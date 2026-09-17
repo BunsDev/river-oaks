@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e9ece5" />
+    <title>River Oaks District — Walk the district</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23455c4f'/%3E%3Cpath d='M9 25V8h8a5 5 0 010 10H9m7 0 8 7' stroke='%23e9ece5' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="field-panel" id="control-panel" aria-label="Preview controls">
+        <header class="identity">
+          <div class="eyebrow"><span class="field-mark" aria-hidden="true">⌖</span> Houston, Texas</div>
+          <h1>River Oaks<span class="district-word">District</span></h1>
+          <p class="preview-label">A place to explore. People to meet.</p>
+          <div class="appearance-control">
+            <span id="appearance-label">Appearance</span>
+            <div class="theme-switch" role="group" aria-labelledby="appearance-label">
+              <button type="button" data-theme-preference="system" aria-pressed="true" class="active">System</button>
+              <button type="button" data-theme-preference="light" aria-pressed="false">Light</button>
+              <button type="button" data-theme-preference="dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+        </header>
+        <div class="panel-scroll">
+          <section class="panel-section scene-section">
+            <div class="section-label">Scene</div>
+            <label class="sr-only" for="scene-select">Destination</label><select id="scene-select" class="scene-select"><option value="district">4444 Westheimer · River Oaks District</option><option value="neighborhood">River Oaks · neighborhood source map</option></select>
+            <div class="segmented" aria-label="Camera presets">
+              <button id="overview" class="active" aria-pressed="true">Overview</button>
+              <button id="street" aria-pressed="false">Street closeup</button>
+            </div>
+            <button id="walk" class="ride-launch walk-launch" aria-pressed="false"><span class="ride-icon" aria-hidden="true">↟</span><span><strong>Walk the district</strong><small>Street level · meet the locals</small></span><span aria-hidden="true">→</span></button>
+            <button id="ride" class="ride-launch" aria-pressed="false"><span class="ride-icon" aria-hidden="true">↗</span><span><strong>Hover moped</strong><small>A new way to explore</small></span><span aria-hidden="true">→</span></button>
+            <div id="district-directory" class="district-directory" hidden><label for="destination">Explore a storefront</label><select id="destination"></select><button id="visit-destination">Arrive at storefront →</button><p class="district-mode-label">Mapped locations. Facades are interpreted; photographic reconstruction is in progress.</p></div>
+            <div class="stat-grid" aria-live="polite">
+              <div><strong id="roads-count">—</strong><span>Road segments</span></div>
+              <div><strong id="parcels-count">—</strong><span>Source parcels</span></div>
+              <div><strong id="buildings-count">—</strong><span>Procedural homes</span></div>
+              <div><strong id="trees-count">—</strong><span>Observed trees</span></div>
+            </div>
+          </section>
+          <section class="panel-section economy-section">
+            <div class="section-label">Scenario lab <span>Jev showcase</span></div>
+            <label class="economy-preset-label" for="economy-preset">Neighborhood services</label>
+            <select id="economy-preset" class="economy-preset"><option value="steady">A normal afternoon</option><option value="demand">Weekend demand surge</option><option value="storm">Sudden thunderstorm</option><option value="wages">Higher wages</option></select>
+            <p id="economy-description" class="quiet-note">Deliveries and landscaping. Adjust the market and watch workers react.</p>
+            <div class="economy-actions"><button id="economy-run" class="economy-primary">Run scenario</button><button id="economy-reset" aria-label="Reset scenario results">Reset</button></div>
+            <p id="economy-engine" class="economy-engine" role="status">Checking decision bridge…</p>
+            <details class="economy-controls"><summary>Adjust the economy</summary>
+              <label class="range-label" for="economy-demand"><span>Demand</span><output id="economy-demand-value">1.0×</output></label><input id="economy-demand" type="range" min="0.5" max="2.5" step="0.1" value="1" />
+              <label class="range-label" for="economy-fee"><span>Service fee</span><output id="economy-fee-value">$18</output></label><input id="economy-fee" type="range" min="8" max="40" step="1" value="18" />
+              <label class="range-label" for="economy-wage"><span>Hourly wage</span><output id="economy-wage-value">$24</output></label><input id="economy-wage" type="range" min="12" max="50" step="1" value="24" />
+              <label class="range-label" for="economy-staff"><span>Workers on shift</span><output id="economy-staff-value">80</output></label><input id="economy-staff" type="range" min="20" max="300" step="10" value="80" />
+              <label class="layer-row"><span>Thunderstorm disruption</span><input id="economy-storm" type="checkbox" /></label>
+            </details>
+            <p class="quiet-note">1 second = 1 simulated minute. Illustrative assumptions; no real household or business data.</p>
+          </section>
+          <section class="panel-section">
+            <div class="section-label">Layers</div>
+            <label class="layer-row"><span><i class="swatch roads-swatch"></i>Roads</span><input type="checkbox" data-layer="roads" checked /></label>
+            <label class="layer-row"><span><i class="swatch parcel-swatch"></i>Parcel boundaries</span><input type="checkbox" data-layer="parcels" /></label>
+            <label class="layer-row"><span><i class="swatch house-swatch"></i><span id="building-layer-label">Procedural homes</span></span><input type="checkbox" data-layer="buildings" checked /></label>
+            <label class="layer-row"><span><i class="swatch tree-swatch"></i>Observed tree points</span><input type="checkbox" data-layer="trees" checked /></label>
+            <label class="layer-row" id="canopy-layer" hidden><span><i class="swatch canopy-swatch"></i><span id="canopy-layer-label">Historical canopy cover</span></span><input type="checkbox" data-layer="canopy" /></label>
+            <label class="layer-row"><span><i class="swatch marker-swatch"></i><span id="marker-label">Route markers</span> <small id="marker-count">0</small></span><input type="checkbox" data-layer="markers" checked /></label>
+            <p class="quiet-note" id="marker-note">Markers follow source road lines locally. Run a scenario to activate service workers and the decision bridge.</p>
+          </section>
+          <section class="panel-section">
+            <div class="section-label">Light & atmosphere <span>Preview only</span></div>
+            <label class="range-label" for="sun-hour"><span>Time of day</span><output id="sun-time">15:00</output></label>
+            <input id="sun-hour" type="range" min="7" max="19" value="15" step="0.25" />
+            <label class="select-row" for="weather"><span>Weather</span><select id="weather"><option value="clear">Clear</option><option value="overcast">Overcast</option><option value="haze">Haze</option></select></label>
+            <button id="motion" class="text-button" aria-pressed="true">Pause marker movement</button>
+          </section>
+          <section class="panel-section evidence-section">
+            <div class="section-label">Data & verification</div>
+            <p class="evidence-line"><span id="verification-dot" class="status-dot"></span><strong id="verification-state">Loading report</strong></p>
+            <p id="verification-detail" class="quiet-note">Reading the current verification report.</p>
+            <div class="data-note"><span>Ground</span><strong id="terrain-state">Checking data</strong></div>
+            <div class="data-note"><span>Canopy</span><strong id="canopy-state">Checking data</strong></div>
+            <p id="canopy-source" class="quiet-note" hidden></p>
+            <details><summary>Scope & outstanding evidence</summary><ul id="limitations"></ul></details>
+          </section>
+        </div>
+        <footer class="panel-footer"><span class="status-dot live-dot"></span><span id="connection">Connecting to local data</span><button id="reload" aria-label="Reload world data" title="Reload world data">↻</button></footer>
+      </aside>
+      <main class="viewport" id="viewport" aria-label="Interactive 3D GIS scene">
+        <button id="panel-toggle" class="panel-trigger" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="Hide controls" title="Hide controls"><span class="trigger-arrow" aria-hidden="true">‹</span><span class="trigger-label" aria-hidden="true">Controls</span></button>
+        <div class="viewport-heading"><span class="viewport-kicker">Spatial study</span><span id="view-name">Neighborhood overview</span></div>
+        <div class="view-meta"><span>Local meters</span><span>EPSG:32615</span></div>
+        <div id="canvas-host" tabindex="0" aria-label="3D map. Drag to orbit, right-drag to pan, scroll to zoom. Arrow keys pan when focused."></div>
+        <div id="loading" class="loading-state" role="status"><span class="loading-mark">⌖</span><h2>Building the view</h2><p>Loading local road and parcel geometry…</p></div>
+        <div class="compass" aria-label="North indicator"><span>N</span><svg id="compass-arrow" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 27 31 20 26 13 31Z" fill="currentColor"/><path d="M20 4V26L13 31Z" fill="#9aa99b"/></svg></div>
+        <div class="legend" aria-label="Synthetic building styles"><span class="legend-title">Synthetic house styles</span><span><i style="--swatch:#829087"></i>Tudor revival</span><span><i style="--swatch:#bfad91"></i>Georgian colonial</span><span><i style="--swatch:#a5a49a"></i>French eclectic</span><span><i style="--swatch:#7f929a"></i>Modern estate</span></div>
+        <div id="selection" class="selection" hidden><span class="section-label">Selected procedural home</span><strong id="selection-style"></strong><span id="selection-detail"></span><button id="clear-selection" aria-label="Clear selected house">×</button></div>
+        <section id="economy-hud" class="economy-hud" aria-label="Live economic scenario" hidden>
+          <div class="economy-hud-heading"><span>NEIGHBORHOOD / LIVE LAB</span><strong id="economy-clock">00:00</strong></div>
+          <div class="economy-metrics"><div><strong id="economy-completed">0</strong><span>Jobs completed</span></div><div><strong id="economy-queued">0</strong><span>Waiting jobs</span></div><div><strong id="economy-profit">$0</strong><span>Operating result</span></div></div>
+          <div class="economy-ledger"><span>Revenue <b id="economy-revenue">$0</b></span><span>Costs <b id="economy-cost">$0</b></span><span>Staff <b id="economy-active">80</b></span></div>
+          <div class="economy-decision-heading"><strong>Reactive decisions</strong><span id="economy-latency">—</span></div>
+          <div class="economy-sources"><span><i class="source-jev"></i>Jev <b id="economy-jev">0</b></span><span><i class="source-local"></i>Local <b id="economy-local">0</b></span><span><i class="source-safety"></i>Safety <b id="economy-safety">0</b></span></div>
+          <p id="economy-response" class="quiet-note">Waiting for the first decision batch.</p>
+          <div id="economy-events" class="economy-events" aria-label="Recent agent reactions"></div>
+          <div class="economy-compare"><button id="economy-save">Save comparison</button><span id="economy-baseline">No saved run</span></div>
+          <p class="economy-model-note">Jev chooses local reactions. Scheduling, demand, and accounting follow simulation rules.</p>
+        </section>
+        <section id="flight-hud" class="flight-hud" aria-label="Hover moped controls" hidden>
+          <div class="flight-topline"><div><span class="flight-brand">AETHER <b>/ 01</b></span><p>River Oaks · hover moped</p></div><button id="flight-exit">Exit ride <kbd>Esc</kbd></button></div>
+          <div class="flight-status"><span class="flight-beacon"></span><span id="flight-mode">Assisted tour</span><span id="flight-location"></span></div>
+          <div class="flight-reticle" aria-hidden="true"><span></span><i></i><span></span></div>
+          <div class="flight-telemetry"><div><strong id="flight-speed">00</strong><span>km/h</span></div><div><strong id="flight-altitude">0</strong><span>m above ground</span></div><div><strong id="flight-heading">000°</strong><span>heading</span></div></div>
+          <div class="flight-console">
+            <div class="flight-progress"><i id="flight-progress"></i></div>
+            <div class="flight-actions"><button id="flight-autopilot" aria-pressed="true">Take control</button><button id="flight-pause" aria-pressed="false">Hover / pause</button></div>
+            <div class="flight-altitude-actions"><button id="flight-street">Street level <kbd>F</kbd></button><button id="flight-rise">Above the roofs <kbd>R</kbd></button></div>
+            <div class="flight-inputs">
+              <div class="flight-pad" role="group" aria-label="Steering and throttle"><button data-flight-key="KeyA" aria-label="Steer left">←</button><button data-flight-key="KeyW" aria-label="Accelerate">↑</button><button data-flight-key="KeyS" aria-label="Brake">↓</button><button data-flight-key="KeyD" aria-label="Steer right">→</button></div>
+              <div class="flight-pad" role="group" aria-label="Altitude"><button data-flight-key="KeyQ" aria-label="Descend">−</button><span>Altitude</span><button data-flight-key="KeyE" aria-label="Climb">+</button></div>
+            </div>
+            <p class="flight-help"><kbd>WASD</kbd> steer & throttle <b>·</b> <kbd>Q E</kbd> altitude <b>·</b> <kbd>Space</kbd> boost <b>·</b> <kbd>H</kbd> pause<br><kbd>F</kbd> street level <b>·</b> <kbd>R</kbd> above the roofs</p>
+            <p class="flight-note">Local scenic autopilot · source map geometry</p>
+          </div>
+        </section>
+        <div class="viewport-footer"><span>Drag to orbit <b>·</b> Shift + drag to pan <b>·</b> Scroll to zoom</span><span id="view-scale">Source geometry · synthetic architecture</span></div>
+        <div id="district-source" class="district-source" hidden><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a><span> · Interpreted facades</span></div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

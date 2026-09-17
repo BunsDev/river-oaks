@@ -1,0 +1,55 @@
+/* Palette and type matched to BunsDev/typesafe-ai-playground app/dashboard.css.
+   This affects interface chrome only; world lighting retains physical colors. */
+:root{--bg:#f5f5f7;--panel:#fff;--soft:#f1f1f4;--ink:#26252c;--muted:#73717e;--line:#e5e4e9;--frame:#e5e4e9;--sidebar:#ededf1;--accent:#ad267e;--accent-soft:#f7e8f1;--on-accent:#fff;--radius:10px;--font-mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;--paper:var(--panel);--forest:var(--accent);--gold:var(--accent);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+:root[data-theme=dark]{--bg:#17171b;--panel:#202025;--soft:#2a2a31;--ink:#eeeef2;--muted:#a4a3b0;--line:#34343e;--frame:#34343e;--sidebar:#1c1c21;--accent:#e2a1c9;--accent-soft:#392b38;--on-accent:#271a25;--paper:var(--panel);--forest:var(--accent);--gold:var(--accent)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+:root[data-theme] .field-panel{background:var(--panel);border-color:var(--line);box-shadow:none}
+:root[data-theme] .identity{background:var(--sidebar);border-color:var(--line);padding-top:25px;padding-bottom:23px}
+:root[data-theme] h1{font-family:inherit;font-size:30px;font-weight:650;line-height:1.18;letter-spacing:-1px}
+.district-word{display:inline;font-size:inherit;text-transform:none;letter-spacing:inherit;margin:0}.district-word::before{content:" "}
+:root[data-theme] .eyebrow,:root[data-theme] .preview-label,:root[data-theme] .section-label,:root[data-theme] .section-label>span,:root[data-theme] .layer-row small,:root[data-theme] .panel-footer{color:var(--muted)}
+.eyebrow,.section-label,.viewport-kicker,.view-meta,.panel-footer,.legend-title{font-family:var(--font-mono)}
+.eyebrow{font-size:9px;letter-spacing:.09em}.field-mark{color:var(--accent);font-size:18px}.preview-label{font-size:11px;line-height:1.6}
+.section-label{font-size:10px;letter-spacing:.075em}.section-label>span{font-family:inherit;font-size:8px}
+.panel-section{padding:21px 22px}.quiet-note{font-size:10px;line-height:1.65}.appearance-control{margin-top:17px}
+:root[data-theme] .segmented,:root[data-theme] .theme-switch{background:var(--soft);border-color:var(--line);border-radius:8px}
+:root[data-theme] .segmented button,:root[data-theme] .theme-switch button{color:var(--muted);border-radius:6px;font-family:inherit}
+:root[data-theme] .segmented button.active,:root[data-theme] .theme-switch button.active{background:var(--panel);color:var(--ink);box-shadow:0 1px 4px #0000000d}
+:root[data-theme] .theme-switch button:hover:not(.active){background:var(--accent-soft)}
+:root[data-theme] select,:root[data-theme] .community-select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:11px;min-height:36px}
+:root[data-theme] input[type=checkbox],:root[data-theme] input[type=range]{accent-color:var(--accent)}
+:root[data-theme] button:focus-visible,:root[data-theme] select:focus-visible,:root[data-theme] input:focus-visible,:root[data-theme] summary:focus-visible,:root[data-theme] #canvas-host:focus-visible{outline-color:var(--accent)}
+:root[data-theme] .ride-launch{background:var(--soft);border-color:var(--line);border-radius:9px;color:var(--ink)}
+:root[data-theme] .ride-launch:hover{background:var(--accent-soft);border-color:var(--accent)}
+:root[data-theme] .ride-launch[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+:root[data-theme] .ride-launch small{color:var(--muted);opacity:1}.ride-icon{border-color:var(--line)}
+:root[data-theme] .community-primary,:root[data-theme] .economy-primary,:root[data-theme] .community-dialogue-actions button:first-child{background:var(--accent);color:var(--on-accent);border-color:var(--accent);border-radius:8px}
+:root[data-theme] .community-section,:root[data-theme] .economy-section{background:var(--panel)}
+:root[data-theme] .community-intro{font-family:inherit;font-size:16px;font-weight:600;letter-spacing:-.3px}
+:root[data-theme] .community-dialogue,:root[data-theme] .economy-hud,:root[data-theme] .selection{background:color-mix(in srgb,var(--panel) 96%,transparent);color:var(--ink);border-color:var(--line);border-radius:16px;box-shadow:0 2px 4px #00000008,0 12px 32px #00000012;--muted:inherit}
+:root[data-theme] .community-dialogue h2{font-family:inherit;font-weight:650;font-size:28px;letter-spacing:-.8px}
+.community-dialogue{padding:22px}.community-speech{font-size:14px;line-height:1.65}.community-topics button{border-radius:8px}.community-close{border-radius:8px}.community-dialogue-actions button{border-radius:8px}
+:root[data-theme] .community-topics button:hover,:root[data-theme] .district-directory button:hover{background:var(--accent-soft)}
+.district-directory button,.economy-actions button,.community-controls button{border-radius:8px;min-height:36px}
+:root[data-theme] .stat-grid strong,:root[data-theme] .economy-metrics strong{font-family:inherit;font-weight:600;letter-spacing:-.7px;color:var(--ink)}
+:root[data-theme] .text-button{color:var(--accent)}
+:root[data-theme] .panel-trigger{background:var(--panel);color:var(--muted);border-color:var(--line);box-shadow:3px 0 10px #00000008;border-radius:0 8px 8px 0}
+:root[data-theme] .panel-trigger:hover,:root[data-theme] .panel-trigger:focus-visible{color:var(--accent);background:var(--accent-soft)}
+:root[data-theme] .panel-footer{background:var(--sidebar);border-color:var(--line);font-size:9px}
+:root[data-theme] .viewport-heading,:root[data-theme] .view-meta,:root[data-theme] .legend{background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:12px}
+:root[data-theme] .viewport-kicker,:root[data-theme] .view-meta,:root[data-theme] .legend-title{color:var(--muted)}
+:root[data-theme] .viewport-footer{background:color-mix(in srgb,var(--panel) 94%,transparent);color:var(--muted);border-color:var(--line)}
+:root[data-theme] .loading-state{background:var(--bg)}:root[data-theme] .loading-mark{color:var(--accent)}:root[data-theme] .loading-state p{color:var(--muted)}.loading-state h2{font-family:inherit;font-weight:600}
+/* Quiet, translucent controls over the world; pink carries only interaction state. */
+.walking-hud,.flight-hud{background:linear-gradient(180deg,#11101777,transparent 24%,transparent 72%,#11101755);font-family:inherit}
+.walking-title strong{font-family:inherit;font-size:32px;font-weight:650;letter-spacing:-1px}.walking-title>span,.walking-help,.flight-help,.flight-brand,.flight-status,.flight-telemetry{font-family:var(--font-mono)}
+:root[data-theme] .walking-console,:root[data-theme] .flight-console{background:#202025ed;border:1px solid #eeeeff33;border-radius:16px;box-shadow:0 12px 32px #00000016;color:#eeeef2}
+:root[data-theme] .walking-hud button,:root[data-theme] .flight-hud button{border-color:#55525f;background:#2a2a31;color:#eeeef2;border-radius:8px}
+:root[data-theme] #walking-talk:not(:disabled),:root[data-theme] .flight-actions button:first-child{background:#e2a1c9;color:#271a25;border-color:#e2a1c9;font-weight:600}
+:root[data-theme] #walking-talk:disabled{background:#2a2a31;color:#a4a3b0;opacity:1}
+.walking-help,#walking-place,.flight-help,.flight-note,.flight-pad span,.flight-telemetry span,.flight-topline p{color:#bcb9c5}
+:root[data-theme] .walking-pad button.held,:root[data-theme] .flight-hud button.held{background:#63465e;border-color:#e2a1c9}
+.flight-beacon{background:#e2a1c9;box-shadow:0 0 9px #e2a1c960}.flight-reticle span,.flight-progress i{background:#e2a1c9}.flight-reticle i{border-color:#e2a1c9}.flight-status{color:#ecd0e0}.flight-status>span:last-child{color:#c5bdc8}.flight-brand b{color:#e2a1c9}
+:root[data-theme] .flying .economy-hud{--ink:#eeeef2;--muted:#a4a3b0;--line:#34343e;background:#202025eb}
+.district-source{background:#202025df;color:#ccc9d1;border-radius:5px}.community-need{accent-color:var(--accent)}.community-need::-webkit-progress-value{background:var(--accent)}
+@media(min-width:2560px){:root[data-theme] h1{font-size:36px}.panel-section{padding:24px 28px}.quiet-note{font-size:11px}.community-intro{font-size:18px}.community-dialogue{padding:26px}.community-speech{font-size:16px}.walking-title strong{font-size:42px}:root[data-theme] select{font-size:13px}}

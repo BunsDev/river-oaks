@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-09-17T11:34:24.939520+00:00",
+  "preview_url": "http://127.0.0.1:5173/",
+  "bridge_url": "http://127.0.0.1:8765/",
+  "bridge_mode": "local_rules",
+  "live_jev_verified": false,
+  "automated_tests": {
+    "javascript": 34,
+    "python": 35,
+    "result": "pass"
+  },
+  "browser_checks": {
+    "system_light_dark_and_persistence": "pass",
+    "manual_flight_hover_escape": "pass",
+    "reduced_motion_stationary_entry": "pass",
+    "storm_completed_jobs_unchanged": [
+      244,
+      244
+    ],
+    "storm_operating_cost_increased_usd_rounded": [
+      796,
+      889
+    ],
+    "storm_safety_overrides": 80,
+    "scenario_pause_freezes_accounting": "pass",
+    "late_injected_test_response_after_reset": {
+      "jev": 0,
+      "completed": 0,
+      "cost": 0
+    },
+    "maximum_showcase_workers": 300,
+    "mobile_viewport": [
+      390,
+      844
+    ],
+    "mobile_horizontal_overflow": false
+  },
+  "short_browser_frame_sample": {
+    "samples": 120,
+    "median_ms": 16.7,
+    "p95_ms": 17.5,
+    "limitation": "Animation-frame timing only; not a GPU or UE5/4K benchmark."
+  },
+  "architecture": {
+    "houses": 2605,
+    "instanced_batches": 17,
+    "triangles_before_shadows": 4488204
+  },
+  "artifacts": [
+    "output/playwright/jev-hover-showcase.png",
+    "output/playwright/mobile-hover-showcase.png",
+    "output/playwright/economy-scenario.png"
+  ],
+  "remaining": [
+    "Unreal execution and photorealism",
+    "Observed tree geometry",
+    "Real Jev throughput",
+    "Target GPU performance"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "scope": "local Python decision rules only; excludes networking, Jev, UE and GPU",
+  "agents": 500,
+  "iterations": 1000,
+  "mode": "local_rules",
+  "median_ms": 0.16427099762950093,
+  "p95_ms": 0.5940830160398036,
+  "max_ms": 3.9362079987768084
+}

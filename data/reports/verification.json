@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "status": "fail",
+  "world_sha256": "a2c7250e8e2e2f9b6597424bbabafd9774d738f30cebc51751df2dc1b3fae910",
+  "counts": {
+    "roads": 940,
+    "parcels": 9981,
+    "buildings": 2605,
+    "trees": 0
+  },
+  "checks": {
+    "road_import": {
+      "status": "pass",
+      "max_deviation_m": 4.547473508864641e-13,
+      "tolerance_m": 5,
+      "missing_ids": [],
+      "extra_ids": [],
+      "reference_count": 940,
+      "generated_count": 940,
+      "scope": "import fidelity against source GIS, not independent survey accuracy"
+    },
+    "parcel_import": {
+      "status": "pass",
+      "max_deviation_m": 0.0,
+      "tolerance_m": 0.1,
+      "missing_ids": [],
+      "extra_ids": [],
+      "reference_count": 9981,
+      "generated_count": 9981,
+      "scope": "import fidelity against source GIS, not independent survey accuracy"
+    },
+    "world_bounds": {
+      "status": "pass"
+    },
+    "building_containment": {
+      "status": "pass",
+      "invalid_building_ids": [],
+      "checked_count": 2605,
+      "scope": "Footprints inside independently projected source parcel setbacks"
+    },
+    "coordinate_contract": {
+      "status": "pass"
+    },
+    "unique_geometry_ids": {
+      "status": "pass"
+    },
+    "source_integrity": {
+      "status": "pass"
+    },
+    "terrain_import": {
+      "status": "pass",
+      "max_height_error_m": 0.0,
+      "grid_vertices": 66049,
+      "feature_samples": 11504,
+      "source_sha256": "4a9f6a657c80809987833badc022a1719cc68fc5854a7bda5befcb66ebae5326",
+      "vertical_datum": "NAVD88",
+      "scope": "Import fidelity against observed DEM; not vertical survey accuracy"
+    },
+    "canopy": {
+      "status": "fail",
+      "iou": 0.0,
+      "coverage_error_fraction": 0.3672263745303462,
+      "reference_coverage_fraction": 0.3672263745303462,
+      "generated_coverage_fraction": 0.0,
+      "reference_source": "hgac-urban-forestry-cir-2016",
+      "threshold_note": "provisional IoU>=0.75 and coverage error<=0.05"
+    },
+    "road_survey_accuracy": {
+      "status": "blocked",
+      "reason": "Independent survey/checkpoints not supplied"
+    },
+    "neighborhood_boundary": {
+      "status": "blocked",
+      "reason": "Bounding box is provisional; authoritative boundary required"
+    },
+    "elevation": {
+      "status": "blocked",
+      "reason": "DEM imported; source age and independent vertical checkpoints require review"
+    },
+    "lane_topology": {
+      "status": "blocked",
+      "reason": "Lane count/width/median/signal observations required"
+    },
+    "residence_similarity": {
+      "status": "blocked",
+      "reason": "All generated homes require manual facade review"
+    },
+    "visual_fidelity": {
+      "status": "blocked",
+      "reason": "Licensed foliage/material/audio kits and engine capture required"
+    },
+    "gpu_performance": {
+      "status": "blocked",
+      "reason": "Target GPU 4K frame-time trace required"
+    },
+    "jev_live": {
+      "status": "blocked",
+      "reason": "Authenticated live service benchmark required"
+    }
+  },
+  "limitations": [
+    "Road widths provisional; lane counts, medians and signals unverified",
+    "Synthetic building massing; styles not surveyed or photo-matched",
+    "Privacy similarity review pending; no reference facade corpus",
+    "provisional bounding box; includes adjacent areas, not an authoritative neighborhood boundary",
+    "No observed canopy supplied; no trees fabricated",
+    "Observed DEM resampled to grid; source dating and vertical survey accuracy require review"
+  ]
+}

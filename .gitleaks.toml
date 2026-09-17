@@ -1,0 +1,11 @@
+title = "River Oaks secret protection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "typesafe-api-key-assignment"
+description = "TypeSafe/Jev API key assigned in configuration or code"
+regex = '''(?i)(?:TYPESAFE_API_KEY|JEV_API_KEY)[\t "']*[:=][\t "']*([A-Za-z0-9_./+=-]{16,})'''
+secretGroup = 1
+keywords = ["typesafe_api_key", "jev_api_key"]
