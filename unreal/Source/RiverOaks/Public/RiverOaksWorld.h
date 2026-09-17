@@ -2,6 +2,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/IHttpRequest.h"
+#include "RiverOaksHumans.h"
+#include "RiverMarkerBackend.h"
 #include "RiverOaksWorld.generated.h"
 
 class UInstancedStaticMeshComponent;
@@ -27,6 +29,10 @@ struct FRiverAgent
     float Speed = 140.f;
     double ActionUntil = 0.;
     bool bBlocked = false;
+    // Visual state only. Backends receive these; they never write back into this struct.
+    FRiverAppearanceRecipe Appearance;
+    int32 HumanHandle = INDEX_NONE;
+    uint64 PoseSequence = 0;
 };
 
 UCLASS(Blueprintable)
@@ -72,6 +78,8 @@ private:
     UPROPERTY() TObjectPtr<UStaticMesh> Cube;
     UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> People;
+    TUniquePtr<FRiverMarkerBackend> MarkerBackend;   // built-in fallback, owned here
+    IRiverHumanBackend* HumanBackend = nullptr;      // selected via IRiverHumanBackend::Select
     UPROPERTY() TArray<TObjectPtr<UInstancedStaticMeshComponent>> Geometry;
     TArray<FRiverRoute> Routes;
     TArray<FRiverAgent> Agents;
@@ -86,6 +94,8 @@ private:
     UInstancedStaticMeshComponent* MakeInstances(FName Name, UStaticMesh* Mesh, const FLinearColor& Color, bool Collision);
     void SpawnAgents();
     void MoveAgents(float DeltaSeconds);
+    void SelectHumanBackend();
+    void TeardownHumans();
     void RequestDecisions();
     void UpdateWeather();
     FVector RouteTarget(const FRiverAgent& Agent) const;

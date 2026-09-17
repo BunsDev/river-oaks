@@ -417,10 +417,17 @@ performance number is quoted here because none has been measured.
 
 ## 13. Roadmap
 
-1. **Foundation (no vendor needed).** Introduce `IRiverHumanBackend`, move the
-   sphere path into `MarkerBackend`, add `FRiverHumanPose`, the skeleton-map
-   validator, manifest sidecar, and the three contract tests. Requires a UE5.6
-   host to compile; author now, execute when available.
+1. **Foundation (no vendor needed).** *Partially authored, uncompiled:*
+   `IRiverHumanBackend`, `FRiverHumanPose`, `FRiverAppearanceRecipe`,
+   `FRiverHumanPoseLedger`, `IRiverHumanBackend::Select` over
+   `IModularFeatures`, `FRiverMarkerBackend` wrapping the sphere path, and
+   `RiverOaksRules::Locomotion` exist in `unreal/Source/RiverOaks/`, with
+   automation tests `RiverOaks.Contracts.HumanPoseSequence`,
+   `HumanBackendSelection`, `HumanAuthority`, and `Locomotion`. *Still
+   pending:* the appearance catalogue and `FRiverRecipeValidator`
+   (section 5.2), the `PortrayalRecipe` test, the skeleton-map validator, and
+   the manifest sidecar. Requires a UE5.6 host to compile; author now, execute
+   when available.
 2. **Skeletal fallback.** One licensed or original UE skeletal mesh with a
    locomotion anim blueprint driven by `Locomotion`; this is the permanent
    crowd and offline path.
