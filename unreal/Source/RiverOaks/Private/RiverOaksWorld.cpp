@@ -248,10 +248,39 @@ FVector ARiverOaksWorld::RouteTarget(const FRiverAgent& Agent) const
     return Route.Points[Agent.Target] + FVector(-Tangent.Y, Tangent.X, 0.) * (Route.HalfWidth + 150.) + FVector(0, 0, 90.);
 }
 
+void ARiverOaksWorld::SelectHumanBackend()
+{
+    MarkerBackend = MakeUnique<FRiverMarkerBackend>(People);
+    HumanBackend = IRiverHumanBackend::Select(MarkerBackend.Get());
+    const FRiverHumanCapabilities Caps = HumanBackend->Probe();
+    UE_LOG(LogTemp, Log, TEXT("River Oaks: human backend '%s' %s (priority %d)."),
+        *Caps.BackendName.ToString(), *Caps.BackendVersion, Caps.Priority);
+}
+
+void ARiverOaksWorld::TeardownHumans()
+{
+    if (HumanBackend)
+        for (auto& Agent : Agents)
+            if (Agent.HumanHandle != INDEX_NONE) HumanBackend->DestroyHuman(Agent.HumanHandle);
+    for (auto& Agent : Agents) Agent.HumanHandle = INDEX_NONE;
+    HumanBackend = nullptr;
+    MarkerBackend.Reset();
+}
+
 void ARiverOaksWorld::SpawnAgents()
 {
     if (Routes.IsEmpty()) return;
     People = MakeInstances(TEXT("Agents"), Sphere, FLinearColor(.75f, .32f, .08f), false);
+    SelectHumanBackend();
+    const auto ApplySpawnPose = [this](FRiverAgent& Agent)
+    {
+        FRiverHumanPose Spawn;
+        Spawn.Sequence = ++Agent.PoseSequence;
+        Spawn.SimTimeSeconds = FPlatformTime::Seconds();
+        Spawn.Root = FTransform(FQuat::Identity, Agent.Position);
+        Spawn.Locomotion = FName(TEXT("idle"));
+        HumanBackend->ApplyPose(Agent.HumanHandle, Spawn);
+    };
     FRandomStream Random(1729);
     for (int32 Index = 0; Index < RiverOaksRules::AgentCount(AgentPopulation); ++Index)
     {
@@ -265,9 +294,30 @@ void ARiverOaksWorld::SpawnAgents()
         Agent.Position = FMath::Lerp(Route.Points[Agent.Target - 1] + (RouteTarget(Agent) - Route.Points[Agent.Target]), RouteTarget(Agent), Random.FRand());
         Agent.Position.X = FMath::Clamp(Agent.Position.X, Bounds.Min.X + 100., Bounds.Max.X - 100.);
         Agent.Position.Y = FMath::Clamp(Agent.Position.Y, Bounds.Min.Y + 100., Bounds.Max.Y - 100.);
-        People->AddInstance(FTransform(FQuat::Identity, Agent.Position, FVector(.6, .6, 1.8)), true);
+        // Placeholder identity until the appearance catalogue lands; not a likeness of anyone.
+        Agent.Appearance.CatalogueId = FName(*FString::Printf(TEXT("resident-%02d"), Index % 6));
+        Agent.HumanHandle = HumanBackend->CreateHuman(Agent.Id, Agent.Appearance);
+        if (Agent.HumanHandle == INDEX_NONE && HumanBackend != MarkerBackend.Get())
+        {
+            // A plugin backend that cannot create a human forfeits the session to the marker fallback.
+            UE_LOG(LogTemp, Warning, TEXT("River Oaks: backend refused %s; using marker fallback."), *Agent.Id);
+            for (auto& Existing : Agents)
+                if (Existing.HumanHandle != INDEX_NONE) HumanBackend->DestroyHuman(Existing.HumanHandle);
+            HumanBackend = MarkerBackend.Get();
+            for (auto& Existing : Agents)
+            {
+                Existing.HumanHandle = HumanBackend->CreateHuman(Existing.Id, Existing.Appearance);
+                Existing.PoseSequence = 0;
+            }
+            Agent.HumanHandle = HumanBackend->CreateHuman(Agent.Id, Agent.Appearance);
+        }
+        ApplySpawnPose(Agent);
         Agents.Add(MoveTemp(Agent));
     }
+    // Agents recreated after a backend fallback had their sequence reset; give them a spawn pose too.
+    for (auto& Agent : Agents)
+        if (Agent.PoseSequence == 0) ApplySpawnPose(Agent);
+    HumanBackend->Tick(0.f);
 }
 
 void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
@@ -304,9 +354,15 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
             Agent.Target = FMath::Clamp(Agent.Target + Agent.Direction, 0, Routes[Agent.Route].Points.Num() - 1);
             Agent.ActionUntil = Now + 1.;
         }
-        People->UpdateInstanceTransform(Index, FTransform(ToTarget.Rotation(), Agent.Position, FVector(.6, .6, 1.8)), true, false, true);
+        // Simulation is settled for this agent; hand the backend a pose it cannot write back from.
+        FRiverHumanPose Pose;
+        Pose.Sequence = ++Agent.PoseSequence;
+        Pose.SimTimeSeconds = Now;
+        Pose.Root = FTransform(ToTarget.Rotation(), Agent.Position);
+        Pose.Locomotion = RiverOaksRules::Locomotion(EffectiveAction, Agent.Kind, Agent.bBlocked);
+        if (HumanBackend && Agent.HumanHandle != INDEX_NONE) HumanBackend->ApplyPose(Agent.HumanHandle, Pose);
     }
-    if (People) People->MarkRenderStateDirty();
+    if (HumanBackend) HumanBackend->Tick(DeltaSeconds);
 }
 
 void ARiverOaksWorld::RequestDecisions()
@@ -441,6 +497,7 @@ void ARiverOaksWorld::Tick(float DeltaSeconds)
 
 void ARiverOaksWorld::EndPlay(const EEndPlayReason::Type Reason)
 {
+    TeardownHumans();
     if (PendingRequest)
     {
         PendingRequest->OnProcessRequestComplete().Unbind();
