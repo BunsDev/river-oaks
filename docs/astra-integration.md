@@ -83,27 +83,42 @@ Jev (TypeSafe)  ──HTTP──▶  river-oaks bridge (Python, loopback :8765)
                                   ▼
                      ARiverOaksWorld  (UE5 RiverOaks module)
                         │ MoveAgents: local rules, collision, schedule, weather
-                        │ FRiverAgent → FRiverHumanState (new, section 5)
+                        │ FRiverAgent → FRiverAppearanceRecipe + FRiverHumanPose (new, section 5)
                         ▼
                   IRiverHumanBackend  (UE interface, River Oaks-owned)
                   ┌──────────────┼──────────────────┐
                   ▼              ▼                   ▼
           MarkerBackend    SkeletalBackend     AstraBackend
           (today's ISM     (UE skeletal mesh   (optional plugin,
-           spheres; keep)   + anim blueprint;   RIVER_OAKS_ASTRA=1,
+           spheres; keep)   + anim blueprint;   plugin enabled only
                             fallback, crowds)   vendor SDK linked)
 ```
 
 Rules:
 
 1. **UE5 hosts Astra.** The backend is a UE plugin (`unreal/Plugins/RiverOaksAstra`)
-   compiled only when `RIVER_OAKS_ASTRA` is defined and `ASTRA_SDK_ROOT` is
-   supplied to UnrealBuildTool. The public repository builds with it off.
+   that is **disabled at the plugin level by default**: `EnabledByDefault:
+   false` in its `.uplugin`, and not enabled in the committed
+   `RiverOaks.uproject`. UnrealBuildTool therefore never discovers or builds
+   its modules on the public build, so its `Build.cs` requirement for
+   `ASTRA_SDK_ROOT` cannot break a no-SDK build. A licensed host enables it
+   with `-EnablePlugin=RiverOaksAstra` on the UBT command line or by
+   enabling it in a local, uncommitted `.uproject` edit. The host module has
+   no compile-time dependency on the plugin (rule 5).
 2. **The out-of-process sidecar is a contingency only**, used if the probe
-   proves Astra cannot be linked into a UE module (incompatible runtime, its
-   own renderer with no host-render path). It would still speak the same
-   `FRiverHumanState` contract, marshalled over loopback like the decision
-   service already is.
+   proves Astra cannot be linked into a UE module (incompatible runtime, or
+   its own renderer). It speaks the same two named types as the in-process
+   backend, marshalled over loopback like the decision service already is:
+   `FRiverAppearanceRecipe` once per `CreateHuman`, `FRiverHumanPose` per
+   `ApplyPose`. Input alone is not enough: an off-process renderer's pixels do
+   not reach the UE scene by themselves. The contingency is viable **only if
+   the probe confirms a depth-carrying shared-texture output** (for example a
+   platform shared GPU surface: IOSurface on macOS, DXGI shared handle on
+   Windows, DMA-BUF on Linux) that the UE side can sample as a `UTexture2D`
+   plus depth and composite with correct occlusion. Frame streaming without
+   depth is not acceptable for humans walking among buildings. If the probe
+   cannot show that, the sidecar is struck as a UE fallback and the skeletal
+   backend is the only non-Astra path.
 3. **The browser showcase does not get Astra.** It is a development view. Its
    people are already moving to skeletal GLB characters (the in-flight CC0
    MakeHuman/MPFB work noted in section 2). That path is the showcase's
@@ -113,13 +128,21 @@ Rules:
 4. **Simulation authority does not move.** `MoveAgents` keeps computing
    position, heading, blocking, and action expiry. Backends receive a pose and
    appearance; they return nothing that changes simulation state.
+5. **Backends are discovered, not linked.** The `RiverOaks` module declares
+   the `IRiverHumanBackend` interface and a modular-feature name
+   (`"RiverHumanBackend"`). Each backend plugin registers an implementation
+   through `IModularFeatures::Get().RegisterModularFeature(...)` at module
+   startup; `ARiverOaksWorld::SpawnAgents` picks the highest-priority
+   registered backend and falls back to `MarkerBackend` when none is
+   registered. No `#if RIVER_OAKS_ASTRA` in host code and no change to
+   `RiverOaks.Build.cs` are required for the Astra plugin to exist.
 
 ### Backend strategy trade-off
 
 | Strategy | Isolation | Coupling to Astra ABI | Fits repository | Use |
 |---|---|---|---|---|
 | Astra as UE plugin in `RiverOaks` process | Medium | Plugin only | Yes: one engine, one build | **Primary** |
-| Astra sidecar over loopback | High | Sidecar only | Adds a second native runtime | Contingency |
+| Astra sidecar over loopback | High | Sidecar only | Adds a second native runtime; needs depth-carrying shared-texture output (rule 2) | Contingency, probe-gated |
 | Offline Astra export to UE skeletal assets | Highest | Build-time only | Yes, if EULA and tooling allow | Preferred for crowds if legal |
 | UE skeletal mesh fallback (no Astra) | High | None | Yes | **Mandatory** |
 | Instanced marker (current) | High | None | Already shipped | Debug and CI |
@@ -155,12 +178,26 @@ struct FRiverHumanPose
 
 struct FRiverAppearanceRecipe
 {
+    FName CatalogueId;             // River Oaks catalogue entry this was resolved from
     FName BodyPreset;
     FName HairAsset;
     TArray<FName> Garments;
-    TMap<FName, float> BodyMorphs;
-    bool bPortrayalLocked = false; // section 9: never likeness-derived
+    TMap<FName, float> BodyMorphs; // semantic channel → value within preset range
 };
+
+// Recipes are never hand-built by callers. They are resolved from a River
+// Oaks-owned catalogue and validated before any backend sees them:
+//
+//   FRiverAppearanceRecipe URiverAppearanceCatalogue::Resolve(int32 PersonaIndex);
+//   bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe&, FString& OutReason);
+//
+// Validate() rejects a recipe when: CatalogueId is unknown; any BodyMorphs
+// key is outside the catalogue's morph allowlist; any value is outside the
+// preset's declared range; or the persona is one of the four portrayals and
+// the recipe deviates from that persona's fixed generic preset in any field.
+// IRiverHumanBackend::CreateHuman is only reachable through
+// ARiverOaksWorld, which calls Validate() first and spawns MarkerBackend on
+// rejection. There is no bypass flag.
 
 enum class ERiverJoint : uint8
 {
@@ -226,12 +263,18 @@ or two canonical joints map to one vendor joint.
 
 ## 6. Build and packaging
 
-- Plugin: `unreal/Plugins/RiverOaksAstra/` with `RiverOaksAstra.uplugin` and a
-  `RiverOaksAstra.Build.cs` that reads `ASTRA_SDK_ROOT` from the environment,
-  fails with a clear message if unset, and adds the vendor include and library
-  paths. Vendor binaries are never committed.
-- `RiverOaks.Build.cs` gains an optional dependency on `RiverOaksAstra` guarded
-  by `RIVER_OAKS_ASTRA`. The Editor and Game targets build with it off in CI.
+- Plugin: `unreal/Plugins/RiverOaksAstra/` with `RiverOaksAstra.uplugin`
+  (`EnabledByDefault: false`) and a `RiverOaksAstra.Build.cs` that reads
+  `ASTRA_SDK_ROOT` from the environment, fails with a clear message if unset,
+  and adds the vendor include and library paths. Because UBT only builds
+  modules of enabled plugins, that failure can only occur on a host that has
+  deliberately enabled the plugin. Vendor binaries are never committed.
+- `RiverOaks.Build.cs` is unchanged. The host discovers backends through
+  `IModularFeatures` (section 4, rule 5); the plugin depends on `RiverOaks`
+  for the interface header, never the reverse. The Editor and Game targets
+  build with the plugin disabled in CI. `RIVER_OAKS_ASTRA`, if used at all, is
+  a `PublicDefinitions` entry inside the plugin's own `Build.cs` for its own
+  code; it is not a gate the host reads.
 - Runtime delivery: the plugin binary and any EULA-permitted Astra runtime files
   ship under `Plugins/RiverOaksAstra/Binaries` and `ThirdParty/Astra` only in
   builds produced on a licensed host. Fallback skeletal assets ship always.
@@ -291,12 +334,18 @@ fictional encounters and states that generic meshes and preset voices do not
 reproduce their likenesses (`docs/showcase.md`). An ultra-realistic pipeline
 must keep that true by construction:
 
-1. `bPortrayalLocked` recipes use catalogue presets only; no morphs derived
-   from photographs, scans, or measurements of the portrayed person. The
+1. Portrayal recipes are **resolved, not authored**: `URiverAppearanceCatalogue`
+   maps each of the four portrayal personas to a fixed generic preset, and
+   `FRiverRecipeValidator` (section 5.2) rejects any recipe for those personas
+   that deviates from the preset, any morph channel outside the allowlist, and
+   any value outside the preset range, before `CreateHuman` is called. No
+   morphs derived from photographs, scans, or measurements of the portrayed
+   person can enter because there is no input path that accepts them. The
    in-flight showcase already does this at code level: `avatarProfile(index)`
    in `preview/src/avatars.js` maps the four portrayals to generic profiles
-   with the comment "never scans or likenesses of them". The UE recipe must
-   preserve that mapping, not reopen it.
+   with the comment "never scans or likenesses of them". The UE catalogue
+   must preserve that mapping, not reopen it, and
+   `RiverOaks.Contracts.PortrayalRecipe` (section 11) covers the rejection.
 2. No face geometry, scan, or biometric capture of any real person enters the
    pipeline. Texas CUBI treats face geometry records as biometric identifiers
    requiring notice and consent for commercial capture; other jurisdictions
@@ -338,9 +387,15 @@ Extend `RiverOaksRulesTests.cpp` (still unexecuted until an engine exists):
   left/right hand raise, sequence ordering and stale-pose drop.
 - `RiverOaks.Contracts.HumanAuthority`: a backend cannot alter `FRiverAgent`
   position or action; `MoveAgents` output equals pre-backend output.
+- `RiverOaks.Contracts.PortrayalRecipe`: for each portrayal persona, a recipe
+  with an off-allowlist morph, an out-of-range value, or any field differing
+  from the fixed preset is rejected by `FRiverRecipeValidator` and never
+  reaches a backend's `CreateHuman`; the resolved catalogue recipe passes.
 
-Python (runs today): `tests/test_humans_manifest.py` for manifest validation
-and skeleton-map rules. Visual fidelity uses fixed cameras, lighting, and
+Python (**proposed**; `tests/test_humans_manifest.py` does not exist at
+`1fe85a3` and lands with the Foundation milestone in section 13): manifest
+validation and skeleton-map rules. Until it exists and has been executed, no
+Python coverage of this plan should be described as running. Visual fidelity uses fixed cameras, lighting, and
 exposure with human review as the release gate; pixel metrics catch
 regressions only. Performance uses the existing 500-agent benchmark shape with
 `stat unit`, Unreal Insights, and (NVIDIA) Nsight captures, sweeping 1 → 500
