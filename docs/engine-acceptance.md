@@ -3,6 +3,9 @@
 The River Oaks Editor and Game Development targets build on Unreal Engine 5.8.2.
 This records the September 20, 2026 compatibility run, not production visual acceptance.
 
+The subsequent [street-level acceptance](street-level-plan.md#verification) supersedes
+the original residential scene below with the compact shopping district.
+
 ## Environment
 
 - Apple M3 Max, 48 GB RAM, macOS 26.6.2.

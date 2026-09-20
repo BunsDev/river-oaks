@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-20",
+  "scope": "River Oaks District, Westheimer at Westcreek",
+  "extent_m": [
+    253.944,
+    290.431
+  ],
+  "buildings": 9,
+  "roads_and_paths": 39,
+  "destinations": 30,
+  "browser": {
+    "only_mode": "walking",
+    "nearby_encounter_radius_m": 40,
+    "talk_radius_m": 4.5,
+    "live_checks_passed": 18,
+    "page_errors": 0,
+    "unit_tests_passed": 87,
+    "production_build": "passed"
+  },
+  "python_tests_passed": 67,
+  "native": {
+    "engine": "5.8.2",
+    "editor_build": "passed",
+    "game_build": "passed",
+    "automation": {
+      "succeeded": 8,
+      "failed": 0,
+      "not_run": 0
+    },
+    "map": "/Game/Maps/RiverOaksDistrict",
+    "bootstrap_saved_reopened": true,
+    "post_process_volume_count": 1,
+    "rendered_scene_counts": {
+      "roads": 39,
+      "buildings": 9,
+      "trees": 4
+    },
+    "street_pawn_and_hud_observed": true,
+    "exit_code": 0,
+    "full_conversation_interface": "browser only",
+    "input_and_collision_acceptance": "Browser walking and collisions tested. Native pawn compiled and spawned; full native input/collision acceptance remains unverified."
+  }
+}

@@ -2,19 +2,6 @@ export function localToScene([east, north, altitude = 0]) {
   return [east, altitude, -north || 0];
 }
 
-export function buildingTransform(building) {
-  const [width, depth, height] = building.size;
-  const position = localToScene(building.center);
-  position[1] += height / 2;
-  return { position, scale: [width, height, depth], rotationY: building.yaw_deg * Math.PI / 180 };
-}
-
-export function parcelSegments(parcel) {
-  return [parcel.ring, ...(parcel.holes ?? [])].flatMap((ring) =>
-    ring.slice(1).map((point, index) => [ring[index], point]),
-  );
-}
-
 export function routeSegments(points) {
   const segments = [];
   let length = 0;

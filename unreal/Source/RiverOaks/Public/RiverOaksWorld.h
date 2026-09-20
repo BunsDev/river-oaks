@@ -42,10 +42,13 @@ class RIVEROAKS_API ARiverOaksWorld : public AActor
 public:
     ARiverOaksWorld();
     virtual void Tick(float DeltaSeconds) override;
+    FVector ConstrainVisitor(const FVector& Position) const;
+    FString GreetNearby(const FVector& Position);
+    FString NearbyVisitor(const FVector& Position) const;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="River Oaks")
-    int32 AgentPopulation = 300;
+    int32 AgentPopulation = 24;
     // Meshes must use centered 100 cm nominal bounds. JSON styles select these slots.
     UPROPERTY(EditAnywhere, Category="River Oaks|Assets")
     TMap<FString, TObjectPtr<UStaticMesh>> BuildingStyleMeshes;

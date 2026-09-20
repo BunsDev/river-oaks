@@ -11,7 +11,7 @@ async (page) => {
       viewport: [Math.round(viewport.width), Math.round(viewport.height)],
       buffer: [canvas.width, canvas.height],
       overflow: document.documentElement.scrollWidth > window.innerWidth,
-      flight: !document.querySelector('#flight-hud').hidden,
+      walking: !document.querySelector('#walking-hud').hidden,
     };
   });
   const settle = () => page.waitForTimeout(400);
@@ -22,7 +22,7 @@ async (page) => {
   if (await trigger.getAttribute('aria-expanded') === 'false') await trigger.click();
   await settle();
   const open = await read();
-  check(open.viewport[0] < 3840 && !open.inert, 'Expanded panel must occupy width and be interactive');
+  check(open.viewport[0] === 3840 && !open.inert, 'Floating panel must stay interactive above the full-width street');
 
   await page.getByRole('button', { name: 'Hide controls', exact: true }).click();
   await settle();
@@ -46,34 +46,8 @@ async (page) => {
 
   await page.getByRole('button', { name: 'Show controls', exact: true }).click();
   await settle();
-  await page.getByRole('button', { name: 'Run scenario', exact: true }).click();
-  const workers = page.locator('input[data-layer="markers"]');
-  check(await workers.isChecked(), 'Starting an economy must reveal its service workers');
-  await workers.uncheck();
-  await page.locator('#economy-run').click();
-  await page.locator('#economy-run').click();
-  check(!await workers.isChecked(), 'Pause and resume must respect a manually hidden worker layer');
-  await workers.check();
-  await page.getByRole('button', { name: 'Hover moped A new way to explore' }).click();
-  await page.getByRole('button', { name: 'Hide controls', exact: true }).click();
-  await settle();
-  check((await read()).flight, 'Collapsing the panel must retain the active ride');
-  check(await page.locator('#canvas-host').evaluate((element) => element === document.activeElement), 'Pointer collapse must return focus to active flight');
-  await page.getByRole('button', { name: 'Street level F', exact: true }).click();
-  await page.waitForFunction(() => Number(document.querySelector('#flight-altitude').textContent) <= 3 && document.querySelector('#flight-mode').textContent.includes('Manual'), null, { timeout: 30000 });
-  const streetAltitude = await page.locator('#flight-altitude').textContent();
-  await page.screenshot({ path: 'output/playwright/street-hover-4k.png' });
-  await page.getByRole('button', { name: 'Above the roofs R', exact: true }).click();
-  await page.waitForFunction(() => Number(document.querySelector('#flight-altitude').textContent) >= 18, null, { timeout: 20000 });
-  await page.getByRole('button', { name: 'Hover / pause', exact: true }).click();
-  await page.getByRole('button', { name: 'Show controls', exact: true }).click();
-  await settle();
-  await page.locator('#economy-run').click();
-  await page.getByRole('button', { name: 'Hide controls', exact: true }).click();
-  await settle();
-  const ride = await read();
-  check(ride.flight && ride.inert, 'Ride must survive repeated panel transitions');
-
+  await trigger.click();
+  check((await read()).walking, 'Panel transitions retain walking');
   await page.setViewportSize({ width: 390, height: 844 });
   await settle();
   const mobile = await read();
@@ -86,5 +60,5 @@ async (page) => {
   await page.screenshot({ path: 'output/playwright/sidebar-mobile.png' });
   await page.setViewportSize({ width: 3840, height: 2160 });
   check(!errors.length, `Unexpected browser errors: ${errors.join('; ')}`);
-  return { open, collapsed, persisted: true, keyboard: true, ride, streetAltitude, mobile, browserErrors: errors };
+  return { open, collapsed, persisted: true, keyboard: true, walking: true, mobile, browserErrors: errors };
 }

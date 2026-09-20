@@ -143,9 +143,8 @@
 #community-dialogue .community-dialogue-note { font-size: 11px; line-height: 1.7; margin: 0 0 6px; }
 #community-dialogue .community-dialogue-footer { flex-shrink: 0; border-top: 1px solid var(--line); padding: 10px 16px; }
 #community-dialogue .community-next { min-height: 44px; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; text-align: center; }
-.flying #community-dialogue { left: auto; right: 24px; }
 @media (max-width: 650px) {
-  #community-dialogue, .flying #community-dialogue { position: fixed; left: 12px; right: 12px; bottom: 12px; width: auto; max-height: calc(100dvh - 24px); z-index: 20; }
+  #community-dialogue { position: fixed; left: 12px; right: 12px; bottom: 12px; width: auto; max-height: calc(100dvh - 24px); z-index: 20; }
   #community-dialogue .community-dialogue-top { padding: 14px; gap: 10px; grid-template-columns: 36px minmax(0, 1fr) 44px; }
   #community-dialogue .community-avatar { width: 36px; height: 36px; border-radius: 11px; font-size: 14px; }
   #community-dialogue h2 { font-size: 23px; }
@@ -158,7 +157,7 @@
   #community-dialogue .community-dialogue-actions button { min-height: 60px; }
 }
 @media (max-height: 500px) {
-  #community-dialogue, .flying #community-dialogue { position: fixed; left: auto; right: 12px; bottom: 12px; width: min(440px, calc(100% - 24px)); max-height: calc(100dvh - 24px); z-index: 20; }
+  #community-dialogue { position: fixed; left: auto; right: 12px; bottom: 12px; width: min(440px, calc(100% - 24px)); max-height: calc(100dvh - 24px); z-index: 20; }
   #community-dialogue .community-dialogue-top { padding-block: 10px; }
   #community-dialogue .community-avatar { display: none; }
   #community-dialogue .community-dialogue-top { grid-template-columns: minmax(0, 1fr) 44px; }

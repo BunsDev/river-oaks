@@ -1,6 +1,7 @@
 #include "RiverOaksGameMode.h"
-#include "GameFramework/SpectatorPawn.h"
+#include "RiverStreetPawn.h"
 ARiverOaksGameMode::ARiverOaksGameMode()
 {
-    DefaultPawnClass = ASpectatorPawn::StaticClass();
+    HUDClass = ARiverStreetHUD::StaticClass();
+    DefaultPawnClass = ARiverStreetPawn::StaticClass();
 }

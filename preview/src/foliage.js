@@ -37,6 +37,26 @@ export function buildObservedFoliage(world) {
     mesh.computeBoundingSphere();mesh.castShadow=mesh.receiveShadow=true;
     group.add(mesh);lod.push({mesh,center:tile.center,ground:ground[0],count:tile.voxels.length});
   }
+  // Fill the interpreted branch crowns between sparse leaf-off returns. These
+  // sprays are decorative foliage, not additional measured vegetation voxels.
+  for (const tile of canopyTiles(data.voxels)) {
+    const tips = data.branch_supports
+      .filter(support => Math.abs(support.position[0]-tile.center[0]) < 32 && Math.abs(support.position[1]-tile.center[1]) < 32)
+      .flatMap(support => support.endpoints.map(end => ({ end, radius: Math.max(0.4, Math.min(1.25, support.radius_m * 0.42)) })));
+    if (!tips.length) continue;
+    const mesh = new THREE.InstancedMesh(leafGeometry, material, tips.length * 64);
+    for (let layer = 0; layer < 64; layer++) tips.forEach(({end, radius}, index) => {
+      const angle = random()*Math.PI*2, vertical = random()*2-1, r = Math.cbrt(random());
+      const spread = Math.sqrt(1-vertical*vertical)*r*radius;
+      dummy.position.set(end[0]+Math.cos(angle)*spread, terrainHeight(world.terrain,end[0],end[1])+end[2]*0.9+vertical*r*radius*0.75, -end[1]+Math.sin(angle)*spread);
+      dummy.rotation.set(random()*Math.PI,random()*Math.PI*2,random()*Math.PI);
+      dummy.scale.setScalar(1.15+random()*0.45); dummy.updateMatrix();
+      mesh.setMatrixAt(layer*tips.length+index,dummy.matrix);
+      mesh.setColorAt(layer*tips.length+index,color.setHSL(0.22+random()*0.025,0.16+random()*0.12,0.50+random()*0.25));
+    });
+    mesh.computeBoundingSphere(); mesh.castShadow=mesh.receiveShadow=true; group.add(mesh);
+    lod.push({mesh,center:tile.center,ground:terrainHeight(world.terrain,...tile.center),count:tips.length,layers:[64,24,8]});
+  }
   const segments=[];
   for(const support of data.branch_supports) {
     const [x,y]=support.position, ground=terrainHeight(world.terrain,x,y), h=support.height_m;
@@ -56,7 +76,7 @@ export function buildObservedFoliage(world) {
   });
   branches.castShadow=branches.receiveShadow=true;group.add(branches);
   group.userData.texture=texture;
-  group.userData.update=position=>{for(const tile of lod){const distance=Math.hypot(position.x-tile.center[0],position.z+tile.center[1],position.y-tile.ground);tile.mesh.count=tile.count*(distance<90?16:distance<160?5:1);}};
+  group.userData.update=position=>{for(const tile of lod){const distance=Math.hypot(position.x-tile.center[0],position.z+tile.center[1],position.y-tile.ground);const levels=tile.layers ?? [16,5,1];tile.mesh.count=tile.count*(distance<90?levels[0]:distance<160?levels[1]:levels[2]);}};
   group.userData.observedVoxels=data.voxels.length;
   return group;
 }

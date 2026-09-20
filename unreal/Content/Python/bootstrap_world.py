@@ -10,7 +10,7 @@ from pathlib import Path
 
 import unreal
 
-MAP = "/Game/Maps/RiverOaks"
+MAP = "/Game/Maps/RiverOaksDistrict"
 MATERIAL = "/Game/Generated/M_Blockout"
 
 
@@ -27,10 +27,16 @@ def main():
     assets = unreal.EditorAssetLibrary
     if assets.does_asset_exist(MAP):
         raise RuntimeError(f"{MAP} already exists; open it or choose a new MAP path.")
-    manifest_path = Path(unreal.Paths.project_content_dir()) / "Data" / "world.json"
+    manifest_path = Path(unreal.Paths.project_content_dir()) / "Data" / "district.json"
     manifest = json.loads(manifest_path.read_text())
-    if manifest.get("schema_version") != 1 or not manifest.get("roads"):
-        raise RuntimeError("Generate a schema-v1 manifest with roads before bootstrapping.")
+    if (
+        manifest.get("schema_version") != 1
+        or manifest.get("scene") != "district"
+        or not manifest.get("roads")
+    ):
+        raise RuntimeError(
+            "Run scripts/export_district.py before bootstrapping the shopping district."
+        )
     actor_class = unreal.load_class(None, "/Script/RiverOaks.RiverOaksWorld")
     if actor_class is None:
         raise RuntimeError("Compile RiverOaksEditor first; runtime class is missing.")
@@ -65,7 +71,7 @@ def main():
     world = actors.spawn_actor_from_class(actor_class, unreal.Vector(0, 0, 0))
     world.set_actor_label("River Oaks GIS BLOCKOUT - not production art")
     world.set_editor_property("blockout_material", material)
-    world.set_editor_property("agent_population", 300)
+    world.set_editor_property("agent_population", 24)
     sun = actors.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1000))
     light = sun.get_component_by_class(unreal.DirectionalLightComponent)
     light.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
@@ -79,20 +85,22 @@ def main():
     fog = actors.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0))
     world.set_editor_property("sun", sun)
     world.set_editor_property("fog", fog)
-    x, y, z = manifest["roads"][0]["points"][0]
+    x, y, z = manifest["walkSpawn"]
     start = actors.spawn_actor_from_class(
         unreal.PlayerStart,
-        unreal.Vector(x * 100, -y * 100, z * 100 + 1500),
-        unreal.Rotator(-15, 0, 0),
+        unreal.Vector(x * 100, -y * 100, z * 100 + 88),
+        unreal.Rotator(0, -90, 0),
     )
-    start.set_actor_label("Fly camera start - WASD, mouse, E/Q vertical")
+    start.set_actor_label("Street start - WASD, mouse, E to greet")
     post_process = runpy.run_path(
         str(Path(unreal.Paths.project_content_dir()) / "Python" / "setup_post_process.py")
     )
     post_process["configure_global_post_process"]()
     if not levels.save_current_level():
         raise RuntimeError("Map save failed.")
-    unreal.log("Saved River Oaks blockout map. Play to load geometry and agents from world.json.")
+    unreal.log(
+        "Saved River Oaks blockout map. Play to load geometry and agents from district.json."
+    )
 
 
 if __name__ == "__main__":

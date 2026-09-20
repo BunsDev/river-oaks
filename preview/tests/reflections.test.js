@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { createStorefrontReflections } from '../src/reflections.js';
 
-function fixture() {
+function fixture(scene = new THREE.Scene()) {
   const material = new THREE.MeshStandardMaterial();
   const hidden = new THREE.Group(), alreadyHidden = new THREE.Group(); alreadyHidden.visible = false;
   const target = { initial: true };
@@ -25,7 +25,7 @@ function fixture() {
     },
     dispose() { this.released = (this.released ?? 0) + 1; },
   };
-  const probe = createStorefrontReflections({ renderer, scene: new THREE.Scene(), materials: [material], excluded: [hidden, alreadyHidden], filter });
+  const probe = createStorefrontReflections({ renderer, scene, materials: [material], excluded: [hidden, alreadyHidden], filter });
   return { probe, renderer, material, hidden, alreadyHidden, target, resources, filter };
 }
 
@@ -78,4 +78,18 @@ test('a failed reflection filter keeps the last complete map and restores render
   assert.equal(material.envMap, complete); assert.equal(probe.stats.failed, true); assert.equal(probe.stats.captures, 1);
   assert.equal(renderer.autoClear, true); assert.equal(renderer.toneMapping, THREE.ACESFilmicToneMapping);
   probe.dispose();
+});
+
+
+test('transmissive props cannot allocate camera-specific refraction targets during probe capture', () => {
+  const scene = new THREE.Scene();
+  const crystal = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial({ transmission: 0.8 }));
+  scene.add(crystal);
+  const { probe, renderer } = fixture(scene);
+  const render = renderer.render.bind(renderer);
+  renderer.render = () => { assert.equal(crystal.visible, false); render(); };
+  probe.update(0, new THREE.Vector3());
+  assert.equal(probe.stats.failed, false, 'Capture must exclude the crystal');
+  assert.equal(crystal.visible, true, 'Main view must retain the crystal');
+  probe.dispose(); crystal.geometry.dispose(); crystal.material.dispose();
 });

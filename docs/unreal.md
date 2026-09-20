@@ -2,10 +2,22 @@
 
 This is a **GIS blockout**, not a photorealistic scene. The Editor and Game Development targets compile on Unreal Engine 5.8.2 with Xcode 26.6 on an Apple M3 Max. All eight native automation tests pass. Map bootstrap, saved-volume persistence, and rendered SSAO are verified; see [engine acceptance](engine-acceptance.md). Packaging remains unverified. No 4K/60 fps claim is made. The generated map is intentionally not checked in because creating it requires the editor.
 
+## Shopping district scope
+
+The active map is `/Game/Maps/RiverOaksDistrict`, restricted to the bundled River Oaks District footprint at Westheimer and Westcreek: approximately 254 × 290 metres, 9 building footprints, 39 road/path segments and 30 storefront destinations. The old residential map is no longer a startup or game map. The runtime rejects non-district and oversized manifests.
+
+Stage the native input with:
+
+```sh
+uv run python scripts/export_district.py
+```
+
+This copies the browser district’s geographic x/y into `unreal/Content/Data/district.json`. The native blockout uses a flat ground plane, so the export intentionally flattens altitude; the browser retains its observed terrain. Native people remain the existing marker backend with a basic proximity greeting. The browser provides the clothed characters and complete topic-based conversation interface.
+
 ## Build and open
 
 1. Install Unreal Engine **5.8.2** and its supported native toolchain. Generate project files for `unreal/RiverOaks.uproject`, then build the **RiverOaksEditor Development** target using the engine's `Build.bat` (Windows) or `Build.sh` (macOS/Linux). The module uses Engine, HTTP, Json and InputCore; no marketplace plugin is required.
-2. Generate `unreal/Content/Data/world.json` using the repository pipeline. Keep the manifest and its verification report together. The loader accepts schema 1, EPSG:32615, local east/north/up meters; it converts to Unreal east/south/up centimeters. `center` on buildings and `position` on trees denote their base, not geometric center.
+2. Run `uv run python scripts/export_district.py` to stage `unreal/Content/Data/district.json` from the bundled shopping footprint. Keep its source attribution. The loader accepts schema 1, EPSG:32615, local east/north/up meters; it converts to Unreal east/south/up centimeters. `center` on buildings and `position` on trees denote their base, not geometric center.
 3. Open the project. Before the map exists, the configured startup map cannot load; create/open an empty level. Save any current work. In the Python console run:
 
    ```python
@@ -16,8 +28,8 @@ This is a **GIS blockout**, not a photorealistic scene. The Editor and Game Deve
    )
    ```
 
-   The bootstrap creates `/Game/Maps/RiverOaks`, a color-parameter material, movable sun, sky atmosphere, skylight, fog, world actor, player start and an unbound global Post Process Volume. It refuses to overwrite an existing map. Unreal's `new_level` closes the current persistent level, so save your editor work before invoking it. See [LevelEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/LevelEditorSubsystem?application_version=5.6).
-4. Press **Play** and click the viewport. The engine spectator pawn provides mouse look, WASD and E/Q vertical movement. Escape exits play. The scene geometry is generated at BeginPlay; an empty editor viewport before Play is expected. Select `River Oaks GIS BLOCKOUT` to change agent count (0–500), weather parameters and asset slots.
+   The bootstrap creates `/Game/Maps/RiverOaksDistrict`, a color-parameter material, movable sun, sky atmosphere, skylight, fog, world actor, player start and an unbound global Post Process Volume. It refuses to overwrite an existing map. Unreal's `new_level` closes the current persistent level, so save your editor work before invoking it. See [LevelEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/LevelEditorSubsystem?application_version=5.6).
+4. Press **Play** and click the viewport. The walking pawn provides mouse look, WASD movement, arrow-key turning and E to greet a nearby visitor. Movement remains at street height and within the district; there is no vertical flight control. Escape exits editor play. The scene geometry is generated at BeginPlay; an empty editor viewport before Play is expected. Select `River Oaks GIS BLOCKOUT` to change agent count (24 by default), weather parameters and asset slots.
 5. Start the Python decision service on `127.0.0.1:8765` to use decisions. With no service, local movement continues using deterministic rules. No API key belongs in the Unreal project.
 
 For a source-built engine, a typical editor build invocation is:
@@ -82,7 +94,7 @@ bootstrap["configure_blockout_material"](unreal.load_asset(bootstrap["MATERIAL"]
 
 ## What runs in the foundation
 
-The actor reads `Content/Data/world.json`, rejects malformed geometry, and creates instanced road boxes, four representative roof treatments (Tudor, Georgian, French and modern), building masses, trunk/canopy shapes and NPC markers. Roads preserve input polylines and declared widths; road surfaces are narrow flat prisms, not intersection topology. Parcel boundaries are used by the offline pipeline to place houses; the runtime does not draw parcels. Tree arrays remain empty when no observed canopy input is supplied. The ground is flat; no elevation model has been supplied.
+The actor reads `Content/Data/district.json`, rejects malformed geometry, and creates instanced road boxes, retail building masses, trunk/canopy shapes and NPC markers. Roads preserve input polylines and declared widths; road surfaces are narrow flat prisms, not intersection topology. Parcel boundaries are used by the offline pipeline to place houses; the runtime does not draw parcels. Tree arrays remain empty when no observed canopy input is supplied. The ground is flat; no elevation model has been supplied.
 
 NPCs are scaled sphere markers, with pedestrians and joggers following road-edge offsets. Marker rendering now sits behind the `IRiverHumanBackend` contract (`Source/RiverOaks/Public/RiverOaksHumans.h`): `ARiverOaksWorld::MoveAgents` computes the authoritative position and hands each backend a sequenced `FRiverHumanPose`; `FRiverMarkerBackend` is the built-in fallback. Backend discovery is enabled (`bRiverHumanBackendDiscoveryEnabled` is `true`), so a plugin registered under the `RiverHumanBackend` modular feature with a higher priority replaces the marker backend with no host change. Appearance is resolved, never authored: `SpawnAgents` calls `URiverAppearanceCatalogue::Resolve` and `FRiverRecipeValidator::Validate` before `CreateHuman`, and falls back to the marker backend on rejection. The catalogue holds the same six CC0 profiles the browser showcase ships, and the four fictional portrayals are locked to fixed generic presets; `tests/test_appearance_catalogue.py` enforces that parity in CI (see `docs/astra-integration.md`). That code compiles in both native targets, and its authority, backend-selection, pose-sequence and recipe tests pass in UE5.8.2. Local motion caps each step at 50 ms, stops at static collision/bounds, checks other agents, and reverses when obstructed. This is a lightweight movement foundation, not skeletal animation, crowd navigation, surveyed sidewalks, vehicle traffic or a complete daily schedule. Local schedules pause pedestrians overnight (before 06:00 and from 22:00) and joggers overnight/at midday (11:00–17:00). Inference cannot override these motion limits. Storm state selects shelter; rain above 0.5 or humidity above 0.85 slows active pedestrians. External stop/pause/shelter decisions remain stationary even when local rules allow movement. Intersection crossings and route continuity still require a lane/sidewalk graph. `seek_shelter` currently pauses the marker; no reachable shelter search exists.
 

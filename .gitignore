@@ -169,3 +169,7 @@ credentials.json
 service-account.json
 .playwright-cli/
 output/playwright/
+
+.playwright-mcp/
+
+unreal/**/Content/Data/district.json

@@ -5,6 +5,7 @@ async (page) => {
   await page.setViewportSize({ width: 3840, height: 2160 });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
+  await page.locator('#community-more').evaluate(element => { element.open = true; });
   check(await page.locator('#walking-hud').isVisible(), 'District should start on foot');
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
@@ -77,16 +78,13 @@ async (page) => {
   check(await page.locator('#walking-hud').isVisible(), 'Mobile must retain walking');
   await page.screenshot({ path: 'output/playwright/district-mobile.png' });
   await toggle.click();
-  await page.locator('#scene-select').selectOption('neighborhood');
-  await page.locator('#loading').waitFor({ state: 'hidden' });
-  check(await page.locator('#district-directory').isHidden(), 'Neighborhood source map remains accessible');
-  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===0,'Leaving the district must terminate its route worker');
-  await page.locator('#scene-select').selectOption('district');
+  check(await page.locator('#scene-select').count() === 0, 'Only the district should be offered');
+  await page.locator('#reload').click();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.setViewportSize({ width: 1920, height: 1080 });
-  check(await page.locator('#walking-hud').isVisible(), 'Returning to district resumes walking');
+  check(await page.locator('#walking-hud').isVisible(), 'Reloading the district resumes walking');
   await page.waitForTimeout(1200);
-  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===1,'Returning to the district must use exactly one new route worker');
+  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===1,'Reloading the district must use exactly one route worker');
   check(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
   return { uhd, movedMeters: Math.hypot(moved[0]-start[0], moved[2]-start[2]), destinations:30, nearbyConversation:true, immediateArrivalConversation:immediate, mission:result, resources, mobileNoOverflow:true, sceneSwitch:true, routeWorkerLifecycle:true, browserErrors:errors };
 }

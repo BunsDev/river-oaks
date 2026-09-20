@@ -3,6 +3,14 @@ import * as THREE from 'three';
 // One nearby probe, two reusable targets, one cube face per animation frame.
 // Static surroundings only: no frozen people or feedback from reflective panes.
 export function createStorefrontReflections({ renderer, scene, materials, excluded, filter = new THREE.PMREMGenerator(renderer) }) {
+  // Three retains transmission targets by camera ID. Probe cameras are recreated
+  // on district reload, so refractive props must stay out of their captures.
+  const captureExclusions = new Set(excluded);
+  scene.traverse(object => {
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    if (materials.some(material => material?.transmission > 0)) captureExclusions.add(object);
+  });
+  excluded = [...captureExclusions];
   const targets = [0, 1].map(() => new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: false }));
   const filtered = [null, null];
   const cube = new THREE.CubeCamera(0.2, 650, targets[0]);

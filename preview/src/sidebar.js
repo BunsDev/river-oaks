@@ -2,8 +2,8 @@ export function setupSidebar() {
   const panel = document.querySelector('#control-panel');
   const trigger = document.querySelector('#panel-toggle');
   const storageKey = 'river-oaks-panel-collapsed';
-  let collapsed = false;
-  try { collapsed = localStorage.getItem(storageKey) === 'true'; } catch { /* Session controls work without storage. */ }
+  let collapsed = true;
+  try { collapsed = localStorage.getItem(storageKey) !== 'false'; } catch { /* Session controls work without storage. */ }
 
   const apply = () => {
     // Move focus before hiding the panel so keyboard users never get stranded inside inert content.
@@ -20,7 +20,7 @@ export function setupSidebar() {
     collapsed = !collapsed;
     try { localStorage.setItem(storageKey, String(collapsed)); } catch { /* Keep the choice for this page session. */ }
     apply();
-    if (collapsed && event.detail > 0 && (document.body.classList.contains('flying') || document.body.classList.contains('walking'))) {
+    if (collapsed && event.detail > 0 && document.body.classList.contains('walking')) {
       document.querySelector('#canvas-host').focus({ preventScroll: true });
     }
   });

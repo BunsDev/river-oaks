@@ -48,13 +48,12 @@
 .community-mission { border-top: 1px solid var(--line); padding-top: 13px; margin: 16px 0 10px; font-size: 9px; line-height: 1.6; font-variant-numeric: tabular-nums; }
 .community-next { padding: 5px 0; font-size: 11px; color: var(--forest); text-align: left; }
 .community-dialogue-note { margin: 11px 0 0; font-size: 8px; line-height: 1.6; color: var(--muted); }
-.flying .community-dialogue { left: auto; right: 24px; bottom: 30px; }
 @media (max-width: 900px) {
   .community-dialogue { left: 28px; width: min(340px, calc(100% - 56px)); padding: 18px; }
 }
 @media (max-width: 650px) {
   .community-section { grid-column: 1 / -1; }
-  .community-dialogue, .flying .community-dialogue { left: 46px; right: 12px; width: auto; bottom: 14px; max-height: calc(100% - 92px); padding: 16px; }
+  .community-dialogue { left: 46px; right: 12px; width: auto; bottom: 14px; max-height: calc(100% - 92px); padding: 16px; }
   .community-dialogue h2 { font-size: 25px; }
   .community-speech { font-size: 12px; }
 }

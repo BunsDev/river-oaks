@@ -91,21 +91,22 @@ void ARiverOaksWorld::BeginPlay()
         BlockoutMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Generated/M_Blockout.M_Blockout"));
     bLoaded = LoadManifest();
     if (bLoaded) SpawnAgents();
-    else UE_LOG(LogTemp, Error, TEXT("River Oaks: invalid/missing Content/Data/world.json; no world generated."));
+    else UE_LOG(LogTemp, Error, TEXT("River Oaks: invalid/missing Content/Data/district.json; no world generated."));
 }
 
 bool ARiverOaksWorld::LoadManifest()
 {
-    const FString Path = FPaths::ProjectContentDir() / TEXT("Data/world.json");
+    const FString Path = FPaths::ProjectContentDir() / TEXT("Data/district.json");
     const int64 Bytes = IFileManager::Get().FileSize(*Path);
     if (Bytes <= 0 || Bytes > 64 * 1024 * 1024) return false;
     FString Text;
     TSharedPtr<FJsonObject> World;
     if (!FFileHelper::LoadFileToString(Text, *Path) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), World) || !World) return false;
     double Version = 0.;
-    FString Crs;
+    FString Crs, Scene;
     const FValues *Extent = nullptr, *Roads = nullptr, *Buildings = nullptr, *Trees = nullptr, *Origin = nullptr;
     if (!World->TryGetNumberField(TEXT("schema_version"), Version) || Version != 1. ||
+        !World->TryGetStringField(TEXT("scene"), Scene) || Scene != TEXT("district") ||
         !World->TryGetStringField(TEXT("crs"), Crs) || Crs != TEXT("EPSG:32615") ||
         !World->TryGetArrayField(TEXT("origin"), Origin) || !Numbers(*Origin, 2) ||
         !World->TryGetArrayField(TEXT("bounds_m"), Extent) || !Numbers(*Extent, 4) ||
@@ -114,7 +115,7 @@ bool ARiverOaksWorld::LoadManifest()
         !World->TryGetArrayField(TEXT("trees"), Trees)) return false;
     const double X0 = (*Extent)[0]->AsNumber(), Y0 = (*Extent)[1]->AsNumber();
     const double X1 = (*Extent)[2]->AsNumber(), Y1 = (*Extent)[3]->AsNumber();
-    if (X1 - X0 <= 2. || Y1 - Y0 <= 2. || X1 - X0 > 20000. || Y1 - Y0 > 20000.) return false;
+    if (X1 - X0 <= 2. || Y1 - Y0 <= 2. || X1 - X0 > 500. || Y1 - Y0 > 500.) return false;
     if (Roads->Num() > 50000 || Buildings->Num() > 50000 || Trees->Num() > 200000) return false;
     Bounds = FBox(FVector(X0 * 100., -Y1 * 100., -100000.), FVector(X1 * 100., -Y0 * 100., 100000.));
     // Validate all geometry before creating any components. Reject malformed arrays without partial scenes.
@@ -191,7 +192,7 @@ bool ARiverOaksWorld::LoadManifest()
         Styles[Style]->AddInstance(FTransform(Rotation, RiverOaksRules::BuildingCenter(Base, Size), Size), true);
         // Representative roof mass, intentionally not a reconstruction of any residence.
         const auto* Replacement = BuildingStyleMeshes.Find(Style);
-        if (!Replacement || !*Replacement)
+        if (Scene != TEXT("district") && (!Replacement || !*Replacement))
         {
             const auto Roof = [&](const FVector& OffsetM, const FVector& Scale, float Roll = 0.f)
             {
@@ -366,7 +367,7 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
         Agent.bBlocked = !Bounds.IsInsideXY(Next);
         FHitResult Hit;
         // Static mesh collision remains authoritative even when inference says continue.
-        if (!Agent.bBlocked && GetWorld()->SweepSingleByObjectType(Hit, Agent.Position, Next, FQuat::Identity,
+        if (!Agent.bBlocked && GetWorld()->SweepSingleByObjectType(Hit, Agent.Position + FVector(0, 0, 90), Next + FVector(0, 0, 90), FQuat::Identity,
             FCollisionObjectQueryParams(ECC_WorldStatic), FCollisionShape::MakeSphere(35.f))) Agent.bBlocked = true;
         for (int32 Other = 0; Other < Agents.Num() && !Agent.bBlocked; ++Other)
             if (Other != Index && FVector::DistSquared2D(Next, Agents[Other].Position) < FMath::Square(70.f) &&
@@ -529,4 +530,31 @@ void ARiverOaksWorld::EndPlay(const EEndPlayReason::Type Reason)
         PendingRequest.Reset();
     }
     Super::EndPlay(Reason);
+}
+
+FVector ARiverOaksWorld::ConstrainVisitor(const FVector& Position) const
+{
+    if (!Bounds.IsValid) return Position;
+    return FVector(FMath::Clamp(Position.X, Bounds.Min.X + 40., Bounds.Max.X - 40.),
+        FMath::Clamp(Position.Y, Bounds.Min.Y + 40., Bounds.Max.Y - 40.), 88.);
+}
+
+FString ARiverOaksWorld::NearbyVisitor(const FVector& Position) const
+{
+    const FRiverAgent* Nearest = nullptr;
+    double Distance = FMath::Square(450.);
+    for (const auto& Agent : Agents)
+    {
+        const double Current = FVector::DistSquared2D(Position, Agent.Position);
+        if (Current < Distance) { Nearest = &Agent; Distance = Current; }
+    }
+    return Nearest ? FString::Printf(TEXT("a %s (%s)"), *Nearest->Kind, *Nearest->Id) : FString();
+}
+
+FString ARiverOaksWorld::GreetNearby(const FVector& Position)
+{
+    const FString Person = NearbyVisitor(Position);
+    if (Person.IsEmpty()) return TEXT("Move closer to someone on the walkway.");
+    return bStorm ? TEXT("Visitor: Let's find cover until the rain passes.") :
+        TEXT("Visitor: Hello! I'm taking a break between the shops. Enjoy your walk.");
 }
