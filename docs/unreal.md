@@ -104,6 +104,8 @@ Weather cycles time of day, sun intensity/orientation, humidity, fog density and
 
 ## Asset replacement
 
+`ResidentAppearances` maps the six catalogue IDs to native skeletal meshes and locomotion animation classes. Each mesh must include its catalogue body, hair and garments, with Z up and X forward. The backend applies the recipe's stature from reference import bounds and aligns the mesh beneath the simulation anchor. It refuses unsupported recipes or incomplete animation setup before taking a handle; the existing marker fallback then handles the session. Released components are destroyed, and disabling backend discovery always selects markers. No native character assets or animation graphs ship yet, so the default scene keeps its markers. See [skeletal backend acceptance](skeletal-backend-acceptance.md) for coverage and remaining asset work.
+
 `BuildingStyleMeshes` maps manifest style strings to licensed meshes. `CanopyMesh` replaces the canopy placeholder. These slots use centered meshes with nominal 100 cm bounds, scaled to manifest dimensions; preprocess meshes to that convention before assignment. Replacement building meshes should include roofs. `BlockoutMaterial` has a `Color` vector parameter; it is a simple rough color material, not a PBR asset kit. Building collision requires simple collision on replacement meshes.
 
 For production, author a separate species/facade kit importer with real dimensions, pivots, materials, LOD/Nanite settings, wind and collision instead of treating these uniform slots as a finished art pipeline. This repository contains no licensed Megascans/Fab content. Generic house masses intentionally do not reproduce individual residences.

@@ -469,9 +469,36 @@ performance number is quoted here because none has been measured.
    before `CreateHuman`, falling back to `FRiverMarkerBackend` on rejection.
    Setting the constant to `false` pins the host to the marker backend and
    remains the supported way to run with no plugin at all.
-2. **Skeletal fallback.** One licensed or original UE skeletal mesh with a
-   locomotion anim blueprint driven by `Locomotion`; this is the permanent
-   crowd and offline path.
+2. **Skeletal fallback.** `FRiverSkeletalBackend` places one skeletal component
+   per accepted catalogue recipe. `ResidentAppearances` on `ARiverOaksWorld` maps
+   each catalogue ID to a fully dressed mesh and an animation class derived from
+   `URiverLocomotionAnimInstance`. The reflected map owns the asset references;
+   the backend keeps weak references. Priority 10 outranks markers, while a
+   registered backend with a higher priority still wins. Disabling discovery
+   pins the world directly to markers, even when skeletal assets are configured.
+
+   The backend rejects unknown or altered recipes, missing profile assets,
+   missing/nonfinite stature, invalid mesh bounds, incompatible animation classes
+   and failed animation initialization before allocating a handle. Any refusal
+   returns the whole session to the existing marker fallback. Components are
+   destroyed when a human is released; this version does not pool them.
+
+   The mesh must include the catalogue's body, hair and garments, face X forward
+   and use Z up. Reference import bounds provide the uniform scale for `Stature`
+   and the origin correction for the host anchor, which sits 90 cm above route
+   ground. That correction is composed with every authoritative pose. Bounds
+   alignment still requires visual feet/proportion review on imported people.
+   `State`, `Locomotion` and horizontal `GroundSpeed` drive the animation graph;
+   root motion never drives simulation movement. LOD tiers change animation tick
+   policy and retain a visible mesh; no separate impostor asset is supplied.
+
+   The repository still ships no native character meshes or animation blueprint.
+   `ResidentAppearances` is empty by default, so the district retains its markers.
+   Import and validate all six CC0 profiles from
+   `preview/public/assets/characters/`, then assign their matching animation
+   graphs covering all five states. Engine-fixture tests verify the backend
+   contract, not production animation, skeleton compatibility or visual fidelity.
+   See [skeletal backend acceptance](skeletal-backend-acceptance.md).
 3. **Astra probe.** Section 10, on a licensed host, with EULA in hand.
 4. **Single-human vertical slice.** Bridge decision → `MoveAgents` → pose →
    Astra render, switchable to fallback at runtime.

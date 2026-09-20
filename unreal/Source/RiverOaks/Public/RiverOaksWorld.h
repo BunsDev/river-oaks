@@ -4,11 +4,14 @@
 #include "Interfaces/IHttpRequest.h"
 #include "RiverOaksHumans.h"
 #include "RiverMarkerBackend.h"
+#include "RiverSkeletalBackend.h"
 #include "RiverOaksWorld.generated.h"
 
 class UInstancedStaticMeshComponent;
 class UStaticMesh;
 class UMaterialInterface;
+class USkeletalMesh;
+class UAnimInstance;
 class ADirectionalLight;
 class AExponentialHeightFog;
 
@@ -56,6 +59,10 @@ public:
     TObjectPtr<UStaticMesh> CanopyMesh;
     UPROPERTY(EditAnywhere, Category="River Oaks|Assets")
     TObjectPtr<UMaterialInterface> BlockoutMaterial;
+    // Empty means markers. Each key is a catalogue ID and each mesh includes its fixed
+    // body, hair and garments; every accepted recipe must have a configured entry.
+    UPROPERTY(EditAnywhere, Category="River Oaks|Assets")
+    TMap<FName, FRiverSkeletalAppearance> ResidentAppearances;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="River Oaks|Weather", meta=(ClampMin="0", ClampMax="24"))
     float Hour = 14.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="River Oaks|Weather", meta=(ClampMin="0", ClampMax="1"))
@@ -82,6 +89,7 @@ private:
     UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> People;
     TUniquePtr<FRiverMarkerBackend> MarkerBackend;   // built-in fallback, owned here
+    TUniquePtr<FRiverSkeletalBackend> SkeletalBackend; // built-in skeletal path, owned here
     IRiverHumanBackend* HumanBackend = nullptr;      // selected via IRiverHumanBackend::Select
     UPROPERTY() TArray<TObjectPtr<UInstancedStaticMeshComponent>> Geometry;
     TArray<FRiverRoute> Routes;

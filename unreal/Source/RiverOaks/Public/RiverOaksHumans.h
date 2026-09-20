@@ -22,14 +22,14 @@ struct FRiverHumanPose
 {
     uint64 Sequence = 0;            // strictly increasing per human; stale poses are dropped
     double SimTimeSeconds = 0.;     // FPlatformTime-based, never a frame index
-    FTransform Root;                // UE space (cm); authoritative from ARiverOaksWorld::MoveAgents
+    FTransform Root;                // UE cm, anchor 90 cm above route ground; authoritative from MoveAgents
     TArray<FTransform> Joints;      // indexed by ERiverJoint, local space; empty for marker/crowd tiers
     TMap<FName, float> Morphs;      // semantic channel -> 0..1
     FName Locomotion;               // idle | walk | walk_slow | jog | shelter
 };
 
 // Never hand-built by callers in production: resolved from the River Oaks catalogue and
-// validated before any backend sees it (catalogue/validator are the next Foundation step).
+// validated before any backend sees it.
 struct FRiverAppearanceRecipe
 {
     FName CatalogueId;

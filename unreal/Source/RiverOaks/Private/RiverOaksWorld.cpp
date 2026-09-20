@@ -1,5 +1,6 @@
 #include "RiverOaksWorld.h"
 #include "RiverAppearanceCatalogue.h"
+#include "RiverSkeletalBackend.h"
 #include "RiverOaksRules.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -247,17 +248,22 @@ FVector ARiverOaksWorld::RouteTarget(const FRiverAgent& Agent) const
     const int32 Previous = FMath::Clamp(Agent.Target - Agent.Direction, 0, Route.Points.Num() - 1);
     const FVector Tangent = (Route.Points[Agent.Target] - Route.Points[Previous]).GetSafeNormal2D();
     // A road-edge offset, not a surveyed sidewalk or navigation mesh.
-    return Route.Points[Agent.Target] + FVector(-Tangent.Y, Tangent.X, 0.) * (Route.HalfWidth + 150.) + FVector(0, 0, 90.);
+    return Route.Points[Agent.Target] + FVector(-Tangent.Y, Tangent.X, 0.) * (Route.HalfWidth + 150.) + FVector(0, 0, RiverOaksRules::HumanRootHeightCm);
 }
 
 void ARiverOaksWorld::SelectHumanBackend()
 {
     MarkerBackend = MakeUnique<FRiverMarkerBackend>(People);
-    // SpawnAgents validates catalogue recipes before handing them to a discovered backend.
-    // The discovery gate retains an explicit marker-only path for installations without plugins.
+    SkeletalBackend = MakeUnique<FRiverSkeletalBackend>(this, ResidentAppearances);
+    // The best built-in: the skeletal path when catalogue assets are configured, the sphere markers when
+    // not. Recipes are resolved and validated before CreateHuman either way, so discovery is
+    // safe to consult; a registered plugin backend with a higher priority still outranks both.
+    IRiverHumanBackend* BuiltIn = SkeletalBackend->IsUsable()
+        ? static_cast<IRiverHumanBackend*>(SkeletalBackend.Get())
+        : static_cast<IRiverHumanBackend*>(MarkerBackend.Get());
     if constexpr (bRiverHumanBackendDiscoveryEnabled)
     {
-        HumanBackend = IRiverHumanBackend::Select(MarkerBackend.Get());
+        HumanBackend = IRiverHumanBackend::Select(BuiltIn);
     }
     else
     {
@@ -288,6 +294,8 @@ void ARiverOaksWorld::TeardownHumans()
             if (Agent.HumanHandle != INDEX_NONE) HumanBackend->DestroyHuman(Agent.HumanHandle);
     for (auto& Agent : Agents) Agent.HumanHandle = INDEX_NONE;
     HumanBackend = nullptr;
+    if (SkeletalBackend) SkeletalBackend->DestroyComponents();
+    SkeletalBackend.Reset();
     MarkerBackend.Reset();
 }
 
