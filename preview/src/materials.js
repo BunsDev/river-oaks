@@ -24,7 +24,7 @@ function texture(name, channel) {
 }
 
 // Geometry UVs are measured in meters. Instanced facade UVs additionally account for each part's scale.
-export function physicalSurface(name, { tileSize = 4, instanced = false, ...options } = {}) {
+export function physicalSurface(name, { tileSize = 4, instanced = false, textureContrast = 1, ...options } = {}) {
   const arm = texture(name, 'arm');
   const material = new THREE.MeshStandardMaterial({
     map: texture(name, 'color'), normalMap: texture(name, 'normal'),
@@ -34,6 +34,12 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, ...opti
   });
   material.userData.sharedTextures = true;
   material.onBeforeCompile = (shader) => {
+    // Retain the photographed surface, but quiet its high-frequency albedo at eye level.
+    shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+      #include <map_fragment>
+      #ifdef USE_MAP
+        diffuseColor.rgb = mix(diffuse * 0.5, diffuseColor.rgb, ${textureContrast.toFixed(4)});
+      #endif`);
     const multiplier = instanced ? `
       vec3 roScale = vec3(1.0);
       #ifdef USE_INSTANCING
@@ -60,7 +66,7 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, ...opti
         vAoMapUv = (aoMapTransform * vec3(roUv, 1.0)).xy;
       #endif`);
   };
-  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}`;
+  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${textureContrast}`;
   return material;
 }
 

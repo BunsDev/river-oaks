@@ -198,12 +198,20 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   provenance.append(node('summary', '', 'How this encounter works'));
   const note = node('p', 'community-dialogue-note', 'These residents and support requests are fictional. Dialogue is authored. Jev can choose an immediate greeting or weather reaction; support outcomes follow local simulation rules. One real second equals one simulation minute.');
   provenance.append(note);
-  body.append(conversation, supportCard, mission, provenance);
+  const activities = node('details', 'community-activities');
+  activities.id = 'community-activities';
+  activities.append(node('summary', '', 'Community activities'), supportCard, mission);
+  body.append(conversation, activities, provenance);
   const footer = node('footer', 'community-dialogue-footer');
   const next = button('Meet another neighbor →', 'community-next', 'community-next');
   footer.append(next);
   dialogue.append(top, body, footer);
   (document.querySelector('#viewport') ?? host).append(dialogue);
+
+  const encounterNotice = node('p', 'encounter-notice');
+  encounterNotice.id = 'community-encounter-notice';
+  encounterNotice.setAttribute('role', 'status');
+  (document.querySelector('#viewport') ?? host).append(encounterNotice);
 
   const invalidate = () => {
     speech.cancel();
@@ -367,6 +375,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const selectLocal = (id) => {
     const local = state?.locals.find((item) => item.id === id);
     if (!local) return false;
+    if (onFocus(local) === false) {
+      text(encounterNotice, `There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
+      return false;
+    }
+    text(encounterNotice, '');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
     state.selectedId = id;
@@ -376,7 +389,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;
-    onFocus(local);
     paint();
     close.focus({ preventScroll: true });
     speech.speak(local, message);
@@ -468,7 +480,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   meet.addEventListener('click', () => selectLocal(chooser.value));
   next.addEventListener('click', () => {
     const ordered = orderedLocals();
-    const nextLocal = ordered.find((local) => local.id !== state.selectedId && local.priority && local.status === 'needs_help') ?? ordered[(ordered.findIndex((local) => local.id === state.selectedId) + 1) % ordered.length];
+    const nextLocal = nearbyPeople(state.locals.filter(local => local.id !== state.selectedId), getVisitor(), 40, 1)[0]?.local ?? ordered[(ordered.findIndex((local) => local.id === state.selectedId) + 1) % ordered.length];
     if (nextLocal) selectLocal(nextLocal.id);
   });
   const closeDialogue = () => {

@@ -58,21 +58,25 @@ export function buildLocals(world, locals) {
     }
     group.clear();
   };
+  let previousTime = null;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   group.userData.update = (state, camera, now, speakingId) => {
+    const dt = previousTime === null ? 0 : Math.min(0.08, Math.max(0, (now - previousTime) / 1000));
+    previousTime = now;
     let visibleKits=0;
     models.forEach((person,index) => {
       const local = state.locals[index];
       if (!local) return;
       person.position.set(local.position[0],terrainHeight(world.terrain,local.position[0],local.position[1])+(world.walkSurfaceOffset ?? 0.15),-local.position[1]);
-      const near = person.position.distanceTo(camera.position) < 7;
       const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
       person.visible = person.position.distanceTo(camera.position)<120 || state.selectedId===local.id;
-      if(local.life?.speed>0.01) {
-        const turn=Math.atan2(Math.sin(local.life.heading-person.rotation.y),Math.cos(local.life.heading-person.rotation.y));
-        person.rotation.y+=turn*0.15;
-      } else if(partner && state.selectedId!==local.id) person.rotation.y=Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z);
-      else if (near || state.selectedId === local.id) person.rotation.y = Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z);
+      let heading = person.rotation.y;
+      if (state.selectedId === local.id) heading = Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z);
+      else if (local.life?.speed > 0.01) heading = local.life.heading;
+      else if (partner) heading = Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z);
+      const turn = Math.atan2(Math.sin(heading-person.rotation.y), Math.cos(heading-person.rotation.y));
+      person.rotation.y += turn * (reducedMotion ? 1 : 1-Math.exp(-8*dt));
       const action=state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action;
       if(person.userData.avatar) {
         if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life);if(person.userData.avatar.carrying) visibleKits++;}

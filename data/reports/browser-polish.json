@@ -1,0 +1,497 @@
+{
+  "street": {
+    "passed": 18,
+    "checks": [
+      "Starts on foot",
+      "No alternate view or scene controls",
+      "Camera remains at human eye height",
+      "Walking advances along the street",
+      "Scrolling cannot zoom into an aerial view",
+      "People precede shop navigation",
+      "Nearby card retains keyboard focus across refreshes",
+      "Keyboard opens nearby conversation",
+      "Conversation answers a topic",
+      "Closing returns focus to walking",
+      "E reopens the nearby encounter",
+      "Primary Meet someone nearby action opens conversation",
+      "Escape never enters an aerial mode",
+      "Shop arrival stays on foot",
+      "Reload stays on foot",
+      "Mobile has no horizontal overflow",
+      "Mobile primary action opens conversation",
+      "No page errors: "
+    ],
+    "errors": []
+  },
+  "polish": {
+    "checks": [
+      "Desktop movement pad starts collapsed",
+      "Default console leaves the street visible",
+      "Movement controls remain discoverable",
+      "Conversation topics lead the encounter",
+      "Support activities start collapsed",
+      "Keyboard opens optional support activities",
+      "Escape restores walking focus",
+      "Portrait conversation preserves the upper street view",
+      "No mobile horizontal overflow",
+      "No browser errors: ",
+      "Touch devices start with movement controls available",
+      "All six touch movement targets fit the narrow viewport at 44px or larger",
+      "Blocked placement cannot open or replace a conversation and announces the reason"
+    ],
+    "browserErrors": []
+  },
+  "dialogue": {
+    "support": "ask, start, supply, cooldown, resolve, pause, resume, dispatch, reset",
+    "reactions": "selected, busy, fallback, stale response",
+    "voice": "sync, failure, mute during generation",
+    "keyboard": "next-action focus, Escape, scroll, walking focus",
+    "layouts": [
+      {
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "dialog": {
+          "top": 24,
+          "bottom": 976,
+          "left": 360,
+          "right": 800,
+          "width": 440,
+          "height": 952
+        },
+        "close": {
+          "top": 45,
+          "bottom": 89,
+          "left": 735,
+          "right": 779,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 921,
+          "bottom": 965,
+          "left": 377,
+          "right": 783,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 138,
+          "bottom": 910,
+          "left": 361,
+          "right": 799,
+          "width": 438,
+          "height": 772
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "dark",
+        "width": 1280,
+        "height": 720,
+        "dialog": {
+          "top": 24,
+          "bottom": 696,
+          "left": 360,
+          "right": 800,
+          "width": 440,
+          "height": 672
+        },
+        "close": {
+          "top": 45,
+          "bottom": 89,
+          "left": 735,
+          "right": 779,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 641,
+          "bottom": 685,
+          "left": 377,
+          "right": 783,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 138,
+          "bottom": 630,
+          "left": 361,
+          "right": 799,
+          "width": 438,
+          "height": 492
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "dialog": {
+          "top": 342.484375,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 489.515625
+        },
+        "close": {
+          "top": 353.484375,
+          "bottom": 397.484375,
+          "left": 319,
+          "right": 363,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 779,
+          "bottom": 823,
+          "left": 25,
+          "right": 365,
+          "width": 340,
+          "height": 44
+        },
+        "body": {
+          "top": 434.078125,
+          "bottom": 770,
+          "left": 13,
+          "right": 377,
+          "width": 364,
+          "height": 335.921875
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "dark",
+        "width": 320,
+        "height": 568,
+        "dialog": {
+          "top": 226.5625,
+          "bottom": 556,
+          "left": 12,
+          "right": 308,
+          "width": 296,
+          "height": 329.4375
+        },
+        "close": {
+          "top": 237.5625,
+          "bottom": 281.5625,
+          "left": 249,
+          "right": 293,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 503,
+          "bottom": 547,
+          "left": 25,
+          "right": 295,
+          "width": 270,
+          "height": 44
+        },
+        "body": {
+          "top": 336.15625,
+          "bottom": 494,
+          "left": 13,
+          "right": 307,
+          "width": 294,
+          "height": 157.84375
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "dark",
+        "width": 844,
+        "height": 390,
+        "dialog": {
+          "top": 12,
+          "bottom": 378,
+          "left": 392,
+          "right": 832,
+          "width": 440,
+          "height": 366
+        },
+        "close": {
+          "top": 23,
+          "bottom": 67,
+          "left": 767,
+          "right": 811,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 329,
+          "bottom": 373,
+          "left": 409,
+          "right": 815,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 106,
+          "bottom": 324,
+          "left": 393,
+          "right": 831,
+          "width": 438,
+          "height": 218
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "dialog": {
+          "top": 24,
+          "bottom": 976,
+          "left": 360,
+          "right": 800,
+          "width": 440,
+          "height": 952
+        },
+        "close": {
+          "top": 45,
+          "bottom": 89,
+          "left": 735,
+          "right": 779,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 921,
+          "bottom": 965,
+          "left": 377,
+          "right": 783,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 138,
+          "bottom": 910,
+          "left": 361,
+          "right": 799,
+          "width": 438,
+          "height": 772
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "light",
+        "width": 1280,
+        "height": 720,
+        "dialog": {
+          "top": 24,
+          "bottom": 696,
+          "left": 360,
+          "right": 800,
+          "width": 440,
+          "height": 672
+        },
+        "close": {
+          "top": 45,
+          "bottom": 89,
+          "left": 735,
+          "right": 779,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 641,
+          "bottom": 685,
+          "left": 377,
+          "right": 783,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 138,
+          "bottom": 630,
+          "left": 361,
+          "right": 799,
+          "width": 438,
+          "height": 492
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "dialog": {
+          "top": 342.484375,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 489.515625
+        },
+        "close": {
+          "top": 353.484375,
+          "bottom": 397.484375,
+          "left": 319,
+          "right": 363,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 779,
+          "bottom": 823,
+          "left": 25,
+          "right": 365,
+          "width": 340,
+          "height": 44
+        },
+        "body": {
+          "top": 434.078125,
+          "bottom": 770,
+          "left": 13,
+          "right": 377,
+          "width": 364,
+          "height": 335.921875
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "dialog": {
+          "top": 226.5625,
+          "bottom": 556,
+          "left": 12,
+          "right": 308,
+          "width": 296,
+          "height": 329.4375
+        },
+        "close": {
+          "top": 237.5625,
+          "bottom": 281.5625,
+          "left": 249,
+          "right": 293,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 503,
+          "bottom": 547,
+          "left": 25,
+          "right": 295,
+          "width": 270,
+          "height": 44
+        },
+        "body": {
+          "top": 336.15625,
+          "bottom": 494,
+          "left": 13,
+          "right": 307,
+          "width": 294,
+          "height": 157.84375
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      },
+      {
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "dialog": {
+          "top": 12,
+          "bottom": 378,
+          "left": 392,
+          "right": 832,
+          "width": 440,
+          "height": 366
+        },
+        "close": {
+          "top": 23,
+          "bottom": 67,
+          "left": 767,
+          "right": 811,
+          "width": 44,
+          "height": 44
+        },
+        "next": {
+          "top": 329,
+          "bottom": 373,
+          "left": 409,
+          "right": 815,
+          "width": 406,
+          "height": 44
+        },
+        "body": {
+          "top": 106,
+          "bottom": 324,
+          "left": 393,
+          "right": 831,
+          "width": 438,
+          "height": 218
+        },
+        "scrollable": true,
+        "overflow": false,
+        "minimumTarget": 44
+      }
+    ],
+    "screenshots": [
+      "output/playwright/dialogue-dark-1440x1000.png",
+      "output/playwright/dialogue-dark-1280x720.png",
+      "output/playwright/dialogue-dark-390x844.png",
+      "output/playwright/dialogue-dark-320x568.png",
+      "output/playwright/dialogue-dark-844x390.png",
+      "output/playwright/dialogue-light-1440x1000.png",
+      "output/playwright/dialogue-light-1280x720.png",
+      "output/playwright/dialogue-light-390x844.png",
+      "output/playwright/dialogue-light-320x568.png",
+      "output/playwright/dialogue-light-844x390.png"
+    ],
+    "requests": 7,
+    "browserErrors": []
+  },
+  "verification": {
+    "date": "2026-09-20",
+    "scope": "Browser-first district polish; native WIP excluded",
+    "javascript_tests": 97,
+    "python_tests": 74,
+    "build": "passed",
+    "ruff": "passed",
+    "secrets": "passed",
+    "review": "Independent review finding fixed and re-reviewed",
+    "limits": [
+      "Browser automation is Chromium on this host, not physical mobile-device or VoiceOver acceptance.",
+      "Existing artist-interpreted geometry and authored resident dialogue remain.",
+      "No FPS target or photorealism claim; no native compatibility claim from this pass."
+    ]
+  },
+  "volunteer_visits": {
+    "helperId": "local-22",
+    "cast": 24,
+    "walkedMeters": 29.157498999957483,
+    "arrivalSeparationMeters": 1.449396225373298,
+    "physicalArrival": true,
+    "pause": true,
+    "stormHold": true,
+    "ambientPauseKeepsVisits": true,
+    "visibleSupplyBag": true,
+    "taskAwareDialogue": true,
+    "conversationHoldsVisit": true,
+    "needsResolved": true,
+    "resetReleasesHelper": true,
+    "browserErrors": []
+  }
+}

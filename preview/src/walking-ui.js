@@ -1,5 +1,6 @@
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
+import { clearEncounterLine, encounterPosition } from './encounter.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion }) {
@@ -7,8 +8,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
-  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS DISTRICT</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="true" aria-controls="walking-movement">Hide movement controls</button><div id="walking-movement"><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left">↶</button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right">↷</button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · Escape closes conversations</p></div></div>`;
+  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS DISTRICT</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left">↶</button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right">↷</button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · Escape closes conversations</p></div></div>`;
   $('#viewport').append(hud);
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  $('#walking-movement').hidden = !coarsePointer;
+  $('#walking-controls-toggle').setAttribute('aria-expanded', String(coarsePointer));
   const keys = new Set();
   let active = false, environment, stores = [], state, nearest = null, drag = null, lastPaint = 0;
   const clear = () => { keys.clear(); drag = null; document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
@@ -22,7 +26,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     let result = null, distance = 4.5;
     for (const local of getLocals() ?? []) {
       const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
-      if (d < distance) { result = local; distance = d; }
+      if (d < distance && Math.abs(local.position[2] - state.position[1]) < 4 && clearEncounterLine(environment, [state.position[0], -state.position[2]], local.position)) { result = local; distance = d; }
     }
     return result;
   };
@@ -70,6 +74,19 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   return {
     get active() { return active; },
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
+    focusPerson(local) {
+      if (!state) return false;
+      const position = encounterPosition(environment, local, this.getPosition(), getLocals() ?? []);
+      if (!position) return false;
+      state = createWalkingState(environment, position, state.yaw);
+      clear();
+      this.lookAt(local.position);
+      // Leave room for the conversation at the left on wide screens.
+      if (host.clientWidth > 900) state.yaw += 0.24;
+      state.pitch = host.clientWidth <= 650 ? -0.28 : -0.16;
+      place();
+      return true;
+    },
     lookAt(position) {
       if (!state) return;
       state.yaw = Math.atan2(state.position[0]-position[0], state.position[2]+position[1]);
@@ -105,10 +122,12 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const nearby = nearbyPeople(getLocals() ?? [], this.getPosition());
       $('#walking-meet-nearby').disabled = !nearby.length;
       $('#walking-talk').disabled = !nearest;
+      $('#walking-talk').hidden = !nearest;
+      $('#walking-meet-nearby').classList.toggle('walking-secondary', Boolean(nearest));
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       $('.walking-title strong').textContent = storefront?.store.name ?? 'On foot';
-      $('#walking-place').textContent = nearest?.anchorName ?? `${state.distance.toFixed(0)} m walked · public district paths`;
+      $('#walking-place').textContent = nearest ? `${nearest.anchorName} · nearby` : 'WASD to walk · Drag to look · E to talk';
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.position = JSON.stringify(state.position);

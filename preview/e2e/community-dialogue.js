@@ -1,5 +1,6 @@
 // Run through the browser harness with a live Vite preview. All model/voice calls are mocked.
 async (page) => {
+  await page.unrouteAll({behavior:'ignoreErrors'});
   const check = (value, message) => { if (!value) throw new Error(message); };
   const errors = [], packets = [], screenshots = [];
   let reactionMode = 'ok', voiceMode = 'fail';
@@ -9,22 +10,25 @@ async (page) => {
   await page.route('**/v1/decisions', async route => {
     const packet = route.request().postDataJSON(); packets.push(packet);
     const mode = reactionMode;
-    if (mode === 'slow') await new Promise(resolve => setTimeout(resolve, 900));
+    if (mode === 'slow') await page.waitForTimeout(900);
     if (mode === 'fail') return route.fulfill({ status: 503, json: { error: 'Fixture unavailable' } });
     await route.fulfill({ json: { schema_version: 1, tick: packet.tick, latency_ms: 0,
       decisions: packet.agents.map(agent => ({ id: agent.id, action: 'greet', source: 'local_rules' })) } });
   });
   await page.route('**/v1/voice', async route => {
-    if (voiceMode === 'slow') await new Promise(resolve => setTimeout(resolve, 900));
+    if (voiceMode === 'slow') await page.waitForTimeout(900);
     await route.fulfill({ status: 503, json: { error: 'Fixture voice unavailable' } });
   });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 60000 });
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+  await page.locator('[data-section=community-section]').click();
+  await page.locator('#community-more > summary').click();
   const meet = async id => {
     await page.locator('#community-local').selectOption(id);
     await page.locator('#community-meet').click();
+    if (!await page.locator('#community-activities').evaluate(el => el.open)) await page.locator('#community-activities > summary').click();
   };
   const settled = () => page.waitForFunction(() => document.querySelector('.community-topics').getAttribute('aria-busy') === 'false');
   const resources = () => page.locator('.community-mission-resources dd').allTextContents();

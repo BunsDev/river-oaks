@@ -67,10 +67,8 @@ function initializeRenderer() {
     getVisitor: () => walking?.active ? walking.getPosition() : null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
-    const position = walking.active ? walking.getPosition() : null;
-    if (!position || Math.hypot(position[0]-local.position[0], position[1]-local.position[1]) > 4) {
-      enterWalk([local.position[0], local.position[1]-2.5, local.position[2]], local.position);
-    } else walking.lookAt(local.position);
+      if (!walking.active) enterWalk();
+      return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals });
@@ -129,10 +127,10 @@ function buildGround(data) {
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    surface = new THREE.Mesh(geometry, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4) }));
+    surface = new THREE.Mesh(geometry, physicalSurface('pavement', { tileSize: 2, textureContrast: 0.65, normalScale: new THREE.Vector2(0.18, 0.18) }));
     surface.position.y = 0.15;
   } else {
-    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4) }));
+    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), physicalSurface('pavement', { tileSize: 2, textureContrast: 0.65, normalScale: new THREE.Vector2(0.18, 0.18) }));
     surface.rotation.x = -Math.PI / 2;
     surface.position.set(center[0], 0, -center[1]);
   }
@@ -171,7 +169,7 @@ function buildRoads(data) {
   const uvs = [];
   for (let index = 0; index < vertices.length; index += 3) uvs.push(vertices[index], vertices[index + 2]);
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  const mesh = new THREE.Mesh(geometry, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#bfc3c8', roughness: 0.82, side: THREE.DoubleSide }));
+  const mesh = new THREE.Mesh(geometry, physicalSurface('asphalt', { tileSize: 7, textureContrast: 0.6, normalScale: new THREE.Vector2(0.09, 0.09), color: '#8e9299', roughness: 0.82, side: THREE.DoubleSide }));
   mesh.receiveShadow = true;
   return mesh;
 }
@@ -245,8 +243,8 @@ function updateAtmosphere() {
   const angle = (hour - 6) / 14 * Math.PI;
   sunOffset.set(Math.cos(angle) * 4500, Math.max(300, Math.sin(angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
-  sun.intensity = weather === 'overcast' ? 0.8 : 3.2;
-  sun.color.set(hour > 17 || hour < 9 ? '#ffe2f0' : '#fff4f9');
+  sun.intensity = weather === 'overcast' ? 0.8 : 2.6;
+  sun.color.set(hour > 17 || hour < 9 ? '#ffe7cf' : '#fff5e8');
   ambient.intensity = weather === 'overcast' ? 0.55 : 0.35;
   const horizon = new THREE.Color(weather === 'overcast' ? '#b9c3c9' : weather === 'haze' ? '#d2cfc1' : hour > 17 ? '#ddd1e2' : '#dee0ec');
   scene.background = environmentAssets && weather !== 'overcast' ? environmentAssets.hdr : horizon;

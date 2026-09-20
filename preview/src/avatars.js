@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { residentStride } from './gait.js';
+import { relaxResidentArms } from './avatar-stance.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
 const cache = new Map();
@@ -65,6 +66,7 @@ export async function loadResidentAvatar(index, id) {
     item.material=Array.isArray(item.material) ? item.material.map(adapt) : adapt(item.material);
   });
   root.add(model);
+  relaxResidentArms(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const bones=['head','spine_03','upperarm_l','upperarm_r','lowerarm_r','thigh_l','thigh_r','calf_l','calf_r','foot_l','foot_r'].map(name=>model.getObjectByName(name)).filter(Boolean);
   const rest=new Map(bones.map(bone=>[bone,bone.quaternion.clone()]));
