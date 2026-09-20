@@ -1,0 +1,10 @@
+{
+  "transport": "real loopback HTTP",
+  "mode": "local_rules",
+  "status_code": 200,
+  "decisions": 500,
+  "latency_ms": 0.19087499822489917,
+  "collision_override": "pass",
+  "storm_reaction": "pass",
+  "jev_live": "not_run"
+}

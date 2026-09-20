@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e9ece5" />
+    <title>River Oaks District — Walk the district</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23455c4f'/%3E%3Cpath d='M9 25V8h8a5 5 0 010 10H9m7 0 8 7' stroke='%23e9ece5' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="field-panel" id="control-panel" aria-label="Preview controls">
+        <header class="identity">
+          <div class="eyebrow"><span class="field-mark" aria-hidden="true">⌖</span> Houston, Texas</div>
+          <h1>River Oaks<span class="district-word">District</span></h1>
+          <p class="preview-label">Walk a little. Meet someone.</p>
+          <div class="appearance-control">
+            <span id="appearance-label">Appearance</span>
+            <div class="theme-switch" role="group" aria-labelledby="appearance-label">
+              <button type="button" data-theme-preference="system" aria-pressed="true" class="active">System</button>
+              <button type="button" data-theme-preference="light" aria-pressed="false">Light</button>
+              <button type="button" data-theme-preference="dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+        </header>
+        <nav class="experience-nav" aria-label="District experiences">
+          <button data-section="community-section">People nearby</button><button data-section="explore-section">Shops & cafés</button><button data-section="settings-section">Settings</button>
+        </nav>
+        <div class="panel-scroll">
+          <section class="panel-section scene-section" id="explore-section" tabindex="-1" aria-label="Explore">
+            <div class="section-label">Shops & cafés</div>
+            <p class="district-address">4444 Westheimer · Houston</p>
+            <div id="district-directory" class="district-directory" hidden>
+              <label for="store-search">Find your next stop</label>
+              <input id="store-search" type="search" placeholder="Search boutiques & dining" autocomplete="off" />
+              <label class="sr-only" for="store-category">Store category</label>
+              <select id="store-category"><option value="">All categories</option><option>Shopping & culture</option><option>Dining</option><option>Jewelry & accessories</option><option>Beauty & wellness</option></select>
+              <div class="directory-results"><span id="store-results" role="status"></span><button id="store-clear" hidden>Clear filters</button></div>
+              <label for="destination">Explore a storefront</label><select id="destination"></select>
+              <div class="store-detail"><strong id="store-name"></strong><span id="store-category-label"></span></div>
+              <button id="visit-destination">Arrive at storefront →</button>
+              <div class="store-tour"><button id="store-previous" aria-label="Visit previous storefront">← Previous</button><span id="store-step"></span><button id="store-next" aria-label="Visit next storefront">Next →</button></div>
+              <p id="storefront-evidence" class="district-mode-label">Real boutiques, imagined facades.</p>
+            </div>
+            <p class="district-summary"><strong id="stores-count">30</strong> boutiques & dining destinations · one walkable district</p>
+          </section>
+          <section class="panel-section" id="settings-section" tabindex="-1" aria-label="Scene settings">
+            <div class="section-label">Layers</div>
+            <label class="layer-row"><span><i class="swatch roads-swatch"></i>Roads</span><input type="checkbox" data-layer="roads" checked /></label>
+            <label class="layer-row"><span><i class="swatch house-swatch"></i><span id="building-layer-label">Boutiques & architecture</span></span><input type="checkbox" data-layer="buildings" checked /></label>
+            <label class="layer-row"><span><i class="swatch tree-swatch"></i>Gardens & trees</span><input type="checkbox" data-layer="trees" checked /></label>
+          </section>
+          <section class="panel-section">
+            <div class="section-label">Light & atmosphere <span>Preview only</span></div>
+            <div class="atmosphere-presets" role="group" aria-label="Lighting presets"><button data-atmosphere="daylight" aria-pressed="false">Daylight</button><button data-atmosphere="pink" aria-pressed="true">Pink hour</button><button data-atmosphere="mist" aria-pressed="false">Mist</button></div>
+            <label class="range-label" for="sun-hour"><span>Time of day</span><output id="sun-time">17:30</output></label>
+            <input id="sun-hour" type="range" min="7" max="19" value="17.5" step="0.25" />
+            <label class="select-row" for="weather"><span>Weather</span><select id="weather"><option value="clear">Clear</option><option value="overcast">Overcast</option><option value="haze">Haze</option></select></label>
+          </section>
+          <section class="panel-section evidence-section">
+            <div class="section-label">About this district</div>
+            <p class="evidence-line"><span id="verification-dot" class="status-dot"></span><strong id="verification-state">Loading report</strong></p>
+            <p id="verification-detail" class="quiet-note">Reading the current verification report.</p>
+            <div class="data-note"><span>Ground</span><strong id="terrain-state">Checking data</strong></div>
+            <div class="data-note"><span>Canopy</span><strong id="canopy-state">Checking data</strong></div>
+            <p id="canopy-source" class="quiet-note" hidden></p>
+            <details><summary>Map sources & interpretation</summary><ul id="limitations"></ul></details>
+          </section>
+        </div>
+        <footer class="panel-footer"><span class="status-dot live-dot"></span><span id="connection">Connecting to local data</span><button id="reload" aria-label="Reload world data" title="Reload world data">↻</button></footer>
+      </aside>
+      <main class="viewport" id="viewport" aria-label="Explore River Oaks District">
+        <button id="panel-toggle" class="panel-trigger" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="Hide controls" title="Hide controls"><span class="trigger-arrow" aria-hidden="true">‹</span><span class="trigger-label" aria-hidden="true">Controls</span></button>
+        <div class="viewport-heading"><span class="viewport-kicker">An enchanted district</span><span id="view-name">River Oaks District</span></div>
+        <div class="view-meta"><span>Houston, Texas</span><span>Real + imagined</span></div>
+        <div id="canvas-host" tabindex="0" aria-label="Walk River Oaks District. WASD moves, drag looks around, E talks to a nearby person."></div>
+        <div id="loading" class="loading-state" role="status"><span class="loading-mark">⌖</span><h2>Building the view</h2><p>Opening the boutiques and gardens…</p></div>
+        <div class="compass" aria-label="North indicator"><span>N</span><svg id="compass-arrow" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 27 31 20 26 13 31Z" fill="currentColor"/><path d="M20 4V26L13 31Z" fill="#9aa99b"/></svg></div>
+        <div class="viewport-footer"><span>WASD to walk <b>·</b> Drag to look <b>·</b> E to talk</span><span id="view-scale">Real places · imagined details</span></div>
+        <div id="district-source" class="district-source" hidden><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a><span> · Artistic interpretation</span></div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

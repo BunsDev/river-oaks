@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-09-17T14:29:20.522Z",
+  "residents": 24,
+  "traveling": 20,
+  "routeWorker": true,
+  "batchedRequests": 25,
+  "conversationHold": true,
+  "nearbyConversation": true,
+  "stormSheltered": 3,
+  "pauseStopsRequests": true,
+  "reducedMotion": true,
+  "uhd": [
+    3840,
+    2160
+  ],
+  "timing": {
+    "medianMs": 20.80000000000291,
+    "p95Ms": 25,
+    "maxMs": 25
+  },
+  "timingScope": "Local Chrome animation frames; not a target-GPU or UE5 benchmark",
+  "browserErrors": []
+}

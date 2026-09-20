@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "origin": [-95.425, 29.755],
+  "bbox": [-95.455, 29.739, -95.410, 29.770],
+  "boundary_status": "provisional bounding box; includes adjacent areas, not an authoritative neighborhood boundary",
+  "crs": "EPSG:32615",
+  "seed": 17092026,
+  "setback_m": 6.0,
+  "sources": {
+    "parcels": {
+      "url": "https://www.gis.hctx.net/arcgis/rest/services/HCAD/Parcels/MapServer/0",
+      "fields": ["OBJECTID", "state_class"],
+      "license_status": "public service; redistribution terms require review"
+    },
+    "roads": {
+      "url": "https://geogimsms.houstontx.gov/arcgis/rest/services/HPC/LandbaseAndRoads_hpc/MapServer/9",
+      "fields": ["OBJECTID", "NAME", "ST_TYPE"],
+      "license_status": "public service; redistribution terms require review"
+    }
+  }
+}

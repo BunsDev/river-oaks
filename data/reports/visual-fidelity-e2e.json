@@ -1,0 +1,35 @@
+{
+  "characters": 24,
+  "canopy": "2018 LiDAR \u00b7 0.50 ha canopy",
+  "buffer": [
+    3840,
+    2160
+  ],
+  "uhd": {
+    "calls": 143,
+    "triangles": 1167978,
+    "geometries": 91,
+    "textures": 197
+  },
+  "frame_sample": {
+    "samples": 120,
+    "median_ms": 16.699999999999818,
+    "p95_ms": 17.5
+  },
+  "frame_sample_scope": "Chrome animation-frame timing on this Mac; not a target-GPU or UE benchmark",
+  "baseline": {
+    "calls": 291,
+    "triangles": 2423388,
+    "geometries": 73,
+    "textures": 183
+  },
+  "afterSceneSwitches": {
+    "calls": 291,
+    "triangles": 2423388,
+    "geometries": 73,
+    "textures": 183
+  },
+  "errors": [],
+  "consoleErrors": [],
+  "recorded_at": "2026-09-17T13:57:24.474284+00:00"
+}

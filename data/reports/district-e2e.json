@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-09-17T14:56:23.332Z",
+  "uhd": [
+    3840,
+    2160
+  ],
+  "movedMeters": 1.678054328177268,
+  "destinations": 30,
+  "nearbyConversation": true,
+  "immediateArrivalConversation": {
+    "expected": "Amara",
+    "actual": "Amara",
+    "opened": true
+  },
+  "mission": "6 neighbors supported. The community objective is complete.",
+  "resources": "4 kits · 0 volunteer visits left · 0 active visits",
+  "mobileNoOverflow": true,
+  "sceneSwitch": true,
+  "routeWorkerLifecycle": true,
+  "browserErrors": []
+}

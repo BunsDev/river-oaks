@@ -1,0 +1,165 @@
+/* The conversation remains non-modal so world and scenario controls stay available. */
+#community-dialogue {
+  display: flex;
+  flex-direction: column;
+  left: 24px;
+  right: auto;
+  bottom: 24px;
+  width: min(440px, calc(100% - 48px));
+  max-height: calc(100% - 48px);
+  padding: 0;
+  overflow: hidden;
+  background: var(--panel, var(--paper));
+  border-radius: 20px;
+  box-shadow: 0 8px 24px #00000014, 0 24px 70px #00000026;
+}
+#community-dialogue[hidden] { display: none; }
+#community-dialogue .community-dialogue-top {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 12px;
+  align-items: start;
+  flex-shrink: 0;
+  padding: 20px;
+  border-bottom: 1px solid var(--line);
+}
+#community-dialogue .community-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 600;
+}
+#community-dialogue .community-kicker {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+#community-dialogue h2 { margin: 3px 0 0; font-size: 25px; line-height: 1.2; overflow-wrap: anywhere; }
+#community-dialogue .community-role { margin: 6px 0 0; font-size: 12px; line-height: 1.5; }
+#community-dialogue .community-close { width: 44px; height: 44px; border-radius: 12px; font-size: 25px; }
+#community-dialogue .community-dialogue-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scroll-padding-block: 16px;
+}
+#community-dialogue .community-dialogue-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--soft) 65%, var(--panel));
+  min-width: 0;
+}
+#community-dialogue .community-card-heading { font-size: 13px; line-height: 1.5; font-weight: 650; margin: 0; }
+#community-dialogue .community-card-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+#community-dialogue .community-speech { font-size: 15px; line-height: 1.65; margin: 12px 0 10px; overflow-wrap: anywhere; }
+#community-dialogue .community-attribution { font-size: 11px; line-height: 1.5; margin: 0 0 14px; }
+#community-dialogue .community-topics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+#community-dialogue .community-topics button {
+  min-height: 44px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+#community-dialogue .community-topics button:last-child { grid-column: 1 / -1; }
+#community-dialogue .community-topics button[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+#community-dialogue .community-topics[aria-busy=true] button { cursor: wait; }
+#community-dialogue .community-biography { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; font-size: 12px; }
+#community-dialogue .community-biography[hidden] { display: none; }
+#community-dialogue .community-audio { margin-top: 14px; border-top: 1px solid var(--line); }
+#community-dialogue summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 12px; list-style: none; color: var(--muted); }
+#community-dialogue summary::-webkit-details-marker { display: none; }
+#community-dialogue summary::after { content: ''; width: 6px; height: 6px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); margin: 0 4px 0 12px; flex-shrink: 0; }
+#community-dialogue details[open] > summary::after { transform: rotate(45deg); }
+#community-dialogue .community-audio-controls { display: grid; gap: 8px; padding-top: 6px; }
+#community-dialogue .community-audio-controls label { font-size: 12px; color: var(--muted); }
+#community-dialogue .community-audio-controls :is(select, button) { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; font-size: 12px; padding: 10px; background: var(--panel); color: var(--ink); }
+#community-dialogue .community-voice-status { margin: 0; font-size: 11px; }
+#community-dialogue .community-status { font-size: 10px; line-height: 1.5; padding: 4px 7px; border-radius: 6px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); }
+#community-dialogue .community-status[data-state=needs_help],
+#community-dialogue .community-status[data-state=running],
+#community-dialogue .community-status[data-state=aid_en_route] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+#community-dialogue .community-status[data-state=supported],
+#community-dialogue .community-status[data-state=success] { border-color: #64997b; }
+#community-dialogue .community-status[data-state=unmet],
+#community-dialogue .community-status[data-state=failed] { border-color: #b06d54; }
+#community-dialogue .community-need-label { font-size: 12px; margin: 0 0 8px; }
+#community-dialogue :is(.community-need, .community-mission-meter) { display: block; appearance: none; height: 6px; width: 100%; border: 0; border-radius: 4px; overflow: hidden; accent-color: var(--accent); }
+#community-dialogue .community-need[hidden] { display: none; }
+#community-dialogue .community-mission-meter::-webkit-progress-bar { background: var(--line); }
+#community-dialogue .community-mission-meter::-webkit-progress-value { background: var(--accent); border-radius: 4px; }
+#community-dialogue .community-mission-meter::-moz-progress-bar { background: var(--accent); }
+#community-dialogue .community-support { min-height: 0; margin: 10px 0 14px; font-size: 12px; line-height: 1.6; }
+#community-dialogue .community-primary-actions { display: grid; gap: 8px; margin-bottom: 0; }
+#community-dialogue .community-primary-actions:has(> :not([hidden])) { margin-bottom: 14px; }
+#community-dialogue .community-primary-actions button { min-height: 44px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-weight: 600; background: var(--panel); color: var(--ink); }
+#community-dialogue .community-primary-actions button.community-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+#community-dialogue .community-primary-actions button[hidden] { display: none; }
+#community-dialogue .community-dialogue-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#community-dialogue .community-dialogue-actions button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px;
+  text-align: left;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  line-height: 1.5;
+}
+#community-dialogue .community-dialogue-actions strong { font-size: 12px; font-weight: 600; }
+#community-dialogue .community-action-cost { font-size: 11px; color: var(--muted); }
+#community-dialogue .community-action-reason { margin: 7px 0 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+#community-dialogue button:disabled,
+#community-dialogue button[aria-disabled=true] { opacity: 1; color: var(--muted); cursor: default; border-style: dashed; background: transparent; }
+#community-dialogue button:hover:not(:disabled):not([aria-disabled=true]) { box-shadow: none; border-color: var(--accent); }
+#community-dialogue :is(button, select, summary, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+#community-dialogue .community-mission { margin: 0; }
+#community-dialogue .community-mission-progress { font-size: 12px; margin: 0 0 10px; font-variant-numeric: tabular-nums; }
+#community-dialogue .community-mission-resources { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; margin: 16px 0 0; }
+#community-dialogue .community-mission-resources > div { min-width: 0; }
+#community-dialogue .community-mission-resources dt { color: var(--muted); font-size: 10px; }
+#community-dialogue .community-mission-resources dd { margin: 5px 0 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#community-dialogue .community-provenance { margin: 0; padding-inline: 4px; }
+#community-dialogue .community-dialogue-note { font-size: 11px; line-height: 1.7; margin: 0 0 6px; }
+#community-dialogue .community-dialogue-footer { flex-shrink: 0; border-top: 1px solid var(--line); padding: 10px 16px; }
+#community-dialogue .community-next { min-height: 44px; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; text-align: center; }
+@media (max-width: 650px) {
+  #community-dialogue { position: fixed; left: 12px; right: 12px; bottom: 12px; width: auto; max-height: calc(100dvh - 24px); z-index: 20; }
+  #community-dialogue .community-dialogue-top { padding: 14px; gap: 10px; grid-template-columns: 36px minmax(0, 1fr) 44px; }
+  #community-dialogue .community-avatar { width: 36px; height: 36px; border-radius: 11px; font-size: 14px; }
+  #community-dialogue h2 { font-size: 23px; }
+  #community-dialogue .community-dialogue-body { padding: 12px; gap: 12px; }
+  #community-dialogue .community-dialogue-card { padding: 14px; }
+  #community-dialogue .community-dialogue-footer { padding: 8px 12px; }
+}
+@media (max-width: 360px) {
+  #community-dialogue .community-topics, #community-dialogue .community-dialogue-actions { grid-template-columns: 1fr; }
+  #community-dialogue .community-dialogue-actions button { min-height: 60px; }
+}
+@media (max-height: 500px) {
+  #community-dialogue { position: fixed; left: auto; right: 12px; bottom: 12px; width: min(440px, calc(100% - 24px)); max-height: calc(100dvh - 24px); z-index: 20; }
+  #community-dialogue .community-dialogue-top { padding-block: 10px; }
+  #community-dialogue .community-avatar { display: none; }
+  #community-dialogue .community-dialogue-top { grid-template-columns: minmax(0, 1fr) 44px; }
+  #community-dialogue .community-dialogue-footer { padding-block: 4px; }
+}

@@ -1,0 +1,65 @@
+{
+  "open": {
+    "expanded": "true",
+    "inert": false,
+    "viewport": [
+      3490,
+      2160
+    ],
+    "buffer": [
+      3490,
+      2160
+    ],
+    "overflow": false,
+    "flight": false
+  },
+  "collapsed": {
+    "expanded": "false",
+    "inert": true,
+    "viewport": [
+      3840,
+      2160
+    ],
+    "buffer": [
+      3840,
+      2160
+    ],
+    "overflow": false,
+    "flight": false
+  },
+  "persisted": true,
+  "keyboard": true,
+  "ride": {
+    "expanded": "false",
+    "inert": true,
+    "viewport": [
+      3840,
+      2160
+    ],
+    "buffer": [
+      3840,
+      2160
+    ],
+    "overflow": false,
+    "flight": true
+  },
+  "streetAltitude": "3",
+  "mobile": {
+    "expanded": "false",
+    "inert": true,
+    "viewport": [
+      390,
+      844
+    ],
+    "buffer": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "flight": true
+  },
+  "browserErrors": [],
+  "recorded_at": "2026-09-17T12:47:27.812801+00:00",
+  "economy_workers_revealed": true,
+  "manual_visibility_preserved": true
+}

@@ -1,0 +1,10 @@
+{
+  "model": "Kokoro-82M int8 CPU",
+  "render_seconds": 4.651,
+  "cached_seconds": 0.00024,
+  "audio_seconds": 5.632,
+  "bytes": 270380,
+  "cache_identical": true,
+  "inference": "local CPU",
+  "human_listening_review": false
+}
