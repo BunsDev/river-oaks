@@ -1,6 +1,6 @@
 # Unreal Engine foundation
 
-This is a **GIS blockout**, not a photorealistic scene. The Editor and Game Development targets compile on Unreal Engine 5.8.2 with Xcode 26.6 on an Apple M3 Max. All eight native automation tests pass. Map bootstrap, saved-volume persistence, and rendered SSAO are verified; see [engine acceptance](engine-acceptance.md). Packaging remains unverified. No 4K/60 fps claim is made. The generated map is intentionally not checked in because creating it requires the editor.
+This is a **GIS blockout**, not a photorealistic scene. The Editor and Game Development targets compile on Unreal Engine 5.8.2 with Xcode 26.6 on an Apple M3 Max. Native contract and imported-resident tests pass; see [native resident validation](native-residents.md#animation-and-verification) for the current results. Map bootstrap, saved-volume persistence, and rendered SSAO are verified; see [engine acceptance](engine-acceptance.md). Packaging remains unverified. No 4K/60 fps claim is made. The generated map is intentionally not checked in because creating it requires the editor.
 
 ## Shopping district scope
 
@@ -12,7 +12,7 @@ Stage the native input with:
 uv run python scripts/export_district.py
 ```
 
-This copies the browser district’s geographic x/y into `unreal/Content/Data/district.json`. The native blockout uses a flat ground plane, so the export intentionally flattens altitude; the browser retains its observed terrain. Native people remain the existing marker backend with a basic proximity greeting. The browser provides the clothed characters and complete topic-based conversation interface.
+This copies the browser district’s geographic x/y into `unreal/Content/Data/district.json`. The native blockout uses a flat ground plane, so the export intentionally flattens altitude; the browser retains its observed terrain. Follow [native resident setup](native-residents.md) to import the six clothed profiles and enable procedural locomotion. Without that local setup, native people use markers. Native interaction provides a basic proximity greeting; the browser provides the complete topic-based conversation interface.
 
 ## Build and open
 

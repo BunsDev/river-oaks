@@ -25,9 +25,17 @@ river-oaks = "river_oaks.cli:main"
 voice = [
     "kokoro-onnx==0.4.9",
 ]
+assets = [
+    "pillow==11.3.0",
+]
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1"]
+dev = [
+    "pillow==11.3.0",
+    "pytest>=8,<10",
+    "pytest-asyncio>=0.25,<2",
+    "ruff>=0.11,<1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

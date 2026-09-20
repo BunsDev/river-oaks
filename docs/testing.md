@@ -4,7 +4,7 @@ Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geome
 
 | Risk | Test evidence |
 | --- | --- |
-| Wrong units or handedness | Python projection round trip in meters; separate unexecuted UE coordinate tests |
+| Wrong units or handedness | Python projection round trip in meters; separate UE coordinate tests |
 | Partial GIS download | Missing object IDs reject the page; long-ID queries use POST |
 | Corrupted generated geography | Shifted/missing roads, invalid bounds, and houses outside setbacks fail verification |
 | Fabricated canopy accuracy | Missing/same-source reference blocks; equal coverage in a different location fails |
@@ -26,7 +26,7 @@ There is no arbitrary test-count or coverage-percentage target. Add a regression
 
 The 500-agent timing script records measurements without enforcing host-dependent pass thresholds. It measures local Python classification only. Full inference latency must include serialization, networking, provider time, batch deadlines, fallback rates, and all-agent update age. UE acceptance needs a frame-time trace recording resolution, upscaling, GPU/driver, scene, population, weather, and engine version.
 
-Unreal automation tests are authored but unexecuted. They provide no compile/UHT, bootstrap, collision integration, visual, packaging, or performance proof. See [engine verification](unreal.md#required-engine-verification).
+Unreal Editor/Game builds and native automation have run on UE 5.8.2. See [native resident validation](native-residents.md#animation-and-verification) and [engine acceptance](engine-acceptance.md) for measured results. Source-only hosts can run `RiverOaks.Contracts`; the full `RiverOaks` group additionally requires the imported resident assets. These checks do not establish packaging, complete collision integration or target performance.
 
 With both development servers running, the browser CLI scripts `preview/e2e/district.js`, `sidebar.js`, `personas-voice.js`, `resident-life.js`, `volunteer-visits.js`, and `visual-fidelity.js` operate real controls and record UHD/mobile screenshots. The voice script additionally needs the optional model and tests actual local synthesis/playback, alongside the hermetic unit tests. It does not run in dependency-only CI. None of these browser checks establishes target-GPU 60 fps or photographic accuracy.
 

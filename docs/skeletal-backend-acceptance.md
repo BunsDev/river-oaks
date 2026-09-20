@@ -35,6 +35,10 @@ Local evidence:
 
 ## Asset acceptance still required
 
+The following describes the PR #5 baseline. The subsequent
+[native resident integration](native-residents.md) adds reproducible asset import
+and procedural locomotion, with its own validation record.
+
 No production native character mesh or animation graph is included. The default
 `ResidentAppearances` map is empty and the district retains markers. The engine
 fixtures establish backend behavior, not visible character fidelity or a working

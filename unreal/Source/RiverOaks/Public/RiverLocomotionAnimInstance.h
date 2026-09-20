@@ -37,6 +37,9 @@ public:
     UPROPERTY(BlueprintReadOnly, Category = "River Oaks")
     float GroundSpeed = 0.f;
 
+    UPROPERTY(BlueprintReadOnly, Category = "River Oaks")
+    double TravelDistanceCm = 0.;
+
     // The only mapping from the simulation's locomotion vocabulary to an animation state.
     // An unrecognised name resolves to Idle: a backend must never invent a motion the
     // simulation did not ask for. tests/test_locomotion_states.py checks the two vocabularies
@@ -44,5 +47,7 @@ public:
     static ERiverLocomotionState StateFor(FName InLocomotion);
 
     // Called by FRiverSkeletalBackend once per applied pose.
-    void ApplyLocomotion(FName InLocomotion, float InGroundSpeed);
+    void ApplyLocomotion(FName InLocomotion, float InGroundSpeed, double StepDistanceCm = 0.);
+
+    static double StrideAngle(FName Bone, ERiverLocomotionState InState, double DistanceCm, double SpeedCm);
 };

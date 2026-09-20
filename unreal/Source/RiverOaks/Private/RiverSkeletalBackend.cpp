@@ -117,7 +117,8 @@ bool FRiverSkeletalBackend::ApplyPose(int32 Handle, const FRiverHumanPose& Pose)
     const double Elapsed = Pose.SimTimeSeconds - Human.LastTime;
     const float GroundSpeed = Human.bHasPose && Elapsed > 0.
         ? static_cast<float>(FVector::Dist2D(Pose.Root.GetLocation(), Human.LastRoot) / Elapsed) : 0.f;
-    Anim->ApplyLocomotion(Pose.Locomotion, GroundSpeed);
+    Anim->ApplyLocomotion(Pose.Locomotion, GroundSpeed,
+        Human.bHasPose ? FVector::Dist2D(Pose.Root.GetLocation(), Human.LastRoot) : 0.);
     Human.LastTime = Pose.SimTimeSeconds;
     Human.LastRoot = Pose.Root.GetLocation();
     Human.bHasPose = true;
