@@ -8,7 +8,7 @@ Confirmed scope: River Oaks District at Westheimer and Westcreek, using the bund
 - [x] Put distance-ranked nearby people and conversations ahead of shop navigation; retire the economic laboratory from the visitor interface.
 - [x] Verify street controls, conversations, closing/reopening dialogue, reload, and mobile layout.
 - [x] Replace the native residential manifest/map with the shopping district and a bounded walking pawn.
-- [ ] Run unit tests, native builds/tests, secret checks, independent review and hosted checks before delivery.
+- [x] Run unit tests, native builds/tests, secret checks, independent review and hosted checks before delivery.
 
 Visual direction: retain the existing TypeSafe pink, graphite and silver artwork and system typography. The main interaction is a nearby person's name, distance, and “Say hello” action. Keep the canvas visible; shop directory, environment settings and community activities remain secondary. No new scene or camera mode is introduced.
 
