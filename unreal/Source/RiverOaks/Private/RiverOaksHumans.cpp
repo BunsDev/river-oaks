@@ -32,13 +32,12 @@ uint64 FRiverHumanPoseLedger::LastSequence(int32 Handle) const
     return Entries.IsValidIndex(Handle) ? Entries[Handle].LastSequence : 0;
 }
 
-IRiverHumanBackend* IRiverHumanBackend::Select(IRiverHumanBackend* Fallback)
+IRiverHumanBackend* IRiverHumanBackend::SelectFrom(IRiverHumanBackend* Fallback,
+                                                   TArrayView<IRiverHumanBackend* const> Candidates)
 {
     IRiverHumanBackend* Best = Fallback;
     int32 BestPriority = Fallback ? Fallback->Probe().Priority : TNumericLimits<int32>::Min();
-    const TArray<IRiverHumanBackend*> Registered =
-        IModularFeatures::Get().GetModularFeatureImplementations<IRiverHumanBackend>(GetModularFeatureName());
-    for (IRiverHumanBackend* Candidate : Registered)
+    for (IRiverHumanBackend* Candidate : Candidates)
     {
         if (!Candidate) continue;
         const int32 Priority = Candidate->Probe().Priority;
@@ -49,4 +48,11 @@ IRiverHumanBackend* IRiverHumanBackend::Select(IRiverHumanBackend* Fallback)
         }
     }
     return Best;
+}
+
+IRiverHumanBackend* IRiverHumanBackend::Select(IRiverHumanBackend* Fallback)
+{
+    const TArray<IRiverHumanBackend*> Registered =
+        IModularFeatures::Get().GetModularFeatureImplementations<IRiverHumanBackend>(GetModularFeatureName());
+    return SelectFrom(Fallback, Registered);
 }

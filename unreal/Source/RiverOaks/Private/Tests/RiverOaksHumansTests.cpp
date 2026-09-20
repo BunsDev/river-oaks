@@ -70,36 +70,62 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRiverHumanBackendSelectionTest, "RiverOaks.Con
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FRiverHumanBackendSelectionTest::RunTest(const FString& Parameters)
 {
-    FRecordingBackend Fallback;
-    Fallback.Priority = 0;
-    TestEqual(TEXT("nothing registered selects the fallback"), IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Fallback));
+    // The priority rule is exercised over an explicit candidate set. Select() reads the
+    // process-wide modular-feature registry, so asserting that "nothing is registered" would fail
+    // on any host where the optional plugin is enabled -- which is the intended licensed setup.
+    FRecordingBackend Fallback; Fallback.Priority = 0;
+    FRecordingBackend Plugin;   Plugin.Priority = 10;
+    FRecordingBackend Better;   Better.Priority = 20;
+    FRecordingBackend Tie;      Tie.Priority = 0;
+    FRecordingBackend Weak;     Weak.Priority = -1;
 
-    FRecordingBackend Plugin;
-    Plugin.Priority = 10;
+    TestEqual(TEXT("no candidates selects the fallback"),
+        IRiverHumanBackend::SelectFrom(&Fallback, TArrayView<IRiverHumanBackend* const>()),
+        static_cast<IRiverHumanBackend*>(&Fallback));
     {
-        FScopedFeature Registered(&Plugin);
-        TestEqual(TEXT("registered higher priority wins"), IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Plugin));
-        FRecordingBackend Better;
-        Better.Priority = 20;
-        {
-            FScopedFeature RegisteredBetter(&Better);
-            TestEqual(TEXT("highest priority wins among several"), IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Better));
-        }
-        FRecordingBackend Tie;
-        Tie.Priority = 0;
-        {
-            FScopedFeature RegisteredTie(&Tie);
-            TestEqual(TEXT("ties keep the fallback over the tie but still lose to the plugin"),
-                IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Plugin));
-        }
+        IRiverHumanBackend* Candidates[] = { &Plugin };
+        TestEqual(TEXT("higher priority wins"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Plugin));
     }
-    TestEqual(TEXT("unregistering restores the fallback"), IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Fallback));
-    FRecordingBackend Weak;
-    Weak.Priority = -1;
     {
-        FScopedFeature RegisteredWeak(&Weak);
-        TestEqual(TEXT("lower priority than the fallback never wins"), IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Fallback));
+        IRiverHumanBackend* Candidates[] = { &Plugin, &Better };
+        TestEqual(TEXT("highest priority wins among several"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Better));
     }
+    {
+        IRiverHumanBackend* Candidates[] = { &Tie };
+        TestEqual(TEXT("ties keep the fallback"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Fallback));
+    }
+    {
+        IRiverHumanBackend* Candidates[] = { &Weak };
+        TestEqual(TEXT("lower priority than the fallback never wins"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Fallback));
+    }
+    {
+        IRiverHumanBackend* Candidates[] = { &Weak, &Tie, &Plugin, &Better };
+        TestEqual(TEXT("candidate order does not matter"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Better));
+    }
+    {
+        IRiverHumanBackend* Candidates[] = { nullptr, &Plugin };
+        TestEqual(TEXT("null candidates are skipped"),
+            IRiverHumanBackend::SelectFrom(&Fallback, Candidates), static_cast<IRiverHumanBackend*>(&Plugin));
+    }
+
+    // Registry round trip without assuming the registry starts empty: a maximum-priority backend
+    // outranks anything the host may already have registered, and unregistering must restore
+    // whatever the selection was beforehand.
+    FRecordingBackend Dominant;
+    Dominant.Priority = TNumericLimits<int32>::Max();
+    IRiverHumanBackend* const BeforeRegister = IRiverHumanBackend::Select(&Fallback);
+    {
+        FScopedFeature Registered(&Dominant);
+        TestEqual(TEXT("a registered backend is discovered through Select"),
+            IRiverHumanBackend::Select(&Fallback), static_cast<IRiverHumanBackend*>(&Dominant));
+    }
+    TestEqual(TEXT("unregistering restores the previous selection"),
+        IRiverHumanBackend::Select(&Fallback), BeforeRegister);
     return true;
 }
 

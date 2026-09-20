@@ -173,7 +173,7 @@ struct FRiverHumanPose
     FTransform Root;               // UE space, cm; authoritative from MoveAgents
     TArray<FTransform> Joints;     // indexed by ERiverJoint, local space
     TMap<FName, float> Morphs;     // semantic channel → 0..1
-    FName Locomotion;              // idle | walk | jog | pause | shelter ...
+    FName Locomotion;              // idle | walk | walk_slow | jog | shelter
 };
 
 struct FRiverAppearanceRecipe
@@ -217,14 +217,25 @@ Nothing in the decision protocol changes; `schema_version: 1` stays.
 
 ```cpp
 // River Oaks-owned. None of these are Tafi names.
-class IRiverHumanBackend
+// This mirrors the shipped unreal/Source/RiverOaks/Public/RiverOaksHumans.h; keep the two in step.
+class RIVEROAKS_API IRiverHumanBackend : public IModularFeature
 {
 public:
     virtual ~IRiverHumanBackend() = default;
-    virtual FRiverHumanCapabilities Probe() = 0;
+
+    // Backends are discovered, never linked: a plugin registers itself under this name at module
+    // startup and the host resolves the highest-priority implementation.
+    static FName GetModularFeatureName() { return FName(TEXT("RiverHumanBackend")); }
+    static IRiverHumanBackend* Select(IRiverHumanBackend* Fallback);
+    static IRiverHumanBackend* SelectFrom(IRiverHumanBackend* Fallback,
+                                          TArrayView<IRiverHumanBackend* const> Candidates);
+
+    virtual FRiverHumanCapabilities Probe() const = 0;
+    // INDEX_NONE is the only refusal value; any other return is treated as a live handle.
     virtual int32 CreateHuman(const FString& AgentId, const FRiverAppearanceRecipe& Recipe) = 0;
     virtual void   DestroyHuman(int32 Handle) = 0;
-    virtual void   ApplyPose(int32 Handle, const FRiverHumanPose& Pose) = 0;
+    // False when the handle is unknown or the pose is stale; the pose is then ignored.
+    virtual bool   ApplyPose(int32 Handle, const FRiverHumanPose& Pose) = 0;
     virtual void   SetLod(int32 Handle, ERiverHumanLod Lod) = 0;
     virtual void   Tick(float DeltaSeconds) = 0;   // game thread, after MoveAgents
 };
@@ -428,6 +439,17 @@ performance number is quoted here because none has been measured.
    (section 5.2), the `PortrayalRecipe` test, the skeleton-map validator, and
    the manifest sidecar. Requires a UE5.6 host to compile; author now, execute
    when available.
+
+   **Backend discovery is gated off until the validator lands.**
+   `bRiverHumanBackendDiscoveryEnabled` in `RiverOaksHumans.h` is `false`, so
+   `ARiverOaksWorld::SelectHumanBackend` always uses `FRiverMarkerBackend` and
+   never calls `IRiverHumanBackend::Select`. The reason is the contract itself:
+   until the catalogue can resolve a recipe and `FRiverRecipeValidator` can
+   check it, the only recipe the host can produce is a hand-built placeholder
+   carrying a `CatalogueId` and nothing else, and section 5.2 forbids handing
+   an unvalidated recipe to a backend. Registering a plugin before that point
+   would feed it exactly that. Flip the constant in the same change that lands
+   the validator; `Select` and its contract test already work and are unaffected.
 2. **Skeletal fallback.** One licensed or original UE skeletal mesh with a
    locomotion anim blueprint driven by `Locomotion`; this is the permanent
    crowd and offline path.

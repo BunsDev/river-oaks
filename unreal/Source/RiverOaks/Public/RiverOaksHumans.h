@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "Containers/ArrayView.h"
 #include "Features/IModularFeature.h"
 
 // River Oaks-owned human-rendering contract. See docs/astra-integration.md sections 4-5.
@@ -67,6 +68,14 @@ private:
     TArray<FEntry> Entries;
 };
 
+// Backend discovery gate. A recipe can only be validated once URiverAppearanceCatalogue and
+// FRiverRecipeValidator exist (docs/astra-integration.md section 5.2). Until then the host has
+// nothing but an unvalidated, hand-built recipe to offer, and the FRiverAppearanceRecipe contract
+// forbids handing one to a backend -- so ARiverOaksWorld stays on the marker fallback instead of
+// discovering a plugin that would consume it. Flip this to true in the same change that lands the
+// validator; IRiverHumanBackend::Select and its contract test are unaffected either way.
+inline constexpr bool bRiverHumanBackendDiscoveryEnabled = false;
+
 // Backends are discovered, not linked: a plugin registers an implementation under
 // GetModularFeatureName() at module startup; the host never depends on the plugin.
 class RIVEROAKS_API IRiverHumanBackend : public IModularFeature
@@ -77,9 +86,19 @@ public:
     static FName GetModularFeatureName() { return FName(TEXT("RiverHumanBackend")); }
 
     // Highest-priority registered backend, or Fallback when none beats it (ties keep Fallback).
+    // Reads the process-wide modular-feature registry.
     static IRiverHumanBackend* Select(IRiverHumanBackend* Fallback);
+    // The same rule over an explicit candidate set, bypassing the registry. The host never calls
+    // this; it exists so contract tests do not depend on what a loaded plugin has registered.
+    static IRiverHumanBackend* SelectFrom(IRiverHumanBackend* Fallback,
+                                          TArrayView<IRiverHumanBackend* const> Candidates);
 
     virtual FRiverHumanCapabilities Probe() const = 0;
+    // Returns a handle owned by this backend, or INDEX_NONE to refuse the human.
+    // INDEX_NONE is the ONLY refusal value: the host treats every other return as a live handle
+    // and will send it poses. A backend that cannot render an agent MUST return INDEX_NONE so the
+    // host can fall back to the marker backend -- returning 0 or any other sentinel on failure
+    // silently defeats that fallback and strands the agent with no visible representation.
     virtual int32 CreateHuman(const FString& AgentId, const FRiverAppearanceRecipe& Recipe) = 0;
     virtual void DestroyHuman(int32 Handle) = 0;
     // Returns false when the handle is unknown or the pose is stale; the pose is then ignored.

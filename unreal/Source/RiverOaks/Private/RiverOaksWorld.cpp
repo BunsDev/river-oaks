@@ -251,7 +251,17 @@ FVector ARiverOaksWorld::RouteTarget(const FRiverAgent& Agent) const
 void ARiverOaksWorld::SelectHumanBackend()
 {
     MarkerBackend = MakeUnique<FRiverMarkerBackend>(People);
-    HumanBackend = IRiverHumanBackend::Select(MarkerBackend.Get());
+    // Until the appearance catalogue and FRiverRecipeValidator land, SpawnAgents can only supply
+    // an unvalidated recipe, and the FRiverAppearanceRecipe contract forbids handing one to a
+    // backend. Stay on the marker fallback rather than discovering a plugin that would consume it.
+    if constexpr (bRiverHumanBackendDiscoveryEnabled)
+    {
+        HumanBackend = IRiverHumanBackend::Select(MarkerBackend.Get());
+    }
+    else
+    {
+        HumanBackend = MarkerBackend.Get();
+    }
     const FRiverHumanCapabilities Caps = HumanBackend->Probe();
     UE_LOG(LogTemp, Log, TEXT("River Oaks: human backend '%s' %s (priority %d)."),
         *Caps.BackendName.ToString(), *Caps.BackendVersion, Caps.Priority);
