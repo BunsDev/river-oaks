@@ -5,6 +5,7 @@ is a setup step, not a render/performance verification.
 """
 
 import json
+import runpy
 from pathlib import Path
 
 import unreal
@@ -77,6 +78,10 @@ def main():
         unreal.Rotator(-15, 0, 0),
     )
     start.set_actor_label("Fly camera start - WASD, mouse, E/Q vertical")
+    post_process = runpy.run_path(
+        str(Path(unreal.Paths.project_content_dir()) / "Python" / "setup_post_process.py")
+    )
+    post_process["configure_global_post_process"]()
     if not levels.save_current_level():
         raise RuntimeError("Map save failed.")
     unreal.log("Saved River Oaks blockout map. Play to load geometry and agents from world.json.")

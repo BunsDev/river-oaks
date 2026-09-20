@@ -16,7 +16,7 @@ This is a **GIS blockout**, not a photorealistic scene. Unreal Engine is not ins
    )
    ```
 
-   The bootstrap creates `/Game/Maps/RiverOaks`, a color-parameter material, movable sun, sky atmosphere, skylight, fog, world actor and player start. It refuses to overwrite an existing map. Unreal's `new_level` closes the current persistent level, so save your editor work before invoking it. See [LevelEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/LevelEditorSubsystem?application_version=5.6).
+   The bootstrap creates `/Game/Maps/RiverOaks`, a color-parameter material, movable sun, sky atmosphere, skylight, fog, world actor, player start and an unbound global Post Process Volume. It refuses to overwrite an existing map. Unreal's `new_level` closes the current persistent level, so save your editor work before invoking it. See [LevelEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/LevelEditorSubsystem?application_version=5.6).
 4. Press **Play** and click the viewport. The engine spectator pawn provides mouse look, WASD and E/Q vertical movement. Escape exits play. The scene geometry is generated at BeginPlay; an empty editor viewport before Play is expected. Select `River Oaks GIS BLOCKOUT` to change agent count (0–500), weather parameters and asset slots.
 5. Start the Python decision service on `127.0.0.1:8765` to use decisions. With no service, local movement continues using deterministic rules. No API key belongs in the Unreal project.
 
@@ -28,6 +28,43 @@ For a source-built engine, a typical editor build invocation is:
 ```
 
 Replace the platform/script for your installation. This is an instruction to run on an engine-equipped machine, not recorded build evidence.
+
+## Global Post Process Volume and SSAO
+
+Newly bootstrapped maps contain **River Oaks Global Post Process**, enabled with
+Infinite Extent (Unbound), blend weight 1, and AO intensity 0.6, radius 100 and
+quality 100. Only those AO settings are overridden; other post-process settings
+retain their existing values. These are initial tuning values, not render-verified
+quality or performance claims.
+
+For an existing map, open the intended map and run this in the editor Python console:
+
+```python
+import runpy, unreal
+
+runpy.run_path(
+    unreal.Paths.project_content_dir() + "Python/setup_post_process.py", run_name="__main__"
+)
+```
+
+Inspect the result and save the level. Repeating setup updates the named volume
+without adding another or modifying artist-authored volumes. Duplicate named
+volumes cause an explicit error. The bootstrap still refuses to overwrite maps.
+Restart the editor after updating `DefaultEngine.ini` so its SystemSettings apply.
+The config selects SSAO (`r.AmbientOcclusion.Method=0`), enables quality-selected
+AO levels, disables Lumen ShortRangeAO and enables `r.Lumen.DiffuseIndirect.SSAO`.
+Lumen GI and reflections remain enabled. Epic's
+[UE5.6 rendering update](https://www.docswell.com/s/EpicGamesJapan/KWM1EQ-CEDEC2025-ue5_6update)
+describes the Lumen SSAO path; the
+[PostProcessSettings API](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/PostProcessSettings?application_version=5.6)
+documents the volume controls.
+
+Engine acceptance remains pending: build/open with UE5.6, bootstrap or update the
+map, confirm exactly one named unbound volume, save/reopen, and query the four
+console variables above. At High/Epic scalability, compare the same camera with
+AO intensity 0 versus 0.6 around building/ground contacts. Record screenshots and
+GPU timings. Python tests exercise setup orchestration with an editor double;
+they do not verify Unreal property binding, persisted maps or rendered SSAO.
 
 ## What runs in the foundation
 
