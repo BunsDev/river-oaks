@@ -3,6 +3,7 @@
 
 namespace RiverOaksRules
 {
+    inline constexpr double HumanRootHeightCm = 90.;
     inline FVector ToUnreal(const FVector& M) { return FVector(M.X * 100., -M.Y * 100., M.Z * 100.); }
     inline FVector ToMeters(const FVector& Cm) { return FVector(Cm.X / 100., -Cm.Y / 100., Cm.Z / 100.); }
     inline FVector BuildingCenter(const FVector& BaseM, const FVector& SizeM)
