@@ -1,4 +1,5 @@
 #include "RiverOaksWorld.h"
+#include "RiverAppearanceCatalogue.h"
 #include "RiverOaksRules.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -267,6 +268,19 @@ void ARiverOaksWorld::SelectHumanBackend()
         *Caps.BackendName.ToString(), *Caps.BackendVersion, Caps.Priority);
 }
 
+void ARiverOaksWorld::FallBackToMarkerBackend()
+{
+    if (HumanBackend == MarkerBackend.Get()) return;
+    for (auto& Existing : Agents)
+        if (Existing.HumanHandle != INDEX_NONE) HumanBackend->DestroyHuman(Existing.HumanHandle);
+    HumanBackend = MarkerBackend.Get();
+    for (auto& Existing : Agents)
+    {
+        Existing.HumanHandle = HumanBackend->CreateHuman(Existing.Id, Existing.Appearance);
+        Existing.PoseSequence = 0;
+    }
+}
+
 void ARiverOaksWorld::TeardownHumans()
 {
     if (HumanBackend)
@@ -304,21 +318,22 @@ void ARiverOaksWorld::SpawnAgents()
         Agent.Position = FMath::Lerp(Route.Points[Agent.Target - 1] + (RouteTarget(Agent) - Route.Points[Agent.Target]), RouteTarget(Agent), Random.FRand());
         Agent.Position.X = FMath::Clamp(Agent.Position.X, Bounds.Min.X + 100., Bounds.Max.X - 100.);
         Agent.Position.Y = FMath::Clamp(Agent.Position.Y, Bounds.Min.Y + 100., Bounds.Max.Y - 100.);
-        // Placeholder identity until the appearance catalogue lands; not a likeness of anyone.
-        Agent.Appearance.CatalogueId = FName(*FString::Printf(TEXT("resident-%02d"), Index % 6));
+        // Resolved from the catalogue and validated before any backend sees it. Never authored
+        // here: a portrayal persona is locked to its fixed generic preset (section 9).
+        Agent.Appearance = URiverAppearanceCatalogue::Resolve(Index);
+        FString RejectReason;
+        if (!FRiverRecipeValidator::Validate(Agent.Appearance, Index, RejectReason))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("River Oaks: appearance recipe for %s rejected (%s); using marker fallback."),
+                *Agent.Id, *RejectReason);
+            if (HumanBackend != MarkerBackend.Get()) FallBackToMarkerBackend();
+        }
         Agent.HumanHandle = HumanBackend->CreateHuman(Agent.Id, Agent.Appearance);
         if (Agent.HumanHandle == INDEX_NONE && HumanBackend != MarkerBackend.Get())
         {
             // A plugin backend that cannot create a human forfeits the session to the marker fallback.
             UE_LOG(LogTemp, Warning, TEXT("River Oaks: backend refused %s; using marker fallback."), *Agent.Id);
-            for (auto& Existing : Agents)
-                if (Existing.HumanHandle != INDEX_NONE) HumanBackend->DestroyHuman(Existing.HumanHandle);
-            HumanBackend = MarkerBackend.Get();
-            for (auto& Existing : Agents)
-            {
-                Existing.HumanHandle = HumanBackend->CreateHuman(Existing.Id, Existing.Appearance);
-                Existing.PoseSequence = 0;
-            }
+            FallBackToMarkerBackend();
             Agent.HumanHandle = HumanBackend->CreateHuman(Agent.Id, Agent.Appearance);
         }
         ApplySpawnPose(Agent);

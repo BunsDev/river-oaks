@@ -95,6 +95,8 @@ private:
     void SpawnAgents();
     void MoveAgents(float DeltaSeconds);
     void SelectHumanBackend();
+    // Destroys humans on the current backend and re-creates them on the marker fallback.
+    void FallBackToMarkerBackend();
     void TeardownHumans();
     void RequestDecisions();
     void UpdateWeather();
