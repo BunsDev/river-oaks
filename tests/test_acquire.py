@@ -44,3 +44,30 @@ def test_arcgis_errors_and_incomplete_pages_fail_closed():
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
         with pytest.raises(ValueError, match="Incomplete"):
             fetch_layer(client, "https://example.test/0", [0, 0, 1, 1], ["OBJECTID"])
+
+
+@pytest.mark.parametrize("identifier", ["id", "OBJECTID", "missing"])
+def test_arcgis_identifier_survives_attribute_whitelist(identifier):
+    def respond(request):
+        if request.url.params.get("returnIdsOnly"):
+            return httpx.Response(200, json={"objectIds": [2, 1]})
+        features = []
+        for number in [2, 1]:
+            feature = {"type": "Feature", "geometry": None, "properties": {"NAME": "ROAD"}}
+            if identifier == "id":
+                feature["id"] = number
+            elif identifier == "OBJECTID":
+                feature["properties"]["OBJECTID"] = number
+            features.append(feature)
+        return httpx.Response(200, json={"features": features})
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        if identifier == "missing":
+            with pytest.raises(ValueError, match="Incomplete ArcGIS page"):
+                fetch_layer(client, "https://example.test/0", [0, 0, 1, 1], ["NAME"])
+            return
+        result = fetch_layer(client, "https://example.test/0", [0, 0, 1, 1], ["NAME"])
+    assert len(result["features"]) == 2
+    assert all(feature["properties"] == {"NAME": "ROAD"} for feature in result["features"])
+    if identifier == "id":
+        assert [feature["id"] for feature in result["features"]] == [1, 2]

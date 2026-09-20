@@ -58,9 +58,7 @@ def fetch_layer(client, url, bbox, fields, chunk_size=500, max_features=25000):
             item["properties"] = {
                 k: v for k, v in item.get("properties", {}).items() if k in fields
             }
-        features.extend(
-            sorted(received, key=lambda f: int(f.get("id", f["properties"]["OBJECTID"])))
-        )
+        features.extend(item for _, item in sorted(zip(actual, received), key=lambda pair: pair[0]))
     return {"type": "FeatureCollection", "features": features}
 
 

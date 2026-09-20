@@ -138,7 +138,8 @@ bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe& Recipe, FStri
             OutReason = FString::Printf(TEXT("morph channel '%s' has no declared range"), *Morph.Key.ToString());
             return false;
         }
-        if (Morph.Value < Min - KINDA_SMALL_NUMBER || Morph.Value > Max + KINDA_SMALL_NUMBER)
+        if (!FMath::IsFinite(Morph.Value) || Morph.Value < Min - KINDA_SMALL_NUMBER
+            || Morph.Value > Max + KINDA_SMALL_NUMBER)
         {
             OutReason = FString::Printf(TEXT("morph '%s' value %f is outside the preset range [%f, %f]"),
                 *Morph.Key.ToString(), Morph.Value, Min, Max);

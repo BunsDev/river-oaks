@@ -252,9 +252,8 @@ FVector ARiverOaksWorld::RouteTarget(const FRiverAgent& Agent) const
 void ARiverOaksWorld::SelectHumanBackend()
 {
     MarkerBackend = MakeUnique<FRiverMarkerBackend>(People);
-    // Until the appearance catalogue and FRiverRecipeValidator land, SpawnAgents can only supply
-    // an unvalidated recipe, and the FRiverAppearanceRecipe contract forbids handing one to a
-    // backend. Stay on the marker fallback rather than discovering a plugin that would consume it.
+    // SpawnAgents validates catalogue recipes before handing them to a discovered backend.
+    // The discovery gate retains an explicit marker-only path for installations without plugins.
     if constexpr (bRiverHumanBackendDiscoveryEnabled)
     {
         HumanBackend = IRiverHumanBackend::Select(MarkerBackend.Get());

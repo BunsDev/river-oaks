@@ -111,3 +111,59 @@ def test_actual_git_hook_prevents_commit(repo):
         ).returncode
         != 0
     )
+
+
+def test_history_scan_automatically_loads_repository_rules(repo):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    shutil.copyfile(ROOT / ".gitleaks.toml", repo / ".gitleaks.toml")
+    stage(repo, "settings.ini", "TYPESAFE_API_KEY=" + "Z9y8" * 9)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-qm",
+            "Synthetic history fixture",
+        ],
+        cwd=repo,
+        check=True,
+    )
+    stage(repo, "settings.ini", "clean")
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-qm",
+            "Remove fixture",
+        ],
+        cwd=repo,
+        check=True,
+    )
+    result = subprocess.run(
+        [
+            "gitleaks",
+            "git",
+            "--log-opts=--all",
+            "--redact",
+            "--no-banner",
+            "--ignore-gitleaks-allow",
+            "--report-format=json",
+            "--report-path=report.json",
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    import json
+
+    assert result.returncode == 1
+    findings = json.loads((repo / "report.json").read_text())
+    assert any(item["RuleID"] == "typesafe-api-key-assignment" for item in findings)

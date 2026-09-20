@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include <limits>
 #include "RiverAppearanceCatalogue.h"
 #include "RiverOaksHumans.h"
 
@@ -44,6 +45,17 @@ bool FRiverPortrayalRecipeTest::RunTest(const FString& Parameters)
             FRiverRecipeValidator::Validate(Resolved, Persona, Reason));
         TestTrue(FString::Printf(TEXT("persona %d resolves to a catalogue entry"), Persona),
             URiverAppearanceCatalogue::Find(Resolved.CatalogueId) != nullptr);
+    }
+
+    for (float Invalid : { std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() })
+    {
+        FRiverAppearanceRecipe NonFinite = URiverAppearanceCatalogue::Resolve(0);
+        NonFinite.BodyMorphs.Add(TEXT("Stature"), Invalid);
+        TestFalse(TEXT("range-only validator rejects non-finite stature"),
+            FRiverRecipeValidator::Validate(NonFinite, Reason));
+        TestFalse(TEXT("persona validator rejects non-finite stature"),
+            FRiverRecipeValidator::Validate(NonFinite, 0, Reason));
     }
 
     // The four portrayals are locked to fixed generic profiles (section 9).
