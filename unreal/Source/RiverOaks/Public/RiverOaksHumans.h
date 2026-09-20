@@ -68,13 +68,12 @@ private:
     TArray<FEntry> Entries;
 };
 
-// Backend discovery gate. A recipe can only be validated once URiverAppearanceCatalogue and
-// FRiverRecipeValidator exist (docs/astra-integration.md section 5.2). Until then the host has
-// nothing but an unvalidated, hand-built recipe to offer, and the FRiverAppearanceRecipe contract
-// forbids handing one to a backend -- so ARiverOaksWorld stays on the marker fallback instead of
-// discovering a plugin that would consume it. Flip this to true in the same change that lands the
-// validator; IRiverHumanBackend::Select and its contract test are unaffected either way.
-inline constexpr bool bRiverHumanBackendDiscoveryEnabled = false;
+// Backend discovery gate. Discovery is enabled: URiverAppearanceCatalogue resolves every recipe
+// and FRiverRecipeValidator checks it before ARiverOaksWorld calls CreateHuman, so a discovered
+// plugin can no longer receive an unvalidated or altered appearance (docs/astra-integration.md
+// sections 5.2 and 9). Setting this to false pins the host to FRiverMarkerBackend, which stays
+// the documented way to run without any plugin.
+inline constexpr bool bRiverHumanBackendDiscoveryEnabled = true;
 
 // Backends are discovered, not linked: a plugin registers an implementation under
 // GetModularFeatureName() at module startup; the host never depends on the plugin.

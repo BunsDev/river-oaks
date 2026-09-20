@@ -186,18 +186,33 @@ struct FRiverAppearanceRecipe
 };
 
 // Recipes are never hand-built by callers. They are resolved from a River
-// Oaks-owned catalogue and validated before any backend sees them:
+// Oaks-owned catalogue and validated before any backend sees them
+// (RiverAppearanceCatalogue.h):
 //
 //   FRiverAppearanceRecipe URiverAppearanceCatalogue::Resolve(int32 PersonaIndex);
 //   bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe&, FString& OutReason);
+//   bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe&, int32 PersonaIndex,
+//                                        FString& OutReason);
 //
-// Validate() rejects a recipe when: CatalogueId is unknown; any BodyMorphs
-// key is outside the catalogue's morph allowlist; any value is outside the
-// preset's declared range; or the persona is one of the four portrayals and
-// the recipe deviates from that persona's fixed generic preset in any field.
-// IRiverHumanBackend::CreateHuman is only reachable through
-// ARiverOaksWorld, which calls Validate() first and spawns MarkerBackend on
-// rejection. There is no bypass flag.
+// The two-argument form rejects a recipe when CatalogueId is unknown, when any
+// field differs from that catalogue entry, when any BodyMorphs key is outside
+// the morph allowlist, or when any value is outside the preset's declared
+// range. The three-argument form adds exactness: the recipe must equal
+// Resolve(PersonaIndex) in every field, stature included, for every persona.
+// A value inside the allowlist and range that differs from the resolved one is
+// still rejected, as is a missing one, so a backend can only ever receive a
+// recipe the catalogue produced. The four portrayals are pinned to their fixed
+// generic preset (section 9) as a special case of that uniform rule.
+// ARiverOaksWorld calls the three-argument form and falls back to
+// FRiverMarkerBackend on rejection. There is no bypass flag.
+//
+// The catalogue holds the six CC0 profiles shipped in
+// preview/public/assets/characters/sources.json, and the persona -> profile
+// mapping mirrors avatarProfile() in preview/src/avatars.js so the browser
+// showcase and the Unreal host resolve the same appearance. Stature is the
+// only allowlisted morph channel, matching the browser's
+// targetHeight = base + (index % 3) * 0.025. tests/test_appearance_catalogue.py
+// enforces that parity in CI.
 
 enum class ERiverJoint : uint8
 {
@@ -355,8 +370,14 @@ must keep that true by construction:
    in-flight showcase already does this at code level: `avatarProfile(index)`
    in `preview/src/avatars.js` maps the four portrayals to generic profiles
    with the comment "never scans or likenesses of them". The UE catalogue
-   must preserve that mapping, not reopen it, and
-   `RiverOaks.Contracts.PortrayalRecipe` (section 11) covers the rejection.
+   preserves that mapping rather than reopening it: `URiverAppearanceCatalogue`
+   resolves persona 20 to `woman-tailored` (Ima Hogg), 21 to `woman-casual`
+   (Barbara Jordan), 22 to `man-tailored` (Hakeem Olajuwon) and 23 to
+   `woman-daywear` (Beyoncé), the same four pairings the browser uses.
+   `RiverOaks.Contracts.PortrayalRecipe` (section 11) covers the rejection but
+   cannot run without an engine, so `tests/test_appearance_catalogue.py`
+   enforces the mapping, the asset ingredients and the stature constants
+   against the browser sources in CI, where it does run.
 2. No face geometry, scan, or biometric capture of any real person enters the
    pipeline. Texas CUBI treats face geometry records as biometric identifiers
    requiring notice and consent for commercial capture; other jurisdictions
@@ -432,24 +453,22 @@ performance number is quoted here because none has been measured.
    `IRiverHumanBackend`, `FRiverHumanPose`, `FRiverAppearanceRecipe`,
    `FRiverHumanPoseLedger`, `IRiverHumanBackend::Select` over
    `IModularFeatures`, `FRiverMarkerBackend` wrapping the sphere path, and
-   `RiverOaksRules::Locomotion` exist in `unreal/Source/RiverOaks/`, with
-   automation tests `RiverOaks.Contracts.HumanPoseSequence`,
-   `HumanBackendSelection`, `HumanAuthority`, and `Locomotion`. *Still
-   pending:* the appearance catalogue and `FRiverRecipeValidator`
-   (section 5.2), the `PortrayalRecipe` test, the skeleton-map validator, and
-   the manifest sidecar. Requires a UE5.6 host to compile; author now, execute
-   when available.
+   `RiverOaksRules::Locomotion`, `URiverAppearanceCatalogue` and
+   `FRiverRecipeValidator` exist in `unreal/Source/RiverOaks/`, with automation
+   tests `RiverOaks.Contracts.HumanPoseSequence`, `HumanBackendSelection`,
+   `HumanAuthority`, `Locomotion` and `PortrayalRecipe`. *Still pending:* the
+   skeleton-map validator and the manifest sidecar. Requires a UE5.6 host to
+   compile; author now, execute when available.
 
-   **Backend discovery is gated off until the validator lands.**
-   `bRiverHumanBackendDiscoveryEnabled` in `RiverOaksHumans.h` is `false`, so
-   `ARiverOaksWorld::SelectHumanBackend` always uses `FRiverMarkerBackend` and
-   never calls `IRiverHumanBackend::Select`. The reason is the contract itself:
-   until the catalogue can resolve a recipe and `FRiverRecipeValidator` can
-   check it, the only recipe the host can produce is a hand-built placeholder
-   carrying a `CatalogueId` and nothing else, and section 5.2 forbids handing
-   an unvalidated recipe to a backend. Registering a plugin before that point
-   would feed it exactly that. Flip the constant in the same change that lands
-   the validator; `Select` and its contract test already work and are unaffected.
+   **Backend discovery is now enabled.**
+   `bRiverHumanBackendDiscoveryEnabled` in `RiverOaksHumans.h` is `true`, so
+   `ARiverOaksWorld::SelectHumanBackend` calls `IRiverHumanBackend::Select` and
+   a registered plugin with a higher priority replaces the marker backend.
+   That is safe only because `SpawnAgents` now resolves every recipe from
+   `URiverAppearanceCatalogue` and validates it with `FRiverRecipeValidator`
+   before `CreateHuman`, falling back to `FRiverMarkerBackend` on rejection.
+   Setting the constant to `false` pins the host to the marker backend and
+   remains the supported way to run with no plugin at all.
 2. **Skeletal fallback.** One licensed or original UE skeletal mesh with a
    locomotion anim blueprint driven by `Locomotion`; this is the permanent
    crowd and offline path.
