@@ -62,7 +62,9 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None):
         try:
             audio = await local_voice.speak(packet)
         except VoiceBusy:
-            raise HTTPException(503, "Local voice busy; try again shortly") from None
+            raise HTTPException(
+                503, "Local voice busy; try again shortly", headers={"Retry-After": "1"}
+            ) from None
         except VoiceUnavailable:
             raise HTTPException(503, "Local voice unavailable; select device voices") from None
         return Response(audio, media_type="audio/wav", headers={"Cache-Control": "no-store"})

@@ -16,7 +16,29 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. Existing generated data loads directly from the bridge. On a new clone, acquire/build the data below first. The browser includes System/Light/Dark appearance, original procedural homes, historical canopy overlay, and a hovering moped tour. Choose **Hover moped** for the cockpit; WASD steers/controls speed, Q/E changes altitude, Space boosts, H pauses, and Escape returns to the map. Visible controls support touch. Reduced-motion mode starts stationary without banking or bobbing.
+Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, and 24 fictional encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. Choose the neighborhood scene to use the larger generated GIS dataset below.
+
+Residents have consistent local identities, remember encounters, walk between public stops and pause to chat. Four labeled fictional encounters feature Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé. Resident route searches run in a Web Worker; immediate reactions are batched for Jev or local fallback. [Resident life and controls](docs/resident-life.md)
+
+Community dispatches recruit a visible resident carrying supplies. Use **Find volunteer** to watch them reach the recipient and help on site; only then is the request resolved. Conversations and storms can delay the visit, while an inaccessible route returns unused capacity.
+
+WASD walks, dragging looks around, Shift walks faster, and E talks to a nearby person. Choose **Hover moped** to fly; Q/E descends/climbs, F assists a street-level arrival, R rises above nearby roofs, and Escape exits. The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance uses the neutral surfaces, pink accents, and system typography from `BunsDev/typesafe-ai-playground`.
+
+Residents have first-person roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human meshes now replace the capsule figures, and storefronts have pale cladding and recessed display bays. These remain interpreted reconstructions; see [visual evidence and asset provenance](docs/visual-fidelity.md).
+
+District foliage now follows 18,832 canopy voxels derived from public 2018 LiDAR, with distance-based detail and local bark materials. The four OSM tree points remain distinct from interpreted branch supports. The independent historical canopy comparison fails; see [vegetation evidence](docs/vegetation.md).
+
+### Optional free local speech
+
+Install the optional CPU runtime and pinned model, then start the bridge with that extra:
+
+```sh
+uv sync --locked --extra voice
+uv run --extra voice python scripts/fetch_voice_model.py
+uv run --extra voice river-oaks serve
+```
+
+In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 121 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. One job at a time and a bounded cache keep speech out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a server-side key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
@@ -95,4 +117,4 @@ uv run river-oaks benchmark --agents 500 --iterations 1000
 
 The demo is a labeled synthetic fixture and never counts as River Oaks accuracy evidence. To explore it in Unreal, copy its `world.json` into `unreal/Content/Data/`.
 
-Raw GIS, generated manifests, review queues, and Unreal binary assets remain ignored. [Data contracts and source catalog](docs/data.md) explain observed canopy inputs and attribution. [Execution ledger](docs/superpowers/plans/2026-09-17-river-oaks.md) records what still needs delivery.
+Raw GIS, generated neighborhood manifests, voice weights, review queues, and Unreal binary assets remain ignored. The bundled district derivative is attributed under [ODbL](preview/public/data/README.md); surface maps and HDR lighting have [CC0 source receipts](preview/public/assets/materials/sources.json). [Data contracts and source catalog](docs/data.md) explain observed canopy inputs and attribution. [Execution ledger](docs/superpowers/plans/2026-09-17-river-oaks.md) records what still needs delivery.

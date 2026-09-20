@@ -1,0 +1,69 @@
+{
+  "recorded_at": "2026-09-17T13:55:49.604414+00:00",
+  "status": "fail",
+  "scope": "District canopy source/derivative evidence; not overall project acceptance",
+  "runtime_sha256": "b65a9947cb9d838d4718b72f70fb51fc93f64656aa5c304c542de8ab86582657",
+  "runtime_bytes": 659941,
+  "source_integrity": {
+    "status": "pass",
+    "files": 69,
+    "tile_points": 3354009,
+    "clipped_points": 1169790,
+    "selection_sha256": "0f2343728496ea1747e5d8644a5d9ac99df44908683fde74eb32ed98a713691e",
+    "classification_counts": {
+      "1": 98970,
+      "2": 438492,
+      "3": 12153,
+      "4": 13460,
+      "5": 62167,
+      "6": 541561,
+      "7": 2987
+    }
+  },
+  "extraction": {
+    "voxel_size_m": 0.65,
+    "voxel_fields": [
+      "east_m",
+      "north_m",
+      "height_above_ground_m",
+      "source_return_count"
+    ],
+    "retained_classes": [
+      4,
+      5
+    ],
+    "classified_returns": 29565,
+    "supported_returns": 24387,
+    "unsupported_ground_returns": 4,
+    "height_rejected_returns": 5174,
+    "max_ground_support_distance_m": 11.93945614106419,
+    "ground_method": "Nearest mean of observed class-2 returns in a 2 m cell, within 12 m",
+    "source_ground_z_range_m": [
+      17.174166666666665,
+      18.4544
+    ]
+  },
+  "render_data": {
+    "voxels": 18832,
+    "interpreted_branch_supports": 230,
+    "scope": "Centroids of observed returns; branch supports are not surveyed trees"
+  },
+  "independent_canopy": {
+    "status": "fail",
+    "iou": 0.009860054004874707,
+    "coverage_fraction_error": 0.06677341105653874,
+    "lidar_footprint_m2": 4993.122809435364,
+    "reference_footprint_m2": 68.37507872170535,
+    "intersection_m2": 49.41936491583128,
+    "source_id": "hgac-urban-forestry-cir-2016",
+    "reference_export_sha256": "66e03b6420fd482cd3cd412c9715a3945b1d2c3a46a48e23790b6f3cc792c54f",
+    "reference_pixel_size_m": [
+      4.32152691653863,
+      4.32152691653846
+    ],
+    "source_date": "2018 leaf-off",
+    "reference_date": "Service label 2016; exact flight date/native resolution unavailable",
+    "limitation": "Large disagreement requires reference classification, site-change and sensor-season review; no accuracy pass inferred."
+  },
+  "source_receipt_sha256": "6bb0b3197097c3c22c5a85f47d065fd62472426d0d772debbfe7e36f6a1d2c98"
+}

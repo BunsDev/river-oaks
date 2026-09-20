@@ -66,12 +66,12 @@ The bonus flight is a browser camera experience. Its local scenic autopilot does
 
 Previous goal turn classification: **progress**. The authoritative worktree contains the live browser, moped, architecture kits, economic engine, tests, and verification artifacts; both dev servers were revalidated on continuation.
 
-- [ ] Replace flat visual treatment with physically based surface materials, environment lighting, contact shadows, and credible streetscape detail while retaining source geometry.
+- [x] Add local CC0 PBR surface maps, HDR environment lighting, shadows and interpreted streetscape detail while retaining source geometry. Photographic facade reconstruction remains outstanding.
 - [ ] Acquire/extract observed 3D vegetation efficiently if available, preserving provenance and independent canopy verification; do not label synthetic stem positions as surveyed trees.
-- [ ] Let the moped descend to street level with smooth controls, local terrain/building collision, and seamless return to the tour.
-- [ ] Make locals selectable/interactable; interactions must alter real scenario state with visible consequence and explicit Jev/local provenance.
-- [ ] Add consequential bounded scenarios with objectives, interventions, and outcome evidence, retaining deterministic accounting and reactive-only Jev.
-- [ ] Inspect live visual results and exercise behavioral/performance/secret tests; do not claim final photorealism or live Jev without their evidence.
+- [x] Let the moped descend to street level with smooth controls, local terrain/building collision, and seamless return to the tour. Current browser check reaches 3 m displayed ground clearance and then rises above roofs.
+- [x] Make locals selectable/interactable; interactions alter scenario state with visible consequence and explicit Jev/local provenance.
+- [x] Add bounded heatwave, storm and delivery scenarios with finite resources, delayed aid, failure states and demonstrated six-neighbor success.
+- [x] Inspect live visual results and exercise behavioral/secret checks and native UHD resolution. Final photorealism, target-GPU performance and live Jev remain unverified.
 
 ### User follow-up: collapsible controls for UHD viewing
 
@@ -83,7 +83,83 @@ Previous goal turn classification: **progress**. The authoritative worktree cont
 
 Val authorized reducing the geographic scope to improve a walkable, realistic experience around actual public storefronts and conversations with fictional locals. The neighborhood import remains available as source work; the focused district is the current experience priority.
 
-- [ ] Acquire the district's official public directory/layout, record date and spatial limitations; never invent store positions and label them accurate.
-- [ ] Add a focused district scene and ground-level walking controls with collision, storefront destinations, and the existing moped/expandable UHD interface.
-- [ ] Place fictional locals at public gathering points, add reactive conversations and interventions with visible outcomes.
-- [ ] Verify walking, store discovery, conversations, mission effects, scene switching and UHD/mobile UI end to end. Preserve explicit gaps for photographic geometry, live Jev, UE execution and hardware profiling.
+- [x] Match 30 mapped OSM tenants against the official directory; preserve ODbL attribution and source receipt. Use permitted OSM geometry rather than the proprietary venue map. Mark inferred storefront/arrival positions as unverified.
+- [x] Add a focused district scene and ground-level walking controls with source-footprint collision, storefront destinations, and the moped/expandable UHD interface.
+- [x] Place 24 fictional encounters at mapped public stops, with authored conversations, immediate reaction packets and consequential support actions.
+- [x] Verify walking, store discovery, nearby conversations, mission success, scene switching and UHD/mobile controls. See `data/reports/district-e2e.json` and `sidebar-e2e.json`.
+
+### Resident identities, local voices, and TypeSafe appearance
+
+- [x] Give 20 fictional residents first-person identities, interests, routines and separate per-scene encounter/support memories. Scenario resets preserve memories; scene reloads reset them.
+- [x] Add sourced fictional portrayals of Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé, with historical/contemporary labels and public biography links. Do not assert current private residences or clone voices/likenesses.
+- [x] Carry at most 512 characters of persona context into the existing Jev classification packet, preserving local safety and reactive-only decisions. Mock transport confirms delivery; actual Jev still runs in local fallback without credentials.
+- [x] Install optional free local Kokoro-82M int8 CPU voices, pinned model hashes, 24 distinct presets, one active job, bounded cache, opt-in UI and cancellation. Real WAV generation and browser playback/mute verified; no subjective listening-quality or mass-concurrency claim.
+- [x] Match neutral light/dark surfaces, pink accents and system typography to `BunsDev/typesafe-ai-playground` `app/dashboard.css` at `fcd1773`; leave that repository unchanged. Verify live OS appearance changes.
+- [x] Fix service-worker visibility on first economy launch while preserving subsequent user visibility choices.
+- [x] Verification: 73 JavaScript tests, 41 Python tests, Python lint/format, production browser build, UHD/mobile browser flows, worktree/history secret scans. Three.js chunk-size advisory remains nonfatal. No commit/push performed in this continuation.
+
+Current continuation classification: **progress**. Keep the full goal open: UE5 execution, photographic storefronts/interiors, production characters, observed 3D canopy, independent survey evidence, live Jev throughput and target-GPU 4K/60 profiling are still required. Browser improvements do not satisfy those production gates. Development servers remain on loopback ports 5173 and 8765.
+
+### Current visual-fidelity pass
+
+Previous turn classification: **progress**, verified against current modified files, stored browser receipts and live loopback processes. The full objective remains active.
+
+- [x] Replace rough masonry/opaque storefront bands with pale cut-stone cladding, recessed glazing and original display interiors, guided by Gensler's public district photograph while preserving mapped footprints. Tenant categories distinguish dining furniture from retail displays.
+- [x] Replace capsule figures with clothed CC0 human meshes generated through an isolated Blender/MPFB asset pipeline; retain fictional identities and bounded runtime cost. Six cached, skinned templates serve 24 encounters; model hashes, licenses and rebuild inputs are recorded.
+- [x] Inspect before/after street-level renders, exercise conversations and scenario behavior, and measure asset/render costs. Record source licenses and remaining photo/survey accuracy gaps in `docs/visual-fidelity.md`.
+
+Fresh validation on 2026-09-17: 74 JavaScript tests and 41 Python tests pass, with Python lint/format and the production browser build. District browser regression verifies walking, 30 destinations, nearby conversation, six-neighbor scenario success, scene switching and mobile/UHD controls. The visual receipt records 24 loaded characters, a 3840×2160 drawing buffer, no browser/WebGL errors and stable geometry/texture counts after two warmed scene round trips. Its short Chrome animation-frame sample measures 16.7 ms median and 17.4 ms p95; this does not establish target-GPU or UE5 performance.
+
+This continuation remains **progress**. Photographic storefront reconstruction, observed 3D canopy, autonomous resident navigation, production animation and the outstanding UE5/GIS/Jev acceptance gates remain open. The readonly asset-build disk image was detached; the development view and local voice bridge remain running.
+
+The final voice replay check exposed an HTTP 503 from the occupied local speech worker. The identical utterance subsequently returned a valid WAV. Added an explicit retry header for worker contention and cancellable, bounded client waiting for only the latest line; missing models still fail immediately. Regression tests reproduced the failure before the fix. Current suites pass 77 JavaScript tests and 42 Python tests; the production browser build also passes.
+
+### Observed district vegetation
+
+Previous turn classification: **progress**, revalidated against the modified worktree, browser receipts and live bridge. The district still has only four mapped OSM tree points with estimated dimensions; the larger neighborhood canopy comparison still fails.
+
+- [x] Acquire a bounded, complete district subset of the public USGS Coastal 2018 LiDAR EPT hierarchy, retaining source tiles, hashes, CRS and coverage evidence. All 63 intersecting additive tiles decoded to their declared counts; 1,169,790 points remain in the district margin.
+- [x] Inspect classifications and ground support before extracting canopy. Retain 24,387 class 4/5 returns with supported relative heights as 18,832 voxels. Keep the four OSM stems separate from 230 interpreted branch supports; species and current stem accuracy remain unverified.
+- [x] Integrate observed vegetation with spatial foliage batches, distance-based detail and CC0 bark maps. Inspect source/scene renders and verify source-frame checks, UHD rendering, resource stability and walking/conversation/scenario behavior.
+
+This turn is **progress**. Source integrity passes; the independent H-GAC comparison fails (IoU 0.00986; coverage-fraction error 0.06677). The live panel and `data/reports/district-canopy.json` preserve that failure. See `docs/vegetation.md` for dating, classification, relative-height and branch-interpretation limits. Full-neighborhood canopy, present-day site accuracy and the UE5 production gates remain open.
+
+The street regression exposed a cached-neighbor bug: rapid arrival followed by E could address the previous resident before the 150 ms HUD refresh. Talk now recomputes proximity at the action. A synchronous arrival/close/E regression opened Amara correctly; the six-neighbor mission, UHD/mobile controls and scene switching passed. Current suites pass 80 JavaScript and 50 Python tests. The visual run has no browser/WebGL errors, a native 3840×2160 buffer and unchanged warmed geometry/texture counts after two scene round trips. Its 16.7 ms median/17.5 ms p95 animation-frame sample remains a local Chrome observation, not target-GPU performance proof.
+
+### Resident movement and visible reactions
+
+Previous continuation: **progress**. Resident personas, local voices and observed foliage are present; the people still stand at fixed encounter points.
+
+- [x] Add bounded district navigation around source footprints and interpreted tree supports. Keep short public-stop routes outside the inference loop; reject inaccessible destinations without teleporting.
+- [x] Move residents at walking speed, pause for conversations and nearby visitors, and respond to weather with interpreted awning destinations. Batch immediate reactions with deadlines and stale-response rejection.
+- [x] Animate generic clothed characters from actual travel distance. Verify movement, collision, pause/resume, weather, conversations and resource scenarios in tests and the running development view.
+
+Routes, routines, shelter choices and character animation are simulation interpretations. They do not establish real pedestrian access, emergency shelter suitability, current residence or a public figure's actual behavior.
+
+This continuation is **progress**. Fourteen new JavaScript tests reproduced missing routing, excess movement per frame, opposing-walker deadlock, obsolete asynchronous paths, permanent shelter actions and incorrect redirect behavior before their fixes. All 94 JavaScript and 50 Python tests pass, along with Python lint/format, the production build, staged-hook tests and worktree/history secret scans. No commit or push was made.
+
+The actual browser verified worker-based routes, batched role packets, conversation holds, storm shelter/resumption, movement pause and reduced motion, plus a native 3840×2160 buffer. The local animation-frame sample was 20.8 ms median / 25 ms p95; this does not meet a measured 60 fps claim. The district regression still completed the six-neighbor objective, rapid E conversation and mobile controls. The persona/voice run verified all four named portrayals, encounter memory, the TypeSafe palette and actual 513,068-byte local WAV playback followed by mute. Receipts are in `data/reports/`. The live bridge remains in local-rules mode; no live Jev inference or UE5/target-GPU proof is claimed.
+
+### Visible volunteer visits
+
+Previous turn: **progress**, confirmed by the current worktree, browser receipts and running development services. District volunteer visits still complete solely by elapsed time.
+
+- [x] Make district visits require an assigned helper's physical arrival and on-site work. Preserve finite resources, pause/storm holds and generation fencing; return unused capacity when no route is available.
+- [x] Recruit existing available residents as volunteers and reuse the navigation worker and character assets. Show their progress and make active helpers easy to locate.
+- [x] Verify real arrival, unreachable routes, interrupted/stale work, weather and an achievable community objective, then inspect the live scene and leave development running.
+
+The community model remains fictional. Helpers, travel times and effects do not represent real residents, services or emergency response.
+
+This turn is **progress**. Six new regression tests cover physical arrival, worker movement around a wall, scenario/storm holds, route-failure refunds, stale route rejection and task-aware dialogue/reactions. All 100 JavaScript and 50 Python tests pass; the browser build and Python lint/format also pass. The native district browser run completed the six-neighbor objective with four physical visits, finite remaining supplies, rapid E interaction, mobile controls and correct navigation-worker disposal.
+
+The focused live visit traversed 29.32 meters and started on-site work at 1.436 meters from the recipient. Its visible supply bag, task-aware greeting, conversation hold, storm hold, ambient-pause behavior, completed request and reset cleanup all passed without browser errors. The cast remains 24 people, with shared character and bag assets and one route worker. See `data/reports/volunteer-visits-e2e.json`, `data/reports/district-e2e.json` and `docs/resident-life.md`. The unchanged neighborhood preview still has abstract timers. Live Jev, photogrammetric storefronts, UE5 execution and target-hardware 4K/60 fps remain unverified; this does not complete the full project goal.
+
+### Storefront lighting and reflections
+
+Previous continuation: **progress**. Live inspection shows weak glass reflections and uniformly lit display rooms. Unreal Editor remains unavailable on this Mac; a UE5 workstation/path question is pending while browser work continues.
+
+- [ ] Give thin storefront panes angle-dependent reflection, remove overlapping entry glazing, and add bounded local environment captures spread across frames.
+- [ ] Add original, reusable room occlusion and warm display-light gradients, preserving source footprints and exterior collision boundaries.
+- [ ] Verify reflection lifecycle/failure recovery, inspect clear/overcast and street/UHD renders, measure current frame cost, and leave development running.
+
+Local cubemap reflections and baked room shading are rendering approximations. They do not establish photographic reconstruction, real shop interiors, ray tracing or measured UE5 performance.

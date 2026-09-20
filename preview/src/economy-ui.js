@@ -9,7 +9,7 @@ const PRESETS = {
 const money = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 const formatTime = (seconds) => `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}`;
 
-export function createEconomyPanel({ onWeather }) {
+export function createEconomyPanel({ onWeather, onEnable = () => {} }) {
   const $ = (selector) => document.querySelector(selector);
   let world, state, shown = false, request = null, generation = 0, nextRequestAt = 0, lastPaint = 0;
   let mode = 'unavailable', baseline = null;
@@ -105,6 +105,7 @@ export function createEconomyPanel({ onWeather }) {
   $('#economy-run').addEventListener('click', () => {
     if (!state) return;
     state.running = !state.running;
+    if (!shown) onEnable();
     shown = true;
     invalidate();
     $('#economy-hud').hidden = false;

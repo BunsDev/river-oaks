@@ -5,6 +5,16 @@
 .community-primary, .community-controls button { padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 11px; }
 .community-primary { background: var(--forest); color: var(--paper); border-color: var(--forest); font-weight: 600; }
 #community-meet { width: 100%; margin-top: 9px; }
+#community-life { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:11px; text-align:left; }
+#community-life:hover:not(:disabled) { background:color-mix(in srgb,var(--accent) 9%,transparent); }
+.community-visits { display:grid; gap:8px; margin-top:12px; }
+.community-visits[hidden] { display:none; }
+.community-visit { padding:11px; border:1px solid var(--line); border-radius:8px; background:var(--paper); }
+.community-visit strong { font-size:11px; font-weight:600; }
+.community-visit p { margin:5px 0 7px; font-size:10px; line-height:1.5; color:var(--muted); }
+.community-visit button { font-size:10px; color:var(--accent); text-align:left; }
+.community-visit[data-phase="assisting"] { border-color:var(--accent); }
+#community-visit-notice { margin-top:10px; }
 .community-controls { display: flex; gap: 7px; margin-top: 13px; }
 .community-controls .community-primary { flex: 1; }
 .community-progress { margin: 14px 0 7px; font-size: 11px; font-variant-numeric: tabular-nums; }

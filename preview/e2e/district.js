@@ -9,7 +9,7 @@ async (page) => {
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   check(await page.locator('#destination option').count() === 30, 'Expected current mapped directory destinations');
-  await page.locator('[data-theme-preference=dark]').click();
+  await page.locator('button[data-theme-preference=dark]').click();
   check(await page.locator('html').getAttribute('data-theme') === 'dark', 'Dark appearance must apply');
   await page.locator('#panel-toggle').click();
   await page.waitForTimeout(400);
@@ -35,6 +35,18 @@ async (page) => {
   check(await page.locator('#community-dialogue').isVisible(), 'E must reopen a nearby local encounter');
   await page.locator('#community-close').click();
 
+  // Arrival, close and E in one browser task: no HUD timer may refresh in between.
+  const immediate=await page.evaluate(()=>{
+    document.querySelector('#community-local').value='local-10';
+    document.querySelector('#community-meet').click();
+    const expected=document.querySelector('#community-name').textContent;
+    document.querySelector('#community-close').click();
+    document.querySelector('#canvas-host').dispatchEvent(new KeyboardEvent('keydown',{code:'KeyE',bubbles:true}));
+    return {expected,actual:document.querySelector('#community-name').textContent,opened:!document.querySelector('#community-dialogue').hidden};
+  });
+  check(immediate.opened && immediate.actual===immediate.expected,'Immediate E must use the new arrival position, not the previous HUD neighbor');
+  await page.locator('#community-close').click();
+
   await page.locator('#community-reset').click();
   const targets = await page.locator('#community-local option').evaluateAll(options => options.filter(option => option.textContent.includes('request open')).map(option => option.value));
   check(targets.length === 8, 'Community scenario needs eight priority neighbors');
@@ -51,7 +63,7 @@ async (page) => {
     await page.locator('#community-meet').click();
     await page.locator('#community-supply').click();
   }
-  await page.waitForFunction(() => document.querySelector('#community-outcome').dataset.state === 'success', null, { timeout: 20000 });
+  await page.waitForFunction(() => document.querySelector('#community-outcome').dataset.state === 'success', null, { timeout: 90000 });
   const result = await page.locator('#community-outcome').textContent();
   const resources = await page.locator('#community-resources').textContent();
   check(result.includes('6 neighbors supported'), 'Interventions must actually complete the objective');
@@ -68,10 +80,13 @@ async (page) => {
   await page.locator('#scene-select').selectOption('neighborhood');
   await page.locator('#loading').waitFor({ state: 'hidden' });
   check(await page.locator('#district-directory').isHidden(), 'Neighborhood source map remains accessible');
+  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===0,'Leaving the district must terminate its route worker');
   await page.locator('#scene-select').selectOption('district');
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.setViewportSize({ width: 1920, height: 1080 });
   check(await page.locator('#walking-hud').isVisible(), 'Returning to district resumes walking');
+  await page.waitForTimeout(1200);
+  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===1,'Returning to the district must use exactly one new route worker');
   check(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
-  return { uhd, movedMeters: Math.hypot(moved[0]-start[0], moved[2]-start[2]), destinations:30, nearbyConversation:true, mission:result, resources, mobileNoOverflow:true, sceneSwitch:true, browserErrors:errors };
+  return { uhd, movedMeters: Math.hypot(moved[0]-start[0], moved[2]-start[2]), destinations:30, nearbyConversation:true, immediateArrivalConversation:immediate, mission:result, resources, mobileNoOverflow:true, sceneSwitch:true, routeWorkerLifecycle:true, browserErrors:errors };
 }

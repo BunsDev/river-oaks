@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-09-17T14:56:23.328Z",
+  "helperId": "local-22",
+  "cast": 24,
+  "walkedMeters": 29.32473459929375,
+  "arrivalSeparationMeters": 1.435510397941062,
+  "physicalArrival": true,
+  "pause": true,
+  "stormHold": true,
+  "ambientPauseKeepsVisits": true,
+  "visibleSupplyBag": true,
+  "taskAwareDialogue": true,
+  "conversationHoldsVisit": true,
+  "needsResolved": true,
+  "resetReleasesHelper": true,
+  "browserErrors": []
+}

@@ -14,7 +14,9 @@ import { createWalkingControls } from './walking-ui.js';
 import { createCommunityPanel } from './community-ui.js';
 import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildLocals } from './locals.js';
-import { buildFoliage } from './foliage.js';
+import { buildFoliage, buildObservedFoliage } from './foliage.js';
+import { validateVegetation } from './vegetation.js';
+import { createStorefrontReflections } from './reflections.js';
 import './style.css';
 import './playground-theme.css';
 
@@ -25,8 +27,10 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const styleNames = { tudor_revival: 'Tudor revival', georgian_colonial: 'Georgian colonial', french_eclectic: 'French eclectic', modern_estate: 'Modern estate' };
 let renderer, controls, world, worldGroup, buildingMesh, markerMesh, moped, economy, walking, community, localsGroup;
-let savedCamera = null, environmentAssets = null;
+let savedCamera = null, environmentAssets = null, storefrontReflections = null;
+const referenceGuidedStores = new Set(['Cartier', 'Dior', 'Harry Winston', 'Le Colonial', 'Steak 48', 'Van Cleef & Arpels']);
 let layers = {}, markers = [], animationTime = 0, moving = !reducedMotion, cameraTransition = null, loading = false;
+let lastRenderStats = 0;
 let overviewTarget = new THREE.Vector3(), closeupTarget = new THREE.Vector3(), extent = 4000;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 25000);
@@ -37,6 +41,7 @@ const clock = new THREE.Timer();
 const markerColor = new THREE.Color();
 const sunOffset = new THREE.Vector3();
 const shadowCenter = new THREE.Vector3();
+const reflectionPosition = new THREE.Vector3();
 
 function showError(message) {
   const panel = $('#loading');
@@ -71,13 +76,19 @@ function initializeRenderer() {
   controls.addEventListener('start', () => { cameraTransition = null; });
   moped = createHoverMoped({ camera, scene, host, reducedMotion, onExit: exitRide });
   let stormActive = false;
-  economy = createEconomyPanel({ onWeather(storm) {
+  economy = createEconomyPanel({ onEnable() {
+    if (markerMesh) markerMesh.visible = true;
+    $('input[data-layer="markers"]').checked = true;
+  }, onWeather(storm) {
     if (storm) $('#weather').value = 'overcast';
     else if (stormActive) $('#weather').value = 'clear';
     stormActive = storm;
     updateAtmosphere();
   } });
-  community = createCommunityPanel({ host: $('.panel-scroll'), getEconomy: () => economy.enabled ? economy.state : null, onFocus(local) {
+  community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
+    getVisitor: () => walking?.active ? walking.getPosition() : null,
+    getWeather: () => ({storm:stormActive,hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
+    getEconomy: () => economy.enabled ? economy.state : null, onFocus(local) {
     if (moped.active) exitRide();
     const position = walking.active ? walking.getPosition() : null;
     if (!position || Math.hypot(position[0]-local.position[0], position[1]-local.position[1]) > 6) {
@@ -87,9 +98,10 @@ function initializeRenderer() {
   $('.scene-section').after($('#community-section'));
   walking = createWalkingControls({ camera, host, reducedMotion, onExit: exitWalk, onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals });
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.bias = -0.00015;
-  sun.shadow.normalBias = 0.06;
+  const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
+  sun.shadow.mapSize.set(shadowResolution,shadowResolution);
+  sun.shadow.bias = -0.00002;
+  sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
   sun.shadow.camera.far = 12000;
   scene.add(ambient, sun, sun.target);
@@ -198,7 +210,7 @@ function buildParcels(data) {
 }
 
 function buildTrees(data) {
-  if (data.scene === 'district') return buildFoliage(data.trees);
+  if (data.scene === 'district') return data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees);
   const group = new THREE.Group();
   if (!data.trees.length) return group;
   const crowns = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#657f58', roughness: 1 }), data.trees.length);
@@ -252,10 +264,13 @@ function buildCanopy(data) {
 function populateWorld(data) {
   exitRide();
   exitWalk();
+  storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
     scene.remove(worldGroup);
     worldGroup.remove(buildingMesh);
     buildingMesh?.userData.dispose?.();
+    worldGroup.remove(localsGroup);
+    localsGroup?.userData.dispose?.();
     worldGroup.traverse((item) => {
       item.userData.texture?.dispose();
       item.geometry?.dispose();
@@ -278,6 +293,11 @@ function populateWorld(data) {
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   if (data.scene === 'district' && !economy.enabled) { markerMesh.visible = false; $('input[data-layer="markers"]').checked = false; }
   scene.add(worldGroup);
+  if (data.scene === 'district') storefrontReflections = createStorefrontReflections({
+    renderer, scene, materials: buildingMesh.userData.reflectionMaterials,
+    excluded: [...buildingMesh.userData.reflectionExclusions, localsGroup, markerMesh,
+      ...scene.children.filter(child => child !== worldGroup && !child.isLight)],
+  });
   const [west, south, east, north] = data.bounds_m;
   const center = [(west + east) / 2, (south + north) / 2];
   overviewTarget.set(center[0], terrainHeight(data.terrain, ...center), -center[1]);
@@ -301,6 +321,7 @@ function populateWorld(data) {
   if (data.scene === 'district') {
     const dior = data.stores.find(store => store.name === 'Dior');
     $('#destination').value = dior.id;
+    updateStorefrontEvidence();
     closeupTarget.fromArray(localToScene(dior.visit));
     $('#view-scale').textContent = 'Mapped footprints · interpreted facades';
     $('#connection').textContent = 'District map loaded · development view';
@@ -310,10 +331,15 @@ function populateWorld(data) {
   const canopy = data.canopy_reference;
   const hasCanopyCover = Boolean(canopy?.geometry);
   $('#canopy-state').textContent = data.trees.length ? `${data.trees.length.toLocaleString()} observed trees` : hasCanopyCover ? `${canopy.source_label_year ?? 'Historical'} cover · 0 tree points` : 'Not acquired · 0 trees';
+  if(data.vegetation) $('#canopy-state').textContent=`2018 LiDAR · ${(data.vegetation.footprint_area_m2/10000).toFixed(2)} ha canopy`;
   $('#canopy-layer').hidden = !hasCanopyCover;
   $('#canopy-layer-label').textContent = `${canopy?.source_label_year ?? 'Historical'} canopy cover`;
   $('#canopy-source').hidden = !hasCanopyCover;
   $('#canopy-source').textContent = hasCanopyCover ? `${canopy.source_label_year ?? 'Historical'} classified canopy footprint; not individual stems or species. Source: ${canopy.source_id}.` : '';
+  if(data.vegetation) {
+    $('#canopy-source').hidden=false;
+    $('#canopy-source').textContent=`2018 leaf-off LiDAR vegetation. Leaves and branch supports are interpreted; species are unknown. The older canopy comparison ${data.vegetation.independent_comparison.status==='pass'?'passes its provisional thresholds':'does not pass'}.`;
+  }
   const limitations = $('#limitations');
   limitations.replaceChildren(...(data.limitations ?? []).map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
   $('#selection').hidden = true;
@@ -338,13 +364,13 @@ function setCamera(preset, immediate = false) {
   $('#view-name').textContent = world.scene === 'district' ? preset === 'overview' ? 'River Oaks District · 4444 Westheimer' : 'District storefronts · closeup' : preset === 'overview' ? 'Neighborhood overview' : 'Residential block · closeup';
 }
 
-function enterWalk(position, lookAt) {
+function enterWalk(position, lookAt, pitch = 0) {
   if (!world || !walking) return;
   exitRide();
   if (!walking.active) savedCamera = { position: camera.position.clone(), target: controls.target.clone(), preset: ['overview', 'street'].find(name => $(`#${name}`).getAttribute('aria-pressed') === 'true') };
   cameraTransition = null;
   controls.enabled = false;
-  walking.enter(world, position, lookAt);
+  walking.enter(world, position, lookAt, pitch);
   $('#walk').setAttribute('aria-pressed', 'true');
 }
 
@@ -396,6 +422,7 @@ function updateAtmosphere() {
   if (layers.roads?.material) {
     layers.roads.material.roughness = weather === 'overcast' ? 0.38 : 1;
   }
+  storefrontReflections?.invalidate();
 }
 
 async function jsonResponse(path) {
@@ -418,10 +445,14 @@ async function loadWorld() {
   $('#loading p').textContent = 'Loading local road and parcel geometry…';
   try {
     const district = $('#scene-select').value === 'district';
-    const [worldResult, reportResult] = await Promise.allSettled([jsonResponse(district ? '/data/district.json' : '/v1/world'), district ? Promise.resolve(null) : jsonResponse('/v1/verification')]);
+    const [worldResult, reportResult, vegetationResult] = await Promise.allSettled([jsonResponse(district ? '/data/district.json' : '/v1/world'), district ? Promise.resolve(null) : jsonResponse('/v1/verification'), district ? jsonResponse('/data/district-vegetation.json') : Promise.resolve(null)]);
     if (worldResult.status !== 'fulfilled') throw worldResult.reason;
     const data = worldResult.value;
     if (data.schema_version !== 1 || !Array.isArray(data.bounds_m) || !['roads', 'parcels', 'buildings', 'trees'].every((key) => Array.isArray(data[key]))) throw new Error('The world manifest does not match the supported geometry schema.');
+    if(district) {
+      if(vegetationResult.status!=='fulfilled') throw vegetationResult.reason;
+      data.vegetation=validateVegetation(data,vegetationResult.value);
+    }
     populateWorld(data);
     if (district) {
       $('#verification-state').textContent = 'District reconstruction in progress';
@@ -456,12 +487,13 @@ function followSunShadow() {
   if (!world) return;
   const target = moped?.active || walking?.active ? camera.position : controls.target;
   const height = camera.position.y - terrainHeight(world.terrain, camera.position.x, -camera.position.z);
-  const span = Math.max(110, Math.min(2200, height * 0.6));
-  const snap = span * 2 / 2048;
+  const span = Math.max(walking?.active ? 36 : 110, Math.min(2200, height * 0.6));
+  const snap = span * 2 / sun.shadow.mapSize.x;
   shadowCenter.set(Math.round(target.x / snap) * snap, target.y, Math.round(target.z / snap) * snap);
   sun.target.position.copy(shadowCenter);
   sun.position.copy(shadowCenter).add(sunOffset);
-  Object.assign(sun.shadow.camera, { left: -span, right: span, top: span, bottom: -span });
+  const distance=sunOffset.length(), depth=Math.max(160,span*2);
+  Object.assign(sun.shadow.camera, { left: -span, right: span, top: span, bottom: -span, near:Math.max(1,distance-depth),far:distance+depth });
   sun.shadow.camera.updateProjectionMatrix();
 }
 
@@ -470,7 +502,8 @@ function render(now) {
   const delta = Math.min(clock.getDelta(), 0.08);
   economy?.update(delta, now);
   community?.update(delta, now);
-  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now);
+  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId);
+  layers.trees?.userData.update?.(camera.position);
   if (moving && !document.hidden) animationTime += delta;
   if (cameraTransition) {
     const t = Math.min(1, (now - cameraTransition.start) / 900);
@@ -517,15 +550,39 @@ function render(now) {
     $('#compass-arrow').style.transform = `rotate(${controls.getAzimuthalAngle() * 180 / Math.PI}deg)`;
   }
   followSunShadow();
+  if (storefrontReflections && environmentAssets) {
+    const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
+    if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
+    else {
+      const stop = world.stores.find(store => store.name === 'Dior').visit;
+      reflectionPosition.set(stop[0], terrainHeight(world.terrain, stop[0], stop[1]) + 2.5, -stop[1]);
+    }
+    storefrontReflections.update(now, reflectionPosition);
+  }
   renderer.render(scene, camera);
+  if (now-lastRenderStats>1000) {
+    host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
+    host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
+    lastRenderStats=now;
+  }
 }
 
 for (const preset of ['overview', 'street']) $(`#${preset}`).addEventListener('click', () => setCamera(preset));
 $('#ride').addEventListener('click', () => moped?.active ? exitRide() : enterRide());
 $('#walk').addEventListener('click', () => walking?.active ? exitWalk() : enterWalk());
 $('#scene-select').addEventListener('change', loadWorld);
-$('#visit-destination').addEventListener('click', () => { const store = world?.stores?.find(item => item.id === $('#destination').value); if (store) enterWalk(store.visit, store.facade); });
-document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => { if (layers[input.dataset.layer]) layers[input.dataset.layer].visible = input.checked; }));
+function updateStorefrontEvidence() {
+  const store = world?.stores?.find(item => item.id === $('#destination').value);
+  $('#storefront-evidence').textContent = referenceGuidedStores.has(store?.name)
+    ? 'Exterior reference informed this facade. Exact frontage and displays are unverified.'
+    : 'Directory-matched tenant. This facade and entrance remain interpreted.';
+}
+$('#destination').addEventListener('change', updateStorefrontEvidence);
+$('#visit-destination').addEventListener('click', () => { const store = world?.stores?.find(item => item.id === $('#destination').value); if (store) enterWalk(store.visit, store.facade, 0.22); });
+document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
+  if (layers[input.dataset.layer]) layers[input.dataset.layer].visible = input.checked;
+  storefrontReflections?.invalidate();
+}));
 $('#sun-hour').addEventListener('input', updateAtmosphere);
 $('#weather').addEventListener('change', updateAtmosphere);
 document.addEventListener('appearancechange', updateAtmosphere);
@@ -552,7 +609,7 @@ host.addEventListener('pointerup', (event) => {
   if (!hit) return;
   if (world.scene === 'district') {
     const store = world.stores.find(item => item.id === hit.object.userData.storeId);
-    if (store) { $('#destination').value = store.id; enterWalk(store.visit, store.facade); }
+    if (store) { $('#destination').value = store.id; enterWalk(store.visit, store.facade, 0.22); }
     return;
   }
   const building = world.buildings[hit.object.userData.buildingIndices?.[hit.instanceId]];

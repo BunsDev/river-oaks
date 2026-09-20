@@ -72,6 +72,22 @@ test('dispatch spends finite help once and resolves only after simulated work fi
   assert.equal(state.jobs.length, 0);
 });
 
+test('district visits cannot resolve until an assigned helper is physically present',()=>{
+  const state=createCommunity({...world,scene:'district'});state.running=true;
+  const local=priority(state)[0],helper=state.locals.find(l=>!l.priority);
+  ask(state,local);interactWithLocal(state,local.id,'dispatch');
+  const job=state.jobs[0];advance(state,12);
+  assert.equal(local.status,'aid_en_route','Elapsed time alone cannot finish a district visit');
+  assert.equal(job.progress,0);
+  job.helperId=helper.id;job.phase='assisting';advance(state,1);
+  assert.equal(job.progress,0,'Claiming arrival without physical proximity must not work');
+  helper.position=[local.position[0]+1.2,local.position[1],local.position[2]];
+  advance(state,1);assert.equal(job.progress,60);
+  helper.position[0]+=10;advance(state,1);assert.equal(job.progress,60,'Work stops if the helper leaves');
+  helper.position[0]-=10;advance(state,6);
+  assert.equal(local.status,'supported');assert.equal(state.jobs.length,0);
+});
+
 test('unmet needs worsen, failure is finite, and finished missions cannot continue spending', () => {
   const state = start(), local = priority(state)[0], original = local.need;
   advance(state, 10);

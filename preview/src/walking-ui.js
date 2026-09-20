@@ -17,7 +17,16 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
     if (!reducedMotion && state.speed > 0.1) camera.position.y += Math.sin(state.distance * 6.4) * 0.012;
     camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
   };
-  const talk = () => { if (nearest) { clear(); onTalk(nearest.id); } };
+  const findNearest = () => {
+    let result = null, distance = 4.5;
+    for (const local of getLocals() ?? []) {
+      const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
+      if (d < distance) { result = local; distance = d; }
+    }
+    return result;
+  };
+  // The HUD is throttled; an arrival followed by E must use the current position.
+  const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
   $('#walking-exit').addEventListener('click', onExit);
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
@@ -59,10 +68,11 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
       state.yaw = Math.atan2(state.position[0]-position[0], state.position[2]+position[1]);
       state.pitch = -0.04;
     },
-    enter(world, position = world.walkSpawn, lookAt) {
+    enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
       environment = createWalkingEnvironment(world);
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);
+      state.pitch = pitch;
       active = true; clear(); hud.hidden = false;
       document.body.classList.add('walking');
       camera.fov = 65; camera.near = 0.06; camera.updateProjectionMatrix();
@@ -82,11 +92,7 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
       place();
       if (now - lastPaint < 150) return;
       lastPaint = now;
-      nearest = null; let distance = 4.5;
-      for (const local of getLocals() ?? []) {
-        const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
-        if (d < distance) { nearest = local; distance = d; }
-      }
+      nearest = findNearest();
       $('#walking-talk').disabled = !nearest;
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       $('#walking-place').textContent = nearest?.anchorName ?? `${state.distance.toFixed(0)} m walked · public district paths`;

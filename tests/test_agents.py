@@ -67,12 +67,22 @@ async def test_jev_batches_reference_agent_and_local_safety_overrides():
     async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
         engine = DecisionEngine(client=client, api_key="test-key", batch_size=2)
         packet = snapshot(5)
+        packet.agents[0].role_context = "Maya, fictional River Oaks resident; visitor encounters 2"
         packet.agents[0].blocked = True
         result = await engine.decide(packet)
     assert len(calls) == 3
     assert result["tick"] == 7
     assert result["decisions"][0] == {"id": "npc-0", "action": "stop", "source": "safety_override"}
     assert result["decisions"][1]["source"] == "jev"
+    assert calls[0]["state"]["agents"]["npc-0"]["role_context"] == packet.agents[0].role_context
+
+
+def test_resident_context_is_optional_and_bounded():
+    packet = snapshot(1).model_dump()
+    assert packet["agents"][0]["role_context"] is None
+    packet["agents"][0]["role_context"] = "x" * 513
+    with pytest.raises(ValidationError):
+        Snapshot.model_validate(packet)
 
 
 async def test_timeouts_keep_500_agents_and_bound_parallelism():

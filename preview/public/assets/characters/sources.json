@@ -1,0 +1,74 @@
+{
+  "generator": "MPFB 2.0.17 / Blender 5.2.1 LTS",
+  "source": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+  "license": "CC0-1.0",
+  "fictional_generic_appearance": true,
+  "files": [
+    {
+      "id": "woman-casual",
+      "path": "/assets/characters/woman-casual.glb",
+      "bytes": 1575648,
+      "sha256": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+      "skin": "young_african_female",
+      "outfit": "female_casualsuit01",
+      "hair": "bob01",
+      "shoes": "shoes02",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "man-casual",
+      "path": "/assets/characters/man-casual.glb",
+      "bytes": 1718048,
+      "sha256": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad",
+      "skin": "young_caucasian_male",
+      "outfit": "male_casualsuit02",
+      "hair": "short01",
+      "shoes": "shoes01",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "woman-tailored",
+      "path": "/assets/characters/woman-tailored.glb",
+      "bytes": 1443576,
+      "sha256": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+      "skin": "middleage_caucasian_female",
+      "outfit": "female_elegantsuit01",
+      "hair": "bob02",
+      "shoes": "shoes02",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "man-tailored",
+      "path": "/assets/characters/man-tailored.glb",
+      "bytes": 1594528,
+      "sha256": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+      "skin": "middleage_african_male",
+      "outfit": "male_elegantsuit01",
+      "hair": "short04",
+      "shoes": "shoes03",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "woman-daywear",
+      "path": "/assets/characters/woman-daywear.glb",
+      "bytes": 1908000,
+      "sha256": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+      "skin": "young_asian_female",
+      "outfit": "female_casualsuit02",
+      "hair": "ponytail01",
+      "shoes": "shoes01",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "man-workwear",
+      "path": "/assets/characters/man-workwear.glb",
+      "bytes": 1615652,
+      "sha256": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+      "skin": "middleage_asian_male",
+      "outfit": "male_worksuit01",
+      "hair": "short02",
+      "shoes": "shoes04",
+      "license": "CC0-1.0"
+    }
+  ]
+}

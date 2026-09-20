@@ -14,6 +14,7 @@ ASSETS = {
     "asphalt": "asphalt_02",
     "pavement": "pavement_03",
     "stone": "large_sandstone_blocks_01",
+    "bark": "bark_brown_02",
 }
 SKY = "kloofendal_48d_partly_cloudy_puresky"
 MAX_FILE_BYTES = 12 * 1024 * 1024

@@ -1,6 +1,6 @@
 // All people, needs, resource costs and outcomes are fictional simulation rules.
 // Source district locations anchor encounters; they do not identify real people.
-import { createPersona } from './personas.js';
+import { createPersona, residentContext } from './personas.js';
 export const COMMUNITY_SCENARIOS = Object.freeze({
   heatwave: Object.freeze({
     title: 'Heatwave support', need: 'cooling supplies',
@@ -59,7 +59,7 @@ function makeLocals(world) {
 }
 
 export function createCommunity(world) {
-  const state = { locals: makeLocals(world), generation: 0, selectedId: null };
+  const state = { locals: makeLocals(world), generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }
@@ -156,6 +156,11 @@ export function stepCommunity(state, realDelta, economy) {
     for (const job of state.jobs) {
       const local = state.locals.find((item) => item.id === job.localId);
       if (local.status !== 'aid_en_route') continue;
+      if(state.physicalVisits) {
+        const helper=state.locals.find(item=>item.id===job.helperId);
+        if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
+        if(helper.id===state.selectedId || ['pause','stop','redirect','seek_shelter'].includes(helper.life?.action)) continue;
+      }
       job.progress = Math.min(job.duration, job.progress + workRate);
       if (job.progress >= job.duration) {
         local.need = 0;
@@ -197,7 +202,7 @@ export function interactWithLocal(state, id, action) {
     if (state.helpBudget < 1) return respond(false, 'no_help', 'All volunteer visits have been committed.');
     state.helpBudget -= 1;
     const duration = state.scenario.dispatchSeconds;
-    state.jobs.push({ localId: id, generation: state.generation, progress: 0, duration });
+    state.jobs.push({ id:`visit-${state.generation}-${id}`,localId: id, generation: state.generation, progress: 0, duration,phase:state.physicalVisits?'queued':'abstract',helperId:null });
     local.status = 'aid_en_route';
     event(state, `Volunteer dispatched to ${local.name}; arrival and support take simulation time.`);
     return respond(true, 'dispatched', 'Thank you. I will wait for the volunteer visit. My need can still grow until they arrive.');
@@ -213,13 +218,24 @@ export function interactWithLocal(state, id, action) {
   return respond(true, local.status === 'supported' ? 'supported' : 'relieved', local.status === 'supported' ? 'That covers what I need. Thank you for checking on me.' : 'That helps right away. I could still use another delivery or a volunteer visit.');
 }
 
+export function returnUnroutableVisit(state,id) {
+  const job=state.jobs.find(job=>job.id===id && job.generation===state.generation);
+  if(!job || !state.physicalVisits || job.phase==='assisting' || job.progress>0) return false;
+  state.jobs=state.jobs.filter(item=>item!==job);
+  const local=state.locals.find(local=>local.id===job.localId);
+  if(local?.status==='aid_en_route') local.status='needs_help';
+  state.helpBudget++;
+  event(state,`No walkable volunteer route to ${local?.name ?? 'this neighbor'}. One visit returned; choose another intervention.`);
+  return true;
+}
+
 export function snapshotForLocal(state, id, interaction = 'ask', tick = 0) {
   const local = state.locals.find((item) => item.id === id);
   if (!local || !Number.isInteger(tick) || tick < 0) return null;
   state._packet = { id, tick, generation: state.generation };
   return {
     schema_version: 1, tick,
-    agents: [{ id, kind: 'resident', position: [...local.position], activity: `neighbor ${String(interaction).slice(0, 12)}; ${state.scenarioKey}; need ${Math.round(local.need)}`.slice(0, 64), nearby: [{ id: 'visitor', kind: 'pedestrian', distance_m: 2 }], blocked: false, vehicle_distance_m: null }],
+    agents: [{ id, kind: 'resident', position: [...local.position], activity: `neighbor ${String(interaction).slice(0, 12)}; ${state.scenarioKey}; need ${Math.round(local.need)}`.slice(0, 64), role_context: residentContext(local), nearby: [{ id: 'visitor', kind: 'pedestrian', distance_m: 2 }], blocked: false, vehicle_distance_m: null }],
     weather: { storm: state.storm, rain: state.storm ? 1 : state.scenarioKey === 'storm' ? 0.3 : 0, humidity: state.scenarioKey === 'heatwave' ? 0.9 : 0.72 }, hour: 15,
   };
 }

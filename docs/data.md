@@ -8,7 +8,7 @@ The pipeline downloads a bounded subset of public road and parcel geometry. It r
 | Roads | [City of Houston street centerlines](https://geogimsms.houstontx.gov/arcgis/rest/services/HPC/LandbaseAndRoads_hpc/MapServer/9) | Geometry, `OBJECTID`, `NAME`, and `ST_TYPE` |
 | Ground elevation | [USGS 3DEP elevation service](https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer) | Houston 2024 catalog raster, NAVD88; observed DEM acquired |
 | Historical canopy footprint | [H-GAC Urban Forestry CIR layer 3](https://gis.h-gac.com/arcgis/rest/services/UrbanForestry/UrbanForestry_CIR_UA/MapServer/3) | Service labeled 2016; acquired footprint, no stems/heights/species |
-| Individual canopy heights | [USGS 2018 Coastal LiDAR EPT](https://usgs-lidar-public.s3.amazonaws.com/TX_Coastal_B1_2018/ept.json) | Metadata inspected; vegetation points not yet extracted |
+| District vegetation heights | [USGS 2018 Coastal LiDAR EPT](https://usgs-lidar-public.s3.amazonaws.com/TX_Coastal_B1_2018/ept.json) | District returns extracted and rendered; stems/species unverified. See [evidence](vegetation.md). |
 
 No Google Earth imagery is downloaded or redistributed. Regional land-cover forest classes cannot establish individual live-oak placement. The catalog does not imply that missing datasets have been licensed or acquired.
 

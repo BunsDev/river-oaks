@@ -28,6 +28,8 @@ export function conversationLine(local, topic) {
   if (persona.memory.topics.length > 6) persona.memory.topics.shift();
   if (topic === 'greeting') {
     persona.memory.encounters++;
+    const helping=local.life?.helping;
+    if(helping) return `${persona.portrayal?'In this imagined visit, ':''}I’m ${local.name}. ${helping.onSite?'I’m here helping':'I’m on my way to help'} ${helping.name} with ${helping.need}. I’ll carry on after our chat.`;
     if (persona.memory.supportReceived) return `Good to see you again. I remember the support you offered. Thank you for stopping by ${local.anchorName}.`;
     if (persona.memory.encounters > 1) return `Welcome back. I’m still enjoying the afternoon near ${local.anchorName}. How is your walk going?`;
     return persona.portrayal ? persona.about : `Hi, I’m ${local.name}. I live here in River Oaks. ${local.anchorName} is one of my stops today. Do you have a moment to chat?`;
@@ -36,4 +38,14 @@ export function conversationLine(local, topic) {
   if (topic === 'story') return persona.story ?? (seen ? `We were talking about ${persona.interest}. I’d enjoy hearing what you noticed as you walked between the storefronts.` : `What I love about a familiar place is noticing a new detail. Around here, ${persona.interest} always give me a reason to slow down. What caught your attention today?`);
   if (topic === 'district') return 'We’re at River Oaks District, 4444 Westheimer. The public lanes connect shops, restaurants and galleries. Pick a storefront in the menu to arrive nearby, or take your time walking between them. I’m staying near '+local.anchorName+' for now.';
   return '';
+}
+
+export function residentContext(local) {
+  const persona = local.persona;
+  if (!persona) return 'Fictional River Oaks resident';
+  const identity = persona.portrayal
+    ? `${persona.name}; fictional portrayal, ${persona.era} cultural guest; no current private residence asserted`
+    : `${persona.name}; fictional River Oaks resident, acting from a first-person local perspective`;
+  const helping=local.life?.helping;
+  return `${identity}.${helping?` Current visit: helping ${helping.name} with ${helping.need}.`:''} Near ${local.anchorName}. Interested in ${persona.interest}. Usual rhythm: ${persona.routine}. Visitor encounters ${persona.memory.encounters}; support offered ${persona.memory.supportReceived}.`.slice(0,512);
 }
