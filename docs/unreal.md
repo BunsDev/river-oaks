@@ -1,10 +1,10 @@
 # Unreal Engine foundation
 
-This is a **GIS blockout**, not a photorealistic scene. Unreal Engine is not installed on the development host, so the C++ module, editor script, automation tests, rendered scene, and packaged build have **not been compiled or run**. No 4K/60 fps claim is made. The generated map is intentionally not checked in because creating it requires the editor.
+This is a **GIS blockout**, not a photorealistic scene. The Editor and Game Development targets compile on Unreal Engine 5.8.2 with Xcode 26.6 on an Apple M3 Max. All eight native automation tests pass. Map bootstrap, saved-volume persistence, and rendered SSAO are verified; see [engine acceptance](engine-acceptance.md). Packaging remains unverified. No 4K/60 fps claim is made. The generated map is intentionally not checked in because creating it requires the editor.
 
 ## Build and open
 
-1. Install Unreal Engine **5.6** and its supported native toolchain. Generate project files for `unreal/RiverOaks.uproject`, then build the **RiverOaksEditor Development** target using the engine's `Build.bat` (Windows) or `Build.sh` (macOS/Linux). The module uses Engine, HTTP, Json and InputCore; no marketplace plugin is required.
+1. Install Unreal Engine **5.8.2** and its supported native toolchain. Generate project files for `unreal/RiverOaks.uproject`, then build the **RiverOaksEditor Development** target using the engine's `Build.bat` (Windows) or `Build.sh` (macOS/Linux). The module uses Engine, HTTP, Json and InputCore; no marketplace plugin is required.
 2. Generate `unreal/Content/Data/world.json` using the repository pipeline. Keep the manifest and its verification report together. The loader accepts schema 1, EPSG:32615, local east/north/up meters; it converts to Unreal east/south/up centimeters. `center` on buildings and `position` on trees denote their base, not geometric center.
 3. Open the project. Before the map exists, the configured startup map cannot load; create/open an empty level. Save any current work. In the Python console run:
 
@@ -34,8 +34,8 @@ Replace the platform/script for your installation. This is an instruction to run
 Newly bootstrapped maps contain **River Oaks Global Post Process**, enabled with
 Infinite Extent (Unbound), blend weight 1, and AO intensity 0.6, radius 100 and
 quality 100. Only those AO settings are overridden; other post-process settings
-retain their existing values. These are initial tuning values, not render-verified
-quality or performance claims.
+retain their existing values. These are initial tuning values. The native run confirms that SSAO renders; it does
+not establish final art quality or a performance target.
 
 For an existing map, open the intended map and run this in the editor Python console:
 
@@ -53,24 +53,38 @@ volumes cause an explicit error. The bootstrap still refuses to overwrite maps.
 Restart the editor after updating `DefaultEngine.ini` so its SystemSettings apply.
 The config selects SSAO (`r.AmbientOcclusion.Method=0`), enables quality-selected
 AO levels, disables Lumen ShortRangeAO and enables `r.Lumen.DiffuseIndirect.SSAO`.
-Lumen GI and reflections remain enabled. Epic's
+Lumen GI and reflections remain enabled. `r.GenerateMeshDistanceFields=True`
+provides the geometry representation required by Lumen software ray tracing;
+without it, Unreal reports that Lumen has no ray tracing data. Restart after
+changing this setting and allow the distance fields to build. See Epic's
+[Lumen technical details](https://dev.epicgames.com/documentation/unreal-engine/lumen-technical-details-in-unreal-engine). Epic's
 [UE5.6 rendering update](https://www.docswell.com/s/EpicGamesJapan/KWM1EQ-CEDEC2025-ue5_6update)
 describes the Lumen SSAO path; the
 [PostProcessSettings API](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/PostProcessSettings?application_version=5.6)
 documents the volume controls.
 
-Engine acceptance remains pending: build/open with UE5.6, bootstrap or update the
-map, confirm exactly one named unbound volume, save/reopen, and query the four
-console variables above. At High/Epic scalability, compare the same camera with
-AO intensity 0 versus 0.6 around building/ground contacts. Record screenshots and
-GPU timings. Python tests exercise setup orchestration with an editor double;
-they do not verify Unreal property binding, persisted maps or rendered SSAO.
+The UE5.8.2 acceptance run built both targets, passed all eight native tests,
+saved and reopened exactly one named unbound volume, and verified the four
+console variables. A GPU capture contains the SSAO setup and pixel passes.
+See [the acceptance record](engine-acceptance.md) for evidence and limitations.
+The Python unit tests cover orchestration with an editor double; native checks
+establish the Unreal property bindings, persistence, and rendering separately.
+
+For a map created before instanced material usage was enabled, run this once in
+the editor Python console to update the generated material:
+
+```python
+import runpy, unreal
+
+bootstrap = runpy.run_path(unreal.Paths.project_content_dir() + "Python/bootstrap_world.py")
+bootstrap["configure_blockout_material"](unreal.load_asset(bootstrap["MATERIAL"]))
+```
 
 ## What runs in the foundation
 
 The actor reads `Content/Data/world.json`, rejects malformed geometry, and creates instanced road boxes, four representative roof treatments (Tudor, Georgian, French and modern), building masses, trunk/canopy shapes and NPC markers. Roads preserve input polylines and declared widths; road surfaces are narrow flat prisms, not intersection topology. Parcel boundaries are used by the offline pipeline to place houses; the runtime does not draw parcels. Tree arrays remain empty when no observed canopy input is supplied. The ground is flat; no elevation model has been supplied.
 
-NPCs are scaled sphere markers, with pedestrians and joggers following road-edge offsets. Marker rendering now sits behind the `IRiverHumanBackend` contract (`Source/RiverOaks/Public/RiverOaksHumans.h`): `ARiverOaksWorld::MoveAgents` computes the authoritative position and hands each backend a sequenced `FRiverHumanPose`; `FRiverMarkerBackend` is the built-in fallback. Backend discovery is enabled (`bRiverHumanBackendDiscoveryEnabled` is `true`), so a plugin registered under the `RiverHumanBackend` modular feature with a higher priority replaces the marker backend with no host change. Appearance is resolved, never authored: `SpawnAgents` calls `URiverAppearanceCatalogue::Resolve` and `FRiverRecipeValidator::Validate` before `CreateHuman`, and falls back to the marker backend on rejection. The catalogue holds the same six CC0 profiles the browser showcase ships, and the four fictional portrayals are locked to fixed generic presets; `tests/test_appearance_catalogue.py` enforces that parity in CI (see `docs/astra-integration.md`). Like the rest of this module, that code is authored but uncompiled here. Local motion caps each step at 50 ms, stops at static collision/bounds, checks other agents, and reverses when obstructed. This is a lightweight movement foundation, not skeletal animation, crowd navigation, surveyed sidewalks, vehicle traffic or a complete daily schedule. Local schedules pause pedestrians overnight (before 06:00 and from 22:00) and joggers overnight/at midday (11:00–17:00). Inference cannot override these motion limits. Storm state selects shelter; rain above 0.5 or humidity above 0.85 slows active pedestrians. External stop/pause/shelter decisions remain stationary even when local rules allow movement. Intersection crossings and route continuity still require a lane/sidewalk graph. `seek_shelter` currently pauses the marker; no reachable shelter search exists.
+NPCs are scaled sphere markers, with pedestrians and joggers following road-edge offsets. Marker rendering now sits behind the `IRiverHumanBackend` contract (`Source/RiverOaks/Public/RiverOaksHumans.h`): `ARiverOaksWorld::MoveAgents` computes the authoritative position and hands each backend a sequenced `FRiverHumanPose`; `FRiverMarkerBackend` is the built-in fallback. Backend discovery is enabled (`bRiverHumanBackendDiscoveryEnabled` is `true`), so a plugin registered under the `RiverHumanBackend` modular feature with a higher priority replaces the marker backend with no host change. Appearance is resolved, never authored: `SpawnAgents` calls `URiverAppearanceCatalogue::Resolve` and `FRiverRecipeValidator::Validate` before `CreateHuman`, and falls back to the marker backend on rejection. The catalogue holds the same six CC0 profiles the browser showcase ships, and the four fictional portrayals are locked to fixed generic presets; `tests/test_appearance_catalogue.py` enforces that parity in CI (see `docs/astra-integration.md`). That code compiles in both native targets, and its authority, backend-selection, pose-sequence and recipe tests pass in UE5.8.2. Local motion caps each step at 50 ms, stops at static collision/bounds, checks other agents, and reverses when obstructed. This is a lightweight movement foundation, not skeletal animation, crowd navigation, surveyed sidewalks, vehicle traffic or a complete daily schedule. Local schedules pause pedestrians overnight (before 06:00 and from 22:00) and joggers overnight/at midday (11:00–17:00). Inference cannot override these motion limits. Storm state selects shelter; rain above 0.5 or humidity above 0.85 slows active pedestrians. External stop/pause/shelter decisions remain stationary even when local rules allow movement. Intersection crossings and route continuity still require a lane/sidewalk graph. `seek_shelter` currently pauses the marker; no reachable shelter search exists.
 
 One asynchronous HTTP request may be outstanding at a time. Packets are sent at most every two seconds; they contain up to 500 agents and eight nearby observations each. A 1.25-second HTTP timeout and 1.5-second local watchdog bound pending work; stale tick/age responses and malformed actions are rejected. Decisions expire after 1.5 seconds. Callbacks explicitly execute on the game thread. Geometry collision and nearby-agent checks run locally regardless of service output. The server is fixed to loopback; inference cannot supply URLs or execute code.
 
@@ -92,6 +106,6 @@ Run the automation tests after building:
   -TestExit="Automation Test Queue Empty" -log
 ```
 
-Tests were written before the C++ helpers. Their red/green execution is blocked by the absent engine; they are **unexecuted tests**, not passing tests. They cover coordinate handedness/unit conversion, ground-centered building placement, bounded movement/population, stale response policy, action safety, and authoritative schedule/weather limits against external movement decisions. They do not establish that UHT, the runtime loader, map bootstrap, rendering or packaging works.
+The C++ automation tests compile with the Editor target. Their execution status is recorded in [engine acceptance](engine-acceptance.md). They cover coordinate handedness/unit conversion, ground-centered building placement, bounded movement/population, stale response policy, action safety, and authoritative schedule/weather limits against external movement decisions. They do not establish that map bootstrap, rendering, or packaging works.
 
-Before accepting the Unreal deliverable, build both Editor and Game targets; run automation; bootstrap and play the map; inspect orientation and known intersections; test service absent/slow/invalid responses; verify no bounds or house collisions; package and verify JSON staging; profile 500 agents at 4K on named target hardware; attach frame timing, screenshots and a capture. Review the generated geometry and GIS acceptance report independently. World Partition/HLOD, production traffic/crowds, weather/audio effects, accurate ground/canopy and licensed photoreal assets remain separate delivery work.
+For production acceptance, repeat the recorded native build, automation, bootstrap and play checks; inspect orientation and known intersections; test service absent/slow/invalid responses; verify no bounds or house collisions; package and verify JSON staging; profile 500 agents at 4K on named target hardware; attach frame timing, screenshots and a capture. Review the generated geometry and GIS acceptance report independently. World Partition/HLOD, production traffic/crowds, weather/audio effects, accurate ground/canopy and licensed photoreal assets remain separate delivery work.

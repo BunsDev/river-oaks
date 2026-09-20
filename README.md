@@ -1,6 +1,6 @@
 # River Oaks
 
-Build a geospatial Unreal Engine world and run local NPC reactions through TypeSafe Jev. This repository provides a data/decision foundation, an interactive browser showcase, and an uncompiled UE5 blockout. The verification report records remaining production gates.
+Build a geospatial Unreal Engine world and run local NPC reactions through TypeSafe Jev. This repository provides a data/decision foundation, an interactive browser showcase, and a UE5 blockout validated on 5.8.2. The verification report records remaining production gates.
 
 ## Run the live showcase
 
@@ -62,7 +62,7 @@ uv run river-oaks serve
 
 `verify` currently exits **1 (failed)** when supplied the observed canopy reference: generated tree coverage is still zero. Other production gates remain blocked. Exit 2 means blocked without a failing comparison; exit 0 is reserved for complete acceptance. The decision service runs at `http://127.0.0.1:8765` using local rules until you supply a Jev key.
 
-Follow [the Unreal setup](docs/unreal.md) to compile `unreal/RiverOaks.uproject`, create the map, and explore it. Unreal Engine was unavailable on the development host; the C++ module and editor bootstrap have not been executed. You need UE5.6 and its native toolchain. The project is not a finished photorealistic environment.
+Follow [the Unreal setup](docs/unreal.md) to compile `unreal/RiverOaks.uproject`, create the map, and explore it. Use UE5.8.2 and its native toolchain. Editor and Game targets compile on macOS; see [engine acceptance](docs/engine-acceptance.md) for runtime verification status. The project is not a finished photorealistic environment.
 
 ## Current evidence
 

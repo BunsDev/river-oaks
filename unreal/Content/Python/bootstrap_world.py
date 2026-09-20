@@ -1,4 +1,4 @@
-"""Run in UE5.6 Editor Python AFTER compiling the RiverOaks module.
+"""Run in UE5.8 Editor Python AFTER compiling the RiverOaks module.
 
 Creates a fresh blockout map. Refuses to overwrite an existing map. This script
 is a setup step, not a render/performance verification.
@@ -12,6 +12,15 @@ import unreal
 
 MAP = "/Game/Maps/RiverOaks"
 MATERIAL = "/Game/Generated/M_Blockout"
+
+
+def configure_blockout_material(material):
+    unreal.MaterialEditingLibrary.set_material_usage(
+        material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES
+    )
+    unreal.MaterialEditingLibrary.recompile_material(material)
+    if not unreal.EditorAssetLibrary.save_loaded_asset(material):
+        raise RuntimeError("Blockout material save failed.")
 
 
 def main():
@@ -47,8 +56,7 @@ def main():
         unreal.MaterialEditingLibrary.connect_material_property(
             roughness, "", unreal.MaterialProperty.MP_ROUGHNESS
         )
-        unreal.MaterialEditingLibrary.recompile_material(material)
-        assets.save_loaded_asset(material)
+    configure_blockout_material(material)
     assets.make_directory("/Game/Maps")
     levels = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)

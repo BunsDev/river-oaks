@@ -1,8 +1,8 @@
 # Tafi Astra humans in the River Oaks UE5 simulator
 
 **Status:** proposed integration plan, rebased onto the repository as of
-`feat/river-oaks-foundation` @ `1fe85a3` (2026-09-17). Nothing in this document
-is implemented. It replaces an earlier draft that assumed the repository was an
+`feat/river-oaks-foundation` @ `1fe85a3` (2026-09-17). The host foundation described below is implemented and validated on UE5.8.2;
+Astra integration remains proposed. It replaces an earlier draft that assumed the repository was an
 empty scaffold with no engine choice; that assumption is false and the earlier
 architecture (a standalone C++20/CMake renderer sidecar) is withdrawn.
 
@@ -12,7 +12,7 @@ Do not approve any Astra code, asset, or license commitment yet.
 
 ## 1. Summary
 
-- River Oaks already has a host for human rendering: the `RiverOaks` UE5.6 C++
+- River Oaks already has a host for human rendering: the `RiverOaks` UE5.8.2 C++
   module. Astra is integrated as a **character backend inside that module**,
   replacing the instanced sphere NPC markers. No second native build system.
 - The repository already owns the two contracts the earlier draft proposed to
@@ -24,9 +24,9 @@ Do not approve any Astra code, asset, or license commitment yet.
   autofit, morphs, streamed assets, desktop and mobile OS support) but not a
   current SDK contract. Every vendor-specific fact below is a **probe gate**,
   not a known value. Nothing here invents Tafi API symbols.
-- Three prerequisites are outside the codebase: a current Astra SDK and EULA,
-  an Unreal Engine 5.6 toolchain on a build host (the module has never been
-  compiled; see `docs/unreal.md`), and a repository license (none exists).
+- Two prerequisites remain outside the codebase: a current Astra SDK and EULA,
+  and a repository license (none exists). The host now builds and passes native
+  tests on Unreal Engine 5.8.2; see [engine acceptance](engine-acceptance.md).
 - The showcase's four fictional portrayals of real Houston public figures rely
   on a "generic meshes do not reproduce their likenesses" disclaimer
   (`docs/showcase.md`). Ultra-realistic humans remove that margin; a likeness
@@ -397,7 +397,7 @@ licensed host. It must produce a written record of:
 | Probe | Pass condition |
 |---|---|
 | SDK identity | exact version, package hashes, EULA copy archived internally |
-| Toolchain | compiles with the UE5.6 supported compiler; runtime dependencies listed |
+| Toolchain | compiles with the UE5.8.2 supported compiler; runtime dependencies listed |
 | Hosting | can be linked into a UE module, or needs its own process/renderer |
 | Basis | handedness, up, forward, unit, quaternion order verified experimentally |
 | Skeleton | joint hierarchy, names, bind pose dumped to `astra.json` |
@@ -449,7 +449,7 @@ performance number is quoted here because none has been measured.
 
 ## 13. Roadmap
 
-1. **Foundation (no vendor needed).** *Partially authored, uncompiled:*
+1. **Foundation (no vendor needed).** *Host contracts compiled and tested on UE5.8.2:*
    `IRiverHumanBackend`, `FRiverHumanPose`, `FRiverAppearanceRecipe`,
    `FRiverHumanPoseLedger`, `IRiverHumanBackend::Select` over
    `IModularFeatures`, `FRiverMarkerBackend` wrapping the sphere path, and
@@ -457,8 +457,8 @@ performance number is quoted here because none has been measured.
    `FRiverRecipeValidator` exist in `unreal/Source/RiverOaks/`, with automation
    tests `RiverOaks.Contracts.HumanPoseSequence`, `HumanBackendSelection`,
    `HumanAuthority`, `Locomotion` and `PortrayalRecipe`. *Still pending:* the
-   skeleton-map validator and the manifest sidecar. Requires a UE5.6 host to
-   compile; author now, execute when available.
+   skeleton-map validator and the manifest sidecar. The existing native tests pass on the UE5.8.2 host;
+   see [engine acceptance](engine-acceptance.md).
 
    **Backend discovery is now enabled.**
    `bRiverHumanBackendDiscoveryEnabled` in `RiverOaksHumans.h` is `true`, so

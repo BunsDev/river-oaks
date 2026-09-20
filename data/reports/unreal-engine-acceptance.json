@@ -1,0 +1,88 @@
+{
+  "date": "2026-09-20",
+  "engine": "5.8.2",
+  "engine_changelist": 56702186,
+  "hardware": "Apple M3 Max, 48 GB RAM",
+  "os": "macOS 26.6.2",
+  "xcode": "26.6",
+  "targets": {
+    "RiverOaksEditor Mac Development": "succeeded",
+    "RiverOaks Mac Development": "succeeded"
+  },
+  "automation": {
+    "succeeded": 8,
+    "failed": 0,
+    "notRun": 0
+  },
+  "native_tests": [
+    {
+      "name": "Coordinates",
+      "state": "Success"
+    },
+    {
+      "name": "HumanAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "HumanBackendSelection",
+      "state": "Success"
+    },
+    {
+      "name": "HumanPoseSequence",
+      "state": "Success"
+    },
+    {
+      "name": "Locomotion",
+      "state": "Success"
+    },
+    {
+      "name": "PortrayalRecipe",
+      "state": "Success"
+    },
+    {
+      "name": "Safety",
+      "state": "Success"
+    },
+    {
+      "name": "ScheduleAuthority",
+      "state": "Success"
+    }
+  ],
+  "post_process": {
+    "status": "passed",
+    "volume_count": 1,
+    "settings": {
+      "ambient_occlusion_intensity": 0.6000000238418579,
+      "ambient_occlusion_radius": 100.0,
+      "ambient_occlusion_quality": 100.0
+    },
+    "cvars": {
+      "r.AmbientOcclusion.Method": 0,
+      "r.AmbientOcclusionLevels": -1,
+      "r.Lumen.ScreenProbeGather.ShortRangeAO": 0,
+      "r.Lumen.DiffuseIndirect.SSAO": 1
+    },
+    "saved_and_reopened": true,
+    "instanced_material_usage": true
+  },
+  "lumen_distance_fields": true,
+  "gpu_sample": {
+    "resolution": [
+      1280,
+      720
+    ],
+    "paused": true,
+    "frame": 24522,
+    "passes_ms": {
+      "AmbientOcclusionSetup 640x360": 0.02,
+      "AmbientOcclusionSetup 320x180": 0.009,
+      "AmbientOcclusionPS 320x180": 0.03,
+      "AmbientOcclusionPS 640x360": 0.071,
+      "AmbientOcclusionPS 1280x720": 0.174
+    },
+    "benchmark": false
+  },
+  "image_comparison": "inconclusive: temporal variation exceeds on/off difference",
+  "packaging_verified": false,
+  "production_visual_acceptance": false
+}
