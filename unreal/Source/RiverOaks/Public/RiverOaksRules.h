@@ -29,6 +29,14 @@ namespace RiverOaksRules
             Action == TEXT("greet") || Action == TEXT("seek_shelter")) return 0.f;
         return Action == TEXT("slow") ? .5f : 1.f;
     }
+    // Visual locomotion state derived from the authoritative action; backends never derive it themselves.
+    inline FName Locomotion(const FString& Action, const FString& Kind, bool Blocked)
+    {
+        const float Multiplier = SpeedMultiplier(Action, Blocked);
+        if (Multiplier <= 0.f) return Action == TEXT("seek_shelter") ? FName(TEXT("shelter")) : FName(TEXT("idle"));
+        if (Multiplier < 1.f) return FName(TEXT("walk_slow"));
+        return Kind == TEXT("jogger") ? FName(TEXT("jog")) : FName(TEXT("walk"));
+    }
     inline FString ConstrainAction(const FString& Requested, const FString& Kind, float Hour,
         float Rain, float Humidity = .7f, bool Storm = false)
     {
