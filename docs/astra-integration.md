@@ -197,10 +197,13 @@ struct FRiverAppearanceRecipe
 // The two-argument form rejects a recipe when CatalogueId is unknown, when any
 // field differs from that catalogue entry, when any BodyMorphs key is outside
 // the morph allowlist, or when any value is outside the preset's declared
-// range. The three-argument form adds the persona-scoped rules: the recipe
-// must be the one this persona resolves to, and when the persona is one of the
-// four portrayals it must equal the fixed generic preset exactly, stature
-// included. ARiverOaksWorld calls the three-argument form and falls back to
+// range. The three-argument form adds exactness: the recipe must equal
+// Resolve(PersonaIndex) in every field, stature included, for every persona.
+// A value inside the allowlist and range that differs from the resolved one is
+// still rejected, as is a missing one, so a backend can only ever receive a
+// recipe the catalogue produced. The four portrayals are pinned to their fixed
+// generic preset (section 9) as a special case of that uniform rule.
+// ARiverOaksWorld calls the three-argument form and falls back to
 // FRiverMarkerBackend on rejection. There is no bypass flag.
 //
 // The catalogue holds the six CC0 profiles shipped in

@@ -60,63 +60,72 @@ bool FRiverPortrayalRecipeTest::RunTest(const FString& Parameters)
             URiverAppearanceCatalogue::IsPortrayal(Persona));
     TestFalse(TEXT("an ordinary resident is not a portrayal"), URiverAppearanceCatalogue::IsPortrayal(19));
 
-    // Each mutation of a portrayal recipe is rejected, and never reaches CreateHuman.
+    // Every mutation is rejected for every persona -- portrayal or not -- and never reaches
+    // CreateHuman. Personas 0, 3, 7 and 19 are ordinary residents; 20-23 are the portrayals.
     FCountingBackend Backend;
-    for (int32 Persona = 20; Persona <= 23; ++Persona)
+    const int32 TestPersonas[] = { 0, 3, 7, 19, 20, 21, 22, 23 };
+    for (int32 Persona : TestPersonas)
     {
         const FRiverAppearanceRecipe Preset = URiverAppearanceCatalogue::Resolve(Persona);
+        const FString Label = FString::Printf(TEXT("persona %d"), Persona);
 
         FRiverAppearanceRecipe OffAllowlist = Preset;
         OffAllowlist.BodyMorphs.Add(TEXT("NoseBridgeWidth"), 0.5f);
-        TestFalse(FString::Printf(TEXT("persona %d: off-allowlist morph rejected"), Persona),
-            CreateIfValid(Backend, OffAllowlist, Persona));
+        TestFalse(Label + TEXT(": off-allowlist morph rejected"), CreateIfValid(Backend, OffAllowlist, Persona));
 
         FRiverAppearanceRecipe OutOfRange = Preset;
         OutOfRange.BodyMorphs.Add(TEXT("Stature"), 2.4f);
-        TestFalse(FString::Printf(TEXT("persona %d: out-of-range stature rejected"), Persona),
-            CreateIfValid(Backend, OutOfRange, Persona));
+        TestFalse(Label + TEXT(": out-of-range stature rejected"), CreateIfValid(Backend, OutOfRange, Persona));
 
-        // Within the catalogue entry's declared range, so the range check passes -- but not this
-        // portrayal's fixed value, so only the portrayal lock can reject it.
-        FRiverAppearanceRecipe InRangeButAltered = Preset;
-        const float Locked = Preset.BodyMorphs.FindChecked(TEXT("Stature"));
+        // In range for this catalogue entry, so the allowlist and range checks both pass and only
+        // the exactness rule can reject it. This is the case that regressed in review of PR #3.
         float Min = 0.f, Max = 0.f;
-        TestTrue(TEXT("stature has a declared range"),
+        TestTrue(Label + TEXT(": stature has a declared range"),
             URiverAppearanceCatalogue::MorphRange(TEXT("Stature"), Preset.CatalogueId, Min, Max));
-        const float Alternative = FMath::IsNearlyEqual(Locked, Max, KINDA_SMALL_NUMBER) ? Min : Max;
-        TestFalse(TEXT("the alternative stature really differs from the locked one"),
-            FMath::IsNearlyEqual(Alternative, Locked, KINDA_SMALL_NUMBER));
+        const float Resolved = Preset.BodyMorphs.FindChecked(TEXT("Stature"));
+        const float Alternative = FMath::IsNearlyEqual(Resolved, Max, KINDA_SMALL_NUMBER) ? Min : Max;
+        TestFalse(Label + TEXT(": the alternative stature differs from the resolved one"),
+            FMath::IsNearlyEqual(Alternative, Resolved, KINDA_SMALL_NUMBER));
+        FRiverAppearanceRecipe InRangeButAltered = Preset;
         InRangeButAltered.BodyMorphs.Add(TEXT("Stature"), Alternative);
         FString RangeReason;
-        TestTrue(TEXT("the altered stature still passes the range-only check"),
+        TestTrue(Label + TEXT(": the altered stature still passes the range-only check"),
             FRiverRecipeValidator::Validate(InRangeButAltered, RangeReason));
-        TestFalse(FString::Printf(TEXT("persona %d: in-range deviation from the locked preset rejected"), Persona),
+        TestFalse(Label + TEXT(": in-range deviation from the resolved recipe rejected"),
             CreateIfValid(Backend, InRangeButAltered, Persona));
 
+        // A dropped morph is a deviation too, and the allowlist/range loop cannot see it at all.
+        FRiverAppearanceRecipe NoStature = Preset;
+        NoStature.BodyMorphs.Empty();
+        FString EmptyReason;
+        TestTrue(Label + TEXT(": a recipe with no morphs still passes the range-only check"),
+            FRiverRecipeValidator::Validate(NoStature, EmptyReason));
+        TestFalse(Label + TEXT(": missing stature rejected"), CreateIfValid(Backend, NoStature, Persona));
+
         FRiverAppearanceRecipe SwappedHair = Preset;
-        SwappedHair.HairAsset = TEXT("short01");
-        TestFalse(FString::Printf(TEXT("persona %d: altered hair rejected"), Persona),
-            CreateIfValid(Backend, SwappedHair, Persona));
+        SwappedHair.HairAsset = FName(*(Preset.HairAsset.ToString() + TEXT("-altered")));
+        TestFalse(Label + TEXT(": altered hair rejected"), CreateIfValid(Backend, SwappedHair, Persona));
 
         FRiverAppearanceRecipe SwappedPreset = Preset;
-        SwappedPreset.BodyPreset = TEXT("young_asian_female");
-        TestFalse(FString::Printf(TEXT("persona %d: altered body preset rejected"), Persona),
-            CreateIfValid(Backend, SwappedPreset, Persona));
+        SwappedPreset.BodyPreset = FName(*(Preset.BodyPreset.ToString() + TEXT("-altered")));
+        TestFalse(Label + TEXT(": altered body preset rejected"), CreateIfValid(Backend, SwappedPreset, Persona));
 
-        FRiverAppearanceRecipe SwappedGarments = Preset;
-        SwappedGarments.Garments = { TEXT("male_worksuit01") };
-        TestFalse(FString::Printf(TEXT("persona %d: altered garments rejected"), Persona),
-            CreateIfValid(Backend, SwappedGarments, Persona));
+        FRiverAppearanceRecipe ExtraGarment = Preset;
+        ExtraGarment.Garments.Add(TEXT("male_worksuit01"));
+        TestFalse(Label + TEXT(": altered garments rejected"), CreateIfValid(Backend, ExtraGarment, Persona));
 
-        // A different catalogue entry, internally consistent, still is not this persona's.
-        FRiverAppearanceRecipe WrongEntry = URiverAppearanceCatalogue::Resolve(Persona == 22 ? 21 : 22);
-        TestFalse(FString::Printf(TEXT("persona %d: another persona's recipe rejected"), Persona),
-            CreateIfValid(Backend, WrongEntry, Persona));
+        // Another persona's recipe is internally consistent, and still is not this persona's.
+        int32 Other = INDEX_NONE;
+        for (int32 Candidate = 0; Candidate < 24; ++Candidate)
+            if (URiverAppearanceCatalogue::ProfileForPersona(Candidate) != Preset.CatalogueId)
+            { Other = Candidate; break; }
+        TestTrue(Label + TEXT(": a persona with a different profile exists"), Other != INDEX_NONE);
+        TestFalse(Label + TEXT(": another persona's recipe rejected"),
+            CreateIfValid(Backend, URiverAppearanceCatalogue::Resolve(Other), Persona));
 
         FRiverAppearanceRecipe Unknown = Preset;
         Unknown.CatalogueId = TEXT("resident-07");
-        TestFalse(FString::Printf(TEXT("persona %d: unknown catalogue id rejected"), Persona),
-            CreateIfValid(Backend, Unknown, Persona));
+        TestFalse(Label + TEXT(": unknown catalogue id rejected"), CreateIfValid(Backend, Unknown, Persona));
     }
     TestEqual(TEXT("no rejected recipe reached CreateHuman"), Backend.Created, 0);
 

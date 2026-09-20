@@ -108,3 +108,21 @@ def test_discovery_gate_is_enabled_only_alongside_the_validator():
     if enabled:
         assert "FRiverRecipeValidator::Validate" in world
         assert "URiverAppearanceCatalogue::Resolve" in world
+
+
+def test_persona_scoped_validation_has_no_non_portrayal_shortcut():
+    """Regression guard for the review finding on PR #3.
+
+    The persona-scoped overload must compare against ``Resolve(PersonaIndex)`` for every persona.
+    An early ``return true`` for non-portrayals let an in-range but altered stature through, and
+    a dropped stature with it. ``RiverOaks.Contracts.PortrayalRecipe`` covers the behaviour but
+    cannot run without an engine, so this checks the shape of the function that must enforce it.
+    """
+    source = CATALOGUE.read_text()
+    signature = "int32 PersonaIndex, FString& OutReason)"
+    assert signature in source, "persona-scoped validator not found"
+    body = source[source.index(signature) :]
+    assert "Resolve(PersonaIndex)" in body
+    assert not re.search(r"IsPortrayal\(PersonaIndex\)\)\s*return true", body), (
+        "persona-scoped validation must not short-circuit for non-portrayal personas"
+    )

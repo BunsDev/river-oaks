@@ -61,7 +61,9 @@ struct RIVEROAKS_API FRiverRecipeValidator
 {
     // Catalogue membership, field parity with the catalogue entry, morph allowlist, morph range.
     static bool Validate(const FRiverAppearanceRecipe& Recipe, FString& OutReason);
-    // The above, plus: the recipe must belong to this persona, and for a portrayal persona it
-    // must equal the resolved preset exactly, in every field including stature.
+    // The above, plus exactness: the recipe must equal Resolve(PersonaIndex) in every field,
+    // stature included, for every persona. An in-range but altered value is still rejected, so a
+    // backend can only ever receive a recipe the catalogue resolved. This pins the four
+    // portrayals to their fixed generic preset (section 9) as a special case of the same rule.
     static bool Validate(const FRiverAppearanceRecipe& Recipe, int32 PersonaIndex, FString& OutReason);
 };

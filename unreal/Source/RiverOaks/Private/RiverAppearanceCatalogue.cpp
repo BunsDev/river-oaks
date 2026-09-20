@@ -151,20 +151,24 @@ bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe& Recipe, FStri
 bool FRiverRecipeValidator::Validate(const FRiverAppearanceRecipe& Recipe, int32 PersonaIndex, FString& OutReason)
 {
     if (!Validate(Recipe, OutReason)) return false;
-    const FName Expected = URiverAppearanceCatalogue::ProfileForPersona(PersonaIndex);
-    if (Recipe.CatalogueId != Expected)
+    const FRiverAppearanceRecipe Resolved = URiverAppearanceCatalogue::Resolve(PersonaIndex);
+    if (Recipe.CatalogueId != Resolved.CatalogueId)
     {
         OutReason = FString::Printf(TEXT("persona %d resolves to '%s', not '%s'"),
-            PersonaIndex, *Expected.ToString(), *Recipe.CatalogueId.ToString());
+            PersonaIndex, *Resolved.CatalogueId.ToString(), *Recipe.CatalogueId.ToString());
         return false;
     }
-    if (!URiverAppearanceCatalogue::IsPortrayal(PersonaIndex)) return true;
-    // A portrayal is locked to its resolved preset in every field, stature included.
-    const FRiverAppearanceRecipe Preset = URiverAppearanceCatalogue::Resolve(PersonaIndex);
-    if (Recipe.BodyPreset != Preset.BodyPreset || Recipe.HairAsset != Preset.HairAsset
-        || Recipe.Garments != Preset.Garments || !SameMorphs(Recipe.BodyMorphs, Preset.BodyMorphs))
+    // Exact for every persona, not only the portrayals. The host hands a backend nothing but the
+    // recipe the catalogue resolved, so an altered or missing value is rejected even when it sits
+    // inside the allowlist and range -- those bound the recipe-shaped input the two-argument form
+    // accepts; this form admits one recipe per persona. The four portrayals are the case where it
+    // matters most (section 9), but a uniform rule is the one that stays true.
+    if (Recipe.BodyPreset != Resolved.BodyPreset || Recipe.HairAsset != Resolved.HairAsset
+        || Recipe.Garments != Resolved.Garments || !SameMorphs(Recipe.BodyMorphs, Resolved.BodyMorphs))
     {
-        OutReason = FString::Printf(TEXT("portrayal persona %d deviates from its fixed generic preset"), PersonaIndex);
+        OutReason = URiverAppearanceCatalogue::IsPortrayal(PersonaIndex)
+            ? FString::Printf(TEXT("portrayal persona %d deviates from its fixed generic preset"), PersonaIndex)
+            : FString::Printf(TEXT("persona %d deviates from its resolved catalogue recipe"), PersonaIndex);
         return false;
     }
     return true;
