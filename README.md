@@ -1,10 +1,9 @@
-# River Oaks
+# River Oaks District
 
-Build a geospatial Unreal Engine world and run local NPC reactions through TypeSafe Jev. This repository provides a data/decision foundation, an interactive browser showcase, and an uncompiled UE5 blockout. The verification report records remaining production gates.
-
+A walkable interpretation of Houston’s River Oaks District: real boutiques and mapped streets combined with TypeSafe pink glass ornaments, silver arches, floating lanterns, and fictional encounters. The browser experience is focused on the district at 4444 Westheimer.
 ## Run the live showcase
 
-Run the bridge and browser development server in separate terminals:
+Start the browser development server with `npm ci` and `npm run dev`. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -16,15 +15,15 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, and 24 fictional encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. Choose the neighborhood scene to use the larger generated GIS dataset below.
+Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, and 24 fictional encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
 
 Residents have consistent local identities, remember encounters, walk between public stops and pause to chat. Four labeled fictional encounters feature Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé. Resident route searches run in a Web Worker; immediate reactions are batched for Jev or local fallback. [Resident life and controls](docs/resident-life.md)
 
 Community dispatches recruit a visible resident carrying supplies. Use **Find volunteer** to watch them reach the recipient and help on site; only then is the request resolved. Conversations and storms can delay the visit, while an inaccessible route returns unused capacity.
 
-WASD walks, dragging looks around, Shift walks faster, and E talks to a nearby person. Choose **Hover moped** to fly; Q/E descends/climbs, F assists a street-level arrival, R rises above nearby roofs, and Escape exits. The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance uses the neutral surfaces, pink accents, and system typography from `BunsDev/typesafe-ai-playground`.
+WASD walks, dragging looks around, Shift walks faster, and E talks to a nearby person. Choose **Hover moped** to fly; Q/E descends/climbs, F assists a street-level arrival, R rises above nearby roofs, and Escape exits. The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
-Residents have first-person roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human meshes now replace the capsule figures, and storefronts have pale cladding and recessed display bays. These remain interpreted reconstructions; see [visual evidence and asset provenance](docs/visual-fidelity.md).
+Residents have first-person roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human meshes now replace the capsule figures, and storefronts have pale cladding and recessed display bays. Storefronts are deliberately imaginative interpretations; see [visual evidence and asset provenance](docs/visual-fidelity.md).
 
 District foliage now follows 18,832 canopy voxels derived from public 2018 LiDAR, with distance-based detail and local bark materials. The four OSM tree points remain distinct from interpreted branch supports. The independent historical canopy comparison fails; see [vegetation evidence](docs/vegetation.md).
 
@@ -42,7 +41,7 @@ In **People & place → Spoken dialogue**, choose **Kokoro · local neural voice
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a server-side key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
-## Acquire source data
+## Optional source-data tooling
 
 ```sh
 uv sync --locked

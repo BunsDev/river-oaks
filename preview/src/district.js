@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createRetailInteriors } from './retail-interiors.js';
+import { buildRetailDisplays } from './retail-displays.js';
 import { terrainHeight } from './geometry.js';
 import { physicalSurface } from './materials.js';
 import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.js';
@@ -12,7 +14,7 @@ function sign(name, illuminated = false) {
   context.font = name === 'Cartier' || name === 'Le Colonial' ? 'italic 65px Georgia' : name === 'Steak 48' ? '600 70px Arial' : `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Georgia`;
   context.fillText(name === 'Cartier' || name === 'Le Colonial' || name === 'Steak 48' ? name : name.toUpperCase(), 512, 65, 955);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-  return new THREE.MeshStandardMaterial({ map: texture, emissiveMap: illuminated ? texture : null, emissive: illuminated ? '#ffffff' : '#000000', emissiveIntensity: illuminated ? 0.6 : 0, roughness: 0.7 });
+  return new THREE.MeshStandardMaterial({ map: texture, emissiveMap: illuminated ? texture : null, emissive: illuminated ? '#ffffff' : '#000000', emissiveIntensity: illuminated ? 0.18 : 0, roughness: 0.7 });
 }
 
 function cutStone() {
@@ -53,6 +55,8 @@ export function buildDistrictBuildings(world) {
   const velvet = new THREE.MeshStandardMaterial({color:'#45413b',roughness:0.96});
   const furniture = new THREE.MeshStandardMaterial({color:'#775c40',roughness:0.65});
   for (const material of [stone, dark, glass, upperGlass, interior, floor, display, light, roof, gold, navy, wood, hedge, velvet, furniture]) materials.add(material);
+  const interiors = createRetailInteriors();
+  interiors.materials.forEach(material => materials.add(material));
   const displays=[];
   const batches = new Map();
   const part = (material, position, scale, yaw = 0, buildingIndex = -1) => {
@@ -108,13 +112,13 @@ export function buildDistrictBuildings(world) {
         part(dark, [x, base+3.5, z], [span-0.3, 0.055, 0.19], yaw, index);
         if(!entryAt(k*span)) part(material, [a[0]+dx*k/bays, base+2.25, -(a[1]+dy*k/bays)], [0.3, 4.1, 0.54], yaw, index);
         if (retailHeight) {
+            const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
           part(floor,at(1.35,0.28),[span,0.10,2.7],yaw,index);
-          part(interior,at(2.7,2.25),[span,4.0,0.12],yaw,index);
+          part(interiors.forCategory(nearest?.category),at(2.7,2.25),[span,4.0,0.12],yaw,index);
           part(interior,at(1.35,4.16),[span,0.12,2.7],yaw,index);
           // Warm display strips and plinths reveal depth through recessed glass.
           part(light,at(1.35,3.98),[span-0.5,0.025,0.06],yaw,index);
           if(!entryAt(t*length)) {
-            const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
             if(['restaurant','ice_cream'].includes(nearest?.category)) {
               part(furniture,at(1.85,1.04),[1.1,0.055,0.72],yaw,index);
               part(dark,at(1.85,0.65),[0.06,0.75,0.52],yaw,index);
@@ -127,7 +131,7 @@ export function buildDistrictBuildings(world) {
               }
             } else {
               part(display,at(1.75,0.86),[0.8,1.05,0.75],yaw,index);
-              displays.push({position:at(1.75,1.4),yaw:yaw+(winding<0?Math.PI:0),jewelry:['jewelry','fashion_accessories'].includes(nearest?.category)});
+              displays.push({position:at(1.75,1.4),yaw:yaw+(winding<0?Math.PI:0),category:nearest?.category,jewelry:['jewelry','fashion_accessories'].includes(nearest?.category)});
             }
           }
           for(const side of [-1,1]) {
@@ -211,20 +215,18 @@ export function buildDistrictBuildings(world) {
   }
   group.userData.reflectionMaterials = [glass, upperGlass];
   group.userData.reflectionExclusions = group.children.filter(mesh => mesh.material === glass || mesh.material === upperGlass);
-  const bustGeometry=new THREE.LatheGeometry([[0.15,0],[0.19,0.08],[0.23,0.18],[0.11,0.31],[0.065,0.40],[0.065,0.46]].map(p=>new THREE.Vector2(...p)),20);
-  const necklaceGeometry=new THREE.TorusGeometry(0.105,0.0035,6,32);
-  for(const [geometry,material,necklace] of [[bustGeometry,velvet,false],[necklaceGeometry,gold,true]]) {
-    geometries.add(geometry);
-    const pieces=necklace?displays.filter(display=>display.jewelry):displays;
-    const mesh=new THREE.InstancedMesh(geometry,material,pieces.length);
-    pieces.forEach((display,index)=>{
-      dummy.position.fromArray(display.position);dummy.rotation.set(0,display.yaw,0);dummy.scale.set(1,1,1);
-      if(necklace) { dummy.translateY(0.3);dummy.translateZ(0.08);dummy.scale.set(1,0.8,1); }
-      dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
+  group.add(buildRetailDisplays(displays));
+  group.userData.dispose = () => {
+    interiors.dispose();
+    group.traverse(item => {
+      if (item.isInstancedMesh) item.dispose();
+      if (item.geometry) geometries.add(item.geometry);
+      if (item.material) materials.add(item.material);
     });
-    mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
-  }
-  group.userData.dispose = () => { group.traverse(item => { if (item.isInstancedMesh) item.dispose(); }); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); };
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => material.dispose());
+    textures.forEach(texture => texture.dispose());
+  };
   return group;
 }
 

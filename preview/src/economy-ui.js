@@ -6,6 +6,7 @@ const PRESETS = {
   storm: { demand: 1.5, fee: 18, wage: 24, staff: 80, storm: true, description: 'Outdoor work stops, but wages continue. Clear the storm to watch the recovery.' },
   wages: { demand: 1, fee: 18, wage: 38, staff: 80, storm: false, description: 'Higher hourly wages raise costs. Test staffing and service fees against the queue.' },
 };
+const GUIDANCE = { steady: 'Watch waiting jobs and operating results. Start with the default staffing, then change one setting.', demand: 'Watch the waiting queue. Try adding workers, then compare jobs completed and operating results.', storm: 'Watch paused work and ongoing costs. Clear thunderstorm disruption under Adjust the economy to test recovery.', wages: 'Watch operating results. Adjust the service fee or staffing, then save a comparison of the outcome.' };
 const money = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 const formatTime = (seconds) => `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}`;
 
@@ -36,6 +37,9 @@ export function createEconomyPanel({ onWeather, onEnable = () => {} }) {
     $('#economy-storm').checked = config.storm;
     onWeather(config.storm);
     $('#economy-run').textContent = state?.running ? 'Pause scenario' : shown ? 'Resume scenario' : 'Run scenario';
+    $('#economy-run-state').textContent = state?.running ? 'Running · results update live' : shown ? 'Paused · adjust settings or resume' : 'Ready to start';
+    $('#economy-description').textContent = PRESETS[$('#economy-preset').value].description;
+    $('#economy-guidance').textContent = GUIDANCE[$('#economy-preset').value];
     $('#economy-run').setAttribute('aria-pressed', String(Boolean(state?.running)));
   };
   const paint = () => {

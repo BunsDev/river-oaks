@@ -186,10 +186,10 @@
       "asset": "kloofendal_48d_partly_cloudy_puresky",
       "kind": "environment",
       "path": "/assets/materials/sky.hdr",
-      "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr",
+      "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
       "asset_page": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
-      "bytes": 1435119,
-      "sha256": "fd94c84997b8a3c353b62c2125a9b44e19509956986a126e472684432a02d798",
+      "bytes": 5451493,
+      "sha256": "5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198",
       "license": "CC0-1.0"
     }
   ]

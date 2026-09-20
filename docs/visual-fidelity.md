@@ -1,5 +1,10 @@
 # District visual-fidelity evidence
 
+## Current art direction
+
+The September 20 district update deliberately combines real shop names and mapped footprints with TypeSafe fantasy styling: neutral white and graphite, pink glass lanterns, silver arches, and floating lights along internal lanes. The neighborhood browser scene has been removed. Earlier photographic reference work below informs recognizable details; exact reconstruction is no longer the visual target.
+
+
 This pass replaces the browser's capsule figures with clothed CC0 human meshes and corrects the most visible façade mismatch. It is progress toward the photorealistic environment, not completion of the UE5 deliverable.
 
 ## Reference and interpretation

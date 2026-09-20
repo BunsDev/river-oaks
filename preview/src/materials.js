@@ -74,6 +74,6 @@ export async function loadEnvironment(renderer, scene) {
   scene.environmentIntensity = 0.7;
   scene.background = hdr;
   scene.backgroundIntensity = 0.7;
-  scene.backgroundBlurriness = 0.015;
+  scene.backgroundBlurriness = 0;
   return { hdr, environment, dispose() { hdr.dispose(); environment.dispose(); } };
 }

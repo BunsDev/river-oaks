@@ -2,8 +2,8 @@ export function setupSidebar() {
   const panel = document.querySelector('#control-panel');
   const trigger = document.querySelector('#panel-toggle');
   const storageKey = 'river-oaks-panel-collapsed';
-  let collapsed = false;
-  try { collapsed = localStorage.getItem(storageKey) === 'true'; } catch { /* Session controls work without storage. */ }
+  let collapsed = true;
+  try { collapsed = localStorage.getItem(storageKey) !== 'false'; } catch { /* Session controls work without storage. */ }
 
   const apply = () => {
     // Move focus before hiding the panel so keyboard users never get stranded inside inert content.

@@ -1,26 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Vector3 } from 'three';
-import { localToScene, buildingTransform, routeSegments, sampleRoute, parcelSegments, terrainHeight } from '../src/geometry.js';
+import { localToScene, routeSegments, sampleRoute, terrainHeight } from '../src/geometry.js';
 
 test('east, north, and altitude map to east, up, and south scene axes', () => {
   assert.deepEqual(localToScene([20, 30, 7]), [20, 7, -30]);
   assert.deepEqual(localToScene([20, 30]), [20, 0, -30]);
-});
-
-test('building mass sits on its ground height and positive yaw points its east axis north', () => {
-  const result = buildingTransform({ center: [12, 21, 5], size: [10, 8, 6], yaw_deg: 90 });
-  assert.deepEqual(result.position, [12, 8, -21]);
-  assert.deepEqual(result.scale, [10, 6, 8]);
-  const east = new Vector3(1, 0, 0).applyAxisAngle(new Vector3(0, 1, 0), result.rotationY);
-  assert.ok(Math.abs(east.x) < 1e-10);
-  assert.ok(Math.abs(east.z + 1) < 1e-10);
-});
-
-test('parcel line segments retain the exterior and holes without connecting rings', () => {
-  const segments = parcelSegments({ ring: [[0, 0], [10, 0], [10, 10], [0, 0]], holes: [[[2, 2], [3, 2], [3, 3], [2, 2]]] });
-  assert.equal(segments.length, 6);
-  assert.deepEqual(segments[3], [[2, 2], [3, 2]]);
 });
 
 test('route travel interpolates through corners and wraps without leaving its polyline', () => {

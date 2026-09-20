@@ -33,6 +33,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   let dialogueVoiceStatus = null;
   const section = node('section', 'panel-section community-section');
   section.id = 'community-section';
+  section.tabIndex = -1; section.setAttribute('aria-label', 'People and community scenarios');
   const heading = node('div', 'section-label', 'People & place');
   heading.append(node('span', '', 'Fictional locals'));
   const intro = node('p', 'community-intro', 'Stop for a conversation. Lend a hand.');
@@ -70,6 +71,9 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   controls.append(run, reset);
   const progress = node('p', 'community-progress');
   progress.id = 'community-progress';
+  const objectiveMeter = node('progress', 'scenario-meter'); objectiveMeter.id = 'community-objective'; objectiveMeter.setAttribute('aria-label', 'Neighbors supported');
+  const nextRequest = button('Find an open request', 'community-next-request');
+  nextRequest.addEventListener('click', () => { const local = state?.locals.find(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id)); if (local) selectLocal(local.id); });
   const resources = node('p', 'community-resources');
   resources.id = 'community-resources';
   const visits=node('div','community-visits');visits.id='community-visits';
@@ -78,7 +82,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   outcome.id = 'community-outcome';
   outcome.setAttribute('role', 'status');
   const clockNote = node('p', 'quiet-note community-disclaimer', 'Fictional people and scenarios. No real needs or outcomes are inferred. 1 second = 1 simulation minute; the clock runs only during a scenario.');
-  section.append(heading, intro, lifeToggle, lifeStatus, chooserLabel, chooser, meet, voiceLabel, voiceMode, voiceStatus, scenarioLabel, scenarioSelect, description, controls, progress, resources, visits, visitNotice, outcome, clockNote);
+  section.append(heading, intro, lifeToggle, lifeStatus, chooserLabel, chooser, meet, voiceLabel, voiceMode, voiceStatus, scenarioLabel, scenarioSelect, description, controls, progress, objectiveMeter, nextRequest, resources, visits, visitNotice, outcome, clockNote);
   host.append(section);
 
   const dialogue = node('section', 'community-dialogue');
@@ -247,7 +251,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const orderedLocals = () => [...(state?.locals ?? [])].sort((a, b) => Number(b.priority && b.status === 'needs_help') - Number(a.priority && a.status === 'needs_help') || a.id.localeCompare(b.id));
   const rebuildChooser = () => {
     chooser.replaceChildren(...orderedLocals().map((local) => {
-      const option = node('option', '', `${local.name} · ${local.anchorName}${local.priority ? ' · request open' : ''}`);
+      const option = node('option', '', `${local.name} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
       option.value = local.id;
       return option;
     }));
@@ -261,7 +265,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const residents=state.locals.map(local=>({id:local.id,position:local.position,speed:local.life?.speed ?? 0,distance:local.life?.distance ?? 0,status:local.life?.status ?? 'resting',action:local.life?.action ?? local.action,source:local.life?.source ?? local.source,visitId:local.life?.visitId ?? null}));
     for(const option of chooser.options) {
       const local=state.locals.find(local=>local.id===option.value);
-      if(local) text(option,`${local.name} · ${local.anchorName}${local.priority ? ' · request open' : ''}`);
+      if(local) text(option,`${local.name} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
     }
     lifeStatus.dataset.residents=JSON.stringify(residents);
     const walking=residents.filter(local=>local.speed>0).length,covered=residents.filter(local=>local.status==='sheltered').length;
@@ -274,6 +278,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     run.disabled = finished || !state.locals.length;
     run.setAttribute('aria-pressed', String(state.running));
     text(progress, `${state.supported} / ${state.target} neighbors supported · ${time(remaining)} sim left`);
+    objectiveMeter.max = state.target; objectiveMeter.value = state.supported;
+    nextRequest.disabled = finished || !state.locals.some(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id));
     text(resources, `${state.supplies} kits · ${state.helpBudget} volunteer visits left · ${state.jobs.length} active visits`);
     paintVisits();
     const mode = state.storm && state.running ? 'Storm hold: volunteer visits pause; unmet needs still grow.' : state.running ? 'Check needs, then choose how to spend shared resources.' : state.elapsed > 0 ? 'Paused. Needs and volunteer progress are frozen.' : 'Ready when you are. Meet the neighbors before starting.';

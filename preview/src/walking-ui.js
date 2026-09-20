@@ -6,10 +6,10 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
-  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS DISTRICT</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><button id="walking-exit">Leave walk <kbd>Esc</kbd></button><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><p id="walking-place">Explore the public walkways</p><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left">↶</button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right">↷</button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · Escape to leave</p></div>`;
+  hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS DISTRICT</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><button id="walking-exit">Leave walk <kbd>Esc</kbd></button><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="true" aria-controls="walking-movement">Hide movement controls</button><div id="walking-movement"><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left">↶</button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right">↷</button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · Escape to leave</p></div></div>`;
   $('#viewport').append(hud);
   const keys = new Set();
-  let active = false, environment, state, nearest = null, drag = null, lastPaint = 0;
+  let active = false, environment, stores = [], state, nearest = null, drag = null, lastPaint = 0;
   const clear = () => { keys.clear(); drag = null; document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
   const place = () => {
@@ -27,6 +27,12 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
   };
   // The HUD is throttled; an arrival followed by E must use the current position.
   const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
+  $('#walking-controls-toggle').addEventListener('click', () => {
+    const movement = $('#walking-movement');
+    movement.hidden = !movement.hidden; clear();
+    $('#walking-controls-toggle').setAttribute('aria-expanded', String(!movement.hidden));
+    $('#walking-controls-toggle').textContent = movement.hidden ? 'Show movement controls' : 'Hide movement controls';
+  });
   $('#walking-exit').addEventListener('click', onExit);
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
@@ -70,6 +76,7 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
       environment = createWalkingEnvironment(world);
+      stores = world.stores ?? [];
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);
       state.pitch = pitch;
@@ -95,6 +102,8 @@ export function createWalkingControls({ camera, host, onExit, onTalk, getLocals,
       nearest = findNearest();
       $('#walking-talk').disabled = !nearest;
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
+      const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
+      $('.walking-title strong').textContent = storefront?.store.name ?? 'On foot';
       $('#walking-place').textContent = nearest?.anchorName ?? `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.position = JSON.stringify(state.position);
