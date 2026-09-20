@@ -30,6 +30,15 @@ def asset_name(name):
     return re.sub(r"[^A-Za-z0-9_-]", "_", name)
 
 
+def validate_catalogue(manifest, catalogue):
+    expected = {
+        item["id"]: (item["sha256"], Path(item["path"]).name) for item in catalogue["files"]
+    }
+    prepared = {item["id"]: (item["source_sha256"], item["filename"]) for item in manifest["files"]}
+    if prepared != expected or len(prepared) != len(manifest["files"]):
+        raise ValueError("Prepared characters must match the current catalogue; regenerate them")
+
+
 def make_material(info, document, textures, folder):
     library = unreal.MaterialEditingLibrary
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
@@ -131,8 +140,7 @@ def import_profile(entry):
 def main():
     manifest = json.loads((SOURCE / "manifest.json").read_text())
     catalogue = json.loads((ROOT / "preview/public/assets/characters/sources.json").read_text())
-    if {item["id"] for item in manifest["files"]} != {item["id"] for item in catalogue["files"]}:
-        raise ValueError("Prepared characters must cover the full catalogue")
+    validate_catalogue(manifest, catalogue)
     receipt = json.loads(RECEIPT.read_text()) if RECEIPT.exists() else {}
     for entry in manifest["files"]:
         previous = receipt.get(entry["id"])

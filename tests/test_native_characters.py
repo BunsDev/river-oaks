@@ -1,6 +1,9 @@
 import json
+import runpy
 import struct
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -50,3 +53,28 @@ def test_native_conversion_rejects_wrong_hash_and_existing_output(tmp_path):
     with pytest.raises(FileExistsError):
         prepare_character(source, output, entry["sha256"])
     assert output.read_text() == "keep"
+
+
+def test_native_import_rejects_stale_catalogue_before_loading_assets(monkeypatch):
+    # The validator runs before any editor operations; no engine is needed here.
+    monkeypatch.setitem(
+        sys.modules,
+        "unreal",
+        SimpleNamespace(Paths=SimpleNamespace(project_dir=lambda: str(ROOT / "unreal"))),
+    )
+    script = runpy.run_path(str(ROOT / "unreal/Content/Python/import_residents.py"))
+    validate = script["validate_catalogue"]
+    catalogue = {"files": [{"id": "person", "sha256": "current", "path": "assets/person.glb"}]}
+    prepared = {"files": [{"id": "person", "source_sha256": "current", "filename": "person.glb"}]}
+    validate(prepared, catalogue)
+    prepared["files"][0]["source_sha256"] = "old"
+    with pytest.raises(ValueError, match="current catalogue"):
+        validate(prepared, catalogue)
+    prepared["files"][0]["source_sha256"] = "current"
+    prepared["files"][0]["filename"] = "other.glb"
+    with pytest.raises(ValueError, match="current catalogue"):
+        validate(prepared, catalogue)
+    prepared["files"][0]["filename"] = "person.glb"
+    prepared["files"].append(dict(prepared["files"][0]))
+    with pytest.raises(ValueError, match="current catalogue"):
+        validate(prepared, catalogue)

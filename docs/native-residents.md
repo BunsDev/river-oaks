@@ -39,7 +39,8 @@ source scripts and manifests are versioned; generated GLBs, Unreal assets and
 the map remain local under the existing repository policy. A fresh checkout
 therefore needs this setup before it displays native clothed residents.
 
-An import receipt permits rerunning the editor script without duplicating
+The importer checks the prepared profile IDs, source hashes and filenames against
+the current catalogue before touching editor assets. An import receipt permits rerunning the editor script without duplicating
 completed profiles. Existing unreceipted folders are deliberately refused. If
 conversion is interrupted, move the partial `data/generated/native-characters`
 directory aside and rerun conversion. If an individual Unreal import fails,
@@ -70,14 +71,16 @@ September 20, 2026 validation on the installed UE 5.8.2 host:
 
 - Editor and Game Development builds succeeded.
 - Native automation: 13 succeeded, 0 failed, 0 not run.
-- Python: 73 passed, including GLB preservation and refusal checks; Ruff passed.
+- Python: 74 passed, including GLB preservation and refusal checks; Ruff passed.
 - JavaScript: 87 passed; preview production build passed with its existing
   Three.js chunk-size advisory.
 - Independent source review found no blocker; import recovery limits are above.
 
 Local native evidence is in `/tmp/river-native-final-tests/index.json`,
 `/tmp/river-upright-build-2.log`, `/tmp/river-native-final-game-build.log`
-and `/tmp/river-native-upright-import.log`.
+and `/tmp/river-native-upright-import.log`. The repeat import with catalogue
+validation reused all six profiles and exited zero; see
+`/tmp/river-native-import-resume.log`.
 
 The rendered runtime reopened the saved district with clothed residents. A
 front/back close-up confirmed upright orientation and visible suit, skin and hair
