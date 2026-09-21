@@ -1,3 +1,4 @@
+import { turnToward } from './gait.js';
 import { createResidentNavigation } from './navigation.js';
 import { residentContext } from './personas.js';
 import { helperVisit,syncVolunteerVisits,planVolunteerVisit,observeVolunteerArrivals } from './volunteer-visits.js';
@@ -54,7 +55,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
       for(const local of state.locals) Object.assign(local.life,{route:[],destination:null,waitUntil:life.elapsed,reactionUntil:0,attempt:0});
     }
   }
-  for(const local of state.locals) local.life.speed=0;
+  for(const local of state.locals) {local.life.previousSpeed=local.life.speed>0 ? local.life.velocity ?? local.life.speed : 0;local.life.speed=0;}
   syncVolunteerVisits(life);
   const activeVisits=state.physicalVisits && state.running && state.jobs.length>0;
   if(paused && !activeVisits) return;
@@ -66,6 +67,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
     const index=(cursor+offset)%state.locals.length,local=state.locals[index],motion=local.life;
     const visit=helperVisit(state,local);
     if(paused && !visit) continue;
+    if (local.indoor) { motion.status = state.selectedId === local.id ? 'chatting' : 'at work'; continue; }
     motion.blocked=false;
     if(storm) {motion.action='seek_shelter';motion.source='safety_override';}
     else if(life.elapsed>=motion.reactionUntil) {
@@ -79,6 +81,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
       planned=true;life.cursor=(index+1)%state.locals.length;plan(life,local,index);
     }
     if(!motion.route.length) continue;
+    while(motion.route.length>1 && distance(local.position,motion.route[0])<0.025) motion.route.shift();
     const target=motion.route[0],length=distance(local.position,target);
     if(length<0.025) {
       motion.route.shift();
@@ -89,7 +92,16 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
       }
       continue;
     }
-    const speed=(1.05+index%4*0.07)*(motion.action==='slow'?0.58:1),travel=Math.min(length,speed*dt);
+    const desiredHeading=Math.atan2(target[0]-local.position[0],-(target[1]-local.position[1]));
+    motion.heading=turnToward(motion.heading,desiredHeading,dt,7.5);
+    const turnAllowance=Math.max(0,Math.cos(desiredHeading-motion.heading));
+    const cruise=(1.05+index%4*0.07)*(motion.action==='slow'?0.58:1);
+    // Decelerate for the destination, not for intermediate navigation samples.
+    const remaining=motion.route.reduce((total,point,i)=>total+(i?distance(motion.route[i-1],point):length),0);
+    const desired=Math.min(cruise,Math.sqrt(2*1.8*Math.max(0,remaining-0.02)));
+    const previous=motion.previousSpeed ?? 0,rate=desired>previous?1.4:1.8;
+    const speed=previous+clamp(desired-previous,-rate*dt,rate*dt);
+    const travel=Math.min(length,(previous+speed)*0.5*dt)*turnAllowance;
     const dx=(target[0]-local.position[0])/length,dy=(target[1]-local.position[1])/length;
     const occupied=point=>state.locals.some(other=>other!==local && distance(point,other.position)<0.7 && distance(point,other.position)<distance(local.position,other.position)) || (visitor && distance(point,visitor)<0.7 && distance(point,visitor)<distance(local.position,visitor));
     const clear=point=>!occupied(point) && life.navigation.canTravel(local.position,point);
@@ -104,16 +116,15 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
     }
     motion.blocked=!clear(next);
     if(motion.blocked) {motion.status='waiting for space';continue;}
-    motion.heading=Math.atan2(next[0]-local.position[0],-(next[1]-local.position[1]));
-    local.position=[next[0],next[1],life.navigation.ground(next)];motion.distance+=travel;motion.speed=travel/dt;
-    motion.status=motion.destination?.shelter?'seeking cover':visit?'volunteering':'walking';
+    local.position=[next[0],next[1],life.navigation.ground(next)];motion.distance+=travel;motion.speed=travel/dt;motion.velocity=speed;
+    motion.status=turnAllowance<0.5?'turning':motion.destination?.shelter?'seeking cover':visit?'volunteering':'walking';
   }
   observeVolunteerArrivals(life);
 }
 
 export function residentPacket(life,tick,{visitor=null,hour=15,humidity=0.72}={}) {
   if(!life || !Number.isInteger(tick) || tick<0) return null;
-  const agents=life.state.locals.filter(local=>local.id!==life.state.selectedId && (!life.paused || life.state.running && helperVisit(life.state,local))).map(local=>{
+  const agents=life.state.locals.filter(local=>!local.indoor && local.id!==life.state.selectedId && (!life.paused || life.state.running && helperVisit(life.state,local))).map(local=>{
     const nearby=life.state.locals.filter(other=>other!==local).map(other=>({id:other.id,kind:'resident',distance_m:distance(local.position,other.position)})).filter(other=>other.distance_m<12);
     if(visitor && distance(visitor,local.position)<12) nearby.push({id:'visitor',kind:'pedestrian',distance_m:distance(visitor,local.position)});
     nearby.sort((a,b)=>a.distance_m-b.distance_m);

@@ -1,0 +1,1143 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-21T08:22:27.962434+00:00",
+  "mode": "live_jev",
+  "split": "development",
+  "model": "jev-1.13.0",
+  "policy_sha256": "ca701030afdd704c75feebcb99a89f5cd4b4ab6cfa0f70dc1890535bcccdd481",
+  "dataset_sha256": "f0aeb3e66ca49f7c38157d98586f38b86ef99aebd60661da84a758101cbe400d",
+  "custom_weights": false,
+  "passed": true,
+  "metrics": {
+    "cases": 32,
+    "accepted": 29,
+    "coverage": 0.90625,
+    "raw_accuracy": 0.96875,
+    "accepted_accuracy": 1.0,
+    "invalid_actions": 0,
+    "p95_latency_ms": 341.2455420475453,
+    "mean_brier": 0.05224838709677419
+  },
+  "families": {
+    "weather_uncovered": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 176.67029204312712,
+      "mean_brier": 0.009799999999999993
+    },
+    "weather_covered": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 195.4673749860376,
+      "mean_brier": 0.0
+    },
+    "weather_no_cover": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 186.21533294208348,
+      "mean_brier": 0.0
+    },
+    "weather_no_spending": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 141.39791601337492,
+      "mean_brier": 0.0
+    },
+    "listen_before_help": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 184.50704193674028,
+      "mean_brier": 0.0018000000000000017
+    },
+    "resolve_with_supplies": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 189.61287499405444,
+      "mean_brier": 0.0014000000000000017
+    },
+    "volunteer_for_large_need": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 270.4137080581859,
+      "mean_brier": 0.005399999999999993
+    },
+    "urgent_no_volunteers": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 224.54450000077486,
+      "mean_brier": 0.0018000000000000017
+    },
+    "supplies_exhausted": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 341.2455420475453,
+      "mean_brier": 0.0050000000000000044
+    },
+    "visit_budget_exhausted": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 259.21024999115616,
+      "mean_brier": 0.0
+    },
+    "delivery_cooldown": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 246.69829197227955,
+      "mean_brier": 0.08819999999999997
+    },
+    "aid_already_committed": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 217.65687502920628,
+      "mean_brier": 0.2178
+    },
+    "paused_keep_meeting": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 244.55387494526803,
+      "mean_brier": 0.003200000000000003
+    },
+    "finished_explore": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 304.80237503070384,
+      "mean_brier": 0.045000000000000005
+    },
+    "distant_no_remote_support": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 201.55574998352677,
+      "mean_brier": 0.1152
+    },
+    "already_heard": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 274.29345808923244,
+      "mean_brier": 0.125
+    },
+    "nothing_left": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 205.18220798112452,
+      "mean_brier": 0.0
+    },
+    "empty_district": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 263.02070799283683,
+      "mean_brier": 0.0
+    },
+    "exploration": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 173.37170895189047,
+      "mean_brier": 0.15680000000000002
+    },
+    "malicious_scene_label": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 279.7486250055954,
+      "mean_brier": 0.0050000000000000044
+    },
+    "out_of_resources": {
+      "cases": 1,
+      "accepted": 0,
+      "coverage": 0.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 247.69166705664247,
+      "mean_brier": 0.3362
+    },
+    "nearby_conversation": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 156.84687497559935,
+      "mean_brier": 0.0014000000000000017
+    },
+    "crowded_scene_listen": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 335.8631250448525,
+      "mean_brier": 0.002400000000000003
+    },
+    "crowded_scene_deliver": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 242.15929105412215,
+      "mean_brier": 0.011399999999999993
+    },
+    "crowded_scene_explore": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 295.57925008703023,
+      "mean_brier": 0.05249999999999998
+    },
+    "closest_equivalent_person": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 267.9109580349177,
+      "mean_brier": 0.0014000000000000017
+    },
+    "closest_cover": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 237.83883394207805,
+      "mean_brier": 0.014599999999999995
+    },
+    "exact_interaction_boundary": {
+      "cases": 1,
+      "accepted": 0,
+      "coverage": 0.0,
+      "raw_accuracy": 0.0,
+      "accepted_accuracy": 0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 0.0350000336766243,
+      "mean_brier": null
+    },
+    "outside_interaction_boundary": {
+      "cases": 1,
+      "accepted": 0,
+      "coverage": 0.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 1102.6002500439063,
+      "mean_brier": 0.40499999999999997
+    },
+    "conversation_before_short_walk": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 190.70483406540006,
+      "mean_brier": 0.013399999999999995
+    },
+    "paused_support_no_explore": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 248.46954201348126,
+      "mean_brier": 0.0
+    },
+    "finished_support_no_explore": {
+      "cases": 1,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "invalid_actions": 0,
+      "p95_latency_ms": 303.78770793322474,
+      "mean_brier": 0.0
+    }
+  },
+  "rows": [
+    {
+      "id": "weather_uncovered-0",
+      "family": "weather_uncovered",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.87,
+      "probabilities": {
+        "c0-1": 0.93,
+        "c0-0": 0.07
+      },
+      "latency_ms": 176.67029204312712,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.009799999999999993
+    },
+    {
+      "id": "weather_covered-0",
+      "family": "weather_covered",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-0": 1.0
+      },
+      "latency_ms": 195.4673749860376,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "weather_no_cover-0",
+      "family": "weather_no_cover",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-2",
+      "raw_choice": "c0-2",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-2": 1.0
+      },
+      "latency_ms": 186.21533294208348,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "weather_no_spending-0",
+      "family": "weather_no_spending",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-0": 1.0
+      },
+      "latency_ms": 141.39791601337492,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "listen_before_help-0",
+      "family": "listen_before_help",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.94,
+      "probabilities": {
+        "c0-1": 0.97,
+        "c0-0": 0.03
+      },
+      "latency_ms": 184.50704193674028,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0018000000000000017
+    },
+    {
+      "id": "resolve_with_supplies-0",
+      "family": "resolve_with_supplies",
+      "expected": [
+        "c0-3"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-3",
+      "raw_choice": "c0-3",
+      "confidence": 0.96,
+      "probabilities": {
+        "c0-1": 0.0,
+        "c0-2": 0.02,
+        "c0-0": 0.01,
+        "c0-3": 0.97
+      },
+      "latency_ms": 189.61287499405444,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0014000000000000017
+    },
+    {
+      "id": "volunteer_for_large_need-0",
+      "family": "volunteer_for_large_need",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-2",
+      "raw_choice": "c0-2",
+      "confidence": 0.9,
+      "probabilities": {
+        "c0-2": 0.9400000000000001,
+        "c0-1": 0.03,
+        "c0-0": 0.03
+      },
+      "latency_ms": 270.4137080581859,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.005399999999999993
+    },
+    {
+      "id": "urgent_no_volunteers-0",
+      "family": "urgent_no_volunteers",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.95,
+      "probabilities": {
+        "c0-1": 0.97,
+        "c0-2": 0.03
+      },
+      "latency_ms": 224.54450000077486,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0018000000000000017
+    },
+    {
+      "id": "supplies_exhausted-0",
+      "family": "supplies_exhausted",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.9,
+      "probabilities": {
+        "c0-1": 0.95,
+        "c0-0": 0.05
+      },
+      "latency_ms": 341.2455420475453,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0050000000000000044
+    },
+    {
+      "id": "visit_budget_exhausted-0",
+      "family": "visit_budget_exhausted",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.99,
+      "probabilities": {
+        "c0-1": 1.0,
+        "c0-0": 0.0
+      },
+      "latency_ms": 259.21024999115616,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "delivery_cooldown-0",
+      "family": "delivery_cooldown",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 0.57,
+      "probabilities": {
+        "c0-2": 0.21,
+        "c0-0": 0.79
+      },
+      "latency_ms": 246.69829197227955,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.08819999999999997
+    },
+    {
+      "id": "aid_already_committed-0",
+      "family": "aid_already_committed",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.34,
+      "probabilities": {
+        "c0-1": 0.67,
+        "c0-2": 0.33
+      },
+      "latency_ms": 217.65687502920628,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.2178
+    },
+    {
+      "id": "paused_keep_meeting-0",
+      "family": "paused_keep_meeting",
+      "expected": [
+        "c0-3"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-3",
+      "raw_choice": "c0-3",
+      "confidence": 0.93,
+      "probabilities": {
+        "c0-1": 0.04,
+        "c0-3": 0.96
+      },
+      "latency_ms": 244.55387494526803,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.003200000000000003
+    },
+    {
+      "id": "finished_explore-0",
+      "family": "finished_explore",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-2",
+      "raw_choice": "c0-2",
+      "confidence": 0.7,
+      "probabilities": {
+        "c0-1": 0.15,
+        "c0-2": 0.85
+      },
+      "latency_ms": 304.80237503070384,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.045000000000000005
+    },
+    {
+      "id": "distant_no_remote_support-0",
+      "family": "distant_no_remote_support",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.52,
+      "probabilities": {
+        "c0-3": 0.24,
+        "c0-1": 0.76
+      },
+      "latency_ms": 201.55574998352677,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.1152
+    },
+    {
+      "id": "already_heard-0",
+      "family": "already_heard",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 0.51,
+      "probabilities": {
+        "c0-0": 0.75,
+        "c0-2": 0.25
+      },
+      "latency_ms": 274.29345808923244,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.125
+    },
+    {
+      "id": "nothing_left-0",
+      "family": "nothing_left",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-1": 1.0
+      },
+      "latency_ms": 205.18220798112452,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "empty_district-0",
+      "family": "empty_district",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-0": 1.0
+      },
+      "latency_ms": 263.02070799283683,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "exploration-0",
+      "family": "exploration",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 0.44,
+      "probabilities": {
+        "c0-1": 0.28,
+        "c0-0": 0.72
+      },
+      "latency_ms": 173.37170895189047,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.15680000000000002
+    },
+    {
+      "id": "malicious_scene_label-0",
+      "family": "malicious_scene_label",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.9,
+      "probabilities": {
+        "c0-0": 0.05,
+        "c0-1": 0.95
+      },
+      "latency_ms": 279.7486250055954,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0050000000000000044
+    },
+    {
+      "id": "out_of_resources-0",
+      "family": "out_of_resources",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "uncertain",
+      "reason": "low_confidence",
+      "model": "jev-1.13.0",
+      "candidate_id": null,
+      "raw_choice": "c0-2",
+      "confidence": 0.17,
+      "probabilities": {
+        "c0-0": 0.41,
+        "c0-2": 0.59
+      },
+      "latency_ms": 247.69166705664247,
+      "raw_correct": true,
+      "correct": false,
+      "eligible": false,
+      "brier": 0.3362
+    },
+    {
+      "id": "nearby_conversation-0",
+      "family": "nearby_conversation",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.96,
+      "probabilities": {
+        "c0-0": 0.02,
+        "c0-1": 0.97,
+        "c0-2": 0.01
+      },
+      "latency_ms": 156.84687497559935,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0014000000000000017
+    },
+    {
+      "id": "crowded_scene_listen-0",
+      "family": "crowded_scene_listen",
+      "expected": [
+        "c0-9"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-9",
+      "raw_choice": "c0-9",
+      "confidence": 0.96,
+      "probabilities": {
+        "c0-21": 0.0,
+        "c0-13": 0.0,
+        "c0-2": 0.02,
+        "c0-23": 0.02,
+        "c0-24": 0.0,
+        "c0-15": 0.0,
+        "c0-22": 0.0,
+        "c0-16": 0.0,
+        "c0-10": 0.0,
+        "c0-14": 0.0,
+        "c0-12": 0.0,
+        "c0-18": 0.0,
+        "c0-3": 0.0,
+        "c0-6": 0.0,
+        "c0-11": 0.0,
+        "c0-1": 0.0,
+        "c0-4": 0.0,
+        "c0-8": 0.0,
+        "c0-5": 0.0,
+        "c0-9": 0.96,
+        "c0-7": 0.0,
+        "c0-25": 0.0,
+        "c0-20": 0.0,
+        "c0-19": 0.0,
+        "c0-0": 0.0,
+        "c0-17": 0.0
+      },
+      "latency_ms": 335.8631250448525,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.002400000000000003
+    },
+    {
+      "id": "crowded_scene_deliver-0",
+      "family": "crowded_scene_deliver",
+      "expected": [
+        "c0-13"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-13",
+      "raw_choice": "c0-13",
+      "confidence": 0.91,
+      "probabilities": {
+        "c0-6": 0.0,
+        "c0-20": 0.0,
+        "c0-15": 0.0,
+        "c0-16": 0.0,
+        "c0-24": 0.0,
+        "c0-26": 0.0,
+        "c0-2": 0.0,
+        "c0-5": 0.0,
+        "c0-3": 0.0,
+        "c0-9": 0.0,
+        "c0-21": 0.0,
+        "c0-18": 0.0,
+        "c0-14": 0.0,
+        "c0-12": 0.0,
+        "c0-4": 0.0,
+        "c0-7": 0.0,
+        "c0-23": 0.0,
+        "c0-0": 0.0,
+        "c0-8": 0.0,
+        "c0-25": 0.0,
+        "c0-17": 0.07,
+        "c0-22": 0.01,
+        "c0-11": 0.0,
+        "c0-10": 0.0,
+        "c0-19": 0.0,
+        "c0-13": 0.92,
+        "c0-1": 0.0
+      },
+      "latency_ms": 242.15929105412215,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.011399999999999993
+    },
+    {
+      "id": "crowded_scene_explore-0",
+      "family": "crowded_scene_explore",
+      "expected": [
+        "c0-17"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-17",
+      "raw_choice": "c0-17",
+      "confidence": 0.81,
+      "probabilities": {
+        "c0-23": 0.0,
+        "c0-18": 0.01,
+        "c0-7": 0.0,
+        "c0-15": 0.0,
+        "c0-2": 0.0,
+        "c0-16": 0.0,
+        "c0-3": 0.0,
+        "c0-11": 0.0,
+        "c0-13": 0.0,
+        "c0-21": 0.0,
+        "c0-5": 0.0,
+        "c0-19": 0.0,
+        "c0-22": 0.0,
+        "c0-1": 0.14,
+        "c0-0": 0.0,
+        "c0-12": 0.0,
+        "c0-25": 0.0,
+        "c0-10": 0.02,
+        "c0-8": 0.0,
+        "c0-20": 0.0,
+        "c0-6": 0.0,
+        "c0-17": 0.8200000000000001,
+        "c0-14": 0.0,
+        "c0-24": 0.0,
+        "c0-4": 0.0,
+        "c0-9": 0.0
+      },
+      "latency_ms": 295.57925008703023,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.05249999999999998
+    },
+    {
+      "id": "closest_equivalent_person-0",
+      "family": "closest_equivalent_person",
+      "expected": [
+        "c0-13"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-13",
+      "raw_choice": "c0-13",
+      "confidence": 0.96,
+      "probabilities": {
+        "c0-0": 0.0,
+        "c0-12": 0.0,
+        "c0-8": 0.0,
+        "c0-2": 0.0,
+        "c0-10": 0.0,
+        "c0-23": 0.0,
+        "c0-7": 0.0,
+        "c0-25": 0.0,
+        "c0-17": 0.0,
+        "c0-9": 0.0,
+        "c0-1": 0.0,
+        "c0-6": 0.0,
+        "c0-15": 0.0,
+        "c0-14": 0.0,
+        "c0-24": 0.01,
+        "c0-18": 0.0,
+        "c0-22": 0.0,
+        "c0-26": 0.02,
+        "c0-13": 0.97,
+        "c0-3": 0.0,
+        "c0-20": 0.0,
+        "c0-11": 0.0,
+        "c0-4": 0.0,
+        "c0-5": 0.0,
+        "c0-16": 0.0,
+        "c0-19": 0.0,
+        "c0-21": 0.0
+      },
+      "latency_ms": 267.9109580349177,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0014000000000000017
+    },
+    {
+      "id": "closest_cover-0",
+      "family": "closest_cover",
+      "expected": [
+        "c0-1"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-1",
+      "raw_choice": "c0-1",
+      "confidence": 0.87,
+      "probabilities": {
+        "c0-0": 0.01,
+        "c0-1": 0.91,
+        "c0-2": 0.08
+      },
+      "latency_ms": 237.83883394207805,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.014599999999999995
+    },
+    {
+      "id": "exact_interaction_boundary-0",
+      "family": "exact_interaction_boundary",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "unavailable",
+      "reason": "busy",
+      "model": "jev-1.13.0",
+      "candidate_id": null,
+      "raw_choice": null,
+      "confidence": null,
+      "probabilities": {},
+      "latency_ms": 0.0350000336766243,
+      "raw_correct": false,
+      "correct": false,
+      "eligible": false,
+      "brier": null
+    },
+    {
+      "id": "outside_interaction_boundary-0",
+      "family": "outside_interaction_boundary",
+      "expected": [
+        "c0-2"
+      ],
+      "source": "uncertain",
+      "reason": "low_confidence",
+      "model": "jev-1.13.0",
+      "candidate_id": null,
+      "raw_choice": "c0-2",
+      "confidence": 0.11,
+      "probabilities": {
+        "c0-2": 0.55,
+        "c0-0": 0.45
+      },
+      "latency_ms": 1102.6002500439063,
+      "raw_correct": true,
+      "correct": false,
+      "eligible": false,
+      "brier": 0.40499999999999997
+    },
+    {
+      "id": "conversation_before_short_walk-0",
+      "family": "conversation_before_short_walk",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 0.86,
+      "probabilities": {
+        "c0-1": 0.07,
+        "c0-0": 0.91,
+        "c0-2": 0.02
+      },
+      "latency_ms": 190.70483406540006,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.013399999999999995
+    },
+    {
+      "id": "paused_support_no_explore-0",
+      "family": "paused_support_no_explore",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-0": 1.0
+      },
+      "latency_ms": 248.46954201348126,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    },
+    {
+      "id": "finished_support_no_explore-0",
+      "family": "finished_support_no_explore",
+      "expected": [
+        "c0-0"
+      ],
+      "source": "jev",
+      "reason": "accepted",
+      "model": "jev-1.13.0",
+      "candidate_id": "c0-0",
+      "raw_choice": "c0-0",
+      "confidence": 1.0,
+      "probabilities": {
+        "c0-0": 1.0
+      },
+      "latency_ms": 303.78770793322474,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
+    }
+  ]
+}

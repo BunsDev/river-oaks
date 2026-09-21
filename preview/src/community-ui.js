@@ -511,10 +511,21 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     get speakingId() { return speech.speakingId; },
     selectLocal,
     meetNearby,
-    setWorld(world) {
+    autoInteract(id, action) {
+      const local = state?.locals.find(item => item.id === id), visitor = getVisitor();
+      if (!local || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
+          Math.hypot(visitor[0] - local.position[0], visitor[1] - local.position[1]) > 2.8) return { ok: false };
+      const selected = state.selectedId;
+      const result = interactWithLocal(state, id, action);
+      state.selectedId = selected;
+      if (result.ok && action === 'ask') conversationLine(local, 'greeting');
+      paint();
+      return result;
+    },
+    setWorld(world, rooms = []) {
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=createNavigationService(world);
-      state = createCommunity(world);
+      state = createCommunity(world, rooms);
       life=createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       meet.disabled = !state.locals.length;

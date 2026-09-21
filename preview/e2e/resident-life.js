@@ -5,15 +5,21 @@ async page => {
   page.on('request',request=>{
     if(request.url().endsWith('/v1/decisions')) {const packet=request.postDataJSON();if(packet.agents.length>1 && packet.agents.every(a=>a.kind==='resident')) packets.push(packet);}
   });
-  const read=()=>page.locator('#community-life-status').evaluate(el=>JSON.parse(el.dataset.residents));
+  const read=()=>page.locator('#community-life-status').evaluate(el=>JSON.parse(el.dataset.residents).filter(local=>local.id.startsWith('local-')));
   await page.setViewportSize({width:1920,height:1080});
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto('http://127.0.0.1:5173/?motion-debug=1');
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.charactersReady==='24');
   const toggle=page.locator('#panel-toggle');if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
+  await page.locator('#community-more summary').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).filter(l=>l.distance>1).length>=20,null,{timeout:20000});
   const moving=await read();
+  const footSamples=await page.evaluate(()=>new Promise(resolve=>{
+    const records=[];const sample=()=>{records.push(...window.__riverMotion());if(records.length>600) resolve(records);else requestAnimationFrame(sample);};requestAnimationFrame(sample);
+  }));
+  const maxFootError=Math.max(...footSamples.flatMap(person=>person.feet.map(foot=>Math.hypot(...foot.actual.map((value,index)=>value-foot.target[index])))));
+  check(maxFootError<0.005,`District feet must reach their targets: ${maxFootError} m`);
   check(page.workers().some(worker=>worker.url().includes('navigation-worker')),'Route searches must run in a Web Worker');
   check(moving.every(l=>l.speed<=1.4),'Residents must stay within walking speed');
   check(packets.length>0 && packets.every(p=>p.agents.length<=24 && p.agents.every(a=>a.role_context && a.nearby.length<=16)),'Expected batched local resident context');
@@ -35,12 +41,11 @@ async page => {
   check(await page.locator('#community-dialogue').isVisible(),'Nearby conversation must still open using E');
   await page.locator('#community-close').click();
 
-  await page.getByText('Adjust the economy',{exact:true}).click();
-  await page.locator('#economy-storm').check();
+  await page.locator('#weather').selectOption('overcast');
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).filter(l=>l.status==='sheltered').length>=2,null,{timeout:25000});
   const storm=await read();
   check(storm.every(l=>l.action==='seek_shelter' && l.source==='safety_override'),'Storm overrides must apply even before starting an economic scenario');
-  await page.locator('#economy-storm').uncheck();await page.waitForTimeout(1800);
+  await page.locator('#weather').selectOption('clear');await page.waitForTimeout(1800);
   check((await read()).some(l=>l.speed>0 && l.action!=='seek_shelter'),'Residents must resume after clearing the storm');
 
   await toggle.click();await page.setViewportSize({width:3840,height:2160});await page.waitForTimeout(600);
@@ -53,10 +58,11 @@ async page => {
   await page.locator('#loading').waitFor({state:'hidden'});await page.waitForTimeout(1200);
   check((await read()).every(l=>l.distance===0),'Reduced motion must start resident walks paused');
   if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
+  await page.locator('#community-more summary').click();
   await page.locator('#community-life').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).some(l=>l.distance>1),null,{timeout:15000});
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.setViewportSize({width:1920,height:1080});
   check(!errors.length,`Browser errors: ${errors.join('; ')}`);
-  return {residents:moving.length,traveling:moving.filter(l=>l.distance>1).length,routeWorker:true,batchedRequests:packets.length,conversationHold:true,nearbyConversation:true,stormSheltered:storm.filter(l=>l.status==='sheltered').length,pauseStopsRequests:true,reducedMotion:true,uhd,timing,timingScope:'Local Chrome animation frames; not a target-GPU or UE5 benchmark',browserErrors:errors};
+  return {maxFootErrorMeters:maxFootError,residents:moving.length,traveling:moving.filter(l=>l.distance>1).length,routeWorker:true,batchedRequests:packets.length,conversationHold:true,nearbyConversation:true,stormSheltered:storm.filter(l=>l.status==='sheltered').length,pauseStopsRequests:true,reducedMotion:true,uhd,timing,timingScope:'Local Chrome animation frames; not a target-GPU or UE5 benchmark',browserErrors:errors};
 }

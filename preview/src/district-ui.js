@@ -39,11 +39,6 @@ export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore
     const store = filtered[(index + step + filtered.length) % filtered.length];
     select.value = store.id; describe(); onArrive(store);
   });
-  document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => {
-    const target = $(`#${button.dataset.section}`);
-    target.scrollIntoView({ block: 'start', behavior: 'instant' });
-    target.focus({ preventScroll: true });
-  }));
   document.querySelectorAll('[data-atmosphere]').forEach(button => button.addEventListener('click', () => {
     const preset = presets[button.dataset.atmosphere];
     $('#sun-hour').value = preset.hour; $('#weather').value = preset.weather; onAtmosphere();

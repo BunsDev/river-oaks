@@ -11,11 +11,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, Response
 
 from .agents import DecisionEngine, Snapshot
+from .auto import AutoEngine, AutoSnapshot
 from .geo import digest
 from .voice import LocalVoice, VoiceBusy, VoiceRequest, VoiceUnavailable
 
 
-def create_app(engine=None, *, world_path=None, report_path=None, voice=None):
+def create_app(engine=None, *, world_path=None, report_path=None, voice=None, auto_engine=None):
     world_path = Path(world_path or "unreal/Content/Data/world.json")
     report_path = Path(report_path or "data/reports/verification.json")
 
@@ -40,10 +41,17 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None):
                 os.environ.get("TYPESAFE_API_KEY"),
                 model=os.environ.get("JEV_MODEL", "jev-1.13.0"),
             )
+            if auto_engine is None:
+                app.state.auto_engine = AutoEngine(
+                    client,
+                    os.environ.get("TYPESAFE_API_KEY"),
+                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                )
             yield
 
     app = FastAPI(title="River Oaks decision bridge", lifespan=lifespan)
     app.state.engine = engine or DecisionEngine()
+    app.state.auto_engine = auto_engine or AutoEngine()
     busy = asyncio.Lock()
     local_voice = voice or LocalVoice()
 
@@ -72,6 +80,16 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None):
     @app.get("/health")
     async def health():
         return {"status": "ok", "mode": app.state.engine.mode, "metrics": app.state.engine.metrics}
+
+    @app.get("/v1/auto")
+    async def auto_status():
+        return JSONResponse(app.state.auto_engine.status, headers={"Cache-Control": "no-store"})
+
+    @app.post("/v1/auto")
+    async def auto_decision(packet: AutoSnapshot):
+        return JSONResponse(
+            await app.state.auto_engine.decide(packet), headers={"Cache-Control": "no-store"}
+        )
 
     @app.get("/v1/world")
     def world():

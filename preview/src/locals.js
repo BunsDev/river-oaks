@@ -1,3 +1,4 @@
+import { turnToward } from './gait.js';
 import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { loadResidentAvatar } from './avatars.js';
@@ -8,7 +9,7 @@ export function buildLocals(world, locals) {
   const skins = ['#b98162', '#d1a085', '#8c5e48', '#dda88d'];
   const shirts = ['#e6dfcd', '#677d72', '#536777', '#a8866b', '#b9bbac', '#394a4b'];
   const models = [];
-  let disposed = false, ready = 0;
+  let disposed = false, ready = 0, previousTime = null;
   const disposePlaceholder = person => {
     const materials=new Set();
     person.traverse(item=>{item.geometry?.dispose(); if(item.material) materials.add(item.material);});
@@ -51,6 +52,7 @@ export function buildLocals(world, locals) {
   });
   document.querySelector('#canvas-host').dataset.charactersReady='0';
   group.userData.ready=Promise.allSettled(loads);
+  group.userData.models=models;
   group.userData.dispose=()=>{
     disposed=true;
     for(const person of models) {
@@ -59,23 +61,23 @@ export function buildLocals(world, locals) {
     group.clear();
   };
   group.userData.update = (state, camera, now, speakingId) => {
+    const delta = previousTime === null ? 0 : (now-previousTime)/1000; previousTime = now;
     let visibleKits=0;
     models.forEach((person,index) => {
-      const local = state.locals[index];
+      const local = state.locals.find(local => local.id === person.userData.localId);
       if (!local) return;
       person.position.set(local.position[0],terrainHeight(world.terrain,local.position[0],local.position[1])+(world.walkSurfaceOffset ?? 0.15),-local.position[1]);
       const near = person.position.distanceTo(camera.position) < 7;
       const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
       person.visible = person.position.distanceTo(camera.position)<120 || state.selectedId===local.id;
-      if(local.life?.speed>0.01) {
-        const turn=Math.atan2(Math.sin(local.life.heading-person.rotation.y),Math.cos(local.life.heading-person.rotation.y));
-        person.rotation.y+=turn*0.15;
-      } else if(partner && state.selectedId!==local.id) person.rotation.y=Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z);
-      else if (near || state.selectedId === local.id) person.rotation.y = Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z);
+      if(local.life?.speed>0.01 || local.life?.status==='turning') {
+        person.rotation.y = local.life.heading;
+      } else if(partner && state.selectedId!==local.id) person.rotation.y=turnToward(person.rotation.y, Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z), delta);
+      else if (near || state.selectedId === local.id) person.rotation.y = turnToward(person.rotation.y, Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z), delta);
       const action=state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action;
       if(person.userData.avatar) {
-        if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life);if(person.userData.avatar.carrying) visibleKits++;}
+        if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
         return;
       }
       const arm = person.userData.greetingArm;

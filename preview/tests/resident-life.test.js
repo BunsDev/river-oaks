@@ -116,3 +116,19 @@ test('redirect reverses the current walking direction within local clearance',()
   const forward=(local.position[0]-position[0])*Math.sin(heading)-(local.position[1]-position[1])*Math.cos(heading);
   assert.ok(forward<0,'Redirect must reverse, not choose another arbitrary forward destination');
 });
+
+
+test('ordinary walking accelerates gradually and slows before reaching a destination',()=>{
+  const street={scene:'district',bounds_m:[-20,-20,20,20],collisionPolygons:[],communityLocations:[{id:'a',name:'West',position:[-5,0,0]}]};
+  const state=createCommunity(street),life=createResidentLife(street,state),local=state.locals[0];
+  local.life.route=[[5,0]];local.life.destination={id:'b',name:'East'};
+  const speeds=[];
+  for(let i=0;i<660;i++) {stepResidentLife(life,1/60);speeds.push(local.life.speed);}
+  assert.ok(speeds[0]>0 && speeds[0]<0.03, 'First frame cannot jump to cruising speed');
+  assert.ok(speeds[30]>0.6 && speeds[30]<0.8);
+  assert.ok(speeds[90]>1);
+  const approaching=speeds.slice(400).filter(speed=>speed>0 && speed<0.5);
+  assert.ok(approaching.length>5,'Arrival must brake over multiple frames');
+  assert.equal(local.life.speed,0);
+  assert.ok(Math.abs(local.position[0]-5)<0.025);
+});

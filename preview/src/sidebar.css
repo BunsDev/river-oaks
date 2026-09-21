@@ -1,0 +1,40 @@
+/* Persistent colors identify tasks; labels and selected outlines carry meaning too. */
+#control-panel{--people:#286c60;--people-soft:#e5f1eb;--places:#963966;--places-soft:#f7e8f0;--scene:#88600c;--scene-soft:#f6efd9}
+[data-theme=dark] #control-panel{--people:#8ad7bd;--people-soft:#243e36;--places:#f3acd0;--places-soft:#482d3e;--scene:#ecd080;--scene-soft:#423b28}
+#control-panel [data-tone=people]{--section-color:var(--people);--section-soft:var(--people-soft)}
+#control-panel [data-tone=places]{--section-color:var(--places);--section-soft:var(--places-soft)}
+#control-panel [data-tone=scene]{--section-color:var(--scene);--section-soft:var(--scene-soft)}
+:root[data-theme] #control-panel .identity{padding:18px 20px 14px}
+:root[data-theme] #control-panel .identity h1{font-size:24px;margin:8px 0 5px}
+#control-panel .identity .preview-label{font-size:12px;margin:0;color:var(--muted)}
+#control-panel .experience-nav{grid-template-columns:repeat(3,1fr);padding:8px 12px;gap:6px;border-bottom:1px solid var(--line)}
+#control-panel .experience-nav button{min-height:44px;font-size:13px;border:1px solid transparent;color:var(--muted);border-radius:9px}
+#control-panel .experience-nav button::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--section-color);margin-right:7px;vertical-align:1px}
+#control-panel .experience-nav button[aria-selected=true]{background:var(--section-soft);border-color:var(--section-color);color:var(--section-color);font-weight:700}
+#control-panel .experience-nav button:focus-visible{outline:2px solid var(--section-color);outline-offset:2px}
+:root[data-theme] #control-panel .panel-section{padding:20px;border:0}
+#control-panel .panel-section[hidden]{display:none}
+#control-panel .section-label{font-size:15px;letter-spacing:0;text-transform:none;line-height:1.4;margin:0 0 12px;color:var(--section-color);font-weight:650}
+#control-panel .section-label span{font-size:10px;color:var(--muted);font-weight:400}
+#control-panel .community-intro{font-size:12px;margin:0 0 16px;line-height:1.5}
+#control-panel .nearby-people{margin:0 0 20px;gap:10px}
+#control-panel .community-label,#control-panel .district-directory label{font-size:12px;margin:12px 0 7px;color:var(--ink)}
+#control-panel select,#control-panel input[type=search]{min-height:44px;font-size:13px;border-radius:8px}
+#control-panel .district-directory{border-left:0;padding-left:0}
+#control-panel .district-address,#control-panel .district-summary,#control-panel #storefront-evidence{display:none}
+#control-panel #community-meet{margin-bottom:18px;min-height:44px;background:var(--people);border-color:var(--people);color:var(--panel)}
+#control-panel .rail-disclosure{border-top:1px solid var(--line);margin-top:20px;padding-top:4px}
+#control-panel .rail-disclosure>summary{min-height:44px;display:list-item;align-content:center;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+#control-panel .rail-disclosure>summary::marker{color:var(--section-color)}
+#control-panel .rail-disclosure-body{padding:4px 0 12px}
+#control-panel .rail-disclosure p,#control-panel .quiet-note{font-size:12px;line-height:1.55}
+#control-panel .appearance-control{margin:20px 0;display:flex;flex-direction:column;align-items:stretch;gap:8px}
+#control-panel .appearance-control>span{font-size:12px;color:var(--ink)}
+#control-panel .theme-switch button{min-height:40px;font-size:12px}
+#control-panel .atmosphere-presets button{font-size:12px;min-height:44px}
+#control-panel .atmosphere-presets [aria-pressed=true]{color:var(--scene);background:var(--scene-soft);border-color:var(--scene)}
+#control-panel .layer-row{min-height:44px;font-size:12px}
+#control-panel .panel-footer{font-size:10px;min-height:42px}
+#control-panel .store-inside{font-size:11px;line-height:1.5}
+#control-panel .community-resources{font-size:12px;line-height:1.6}
+@media(prefers-reduced-motion:reduce){#control-panel *{scroll-behavior:auto;transition:none}}

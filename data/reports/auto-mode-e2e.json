@@ -1,0 +1,24 @@
+{
+  "mode": "mocked_jev_integration",
+  "railTabs": true,
+  "keyboard": true,
+  "mobile": true,
+  "darkTheme": true,
+  "movement": true,
+  "manualTakeover": true,
+  "staleCancellation": true,
+  "unavailable": true,
+  "support": {
+    "enabled": true,
+    "phase": "interacting",
+    "source": "jev",
+    "action": "supply",
+    "label": "Bring supplies to Maya \u00b7 That helps right away. I could still use another delivery or a volunteer visit.",
+    "reason": null,
+    "decisions": 3,
+    "arrivals": 0,
+    "interactions": 2
+  },
+  "resources": "10 kits \u00b7 4 volunteer visits left \u00b7 0 active visits",
+  "browserErrors": []
+}

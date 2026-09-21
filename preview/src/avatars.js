@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { residentStride } from './gait.js';
+import { createFootPlacement } from './foot-placement.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
 const cache = new Map();
@@ -91,7 +92,10 @@ export async function loadResidentAvatar(index, id) {
   const root = new THREE.Group();
   root.add(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
-  const adjustment = new THREE.Quaternion(), axisX = new THREE.Vector3(1,0,0);
+  const adjustment = new THREE.Quaternion();
+  const feet = createFootPlacement(model, root), baseY = model.position.y;
+  const legReach = feet.legs[0] ? feet.legs[0].upperLength + feet.legs[0].lowerLength : 0.85;
+  const walkingDrop = legReach - Math.sqrt(Math.max(0,legReach*legReach-0.42*0.42)) + 0.025;
   // The exported joints have different local axes. Rotate gait around the
   // character's horizontal axis, expressed in each joint's rest coordinates.
   const gaitAxes=new Map(bones.map(bone=>[bone,avatar.axes.get(bone).x]));
@@ -100,20 +104,24 @@ export async function loadResidentAvatar(index, id) {
   return {
     object:root, profile,
     get carrying() {return kit.visible;},
-    update(now, action, speaking, locomotion) {
+    get feet() {return feet.legs;},
+    update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y) {
       const t=now/1000+index*0.7;
       const dt=previousTime===null?0:Math.min(0.08,Math.max(0,(now-previousTime)/1000));previousTime=now;
       walkingSpeed+=((locomotion?.speed ?? 0)-walkingSpeed)*(1-Math.exp(-18*dt));
       const gait=residentStride(locomotion?.distance ?? 0,walkingSpeed);
+      const strength = Math.min(1,walkingSpeed/0.65);
+      model.position.y = baseY - 0.018 - walkingDrop*strength + Math.cos((locomotion?.distance ?? 0)/1.1*Math.PI*4)*0.008*strength;
       for (const bone of bones) {
         bone.quaternion.copy(rest.get(bone));
         if(noMotion && !locomotion?.speed) continue;
-        if(gait[bone.name]) {adjustment.setFromAxisAngle(gaitAxes.get(bone),gait[bone.name]);bone.quaternion.multiply(adjustment);}
+        if(gait[bone.name] && !/^(thigh|calf|foot)_/.test(bone.name)) {adjustment.setFromAxisAngle(gaitAxes.get(bone),gait[bone.name]);bone.quaternion.multiply(adjustment);}
         const angle=bone.name==='head' ? Math.sin(t*(speaking?4:0.7))*(speaking?0.025:0.008)
           : bone.name==='spine_03' ? Math.sin(t*1.3)*0.006
           : bone.name==='lowerarm_r' && action==='greet' ? -0.32+Math.sin(t*2)*0.025 : 0;
-        adjustment.setFromAxisAngle(axisX,angle); bone.quaternion.multiply(adjustment);
+        adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
       }
+      feet.update(dt, locomotion, groundAt);
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
     },
