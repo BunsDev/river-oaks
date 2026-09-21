@@ -27,6 +27,10 @@ The [current district shop](https://www.riveroaksdistrict.com/shop), [dining](ht
 
 These designs, room depths, materials and display contents are interpretations. Doors remain exterior viewing destinations; the walking collision model still uses full building footprints. Actual shop interiors, exact tenant frontages and present-day entrances require licensed/site reference work. The district's OSM and DEM import receipts do not establish survey or photographic accuracy.
 
+## Streetscape, upper storeys and light
+
+The September 20 ultra-realism pass adds the layers a pedestrian reads first. Upper storeys carry punched windows with projecting limestone surrounds, sills and reveals, string courses and a stepped cornice, all derived from the mapped footprint and estimated height rather than from photographs. Shopfronts have a stone bulkhead, bronze glazing frames, soffit and ceiling downlights, thresholds, mats, planters and sloped awnings. Kerbs, lamp columns, planters, litter bins and mulched tree pits follow the mapped lane centrelines and the observed trunk positions; a placement test keeps them out of footprints and junctions. A GTAO ambient-occlusion pass, a coupled dusk atmosphere and a fogged context ground complete the picture. None of this is surveyed street furniture; see [the design-goal record](immersive-design-goal.md#pass-4-evidence) for the evidence and limits.
+
 ## Residents
 
 Six MakeHuman/MPFB variants provide faces, hands, hair, clothing, shoes and independent skeletons for all 24 encounter identities. The neutral modeling pose is converted into a relaxed standing pose during export. The runtime adds breathing, conversational head motion, an immediate arm gesture and a procedural stride tied to actual distance traveled. [Resident life](resident-life.md) documents district navigation, weather reactions and reduced-motion controls.

@@ -28,12 +28,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   };
   // The HUD is throttled; an arrival followed by E must use the current position.
   const talk = () => { if (!active) return; nearest = findNearest(); if (nearest) { clear(); onTalk(nearest.id); } };
-  $('#walking-controls-toggle').addEventListener('click', () => {
+  // The on-screen pad stays wherever the visitor last left it across visits.
+  const showMovement = shown => {
     const movement = $('#walking-movement');
-    movement.hidden = !movement.hidden; clear();
-    $('#walking-controls-toggle').setAttribute('aria-expanded', String(!movement.hidden));
-    $('#walking-controls-toggle').textContent = movement.hidden ? 'Show movement controls' : 'Hide movement controls';
-  });
+    movement.hidden = !shown; clear();
+    $('#walking-controls-toggle').setAttribute('aria-expanded', String(shown));
+    $('#walking-controls-toggle').textContent = shown ? 'Hide movement controls' : 'Show movement controls';
+    try { localStorage.setItem('river-oaks-movement-pad', shown ? 'shown' : 'hidden'); } catch { /* storage may be unavailable */ }
+  };
+  try { if (localStorage.getItem('river-oaks-movement-pad') === 'hidden') showMovement(false); } catch { /* storage may be unavailable */ }
+  $('#walking-controls-toggle').addEventListener('click', () => showMovement($('#walking-movement').hidden));
   $('#walking-meet-nearby').addEventListener('click', () => { clear(); onMeetNearby(); });
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
