@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { terrainHeight } from './geometry.js';
 import { buildMatureTrees } from './landscape-models.js';
 
 export function buildObservedFoliage(world) {

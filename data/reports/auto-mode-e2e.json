@@ -7,6 +7,10 @@
   "movement": true,
   "manualTakeover": true,
   "staleCancellation": true,
+  "visibilityEvent": true,
+  "blurEvent": true,
+  "nativeTabLifecycle": "not_verified_cli_keeps_tabs_visible",
+  "worldReload": true,
   "unavailable": true,
   "support": {
     "enabled": true,

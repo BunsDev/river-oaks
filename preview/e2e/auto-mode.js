@@ -83,11 +83,17 @@ async page => {
 
   mode = 'walk';
   await page.locator('#auto-toggle').click();
-  const other = await page.context().newPage();
-  await other.goto('about:blank');await other.bringToFront();
-  await page.waitForFunction(() => document.hidden && document.querySelector('#auto-toggle').getAttribute('aria-pressed') === 'false');
-  await other.close();await page.bringToFront();
-  check(!(await read()).enabled,'Hidden tabs must stop auto and require deliberate restart');
+  // The CLI browser keeps every tab document visible. Exercise the platform
+  // event explicitly; this is event integration, not native tab lifecycle proof.
+  await page.evaluate(() => {
+    Object.defineProperty(document,'hidden',{configurable:true,value:true});
+    document.dispatchEvent(new Event('visibilitychange'));
+    delete document.hidden;
+  });
+  check(!(await read()).enabled,'Visibility change must stop auto and require deliberate restart');
+  await page.locator('#auto-toggle').click();
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  check(!(await read()).enabled,'Window blur must stop auto');
   await page.locator('#auto-toggle').click();
   await page.locator('#reload').click();await page.locator('#loading').waitFor({state:'hidden'});
   check(!(await read()).enabled,'World replacement must cancel auto');
@@ -102,6 +108,7 @@ async page => {
   check(!errors.length,`Browser errors: ${errors.join('; ')}`);
   await page.unroute('**/v1/auto'); await page.unroute('**/v1/decisions');
   return {mode:'mocked_jev_integration',railTabs:true,keyboard:true,mobile:true,darkTheme:true,
-    movement:true,manualTakeover:true,staleCancellation:true,hiddenTab:true,worldReload:true,
+    movement:true,manualTakeover:true,staleCancellation:true,visibilityEvent:true,blurEvent:true,
+    nativeTabLifecycle:'not_verified_cli_keeps_tabs_visible',worldReload:true,
     unavailable:true,support,resources,browserErrors:errors};
 }
