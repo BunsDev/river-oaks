@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { measureHead } from './head-fit.js';
 
 // The peoples of Baum's Oz (the 1900 novel is public domain): each country
 // dresses in its own colour, and Emerald City folk wear their green spectacles.
@@ -17,43 +18,61 @@ export function ozFolkFor(id) {
 }
 
 const templates = new Map();
-function template(folk) {
-  if (templates.has(folk.name)) return templates.get(folk.name);
+const quantize = value => Math.round(value * 200) / 200;
+// Hats are cut to the measured head: brims clear the hair, crowns sit on it,
+// hoods replace it, and Emerald spectacles sit at the real eye line.
+function template(folk, fit) {
+  const key = `${folk.name}:${[fit.skull.top, fit.skull.radius, fit.skull.front, fit.skull.back, ...fit.skull.centre, fit.hair.top, fit.hair.radius, ...fit.hair.centre].map(quantize).join(':')}`;
+  if (templates.has(key)) return templates.get(key);
   const cloth = [], trim = [];
   const add = (parts, geometry, position, rotation = [0, 0, 0], scale = [1, 1, 1]) => {
     geometry.scale(...scale); geometry.rotateX(rotation[0]); geometry.rotateY(rotation[1]); geometry.rotateZ(rotation[2]); geometry.translate(...position); parts.push(geometry);
   };
-  // Positions are metres in a head-aligned frame: y up from the head joint, z forward.
+  const { skull, hair } = fit, eyeY = skull.top - 0.105, eyeZ = skull.front - 0.025, centreY = skull.top - skull.radius;
+  const [hx, hz] = hair.centre, [sx, sz] = skull.centre;
   if (folk.hat === 'bells') {
-    add(cloth, new THREE.CylinderGeometry(0.2, 0.21, 0.018, 32), [0, 0.19, 0]);
-    add(cloth, new THREE.CylinderGeometry(0.11, 0.15, 0.16, 32), [0, 0.27, 0]);
-    add(cloth, new THREE.ConeGeometry(0.11, 0.24, 32), [0, 0.47, 0]);
-    for (let i = 0; i < 6; i++) { const angle = i / 6 * Math.PI * 2; add(trim, new THREE.SphereGeometry(0.014, 10, 8), [Math.cos(angle) * 0.2, 0.17, Math.sin(angle) * 0.2]); }
+    const brimY = hair.top - 0.022, brimR = hair.radius + 0.035, crownR = hair.radius * 0.92;
+    add(cloth, new THREE.CylinderGeometry(brimR, brimR + 0.01, 0.018, 32), [hx, brimY, hz]);
+    add(cloth, new THREE.CylinderGeometry(crownR * 0.72, crownR, 0.16, 32), [hx, brimY + 0.08, hz]);
+    add(cloth, new THREE.ConeGeometry(crownR * 0.72, 0.24, 32), [hx, brimY + 0.28, hz]);
+    for (let i = 0; i < 6; i++) { const angle = i / 6 * Math.PI * 2; add(trim, new THREE.SphereGeometry(0.014, 10, 8), [hx + Math.cos(angle) * brimR, brimY - 0.02, hz + Math.sin(angle) * brimR]); }
   } else if (folk.hat === 'peak') {
-    add(cloth, new THREE.SphereGeometry(0.155, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2), [0, 0.135, -0.01], [0, 0, 0], [1, 0.78, 1]);
-    add(cloth, new THREE.CylinderGeometry(0.16, 0.16, 0.014, 24, 1, false, -Math.PI / 2, Math.PI), [0, 0.135, -0.01]);
-    add(trim, new THREE.TorusGeometry(0.152, 0.008, 6, 32), [0, 0.135, -0.01], [Math.PI / 2, 0, 0]);
+    const capR = hair.radius + 0.022, capY = hair.top - capR * 0.66;
+    add(cloth, new THREE.SphereGeometry(capR, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2), [hx, capY, hz], [0, 0, 0], [1, 0.82, 1]);
+    add(cloth, new THREE.CylinderGeometry(capR + 0.045, capR + 0.045, 0.012, 24, 1, false, -Math.PI / 2, Math.PI), [hx, capY, hz]);
+    add(trim, new THREE.TorusGeometry(capR, 0.008, 6, 32), [hx, capY, hz], [Math.PI / 2, 0, 0]);
   } else if (folk.hat === 'beret') {
-    add(cloth, new THREE.SphereGeometry(0.19, 28, 16), [0.03, 0.205, -0.02], [0, 0, 0.12], [1, 0.36, 1]);
-    add(trim, new THREE.CylinderGeometry(0.008, 0.008, 0.03, 8), [0.03, 0.28, -0.02]);
+    // A beret presses the hair flat, so it is cut to the skull rather than the hair.
+    const beretR = Math.max(hair.radius, skull.radius + 0.02) + 0.03, beretY = skull.top - 0.005;
+    add(cloth, new THREE.SphereGeometry(beretR, 28, 16), [sx + 0.02, beretY, sz - 0.01], [0, 0, 0.1], [1, 0.4, 1]);
+    add(trim, new THREE.CylinderGeometry(0.008, 0.008, 0.03, 8), [sx + 0.02, beretY + beretR * 0.4, sz - 0.01]);
   } else if (folk.hat === 'hood') {
-    add(cloth, new THREE.ConeGeometry(0.175, 0.34, 32, 1, true), [0, 0.2, -0.03], [0.12, 0, 0]);
-    add(cloth, new THREE.SphereGeometry(0.17, 28, 16, Math.PI * 0.55, Math.PI * 0.9, 0, Math.PI * 0.62), [0, 0.06, -0.01]);
-    add(trim, new THREE.TorusGeometry(0.16, 0.014, 8, 32), [0, -0.09, -0.01], [Math.PI / 2, 0, 0]);
+    // A cowl: a shell over the crown and the back half of the head (sphere phi runs
+    // +x -> -z -> -x for [PI, 2PI]), a soft peak folded back, and a short collar.
+    // The shell hugs the skull: a hair's breadth wider than the head, squashed so its
+    // crown sits half a centimetre above the measured top.
+    const hoodR = skull.radius + 0.012, squash = (skull.radius + 0.005) / hoodR;
+    add(cloth, new THREE.SphereGeometry(hoodR, 32, 18, Math.PI, Math.PI, 0, Math.PI * 0.74), [sx, centreY, sz], [0, 0, 0], [1, squash, 1]);
+    add(cloth, new THREE.SphereGeometry(hoodR, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.4), [sx, centreY, sz], [0, 0, 0], [1, squash, 1]);
+    add(cloth, new THREE.ConeGeometry(0.045, 0.1, 24, 1, true), [sx, centreY + hoodR * squash * 0.72, sz - hoodR * 0.5], [-0.75, 0, 0]);
+    add(cloth, new THREE.CylinderGeometry(skull.radius + 0.015, skull.radius + 0.05, 0.06, 32, 1, true), [sx, centreY - skull.radius - 0.045, sz]);
+    add(trim, new THREE.TorusGeometry(skull.radius + 0.022, 0.009, 8, 32), [sx, centreY - skull.radius - 0.013, sz], [Math.PI / 2, 0, 0]);
   } else {
-    add(cloth, new THREE.CylinderGeometry(0.21, 0.21, 0.018, 32), [0, 0.19, 0]);
-    add(cloth, new THREE.CylinderGeometry(0.135, 0.145, 0.26, 32), [0, 0.32, 0]);
-    add(trim, new THREE.TorusGeometry(0.14, 0.012, 6, 32), [0, 0.21, 0], [Math.PI / 2, 0, 0]);
-    // Green spectacles, as every citizen of the Emerald City wears.
-    for (const side of [-1, 1]) add(trim, new THREE.TorusGeometry(0.03, 0.005, 6, 24), [side * 0.05, 0.07, 0.125]);
-    add(trim, new THREE.CylinderGeometry(0.004, 0.004, 0.04, 6), [0, 0.07, 0.125], [0, 0, Math.PI / 2]);
+    const brimY = hair.top - 0.01, brimR = hair.radius + 0.04, crownR = hair.radius * 0.95;
+    add(cloth, new THREE.CylinderGeometry(brimR, brimR, 0.016, 32), [hx, brimY, hz]);
+    add(cloth, new THREE.CylinderGeometry(crownR * 0.94, crownR, 0.26, 32), [hx, brimY + 0.13, hz]);
+    add(trim, new THREE.TorusGeometry(crownR, 0.012, 6, 32), [hx, brimY + 0.03, hz], [Math.PI / 2, 0, 0]);
+    // Green spectacles, as every citizen of the Emerald City wears, at the eye line.
+    for (const side of [-1, 1]) add(trim, new THREE.TorusGeometry(0.031, 0.0045, 6, 24), [sx + side * 0.036, eyeY, eyeZ]);
+    add(trim, new THREE.CylinderGeometry(0.003, 0.003, 0.014, 6), [sx, eyeY + 0.006, eyeZ], [0, 0, Math.PI / 2]);
+    for (const side of [-1, 1]) add(trim, new THREE.CylinderGeometry(0.003, 0.003, skull.front - skull.back - 0.03, 6), [sx + side * (skull.radius - 0.005), eyeY + 0.008, (skull.front + skull.back) / 2 - 0.01], [Math.PI / 2, 0, 0]);
   }
   const result = [
     { geometry: mergeGeometries(cloth), material: new THREE.MeshStandardMaterial({ color: folk.color, roughness: 0.86 }) },
     { geometry: mergeGeometries(trim), material: new THREE.MeshStandardMaterial({ color: folk.trim, roughness: 0.4, metalness: folk.hat === 'bells' ? 0.7 : 0.15 }) },
   ];
   [...cloth, ...trim].forEach(geometry => geometry.dispose());
-  templates.set(folk.name, result); return result;
+  templates.set(key, result); return result;
 }
 
 // Tint the shared suit toward the country colour and attach the country's hat.
@@ -62,10 +81,13 @@ export function applyOzFolk(avatar, id) {
   const folk = ozFolkFor(id), model = avatar.model, head = model.getObjectByName('head');
   for (const [original, material] of avatar.materials) if (/suit|dress|shirt|jacket/.test(original.name)) { material.color.set(folk.color); material.roughness = 0.82; material.needsUpdate = true; }
   if (head) {
+    const fit = measureHead(avatar);
+    // A hood replaces the hair; every other hat sits on top of it.
+    if (folk.hat === 'hood') model.traverse(item => { if (item.isMesh && /^(bob|short|ponytail|long|afro|curly)/.test(item.material?.name ?? '')) item.visible = false; });
     model.updateMatrixWorld(true);
     const group = new THREE.Group(); group.name = `${folk.name} hat`;
     group.position.copy(head.getWorldPosition(new THREE.Vector3())); group.updateMatrixWorld(true);
-    for (const part of template(folk)) { const mesh = new THREE.Mesh(part.geometry, part.material); mesh.castShadow = mesh.receiveShadow = true; mesh.userData.localId = id; mesh.userData.ozFolk = folk.name; group.add(mesh); }
+    for (const part of template(folk, fit)) { const mesh = new THREE.Mesh(part.geometry, part.material); mesh.castShadow = mesh.receiveShadow = true; mesh.userData.localId = id; mesh.userData.ozFolk = folk.name; group.add(mesh); }
     head.attach(group);
   }
   model.userData.ozFolk = folk.name;

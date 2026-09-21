@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createJevicaCostume } from './jevica-costume.js';
+import { measureHead } from './head-fit.js';
 
 const isSkin = name => /^(young|middleage|old)_/.test(name);
 const isHair = name => /^(bob|short|ponytail|long|afro|curly)/.test(name);
@@ -25,6 +26,7 @@ function gingham() {
 export function createPlayerCostume(avatar, form) {
   if (form === 'jevica') return createJevicaCostume(avatar);
   const { model, materials } = avatar.rig;
+  const fit = measureHead(avatar.rig), { skull, hair: hairFit } = fit, skullCentre = skull.top - skull.radius, [sx, sz] = skull.centre, [hx, hz] = hairFit.centre;
   const attachments = [], owned = new Set();
   const material = (color, extra = {}) => { const value = new THREE.MeshPhysicalMaterial({ color, roughness: 0.65, ...extra }); owned.add(value); return value; };
   const black = material('#080c12', { roughness: 0.15 });
@@ -84,9 +86,10 @@ export function createPlayerCostume(avatar, form) {
   if (form === 'scarecrow') {
     hideHair();
     const head = attach('head');
-    mesh(head, new THREE.CylinderGeometry(0.3, 0.31, 0.02, 32), burlap, [0, 0.17, 0]);
-    const crown = mesh(head, new THREE.ConeGeometry(0.19, 0.44, 32), burlap, [0.05, 0.38, -0.02]); crown.rotation.z = -0.22;
-    tufts(head, 14, 0.15, 0.12, 0.17);
+    const brimY = skull.top - 0.008;
+    mesh(head, new THREE.CylinderGeometry(skull.radius + 0.19, skull.radius + 0.2, 0.02, 32), burlap, [sx, brimY, sz]);
+    const crown = mesh(head, new THREE.ConeGeometry(skull.radius + 0.08, 0.44, 32), burlap, [sx + 0.05, brimY + 0.21, sz - 0.02]); crown.rotation.z = -0.22;
+    const straws = attach('head'); straws.position.set(0, 0, 0); tufts(straws, 14, skull.radius + 0.04, 0.12, brimY); straws.children.forEach(tuft => { tuft.position.x += sx; tuft.position.z += sz; });
     const neck = attach('neck_01'); tufts(neck, 12, 0.07, 0.1, 0.02);
     for (const side of ['l', 'r']) { const wrist = attach(`hand_${side}`); tufts(wrist, 10, 0.045, 0.09, 0.02); const ankle = attach(`foot_${side}`); tufts(ankle, 10, 0.055, 0.08, 0.1); }
     const chest = attach('spine_03');
@@ -99,8 +102,8 @@ export function createPlayerCostume(avatar, form) {
   if (form === 'tinman') {
     hideHair();
     const head = attach('head');
-    mesh(head, new THREE.CylinderGeometry(0.19, 0.05, 0.16, 32), tin, [0, 0.185, -0.01]);
-    mesh(head, new THREE.CylinderGeometry(0.02, 0.026, 0.15, 12), tin, [0, 0.335, -0.01]);
+    mesh(head, new THREE.CylinderGeometry(skull.radius + 0.08, 0.05, 0.16, 32), tin, [sx, skull.top + 0.07, sz]);
+    mesh(head, new THREE.CylinderGeometry(0.02, 0.026, 0.15, 12), tin, [sx, skull.top + 0.22, sz]);
     const chest = attach('spine_03');
     const plate = mesh(chest, new THREE.CylinderGeometry(0.2, 0.185, 0.34, 28), tin, [0, -0.05, 0.005]); plate.scale.set(1, 1, 0.78);
     for (let i = 0; i < 12; i++) { const angle = i / 12 * Math.PI * 2; sphere(chest, silver, [Math.cos(angle) * 0.2, 0.08, Math.sin(angle) * 0.156], [0.012, 0.012, 0.012]); sphere(chest, silver, [Math.cos(angle) * 0.19, -0.19, Math.sin(angle) * 0.148], [0.012, 0.012, 0.012]); }
@@ -117,16 +120,17 @@ export function createPlayerCostume(avatar, form) {
     hideHair();
     avatar.object.scale.set(1.06, 1.02, 1.06);
     const head = attach('head');
+    const maneR = skull.radius + 0.09, back = skull.back;
     for (let i = 0; i < 16; i++) {
-      const angle = i / 16 * Math.PI * 2, radius = 0.19 + (i % 2) * 0.04, low = Math.sin(angle) < -0.3;
-      const lock = sphere(head, mane, [Math.cos(angle) * radius, 0.05 + Math.sin(angle) * radius * 0.95, low ? -0.02 : -0.1 - (i % 3) * 0.02], [0.08, 0.12 + (i % 2) * 0.03, 0.07]); lock.rotation.z = angle;
+      const angle = i / 16 * Math.PI * 2, radius = maneR + (i % 2) * 0.04, low = Math.sin(angle) < -0.3;
+      const lock = sphere(head, mane, [sx + Math.cos(angle) * radius, skullCentre + Math.sin(angle) * radius * 0.95, low ? back + 0.06 : back + 0.01 - (i % 3) * 0.02], [0.08, 0.12 + (i % 2) * 0.03, 0.07]); lock.rotation.z = angle;
     }
-    for (let i = 0; i < 12; i++) { const angle = i / 12 * Math.PI * 2; sphere(head, mane, [Math.cos(angle) * 0.15, 0.04 + Math.sin(angle) * 0.15, -0.18], [0.07, 0.1, 0.06], [0, 0, angle]); }
-    for (let i = 0; i < 5; i++) { const t = (i - 2) / 2; sphere(head, mane, [t * 0.11, -0.12 - Math.abs(t) * 0.02, 0.06 - Math.abs(t) * 0.03], [0.05, 0.07, 0.045]); }
-    for (const side of [-1, 1]) sphere(head, fur, [side * 0.11, 0.21, -0.01], [0.045, 0.05, 0.03]);
-    sphere(head, black, [0, 0.02, 0.15], [0.026, 0.018, 0.016]);
-    for (const side of [-1, 1]) { const loop = sphere(head, ribbon, [side * 0.045, 0.27, 0.05], [0.045, 0.026, 0.02]); loop.rotation.z = side * 0.5; }
-    sphere(head, ribbon, [0, 0.265, 0.055], [0.018, 0.018, 0.018]);
+    for (let i = 0; i < 12; i++) { const angle = i / 12 * Math.PI * 2; sphere(head, mane, [sx + Math.cos(angle) * (maneR - 0.04), skullCentre - 0.01 + Math.sin(angle) * (maneR - 0.04), back - 0.06], [0.07, 0.1, 0.06], [0, 0, angle]); }
+    for (let i = 0; i < 5; i++) { const t = (i - 2) / 2; sphere(head, mane, [sx + t * 0.11, skullCentre - skull.radius - 0.05 - Math.abs(t) * 0.02, skull.front - 0.05 - Math.abs(t) * 0.03], [0.05, 0.07, 0.045]); }
+    for (const side of [-1, 1]) sphere(head, fur, [sx + side * (skull.radius + 0.01), skull.top + 0.01, sz], [0.045, 0.05, 0.03]);
+    sphere(head, black, [sx, skullCentre - 0.02, skull.front + 0.01], [0.026, 0.018, 0.016]);
+    for (const side of [-1, 1]) { const loop = sphere(head, ribbon, [sx + side * 0.045, skull.top + 0.06, sz + 0.05], [0.045, 0.026, 0.02]); loop.rotation.z = side * 0.5; }
+    sphere(head, ribbon, [sx, skull.top + 0.055, sz + 0.055], [0.018, 0.018, 0.018]);
     const tail = attach('spine_01');
     const path = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -0.02, -0.11), new THREE.Vector3(0.05, -0.2, -0.28), new THREE.Vector3(0.12, -0.5, -0.32), new THREE.Vector3(0.2, -0.72, -0.2)]);
     mesh(tail, new THREE.TubeGeometry(path, 16, 0.02, 8, false), fur, [0, 0, 0]);
@@ -135,10 +139,11 @@ export function createPlayerCostume(avatar, form) {
   if (form === 'witch') {
     avatar.object.scale.set(0.88, 1.08, 0.93);
     const head = attach('head');
-    mesh(head, new THREE.CylinderGeometry(0.42, 0.43, 0.035, 40), purple, [0, 0.08, 0]);
-    const crown = mesh(head, new THREE.ConeGeometry(0.24, 0.71, 40), purple, [0.06, 0.42, 0]); crown.rotation.z = -0.18;
-    mesh(head, new THREE.CylinderGeometry(0.23, 0.25, 0.075, 32), black, [0.015, 0.125, 0]);
-    mesh(head, new THREE.TorusGeometry(0.045, 0.008, 8, 20), silver, [0, 0.13, 0.235]);
+    const brimY = hairFit.top - 0.014, crownR = hairFit.radius + 0.1;
+    mesh(head, new THREE.CylinderGeometry(crownR + 0.18, crownR + 0.19, 0.035, 40), purple, [hx, brimY, hz]);
+    const crown = mesh(head, new THREE.ConeGeometry(crownR, 0.71, 40), purple, [hx + 0.06, brimY + 0.34, hz]); crown.rotation.z = -0.18;
+    mesh(head, new THREE.CylinderGeometry(crownR - 0.01, crownR + 0.01, 0.075, 32), black, [hx + 0.015, brimY + 0.045, hz]);
+    mesh(head, new THREE.TorusGeometry(0.045, 0.008, 8, 20), silver, [hx, brimY + 0.05, hz + crownR]);
     const waist = attach('spine_01');
     const robe = new THREE.LatheGeometry(Array.from({ length: 25 }, (_, i) => { const t = i / 24; return new THREE.Vector2(0.34 - 0.18 * t, -0.91 + t * 1.04); }), 64);
     const points = robe.attributes.position;

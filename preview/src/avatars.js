@@ -84,7 +84,7 @@ export function instantiateAvatar(source, { targetHeight, id }) {
   }));
   const hipHeight=model.getObjectByName('thigh_l')?.getWorldPosition(new THREE.Vector3()).y ?? targetHeight*0.52;
   return {
-    model, bones, rest, axes, materials, skeletons, hipHeight,
+    model, bones, rest, axes, materials, skeletons, hipHeight, source,
     dispose() { for (const skeleton of skeletons) skeleton.dispose(); for (const material of materials.values()) material.dispose(); },
   };
 }
