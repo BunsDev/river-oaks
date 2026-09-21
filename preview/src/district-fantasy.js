@@ -38,23 +38,23 @@ export function buildDistrictFantasy(world) {
       add(box,glow,at(0,5.32,1.5),[6.1,0.025,0.025],yaw,store.id);
     } else if (jewelry) {
       // Dark brushed-metal portal with inset champagne light; no giant badge.
-      add(box,graphite,at(0,6.9,0.32),[6.7,0.2,0.46],yaw,store.id);
-      add(box,silver,at(0,6.76,0.52),[6.4,0.035,0.025],yaw,store.id);
+      add(box,graphite,at(0,5.72,0.32),[6.7,0.16,0.46],yaw,store.id);
+      add(box,silver,at(0,5.62,0.52),[6.4,0.03,0.025],yaw,store.id);
       for (const side of [-1,1]) {
-        add(box,graphite,at(side*3.25,3.52,0.3),[0.25,6.6,0.4],yaw,store.id);
-        add(box,glow,at(side*3.10,3.7,0.53),[0.018,5.7,0.025],yaw,store.id);
+        add(box,graphite,at(side*3.25,3.0,0.3),[0.25,5.6,0.4],yaw,store.id);
+        add(box,glow,at(side*3.10,3.1,0.53),[0.018,4.9,0.025],yaw,store.id);
       }
-      for (let flute=-7;flute<=7;flute++) add(box,silver,at(flute*0.34,5.96,0.27),[0.018,0.86,0.1],yaw,store.id);
+      for (let flute=-7;flute<=7;flute++) add(box,silver,at(flute*0.34,5.4,0.27),[0.018,0.42,0.1],yaw,store.id);
     } else if (wellness) {
       // Satin ceramic fins above the sign, with a subtle asymmetric pink inset.
-      for (let fin=-8;fin<=8;fin++) add(box,porcelain,at(fin*0.38,6.05,0.3),[0.10,1.3,0.26],yaw,store.id);
+      for (let fin=-8;fin<=8;fin++) add(box,porcelain,at(fin*0.38,5.5,0.3),[0.10,0.6,0.26],yaw,store.id);
       add(box,enamel,at(2.9,2.55,0.27),[0.14,4.6,0.12],yaw,store.id);
       add(box,glow,at(2.78,2.55,0.34),[0.018,4.4,0.025],yaw,store.id);
     } else {
       // Fashion retains the signature halo, with slimmer ceramic piers.
-      add(arch,silver,at(0,4.9),[1.12,0.62,1],yaw,store.id);
-      add(jewel,pearl,at(0,6.05,0.58),[0.22,0.38,0.15],yaw,store.id);
-      add(jewel,glow,at(0,6.05,0.5),[0.025,0.19,0.025],yaw,store.id);
+      add(arch,silver,at(0,4.9),[1.12,0.5,1],yaw,store.id);
+      add(jewel,pearl,at(0,5.85,0.58),[0.22,0.34,0.15],yaw,store.id);
+      add(jewel,glow,at(0,5.85,0.5),[0.025,0.17,0.025],yaw,store.id);
       for(const side of [-1,1]) {
         add(box,porcelain,at(side*2.96,2.7,0.28),[0.16,4.4,0.2],yaw,store.id);
         add(box,enamel,at(side*2.96,2.7,0.39),[0.035,4.25,0.025],yaw,store.id);

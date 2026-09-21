@@ -39,6 +39,8 @@
               <label for="destination">Explore a storefront</label><select id="destination"></select>
               <div class="store-detail"><strong id="store-name"></strong><span id="store-category-label"></span></div>
               <button id="visit-destination">Arrive at storefront →</button>
+              <button id="enter-destination" class="enter-destination">Step inside →</button>
+              <p id="store-inside" class="quiet-note store-inside"></p>
               <div class="store-tour"><button id="store-previous" aria-label="Visit previous storefront">← Previous</button><span id="store-step"></span><button id="store-next" aria-label="Visit next storefront">Next →</button></div>
               <p id="storefront-evidence" class="district-mode-label">Real boutiques, imagined facades.</p>
             </div>
@@ -48,6 +50,7 @@
             <div class="section-label">Layers</div>
             <label class="layer-row"><span><i class="swatch roads-swatch"></i>Roads</span><input type="checkbox" data-layer="roads" checked /></label>
             <label class="layer-row"><span><i class="swatch house-swatch"></i><span id="building-layer-label">Boutiques & architecture</span></span><input type="checkbox" data-layer="buildings" checked /></label>
+            <label class="layer-row"><span><i class="swatch interior-swatch"></i>Boutique interiors & staff</span><input type="checkbox" data-layer="interiors" checked /></label>
             <label class="layer-row"><span><i class="swatch tree-swatch"></i>Gardens & trees</span><input type="checkbox" data-layer="trees" checked /></label>
           </section>
           <section class="panel-section">
