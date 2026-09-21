@@ -146,7 +146,7 @@ export function createHoverMoped({ camera, scene, host, reducedMotion, onExit })
       active = true;
       model.visible = true;
       camera.fov = 64;
-      camera.near = 0.05;
+      camera.near = 0.05; camera.far = 1800;
       camera.updateProjectionMatrix();
       const geometry = new THREE.BufferGeometry().setFromPoints(environment.curve.getSpacedPoints(384));
       route = new THREE.Line(geometry, new THREE.LineDashedMaterial({ color: '#8fffe4', transparent: true, opacity: 0.45, dashSize: 14, gapSize: 13 }));
@@ -168,7 +168,7 @@ export function createHoverMoped({ camera, scene, host, reducedMotion, onExit })
       route.material.dispose();
       model.visible = false;
       camera.fov = 42;
-      camera.near = 0.5;
+      camera.near = 0.5; camera.far = 30000;
       camera.updateProjectionMatrix();
       camera.rotation.z = 0;
       document.body.classList.remove('flying');

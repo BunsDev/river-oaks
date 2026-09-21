@@ -18,6 +18,9 @@ import { buildLocals } from './locals.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
+import { buildStreetFurniture } from './street-furniture.js';
+import { atmosphereFor } from './atmosphere.js';
+import { createWalkingEnvironment } from './walking.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -34,7 +37,9 @@ let layers = {}, markers = [], animationTime = 0, moving = !reducedMotion, camer
 let lastRenderStats = 0;
 let overviewTarget = new THREE.Vector3(), closeupTarget = new THREE.Vector3(), extent = 4000;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 1800);
+// The orbit camera sees to the fogged horizon; walking narrows the range for depth precision.
+export const ORBIT_FAR = 30000, WALK_FAR = 1800;
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, ORBIT_FAR);
 const sun = new THREE.DirectionalLight('#fff2d8', 2.5);
 const ambient = new THREE.HemisphereLight('#eef4eb', '#73806c', 2.3);
 const object = new THREE.Object3D();
@@ -63,6 +68,9 @@ function initializeRenderer() {
   renderer.toneMappingExposure = 0.95;
   configureMaterials(renderer);
   pipeline = createRenderPipeline(renderer, scene, camera);
+  const debugOcclusion = new URLSearchParams(location.search).get('ao');
+  if (debugOcclusion === 'off') pipeline.setOcclusion(false);
+  else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
   loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
@@ -155,10 +163,10 @@ function buildGround(data) {
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    surface = new THREE.Mesh(geometry, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4) }));
+    surface = new THREE.Mesh(geometry, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), variation: 0.22 }));
     surface.position.y = 0.15;
   } else {
-    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4) }));
+    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), variation: 0.22 }));
     surface.rotation.x = -Math.PI / 2;
     surface.position.set(center[0], 0, -center[1]);
   }
@@ -168,6 +176,15 @@ function buildGround(data) {
   const base = new THREE.Mesh(new THREE.BoxGeometry(width, 35, depth), new THREE.MeshStandardMaterial({ color: '#635745', roughness: 1 }));
   base.position.set(center[0], minimum - 18, -center[1]);
   group.add(base);
+  // Surrounding ground continues to the fogged horizon so the mapped block no
+  // longer floats over the sky probe's lower hemisphere. It is context only.
+  const context = new THREE.CircleGeometry(25000, 72); context.rotateX(-Math.PI / 2);
+  const positions = context.getAttribute('position'), contextUv = new Float32Array(positions.count * 2);
+  for (let i = 0; i < positions.count; i++) { contextUv[i * 2] = positions.getX(i) + center[0]; contextUv[i * 2 + 1] = positions.getZ(i) - center[1]; }
+  context.setAttribute('uv', new THREE.BufferAttribute(contextUv, 2));
+  const surroundings = new THREE.Mesh(context, physicalSurface('grass', { tileSize: 14, variation: 0.6, color: '#a3a888', roughness: 1 }));
+  surroundings.position.set(center[0], minimum - 0.35, -center[1]); surroundings.receiveShadow = true;
+  group.add(surroundings);
   return group;
 }
 
@@ -197,7 +214,7 @@ function buildRoads(data) {
   const uvs = [];
   for (let index = 0; index < vertices.length; index += 3) uvs.push(vertices[index], vertices[index + 2]);
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  const mesh = new THREE.Mesh(geometry, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#bfc3c8', roughness: 0.82, side: THREE.DoubleSide }));
+  const mesh = new THREE.Mesh(geometry, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#b4b8bd', roughness: 0.82, side: THREE.DoubleSide, variation: 0.3 }));
   mesh.receiveShadow = true;
   return mesh;
 }
@@ -252,6 +269,7 @@ function populateWorld(data) {
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(buildDistrictDetail(data));
+  worldGroup.add(buildStreetFurniture(data, createWalkingEnvironment(data).isFree));
   buildingMesh.add(buildDistrictFantasy(data));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   if (!economy.enabled) { markerMesh.visible = false; $('input[data-layer="markers"]').checked = false; }
@@ -363,17 +381,18 @@ function exitRide() {
 function updateAtmosphere() {
   const hour = Number($('#sun-hour').value), weather = $('#weather').value;
   $('#sun-time').textContent = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.round((hour % 1) * 60)).padStart(2, '0')}`;
-  const angle = (hour - 6) / 14 * Math.PI;
-  sunOffset.set(Math.cos(angle) * 4500, Math.max(300, Math.sin(angle) * 5500), 1900);
+  const atmosphere = atmosphereFor(hour, weather);
+  sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
-  sun.intensity = weather === 'overcast' ? 0.8 : 3.2;
-  sun.color.set(hour > 17 || hour < 9 ? '#ffe2f0' : '#fff4f9');
-  ambient.intensity = weather === 'overcast' ? 0.55 : 0.35;
-  const horizon = new THREE.Color(weather === 'overcast' ? '#b9c3c9' : weather === 'haze' ? '#d2cfc1' : hour > 17 ? '#ddd1e2' : '#dee0ec');
-  scene.background = environmentAssets && weather !== 'overcast' ? environmentAssets.hdr : horizon;
-  scene.backgroundIntensity = hour > 17 ? 0.8 : 1.0;
-  scene.environmentIntensity = weather === 'overcast' ? 0.45 : 0.7;
-  scene.fog = new THREE.FogExp2(horizon, weather === 'haze' ? 0.0003 : 0.000075);
+  sun.intensity = atmosphere.sunIntensity;
+  sun.color.copy(atmosphere.sunColor);
+  ambient.intensity = atmosphere.ambientIntensity;
+  scene.background = environmentAssets && weather !== 'overcast' ? environmentAssets.hdr : atmosphere.horizon;
+  scene.backgroundIntensity = atmosphere.backgroundIntensity;
+  scene.environmentIntensity = atmosphere.environmentIntensity;
+  // FogExp2 squares density × depth: 0.00055 leaves the street clear and fades the horizon.
+  scene.fog = new THREE.FogExp2(atmosphere.horizon, atmosphere.fogDensity);
+  if (renderer) renderer.toneMappingExposure = atmosphere.exposure;
   if (layers.roads?.material) {
     layers.roads.material.roughness = weather === 'overcast' ? 0.38 : 1;
   }
@@ -498,6 +517,7 @@ function render(now) {
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
+    host.dataset.pipeline = JSON.stringify(pipeline.stats);
     lastRenderStats=now;
   }
 }
