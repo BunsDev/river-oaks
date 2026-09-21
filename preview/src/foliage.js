@@ -34,7 +34,7 @@ export function buildObservedFoliage(world) {
       const instance=layer*tile.voxels.length+index;mesh.setMatrixAt(instance,dummy.matrix);
       mesh.setColorAt(instance,color.setHSL(0.2+random()*0.05,0.10+random()*0.13,0.62+random()*0.25));
     });
-    mesh.computeBoundingSphere();mesh.castShadow=mesh.receiveShadow=true;
+    mesh.computeBoundingSphere();mesh.castShadow=mesh.receiveShadow=true;mesh.userData.aoExclude=true;
     group.add(mesh);lod.push({mesh,center:tile.center,ground:ground[0],count:tile.voxels.length});
   }
   // Fill the interpreted branch crowns between sparse leaf-off returns. These
@@ -54,7 +54,7 @@ export function buildObservedFoliage(world) {
       mesh.setMatrixAt(layer*tips.length+index,dummy.matrix);
       mesh.setColorAt(layer*tips.length+index,color.setHSL(0.22+random()*0.025,0.16+random()*0.12,0.50+random()*0.25));
     });
-    mesh.computeBoundingSphere(); mesh.castShadow=mesh.receiveShadow=true; group.add(mesh);
+    mesh.computeBoundingSphere(); mesh.castShadow=mesh.receiveShadow=true; mesh.userData.aoExclude=true; group.add(mesh);
     lod.push({mesh,center:tile.center,ground:terrainHeight(world.terrain,...tile.center),count:tips.length,layers:[64,24,8]});
   }
   const segments=[];
@@ -118,6 +118,7 @@ export function buildFoliage(trees) {
     }
   });
   for(const mesh of [branches,leaves]){mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);}
+  leaves.userData.aoExclude=true;
   group.userData.texture=texture;
   return group;
 }

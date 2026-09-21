@@ -24,7 +24,10 @@ function texture(name, channel) {
 }
 
 // Geometry UVs are measured in meters. Instanced facade UVs additionally account for each part's scale.
-export function physicalSurface(name, { tileSize = 4, instanced = false, textureContrast = 1, ...options } = {}) {
+// Optional low-frequency tone variation breaks the visible repeat of a tiled
+// texture over large ground planes; it multiplies albedo only. textureContrast
+// (< 1) quiets the photographed surface's high-frequency albedo at eye level.
+export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, textureContrast = 1, ...options } = {}) {
   const arm = texture(name, 'arm');
   const material = new THREE.MeshStandardMaterial({
     map: texture(name, 'color'), normalMap: texture(name, 'normal'),
@@ -34,9 +37,18 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, texture
   });
   material.userData.sharedTextures = true;
   material.onBeforeCompile = (shader) => {
-    // Retain the photographed surface, but quiet its high-frequency albedo at eye level.
-    shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
-      #include <map_fragment>
+    if (variation > 0) shader.fragmentShader = shader.fragmentShader
+      .replace('void main() {', `float roHash(vec2 cell) { return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453); }
+      float roValueNoise(vec2 p) {
+        vec2 cell = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(roHash(cell), roHash(cell + vec2(1.0, 0.0)), f.x), mix(roHash(cell + vec2(0.0, 1.0)), roHash(cell + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      void main() {`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+      vec2 roMeters = vMapUv * ${tileSize.toFixed(4)};
+      float roNoise = 0.25 * roValueNoise(roMeters / 3.1) + 0.4 * roValueNoise(mat2(0.83, -0.56, 0.56, 0.83) * roMeters / 19.0) + 0.35 * roValueNoise(mat2(0.31, 0.95, -0.95, 0.31) * roMeters / 131.0);
+      diffuseColor.rgb *= 1.0 + ${variation.toFixed(4)} * (roNoise - 0.5);`);
+    if (textureContrast !== 1) shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
       #ifdef USE_MAP
         diffuseColor.rgb = mix(diffuse * 0.5, diffuseColor.rgb, ${textureContrast.toFixed(4)});
       #endif`);
@@ -66,7 +78,7 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, texture
         vAoMapUv = (aoMapTransform * vec3(roUv, 1.0)).xy;
       #endif`);
   };
-  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${textureContrast}`;
+  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${variation}:${textureContrast}`;
   return material;
 }
 
