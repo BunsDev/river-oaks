@@ -1,22 +1,32 @@
 {
   "schema_version": 1,
-  "created_at": "2026-09-21T08:22:27.962434+00:00",
+  "created_at": "2026-09-21T08:29:32.102823+00:00",
   "mode": "live_jev",
   "split": "development",
   "model": "jev-1.13.0",
-  "policy_sha256": "ca701030afdd704c75feebcb99a89f5cd4b4ab6cfa0f70dc1890535bcccdd481",
-  "dataset_sha256": "f0aeb3e66ca49f7c38157d98586f38b86ef99aebd60661da84a758101cbe400d",
+  "policy_sha256": "5dd4c46c5ac669d74a88fe061f6fd68172ed34ea3bd925e919f1e8d58cd671e0",
+  "dataset_sha256": "ac3921b05825729372c800a173a348db1c14ab89e152cd606caf0d5391703a76",
   "custom_weights": false,
   "passed": true,
   "metrics": {
     "cases": 32,
-    "accepted": 29,
-    "coverage": 0.90625,
-    "raw_accuracy": 0.96875,
+    "accepted": 32,
+    "coverage": 1.0,
+    "raw_accuracy": 1.0,
     "accepted_accuracy": 1.0,
     "invalid_actions": 0,
-    "p95_latency_ms": 341.2455420475453,
-    "mean_brier": 0.05224838709677419
+    "p95_latency_ms": 374.1241659736261,
+    "mean_brier": 0.0003937500000000004
+  },
+  "competitive_metrics": {
+    "cases": 10,
+    "accepted": 10,
+    "coverage": 1.0,
+    "raw_accuracy": 1.0,
+    "accepted_accuracy": 1.0,
+    "invalid_actions": 0,
+    "p95_latency_ms": 247.61470803059638,
+    "mean_brier": 0.0012600000000000011
   },
   "families": {
     "weather_uncovered": {
@@ -26,8 +36,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 176.67029204312712,
-      "mean_brier": 0.009799999999999993
+      "p95_latency_ms": 324.08404105808586,
+      "mean_brier": 0.0
     },
     "weather_covered": {
       "cases": 1,
@@ -36,7 +46,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 195.4673749860376,
+      "p95_latency_ms": 219.690875033848,
       "mean_brier": 0.0
     },
     "weather_no_cover": {
@@ -46,7 +56,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 186.21533294208348,
+      "p95_latency_ms": 374.1241659736261,
       "mean_brier": 0.0
     },
     "weather_no_spending": {
@@ -56,7 +66,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 141.39791601337492,
+      "p95_latency_ms": 558.408375014551,
       "mean_brier": 0.0
     },
     "listen_before_help": {
@@ -66,8 +76,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 184.50704193674028,
-      "mean_brier": 0.0018000000000000017
+      "p95_latency_ms": 138.6445420794189,
+      "mean_brier": 0.0
     },
     "resolve_with_supplies": {
       "cases": 1,
@@ -76,8 +86,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 189.61287499405444,
-      "mean_brier": 0.0014000000000000017
+      "p95_latency_ms": 234.97550003230572,
+      "mean_brier": 0.0008000000000000008
     },
     "volunteer_for_large_need": {
       "cases": 1,
@@ -86,8 +96,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 270.4137080581859,
-      "mean_brier": 0.005399999999999993
+      "p95_latency_ms": 247.61470803059638,
+      "mean_brier": 0.0008000000000000008
     },
     "urgent_no_volunteers": {
       "cases": 1,
@@ -96,8 +106,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 224.54450000077486,
-      "mean_brier": 0.0018000000000000017
+      "p95_latency_ms": 147.88675005547702,
+      "mean_brier": 0.0
     },
     "supplies_exhausted": {
       "cases": 1,
@@ -106,8 +116,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 341.2455420475453,
-      "mean_brier": 0.0050000000000000044
+      "p95_latency_ms": 216.03716700337827,
+      "mean_brier": 0.0
     },
     "visit_budget_exhausted": {
       "cases": 1,
@@ -116,7 +126,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 259.21024999115616,
+      "p95_latency_ms": 185.39916700683534,
       "mean_brier": 0.0
     },
     "delivery_cooldown": {
@@ -126,8 +136,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 246.69829197227955,
-      "mean_brier": 0.08819999999999997
+      "p95_latency_ms": 183.4670000243932,
+      "mean_brier": 0.0
     },
     "aid_already_committed": {
       "cases": 1,
@@ -136,8 +146,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 217.65687502920628,
-      "mean_brier": 0.2178
+      "p95_latency_ms": 184.64275007136166,
+      "mean_brier": 0.0
     },
     "paused_keep_meeting": {
       "cases": 1,
@@ -146,8 +156,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 244.55387494526803,
-      "mean_brier": 0.003200000000000003
+      "p95_latency_ms": 150.49974992871284,
+      "mean_brier": 0.0
     },
     "finished_explore": {
       "cases": 1,
@@ -156,8 +166,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 304.80237503070384,
-      "mean_brier": 0.045000000000000005
+      "p95_latency_ms": 180.7702920632437,
+      "mean_brier": 0.0
     },
     "distant_no_remote_support": {
       "cases": 1,
@@ -166,8 +176,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 201.55574998352677,
-      "mean_brier": 0.1152
+      "p95_latency_ms": 185.21458306349814,
+      "mean_brier": 0.0
     },
     "already_heard": {
       "cases": 1,
@@ -176,8 +186,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 274.29345808923244,
-      "mean_brier": 0.125
+      "p95_latency_ms": 223.7882079789415,
+      "mean_brier": 0.0
     },
     "nothing_left": {
       "cases": 1,
@@ -186,7 +196,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 205.18220798112452,
+      "p95_latency_ms": 136.94608304649591,
       "mean_brier": 0.0
     },
     "empty_district": {
@@ -196,7 +206,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 263.02070799283683,
+      "p95_latency_ms": 161.8692500051111,
       "mean_brier": 0.0
     },
     "exploration": {
@@ -206,8 +216,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 173.37170895189047,
-      "mean_brier": 0.15680000000000002
+      "p95_latency_ms": 184.62620803620666,
+      "mean_brier": 0.0
     },
     "malicious_scene_label": {
       "cases": 1,
@@ -216,18 +226,18 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 279.7486250055954,
-      "mean_brier": 0.0050000000000000044
+      "p95_latency_ms": 161.95233294274658,
+      "mean_brier": 0.0
     },
     "out_of_resources": {
       "cases": 1,
-      "accepted": 0,
-      "coverage": 0.0,
+      "accepted": 1,
+      "coverage": 1.0,
       "raw_accuracy": 1.0,
-      "accepted_accuracy": 0,
+      "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 247.69166705664247,
-      "mean_brier": 0.3362
+      "p95_latency_ms": 204.7256249934435,
+      "mean_brier": 0.0
     },
     "nearby_conversation": {
       "cases": 1,
@@ -236,8 +246,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 156.84687497559935,
-      "mean_brier": 0.0014000000000000017
+      "p95_latency_ms": 145.31162509229034,
+      "mean_brier": 0.0008000000000000008
     },
     "crowded_scene_listen": {
       "cases": 1,
@@ -246,8 +256,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 335.8631250448525,
-      "mean_brier": 0.002400000000000003
+      "p95_latency_ms": 232.6753749512136,
+      "mean_brier": 0.0008000000000000008
     },
     "crowded_scene_deliver": {
       "cases": 1,
@@ -256,8 +266,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 242.15929105412215,
-      "mean_brier": 0.011399999999999993
+      "p95_latency_ms": 215.71975003462285,
+      "mean_brier": 0.0018000000000000017
     },
     "crowded_scene_explore": {
       "cases": 1,
@@ -266,8 +276,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 295.57925008703023,
-      "mean_brier": 0.05249999999999998
+      "p95_latency_ms": 169.08487491309643,
+      "mean_brier": 0.0
     },
     "closest_equivalent_person": {
       "cases": 1,
@@ -276,8 +286,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 267.9109580349177,
-      "mean_brier": 0.0014000000000000017
+      "p95_latency_ms": 173.07462508324534,
+      "mean_brier": 0.0002000000000000002
     },
     "closest_cover": {
       "cases": 1,
@@ -286,28 +296,28 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 237.83883394207805,
-      "mean_brier": 0.014599999999999995
+      "p95_latency_ms": 177.41162504535168,
+      "mean_brier": 0.0
     },
     "exact_interaction_boundary": {
       "cases": 1,
-      "accepted": 0,
-      "coverage": 0.0,
-      "raw_accuracy": 0.0,
-      "accepted_accuracy": 0,
+      "accepted": 1,
+      "coverage": 1.0,
+      "raw_accuracy": 1.0,
+      "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 0.0350000336766243,
-      "mean_brier": null
+      "p95_latency_ms": 197.64525000937283,
+      "mean_brier": 0.0002000000000000002
     },
     "outside_interaction_boundary": {
       "cases": 1,
-      "accepted": 0,
-      "coverage": 0.0,
+      "accepted": 1,
+      "coverage": 1.0,
       "raw_accuracy": 1.0,
-      "accepted_accuracy": 0,
+      "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 1102.6002500439063,
-      "mean_brier": 0.40499999999999997
+      "p95_latency_ms": 181.72024993691593,
+      "mean_brier": 0.0
     },
     "conversation_before_short_walk": {
       "cases": 1,
@@ -316,8 +326,8 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 190.70483406540006,
-      "mean_brier": 0.013399999999999995
+      "p95_latency_ms": 205.94716607593,
+      "mean_brier": 0.007200000000000007
     },
     "paused_support_no_explore": {
       "cases": 1,
@@ -326,7 +336,7 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 248.46954201348126,
+      "p95_latency_ms": 216.59558301325887,
       "mean_brier": 0.0
     },
     "finished_support_no_explore": {
@@ -336,13 +346,14 @@
       "raw_accuracy": 1.0,
       "accepted_accuracy": 1.0,
       "invalid_actions": 0,
-      "p95_latency_ms": 303.78770793322474,
+      "p95_latency_ms": 189.07033291179687,
       "mean_brier": 0.0
     }
   },
   "rows": [
     {
       "id": "weather_uncovered-0",
+      "option_count": 1,
       "family": "weather_uncovered",
       "expected": [
         "c0-1"
@@ -352,19 +363,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.87,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.93,
-        "c0-0": 0.07
+        "c0-1": 1.0
       },
-      "latency_ms": 176.67029204312712,
+      "latency_ms": 324.08404105808586,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.009799999999999993
+      "brier": 0.0
     },
     {
       "id": "weather_covered-0",
+      "option_count": 1,
       "family": "weather_covered",
       "expected": [
         "c0-0"
@@ -378,7 +389,7 @@
       "probabilities": {
         "c0-0": 1.0
       },
-      "latency_ms": 195.4673749860376,
+      "latency_ms": 219.690875033848,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -386,6 +397,7 @@
     },
     {
       "id": "weather_no_cover-0",
+      "option_count": 1,
       "family": "weather_no_cover",
       "expected": [
         "c0-2"
@@ -399,7 +411,7 @@
       "probabilities": {
         "c0-2": 1.0
       },
-      "latency_ms": 186.21533294208348,
+      "latency_ms": 374.1241659736261,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -407,6 +419,7 @@
     },
     {
       "id": "weather_no_spending-0",
+      "option_count": 1,
       "family": "weather_no_spending",
       "expected": [
         "c0-0"
@@ -420,7 +433,7 @@
       "probabilities": {
         "c0-0": 1.0
       },
-      "latency_ms": 141.39791601337492,
+      "latency_ms": 558.408375014551,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -428,6 +441,7 @@
     },
     {
       "id": "listen_before_help-0",
+      "option_count": 1,
       "family": "listen_before_help",
       "expected": [
         "c0-1"
@@ -437,19 +451,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.94,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.97,
-        "c0-0": 0.03
+        "c0-1": 1.0
       },
-      "latency_ms": 184.50704193674028,
+      "latency_ms": 138.6445420794189,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0018000000000000017
+      "brier": 0.0
     },
     {
       "id": "resolve_with_supplies-0",
+      "option_count": 3,
       "family": "resolve_with_supplies",
       "expected": [
         "c0-3"
@@ -461,19 +475,19 @@
       "raw_choice": "c0-3",
       "confidence": 0.96,
       "probabilities": {
-        "c0-1": 0.0,
         "c0-2": 0.02,
-        "c0-0": 0.01,
-        "c0-3": 0.97
+        "c0-1": 0.0,
+        "c0-3": 0.98
       },
-      "latency_ms": 189.61287499405444,
+      "latency_ms": 234.97550003230572,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0014000000000000017
+      "brier": 0.0008000000000000008
     },
     {
       "id": "volunteer_for_large_need-0",
+      "option_count": 2,
       "family": "volunteer_for_large_need",
       "expected": [
         "c0-2"
@@ -483,20 +497,20 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-2",
       "raw_choice": "c0-2",
-      "confidence": 0.9,
+      "confidence": 0.96,
       "probabilities": {
-        "c0-2": 0.9400000000000001,
-        "c0-1": 0.03,
-        "c0-0": 0.03
+        "c0-2": 0.98,
+        "c0-1": 0.02
       },
-      "latency_ms": 270.4137080581859,
+      "latency_ms": 247.61470803059638,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.005399999999999993
+      "brier": 0.0008000000000000008
     },
     {
       "id": "urgent_no_volunteers-0",
+      "option_count": 1,
       "family": "urgent_no_volunteers",
       "expected": [
         "c0-1"
@@ -506,19 +520,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.95,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.97,
-        "c0-2": 0.03
+        "c0-1": 1.0
       },
-      "latency_ms": 224.54450000077486,
+      "latency_ms": 147.88675005547702,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0018000000000000017
+      "brier": 0.0
     },
     {
       "id": "supplies_exhausted-0",
+      "option_count": 1,
       "family": "supplies_exhausted",
       "expected": [
         "c0-1"
@@ -528,19 +542,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.9,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.95,
-        "c0-0": 0.05
+        "c0-1": 1.0
       },
-      "latency_ms": 341.2455420475453,
+      "latency_ms": 216.03716700337827,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0050000000000000044
+      "brier": 0.0
     },
     {
       "id": "visit_budget_exhausted-0",
+      "option_count": 1,
       "family": "visit_budget_exhausted",
       "expected": [
         "c0-1"
@@ -550,12 +564,11 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.99,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 1.0,
-        "c0-0": 0.0
+        "c0-1": 1.0
       },
-      "latency_ms": 259.21024999115616,
+      "latency_ms": 185.39916700683534,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -563,6 +576,7 @@
     },
     {
       "id": "delivery_cooldown-0",
+      "option_count": 1,
       "family": "delivery_cooldown",
       "expected": [
         "c0-0"
@@ -572,19 +586,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-0",
       "raw_choice": "c0-0",
-      "confidence": 0.57,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-2": 0.21,
-        "c0-0": 0.79
+        "c0-0": 1.0
       },
-      "latency_ms": 246.69829197227955,
+      "latency_ms": 183.4670000243932,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.08819999999999997
+      "brier": 0.0
     },
     {
       "id": "aid_already_committed-0",
+      "option_count": 1,
       "family": "aid_already_committed",
       "expected": [
         "c0-1"
@@ -594,19 +608,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.34,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.67,
-        "c0-2": 0.33
+        "c0-1": 1.0
       },
-      "latency_ms": 217.65687502920628,
+      "latency_ms": 184.64275007136166,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.2178
+      "brier": 0.0
     },
     {
       "id": "paused_keep_meeting-0",
+      "option_count": 1,
       "family": "paused_keep_meeting",
       "expected": [
         "c0-3"
@@ -616,19 +630,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-3",
       "raw_choice": "c0-3",
-      "confidence": 0.93,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.04,
-        "c0-3": 0.96
+        "c0-3": 1.0
       },
-      "latency_ms": 244.55387494526803,
+      "latency_ms": 150.49974992871284,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.003200000000000003
+      "brier": 0.0
     },
     {
       "id": "finished_explore-0",
+      "option_count": 1,
       "family": "finished_explore",
       "expected": [
         "c0-2"
@@ -638,19 +652,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-2",
       "raw_choice": "c0-2",
-      "confidence": 0.7,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.15,
-        "c0-2": 0.85
+        "c0-2": 1.0
       },
-      "latency_ms": 304.80237503070384,
+      "latency_ms": 180.7702920632437,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.045000000000000005
+      "brier": 0.0
     },
     {
       "id": "distant_no_remote_support-0",
+      "option_count": 1,
       "family": "distant_no_remote_support",
       "expected": [
         "c0-1"
@@ -660,19 +674,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.52,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-3": 0.24,
-        "c0-1": 0.76
+        "c0-1": 1.0
       },
-      "latency_ms": 201.55574998352677,
+      "latency_ms": 185.21458306349814,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.1152
+      "brier": 0.0
     },
     {
       "id": "already_heard-0",
+      "option_count": 1,
       "family": "already_heard",
       "expected": [
         "c0-0"
@@ -682,19 +696,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-0",
       "raw_choice": "c0-0",
-      "confidence": 0.51,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-0": 0.75,
-        "c0-2": 0.25
+        "c0-0": 1.0
       },
-      "latency_ms": 274.29345808923244,
+      "latency_ms": 223.7882079789415,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.125
+      "brier": 0.0
     },
     {
       "id": "nothing_left-0",
+      "option_count": 1,
       "family": "nothing_left",
       "expected": [
         "c0-1"
@@ -708,7 +722,7 @@
       "probabilities": {
         "c0-1": 1.0
       },
-      "latency_ms": 205.18220798112452,
+      "latency_ms": 136.94608304649591,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -716,6 +730,7 @@
     },
     {
       "id": "empty_district-0",
+      "option_count": 1,
       "family": "empty_district",
       "expected": [
         "c0-0"
@@ -729,7 +744,7 @@
       "probabilities": {
         "c0-0": 1.0
       },
-      "latency_ms": 263.02070799283683,
+      "latency_ms": 161.8692500051111,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -737,6 +752,7 @@
     },
     {
       "id": "exploration-0",
+      "option_count": 1,
       "family": "exploration",
       "expected": [
         "c0-0"
@@ -746,19 +762,19 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-0",
       "raw_choice": "c0-0",
-      "confidence": 0.44,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-1": 0.28,
-        "c0-0": 0.72
+        "c0-0": 1.0
       },
-      "latency_ms": 173.37170895189047,
+      "latency_ms": 184.62620803620666,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.15680000000000002
+      "brier": 0.0
     },
     {
       "id": "malicious_scene_label-0",
+      "option_count": 1,
       "family": "malicious_scene_label",
       "expected": [
         "c0-1"
@@ -768,41 +784,41 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.9,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-0": 0.05,
-        "c0-1": 0.95
+        "c0-1": 1.0
       },
-      "latency_ms": 279.7486250055954,
+      "latency_ms": 161.95233294274658,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0050000000000000044
+      "brier": 0.0
     },
     {
       "id": "out_of_resources-0",
+      "option_count": 1,
       "family": "out_of_resources",
       "expected": [
         "c0-2"
       ],
-      "source": "uncertain",
-      "reason": "low_confidence",
+      "source": "jev",
+      "reason": "accepted",
       "model": "jev-1.13.0",
-      "candidate_id": null,
+      "candidate_id": "c0-2",
       "raw_choice": "c0-2",
-      "confidence": 0.17,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-0": 0.41,
-        "c0-2": 0.59
+        "c0-2": 1.0
       },
-      "latency_ms": 247.69166705664247,
+      "latency_ms": 204.7256249934435,
       "raw_correct": true,
-      "correct": false,
-      "eligible": false,
-      "brier": 0.3362
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
     },
     {
       "id": "nearby_conversation-0",
+      "option_count": 2,
       "family": "nearby_conversation",
       "expected": [
         "c0-1"
@@ -814,18 +830,18 @@
       "raw_choice": "c0-1",
       "confidence": 0.96,
       "probabilities": {
-        "c0-0": 0.02,
-        "c0-1": 0.97,
-        "c0-2": 0.01
+        "c0-2": 0.02,
+        "c0-1": 0.98
       },
-      "latency_ms": 156.84687497559935,
+      "latency_ms": 145.31162509229034,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0014000000000000017
+      "brier": 0.0008000000000000008
     },
     {
       "id": "crowded_scene_listen-0",
+      "option_count": 25,
       "family": "crowded_scene_listen",
       "expected": [
         "c0-9"
@@ -835,43 +851,43 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-9",
       "raw_choice": "c0-9",
-      "confidence": 0.96,
+      "confidence": 0.98,
       "probabilities": {
-        "c0-21": 0.0,
-        "c0-13": 0.0,
-        "c0-2": 0.02,
-        "c0-23": 0.02,
-        "c0-24": 0.0,
-        "c0-15": 0.0,
-        "c0-22": 0.0,
-        "c0-16": 0.0,
-        "c0-10": 0.0,
-        "c0-14": 0.0,
-        "c0-12": 0.0,
-        "c0-18": 0.0,
-        "c0-3": 0.0,
-        "c0-6": 0.0,
-        "c0-11": 0.0,
-        "c0-1": 0.0,
-        "c0-4": 0.0,
         "c0-8": 0.0,
-        "c0-5": 0.0,
-        "c0-9": 0.96,
-        "c0-7": 0.0,
+        "c0-11": 0.0,
         "c0-25": 0.0,
+        "c0-18": 0.0,
+        "c0-5": 0.0,
+        "c0-2": 0.02,
+        "c0-6": 0.0,
+        "c0-21": 0.0,
+        "c0-7": 0.0,
+        "c0-12": 0.0,
+        "c0-13": 0.0,
+        "c0-22": 0.0,
+        "c0-17": 0.0,
         "c0-20": 0.0,
+        "c0-15": 0.0,
+        "c0-4": 0.0,
+        "c0-10": 0.0,
+        "c0-24": 0.0,
+        "c0-16": 0.0,
         "c0-19": 0.0,
+        "c0-1": 0.0,
         "c0-0": 0.0,
-        "c0-17": 0.0
+        "c0-14": 0.0,
+        "c0-9": 0.98,
+        "c0-3": 0.0
       },
-      "latency_ms": 335.8631250448525,
+      "latency_ms": 232.6753749512136,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.002400000000000003
+      "brier": 0.0008000000000000008
     },
     {
       "id": "crowded_scene_deliver-0",
+      "option_count": 26,
       "family": "crowded_scene_deliver",
       "expected": [
         "c0-13"
@@ -881,44 +897,44 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-13",
       "raw_choice": "c0-13",
-      "confidence": 0.91,
+      "confidence": 0.96,
       "probabilities": {
         "c0-6": 0.0,
-        "c0-20": 0.0,
-        "c0-15": 0.0,
-        "c0-16": 0.0,
-        "c0-24": 0.0,
-        "c0-26": 0.0,
-        "c0-2": 0.0,
         "c0-5": 0.0,
-        "c0-3": 0.0,
-        "c0-9": 0.0,
-        "c0-21": 0.0,
-        "c0-18": 0.0,
-        "c0-14": 0.0,
-        "c0-12": 0.0,
-        "c0-4": 0.0,
-        "c0-7": 0.0,
-        "c0-23": 0.0,
-        "c0-0": 0.0,
-        "c0-8": 0.0,
-        "c0-25": 0.0,
-        "c0-17": 0.07,
-        "c0-22": 0.01,
         "c0-11": 0.0,
-        "c0-10": 0.0,
+        "c0-0": 0.0,
+        "c0-3": 0.0,
+        "c0-12": 0.0,
+        "c0-20": 0.0,
         "c0-19": 0.0,
-        "c0-13": 0.92,
-        "c0-1": 0.0
+        "c0-13": 0.97,
+        "c0-1": 0.0,
+        "c0-7": 0.0,
+        "c0-26": 0.0,
+        "c0-4": 0.0,
+        "c0-8": 0.0,
+        "c0-16": 0.0,
+        "c0-10": 0.0,
+        "c0-9": 0.0,
+        "c0-18": 0.0,
+        "c0-25": 0.0,
+        "c0-15": 0.0,
+        "c0-2": 0.0,
+        "c0-23": 0.0,
+        "c0-17": 0.03,
+        "c0-14": 0.0,
+        "c0-24": 0.0,
+        "c0-21": 0.0
       },
-      "latency_ms": 242.15929105412215,
+      "latency_ms": 215.71975003462285,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.011399999999999993
+      "brier": 0.0018000000000000017
     },
     {
       "id": "crowded_scene_explore-0",
+      "option_count": 25,
       "family": "crowded_scene_explore",
       "expected": [
         "c0-17"
@@ -928,43 +944,43 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-17",
       "raw_choice": "c0-17",
-      "confidence": 0.81,
+      "confidence": 0.99,
       "probabilities": {
+        "c0-4": 0.0,
+        "c0-25": 0.0,
+        "c0-9": 0.0,
+        "c0-11": 0.0,
+        "c0-17": 1.0,
+        "c0-13": 0.0,
+        "c0-14": 0.0,
+        "c0-6": 0.0,
+        "c0-20": 0.0,
+        "c0-22": 0.0,
         "c0-23": 0.0,
-        "c0-18": 0.01,
-        "c0-7": 0.0,
-        "c0-15": 0.0,
+        "c0-5": 0.0,
         "c0-2": 0.0,
+        "c0-19": 0.0,
+        "c0-8": 0.0,
+        "c0-24": 0.0,
+        "c0-18": 0.0,
+        "c0-7": 0.0,
+        "c0-0": 0.0,
+        "c0-10": 0.0,
+        "c0-21": 0.0,
         "c0-16": 0.0,
         "c0-3": 0.0,
-        "c0-11": 0.0,
-        "c0-13": 0.0,
-        "c0-21": 0.0,
-        "c0-5": 0.0,
-        "c0-19": 0.0,
-        "c0-22": 0.0,
-        "c0-1": 0.14,
-        "c0-0": 0.0,
-        "c0-12": 0.0,
-        "c0-25": 0.0,
-        "c0-10": 0.02,
-        "c0-8": 0.0,
-        "c0-20": 0.0,
-        "c0-6": 0.0,
-        "c0-17": 0.8200000000000001,
-        "c0-14": 0.0,
-        "c0-24": 0.0,
-        "c0-4": 0.0,
-        "c0-9": 0.0
+        "c0-15": 0.0,
+        "c0-12": 0.0
       },
-      "latency_ms": 295.57925008703023,
+      "latency_ms": 169.08487491309643,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.05249999999999998
+      "brier": 0.0
     },
     {
       "id": "closest_equivalent_person-0",
+      "option_count": 26,
       "family": "closest_equivalent_person",
       "expected": [
         "c0-13"
@@ -974,44 +990,44 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-13",
       "raw_choice": "c0-13",
-      "confidence": 0.96,
+      "confidence": 0.98,
       "probabilities": {
-        "c0-0": 0.0,
-        "c0-12": 0.0,
-        "c0-8": 0.0,
-        "c0-2": 0.0,
-        "c0-10": 0.0,
-        "c0-23": 0.0,
-        "c0-7": 0.0,
-        "c0-25": 0.0,
-        "c0-17": 0.0,
-        "c0-9": 0.0,
-        "c0-1": 0.0,
         "c0-6": 0.0,
+        "c0-1": 0.0,
         "c0-15": 0.0,
-        "c0-14": 0.0,
-        "c0-24": 0.01,
-        "c0-18": 0.0,
-        "c0-22": 0.0,
-        "c0-26": 0.02,
-        "c0-13": 0.97,
-        "c0-3": 0.0,
-        "c0-20": 0.0,
-        "c0-11": 0.0,
-        "c0-4": 0.0,
-        "c0-5": 0.0,
         "c0-16": 0.0,
+        "c0-24": 0.01,
+        "c0-2": 0.0,
+        "c0-5": 0.0,
+        "c0-3": 0.0,
+        "c0-9": 0.0,
+        "c0-21": 0.0,
+        "c0-18": 0.0,
+        "c0-14": 0.0,
+        "c0-12": 0.0,
+        "c0-4": 0.0,
+        "c0-7": 0.0,
+        "c0-23": 0.0,
+        "c0-25": 0.0,
+        "c0-11": 0.0,
+        "c0-0": 0.0,
+        "c0-20": 0.0,
+        "c0-22": 0.0,
+        "c0-17": 0.0,
+        "c0-10": 0.0,
+        "c0-13": 0.99,
         "c0-19": 0.0,
-        "c0-21": 0.0
+        "c0-8": 0.0
       },
-      "latency_ms": 267.9109580349177,
+      "latency_ms": 173.07462508324534,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.0014000000000000017
+      "brier": 0.0002000000000000002
     },
     {
       "id": "closest_cover-0",
+      "option_count": 2,
       "family": "closest_cover",
       "expected": [
         "c0-1"
@@ -1021,61 +1037,65 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-1",
       "raw_choice": "c0-1",
-      "confidence": 0.87,
+      "confidence": 0.99,
       "probabilities": {
-        "c0-0": 0.01,
-        "c0-1": 0.91,
-        "c0-2": 0.08
+        "c0-1": 1.0,
+        "c0-0": 0.0
       },
-      "latency_ms": 237.83883394207805,
+      "latency_ms": 177.41162504535168,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.014599999999999995
+      "brier": 0.0
     },
     {
       "id": "exact_interaction_boundary-0",
+      "option_count": 2,
       "family": "exact_interaction_boundary",
       "expected": [
         "c0-2"
       ],
-      "source": "unavailable",
-      "reason": "busy",
+      "source": "jev",
+      "reason": "accepted",
       "model": "jev-1.13.0",
-      "candidate_id": null,
-      "raw_choice": null,
-      "confidence": null,
-      "probabilities": {},
-      "latency_ms": 0.0350000336766243,
-      "raw_correct": false,
-      "correct": false,
-      "eligible": false,
-      "brier": null
+      "candidate_id": "c0-2",
+      "raw_choice": "c0-2",
+      "confidence": 0.99,
+      "probabilities": {
+        "c0-0": 0.01,
+        "c0-2": 0.99
+      },
+      "latency_ms": 197.64525000937283,
+      "raw_correct": true,
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0002000000000000002
     },
     {
       "id": "outside_interaction_boundary-0",
+      "option_count": 1,
       "family": "outside_interaction_boundary",
       "expected": [
         "c0-2"
       ],
-      "source": "uncertain",
-      "reason": "low_confidence",
+      "source": "jev",
+      "reason": "accepted",
       "model": "jev-1.13.0",
-      "candidate_id": null,
+      "candidate_id": "c0-2",
       "raw_choice": "c0-2",
-      "confidence": 0.11,
+      "confidence": 1.0,
       "probabilities": {
-        "c0-2": 0.55,
-        "c0-0": 0.45
+        "c0-2": 1.0
       },
-      "latency_ms": 1102.6002500439063,
+      "latency_ms": 181.72024993691593,
       "raw_correct": true,
-      "correct": false,
-      "eligible": false,
-      "brier": 0.40499999999999997
+      "correct": true,
+      "eligible": true,
+      "brier": 0.0
     },
     {
       "id": "conversation_before_short_walk-0",
+      "option_count": 2,
       "family": "conversation_before_short_walk",
       "expected": [
         "c0-0"
@@ -1085,20 +1105,20 @@
       "model": "jev-1.13.0",
       "candidate_id": "c0-0",
       "raw_choice": "c0-0",
-      "confidence": 0.86,
+      "confidence": 0.89,
       "probabilities": {
-        "c0-1": 0.07,
-        "c0-0": 0.91,
-        "c0-2": 0.02
+        "c0-0": 0.94,
+        "c0-1": 0.06
       },
-      "latency_ms": 190.70483406540006,
+      "latency_ms": 205.94716607593,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
-      "brier": 0.013399999999999995
+      "brier": 0.007200000000000007
     },
     {
       "id": "paused_support_no_explore-0",
+      "option_count": 1,
       "family": "paused_support_no_explore",
       "expected": [
         "c0-0"
@@ -1112,7 +1132,7 @@
       "probabilities": {
         "c0-0": 1.0
       },
-      "latency_ms": 248.46954201348126,
+      "latency_ms": 216.59558301325887,
       "raw_correct": true,
       "correct": true,
       "eligible": true,
@@ -1120,6 +1140,7 @@
     },
     {
       "id": "finished_support_no_explore-0",
+      "option_count": 1,
       "family": "finished_support_no_explore",
       "expected": [
         "c0-0"
@@ -1133,7 +1154,7 @@
       "probabilities": {
         "c0-0": 1.0
       },
-      "latency_ms": 303.78770793322474,
+      "latency_ms": 189.07033291179687,
       "raw_correct": true,
       "correct": true,
       "eligible": true,

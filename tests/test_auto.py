@@ -159,3 +159,42 @@ def test_curriculum_labels_are_eligible_and_never_leak_into_inference():
         assert "expected" not in body["state"] and "family" not in body["state"]
         (dev if case["split"] == "development" else holdout).append(case["id"])
     assert set(dev).isdisjoint(holdout)
+
+
+async def test_quality_status_rejects_stale_or_non_live_evidence(tmp_path, monkeypatch):
+    from river_oaks.auto import POLICY_SHA256
+
+    monkeypatch.chdir(tmp_path)
+    path = tmp_path / "data/reports/jev-auto-eval.json"
+    path.parent.mkdir(parents=True)
+    report = {
+        "mode": "live_jev",
+        "split": "holdout",
+        "passed": True,
+        "model": "jev-1.13.0",
+        "policy_sha256": POLICY_SHA256,
+        "created_at": "fixture",
+        "dataset_sha256": "fixture",
+        "metrics": {
+            "cases": 96,
+            "coverage": 1,
+            "accepted_accuracy": 1,
+            "raw_accuracy": 1,
+            "invalid_actions": 0,
+        },
+        "competitive_metrics": {"cases": 30, "coverage": 1, "accepted_accuracy": 1},
+    }
+    app = create_app(auto_engine=AutoEngine())
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+        path.write_text(json.dumps(report))
+        assert (await c.get("/v1/auto")).json()["quality"] == "evaluated_on_heldout_scenarios"
+        for changes in [
+            {"policy_sha256": "old"},
+            {"model": "other"},
+            {"mode": "mock"},
+            {"split": "development"},
+            {"passed": False},
+            {"competitive_metrics": {}},
+        ]:
+            path.write_text(json.dumps({**report, **changes}))
+            assert (await c.get("/v1/auto")).json()["quality"] == "live_evaluation_required"

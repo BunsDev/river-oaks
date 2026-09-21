@@ -83,7 +83,40 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None, au
 
     @app.get("/v1/auto")
     async def auto_status():
-        return JSONResponse(app.state.auto_engine.status, headers={"Cache-Control": "no-store"})
+        status = dict(app.state.auto_engine.status)
+        evidence_path = Path("data/reports/jev-auto-eval.json")
+        try:
+            if evidence_path.stat().st_size <= 1024 * 1024:
+                evidence = json.loads(evidence_path.read_text())
+                metrics = evidence.get("metrics", {})
+                competitive = evidence.get("competitive_metrics", {})
+                if (
+                    evidence.get("mode") == "live_jev"
+                    and evidence.get("split") == "holdout"
+                    and evidence.get("passed") is True
+                    and evidence.get("policy_sha256") == status["policy_sha256"]
+                    and evidence.get("model") == status["model"]
+                    and metrics.get("cases", 0) >= 96
+                    and metrics.get("coverage", 0) >= 0.9
+                    and metrics.get("accepted_accuracy", 0) >= 0.95
+                    and metrics.get("raw_accuracy", 0) >= 0.95
+                    and metrics.get("invalid_actions", -1) == 0
+                    and competitive.get("cases", 0) >= 30
+                    and competitive.get("coverage", 0) >= 0.9
+                    and competitive.get("accepted_accuracy", 0) >= 0.95
+                ):
+                    status.update(
+                        quality="evaluated_on_heldout_scenarios",
+                        evaluation={
+                            "created_at": evidence["created_at"],
+                            "metrics": metrics,
+                            "competitive_metrics": competitive,
+                            "dataset_sha256": evidence["dataset_sha256"],
+                        },
+                    )
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            pass
+        return JSONResponse(status, headers={"Cache-Control": "no-store"})
 
     @app.post("/v1/auto")
     async def auto_decision(packet: AutoSnapshot):

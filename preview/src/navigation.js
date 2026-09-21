@@ -72,7 +72,7 @@ export function createResidentNavigation(world) {
     }
     return result;
   };
-  const route = (start,end) => {
+  const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
     if(canTravel(start,end)) return [[...end]];
     const starts=connectors(start),goals=new Set(connectors(end));
@@ -112,6 +112,33 @@ export function createResidentNavigation(world) {
       result.push(path[next]);previous=path[next];index=next+1;
     }
     return result;
+  };
+  // Interior furniture needs finer waypoints than the outdoor two-meter grid.
+  // A visibility graph around expanded fixture corners stays bounded per room.
+  const interiorExit = (room,start) => {
+    const end=room.toWorld(0,-1),points=[start,end,room.toWorld(0,0.8)];
+    for(const o of room.obstacles) for(const a of [o.a0-0.4,o.a1+0.4]) for(const d of [o.d0-0.4,o.d1+0.4]) {
+      const p=room.toWorld(a,d);if(free(p)) points.push(p);
+    }
+    const costs=new Float64Array(points.length).fill(Infinity),parents=new Int32Array(points.length).fill(-1),closed=new Set();costs[0]=0;
+    for(let step=0;step<points.length;step++) {
+      let best=-1;for(let i=0;i<points.length;i++) if(!closed.has(i) && (best<0 || costs[i]<costs[best])) best=i;
+      if(best<0 || !Number.isFinite(costs[best])) return null;
+      if(best===1) {const path=[];for(let i=1;i>0;i=parents[i]) path.unshift(points[i]);return path;}
+      closed.add(best);
+      for(let i=1;i<points.length;i++) {
+        const cost=costs[best]+distance(points[best],points[i]);
+        if(cost<costs[i] && canTravel(points[best],points[i])) {costs[i]=cost;parents[i]=best;}
+      }
+    }
+    return null;
+  };
+  const route = (start,end) => {
+    const direct=gridRoute(start,end);if(direct) return direct;
+    const room=environment.rooms.find(room=>room.contains(...start));
+    if(!room) return null;
+    const exit=interiorExit(room,start);if(!exit) return null;
+    const rest=gridRoute(exit.at(-1),end);return rest ? [...exit,...rest] : null;
   };
   return { route,canTravel,free,ground };
 }

@@ -9,7 +9,6 @@ import asyncio
 import hashlib
 import json
 import random
-import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -218,7 +217,6 @@ async def evaluate(base_url, split):
         if status["policy_sha256"] != POLICY_SHA256:
             raise RuntimeError("Bridge policy is stale; restart it before evaluation")
         for case in cases:
-            started = time.monotonic()
             result = (await client.post("/v1/auto", json=case["packet"])).raise_for_status().json()
             probabilities = result.get("probabilities") or {}
             raw = max(probabilities, key=probabilities.get) if probabilities else None
@@ -253,7 +251,9 @@ async def evaluate(base_url, split):
                 }
             )
             # Share the bridge's request budget; never retry a failed example to hide it.
-            await asyncio.sleep(max(0, 0.6 - (time.monotonic() - started)))
+            # Space from response completion. Spacing from client send time can
+            # violate server admission spacing when local request latency varies.
+            await asyncio.sleep(0.6)
     grouped = defaultdict(list)
     for row in rows:
         grouped[row["family"]].append(row)

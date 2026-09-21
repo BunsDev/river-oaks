@@ -78,3 +78,14 @@ export function stepWalking(state, environment, input, delta) {
   }
   return state;
 }
+
+export function steerWalkingToward(state, point, delta) {
+  const desired = Math.atan2(state.position[0] - point[0], state.position[2] + point[1]);
+  const difference = Math.atan2(Math.sin(desired - state.yaw), Math.cos(desired - state.yaw));
+  state.yaw += Math.max(-delta * 1.6, Math.min(delta * 1.6, difference));
+  state.pitch *= Math.exp(-4 * delta);
+  // Turn in place at corners so inertia cannot cut through fixture clearance.
+  if (Math.abs(difference) > 0.08) { state.velocity = [0, 0]; return { forward: 0 }; }
+  const distance = Math.hypot(state.position[0] - point[0], state.position[2] + point[1]);
+  return { forward: Math.min(1, distance / 0.4) };
+}
