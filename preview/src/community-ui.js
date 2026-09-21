@@ -27,7 +27,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getWeather = () => ({}), reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -51,7 +51,10 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
-  const meetNearby = () => { const first = nearbyPeople(state?.locals ?? [], getVisitor())[0]; return first ? selectLocal(first.local.id) : false; };
+  // People in the visitor's own space: the street, or the boutique they are standing in (same rule as the HUD).
+  const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
+  // Try each nearby person in turn: the nearest may have no clear place to meet.
+  const meetNearby = () => nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
   const chooserLabel = node('label', 'community-label', 'Meet a local');
   chooserLabel.htmlFor = 'community-local';
   const chooser = node('select', 'community-select');
@@ -198,12 +201,26 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   provenance.append(node('summary', '', 'How this encounter works'));
   const note = node('p', 'community-dialogue-note', 'These residents and support requests are fictional. Dialogue is authored. Jev can choose an immediate greeting or weather reaction; support outcomes follow local simulation rules. One real second equals one simulation minute.');
   provenance.append(note);
-  body.append(conversation, supportCard, mission, provenance);
+  const activities = node('details', 'community-activities');
+  activities.id = 'community-activities';
+  activities.append(node('summary', '', 'Community activities'), supportCard, mission);
+  body.append(conversation, activities, provenance);
   const footer = node('footer', 'community-dialogue-footer');
   const next = button('Meet another neighbor →', 'community-next', 'community-next');
   footer.append(next);
   dialogue.append(top, body, footer);
   (document.querySelector('#viewport') ?? host).append(dialogue);
+
+  const encounterNotice = node('p', 'encounter-notice');
+  encounterNotice.id = 'community-encounter-notice';
+  encounterNotice.setAttribute('role', 'status');
+  (document.querySelector('#viewport') ?? host).append(encounterNotice);
+  let noticeTimer = null;
+  const notify = message => {
+    clearTimeout(noticeTimer);
+    text(encounterNotice, message);
+    if (message) noticeTimer = setTimeout(() => text(encounterNotice, ''), 8000);
+  };
 
   const invalidate = () => {
     speech.cancel();
@@ -245,7 +262,14 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       const helper=state.locals.find(local=>local.id===job.helperId),recipient=state.locals.find(local=>local.id===job.localId);
       if(!visitRows.has(job.id)) {
         const element=node('div','community-visit'),title=node('strong'),status=node('p'),find=button('Find volunteer →',`find-${job.id}`);
-        find.addEventListener('click',()=>{const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);if(local){if(!dialogue.hidden) closeDialogue();onFocus(local);document.querySelector('#canvas-host')?.focus({preventScroll:true});}});
+        find.addEventListener('click',()=>{
+          const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);
+          if(!local) return;
+          // Ask for the placement before closing anything, so a refusal keeps the open conversation.
+          if(onFocus(local)===false) {notify(`There isn't a clear place to reach ${local.name} right now.`);return;}
+          if(!dialogue.hidden) closeDialogue();
+          document.querySelector('#canvas-host')?.focus({preventScroll:true});
+        });
         element.append(title,status,find);visits.append(element);visitRows.set(job.id,{element,title,status,find});
       }
       const row=visitRows.get(job.id);row.element.dataset.phase=job.phase;row.element.dataset.helper=job.helperId ?? '';
@@ -367,6 +391,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const selectLocal = (id) => {
     const local = state?.locals.find((item) => item.id === id);
     if (!local) return false;
+    if (onFocus(local) === false) {
+      notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
+      return false;
+    }
+    notify('');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
     state.selectedId = id;
@@ -376,7 +405,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;
-    onFocus(local);
     paint();
     close.focus({ preventScroll: true });
     speech.speak(local, message);
@@ -466,15 +494,29 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   supply.addEventListener('click', () => interact('supply'));
   dispatch.addEventListener('click', () => interact('dispatch'));
   meet.addEventListener('click', () => selectLocal(chooser.value));
-  next.addEventListener('click', () => {
-    const ordered = orderedLocals();
-    const nextLocal = ordered.find((local) => local.id !== state.selectedId && local.priority && local.status === 'needs_help') ?? ordered[(ordered.findIndex((local) => local.id === state.selectedId) + 1) % ordered.length];
-    if (nextLocal) selectLocal(nextLocal.id);
-  });
+  // People already met or refused this conversation are skipped, so "another neighbor"
+  // walks the district instead of bouncing between the two nearest.
+  const offered = new Set();
+  const nextNeighbor = () => {
+    if (!state?.locals.length) return false;
+    if (state.selectedId) offered.add(state.selectedId);
+    const ordered = orderedLocals(), start = ordered.findIndex(local => local.id === state.selectedId);
+    const rotated = [...ordered.slice(start + 1), ...ordered.slice(0, start + 1)];
+    const candidates = () => [...nearbyPeople(state.locals.filter(sameSpace), getVisitor(), 40, Infinity).map(item => item.local), ...rotated.filter(sameSpace)]
+      .filter((local, index, list) => local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
+    let pool = candidates();
+    if (!pool.length) { offered.clear(); if (state.selectedId) offered.add(state.selectedId); pool = candidates(); }
+    for (const local of pool) { offered.add(local.id); if (selectLocal(local.id)) return true; }
+    notify('Nobody nearby has a clear place to meet right now. Walk a little further and try again.');
+    return false;
+  };
+  next.addEventListener('click', nextNeighbor);
   const closeDialogue = () => {
     invalidate();
     dialogue.hidden = true;
     state.selectedId = null;
+    offered.clear();
+    notify('');
     if (document.body.classList.contains('walking') || previousFocus?.closest('[inert]')) document.querySelector('#canvas-host')?.focus({ preventScroll: true });
     else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
   };
@@ -528,6 +570,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       state = createCommunity(world, rooms);
       life=createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
+      offered.clear();
+      notify('');
       meet.disabled = !state.locals.length;
       reset.disabled = !state.locals.length;
       rebuildChooser();

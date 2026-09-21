@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { residentStride } from './gait.js';
+import { relaxResidentArms } from './avatar-stance.js';
 import { createFootPlacement } from './foot-placement.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
@@ -69,6 +70,9 @@ export function instantiateAvatar(source, { targetHeight, id }) {
     };
     item.material=Array.isArray(item.material) ? item.material.map(adapt) : adapt(item.material);
   });
+  // Relax the imported arm pose before the rest quaternions are captured;
+  // update() restores `rest` every frame, so anything applied later is undone.
+  relaxResidentArms(model);
   const bones=BONES.map(name=>model.getObjectByName(name)).filter(Boolean);
   const rest=new Map(bones.map(bone=>[bone,bone.quaternion.clone()]));
   model.updateMatrixWorld(true);

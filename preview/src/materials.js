@@ -25,8 +25,9 @@ function texture(name, channel) {
 
 // Geometry UVs are measured in meters. Instanced facade UVs additionally account for each part's scale.
 // Optional low-frequency tone variation breaks the visible repeat of a tiled
-// texture over large ground planes; it multiplies albedo only.
-export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, ...options } = {}) {
+// texture over large ground planes; it multiplies albedo only. textureContrast
+// (< 1) quiets the photographed surface's high-frequency albedo at eye level.
+export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, textureContrast = 1, ...options } = {}) {
   const arm = texture(name, 'arm');
   const material = new THREE.MeshStandardMaterial({
     map: texture(name, 'color'), normalMap: texture(name, 'normal'),
@@ -47,6 +48,10 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, variati
       vec2 roMeters = vMapUv * ${tileSize.toFixed(4)};
       float roNoise = 0.25 * roValueNoise(roMeters / 3.1) + 0.4 * roValueNoise(mat2(0.83, -0.56, 0.56, 0.83) * roMeters / 19.0) + 0.35 * roValueNoise(mat2(0.31, 0.95, -0.95, 0.31) * roMeters / 131.0);
       diffuseColor.rgb *= 1.0 + ${variation.toFixed(4)} * (roNoise - 0.5);`);
+    if (textureContrast !== 1) shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+      #ifdef USE_MAP
+        diffuseColor.rgb = mix(diffuse * 0.5, diffuseColor.rgb, ${textureContrast.toFixed(4)});
+      #endif`);
     const multiplier = instanced ? `
       vec3 roScale = vec3(1.0);
       #ifdef USE_INSTANCING
@@ -73,7 +78,7 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, variati
         vAoMapUv = (aoMapTransform * vec3(roUv, 1.0)).xy;
       #endif`);
   };
-  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${variation}`;
+  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${variation}:${textureContrast}`;
   return material;
 }
 

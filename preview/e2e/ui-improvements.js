@@ -8,6 +8,7 @@ async page => {
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
   await page.locator('#store-search').fill('hermes');
   check(await page.locator('#destination option').count() === 1, 'Store search handles accents');
   check(await page.locator('#store-name').textContent() === 'Hermès', 'Selected store details follow search');
@@ -32,13 +33,14 @@ async page => {
   check(await page.locator('#walking-hud').getAttribute('data-position') !== firstPosition, 'Next stop actually moves the visitor');
   await page.locator('#store-previous').click();
   check(await page.locator('#destination').inputValue() === first, 'Previous stop returns to original selection');
+  check(await page.locator('#walking-movement').isHidden(), 'Desktop HUD starts with the movement pad collapsed');
+  check(await page.locator('#walking-meet-nearby').isVisible(), 'Compact HUD retains the meet action');
   await page.locator('#walking-controls-toggle').click();
-  check(await page.locator('#walking-movement').isHidden(), 'Compact HUD hides movement pad');
-  check(await page.locator('#walking-talk').isVisible(), 'Compact HUD retains talk action');
+  check(await page.locator('#walking-movement').isVisible(), 'Movement controls can be shown');
   await page.locator('#walking-controls-toggle').click();
-  check(await page.locator('#walking-movement').isVisible(), 'Movement controls can be restored');
+  check(await page.locator('#walking-movement').isHidden(), 'Movement controls collapse again');
   await page.locator('[data-section=community-section]').click();
-  check(await page.locator('#community-section').evaluate(node => node === document.activeElement), 'People shortcut moves keyboard focus');
+  check(await page.locator('[data-section=community-section]').getAttribute('aria-selected') === 'true' && await page.locator('#community-section').isVisible(), 'People shortcut selects the People rail section');
   check(Number(await page.locator('#community-objective').getAttribute('max')) > 0, 'Community objective has a real target');
   for (const option of await page.locator('#community-scenario option').evaluateAll(options => options.map(option => option.value))) {
     await page.locator('#community-scenario').selectOption(option);
@@ -62,7 +64,8 @@ async page => {
   await page.locator('#visit-destination').click();
   await page.locator('#panel-toggle').click();
   await page.locator('#walking-controls-toggle').click();
-  check(await page.locator('#walking-talk').isVisible(), 'Mobile compact HUD keeps talk reachable');
+  check(await page.locator('#walking-movement').isVisible(), 'Mobile toggle reveals the movement pad');
+  check(await page.locator('#walking-meet-nearby').isVisible(), 'Mobile compact HUD keeps the meet action reachable');
   await page.screenshot({ path: 'output/playwright/ui-mobile.png' });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator('#panel-toggle').click();

@@ -81,22 +81,21 @@ function initializeRenderer() {
   });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
     getVisitor: () => walking?.active ? walking.getPosition() : null,
+    getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
-    autoControls?.stop();
-    if (local.indoor) {
-      const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
-      const position = walking.active ? walking.getPosition() : null;
-      if (room && (!position || !room.contains(position[0], position[1]))) {
-        enterStore(world.stores.find(store => store.id === local.storeId));
+      autoControls?.stop();
+      if (local.indoor) {
+        const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
+        const position = walking.active ? walking.getPosition() : null;
+        if (room && (!position || !room.contains(position[0], position[1]))) {
+          enterStore(world.stores.find(store => store.id === local.storeId));
+        }
+        walking.lookAt(local.position);
+        return true;
       }
-      walking.lookAt(local.position);
-      return;
-    }
-    const position = walking.active ? walking.getPosition() : null;
-    if (!position || Math.hypot(position[0]-local.position[0], position[1]-local.position[1]) > 4) {
-      enterWalk([local.position[0], local.position[1]-2.5, local.position[2]], local.position);
-    } else walking.lookAt(local.position);
+      if (!walking.active) enterWalk();
+      return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections();
