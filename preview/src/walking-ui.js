@@ -1,6 +1,6 @@
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
-import { clearEncounterLine, encounterPosition } from './encounter.js';
+import { ENCOUNTER_FAR, encounterPosition } from './encounter.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave }) {
@@ -19,11 +19,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     if (!reducedMotion && state.speed > 0.1) camera.position.y += Math.sin(state.distance * 6.4) * 0.012;
     camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
   };
+  // The HUD only promises what encounterPosition will accept, so E and the meet button never dead-end.
+  const visitorPosition = () => [state.position[0], -state.position[2], state.position[1]];
+  const canMeet = local => encounterPosition(environment, local, visitorPosition(), getLocals() ?? []) !== null;
   const findNearest = () => {
-    let result = null, distance = 4.5;
+    let result = null, distance = ENCOUNTER_FAR;
     for (const local of getLocals() ?? []) {
       const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
-      if (d < distance && Math.abs(local.position[2] - state.position[1]) < 4 && clearEncounterLine(environment, [state.position[0], -state.position[2]], local.position)) { result = local; distance = d; }
+      if (d < distance && Math.abs(local.position[2] - state.position[1]) < 4 && canMeet(local)) { result = local; distance = d; }
     }
     return result;
   };
@@ -99,10 +102,15 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
     focusPerson(local) {
       if (!state) return false;
-      const position = encounterPosition(environment, local, this.getPosition(), getLocals() ?? []);
+      const visitor = this.getPosition();
+      const position = encounterPosition(environment, local, visitor, getLocals() ?? []);
       if (!position) return false;
-      state = createWalkingState(environment, position, state.yaw);
       clear();
+      // Already within talking range: turn toward them and stay put.
+      if (position === visitor) { this.lookAt(local.position); place(); return true; }
+      const walked = state.distance;
+      state = createWalkingState(environment, position, state.yaw);
+      state.distance = walked;
       this.lookAt(local.position);
       // Leave room for the conversation at the left on wide screens.
       if (host.clientWidth > 900) state.yaw += 0.24;
@@ -142,7 +150,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (now - lastPaint < 150) return;
       lastPaint = now;
       nearest = findNearest();
-      const nearby = nearbyPeople(getLocals() ?? [], this.getPosition());
+      const nearby = nearbyPeople(getLocals() ?? [], this.getPosition()).filter(item => canMeet(item.local));
       $('#walking-meet-nearby').disabled = !nearby.length;
       $('#walking-talk').disabled = !nearest;
       $('#walking-talk').hidden = !nearest;

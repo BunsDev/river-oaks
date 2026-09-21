@@ -464,25 +464,26 @@
     "browserErrors": []
   },
   "verification": {
-    "date": "2026-09-20",
-    "scope": "Browser-first district polish; native WIP excluded",
-    "javascript_tests": 97,
+    "date": "2026-09-21",
+    "scope": "Browser-first district polish merged with main (walk-in interiors, realism pass); native WIP excluded",
+    "javascript_tests": 110,
     "python_tests": 74,
     "build": "passed",
     "ruff": "passed",
     "secrets": "passed",
-    "review": "Independent review finding fixed and re-reviewed",
+    "review": "Ten PR review findings fixed and re-run: hand-resolved merge with main, arm relaxation before rest capture, HUD/encounter feasibility parity, no facade crossing, stay-put talking range, greeting residents face the visitor, notice lifecycle, veto-aware volunteer finder, next-neighbor rotation, ui-improvements harness updated",
     "limits": [
       "Browser automation is Chromium on this host, not physical mobile-device or VoiceOver acceptance.",
       "Existing artist-interpreted geometry and authored resident dialogue remain.",
-      "No FPS target or photorealism claim; no native compatibility claim from this pass."
+      "No FPS target or photorealism claim; no native compatibility claim from this pass.",
+      "The /v1/decisions backend on :8765 was not running for this pass; store-interiors ran with the same fulfilled-decisions route fixture as community-dialogue, other harnesses tolerate the 503 fallback."
     ]
   },
   "volunteer_visits": {
     "helperId": "local-22",
     "cast": 24,
-    "walkedMeters": 29.157498999957483,
-    "arrivalSeparationMeters": 1.449396225373298,
+    "walkedMeters": 29.2782840001702,
+    "arrivalSeparationMeters": 1.4457530766700195,
     "physicalArrival": true,
     "pause": true,
     "stormHold": true,
@@ -493,5 +494,67 @@
     "needsResolved": true,
     "resetReleasesHelper": true,
     "browserErrors": []
+  },
+  "ui_improvements": {
+    "passed": 28,
+    "checks": [
+      "Store search handles accents",
+      "Selected store details follow search",
+      "Empty results disable arrival",
+      "Empty results disable tour",
+      "Clearing filters restores all stores",
+      "Clear returns keyboard focus to search",
+      "Wellness category includes the fitness destination",
+      "Category filter narrows destinations",
+      "Next stop advances filtered selection",
+      "Next stop actually moves the visitor",
+      "Previous stop returns to original selection",
+      "Desktop HUD starts with the movement pad collapsed",
+      "Compact HUD retains the meet action",
+      "Movement controls can be shown",
+      "Movement controls collapse again",
+      "People shortcut moves keyboard focus",
+      "Community objective has a real target",
+      "heatwave community example updates its target",
+      "storm community example updates its target",
+      "delivery community example updates its target",
+      "Open-request shortcut starts a conversation",
+      "Mist preset changes actual weather",
+      "Active lighting preset is announced",
+      "Manual weather clears stale preset state",
+      "Mobile panel has no horizontal overflow",
+      "Mobile toggle reveals the movement pad",
+      "Mobile compact HUD keeps the meet action reachable",
+      "No page errors: "
+    ],
+    "errors": []
+  },
+  "store_interiors": {
+    "destinations": 30,
+    "people": [
+      194,
+      194
+    ],
+    "rooms": {
+      "Dior": "Inside Dior \u00b7 Fashion boutique \u00b7 2 staff, 3 guests",
+      "Le Colonial": "Inside Le Colonial \u00b7 Dining room & bar \u00b7 3 staff, 9 guests",
+      "Bella Rinova": "Inside Bella Rinova \u00b7 Hair salon \u00b7 3 staff, 3 guests",
+      "Laura Rathe Fine Art": "Inside Laura Rathe Fine Art \u00b7 Art gallery \u00b7 1 staff, 2 guests"
+    },
+    "walk": {
+      "inside": "osm-node-8172494965",
+      "distance": 2.37
+    },
+    "renderStats": {
+      "calls": 1734,
+      "triangles": 10120431,
+      "geometries": 173,
+      "textures": 472
+    },
+    "buffer": [
+      3840,
+      2160
+    ],
+    "errors": []
   }
 }

@@ -72,7 +72,7 @@ export function buildLocals(world, locals) {
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
       person.visible = person.position.distanceTo(camera.position)<120 || state.selectedId===local.id;
       let heading = person.rotation.y;
-      if (state.selectedId === local.id) heading = Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z);
+      if (state.selectedId === local.id || local.life?.status === 'greeting visitor') heading = Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z);
       else if (local.life?.speed > 0.01) heading = local.life.heading;
       else if (partner) heading = Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z);
       const turn = Math.atan2(Math.sin(heading-person.rotation.y), Math.cos(heading-person.rotation.y));

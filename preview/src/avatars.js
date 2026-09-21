@@ -69,6 +69,9 @@ export function instantiateAvatar(source, { targetHeight, id }) {
     };
     item.material=Array.isArray(item.material) ? item.material.map(adapt) : adapt(item.material);
   });
+  // Relax the imported arm pose before the rest quaternions are captured;
+  // update() restores `rest` every frame, so anything applied later is undone.
+  relaxResidentArms(model);
   const bones=BONES.map(name=>model.getObjectByName(name)).filter(Boolean);
   const rest=new Map(bones.map(bone=>[bone,bone.quaternion.clone()]));
   model.updateMatrixWorld(true);
@@ -91,7 +94,6 @@ export async function loadResidentAvatar(index, id) {
   const { model, bones, rest } = avatar;
   const root = new THREE.Group();
   root.add(model);
-  relaxResidentArms(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const adjustment = new THREE.Quaternion(), axisX = new THREE.Vector3(1,0,0);
   // The exported joints have different local axes. Rotate gait around the

@@ -51,7 +51,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
-  const meetNearby = () => { const first = nearbyPeople(state?.locals ?? [], getVisitor())[0]; return first ? selectLocal(first.local.id) : false; };
+  // Try each nearby person in turn: the nearest may have no clear place to meet.
+  const meetNearby = () => nearbyPeople(state?.locals ?? [], getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
   const chooserLabel = node('label', 'community-label', 'Meet a local');
   chooserLabel.htmlFor = 'community-local';
   const chooser = node('select', 'community-select');
@@ -212,6 +213,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   encounterNotice.id = 'community-encounter-notice';
   encounterNotice.setAttribute('role', 'status');
   (document.querySelector('#viewport') ?? host).append(encounterNotice);
+  let noticeTimer = null;
+  const notify = message => {
+    clearTimeout(noticeTimer);
+    text(encounterNotice, message);
+    if (message) noticeTimer = setTimeout(() => text(encounterNotice, ''), 8000);
+  };
 
   const invalidate = () => {
     speech.cancel();
@@ -253,7 +260,14 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       const helper=state.locals.find(local=>local.id===job.helperId),recipient=state.locals.find(local=>local.id===job.localId);
       if(!visitRows.has(job.id)) {
         const element=node('div','community-visit'),title=node('strong'),status=node('p'),find=button('Find volunteer →',`find-${job.id}`);
-        find.addEventListener('click',()=>{const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);if(local){if(!dialogue.hidden) closeDialogue();onFocus(local);document.querySelector('#canvas-host')?.focus({preventScroll:true});}});
+        find.addEventListener('click',()=>{
+          const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);
+          if(!local) return;
+          // Ask for the placement before closing anything, so a refusal keeps the open conversation.
+          if(onFocus(local)===false) {notify(`There isn't a clear place to reach ${local.name} right now.`);return;}
+          if(!dialogue.hidden) closeDialogue();
+          document.querySelector('#canvas-host')?.focus({preventScroll:true});
+        });
         element.append(title,status,find);visits.append(element);visitRows.set(job.id,{element,title,status,find});
       }
       const row=visitRows.get(job.id);row.element.dataset.phase=job.phase;row.element.dataset.helper=job.helperId ?? '';
@@ -376,10 +390,10 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const local = state?.locals.find((item) => item.id === id);
     if (!local) return false;
     if (onFocus(local) === false) {
-      text(encounterNotice, `There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
+      notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
       return false;
     }
-    text(encounterNotice, '');
+    notify('');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
     state.selectedId = id;
@@ -478,15 +492,29 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   supply.addEventListener('click', () => interact('supply'));
   dispatch.addEventListener('click', () => interact('dispatch'));
   meet.addEventListener('click', () => selectLocal(chooser.value));
-  next.addEventListener('click', () => {
-    const ordered = orderedLocals();
-    const nextLocal = nearbyPeople(state.locals.filter(local => local.id !== state.selectedId), getVisitor(), 40, 1)[0]?.local ?? ordered[(ordered.findIndex((local) => local.id === state.selectedId) + 1) % ordered.length];
-    if (nextLocal) selectLocal(nextLocal.id);
-  });
+  // People already met or refused this conversation are skipped, so "another neighbor"
+  // walks the district instead of bouncing between the two nearest.
+  const offered = new Set();
+  const nextNeighbor = () => {
+    if (!state?.locals.length) return false;
+    if (state.selectedId) offered.add(state.selectedId);
+    const ordered = orderedLocals(), start = ordered.findIndex(local => local.id === state.selectedId);
+    const rotated = [...ordered.slice(start + 1), ...ordered.slice(0, start + 1)];
+    const candidates = () => [...nearbyPeople(state.locals, getVisitor(), 40, Infinity).map(item => item.local), ...rotated]
+      .filter((local, index, list) => local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
+    let pool = candidates();
+    if (!pool.length) { offered.clear(); if (state.selectedId) offered.add(state.selectedId); pool = candidates(); }
+    for (const local of pool) { offered.add(local.id); if (selectLocal(local.id)) return true; }
+    notify('Nobody nearby has a clear place to meet right now. Walk a little further and try again.');
+    return false;
+  };
+  next.addEventListener('click', nextNeighbor);
   const closeDialogue = () => {
     invalidate();
     dialogue.hidden = true;
     state.selectedId = null;
+    offered.clear();
+    notify('');
     if (document.body.classList.contains('walking') || previousFocus?.closest('[inert]')) document.querySelector('#canvas-host')?.focus({ preventScroll: true });
     else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
   };
@@ -529,6 +557,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       state = createCommunity(world);
       life=createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
+      offered.clear();
+      notify('');
       meet.disabled = !state.locals.length;
       reset.disabled = !state.locals.length;
       rebuildChooser();
