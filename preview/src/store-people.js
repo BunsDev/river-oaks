@@ -1,3 +1,4 @@
+import { turnToward } from './gait.js';
 import { storePersonId } from './store-encounters.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadAvatarTemplate, instantiateAvatar } from './avatars.js';
@@ -46,14 +47,15 @@ function dress(avatar, spot, theme, seed) {
 export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
   const group = new THREE.Group(); group.name = 'Boutique staff and guests';
   const figures = [], loads = [];
-  let disposed = false, ready = 0;
+  let disposed = false, ready = 0, previousTime = null;
   const host = document.querySelector('#canvas-host');
   const adjustment = new THREE.Quaternion();
   const applyPose = (figure, t) => {
     const { avatar, pose, sway } = figure;
     for (const bone of avatar.bones) {
       bone.quaternion.copy(avatar.rest.get(bone));
-      const angles = pose[bone.name];
+      const reactionPose = figure.reaction ? { head: [-0.07,0,0], upperarm_r: [-0.65,0,0], lowerarm_r: [0,0,1.4] } : null;
+      const angles = reactionPose?.[bone.name] ?? pose[bone.name];
       const axes = avatar.axes.get(bone);
       if (angles) for (const [index, axis] of ['x', 'y', 'z'].entries()) if (angles[index]) { adjustment.setFromAxisAngle(axes[axis], angles[index]); bone.quaternion.multiply(adjustment); }
       if (t === null) continue;
@@ -89,7 +91,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         holder.userData.storeId = room.storeId; holder.userData.role = spot.role;
         avatar.model.traverse(item => { item.userData.storeId = room.storeId; item.userData.role = spot.role; });
         roomGroup.add(holder);
-        const figure = { holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, phase: seed * 0.61, animated: false };
+        const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, phase: seed * 0.61, animated: false };
         applyPose(figure, null);
         figures.push(figure); ready++;
         host.dataset.storePeopleReady = String(ready);
@@ -100,8 +102,8 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
   host.dataset.storePeopleTotal = String(loads.length);
   group.userData.ready = Promise.allSettled(loads);
   group.userData.figures = figures;
-  group.userData.update = (camera, now) => {
-    const t = now / 1000;
+  group.userData.update = (camera, now, state, visitor) => {
+    const t = now / 1000, delta = previousTime === null ? 0 : (now - previousTime) / 1000;previousTime = now;
     for (const roomGroup of group.children) {
       const distance = roomGroup.userData.anchor.distanceTo(camera.position);
       // Whole rooms beyond 55 m skip their people entirely; nearby ones idle.
@@ -109,6 +111,11 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
     }
     for (const figure of figures) {
       if (!figure.holder.parent?.visible) continue;
+      const local = state?.locals.find(local => local.id === figure.id);
+      figure.reaction = local?.visitorReaction;
+      const attending = visitor && (figure.reaction || state?.selectedId === figure.id);
+      // Seated figures retain the chair-facing body; their head/arms can react.
+      if (figure.pose !== POSES.seated) figure.holder.rotation.y = turnToward(figure.holder.rotation.y, attending ? Math.atan2(visitor[0] - figure.holder.position.x, -visitor[1] - figure.holder.position.z) : figure.heading, delta);
       const near = figure.holder.position.distanceToSquared(camera.position) < 16 * 16;
       if (near && !reducedMotion && figure.role !== 'mannequin') { applyPose(figure, t + figure.phase); figure.animated = true; }
       else if (figure.animated) { applyPose(figure, null); figure.animated = false; }

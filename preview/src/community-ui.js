@@ -1,3 +1,4 @@
+import { visitorGreeting } from './visitor-persona.js';
 import { nearbyPeople } from './nearby-people.js';
 import { COMMUNITY_SCENARIOS, createCommunity, stepCommunity, interactWithLocal, chooseCommunityScenario, snapshotForLocal, applyLocalReaction } from './community.js';
 import './community.css';
@@ -401,7 +402,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     state.selectedId = id;
     chooser.value = id;
     currentTopic = null;
-    message = conversationLine(local, 'greeting');
+    message = visitorGreeting(local, getPersona()) ?? conversationLine(local, 'greeting');
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;

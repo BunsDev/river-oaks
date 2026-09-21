@@ -1,3 +1,4 @@
+import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -25,6 +26,7 @@ import './playground-theme.css';
 import './district-theme.css';
 import './immersive.css';
 import './sidebar.css';
+import './visual-finish.css';
 
 setupThemeControls();
 setupSidebar();
@@ -33,7 +35,7 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
-let autoControls;
+let autoControls, playerAvatar;
 let layers = {}, loading = false;
 let lastRenderStats = 0;
 
@@ -81,6 +83,7 @@ function initializeRenderer() {
   });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
     getVisitor: () => walking?.active ? walking.getPosition() : null,
+    getPersona: () => playerAvatar?.form ?? 'visitor',
     getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
@@ -100,7 +103,13 @@ function initializeRenderer() {
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections();
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
+  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals });
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
+  // Let content height determine spacing, including wrapped visit status text.
+  const visitTools = document.createElement('div');
+  visitTools.className = 'visit-tools';
+  visitTools.append($('.player-controls'), $('.auto-controls'));
+  $('#viewport').append(visitTools);
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
@@ -390,10 +399,11 @@ function followSunShadow() {
 function render(now) {
   clock.update();
   const delta = Math.min(clock.getDelta(), 0.08);
+  playerAvatar?.react(now);
   community?.update(delta, now);
-  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId);
+  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
   layers.trees?.userData.update?.(camera.position);
-  if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now);
+  if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition());
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
     if (visitor) walkerPosition.set(visitor[0], visitor[2], -visitor[1]);
@@ -402,6 +412,7 @@ function render(now) {
   updateStoreLights();
   autoControls?.update(delta);
   walking?.update(delta, now);
+  playerAvatar?.update(now, camera);
   followSunShadow();
   if (storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);

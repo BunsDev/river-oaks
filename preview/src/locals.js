@@ -60,7 +60,7 @@ export function buildLocals(world, locals) {
     }
     group.clear();
   };
-  group.userData.update = (state, camera, now, speakingId) => {
+  group.userData.update = (state, camera, now, speakingId, visitor) => {
     const delta = previousTime === null ? 0 : (now-previousTime)/1000; previousTime = now;
     let visibleKits=0;
     models.forEach((person,index) => {
@@ -70,12 +70,14 @@ export function buildLocals(world, locals) {
       const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
       person.visible = person.position.distanceTo(camera.position)<120 || state.selectedId===local.id;
-      if(local.life?.speed>0.01 || local.life?.status==='turning') {
+      if (local.visitorReaction && visitor && !local.life?.visitId) {
+        person.rotation.y=turnToward(person.rotation.y,Math.atan2(visitor[0]-person.position.x,-visitor[1]-person.position.z),delta);
+      } else if(local.life?.speed>0.01 || local.life?.status==='turning') {
         person.rotation.y = local.life.heading;
       } else if(partner && state.selectedId!==local.id) person.rotation.y=turnToward(person.rotation.y, Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z), delta);
       // Only the person in conversation or one held to greet the visitor turns to the camera; passers-by keep their heading.
       else if (state.selectedId === local.id || local.life?.status === 'greeting visitor') person.rotation.y = turnToward(person.rotation.y, Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z), delta);
-      const action=state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action;
+      const action=local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
       if(person.userData.avatar) {
         if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
         return;

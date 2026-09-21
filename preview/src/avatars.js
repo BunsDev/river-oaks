@@ -106,7 +106,7 @@ export async function loadResidentAvatar(index, id) {
   const noMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let previousTime=null,walkingSpeed=0;
   return {
-    object:root, profile,
+    object:root, profile, rig:avatar,
     get carrying() {return kit.visible;},
     get feet() {return feet.legs;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y) {
@@ -125,7 +125,20 @@ export async function loadResidentAvatar(index, id) {
           : bone.name==='lowerarm_r' && action==='greet' ? -0.32+Math.sin(t*2)*0.025 : 0;
         adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
       }
-      feet.update(dt, locomotion, groundAt);
+      if (['amazed','startled','enchanted'].includes(action) && !noMotion) {
+        const startled = action === 'startled';
+        const poses = { upperarm_r: [-0.7,0,0], lowerarm_r: [0,0,1.35], upperarm_l: [startled?-0.7:-0.25,0,0], lowerarm_l: [0,0,startled?1.35:0.7], head: [startled?-0.1:0.04,0,0] };
+        for (const bone of bones) {
+          const pose=poses[bone.name];if(!pose)continue;
+          for (const [i,axis] of ['x','y','z'].entries()) if(pose[i]) {adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}
+        }
+      }
+      if(locomotion?.flying) {
+        if(locomotion.vehicle==='witch') for(const bone of bones) {
+          const angle=bone.name.startsWith('thigh_')?1.1:bone.name.startsWith('calf_')?-1.25:bone.name.startsWith('upperarm_')?-0.6:0;
+          if(angle){adjustment.setFromAxisAngle(avatar.axes.get(bone).x,angle);bone.quaternion.multiply(adjustment);}
+        }
+      } else feet.update(dt, locomotion, groundAt);
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
     },

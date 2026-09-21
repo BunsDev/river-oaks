@@ -1,3 +1,5 @@
+import { createFlightState, stepFlight } from './flight.js';
+import { thirdPersonPose } from './third-person.js';
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
 import { ENCOUNTER_FAR, clearEncounterLine, encounterPosition } from './encounter.js';
@@ -12,10 +14,18 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#viewport').append(hud);
   const keys = new Set();
   let autoInput = null;
+  let flight = createFlightState();
+  let thirdPerson = true, bodyVisible = true;
   let active = false, environment, stores = [], state, nearest = null, drag = null, lastPaint = 0;
   const clear = () => { keys.clear(); drag = null; document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
   const place = () => {
+    if (thirdPerson) {
+      const pose = thirdPersonPose(state, environment);
+      camera.position.fromArray(pose.position);camera.lookAt(...pose.target);bodyVisible = pose.showBody;
+      return;
+    }
+    bodyVisible = false;
     camera.position.fromArray(state.position);
     if (!reducedMotion && state.speed > 0.1) camera.position.y += Math.sin(state.distance * 6.4) * 0.012;
     camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
@@ -76,7 +86,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   host.addEventListener('keydown', event => {
     if (!active || dialogueOpen()) return;
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'Escape'].includes(event.code)) onManual();
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code)) { event.preventDefault(); keys.add(event.code); }
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight', 'Space', 'KeyC'].includes(event.code)) { event.preventDefault(); keys.add(event.code); }
     if (event.code === 'KeyE' && !event.repeat) { event.preventDefault(); talk(); }
     if (event.code === 'KeyF' && !event.repeat) { event.preventDefault(); stepThrough(); }
     if (event.code === 'Escape') { clear(); host.blur(); }
@@ -110,6 +120,22 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   });
   return {
     get active() { return active; },
+    get thirdPerson() { return thirdPerson; },
+    toggleFlight() {
+      if (!active || currentRoom()) return false;
+      onManual();autoInput=null;clear();
+      if (!flight.active) Object.assign(flight,{active:true,target:3.5,landing:false});
+      else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
+      return true;
+    },
+    setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
+    getPose() { return active && state ? { position: [...state.position], ground: environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    canSee(point) {
+      if (!state) return false;
+      const distance = Math.hypot(point[0] - state.position[0], -point[1] - state.position[2]);
+      for (let t = 0.5; t < distance; t += 0.5) { const f = t / distance; if (!environment.isFree(state.position[0] + (point[0] - state.position[0]) * f, state.position[2] + (-point[1] - state.position[2]) * f)) return false; }
+      return true;
+    },
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
     get roomId() { return active && state ? currentRoom()?.storeId ?? null : null; },
     focusPerson(local) {
@@ -144,6 +170,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       onManual(); autoInput = null;
       environment = createWalkingEnvironment(world);
       stores = world.stores ?? [];
+      flight = createFlightState();
       state = createWalkingState(environment, position);
       if (lookAt) state.yaw = Math.atan2(state.position[0] - lookAt[0], state.position[2] + lookAt[1]);
       state.pitch = pitch;
@@ -164,7 +191,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const pressed = (...codes) => codes.some(code => keys.has(code));
       $('.walking-console').inert = dialogueOpen();
       if (dialogueOpen()) clear();
-      else stepWalking(state, environment, autoInput ?? { forward: Number(pressed('KeyW', 'ArrowUp')) - Number(pressed('KeyS', 'ArrowDown')), strafe: Number(pressed('KeyD')) - Number(pressed('KeyA')), turn: Number(pressed('ArrowLeft')) - Number(pressed('ArrowRight')), fast: pressed('ShiftLeft', 'ShiftRight') }, delta);
+      else {
+        const input=autoInput ?? {forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
+        if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,input,delta);
+      }
       place();
       if (now - lastPaint < 150) return;
       lastPaint = now;
@@ -186,6 +216,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-place').textContent = room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
+      hud.dataset.flying=String(flight.active);hud.dataset.altitude=flight.altitude.toFixed(2);
       hud.dataset.position = JSON.stringify(state.position);
     },
   };

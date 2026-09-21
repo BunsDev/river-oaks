@@ -39,7 +39,16 @@ export function createWalkingEnvironment(world) {
     if (room) return !roomBlocked(room, x, -z, RADIUS);
     return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
-  return { groundAt, isFree, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  const canFly = (x, altitude, z) => {
+    if(x<west+1 || x>east-1 || z<-north+1 || z>-south-1) return false;
+    if(isFree(x,z) && !roomFor(x,z,0)) return true;
+    // Conservative building columns keep airborne bodies and vehicles outside
+    // walls until they clear the tallest nearby roof with two meters to spare.
+    const roofs=(world.buildings ?? []).filter(building=>Math.abs(x-building.center[0])<Math.hypot(building.size[0],building.size[1])/2+1.5 && Math.abs(z+building.center[1])<Math.hypot(building.size[0],building.size[1])/2+1.5);
+    const ceiling=Math.max(20,...roofs.map(building=>building.size[2]));
+    return altitude>terrainHeight(world.terrain,x,-z)+ceiling+2;
+  };
+  return { groundAt, isFree, canFly, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {
