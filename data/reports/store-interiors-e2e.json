@@ -1,0 +1,37 @@
+{
+  "destinations": 30,
+  "people": [
+    194,
+    194
+  ],
+  "rooms": {
+    "Dior": "Inside Dior · Fashion boutique · 2 staff, 3 guests",
+    "Le Colonial": "Inside Le Colonial · Dining room & bar · 3 staff, 9 guests",
+    "Bella Rinova": "Inside Bella Rinova · Hair salon · 3 staff, 3 guests",
+    "Laura Rathe Fine Art": "Inside Laura Rathe Fine Art · Art gallery · 1 staff, 2 guests"
+  },
+  "walk": {
+    "inside": "osm-node-8172494965",
+    "distance": 2.1
+  },
+  "renderStats": {
+    "calls": 1050,
+    "triangles": 5684632,
+    "geometries": 166,
+    "textures": 491
+  },
+  "frame_sample": {
+    "samples": 120,
+    "median_ms": 33.19999999999709,
+    "p95_ms": 41.599999999998545
+  },
+  "frame_sample_scope": "Local Chrome walking inside boutiques on this Mac; not a target-GPU or UE benchmark",
+  "buffer": [
+    3840,
+    2160
+  ],
+  "errors": [],
+  "recorded_at": "2026-09-21T04:36:08.840Z",
+  "script": "preview/e2e/store-interiors.js",
+  "browser": "Playwright 1.62 headless Chromium with Metal ANGLE on macOS"
+}

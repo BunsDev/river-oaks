@@ -39,3 +39,14 @@
 }
 
 @media(max-width:650px) { .experience-nav { position: sticky; top: 0; z-index: 2; } }
+
+/* Walk-in boutiques */
+:root[data-theme] #enter-destination { margin-top: 6px; width: 100%; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 10px; padding: 9px 12px; font-weight: 600; cursor: pointer; }
+:root[data-theme] #enter-destination:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+:root[data-theme] #enter-destination:disabled { opacity: .45; cursor: default; }
+.store-inside { margin: 8px 0 0; line-height: 1.45; }
+.interior-swatch { background: linear-gradient(135deg, #ffd9ae, #e2a1c9); }
+#walking-enter { display: block; width: 100%; margin: 6px 0 4px; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2a1c9; background: #2a1e28; color: #f7e8f1; font-weight: 600; pointer-events: auto; cursor: pointer; }
+#walking-enter[hidden] { display: none; }
+#walking-enter kbd { font: inherit; opacity: .7; margin-left: 4px; }
+body.inside-store .walking-title > span::after { content: ' · INSIDE'; opacity: .9; }

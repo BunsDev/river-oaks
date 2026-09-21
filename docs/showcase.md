@@ -4,7 +4,7 @@ Start `uv run --extra voice river-oaks serve` and `npm run dev` in separate term
 
 ## Walk, meet residents, and play a community scenario
 
-WASD moves at street level; drag to look, use arrow keys to turn, hold Shift for a brisk walk, and press E near a local to talk. Storefront destinations move the visitor to an inferred exterior arrival point. Building footprints block walking and the camera follows observed terrain.
+WASD moves at street level; drag to look, use arrow keys to turn, hold Shift for a brisk walk, and press E near a local to talk. Storefront destinations move the visitor to an inferred exterior arrival; **Step inside** or F walks through the door into a furnished interior with staff and guests, and F steps back out. Storefront destinations move the visitor to an inferred exterior arrival point. Building footprints block walking and the camera follows observed terrain.
 
 **People & place** offers 20 fictional River Oaks residents and four fictional portrayals: Ima Hogg and Barbara Jordan as historical cultural encounters, Hakeem Olajuwon and Beyoncé as contemporary guests. They have linked public biographies, original authored dialogue, distinct interests and routines, and bounded per-scene memory of encounters, topics, and support offered. Memory survives a scenario reset; reloading creates a fresh population. These roles do not assert that public figures live at a particular private address. Generic meshes and preset voices do not reproduce their likenesses or voices.
 
