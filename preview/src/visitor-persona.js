@@ -1,7 +1,7 @@
 export const VISITOR_FORMS = [
-  { id: 'alien', label: 'Scary alien', description: 'An otherworldly visitor with luminous skin and enormous dark eyes.' },
-  { id: 'witch', label: 'Scary witch', description: 'A pointed hat, midnight robes and a little district magic.' },
-  { id: 'jevica', label: 'Jevica', description: 'Glinda-inspired magic: pink gown, blonde curls and a crystal crown.' },
+  { id: 'alien', label: 'Scary alien', role: 'The otherworldly visitor', description: 'Cobalt skin, a broad armored silhouette and amber eyes with slit pupils.' },
+  { id: 'witch', label: 'Scary witch', role: 'The midnight wanderer', description: 'A tall, angular silhouette in obsidian velvet, a sweeping cape and a crooked hat.' },
+  { id: 'jevica', label: 'Jevica', role: 'The rose enchantress', description: 'Blonde hair, embroidered rose silk, sheer shoulder bows and a silver filigree crown.' },
 ];
 const LINES = {
   alien: ["Whoa… a visitor from another planet!", "Those eyes! Is this a close encounter?", "Okay, that is wonderfully terrifying."],
