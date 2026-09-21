@@ -11,6 +11,7 @@ async page => {
   const host = () => page.locator('#canvas-host').evaluate(element => ({ ...element.dataset }));
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+  await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
   // Every destination advertises a walk-in interior in the directory.
   const summaries = await page.evaluate(() => {
     const select = document.querySelector('#destination'), out = [];

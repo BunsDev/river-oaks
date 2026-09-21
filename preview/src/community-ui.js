@@ -27,7 +27,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getWeather = () => ({}), reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -51,8 +51,10 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
+  // People in the visitor's own space: the street, or the boutique they are standing in (same rule as the HUD).
+  const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
-  const meetNearby = () => nearbyPeople(state?.locals ?? [], getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
+  const meetNearby = () => nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
   const chooserLabel = node('label', 'community-label', 'Meet a local');
   chooserLabel.htmlFor = 'community-local';
   const chooser = node('select', 'community-select');
@@ -500,7 +502,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     if (state.selectedId) offered.add(state.selectedId);
     const ordered = orderedLocals(), start = ordered.findIndex(local => local.id === state.selectedId);
     const rotated = [...ordered.slice(start + 1), ...ordered.slice(0, start + 1)];
-    const candidates = () => [...nearbyPeople(state.locals, getVisitor(), 40, Infinity).map(item => item.local), ...rotated]
+    const candidates = () => [...nearbyPeople(state.locals.filter(sameSpace), getVisitor(), 40, Infinity).map(item => item.local), ...rotated.filter(sameSpace)]
       .filter((local, index, list) => local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
     let pool = candidates();
     if (!pool.length) { offered.clear(); if (state.selectedId) offered.add(state.selectedId); pool = candidates(); }
@@ -551,10 +553,21 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     get speakingId() { return speech.speakingId; },
     selectLocal,
     meetNearby,
-    setWorld(world) {
+    autoInteract(id, action) {
+      const local = state?.locals.find(item => item.id === id), visitor = getVisitor();
+      if (!local || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
+          Math.hypot(visitor[0] - local.position[0], visitor[1] - local.position[1]) > 2.8) return { ok: false };
+      const selected = state.selectedId;
+      const result = interactWithLocal(state, id, action);
+      state.selectedId = selected;
+      if (result.ok && action === 'ask') conversationLine(local, 'greeting');
+      paint();
+      return result;
+    },
+    setWorld(world, rooms = []) {
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=createNavigationService(world);
-      state = createCommunity(world);
+      state = createCommunity(world, rooms);
       life=createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();

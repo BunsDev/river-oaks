@@ -8,6 +8,7 @@ async page => {
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
   await page.locator('#store-search').fill('hermes');
   check(await page.locator('#destination option').count() === 1, 'Store search handles accents');
   check(await page.locator('#store-name').textContent() === 'Hermès', 'Selected store details follow search');
@@ -39,7 +40,7 @@ async page => {
   await page.locator('#walking-controls-toggle').click();
   check(await page.locator('#walking-movement').isHidden(), 'Movement controls collapse again');
   await page.locator('[data-section=community-section]').click();
-  check(await page.locator('#community-section').evaluate(node => node === document.activeElement), 'People shortcut moves keyboard focus');
+  check(await page.locator('[data-section=community-section]').getAttribute('aria-selected') === 'true' && await page.locator('#community-section').isVisible(), 'People shortcut selects the People rail section');
   check(Number(await page.locator('#community-objective').getAttribute('max')) > 0, 'Community objective has a real target');
   for (const option of await page.locator('#community-scenario option').evaluateAll(options => options.map(option => option.value))) {
     await page.locator('#community-scenario').selectOption(option);

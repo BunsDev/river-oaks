@@ -4,7 +4,7 @@ import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
-import { setupSidebar } from './sidebar.js';
+import { setupSidebar, setupSidebarSections } from './sidebar.js';
 import { renderPixelRatio } from './viewport.js';
 import { createWalkingControls } from './walking-ui.js';
 import { createCommunityPanel } from './community-ui.js';
@@ -19,10 +19,12 @@ import { createStorefrontReflections } from './reflections.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
+import { createAutoControls } from './auto-ui.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
 import './immersive.css';
+import './sidebar.css';
 
 setupThemeControls();
 setupSidebar();
@@ -31,6 +33,7 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
+let autoControls;
 let layers = {}, loading = false;
 let lastRenderStats = 0;
 
@@ -78,13 +81,26 @@ function initializeRenderer() {
   });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
     getVisitor: () => walking?.active ? walking.getPosition() : null,
+    getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
+      autoControls?.stop();
+      if (local.indoor) {
+        const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
+        const position = walking.active ? walking.getPosition() : null;
+        if (room && (!position || !room.contains(position[0], position[1]))) {
+          enterStore(world.stores.find(store => store.id === local.storeId));
+        }
+        walking.lookAt(local.position);
+        return true;
+      }
       if (!walking.active) enterWalk();
       return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore });
+  setupSidebarSections();
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
+  autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
@@ -208,6 +224,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     worldGroup.traverse((item) => {
+      item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
       item.geometry?.dispose();
       if (Array.isArray(item.material)) item.material.forEach((material) => material.dispose());
@@ -218,8 +235,8 @@ function populateWorld(data) {
   world = data;
   worldGroup = new THREE.Group();
   buildingMesh = buildDistrictBuildings(data);
-  community.setWorld(data);
-  localsGroup = buildLocals(data, community.state.locals);
+  community.setWorld(data, buildingMesh.userData.rooms ?? []);
+  localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor));
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
@@ -332,7 +349,7 @@ async function loadWorld() {
     data.vegetation = validateVegetation(data, vegetation);
     populateWorld(data);
     $('#verification-state').textContent = 'A real district, reimagined';
-    $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture, pink glass lanterns, and fictional encounters. This is an artistic interpretation.`;
+    $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
     $('#verification-dot').className = 'status-dot pass';
     $('#loading').hidden = true;
     enterWalk(data.walkSpawn, data.walkLookAt);
@@ -383,6 +400,7 @@ function render(now) {
     buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
   }
   updateStoreLights();
+  autoControls?.update(delta);
   walking?.update(delta, now);
   followSunShadow();
   if (storefrontReflections && environmentAssets) {
@@ -413,6 +431,10 @@ $('#sun-hour').addEventListener('input', updateAtmosphere);
 $('#weather').addEventListener('change', updateAtmosphere);
 document.addEventListener('appearancechange', updateAtmosphere);
 $('#reload').addEventListener('click', loadWorld);
+function visibleInScene(object) {
+  for (let ancestor = object; ancestor; ancestor = ancestor.parent) if (!ancestor.visible) return false;
+  return true;
+}
 let pointerStart;
 host.addEventListener('pointerdown', (event) => { pointerStart = [event.clientX, event.clientY]; });
 host.addEventListener('pointerup', (event) => {
@@ -421,10 +443,20 @@ host.addEventListener('pointerup', (event) => {
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
-  const person = raycaster.intersectObject(localsGroup, true)[0];
+  const person = raycaster.intersectObjects([localsGroup, ...(interiorsLayer?.visible && storePeople ? [storePeople] : [])], true).find(hit => hit.object.userData.localId && visibleInScene(hit.object));
   if (person?.object.userData.localId && (!walking.active || person.distance < 5)) { community.selectLocal(person.object.userData.localId); return; }
 
 });
+
+// Read-only diagnostics for browser acceptance runs; absent from production.
+if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverMotion = () => (localsGroup?.userData.models ?? []).filter(person=>person.visible && person.userData.avatar).map(person=>({
+    id:person.userData.localId, status:community.state.locals.find(local=>local.id===person.userData.localId)?.life?.status,
+    feet:person.userData.avatar.feet.filter(leg=>leg.target).map(leg=>({
+      contact:leg.contact, target:leg.target.toArray(), actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray(),
+    })),
+  }));
+}
 
 try {
   initializeRenderer();

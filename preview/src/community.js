@@ -1,5 +1,6 @@
 // All people, needs, resource costs and outcomes are fictional simulation rules.
 // Source district locations anchor encounters; they do not identify real people.
+import { createStoreEncounters } from './store-encounters.js';
 import { createPersona, residentContext } from './personas.js';
 export const COMMUNITY_SCENARIOS = Object.freeze({
   heatwave: Object.freeze({
@@ -58,16 +59,16 @@ function makeLocals(world) {
   });
 }
 
-export function createCommunity(world) {
-  const state = { locals: makeLocals(world), generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
+export function createCommunity(world, rooms = []) {
+  const state = { locals: [...makeLocals(world), ...createStoreEncounters(rooms)], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }
 
 export function chooseCommunityScenario(state, key) {
   if (!Object.hasOwn(COMMUNITY_SCENARIOS, key)) return false;
-  const scenario = COMMUNITY_SCENARIOS[key], count = Math.min(8, state.locals.length);
-  const targets = new Set(Array.from({ length: count }, (_, i) => (Math.floor(i * state.locals.length / count) + scenario.offset) % state.locals.length));
+  const scenario = COMMUNITY_SCENARIOS[key], eligible = state.locals.filter(local => !local.indoor), count = Math.min(8, eligible.length);
+  const targets = new Set(Array.from({ length: count }, (_, i) => eligible[(Math.floor(i * eligible.length / count) + scenario.offset) % eligible.length].id));
   Object.assign(state, {
     scenarioKey: key, scenario, status: 'ready', running: false, elapsed: 0,
     target: Math.min(6, count), supported: 0, unmet: 0,
@@ -77,7 +78,7 @@ export function chooseCommunityScenario(state, key) {
     _economyRemainder: 0, _packet: null, _appliedTick: -1,
   });
   state.locals.forEach((local, index) => {
-    const priority = targets.has(index);
+    const priority = targets.has(local.id);
     Object.assign(local, {
       priority, need: priority ? scenario.initialNeed + index % 4 * 4 : 0,
       needKnown: false, status: priority ? 'needs_help' : 'comfortable',

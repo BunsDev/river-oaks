@@ -1,3 +1,4 @@
+import { storePersonId } from './store-encounters.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadAvatarTemplate, instantiateAvatar } from './avatars.js';
 
@@ -72,7 +73,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       loads.push(loadAvatarTemplate(profile).then(source => {
         if (disposed) return;
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
-        const avatar = instantiateAvatar(source, { targetHeight });
+        const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
         dress(avatar, spot, room.theme, seed);
         const holder = new THREE.Group();
         const [east, north] = room.toWorld(spot.a, spot.d);

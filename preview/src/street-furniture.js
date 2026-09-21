@@ -1,3 +1,4 @@
+import { buildPlanterPlanting } from './landscape-models.js';
 import * as THREE from 'three';
 import { localToScene, routeSegments, sampleRoute, terrainHeight } from './geometry.js';
 import { physicalSurface } from './materials.js';
@@ -95,11 +96,9 @@ export function buildStreetFurniture(world, isFree) {
   const group = new THREE.Group(); group.name = 'Street furniture';
   const box = new THREE.BoxGeometry(1, 1, 1), disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 20), post = new THREE.CylinderGeometry(0.5, 0.5, 1, 10);
   const granite = new THREE.MeshStandardMaterial({ color: '#a19e98', roughness: 0.62 });
-  const leaf = new THREE.IcosahedronGeometry(0.5, 1);
   const bronze = new THREE.MeshStandardMaterial({ color: '#3b3f3d', roughness: 0.5, metalness: 0.65 });
   const lampGlow = new THREE.MeshStandardMaterial({ color: '#fff4dc', emissive: '#ffe2b4', emissiveIntensity: 2.2, roughness: 0.4 });
   const stoneCast = new THREE.MeshStandardMaterial({ color: '#c3bdb0', roughness: 0.85 });
-  const boxwood = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true });
   const mulch = new THREE.MeshStandardMaterial({ color: '#3a2d22', roughness: 1 });
   const grate = new THREE.MeshStandardMaterial({ color: '#4a4b48', roughness: 0.6, metalness: 0.55 });
   const batches = new Map(), dummy = new THREE.Object3D();
@@ -121,8 +120,8 @@ export function buildStreetFurniture(world, isFree) {
   }
   for (const [x, y, z, yaw] of planters) {
     add(box, stoneCast, [x, y + 0.36, z], [1.5, 0.5, 0.62], yaw);
-    hedgeClusters(1.42, 0.56, 0.5).forEach((cluster, lobe) => add(leaf, boxwood, [x + Math.cos(yaw) * cluster[0] + Math.sin(yaw) * cluster[2], y + 0.62 + cluster[1], z - Math.sin(yaw) * cluster[0] + Math.cos(yaw) * cluster[2]], cluster[3], yaw + cluster[4], new THREE.Color().setHSL(0.33 + (lobe % 3) * 0.012, 0.32, 0.22 + (lobe % 4) * 0.025)));
   }
+  group.add(buildPlanterPlanting(planters));
   for (const [x, y, z, yaw] of bins) {
     add(post, bronze, [x, y + 0.48, z], [0.5, 0.95, 0.5], yaw);
     add(post, grate, [x, y + 0.98, z], [0.54, 0.05, 0.54], yaw);

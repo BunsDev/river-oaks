@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { routeSegments, sampleRoute, terrainHeight } from './geometry.js';
 
 // Original ornament layered over the mapped district. No additional walk obstacles:
 // arches hug facades, while lanterns hang above pedestrian head height.
@@ -70,19 +69,6 @@ export function buildDistrictFantasy(world) {
       add(jewel,glow,at(across,3.45,1.18),[0.027,0.20,0.027],yaw,store.id);
     }
   });
-  // Floating lanterns mark the internal promenades, well above walking height.
-  for (const road of world.roads.filter(road => road.name?.startsWith('District'))) {
-    const route = routeSegments(road.points);
-    if (!route || route.length < 35) continue;
-    for (let distance = 15; distance < route.length - 8; distance += 24) {
-      const { position: [x, , z], direction } = sampleRoute(route, distance);
-      const height = terrainHeight(world.terrain, x, -z) + 6.8;
-      const yaw = Math.atan2(direction[0], direction[1]);
-      add(ring, silver, [x, height, z], [1.15, 1.55, 1.15], yaw);
-      add(jewel, glow, [x, height, z], [0.27, 0.62, 0.27], yaw);
-      add(jewel, enamels[0], [x, height - 0.94, z], [0.1, 0.22, 0.1], yaw);
-    }
-  }
   const dummy = new THREE.Object3D();
   for (const { geometry, material, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);

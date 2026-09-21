@@ -465,13 +465,13 @@
   },
   "verification": {
     "date": "2026-09-21",
-    "scope": "Browser-first district polish merged with main (walk-in interiors, realism pass); native WIP excluded",
-    "javascript_tests": 110,
+    "scope": "Browser-first district polish merged with main (walk-in interiors, realism pass, Jev auto visitor mode and grounded motion); native WIP excluded",
+    "javascript_tests": 125,
     "python_tests": 74,
     "build": "passed",
     "ruff": "passed",
     "secrets": "passed",
-    "review": "Ten PR review findings fixed and re-run: hand-resolved merge with main, arm relaxation before rest capture, HUD/encounter feasibility parity, no facade crossing, stay-put talking range, greeting residents face the visitor, notice lifecycle, veto-aware volunteer finder, next-neighbor rotation, ui-improvements harness updated",
+    "review": "Ten PR review findings fixed and re-run: hand-resolved merge with main, arm relaxation before rest capture, HUD/encounter feasibility parity, no facade crossing, stay-put talking range, greeting residents face the visitor, notice lifecycle, veto-aware volunteer finder, next-neighbor rotation, ui-improvements harness updated; second merge keeps indoor encounters on a line-of-sight rule and the meet/next pickers on the HUD same-space rule; ui-improvements, community-dialogue, store-interiors and store-encounters harnesses open the rail tab their controls live in",
     "limits": [
       "Browser automation is Chromium on this host, not physical mobile-device or VoiceOver acceptance.",
       "Existing artist-interpreted geometry and authored resident dialogue remain.",
@@ -481,9 +481,9 @@
   },
   "volunteer_visits": {
     "helperId": "local-22",
-    "cast": 24,
-    "walkedMeters": 29.2782840001702,
-    "arrivalSeparationMeters": 1.4457530766700195,
+    "cast": 193,
+    "walkedMeters": 28.68826013650366,
+    "arrivalSeparationMeters": 1.4219926082994405,
     "physicalArrival": true,
     "pause": true,
     "stormHold": true,
@@ -513,7 +513,7 @@
       "Compact HUD retains the meet action",
       "Movement controls can be shown",
       "Movement controls collapse again",
-      "People shortcut moves keyboard focus",
+      "People shortcut selects the People rail section",
       "Community objective has a real target",
       "heatwave community example updates its target",
       "storm community example updates its target",
@@ -543,18 +543,179 @@
     },
     "walk": {
       "inside": "osm-node-8172494965",
-      "distance": 2.37
+      "distance": 2.1
     },
     "renderStats": {
-      "calls": 1734,
-      "triangles": 10120431,
-      "geometries": 173,
-      "textures": 472
+      "calls": 1860,
+      "triangles": 31963794,
+      "geometries": 195,
+      "textures": 483
     },
     "buffer": [
       3840,
       2160
     ],
     "errors": []
+  },
+  "grounded_motion": {
+    "rigs": 6,
+    "frames": 301,
+    "plantedSamples": 2052,
+    "maxFootErrorMeters": 9.75958288579981e-07,
+    "errors": [],
+    "scope": "Actual shipped skinned rigs and renderer on an inclined fixture; district paths checked separately"
+  },
+  "store_encounters": {
+    "counts": {
+      "all": 193,
+      "indoor": 169
+    },
+    "visits": [
+      {
+        "store": "Alice + Olivia",
+        "encounter": "store-osm-node-8172494989-person-6"
+      },
+      {
+        "store": "Amorino",
+        "encounter": "store-osm-node-8172495006-person-2"
+      },
+      {
+        "store": "Baccarat",
+        "encounter": "store-osm-node-8172495000-person-2"
+      },
+      {
+        "store": "Bella Rinova",
+        "encounter": "store-osm-node-8172494957-person-5"
+      },
+      {
+        "store": "Brunello Cucinelli",
+        "encounter": "store-osm-node-8172494981-person-6"
+      },
+      {
+        "store": "Cartier",
+        "encounter": "store-osm-node-8172494965-person-2"
+      },
+      {
+        "store": "Dior",
+        "encounter": "store-osm-node-8172494958-person-3"
+      },
+      {
+        "store": "Diptyque",
+        "encounter": "store-osm-node-8172494985-person-3"
+      },
+      {
+        "store": "Dolce & Gabbana",
+        "encounter": "store-osm-node-8172495003-person-6"
+      },
+      {
+        "store": "Equinox",
+        "encounter": "store-osm-node-8172494974-person-0"
+      },
+      {
+        "store": "Harry Winston",
+        "encounter": "store-osm-node-8172494972-person-3"
+      },
+      {
+        "store": "Herm\u00e8s",
+        "encounter": "store-osm-node-8172494969-person-3"
+      },
+      {
+        "store": "Hopdoddy Burger Bar",
+        "encounter": "store-osm-node-8172494955-person-0"
+      },
+      {
+        "store": "IPIC Theaters",
+        "encounter": "store-osm-node-8172494964-person-3"
+      },
+      {
+        "store": "Jo Malone London",
+        "encounter": "store-osm-node-8172494963-person-1"
+      },
+      {
+        "store": "Kiton",
+        "encounter": "store-osm-node-8172494991-person-6"
+      },
+      {
+        "store": "Laura Rathe Fine Art",
+        "encounter": "store-osm-node-8172494977-person-2"
+      },
+      {
+        "store": "Le Colonial",
+        "encounter": "store-osm-node-8172494976-person-11"
+      },
+      {
+        "store": "MAD Houston",
+        "encounter": "store-osm-node-8172494967-person-11"
+      },
+      {
+        "store": "Moreau",
+        "encounter": "store-osm-node-8172494980-person-3"
+      },
+      {
+        "store": "Oliver Peoples",
+        "encounter": "store-osm-node-8172494979-person-2"
+      },
+      {
+        "store": "Saint Bernard",
+        "encounter": "store-osm-node-8172494973-person-3"
+      },
+      {
+        "store": "Steak 48",
+        "encounter": "store-osm-node-8172494999-person-0"
+      },
+      {
+        "store": "Toulouse",
+        "encounter": "store-osm-node-6374756992-person-0"
+      },
+      {
+        "store": "Van Cleef & Arpels",
+        "encounter": "store-osm-node-8172494966-person-3"
+      },
+      {
+        "store": "Veronica Beard",
+        "encounter": "store-osm-node-8172495005-person-6"
+      },
+      {
+        "store": "Vilebrequin",
+        "encounter": "store-osm-node-8172494960-person-6"
+      },
+      {
+        "store": "Vince",
+        "encounter": "store-osm-node-8172494987-person-4"
+      },
+      {
+        "store": "Zadig & Voltaire",
+        "encounter": "store-osm-node-8172494990-person-2"
+      },
+      {
+        "store": "de Boulle",
+        "encounter": "store-osm-node-8172494993-person-2"
+      }
+    ],
+    "errors": []
+  },
+  "auto_mode": {
+    "mode": "mocked_jev_integration",
+    "railTabs": true,
+    "keyboard": true,
+    "mobile": true,
+    "darkTheme": true,
+    "movement": true,
+    "manualTakeover": true,
+    "staleCancellation": true,
+    "unavailable": true,
+    "support": {
+      "enabled": true,
+      "phase": "interacting",
+      "source": "jev",
+      "action": "supply",
+      "label": "Bring supplies to Maya \u00b7 That helps right away. I could still use another delivery or a volunteer visit.",
+      "reason": null,
+      "decisions": 3,
+      "arrivals": 0,
+      "interactions": 2
+    },
+    "resources": "10 kits \u00b7 4 volunteer visits left \u00b7 0 active visits",
+    "browserErrors": []
   }
 }

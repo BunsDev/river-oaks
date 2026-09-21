@@ -11,7 +11,7 @@ async (page) => {
   await page.locator('#loading').waitFor({state:'hidden'});
   const toggle=page.locator('#panel-toggle');
   if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
-  check(await page.locator('#community-local option').count()===24,'Need 24 distinct local encounters');
+  check(await page.locator('#community-local option[value^=local-]').count()===24,'Need 24 distinct local encounters');
   check(await page.locator('#community-voice').inputValue()==='off','Speech must start muted');
   const palette=()=>page.evaluate(()=>{
     const style=getComputedStyle(document.documentElement);

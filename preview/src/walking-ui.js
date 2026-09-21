@@ -1,9 +1,9 @@
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
-import { ENCOUNTER_FAR, encounterPosition } from './encounter.js';
+import { ENCOUNTER_FAR, clearEncounterLine, encounterPosition } from './encounter.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {} }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
@@ -11,6 +11,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS DISTRICT</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left">↶</button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right">↷</button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Escape closes conversations</p></div></div>`;
   $('#viewport').append(hud);
   const keys = new Set();
+  let autoInput = null;
   let active = false, environment, stores = [], state, nearest = null, drag = null, lastPaint = 0;
   const clear = () => { keys.clear(); drag = null; document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
@@ -19,12 +20,18 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     if (!reducedMotion && state.speed > 0.1) camera.position.y += Math.sin(state.distance * 6.4) * 0.012;
     camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
   };
-  // The HUD only promises what encounterPosition will accept, so E and the meet button never dead-end.
+  // The HUD only promises what focusing will accept, so E and the meet button never dead-end:
+  // street residents need a personal-space placement, people at work only a clear line across the room.
   const visitorPosition = () => [state.position[0], -state.position[2], state.position[1]];
-  const canMeet = local => encounterPosition(environment, local, visitorPosition(), getLocals() ?? []) !== null;
+  const canMeet = local => local.indoor
+    ? clearEncounterLine(environment, visitorPosition(), local.position)
+    : encounterPosition(environment, local, visitorPosition(), getLocals() ?? []) !== null;
   const findNearest = () => {
     let result = null, distance = ENCOUNTER_FAR;
+    const room = currentRoom();
     for (const local of getLocals() ?? []) {
+      if ((local.storeId ?? null) !== (room?.storeId ?? null)) continue;
+      if (Math.abs(local.position[2] - environment.groundAt(state.position[0], state.position[2])) > 4) continue;
       const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
       if (d < distance && Math.abs(local.position[2] - state.position[1]) < 4 && canMeet(local)) { result = local; distance = d; }
     }
@@ -44,6 +51,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   };
   const stepThrough = () => {
     if (!active) return;
+    onManual();
     const room = currentRoom();
     if (room) { const store = stores.find(item => item.id === room.storeId); if (store) { clear(); onLeave?.(store); } return; }
     const store = doorway();
@@ -67,6 +75,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
     if (!active || dialogueOpen()) return;
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'Escape'].includes(event.code)) onManual();
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code)) { event.preventDefault(); keys.add(event.code); }
     if (event.code === 'KeyE' && !event.repeat) { event.preventDefault(); talk(); }
     if (event.code === 'KeyF' && !event.repeat) { event.preventDefault(); stepThrough(); }
@@ -78,6 +87,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   document.addEventListener('visibilitychange', clear);
   host.addEventListener('pointerdown', event => {
     if (!active || dialogueOpen() || event.button !== 0) return;
+    onManual();
     drag = [event.clientX, event.clientY]; host.setPointerCapture(event.pointerId); host.focus({ preventScroll: true });
   });
   host.addEventListener('pointermove', event => {
@@ -92,14 +102,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     const release = () => { keys.delete(button.dataset.walkKey); button.classList.remove('held'); };
     button.addEventListener('pointerdown', event => {
       if (!active || dialogueOpen()) return;
+      onManual();
       event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(button.dataset.walkKey); button.classList.add('held');
     });
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, release);
-    button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) { keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
+    button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) { onManual(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
   });
   return {
     get active() { return active; },
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
+    get roomId() { return active && state ? currentRoom()?.storeId ?? null : null; },
     focusPerson(local) {
       if (!state) return false;
       const visitor = this.getPosition();
@@ -118,12 +130,22 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       place();
       return true;
     },
+    haltAuto() { autoInput = null; if (state) { state.velocity = [0, 0]; state.speed = 0; } },
+    steerTo(point, delta) {
+      if (!state || !active) return;
+      const desired = Math.atan2(state.position[0] - point[0], state.position[2] + point[1]);
+      const difference = Math.atan2(Math.sin(desired - state.yaw), Math.cos(desired - state.yaw));
+      state.yaw += Math.max(-delta * 1.6, Math.min(delta * 1.6, difference));
+      state.pitch *= Math.exp(-4 * delta);
+      autoInput = { forward: Math.max(0, Math.cos(difference)) };
+    },
     lookAt(position) {
       if (!state) return;
       state.yaw = Math.atan2(state.position[0]-position[0], state.position[2]+position[1]);
       state.pitch = -0.04;
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
+      onManual(); autoInput = null;
       environment = createWalkingEnvironment(world);
       stores = world.stores ?? [];
       state = createWalkingState(environment, position);
@@ -136,6 +158,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       place(); host.focus({ preventScroll: true });
     },
     exit() {
+      onManual(); autoInput = null;
       active = false; clear(); hud.hidden = true; nearest = null;
       document.body.classList.remove('walking', 'inside-store'); hud.dataset.inside = '';
       camera.fov = 42; camera.near = 0.5; camera.updateProjectionMatrix(); camera.rotation.z = 0;
@@ -145,7 +168,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const pressed = (...codes) => codes.some(code => keys.has(code));
       $('.walking-console').inert = dialogueOpen();
       if (dialogueOpen()) clear();
-      else stepWalking(state, environment, { forward: Number(pressed('KeyW', 'ArrowUp')) - Number(pressed('KeyS', 'ArrowDown')), strafe: Number(pressed('KeyD')) - Number(pressed('KeyA')), turn: Number(pressed('ArrowLeft')) - Number(pressed('ArrowRight')), fast: pressed('ShiftLeft', 'ShiftRight') }, delta);
+      else stepWalking(state, environment, autoInput ?? { forward: Number(pressed('KeyW', 'ArrowUp')) - Number(pressed('KeyS', 'ArrowDown')), strafe: Number(pressed('KeyD')) - Number(pressed('KeyA')), turn: Number(pressed('ArrowLeft')) - Number(pressed('ArrowRight')), fast: pressed('ShiftLeft', 'ShiftRight') }, delta);
       place();
       if (now - lastPaint < 150) return;
       lastPaint = now;
