@@ -44,7 +44,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
     host.dataset.playerReady = 'false';
     let next, nextOutfit, nextVehicle;
     try {
-      next = await loadResidentAvatar(value === 'alien' ? 1 : value === 'jevica' ? 4 : 2, 'player', value === 'jevica' ? 'jevica' : undefined);
+      const chosen = VISITOR_FORMS.find(item => item.id === value) ?? VISITOR_FORMS.at(-1);
+      next = await loadResidentAvatar(chosen.avatar, 'player', chosen.profile);
       if (disposed || generation !== version) {next.dispose();return;}
       nextOutfit = createPlayerCostume(next, value);nextVehicle = createFlightVehicle(value);
       outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
@@ -52,7 +53,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
       form = value;reactions.reset();toggleCamera(true);
       const identity = VISITOR_FORMS.find(item => item.id === form);
       panel.dataset.form = form;
-      panel.querySelector('#player-name').textContent = form === 'jevica' ? 'Jevica' : form === 'witch' ? 'Witch' : 'Alien';
+      panel.querySelector('#player-name').textContent = identity.label;
       panel.querySelector('#player-role').textContent = identity.role;
       panel.querySelector('.player-portrait img').src = `/assets/characters/${form}-portrait.png`;
       panel.querySelector('#player-description').textContent = VISITOR_FORMS.find(item => item.id === form).description;

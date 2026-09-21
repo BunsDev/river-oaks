@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { loadResidentAvatar } from '../../src/avatars.js';
 import { createPlayerCostume } from '../../src/player-costume.js';
+import { VISITOR_FORMS } from '../../src/visitor-persona.js';
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
@@ -20,7 +21,8 @@ const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshStand
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
 const form=new URLSearchParams(location.search).get('form')??'jevica';
-const avatar = await loadResidentAvatar(form==='alien'?1:form==='witch'?2:4,'player',form==='jevica'?'jevica':undefined), outfit = createPlayerCostume(avatar,form); scene.add(avatar.object);
+const identity=VISITOR_FORMS.find(item=>item.id===form) ?? VISITOR_FORMS.at(-1);
+const avatar = await loadResidentAvatar(identity.avatar,'player',identity.profile), outfit = createPlayerCostume(avatar,form); scene.add(avatar.object);
 function render(view='full',time=0,speed=0) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : 0;
   if (view === 'portrait') {camera.position.set(0,1.61,1.40);camera.lookAt(0,1.48,0);}

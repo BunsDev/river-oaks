@@ -45,10 +45,17 @@ BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
   data/raw/characters/jevica-build/bin/python scripts/build_jevica.py
 ```
 
-The witch uses narrow velvet robes and a cape; the alien uses a broad cobalt
-carapace and amber slit pupils. Their costumes are player-only and do not change
-the surrounding residents. The three `*-portrait.png` files are actual renderer
-captures of these models, made with `e2e/fixtures/jevica.html?form=jevica` (or
-`witch` / `alien`) at 288 × 352 and `window.jevicaFixture.render('portrait')`.
+The other playable forms are Baum's Oz travellers, built from the public-domain
+novel's descriptions rather than any film design: Dorothy (gingham pinafore,
+braids, basket and silver shoes), the Scarecrow (patched burlap, straw cuffs and
+a floppy hat), the Tin Man (riveted tin, jointed limbs, funnel hat, oil can) and
+the Cowardly Lion (tawny fur, a bowed mane and a tufted tail), plus the Wicked
+Witch in velvet robes and cape. Costumes are player-only. Residents and store
+people are dressed by `preview/src/oz-folk.js` as the peoples of the five Oz
+countries (Munchkin, Winkie, Quadling, Gillikin and Emerald City): the shared
+suit is tinted to the country colour and a country hat follows the head bone.
+The `*-portrait.png` files are actual renderer captures of these models, made
+with `e2e/fixtures/jevica.html?form=<id>` at 288 × 352 and
+`window.jevicaFixture.render('portrait')`.
 Use `e2e/player-forms.js` with the repository's Playwright browser runner to
 check transformations, camera mode, flight, responsive controls and portraits.

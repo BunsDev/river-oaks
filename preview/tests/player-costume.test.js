@@ -26,13 +26,13 @@ test('Jevica ships a self-contained, skinned hero asset with a reproducible rece
 
 function avatarFixture() {
   const object=new THREE.Group(),model=new THREE.Group();object.add(model);
-  for(const name of ['head','clavicle_l','clavicle_r','spine_01','spine_03','hand_l','hand_r','upperarm_l','upperarm_r']) {
+  for(const name of ['head','neck_01','clavicle_l','clavicle_r','spine_01','spine_02','spine_03','hand_l','hand_r','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r','thigh_l','thigh_r','calf_l','calf_r','foot_l','foot_r']) {
     const bone=new THREE.Bone();bone.name=name;bone.position.y=name==='head'?1.45:1;model.add(bone);
   }
   return {object,rig:{model,materials:new Map()}};
 }
 
-for(const form of ['jevica','witch','alien']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
+for(const form of ['jevica','witch','dorothy','scarecrow','tinman','lion']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
   const avatar=avatarFixture(), originalChildren=avatar.object.children.length;
   const costume=createPlayerCostume(avatar,form);
   avatar.object.position.set(40,3,-20);avatar.object.rotation.y=1.3;

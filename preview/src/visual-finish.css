@@ -211,9 +211,18 @@ button:disabled { cursor: not-allowed; }
 @media (max-height: 600px) and (min-width: 701px) {
   .visit-tools { width: auto; grid-template-columns: 218px 264px; }
 }
-.player-controls[data-form=alien] { --accent: #365f7e; --accent-soft: #e4edf5; }
+.player-controls[data-form=dorothy] { --accent: #2f5fae; --accent-soft: #e4ebf7; }
+.player-controls[data-form=scarecrow] { --accent: #9a6d2b; --accent-soft: #f5ecdc; }
+.player-controls[data-form=tinman] { --accent: #5f6f80; --accent-soft: #e8edf2; }
+.player-controls[data-form=lion] { --accent: #b06a1f; --accent-soft: #f7e9d6; }
 .player-controls[data-form=witch] { --accent: #704980; --accent-soft: #ede5f1; }
-:root[data-theme=dark] .player-controls[data-form=alien] { --accent: #a3cce7; --accent-soft: #2d4151; }
+:root[data-theme=dark] .player-controls[data-form=dorothy] { --accent: #9cc0f0; --accent-soft: #2a3b52; }
+:root[data-theme=dark] .player-controls[data-form=scarecrow] { --accent: #e0b86a; --accent-soft: #4a3a22; }
+:root[data-theme=dark] .player-controls[data-form=tinman] { --accent: #b8c6d4; --accent-soft: #37414b; }
+:root[data-theme=dark] .player-controls[data-form=lion] { --accent: #f0b56a; --accent-soft: #4d3618; }
 :root[data-theme=dark] .player-controls[data-form=witch] { --accent: #d6b9e3; --accent-soft: #43324b; }
-:root[data-theme] .player-controls[data-form=alien] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#436c8c,#2c465e); border-color: #6e90ab; }
+:root[data-theme] .player-controls[data-form=dorothy] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#3d6fbf,#274a80); border-color: #4f7fc9; }
+:root[data-theme] .player-controls[data-form=scarecrow] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#b0832f,#7a5a1f); border-color: #c2953f; }
+:root[data-theme] .player-controls[data-form=tinman] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#7a8a9c,#4d5b6a); border-color: #8d9caa; }
+:root[data-theme] .player-controls[data-form=lion] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#c67a26,#8a5115); border-color: #d18a3a; }
 :root[data-theme] .player-controls[data-form=witch] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#675072,#3b2c45); border-color: #8b6c9b; }

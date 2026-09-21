@@ -1,4 +1,4 @@
-import { alienSpeciesFor } from './alien-species.js';
+import { ozFolkFor } from './oz-folk.js';
 import { turnToward } from './gait.js';
 import { createResidentNavigation } from './navigation.js';
 import { residentContext } from './personas.js';
@@ -16,7 +16,7 @@ export function createResidentLife(world,state,routeProvider=null) {
   // These small awnings exist in the interpreted storefront mesh, not a shelter registry.
   const shelters=(world.stores ?? []).map(store=>({id:store.id,name:store.name,position:[store.facade[0]+store.outward[0]*0.9,store.facade[1]+store.outward[1]*0.9]})).filter(stop=>navigation.free(stop.position));
   state.locals.forEach((local,index)=>{
-    local.species=alienSpeciesFor(local.id).name;
+    local.folk=ozFolkFor(local.id).name;
     local.life={speed:0,distance:0,heading:index*2.4,status:'resting',action:'continue',source:'local_rules',route:[],routeVersion:0,destination:null,waitUntil:0.5+index*0.17,reactionUntil:0,visits:0,blocked:false};
   });
   return {state,navigation,routeProvider:routeProvider ?? navigation.route,planning:false,stops,shelters,elapsed:0,storm:false,revision:0,packet:null,cursor:0,paused:false,stats:{jev:0,local_rules:0,safety_override:0,latency_ms:null}};

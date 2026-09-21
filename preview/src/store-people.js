@@ -1,4 +1,4 @@
-import { applyAlienSpecies } from './alien-species.js';
+import { applyOzFolk } from './oz-folk.js';
 import { turnToward } from './gait.js';
 import { storePersonId } from './store-encounters.js';
 import * as THREE from 'three';
@@ -78,7 +78,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
         const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
         dress(avatar, spot, room.theme, seed);
-        applyAlienSpecies(avatar,storePersonId(room,spotIndex));
+        applyOzFolk(avatar,storePersonId(room,spotIndex));
         const holder = new THREE.Group();
         const [east, north] = room.toWorld(spot.a, spot.d);
         const seated = spot.pose === 'seated';
