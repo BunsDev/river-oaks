@@ -8,8 +8,12 @@ async (page) => {
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   check(await page.locator('#walking-hud').isVisible(), 'District should start on foot');
   const toggle = page.locator('#panel-toggle');
+  // The rail sidebar shows one section at a time; select the tab a control lives in first.
+  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   check(await page.locator('#destination option').count() === 30, 'Expected current mapped directory destinations');
+  await rail('settings-section');
   await page.locator('button[data-theme-preference=dark]').click();
   check(await page.locator('html').getAttribute('data-theme') === 'dark', 'Dark appearance must apply');
   await page.locator('#panel-toggle').click();
@@ -23,9 +27,11 @@ async (page) => {
   check(uhd[0] === 3840 && uhd[1] === 2160, 'Collapsed buffer must be native UHD');
   await page.screenshot({ path: 'output/playwright/district-walking-4k.png' });
   await toggle.click();
+  await rail('explore-section');
   await page.locator('#destination').selectOption({ label: 'Hermès' });
   await page.locator('#visit-destination').click();
   check(await page.locator('#walking-hud').isVisible(), 'Store arrival must preserve walking');
+  await rail('community-section');
   await page.locator('#community-meet').click();
   await page.locator('#community-about').click();
   await page.waitForFunction(() => !document.querySelector('#community-attribution').textContent.includes('checking'));
@@ -48,6 +54,7 @@ async (page) => {
   check(immediate.opened && immediate.actual===immediate.expected,'Immediate E must use the new arrival position, not the previous HUD neighbor');
   await page.locator('#community-close').click();
 
+  await rail('community-section');
   await page.locator('#community-reset').click();
   const targets = await page.locator('#community-local option').evaluateAll(options => options.filter(option => option.textContent.includes('request open')).map(option => option.value));
   check(targets.length === 8, 'Community scenario needs eight priority neighbors');
@@ -55,6 +62,7 @@ async (page) => {
   for (const id of targets.slice(0, 6)) {
     await page.locator('#community-local').selectOption(id);
     await page.locator('#community-meet').click();
+    await page.locator('#community-activities').evaluate(details => { details.open = true; });
     await page.locator('#community-ask').click();
     await page.locator(targets.indexOf(id) < 4 ? '#community-dispatch' : '#community-supply').click();
   }
@@ -62,6 +70,7 @@ async (page) => {
   for (const id of targets.slice(4, 6)) {
     await page.locator('#community-local').selectOption(id);
     await page.locator('#community-meet').click();
+    await page.locator('#community-activities').evaluate(details => { details.open = true; });
     await page.locator('#community-supply').click();
   }
   await page.waitForFunction(() => document.querySelector('#community-outcome').dataset.state === 'success', null, { timeout: 90000 });
@@ -79,6 +88,7 @@ async (page) => {
   await page.screenshot({ path: 'output/playwright/district-mobile.png' });
   await toggle.click();
   check(await page.locator('#scene-select').count() === 0, 'Only the district should be offered');
+  await rail('settings-section');
   await page.locator('#reload').click();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.setViewportSize({ width: 1920, height: 1080 });

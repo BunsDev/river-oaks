@@ -12,7 +12,10 @@ async page => {
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.charactersReady==='24');
   const toggle=page.locator('#panel-toggle');if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
-  await page.locator('#community-more summary').click();
+  // The rail sidebar shows one section at a time; select the tab a control lives in first.
+  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
+  await rail('community-section');await page.locator('#community-more summary').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).filter(l=>l.distance>1).length>=20,null,{timeout:20000});
   const moving=await read();
   const footSamples=await page.evaluate(()=>new Promise(resolve=>{
@@ -24,13 +27,13 @@ async page => {
   check(moving.every(l=>l.speed<=1.4),'Residents must stay within walking speed');
   check(packets.length>0 && packets.every(p=>p.agents.length<=24 && p.agents.every(a=>a.role_context && a.nearby.length<=16)),'Expected batched local resident context');
 
-  await page.locator('#community-life').click();await page.waitForTimeout(250);
+  await voices();await page.locator('#community-life').click();await page.waitForTimeout(250);
   const paused=await read();await page.waitForTimeout(1200);
   check(JSON.stringify(await read())===JSON.stringify(paused),'Paused walks must freeze positions and stride distance');
   const pausedRequests=packets.length;await page.waitForTimeout(2200);
   check(packets.length===pausedRequests,'Paused walks must not generate resident inference requests');
   await page.locator('#community-life').click();
-  await page.locator('#community-local').selectOption('local-22');await page.locator('#community-meet').click();
+  await rail('community-section');await page.locator('#community-local').selectOption('local-22');await page.locator('#community-meet').click();
   await page.waitForTimeout(250);const greeting=(await read()).find(l=>l.id==='local-22');
   await page.waitForTimeout(1600);const held=(await read()).find(l=>l.id==='local-22');
   check(held.status==='chatting' && JSON.stringify(held.position)===JSON.stringify(greeting.position),'Conversation partner must stop and remain in place');
@@ -41,7 +44,7 @@ async page => {
   check(await page.locator('#community-dialogue').isVisible(),'Nearby conversation must still open using E');
   await page.locator('#community-close').click();
 
-  await page.locator('#weather').selectOption('overcast');
+  await rail('settings-section');await page.locator('#weather').selectOption('overcast');
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).filter(l=>l.status==='sheltered').length>=2,null,{timeout:25000});
   const storm=await read();
   check(storm.every(l=>l.action==='seek_shelter' && l.source==='safety_override'),'Storm overrides must apply even before starting an economic scenario');
@@ -58,8 +61,8 @@ async page => {
   await page.locator('#loading').waitFor({state:'hidden'});await page.waitForTimeout(1200);
   check((await read()).every(l=>l.distance===0),'Reduced motion must start resident walks paused');
   if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
-  await page.locator('#community-more summary').click();
-  await page.locator('#community-life').click();
+  await rail('community-section');await page.locator('#community-more summary').click();
+  await voices();await page.locator('#community-life').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).some(l=>l.distance>1),null,{timeout:15000});
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.setViewportSize({width:1920,height:1080});

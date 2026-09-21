@@ -10,16 +10,19 @@ async(page)=>{
   };
   const stats=()=>page.locator('#canvas-host').evaluate(element=>JSON.parse(element.dataset.renderStats));
   const openControls=async()=>{if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();};
+  // The rail sidebar shows one section at a time; select the tab a control lives in first.
+  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
   await page.setViewportSize({width:1920,height:1080});
   await page.goto('http://127.0.0.1:5173/');await ready();
   const canopy=await page.locator('#canopy-state').textContent();
   check(canopy.includes('2018 LiDAR'),'Observed district canopy must load');
   check((await page.locator('#canopy-source').textContent()).includes('does not pass'),'Failed historical comparison must remain visible');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('#destination').selectOption({label:'Cartier'});await page.locator('#visit-destination').click();
+  await rail('explore-section');await page.locator('#destination').selectOption({label:'Cartier'});await page.locator('#visit-destination').click();
   await page.waitForTimeout(500);
   await page.screenshot({path:'output/playwright/storefront-recesses.png'});
-  await page.locator('#community-local').selectOption('local-20');await page.locator('#community-meet').click();
+  await rail('community-section');await page.locator('#community-local').selectOption('local-20');await page.locator('#community-meet').click();
   await page.locator('#community-about').click();
   await page.waitForFunction(()=>!document.querySelector('#community-attribution').textContent.includes('checking'));
   await page.setViewportSize({width:3840,height:2160});
@@ -39,11 +42,11 @@ async(page)=>{
   await page.goto('http://127.0.0.1:5173/');await ready();
   await openControls();
   // Warm district materials before measuring repeated rebuilds.
-  await page.locator('#reload').click();await ready();
+  await rail('settings-section');await page.locator('#reload').click();await ready();
   const baseline=await stats();
   for(let round=0;round<2;round++) {
     await openControls();
-    await page.locator('#reload').click();await ready();
+    await rail('settings-section');await page.locator('#reload').click();await ready();
   }
   const after=await stats();
   check(after.geometries<=baseline.geometries+2,`Reloading scenes must not accumulate geometry: ${JSON.stringify({baseline,after})}`);
