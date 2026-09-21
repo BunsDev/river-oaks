@@ -20,7 +20,7 @@ async page => {
   });
   const read = () => page.locator('.auto-controls').evaluate(el => JSON.parse(el.dataset.state));
   await page.setViewportSize({width:1440,height:1000});
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto('http://127.0.0.1:5186/');
   await page.locator('#loading').waitFor({state:'hidden'});
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
@@ -81,6 +81,17 @@ async page => {
   const resources = await page.locator('#community-resources').textContent();
   check(!resources.includes('12 kits'),'Support must spend actual scenario supplies');
 
+  mode = 'walk';
+  await page.locator('#auto-toggle').click();
+  const other = await page.context().newPage();
+  await other.goto('about:blank');await other.bringToFront();
+  await page.waitForFunction(() => document.hidden && document.querySelector('#auto-toggle').getAttribute('aria-pressed') === 'false');
+  await other.close();await page.bringToFront();
+  check(!(await read()).enabled,'Hidden tabs must stop auto and require deliberate restart');
+  await page.locator('#auto-toggle').click();
+  await page.locator('#reload').click();await page.locator('#loading').waitFor({state:'hidden'});
+  check(!(await read()).enabled,'World replacement must cancel auto');
+
   await page.getByRole('tab',{name:'Scene',exact:true}).click();
   await page.setViewportSize({width:390,height:844});
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),'Mobile must not overflow');
@@ -91,5 +102,6 @@ async page => {
   check(!errors.length,`Browser errors: ${errors.join('; ')}`);
   await page.unroute('**/v1/auto'); await page.unroute('**/v1/decisions');
   return {mode:'mocked_jev_integration',railTabs:true,keyboard:true,mobile:true,darkTheme:true,
-    movement:true,manualTakeover:true,staleCancellation:true,unavailable:true,support,resources,browserErrors:errors};
+    movement:true,manualTakeover:true,staleCancellation:true,hiddenTab:true,worldReload:true,
+    unavailable:true,support,resources,browserErrors:errors};
 }

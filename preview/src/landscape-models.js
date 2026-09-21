@@ -16,7 +16,7 @@ function materialFrom(source, foliage = false) {
   material.side=foliage?THREE.DoubleSide:THREE.FrontSide;
   material.roughness=foliage?0.86:1;material.metalness=0;
   material.envMapIntensity=0.55;
-  if(foliage) material.color.set('#e4efd5');
+  if(foliage) {material.color.set('#f4ffea');material.emissive.set('#29421a');material.emissiveIntensity=0.16;}
   return material;
 }
 export function matureTreePlacements(world) {
@@ -53,19 +53,21 @@ export function buildMatureTrees(world) {
     });
     // Spatial batches keep draw calls bounded and retain ordinary frustum culling.
     const tiles=new Map();
-    placements.forEach(tree=>{const key=`${Math.floor(tree.position[0]/48)}:${Math.floor(tree.position[2]/48)}`;if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push(tree);});
+    placements.forEach(tree=>{const key=`${Math.floor(tree.position[0]/24)}:${Math.floor(tree.position[2]/24)}`;if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push(tree);});
     const dummy=new THREE.Object3D();
     for(const trees of tiles.values()) {
       const center=new THREE.Vector3();trees.forEach(tree=>center.add(new THREE.Vector3(...tree.position)));center.divideScalar(trees.length);
       const batches=parts.map((level,index)=>level.map(part=>{
-        const mesh=new THREE.InstancedMesh(part.geometry,part.material,trees.length);
-        trees.forEach((tree,i)=>{
+        const copies=part.leafy?3:1;
+        const mesh=new THREE.InstancedMesh(part.geometry,part.material,trees.length*copies);
+        trees.forEach((tree,i)=>{for(let layer=0;layer<copies;layer++){
           dummy.position.fromArray(tree.position);dummy.position.y-=bounds.min.y*tree.height/size.y;
           dummy.scale.set(tree.radius*2/Math.max(size.x,size.z),tree.height/size.y,tree.radius*2/Math.max(size.x,size.z));
-          dummy.rotation.set(0,tree.yaw,0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
-          mesh.setColorAt(i,new THREE.Color().setHSL(0.22+(i%5)*0.003,0.07,0.86+(i%4)*0.025));
-        });
-        mesh.castShadow=index<2;mesh.receiveShadow=true;mesh.visible=index===0;
+          if(layer)dummy.scale.multiply(new THREE.Vector3(0.94,0.94,0.94));
+          dummy.rotation.set(0,tree.yaw+layer*1.618,0);dummy.updateMatrix();mesh.setMatrixAt(i*copies+layer,dummy.matrix);
+          mesh.setColorAt(i*copies+layer,new THREE.Color().setHSL(0.22+(i%5)*0.003,0.07,0.86+(i%4)*0.025));
+        }});
+        mesh.castShadow=index===0;mesh.receiveShadow=true;mesh.visible=index===0;
         if(part.leafy)mesh.userData.aoExclude=true;
         mesh.computeBoundingSphere();group.add(mesh);return mesh;
       }));
@@ -73,7 +75,7 @@ export function buildMatureTrees(world) {
     }
     const host=document.querySelector('#canvas-host');if(host)host.dataset.matureTrees=String(placements.length);
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
-  group.userData.update=position=>{for(const tile of levels){const distance=position.distanceTo(tile.center);const selected=distance<65?0:distance<140?1:2;tile.batches.forEach((meshes,index)=>meshes.forEach(mesh=>{mesh.visible=index===selected;}));}};
+  group.userData.update=position=>{for(const tile of levels){const distance=position.distanceTo(tile.center);const selected=distance<28?0:distance<75?1:2;tile.batches.forEach((meshes,index)=>meshes.forEach(mesh=>{mesh.visible=index===selected;}));}};
   return group;
 }
 

@@ -1,5 +1,5 @@
 import { nearbyPeople } from './nearby-people.js';
-import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
+import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {} }) {
@@ -104,11 +104,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     haltAuto() { autoInput = null; if (state) { state.velocity = [0, 0]; state.speed = 0; } },
     steerTo(point, delta) {
       if (!state || !active) return;
-      const desired = Math.atan2(state.position[0] - point[0], state.position[2] + point[1]);
-      const difference = Math.atan2(Math.sin(desired - state.yaw), Math.cos(desired - state.yaw));
-      state.yaw += Math.max(-delta * 1.6, Math.min(delta * 1.6, difference));
-      state.pitch *= Math.exp(-4 * delta);
-      autoInput = { forward: Math.max(0, Math.cos(difference)) };
+      autoInput = steerWalkingToward(state, point, delta);
     },
     lookAt(position) {
       if (!state) return;
