@@ -1,4 +1,5 @@
 import { buildDesignatedSidewalks } from './sidewalks.js';
+import { pickPerson, withinTalkingReach } from './people-picking.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
@@ -451,18 +452,37 @@ function visibleInScene(object) {
 let pointerStart;
 host.addEventListener('pointerdown', (event) => { pointerStart = [event.clientX, event.clientY]; });
 host.addEventListener('pointerup', (event) => {
-  if (!localsGroup?.visible || !pointerStart || Math.hypot(event.clientX - pointerStart[0], event.clientY - pointerStart[1]) > 5) return;
+  const start = pointerStart; pointerStart = null;
+  if (!start || Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5) return;
   const rect = host.getBoundingClientRect();
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
-  const person = raycaster.intersectObjects([localsGroup, ...(interiorsLayer?.visible && storePeople ? [storePeople] : [])], true).find(hit => hit.object.userData.localId && visibleInScene(hit.object));
-  if (person?.object.userData.localId && (!walking.active || person.distance < 5)) { community.selectLocal(person.object.userData.localId); return; }
+  const pose = walking.getPose();
+  const id = pickPerson(raycaster, [localsGroup, storePeople].filter(Boolean),
+    [buildingMesh, buildingMesh?.userData.interiors].filter(Boolean),
+    id => !walking.active || withinTalkingReach(community.state.locals.find(local => local.id === id), pose, point => walking.canSee(point)));
+  if (id) community.selectLocal(id);
 
 });
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverPeople = () => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
+    .filter(person => person.id).map(person => {
+      person.holder.updateWorldMatrix(true,true);
+      const head=person.holder.getObjectByName('head');
+      const bounds = new THREE.Box3().setFromObject(person.holder), point = bounds.getCenter(new THREE.Vector3());
+      // Held props can move the whole-body bounds away from the actual face.
+      // Project the head joint for acceptance clicks, above the jaw pivot.
+      if(head) {head.getWorldPosition(point);point.y+=0.07;}
+      else point.y = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.86;
+      point.project(camera);
+      const rect = host.getBoundingClientRect();
+      const local=community.state.locals.find(local=>local.id===person.id);
+      return {id:person.id, role:person.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
+        reachable:withinTalkingReach(local,walking.getPose(),point=>walking.canSee(point)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+    });
   window.__riverMotion = () => (localsGroup?.userData.models ?? []).filter(person=>person.visible && person.userData.avatar).map(person=>({
     id:person.userData.localId, status:community.state.locals.find(local=>local.id===person.userData.localId)?.life?.status,
     feet:person.userData.avatar.feet.filter(leg=>leg.target).map(leg=>({

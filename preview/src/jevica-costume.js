@@ -1,4 +1,6 @@
+import { batchCostumeAttachments } from './costume-batching.js';
 import * as THREE from 'three';
+import { measureHead } from './head-fit.js';
 
 // One hero costume. Shared resident geometry and textures are never mutated.
 export function createJevicaCostume(avatar) {
@@ -19,8 +21,8 @@ export function createJevicaCostume(avatar) {
   weave.wrapS = weave.wrapT = THREE.RepeatWrapping; weave.repeat.set(22, 16);
   weave.magFilter = THREE.LinearFilter; weave.minFilter = THREE.LinearMipmapLinearFilter;
   weave.generateMipmaps = true; weave.needsUpdate = true; owned.add(weave);
-  const silk = surface({color:'#c78699', roughness:0.42, sheen:0.8, sheenColor:new THREE.Color('#fbe1d9'), sheenRoughness:0.48, bumpMap:weave, bumpScale:0.0007, side:THREE.DoubleSide});
-  const organza = surface({color:'#e0b0b9', roughness:0.57, sheen:0.9, sheenColor:new THREE.Color('#fff0df'), sheenRoughness:0.65, side:THREE.DoubleSide});
+  const silk = surface({color:'#c66e8c', roughness:0.36, sheen:0.8, sheenColor:new THREE.Color('#fbe1d9'), sheenRoughness:0.48, bumpMap:weave, bumpScale:0.0007, side:THREE.DoubleSide});
+  const organza = surface({color:'#d992a9', roughness:0.43, sheen:0.9, sheenColor:new THREE.Color('#fff0df'), sheenRoughness:0.65, side:THREE.DoubleSide});
   const platinum = surface({color:'#e5e2eb', metalness:0.92, roughness:0.22});
   const crystal = surface({color:'#fff5ee', roughness:0.08, metalness:0.08, clearcoat:1, ior:1.8, transmission:0.35, thickness:0.012});
   const embroiderySize=512, embroideryData=new Uint8Array(embroiderySize*embroiderySize*4);
@@ -82,50 +84,40 @@ export function createJevicaCostume(avatar) {
     vertices.setXYZ(i, x * fold, y + Math.pow(t, 8) * 0.012 * Math.cos(angle * 18), z * fold * 0.93);
   }
   skirt.computeVertexNormals();
-  const gown = mesh(waist, skirt, silk, [0,0,0]); gown.name = 'Jevica draped silk gown';
-  // Two continuous organza swags sit over the silk, with thin scalloped hems.
-  for (let tier = 0; tier < 2; tier++) {
+  const gown = mesh(waist, skirt, silk, [0,0,0], [0.88,1,0.88]); gown.name = 'Jevica draped silk gown';
+  // Three overlapping silk flounces: curled scalloped edges echo the reference
+  // while continuous surfaces keep the gown believable at walking distance.
+  for (let tier = 0; tier < 3; tier++) {
     const geometry = skirt.clone(), positions = geometry.attributes.position;
+    const start = [0,0.28,0.55][tier], end = [0.40,0.70,0.985][tier];
     for (let i = 0; i < positions.count; i++) {
       const t = THREE.MathUtils.clamp((0.085 - vertices.getY(i)) / 0.985, 0, 1);
       const angle = Math.atan2(vertices.getZ(i), vertices.getX(i));
-      const hem = 0.49 + tier * 0.29 + 0.055 * Math.cos(angle * 5);
-      const progress = t * hem;
-      const radius = 0.163 + tier * 0.004 + 0.445 * Math.pow(progress, 0.72);
-      const fold = 1 + progress * 0.048 * Math.sin(angle * 18 + progress * 0.8);
-      positions.setXYZ(i, Math.cos(angle) * radius * fold, 0.086 - progress * 0.985, Math.sin(angle) * radius * fold * 0.93);
+      const scallop = Math.cos(angle * 5 + tier * 0.85);
+      const progress = start + t * (end - start + 0.035 * scallop);
+      const curl = Math.pow(t,6) * (0.035 + 0.025 * scallop);
+      const radius = 0.158 + 0.44 * Math.pow(progress,0.72) + (0.020+(2-tier)*0.023+curl)*(tier===0?Math.sin(t*Math.PI/2):1);
+      const fold = 1 + t * 0.018 * Math.sin(angle * 10 + tier * 0.8);
+      positions.setXYZ(i,Math.cos(angle)*radius*fold,0.086-progress*0.985+Math.pow(t,9)*0.025,Math.sin(angle)*radius*fold*0.93);
     }
-    geometry.computeVertexNormals(); mesh(waist, geometry, organza, [0,0,0]);
+    geometry.computeVertexNormals();
+    const flounce=mesh(waist,geometry,tier===1?silk:organza,[0,0,0]);flounce.name=`Rose silk flounce ${tier+1}`;
   }
   const head = attach('head');
-  const tulle=surface({color:'#f7c9df',roughness:0.62,sheen:0.9,sheenColor:new THREE.Color('#fff2fc'),transparent:true,opacity:0.43,depthWrite:false,side:THREE.DoubleSide});
-  for(const side of [-1,1]) {
-    const shoulder=attach(side<0?'clavicle_r':'clavicle_l');
-    for(let petal=0;petal<3;petal++) {
-      const geometry=new THREE.PlaneGeometry(1,1,16,20),position=geometry.attributes.position;
-      for(let i=0;i<position.count;i++) {
-        const u=position.getX(i)*2,v=position.getY(i)+0.5;
-        const width=Math.sin(v*Math.PI)*0.11;
-        position.setXYZ(i,side*(0.065+v*(0.17-petal*0.025)+u*width*0.35),v*(0.15+petal*0.035),-0.018+u*width+Math.sin(v*Math.PI)*0.035-petal*0.028);
-      }
-      geometry.computeVertexNormals();
-      const bow=mesh(shoulder,geometry,tulle,[side*0.06,-0.075,0.025]);bow.castShadow=false;
-    }
-    const earring=mesh(head,new THREE.TorusGeometry(0.014,0.0016,6,24),platinum,[side*0.086,0.013,0.029]);earring.scale.y=1.3;
+  const fit=measureHead(avatar.rig), crownRadius=fit.hair.radius+0.003;
+  const [crownX,crownZ]=fit.hair.centre, crownY=fit.skull.top-0.016;
+  for(const y of [crownY,crownY+0.018]) {
+    const band=mesh(head,new THREE.TorusGeometry(crownRadius,0.002,8,64),platinum,[crownX,y,crownZ]);band.rotation.x=Math.PI/2;
   }
-  const band = mesh(head, new THREE.TorusGeometry(0.098,0.002,8,64), platinum, [0,0.115,0.005]);
-  band.rotation.x = Math.PI / 2;
-  // A low, tapered tiara follows the forehead instead of extending the skull.
-  for (let i = 0; i < 9; i++) {
-    const angle = -Math.PI * 0.43 + i / 8 * Math.PI * 0.86;
-    const height = 0.018 + 0.038 * Math.pow(Math.cos(angle), 3);
-    const x = Math.sin(angle) * 0.098, z = Math.cos(angle) * 0.098;
-    const points = Array.from({length:17}, (_, j) => {
-      const a = j / 16 * Math.PI * 2;
-      return new THREE.Vector3(x + Math.sin(a) * 0.012, 0.115 + (1-Math.cos(a))*height/2, z);
+  // Open silver filigree surrounds the crown rather than a solid metal cylinder.
+  for(let i=0;i<15;i++) {
+    const angle=i/15*Math.PI*2, height=0.046+0.024*Math.max(0,Math.cos(angle));
+    const points=Array.from({length:25},(_,j)=>{
+      const a=j/24*Math.PI*2,theta=angle+Math.sin(a)*0.13,r=crownRadius+(1-Math.cos(a))*0.004;
+      return new THREE.Vector3(crownX+Math.sin(theta)*r,crownY+(1-Math.cos(a))*height/2,crownZ+Math.cos(theta)*r);
     });
-    mesh(head, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.0013,5,false), platinum, [0,0,0]);
-    mesh(head, new THREE.OctahedronGeometry(0.007), crystal, [x,0.115+height,z], [0.7,1.35,0.6]);
+    mesh(head,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points,true),32,0.0018,6,true),platinum,[0,0,0]);
+    mesh(head,new THREE.OctahedronGeometry(0.005),crystal,[crownX+Math.sin(angle)*crownRadius,crownY+height,crownZ+Math.cos(angle)*crownRadius],[0.7,1.4,0.7]);
   }
   for (const side of [-1,1]) {
     mesh(head, new THREE.OctahedronGeometry(0.01), crystal, [side*0.083,0.018,0.025], [0.65,1.6,0.7]);
@@ -133,15 +125,15 @@ export function createJevicaCostume(avatar) {
   const belt = mesh(waist, new THREE.TorusGeometry(0.16,0.004,8,80), platinum, [0,0.065,0]);
   belt.rotation.x = Math.PI / 2; belt.scale.y = 0.78;
   const hand = attach('hand_r');
-  mesh(hand, new THREE.CylinderGeometry(0.003,0.004,0.56,12), platinum, [0,0.2,0.03]);
-  const star = new THREE.Shape();
-  for (let i = 0; i < 10; i++) {
-    const angle = Math.PI/2 + i*Math.PI/5, r = i%2 ? 0.024 : 0.06;
-    if (i) star.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
-    else star.moveTo(Math.cos(angle)*r, Math.sin(angle)*r);
+  const roseCrystal=surface({color:'#efb7d7',roughness:0.13,clearcoat:1,metalness:0.12,transmission:0.15,thickness:0.015});
+  mesh(hand,new THREE.CylinderGeometry(0.006,0.004,0.69,16),crystal,[0,0.24,0.03]);
+  mesh(hand,new THREE.IcosahedronGeometry(0.037,1),roseCrystal,[0,0.60,0.03]);
+  for(let i=0;i<12;i++) {
+    const angle=i/12*Math.PI*2,length=i%2?0.037:0.055;
+    const spike=mesh(hand,new THREE.ConeGeometry(0.011,length,6),roseCrystal,[Math.sin(angle)*(0.029+length/2),0.60+Math.cos(angle)*(0.029+length/2),0.03]);spike.rotation.z=-angle;
+    mesh(hand,new THREE.OctahedronGeometry(0.008),crystal,[Math.sin(angle)*(0.029+length),0.60+Math.cos(angle)*(0.029+length),0.03]);
   }
-  star.closePath();
-  mesh(hand, new THREE.ExtrudeGeometry(star,{depth:0.007,bevelEnabled:true,bevelThickness:0.002,bevelSize:0.002,bevelSegments:2,steps:1}), crystal, [0,0.51,0.026]);
+  batchCostumeAttachments(attachments, owned);
   const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
   return {
     update() {

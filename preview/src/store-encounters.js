@@ -4,10 +4,11 @@ const OCCUPATIONS = {
   fashion: ['Style adviser', 'Tailor'], leather: ['Leather goods specialist', 'Client adviser'],
   jewelry: ['Jewelry adviser', 'Watch specialist'], perfumery: ['Fragrance consultant', 'Perfumer'],
   optician: ['Eyewear stylist', 'Optical associate'], gallery: ['Gallery guide', 'Art adviser'],
-  dining: ['Host', 'Server'], gelato: ['Gelato maker', 'Counter attendant'],
-  cinema: ['Cinema host', 'Projection technician'], salon: ['Hair stylist', 'Colorist'],
+  dining: ['Host', 'Server', 'Bartender'], gelato: ['Gelato maker', 'Counter attendant'],
+  cinema: ['Cinema host', 'Projection technician', 'Concession attendant'], salon: ['Hair stylist', 'Colorist', 'Salon host'],
   wellness: ['Fitness trainer', 'Studio host'],
 };
+const GUEST_ROLES = { dining:'Dining guest', gelato:'Café guest', salon:'Salon client', wellness:'Studio member', cinema:'Cinema guest', gallery:'Gallery visitor', optician:'Eyewear client' };
 const NAMES = ['Alex', 'Jordan', 'Morgan', 'Casey', 'Taylor', 'Drew', 'Robin', 'Avery', 'Quinn', 'Sasha', 'Jamie', 'Reese'];
 export const storePersonId = (room, index) => `store-${room.storeId}-person-${index}`;
 
@@ -17,7 +18,9 @@ export function createStoreEncounters(rooms) {
   return rooms.flatMap(room => room.people.flatMap((spot, index) => {
     if (spot.role === 'mannequin') return [];
     const name = NAMES[(room.index * 3 + index) % NAMES.length];
-    const role = spot.role === 'staff' ? (OCCUPATIONS[room.theme] ?? ['Client adviser'])[index % (OCCUPATIONS[room.theme]?.length ?? 1)] : spot.pose === 'seated' ? 'Dining guest' : 'Visiting shopper';
+    const staffIndex = room.people.slice(0,index).filter(person=>person.role==='staff').length;
+    const occupations=OCCUPATIONS[room.theme] ?? ['Client adviser'];
+    const role = spot.role === 'staff' ? occupations[staffIndex % occupations.length] : GUEST_ROLES[room.theme] ?? 'Visiting shopper';
     const persona = createPersona(24 + room.index * 10 + index, name, room.name);
     Object.assign(persona, {
       role, homeContext: `Fictional ${role.toLowerCase()} at ${room.name}`,

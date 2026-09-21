@@ -1,7 +1,7 @@
 # River Oaks District
 
 
-A walkable interpretation of Houston’s River Oaks District: real boutiques and mapped streets combined with TypeSafe pink glass ornaments, silver arches, floating lanterns, and fictional encounters. The browser experience is focused on the district at 4444 Westheimer.
+An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Start as **Jevica**, explore in third person, or transform into a witch with a flying broom or an alien with a small UFO. Jevica flies in her bubble. See [the creative direction and controls](docs/world-direction.md).
 ## Run the live showcase
 
 Start the browser development server with `npm ci` and `npm run dev`. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
@@ -16,7 +16,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, and 24 fictional encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
+Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
 
 Residents have consistent local identities, remember encounters, walk between public stops and pause to chat. Four labeled fictional encounters feature Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé. Resident route searches run in a Web Worker; immediate reactions are batched for Jev or local fallback. [Resident life and controls](docs/resident-life.md)
 
@@ -24,13 +24,13 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Scene**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
-The experience starts on foot at human eye height. **Meet someone nearby** opens a conversation with a nearby visitor; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. Shops and cafés are secondary destinations. Overview, orbit, hover-moped and neighborhood views have been removed. The scene is exclusively the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Alien, Witch and Jevica are the only playable forms. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
-Residents have first-person roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human meshes now replace the capsule figures, and storefronts have pale cladding and recessed display bays. Storefronts are deliberately imaginative interpretations; see [visual evidence and asset provenance](docs/visual-fidelity.md).
+Residents have roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human rigs retain their natural faces, skin and hair, with six coordinated fashion palettes inspired by the playable characters. Shop workers inspect, prepare, serve or present at their stations, pause to attend to conversations, and resume work afterward. Storefronts are deliberately imaginative interpretations; see [visual evidence and asset provenance](docs/visual-fidelity.md).
 
-District foliage now follows 18,832 canopy voxels derived from public 2018 LiDAR, with distance-based detail and local bark materials. The four OSM tree points remain distinct from interpreted branch supports. The independent historical canopy comparison fails; see [vegetation evidence](docs/vegetation.md).
+Mature tree models retain the existing stem layout, with distance-based detail, clipped planter shrubs and ornamental grasses. These are artistic additions informed by the source vegetation record; the independent historical canopy comparison still fails. See [vegetation evidence and asset provenance](docs/vegetation.md).
 
 ### Optional free local speech
 

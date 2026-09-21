@@ -5,10 +5,15 @@ import { storeRoomsFor } from '../src/store-rooms.js';
 import { createCommunity, chooseCommunityScenario, snapshotForLocal } from '../src/community.js';
 import { createResidentLife, stepResidentLife, residentPacket } from '../src/resident-life.js';
 import { conversationLine } from '../src/personas.js';
-import { storePersonId } from '../src/store-encounters.js';
+import { storePersonId, createStoreEncounters } from '../src/store-encounters.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const rooms = storeRoomsFor(world);
+test('occupations follow staff order and seated guests retain their venue context',()=>{
+  const room={index:0,storeId:'salon',name:'Salon',theme:'salon',floor:0,toWorld:(x,y)=>[x,y],people:[{role:'guest',pose:'seated',a:0,d:0},{role:'staff',a:1,d:1},{role:'guest',pose:'seated',a:2,d:2},{role:'staff',a:3,d:3},{role:'staff',a:4,d:4}]};
+  assert.deepEqual(createStoreEncounters([room]).map(local=>local.role),['Salon client','Hair stylist','Salon client','Colorist','Salon host']);
+  assert.deepEqual(createStoreEncounters([{...room,theme:'dining'}]).filter(local=>local.role!=='Dining guest').map(local=>local.role),['Host','Server','Bartender']);
+});
 test('every real boutique person has a distinct conversational identity and a matching rendered ID', () => {
   const state = createCommunity(world, rooms);
   assert.equal(new Set(state.locals.map(person => person.id)).size, state.locals.length);

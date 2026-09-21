@@ -207,13 +207,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
-      $('.walking-title strong').textContent = room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = !room && !door;
       enter.textContent = room ? 'Step outside · F' : door ? `Step inside ${door.name} · F` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
-      $('#walking-place').textContent = room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
+      $('#walking-place').textContent = flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.flying=String(flight.active);hud.dataset.altitude=flight.altitude.toFixed(2);

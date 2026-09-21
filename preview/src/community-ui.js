@@ -357,7 +357,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     replay.disabled = speech.mode === 'off';
     if (speech.mode === 'off') text(dialogueVoiceStatus, 'Voice is off. Choose a local voice to listen.');
     const helping=state.jobs.find(job=>job.helperId===local.id);
-    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.anchorName}`);
+    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.species ? `${local.species} · ` : ''}${local.anchorName}`);
     text(dialogueText, message);
     text(source, attribution);
     text(needLabel, local.status === 'supported' ? 'Supported · request resolved' : local.status === 'unmet' ? 'Support window missed' : local.needKnown ? local.priority ? `${state.scenario.need} · ${Math.round(local.need)} / 100 unmet need` : 'No support request' : 'Ask to learn what would help');
