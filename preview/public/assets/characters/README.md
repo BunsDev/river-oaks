@@ -54,6 +54,12 @@ Witch in velvet robes and cape. Costumes are player-only. Residents and store
 people are dressed by `preview/src/oz-folk.js` as the peoples of the five Oz
 countries (Munchkin, Winkie, Quadling, Gillikin and Emerald City): the shared
 suit is tinted to the country colour and a country hat follows the head bone.
+`preview/src/head-fit.js` measures each rig's skull and hair around the head
+joint from the skinned mesh (cached per template, scaled per instance), and
+every hat — folk hats and the player hats alike — is cut to those measurements,
+so brims clear the hair, crowns sit on it, hoods replace it and the Emerald
+spectacles sit at the eye line. `e2e/fixtures/jevica.html?resident=local-04&rig=1`
+renders a dressed resident on a given shared rig for inspection.
 The `*-portrait.png` files are actual renderer captures of these models, made
 with `e2e/fixtures/jevica.html?form=<id>` at 288 × 352 and
 `window.jevicaFixture.render('portrait')`.
