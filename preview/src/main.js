@@ -1,3 +1,4 @@
+import { buildDesignatedSidewalks } from './sidewalks.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
@@ -253,6 +254,7 @@ function populateWorld(data) {
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(buildDistrictDetail(data));
+  worldGroup.add(buildDesignatedSidewalks(data,createWalkingEnvironment(data).isFree));
   worldGroup.add(buildStreetFurniture(data, createWalkingEnvironment(data).isFree));
   buildingMesh.add(buildDistrictFantasy(data));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });

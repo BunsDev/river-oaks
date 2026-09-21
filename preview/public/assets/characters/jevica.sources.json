@@ -1,0 +1,17 @@
+{
+  "id": "jevica",
+  "path": "/assets/characters/jevica.glb",
+  "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS",
+  "source": "MakeHuman system assets; see sources.json and LICENSE-CC0.md",
+  "license": "CC0-1.0",
+  "fictional_generic_appearance": true,
+  "bytes": 5286012,
+  "sha256": "f5cf412f0ff67a79471c3546ccfe594440ba9b7ac8de7fc3da958d1fd0d0e761",
+  "skin": "young_asian_female",
+  "hair": "long01",
+  "eyes": "high-poly",
+  "eyelashes": "eyelashes01",
+  "eyebrows": "eyebrow001",
+  "body_subdivision": 1,
+  "costume": "Original fitted shell; runtime draped skirt, tiara and wand"
+}

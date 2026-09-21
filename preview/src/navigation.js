@@ -1,3 +1,4 @@
+import { createPedestrianNetwork } from './sidewalks.js';
 import { createWalkingEnvironment } from './walking.js';
 
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -19,7 +20,7 @@ export function createResidentNavigation(world) {
   const [west,south,east,north]=bounds, cell=2;
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;
   if(width<2 || height<2 || size>40000) return null;
-  const environment=createWalkingEnvironment(world), trunks=new Map();
+  const environment=createWalkingEnvironment(world), trunks=new Map(), pedestrian=createPedestrianNetwork(world);
   for(const support of world.vegetation?.branch_supports ?? []) {
     const [x,y]=support.position,key=`${Math.floor(x/4)},${Math.floor(y/4)}`;
     if(!trunks.has(key)) trunks.set(key,[]);
@@ -47,10 +48,11 @@ export function createResidentNavigation(world) {
     }
     return true;
   };
+  const walkable = (a,b) => canTravel(a,b) && Number.isFinite(pedestrian.segmentCost(a,b));
   const position = id => [west+(id%width)*cell,south+Math.floor(id/width)*cell];
   const occupancy=new Int8Array(size),edges=new Map();
   const available = id => {
-    if(!occupancy[id]) occupancy[id]=free(position(id))?1:-1;
+    if(!occupancy[id]) occupancy[id]=free(position(id)) && pedestrian.classify(position(id))!=='road'?1:-1;
     return occupancy[id]===1;
   };
   const links = id => {
@@ -59,7 +61,7 @@ export function createResidentNavigation(world) {
     for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++) {
       if(!dx && !dy || x+dx<0 || x+dx>=width || y+dy<0 || y+dy>=height) continue;
       const next=id+dx+dy*width;
-      if(available(next) && canTravel(position(id),position(next))) result.push(next);
+      if(available(next) && walkable(position(id),position(next))) result.push(next);
     }
     edges.set(id,result);return result;
   };
@@ -68,13 +70,13 @@ export function createResidentNavigation(world) {
     for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++) {
       if(x+dx<0 || x+dx>=width || y+dy<0 || y+dy>=height) continue;
       const id=x+dx+(y+dy)*width;
-      if(available(id) && canTravel(point,position(id))) result.push(id);
+      if(available(id) && (walkable(point,position(id)) || pedestrian.classify(point)==='road' && canTravel(point,position(id)))) result.push(id);
     }
     return result;
   };
   const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
-    if(canTravel(start,end)) return [[...end]];
+    if(walkable(start,end) && pedestrian.segmentCost(start,end)<=distance(start,end)*1.15) return [[...end]];
     const starts=connectors(start),goals=new Set(connectors(end));
     if(!starts.length || !goals.size) return null;
     const scores=new Float64Array(size).fill(Infinity),parent=new Int32Array(size).fill(-1),closed=new Uint8Array(size),heap=[];
@@ -88,14 +90,14 @@ export function createResidentNavigation(world) {
       if(heap.length) { let i=0;while(i*2+1<heap.length) {let child=i*2+1;if(child+1<heap.length && heap[child+1].priority<heap[child].priority) child++;if(heap[child].priority>=last.priority) break;heap[i]=heap[child];i=child;}heap[i]=last; }
       return first;
     };
-    for(const id of starts) {scores[id]=distance(start,position(id));push(id,scores[id]);}
+    for(const id of starts) {scores[id]=Number.isFinite(pedestrian.segmentCost(start,position(id)))?pedestrian.segmentCost(start,position(id)):distance(start,position(id))*8;push(id,scores[id]);}
     let found=-1,visits=0;
     while(heap.length && visits<15000) {
       const {id,cost}=pop();if(closed[id] || cost>scores[id]) continue;
       closed[id]=1;visits++;
       if(goals.has(id)) {found=id;break;}
       for(const next of links(id)) {
-        const score=cost+distance(position(id),position(next));
+        const score=cost+pedestrian.segmentCost(position(id),position(next));
         if(score>=scores[next]) continue;
         scores[next]=score;parent[next]=id;push(next,score);
       }
@@ -108,7 +110,8 @@ export function createResidentNavigation(world) {
     const result=[];let previous=start,index=0;
     while(index<path.length) {
       let next=index;
-      while(next+1<path.length && canTravel(previous,path[next+1])) next++;
+      let retained=pedestrian.segmentCost(previous,path[next]);
+      while(next+1<path.length) {retained+=pedestrian.segmentCost(path[next],path[next+1]);if(!walkable(previous,path[next+1]) || pedestrian.segmentCost(previous,path[next+1])>retained*1.03)break;next++;}
       result.push(path[next]);previous=path[next];index=next+1;
     }
     return result;
@@ -140,5 +143,5 @@ export function createResidentNavigation(world) {
     const exit=interiorExit(room,start);if(!exit) return null;
     const rest=gridRoute(exit.at(-1),end);return rest ? [...exit,...rest] : null;
   };
-  return { route,canTravel,free,ground };
+  return { route,canTravel,canWalk:walkable,free,ground,pedestrian };
 }

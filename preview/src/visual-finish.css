@@ -162,3 +162,67 @@ button:disabled { cursor: not-allowed; }
   :root[data-theme] .auto-controls { grid-column: 1; grid-row: 1; }
   .walking-title { visibility: hidden; }
 }
+
+/* Jevica's character card: satin paper, restrained rose accents and real model portrait. */
+.visit-tools { width: 264px; gap: 12px; }
+:root[data-theme] .player-controls { padding: 18px; border-radius: 22px; }
+.player-identity { position: relative; display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+.player-portrait { flex: 0 0 64px; height: 80px; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, #ddd2c9, #afa5a4); outline: 1px solid #0000001a; box-shadow: 0 3px 8px #251c2112; }
+[data-theme=dark] .player-portrait { outline-color: #ffffff1a; }
+.player-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.player-portrait span { display: grid; place-items: center; height: 100%; color: #514357; font: 44px Georgia,serif; }
+.player-portrait [hidden] { display: none; }
+.player-controls .player-controls-title { margin: 0 0 4px; font-size: 9px; letter-spacing: .14em; }
+.player-controls #player-name { margin: 0; font: 400 30px/1.1 var(--font-display); letter-spacing: -.7px; color: var(--ink); }
+.player-controls #player-role { display: block; max-width: 125px; margin-top: 5px; font-size: 10px; color: var(--muted); line-height: 1.4; }
+.player-mode { position: absolute; bottom: -9px; right: 0; padding: 3px 7px; border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 9px; line-height: 1.3; border: 1px solid var(--line); }
+.player-settings { padding-top: 16px; border-top: 1px solid var(--line); }
+.player-settings summary { display: flex; align-items: center; justify-content: space-between; min-height: 28px; list-style: none; color: var(--ink); cursor: pointer; font-size: 11px; }
+.player-settings summary::-webkit-details-marker { display: none; }
+.player-settings summary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(-90deg); }
+.player-settings[open] summary svg { transform: none; }
+.player-controls label { margin: 12px 0 6px; font-size: 10px; }
+:root[data-theme] .player-controls select { padding: 9px 10px; background-color: var(--panel); }
+.player-controls #player-description { display: block; font-size: 11px; line-height: 1.6; margin: 9px 0 14px; }
+.player-actions { display: grid; gap: 8px; }
+:root[data-theme] .player-controls .player-actions button { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px #231c2108; }
+:root[data-theme] .player-controls #player-flight { margin-top: 0; background: linear-gradient(135deg,#a35075,#793552); color: #fff6fa; border-color: #a56582; }
+:root[data-theme] .player-controls #player-flight[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.player-controls kbd { font: 500 10px/1 system-ui,sans-serif; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 5px; opacity: .65; }
+.player-controls #player-status { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--line); font-size: 10px; line-height: 1.6; }
+.player-controls[aria-busy=true] .player-portrait { opacity: .5; }
+:root[data-theme] .player-controls button:hover { box-shadow: inset 0 0 0 1px var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .player-controls button:active:not(:disabled) { transform: scale(.96); }
+}
+@media (max-width: 700px) {
+  .visit-tools { width: auto; grid-template-columns: 1fr minmax(174px, 210px); }
+  :root[data-theme] .player-controls { padding: 12px; border-radius: 18px; }
+  .player-identity { gap: 9px; padding-bottom: 12px; }
+  .player-portrait { flex-basis: 40px; height: 50px; border-radius: 8px; }
+  .player-controls #player-name { font-size: 24px; }
+  .player-controls #player-role { display: none; }
+  .player-mode { font-size: 8px; }
+  .player-settings summary { min-height: 44px; }
+  .player-settings { padding-top: 10px; }
+  .player-controls #player-status { max-height: none; margin-top: 5px; }
+  .player-controls #player-description { font-size: 10px; }
+}
+@media (max-height: 600px) and (min-width: 701px) {
+  .visit-tools { width: auto; grid-template-columns: 218px 264px; }
+}
+.player-controls[data-form=dorothy] { --accent: #2f5fae; --accent-soft: #e4ebf7; }
+.player-controls[data-form=scarecrow] { --accent: #9a6d2b; --accent-soft: #f5ecdc; }
+.player-controls[data-form=tinman] { --accent: #5f6f80; --accent-soft: #e8edf2; }
+.player-controls[data-form=lion] { --accent: #b06a1f; --accent-soft: #f7e9d6; }
+.player-controls[data-form=witch] { --accent: #704980; --accent-soft: #ede5f1; }
+:root[data-theme=dark] .player-controls[data-form=dorothy] { --accent: #9cc0f0; --accent-soft: #2a3b52; }
+:root[data-theme=dark] .player-controls[data-form=scarecrow] { --accent: #e0b86a; --accent-soft: #4a3a22; }
+:root[data-theme=dark] .player-controls[data-form=tinman] { --accent: #b8c6d4; --accent-soft: #37414b; }
+:root[data-theme=dark] .player-controls[data-form=lion] { --accent: #f0b56a; --accent-soft: #4d3618; }
+:root[data-theme=dark] .player-controls[data-form=witch] { --accent: #d6b9e3; --accent-soft: #43324b; }
+:root[data-theme] .player-controls[data-form=dorothy] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#3d6fbf,#274a80); border-color: #4f7fc9; }
+:root[data-theme] .player-controls[data-form=scarecrow] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#b0832f,#7a5a1f); border-color: #c2953f; }
+:root[data-theme] .player-controls[data-form=tinman] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#7a8a9c,#4d5b6a); border-color: #8d9caa; }
+:root[data-theme] .player-controls[data-form=lion] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#c67a26,#8a5115); border-color: #d18a3a; }
+:root[data-theme] .player-controls[data-form=witch] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#675072,#3b2c45); border-color: #8b6c9b; }
