@@ -9,7 +9,11 @@ async page => {
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.charactersReady === '24');
   await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.reflections ?? 'null')?.captures >= 1);
   const toggle = page.locator('#panel-toggle');
+  // The rail sidebar shows one section at a time; select the tab a control lives in first.
+  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+  await rail('explore-section');
   await page.locator('#destination').selectOption({ label: 'Cartier' });
   await page.locator('#visit-destination').click();
   await page.waitForTimeout(2800);
@@ -18,6 +22,7 @@ async page => {
   await page.waitForTimeout(2300);
   check((await probe()).captures === first.captures, 'Standing still must reuse the probe');
   await page.screenshot({ path: 'output/playwright/storefront-lighting-clear.png' });
+  await rail('settings-section');
   await page.locator('#weather').selectOption('overcast');
   await page.waitForFunction(count => JSON.parse(document.querySelector('#canvas-host').dataset.reflections).captures > count, first.captures);
   const overcast = await probe();

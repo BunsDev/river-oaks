@@ -28,7 +28,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -402,7 +402,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     state.selectedId = id;
     chooser.value = id;
     currentTopic = null;
-    message = visitorGreeting(local, getPersona()) ?? conversationLine(local, 'greeting');
+    const reaction = visitorGreeting(local, getPersona()), greeting = conversationLine(local, 'greeting');
+    message = reaction ? `${reaction} ${greeting}` : greeting;
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;
