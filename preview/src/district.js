@@ -5,6 +5,8 @@ import { terrainHeight } from './geometry.js';
 import { physicalSurface } from './materials.js';
 import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.js';
 import { hedgeClusters } from './street-furniture.js';
+import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { buildStoreInteriors } from './store-interiors.js';
 
 // Signs are drawn once per tenant. Reference-guided frontages keep a backlit
 // plaque; every other tenant reads as pin-mounted lettering on the limestone,
@@ -88,9 +90,11 @@ export function buildDistrictBuildings(world) {
   const velvet = new THREE.MeshStandardMaterial({color:'#45413b',roughness:0.96});
   const furniture = new THREE.MeshStandardMaterial({color:'#775c40',roughness:0.65});
   const planter = new THREE.MeshStandardMaterial({color:'#b9b3a6',roughness:0.8});
-  for (const material of [stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter]) materials.add(material);
+  for (const [name, material] of Object.entries({ stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter })) { material.name = `facade-${name}`; materials.add(material); }
   const interiors = createRetailInteriors();
   interiors.materials.forEach(material => materials.add(material));
+  // Walk-in rooms replace the shallow alcoves wherever a boutique plan covers a bay.
+  const rooms = storeRoomsFor(world), roomById = new Map(rooms.map(room => [room.storeId, room])), doors = [];
   const displays=[];
   const batches = new Map();
   const part = (material, position, scale, yaw = 0, buildingIndex = -1, pitch = 0, geometry = box) => {
@@ -141,7 +145,7 @@ export function buildDistrictBuildings(world) {
       const bays = Math.floor(length / 3.2), span = length / Math.max(1, bays);
       const entries=world.stores.filter(store=>store.building_id===building.id).map(store=>{
         const sx=store.facade[0]-a[0],sy=store.facade[1]-a[1];
-        return {along:(sx*dx+sy*dy)/length,distance:Math.abs(sx*dy-sy*dx)/length,name:store.name};
+        return {storeId:store.id,along:(sx*dx+sy*dy)/length,distance:Math.abs(sx*dy-sy*dx)/length,name:store.name};
       }).filter(entry=>entry.distance<0.2 && entry.along>=0 && entry.along<=length);
       const entryAt=offset=>entries.some(entry=>Math.abs(entry.along-offset)<1.15);
       for (let k = 0; k < bays; k++) {
@@ -149,6 +153,14 @@ export function buildDistrictBuildings(world) {
         const nx=winding*dy/length, nz=winding*dx/length;
         const at=(depth,height)=>[x-nx*depth,base+height,z-nz*depth];
         const along=(point,offset)=>{ const p=[...point]; p[0]+=dx/length*offset; p[2]-=dy/length*offset; return p; };
+        // A boutique room behind this bay: its own storefront keeps the glazing;
+        // a room fronting another edge turns this bay into solid party wall.
+        const inE = -nx, inN = nz;
+        const bay0 = [a[0]+dx*k/bays+inE*1.4, a[1]+dy*k/bays+inN*1.4], bay1 = [a[0]+dx*(k+1)/bays+inE*1.4, a[1]+dy*(k+1)/bays+inN*1.4];
+        const open = retailHeight ? uncoveredBay(rooms, bay0, bay1) : [0, 1];
+        const cover = retailHeight && (!open || open[0] > 0 || open[1] < 1) ? coveringRoom(rooms, bay0, bay1) : null;
+        const fronting = !cover || entries.some(entry => entry.storeId === cover.storeId);
+        const shifted = (depth, height, fraction) => { const p = at(depth, height); const offset = (fraction - 0.5) * span; p[0] += dx / length * offset; p[2] -= dy / length * offset; return p; };
         // Cut the entry out of this single outward-facing sheet, so the door
         // does not reflect twice through a second pane behind its opening.
         let intervals = [[k * span + 0.19, (k + 1) * span - 0.19]];
@@ -157,6 +169,16 @@ export function buildDistrictBuildings(world) {
           if (hi <= left || lo >= right) return [[left, right]];
           return [[left, Math.min(right, lo)], [Math.max(left, hi), right]].filter(([a, b]) => b - a > 0.05);
         });
+        if (!fronting) {
+          const [t0, t1] = open ?? [0, 0];
+          const solid = [[0, t0], [t1, 1]].filter(([p, q]) => q - p > 0.01);
+          for (const [p, q] of solid) if (span * (q - p) > 0.1) part(stone, shifted(0.15, 2.25, (p + q) / 2), [span * (q - p) + 0.02, 3.8, 0.3], yaw, index);
+          intervals = intervals.flatMap(([left, right]) => {
+            const lo = k * span + t0 * span, hi = k * span + t1 * span;
+            const kept = [[Math.max(left, lo), Math.min(right, hi)]].filter(([a, b]) => b - a > 0.05);
+            return kept;
+          });
+        }
         for (const [left, right] of intervals) {
           const offset = (left + right) / 2 - t * length, width = right - left;
           // Honed stone bulkhead, glazing sheet, and a bronze frame with real
@@ -167,42 +189,49 @@ export function buildDistrictBuildings(world) {
           part(bronzeFrame, along(at(0.10, 0.52), offset), [width + 0.04, 0.05, 0.12], yaw, index);
           for (const side of [-1, 1]) part(bronzeFrame, along(at(0.10, 2.29), offset + side * width / 2), [0.05, 3.6, 0.12], yaw, index);
         }
-        if(!entryAt(t*length)) part(dark, [x, base+2.29, z], [0.045, 3.55, 0.16], yaw, index);
-        part(dark, at(0.10,3.5), [span-0.3, 0.05, 0.16], yaw, index);
+        const solidCenter = !fronting && (!open || open[0] > 0.5 || open[1] < 0.5);
+        if(!entryAt(t*length) && !solidCenter) part(dark, [x, base+2.29, z], [0.045, 3.55, 0.16], yaw, index);
+        if(!solidCenter) part(dark, at(0.10,3.5), [span-0.3, 0.05, 0.16], yaw, index);
         if(!entryAt(k*span)) {
           part(material, [a[0]+dx*k/bays, base+2.25, -(a[1]+dy*k/bays)], [0.3, 4.1, 0.54], yaw, index);
           part(reveal, [a[0]+dx*k/bays, base+2.25, -(a[1]+dy*k/bays)], [0.36, 4.1, 0.02], yaw, index);
         }
         // Recessed downlights in the fascia soffit wash the display glass at dusk.
-        for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
+        if(!solidCenter) for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
         if (retailHeight) {
+          if (open) {
+            const [t0, t1] = open, width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
+            const atc=(depth,height)=>{const p=at(depth,height);p[0]+=dx/length*shift;p[2]-=dy/length*shift;return p;};
             const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
-          part(floor,at(1.35,0.28),[span,0.10,2.7],yaw,index);
-          part(interiors.forCategory(nearest?.category),at(2.7,2.25),[span,4.0,0.12],yaw,index);
-          part(interior,at(1.35,4.16),[span,0.12,2.7],yaw,index);
-          // Warm display strips, ceiling spots and plinths reveal depth through recessed glass.
-          part(light,at(1.35,3.98),[span-0.5,0.025,0.06],yaw,index);
-          for (const offset of [-span * 0.3, 0, span * 0.3]) part(spot, along(at(1.6, 4.09), offset), [0.12, 0.02, 0.12], yaw, index, 0, disc);
-          if(!entryAt(t*length)) {
-            if(['restaurant','ice_cream'].includes(nearest?.category)) {
-              part(furniture,at(1.85,1.04),[1.1,0.055,0.72],yaw,index);
-              part(dark,at(1.85,0.65),[0.06,0.75,0.52],yaw,index);
-              for(const side of [-1,1]) {
-                const seat=at(1.85,0.74);seat[0]+=dx/length*0.8*side;seat[2]-=dy/length*0.8*side;
-                part(furniture,seat,[0.43,0.06,0.43],yaw,index);
-                const back=[...seat];back[0]+=dx/length*0.2*side;back[2]-=dy/length*0.2*side;back[1]+=0.25;
-                part(furniture,back,[0.05,0.5,0.43],yaw,index);
-                const leg=[...seat];leg[1]-=0.23;part(dark,leg,[0.04,0.46,0.35],yaw,index);
+            part(floor,atc(1.35,0.28),[width,0.10,2.7],yaw,index);
+            part(interiors.forCategory(nearest?.category),atc(2.7,2.25),[width,4.0,0.12],yaw,index);
+            part(interior,atc(1.35,4.16),[width,0.12,2.7],yaw,index);
+            // Warm display strips, ceiling spots and plinths reveal depth through recessed glass.
+            part(light,atc(1.35,3.98),[Math.max(0.3,width-0.5),0.025,0.06],yaw,index);
+            for (const offset of (width > 2.4 ? [-width * 0.3, 0, width * 0.3] : [0])) part(spot, along(atc(1.6, 4.09), offset), [0.12, 0.02, 0.12], yaw, index, 0, disc);
+            if(!entryAt(t*length) && width>1.8) {
+              if(['restaurant','ice_cream'].includes(nearest?.category)) {
+                part(furniture,atc(1.85,1.04),[1.1,0.055,0.72],yaw,index);
+                part(dark,atc(1.85,0.65),[0.06,0.75,0.52],yaw,index);
+                for(const side of [-1,1]) {
+                  const seat=atc(1.85,0.74);seat[0]+=dx/length*0.8*side;seat[2]-=dy/length*0.8*side;
+                  part(furniture,seat,[0.43,0.06,0.43],yaw,index);
+                  const back=[...seat];back[0]+=dx/length*0.2*side;back[2]-=dy/length*0.2*side;back[1]+=0.25;
+                  part(furniture,back,[0.05,0.5,0.43],yaw,index);
+                  const leg=[...seat];leg[1]-=0.23;part(dark,leg,[0.04,0.46,0.35],yaw,index);
+                }
+              } else {
+                part(display,atc(1.75,0.86),[0.8,1.05,0.75],yaw,index);
+                displays.push({position:atc(1.75,1.4),yaw:yaw+(winding<0?Math.PI:0),category:nearest?.category,jewelry:['jewelry','fashion_accessories'].includes(nearest?.category)});
               }
-            } else {
-              part(display,at(1.75,0.86),[0.8,1.05,0.75],yaw,index);
-              displays.push({position:at(1.75,1.4),yaw:yaw+(winding<0?Math.PI:0),category:nearest?.category,jewelry:['jewelry','fashion_accessories'].includes(nearest?.category)});
             }
-          }
-          for(const side of [-1,1]) {
-            if(entryAt((k+(side>0?1:0))*span)) continue;
-            const p=at(1.35,2.2);p[0]+=dx/length*span/2*side;p[2]-=dy/length*span/2*side;
-            part(interior,p,[0.08,4.0,2.7],yaw,index);
+            for(const side of [-1,1]) {
+              if(entryAt((k+(side>0?1:0))*span)) continue;
+              // A room wall already closes the side that borders a boutique.
+              if(side<0 ? t0>0.001 : t1<0.999) continue;
+              const p=at(1.35,2.2);p[0]+=dx/length*span/2*side;p[2]-=dy/length*span/2*side;
+              part(interior,p,[0.08,4.0,2.7],yaw,index);
+            }
           }
         }
         // Upper storeys: punched windows with a projecting limestone surround,
@@ -240,9 +269,22 @@ export function buildDistrictBuildings(world) {
     const entryFrame = isHarry ? stone : isCartier || isVanCleef ? gold : dark;
     for(const side of [-1,1]) part(entryFrame,[x+nx*0.15-ny*side*0.82,base+1.8,-north-ny*0.15-nx*side*0.82],[0.065,3.2,0.16],yaw);
     if (!isHarry) part(entryFrame,[x+nx*0.15,base+3.38,-north-ny*0.15],[1.7,0.06,0.16],yaw);
-    part(glass, [x+nx*0.26, base+1.8, -north-ny*0.26], [1.5, 3.0, 0.09], yaw);
-    part(entryFrame, [x+nx*0.24, base+1.8, -north-ny*0.24], [0.04, 3.0, 0.08], yaw);
-    for (const side of [-1, 1]) part(gold, [x+nx*0.36-ny*side*0.12, base+1.15, -north-ny*0.36-nx*side*0.12], [0.03, 0.9, 0.03], yaw);
+    const room = roomById.get(store.id);
+    if (room) {
+      // A single pivot leaf that swings inward as a visitor approaches, so the
+      // walk-in room stays reachable while the closed door reflects the street.
+      const pivot = new THREE.Group();
+      pivot.position.set(x+ny*0.85+nx*0.2, base, -north+nx*0.85-ny*0.2); pivot.rotation.y = yaw;
+      const leaf = new THREE.Mesh(pane, glass); leaf.position.set(0.85, 1.8, 0); leaf.scale.set(1.7, 3.0, 1); leaf.userData.storeId = store.id;
+      const pull = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); pull.position.set(1.52, 1.45, 0.06); pull.scale.set(0.03, 0.9, 0.03); pull.userData.storeId = store.id;
+      const rail = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); rail.position.set(0.85, 0.32, 0); rail.scale.set(1.68, 0.06, 0.05); rail.userData.storeId = store.id;
+      pivot.add(leaf, pull, rail); pivot.userData.storeId = store.id; group.add(pivot);
+      doors.push({ pivot, yaw, angle: 0, hinge: new THREE.Vector3(x+nx*0.2, base+1.2, -north-ny*0.2) });
+    } else {
+      part(glass, [x+nx*0.26, base+1.8, -north-ny*0.26], [1.5, 3.0, 0.09], yaw);
+      part(entryFrame, [x+nx*0.24, base+1.8, -north-ny*0.24], [0.04, 3.0, 0.08], yaw);
+      for (const side of [-1, 1]) part(gold, [x+nx*0.36-ny*side*0.12, base+1.15, -north-ny*0.36-nx*side*0.12], [0.03, 0.9, 0.03], yaw);
+    }
     // Threshold, entrance mat and a recessed downlight over every door.
     part(bulkhead, [x+nx*0.55, base+0.16, -north-ny*0.55], [1.9, 0.03, 0.9], yaw);
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
@@ -313,14 +355,30 @@ export function buildDistrictBuildings(world) {
   const dummy = new THREE.Object3D();
   for (const { material, geometry, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
+    mesh.name = `facade:${material.name}`;
     mesh.userData.buildingIndices = parts.map(part => part.buildingIndex);
     parts.forEach((part, index) => { dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix); });
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
-  group.userData.reflectionMaterials = [glass, upperGlass];
-  group.userData.reflectionExclusions = group.children.filter(mesh => mesh.material === glass || mesh.material === upperGlass);
+  const reflectionMaterials = [glass, upperGlass];
+  const interiorGroup = buildStoreInteriors(rooms, { atlas: interiors, reflectionMaterials });
+  group.userData.reflectionMaterials = reflectionMaterials;
+  const reflective = [];
+  for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });
+  group.userData.reflectionExclusions = reflective;
+  group.userData.interiors = interiorGroup;
+  group.userData.rooms = rooms;
+  group.userData.updateDoors = (positions, delta) => {
+    const step = 1 - Math.exp(-5 * Math.min(delta, 0.1));
+    for (const door of doors) {
+      const near = positions.some(position => position && position.distanceToSquared(door.hinge) < 2.8 * 2.8);
+      door.angle += ((near ? 1.5 : 0) - door.angle) * step;
+      door.pivot.rotation.y = door.yaw + door.angle;
+    }
+  };
   group.add(buildRetailDisplays(displays));
   group.userData.dispose = () => {
+    interiorGroup.userData.dispose();
     interiors.dispose();
     group.traverse(item => {
       if (item.isInstancedMesh) item.dispose();

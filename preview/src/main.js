@@ -11,6 +11,8 @@ import { createCommunityPanel } from './community-ui.js';
 import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildLocals } from './locals.js';
+import { buildStorePeople } from './store-people.js';
+import { storeRoomsFor } from './store-rooms.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
@@ -27,7 +29,7 @@ setupSidebar();
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup;
+let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let layers = {}, loading = false;
 let lastRenderStats = 0;
@@ -42,6 +44,9 @@ const clock = new THREE.Timer();
 const sunOffset = new THREE.Vector3();
 const shadowCenter = new THREE.Vector3();
 const reflectionPosition = new THREE.Vector3();
+// A small pool of warm point lights follows the visitor into the nearest boutiques.
+const storeLights = Array.from({ length: 8 }, () => { const light = new THREE.PointLight('#ffd9ae', 0, 10, 2); light.castShadow = false; scene.add(light); return light; });
+const walkerPosition = new THREE.Vector3();
 
 function showError(message) {
   const panel = $('#loading');
@@ -81,8 +86,8 @@ function initializeRenderer() {
     } else walking.lookAt(local.position);
   } });
   $('.panel-scroll').prepend($('#community-section'));
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals });
-  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onAtmosphere: updateAtmosphere });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore });
+  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
@@ -202,6 +207,8 @@ function populateWorld(data) {
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(localsGroup);
     localsGroup?.userData.dispose?.();
+    worldGroup.remove(interiorsLayer);
+    storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     worldGroup.traverse((item) => {
       item.userData.texture?.dispose();
       item.geometry?.dispose();
@@ -215,7 +222,10 @@ function populateWorld(data) {
   buildingMesh = buildDistrictBuildings(data);
   community.setWorld(data);
   localsGroup = buildLocals(data, community.state.locals);
-  layers = { ground: buildGround(data), roads: buildRoads(data), buildings: buildingMesh, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
+  storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion });
+  interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
+  interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
+  layers = { ground: buildGround(data), roads: buildRoads(data), buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(buildDistrictDetail(data));
@@ -225,7 +235,7 @@ function populateWorld(data) {
   scene.add(worldGroup);
   storefrontReflections = createStorefrontReflections({
     renderer, scene, materials: buildingMesh.userData.reflectionMaterials,
-    excluded: [...buildingMesh.userData.reflectionExclusions, localsGroup,
+    excluded: [...buildingMesh.userData.reflectionExclusions, localsGroup, storePeople,
       ...scene.children.filter(child => child !== worldGroup && !child.isLight)],
   });
   updateAtmosphere();
@@ -248,6 +258,28 @@ function populateWorld(data) {
 function enterWalk(position, lookAt, pitch = 0) {
   if (!world || !walking) return;
   walking.enter(world, position, lookAt, pitch);
+}
+
+function enterStore(store) {
+  const room = storeRoomsFor(world).find(item => item.storeId === store.id);
+  if (!room) return arriveAtStore(store);
+  const [east, north] = room.toWorld(0, 2.4), [lookEast, lookNorth] = room.toWorld(room.center, room.depth - 1);
+  districtUI.select(store.id);
+  enterWalk([east, north, room.floor], [lookEast, lookNorth], 0.02);
+}
+
+function leaveStore(store) {
+  // Step out onto the threshold, facing the door you just came through.
+  const [x, north, base] = store.facade, [nx, ny] = store.outward;
+  enterWalk([x + nx * 2.6, north + ny * 2.6, base], [x, north], 0.05);
+}
+
+function describeInterior(store) {
+  const room = world ? storeRoomsFor(world).find(item => item.storeId === store.id) : null;
+  if (!room) return 'Exterior viewing destination.';
+  const { label, staff, guests, mannequins, highlights } = room.summary;
+  const people = [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
+  return `${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Imagined interior, not a photographed store.`;
 }
 
 function arriveAtStore(store) {
@@ -315,6 +347,17 @@ async function loadWorld() {
 }
 
 
+function updateStoreLights() {
+  const positions = interiorsLayer?.visible ? buildingMesh?.userData.interiors?.userData.lightPositions ?? [] : [];
+  const picked = [];
+  for (const item of positions) { const d2 = item.position.distanceToSquared(camera.position); if (d2 < 32 * 32) picked.push([d2, item]); }
+  picked.sort((left, right) => left[0] - right[0]);
+  storeLights.forEach((light, index) => {
+    const hit = picked[index];
+    if (hit) { light.position.copy(hit[1].position); light.intensity = 10; } else light.intensity = 0;
+  });
+}
+
 function followSunShadow() {
   if (!world) return;
   const target = camera.position;
@@ -335,6 +378,13 @@ function render(now) {
   community?.update(delta, now);
   if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId);
   layers.trees?.userData.update?.(camera.position);
+  if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now);
+  if (buildingMesh?.userData.updateDoors) {
+    const visitor = walking?.active ? walking.getPosition() : null;
+    if (visitor) walkerPosition.set(visitor[0], visitor[2], -visitor[1]);
+    buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
+  }
+  updateStoreLights();
   walking?.update(delta, now);
   followSunShadow();
   if (storefrontReflections && environmentAssets) {
