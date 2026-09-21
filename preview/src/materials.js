@@ -24,7 +24,9 @@ function texture(name, channel) {
 }
 
 // Geometry UVs are measured in meters. Instanced facade UVs additionally account for each part's scale.
-export function physicalSurface(name, { tileSize = 4, instanced = false, ...options } = {}) {
+// Optional low-frequency tone variation breaks the visible repeat of a tiled
+// texture over large ground planes; it multiplies albedo only.
+export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, ...options } = {}) {
   const arm = texture(name, 'arm');
   const material = new THREE.MeshStandardMaterial({
     map: texture(name, 'color'), normalMap: texture(name, 'normal'),
@@ -34,6 +36,17 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, ...opti
   });
   material.userData.sharedTextures = true;
   material.onBeforeCompile = (shader) => {
+    if (variation > 0) shader.fragmentShader = shader.fragmentShader
+      .replace('void main() {', `float roHash(vec2 cell) { return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453); }
+      float roValueNoise(vec2 p) {
+        vec2 cell = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(roHash(cell), roHash(cell + vec2(1.0, 0.0)), f.x), mix(roHash(cell + vec2(0.0, 1.0)), roHash(cell + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      void main() {`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+      vec2 roMeters = vMapUv * ${tileSize.toFixed(4)};
+      float roNoise = 0.25 * roValueNoise(roMeters / 3.1) + 0.4 * roValueNoise(mat2(0.83, -0.56, 0.56, 0.83) * roMeters / 19.0) + 0.35 * roValueNoise(mat2(0.31, 0.95, -0.95, 0.31) * roMeters / 131.0);
+      diffuseColor.rgb *= 1.0 + ${variation.toFixed(4)} * (roNoise - 0.5);`);
     const multiplier = instanced ? `
       vec3 roScale = vec3(1.0);
       #ifdef USE_INSTANCING
@@ -60,7 +73,7 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, ...opti
         vAoMapUv = (aoMapTransform * vec3(roUv, 1.0)).xy;
       #endif`);
   };
-  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}`;
+  material.customProgramCacheKey = () => `river-oaks-metric-uv:${tileSize}:${instanced}:${variation}`;
   return material;
 }
 
