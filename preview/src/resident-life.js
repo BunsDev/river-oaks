@@ -16,7 +16,6 @@ export function createResidentLife(world,state,routeProvider=null) {
   // These small awnings exist in the interpreted storefront mesh, not a shelter registry.
   const shelters=(world.stores ?? []).map(store=>({id:store.id,name:store.name,position:[store.facade[0]+store.outward[0]*0.9,store.facade[1]+store.outward[1]*0.9]})).filter(stop=>navigation.free(stop.position));
   state.locals.forEach((local,index)=>{
-    local.species=alienSpeciesFor(local.id).name;
     if(!local.indoor){const point=navigation.sidewalkPoint(local.position);local.position=[...point,navigation.ground(point)];}
     local.life={speed:0,distance:0,heading:index*2.4,status:'resting',action:'continue',source:'local_rules',route:[],routeVersion:0,destination:null,waitUntil:0.5+index*0.17,reactionUntil:0,visits:0,blocked:false};
   });
