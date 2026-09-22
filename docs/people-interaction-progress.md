@@ -222,6 +222,30 @@ The live district check also selected six walking rigs, held each conversation,
 and resumed movement without relocating the visitor. Results are recorded in
 [`resident-gesture-transitions.json`](../data/reports/resident-gesture-transitions.json).
 
+## Native encounter holds (September 22)
+
+The native world previously selected residents using horizontal distance alone
+and let them keep walking during greetings. Selection now requires talking range,
+compatible height and an unobstructed eye-level trace against static geometry. A
+blocked nearest resident does not hide a farther visible candidate.
+
+A greeting holds the selected resident in place for up to ten seconds, turns them
+toward the visitor at a bounded rate, and preserves their route target/direction.
+E closes the encounter; leaving talking reach, new occlusion, expiry and pawn
+shutdown release it. Inference callbacks skip action and route writes for the
+held resident. The existing route resumes after release.
+
+The engine regression failed four behavioral assertions before the implementation:
+position hold, floor separation, wall rejection and visible-neighbor selection.
+The final contract suite passes 13 tests, including those cases plus release,
+route-endpoint preservation and bounded turn checks. Editor and Game Development
+builds pass. Results and hashes are in
+[`native-encounter-holds.json`](../data/reports/native-encounter-holds.json).
+These are native world/collision tests under NullRHI; actual keyboard input,
+pawn-destruction acceptance, in-flight HTTP timing and rendered native conversation
+acceptance remain unverified. Native dialogue is still the basic authored greeting,
+and native worker-role and motion parity remain open.
+
 ## Still required for the full goal
 
 - Broaden sampled hand/body clearance to continuous motion, seated contacts and

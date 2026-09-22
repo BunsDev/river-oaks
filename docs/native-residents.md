@@ -94,6 +94,10 @@ Stationary residents retain the source rig's relaxed A-pose. This is prototype
 locomotion, without authored animation clips, foot IK or
 collision-aware foot placement. Source hair transparency is rendered with a
 two-sided masked material. Native interactions still provide a basic greeting;
-the browser has the fuller conversation interface. The earlier
+the browser has the fuller conversation interface. Native greetings now hold the
+selected resident, check visible talking reach and release on close, expiry or
+separation. The new world/collision contract tests cover that behavior; actual
+keyboard and rendered conversation acceptance remain open. See the
+[interaction progress record](people-interaction-progress.md#native-encounter-holds-september-22). The earlier
 [street-level acceptance limits](street-level-plan.md#verification) for native
 input/collision and isolated SSAO image comparison still apply.
