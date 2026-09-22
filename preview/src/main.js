@@ -112,8 +112,12 @@ function initializeRenderer() {
   visitTools.className = 'visit-tools';
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'), invasion.panel, $('.auto-controls'));
+  visitTools.append($('.player-controls'), invasion.panel);
   $('#viewport').append(visitTools);
+  // The auto visit belongs to the whole visit: under the title on wide screens, atop the card grid on phones.
+  const phoneLayout = window.matchMedia('(max-width: 700px)');
+  const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
+  placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
