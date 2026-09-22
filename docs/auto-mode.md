@@ -27,7 +27,7 @@ The bridge offers wait only when no other eligible action exists. Uncertainty st
 
 The visitor route worker includes boutique interiors. A bounded visibility graph around furniture corners complements the exterior grid. The controller turns in place before moving at corners; tests physically walk from all 30 boutique spawn points to their exits. Unreachable destinations are excluded for 60 seconds and stalled walking is interrupted after four seconds.
 
-The left rail has three labeled, keyboard-accessible tabs: teal **People**, pink **Places**, amber **Scene**. Only one panel is exposed at a time. Voice, layer and source details stay collapsed; the rail remains readable in dark mode and on mobile. Reading it does not cancel auto. Unsupported floating promenade ornaments were removed; facade-mounted details remain.
+The left rail has three labeled, keyboard-accessible tabs: teal **People**, pink **Places**, amber **Settings**. Only one panel is exposed at a time. Voice, layer and source details stay collapsed; the rail remains readable in dark mode and on mobile. Reading it does not cancel auto. Unsupported floating promenade ornaments were removed; facade-mounted details remain.
 
 ## Running and evaluating
 
