@@ -80,6 +80,7 @@ export function buildLocals(world, locals) {
       const action=local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
       if(person.userData.avatar) {
         if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
+        else person.userData.avatar.suspend();
         return;
       }
       const arm = person.userData.greetingArm;
