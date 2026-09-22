@@ -1,4 +1,4 @@
-"""Loopback-only bridge. API keys never enter the Unreal project or agent packets."""
+"""Loopback bridge. Credentials stay out of Unreal assets and agent packets."""
 
 import asyncio
 import json
@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 
 from .agents import DecisionEngine, Snapshot
@@ -52,6 +52,56 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None, au
     app = FastAPI(title="River Oaks decision bridge", lifespan=lifespan)
     app.state.engine = engine or DecisionEngine()
     app.state.auto_engine = auto_engine or AutoEngine()
+    original_keys = None
+
+    def jev_settings():
+        configured = bool(app.state.engine.api_key or app.state.auto_engine.api_key)
+        source = "manual" if original_keys is not None else "server" if configured else "none"
+        return JSONResponse(
+            {"source": source, "configured": configured}, headers={"Cache-Control": "no-store"}
+        )
+
+    @app.get("/v1/settings/jev")
+    async def get_jev_settings():
+        return jev_settings()
+
+    @app.put("/v1/settings/jev")
+    async def override_jev_key(request: Request):
+        nonlocal original_keys
+        if request.headers.get("content-type", "").split(";", 1)[0] != "application/json":
+            raise HTTPException(415, "Use application/json")
+        # Validate without reflecting credential values in FastAPI validation errors.
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > 8192:
+                raise HTTPException(400, "Invalid API key")
+        try:
+            payload = json.loads(body)
+        except (ValueError, UnicodeError):
+            raise HTTPException(400, "Invalid API key") from None
+        if not isinstance(payload, dict) or set(payload) != {"api_key"}:
+            raise HTTPException(400, "Invalid API key")
+        key = payload["api_key"]
+        if not isinstance(key, str):
+            raise HTTPException(400, "Invalid API key")
+        key = key.strip()
+        if not 1 <= len(key) <= 4096 or not all(33 <= ord(char) <= 126 for char in key):
+            raise HTTPException(400, "Invalid API key")
+        if original_keys is None:
+            original_keys = (app.state.engine.api_key, app.state.auto_engine.api_key)
+        app.state.engine.api_key = key
+        app.state.auto_engine.api_key = key
+        return jev_settings()
+
+    @app.delete("/v1/settings/jev")
+    async def clear_jev_override():
+        nonlocal original_keys
+        if original_keys is not None:
+            app.state.engine.api_key, app.state.auto_engine.api_key = original_keys
+            original_keys = None
+        return jev_settings()
+
     busy = asyncio.Lock()
     local_voice = voice or LocalVoice()
 

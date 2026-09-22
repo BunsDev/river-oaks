@@ -22,7 +22,7 @@ Residents have consistent local identities, remember encounters, walk between pu
 
 Community dispatches recruit a visible resident carrying supplies. Use **Find volunteer** to watch them reach the recipient and help on site; only then is the request resolved. Conversations and storms can delay the visit, while an inaccessible route returns unused capacity.
 
-**Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Scene**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
+**Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
 The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Alien, Witch and Jevica are the only playable forms. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
@@ -46,7 +46,7 @@ uv run --extra voice river-oaks serve
 
 In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 121 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. One job at a time and a bounded cache keep speech out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
-The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a server-side key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
+The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
 ## Optional source-data tooling
 
@@ -84,6 +84,13 @@ See [verification results](data/reports/verification.md), [GIS layout](data/repo
 ## Use Jev
 
 Copy `.env.example` to the ignored `.env` file and set `TYPESAFE_API_KEY` locally. Keep it out of Unreal assets and logs.
+
+You can also open **Settings → Jev API key** in the preview and select **Use key**.
+This manual override applies to resident reactions and auto visits in the running
+local bridge. It stays in server memory until the bridge restarts. The browser
+does not save it, and the bridge never returns the key. Select **Use server key**
+to remove the override and restore the original server configuration. A configured
+key is validated by Jev on the next inference request.
 
 ```sh
 uv run --env-file .env river-oaks serve

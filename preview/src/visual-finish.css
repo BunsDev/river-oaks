@@ -276,6 +276,13 @@ button:disabled { cursor: not-allowed; }
 @media (min-width: 701px) and (max-width: 1100px) { :root[data-theme] #viewport > .auto-controls { top: 96px; } }
 @media (max-width: 900px) { body:not(.panel-collapsed) #viewport > .auto-controls { visibility: hidden; } }
 @media (max-height: 600px) and (min-width: 701px) { :root[data-theme] #viewport > .auto-controls { top: 20px; left: 76px; } }
+@media (min-width: 901px) {
+  /* Keep auto visit reachable beside the open settings and people rail. */
+  :root[data-theme] body:not(.panel-collapsed) #viewport > .auto-controls { left: 348px; top: 124px; width: min(264px, calc(100% - 642px)); }
+}
+@media (min-width: 901px) and (max-height: 600px) {
+  body:not(.panel-collapsed) .visit-tools { display: flex; width: 264px; }
+}
 @media (max-width: 700px) {
   .invasion-counts { flex-direction: column; gap: 6px; }
   .invasion-counts > span { white-space: nowrap; }
