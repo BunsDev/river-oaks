@@ -303,6 +303,32 @@ movement, native worker routines, full native dialogue, and broader rendered
 motion acceptance still need work. The rendered sample suggests a possible
 ground-contact gap that must be measured before claiming planted feet.
 
+### Native support height (September 22)
+
+An engine probe confirmed that all 24 resident roots placed their soles 5 cm
+above the old collision ground. Roads had no query collision; their visible top
+was 4 cm above the nominal sole height. The simulation now samples static support
+before spawning residents and accepting movement. It adjusts only root Z, accepts
+steps within 30 cm and surfaces up to 45 degrees, and rejects unsupported movement.
+Road query collision uses the existing rendered geometry. Conversation holds keep
+the accepted root even if the supporting surface changes during the greeting.
+
+The real-district check is opt-in under `RiverOaks.NativeAssets`, because its
+manifest is generated locally. Synthetic floor, curb, upper-floor, unsupported
+edge, excessive-step, steep-surface, and held-root cases remain in the source-only
+contract suite. Six-profile shoe checks measure standing bind geometry, with leg
+bones in their reference pose. This does not establish moving-foot contact or
+planted feet on slopes. Foot IK, weight transfer, and curb step animation remain
+required for the full motion goal.
+
+Verification passed 23 native tests and both Development builds. The 21 source-only
+contracts also passed with the generated manifest temporarily absent. The district
+probe now measures zero gap at all 24 spawn roots; all six resting shoe meshes
+meet their expected ground height. A rendered `woman-casual` sample confirms road
+contact and E open/close. Python passed 98 tests, and Ruff check/format passed.
+See [`native-ground-contact.json`](../data/reports/native-ground-contact.json)
+for measurements, source hashes, local receipts, and the one-profile visual limit.
+
 ## Still required for the full goal
 
 - Broaden sampled hand/body clearance to continuous motion, seated contacts and
