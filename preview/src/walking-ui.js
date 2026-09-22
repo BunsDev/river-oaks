@@ -216,6 +216,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-place').textContent = room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
+      hud.dataset.yaw = state.yaw.toFixed(3);
       hud.dataset.flying=String(flight.active);hud.dataset.altitude=flight.altitude.toFixed(2);
       hud.dataset.position = JSON.stringify(state.position);
     },

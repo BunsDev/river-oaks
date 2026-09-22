@@ -22,6 +22,7 @@ import { buildStreetFurniture } from './street-furniture.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
+import { createInvasionControls } from './invasion-ui.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -36,7 +37,7 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
-let autoControls, playerAvatar;
+let autoControls, playerAvatar, invasion;
 let layers = {}, loading = false;
 let lastRenderStats = 0;
 
@@ -109,7 +110,9 @@ function initializeRenderer() {
   // Let content height determine spacing, including wrapped visit status text.
   const visitTools = document.createElement('div');
   visitTools.className = 'visit-tools';
-  visitTools.append($('.player-controls'), $('.auto-controls'));
+  invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
+  playerAvatar.onChange(() => invasion.refreshGate());
+  visitTools.append($('.player-controls'), invasion.panel, $('.auto-controls'));
   $('#viewport').append(visitTools);
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
@@ -414,6 +417,7 @@ function render(now) {
   updateStoreLights();
   autoControls?.update(delta);
   walking?.update(delta, now);
+  invasion?.update(delta, now);
   playerAvatar?.update(now, camera);
   followSunShadow();
   if (storefrontReflections && environmentAssets) {
