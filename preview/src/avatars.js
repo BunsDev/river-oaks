@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { residentStride } from './gait.js';
+import { createResidentGestures } from './resident-gestures.js';
 import { relaxResidentArms } from './avatar-stance.js';
 import { createFootPlacement } from './foot-placement.js';
 
@@ -106,6 +107,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   // character's horizontal axis, expressed in each joint's rest coordinates.
   const gaitAxes=new Map(bones.map(bone=>[bone,avatar.axes.get(bone).x]));
   const noMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const gestures=createResidentGestures({reducedMotion:noMotion});
   let previousTime=null,walkingSpeed=0;
   return {
     object:root, profile, rig:avatar,
@@ -116,6 +118,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const dt=previousTime===null?0:Math.min(0.08,Math.max(0,(now-previousTime)/1000));previousTime=now;
       walkingSpeed+=((locomotion?.speed ?? 0)-walkingSpeed)*(1-Math.exp(-18*dt));
       const gait=residentStride(locomotion?.distance ?? 0,walkingSpeed);
+      const gesture=gestures.update(action,dt,t);
       const strength = Math.min(1,walkingSpeed/0.65);
       model.position.y = baseY - 0.018 - walkingDrop*strength + Math.cos((locomotion?.distance ?? 0)/1.1*Math.PI*4)*0.008*strength;
       for (const bone of bones) {
@@ -123,17 +126,12 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         if(noMotion && !locomotion?.speed) continue;
         if(gait[bone.name] && !/^(thigh|calf|foot)_/.test(bone.name)) {adjustment.setFromAxisAngle(gaitAxes.get(bone),gait[bone.name]);bone.quaternion.multiply(adjustment);}
         const angle=bone.name==='head' ? Math.sin(t*(speaking?4:0.7))*(speaking?0.025:0.008)
-          : bone.name==='spine_03' ? Math.sin(t*1.3)*0.006
-          : bone.name==='lowerarm_r' && action==='greet' ? -0.32+Math.sin(t*2)*0.025 : 0;
+          : bone.name==='spine_03' ? Math.sin(t*1.3)*0.006 : 0;
         adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
       }
-      if (['amazed','startled','enchanted'].includes(action) && !noMotion) {
-        const startled = action === 'startled';
-        const poses = { upperarm_r: [-0.7,0,0], lowerarm_r: [0,0,1.35], upperarm_l: [startled?-0.7:-0.25,0,0], lowerarm_l: [0,0,startled?1.35:0.7], head: [startled?-0.1:0.04,0,0] };
-        for (const bone of bones) {
-          const pose=poses[bone.name];if(!pose)continue;
-          for (const [i,axis] of ['x','y','z'].entries()) if(pose[i]) {adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}
-        }
+      for(const bone of bones) {
+        const pose=gesture[bone.name];if(!pose)continue;
+        for(const [i,axis] of ['x','y','z'].entries())if(pose[i]){adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}
       }
       if(locomotion?.flying) {
         if(locomotion.vehicle==='witch') for(const bone of bones) {

@@ -196,6 +196,27 @@ review corrections. The report distinguishes that sequence from the earlier
 14-script acceptance above. Dev is served from the isolated integration worktree;
 the original checkout's concurrent changes remain preserved.
 
+## Resident gesture continuity (September 22)
+
+Outdoor amazed, startled, enchanted and greeting actions previously replaced joint
+angles in one frame. A rendered six-rig reproduction measured a maximum 1.695-radian
+joint jump and 0.463 m wrist jump at action boundaries. Per-resident damped gesture
+state now preserves angular velocity on interruption and eases back to rest.
+Reduced motion suppresses these gestures; grounded locomotion keeps its existing
+solver.
+
+The same 714-frame browser sequence, including rapid reaction changes, now has a
+maximum 0.104-radian joint step and 0.032 m wrist step at 60 Hz. Rest, transition and
+settled screenshots were inspected. The poses remain stylized; this fixes temporal
+continuity without claiming complete expressive or biomechanical realism.
+Unit checks cover consistent settling at 30, 60 and 144 Hz, interruption velocity,
+independent residents and reduced motion. All 223 JavaScript tests and the
+production build pass. Crowd passing and turns still complete on all six rigs,
+with 25,679 planted-foot samples and four actual walking-mesh clicks passing.
+The live district check also selected six walking rigs, held each conversation,
+and resumed movement without relocating the visitor. Results are recorded in
+[`resident-gesture-transitions.json`](../data/reports/resident-gesture-transitions.json).
+
 ## Still required for the full goal
 
 - Broaden sampled hand/body clearance to continuous motion, seated contacts and

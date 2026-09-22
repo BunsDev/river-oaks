@@ -1,0 +1,177 @@
+{
+  "recorded_at": "2026-09-22T12:05:42.264828+00:00",
+  "baseline": "601c3aca5d4e8073c87021bba9d9349856e73fdb",
+  "source_sha256": {
+    "preview/src/avatars.js": "459aa9620d2136e793981dc784e767ca74bf2c160e0effbb4af719a7291cfca6",
+    "preview/src/resident-gestures.js": "ec6834d57c7e1bc2824be86298916ebd6801790dd4766a2112910940827c0573"
+  },
+  "before": {
+    "rigs": 6,
+    "frames": 714,
+    "maxJointStep": 1.6945248791671723,
+    "maxWristStep": 0.4627111193228306
+  },
+  "before_failures": 318,
+  "after": {
+    "rigs": 6,
+    "frames": 714,
+    "settledChecks": 42,
+    "maxJointStep": 0.10342787373785366,
+    "maxWristStep": 0.031957706444162716,
+    "failures": [],
+    "errors": []
+  },
+  "browser_regressions": {
+    "crowd-motion": {
+      "results": [
+        {
+          "scenario": "passing",
+          "rigs": 6,
+          "frames": 1441,
+          "plantedSamples": 12854,
+          "maxFootErrorMeters": 9.747649735390878e-07,
+          "walkingMeshClicks": 4,
+          "opaqueForegroundRejections": 4,
+          "arrived": 6
+        },
+        {
+          "scenario": "turns",
+          "rigs": 6,
+          "frames": 1441,
+          "plantedSamples": 12825,
+          "maxFootErrorMeters": 9.865315110286478e-07,
+          "walkingMeshClicks": 0,
+          "opaqueForegroundRejections": 0,
+          "arrived": 6
+        }
+      ],
+      "errors": [],
+      "scope": "Actual resident simulation, avatar animation and pointer picker on fixtures; deterministic walking frames"
+    },
+    "moving-people": {
+      "checks": [
+        "local-00: walking mesh is visible and in reach",
+        "local-00: walking mesh projects inside the viewport",
+        "local-00: real pointer selects the walking person",
+        "local-00: pointer conversation does not relocate the visitor",
+        "local-00: clicked walker holds position during conversation",
+        "local-01: walking mesh is visible and in reach",
+        "local-01: walking mesh projects inside the viewport",
+        "local-01: real pointer selects the walking person",
+        "local-01: pointer conversation does not relocate the visitor",
+        "local-01: clicked walker holds position during conversation",
+        "local-02: walking mesh is visible and in reach",
+        "local-02: walking mesh projects inside the viewport",
+        "local-02: real pointer selects the walking person",
+        "local-02: pointer conversation does not relocate the visitor",
+        "local-02: clicked walker holds position during conversation",
+        "local-03: walking mesh is visible and in reach",
+        "local-03: walking mesh projects inside the viewport",
+        "local-03: real pointer selects the walking person",
+        "local-03: pointer conversation does not relocate the visitor",
+        "local-03: clicked walker holds position during conversation",
+        "local-04: walking mesh is visible and in reach",
+        "local-04: walking mesh projects inside the viewport",
+        "local-04: real pointer selects the walking person",
+        "local-04: pointer conversation does not relocate the visitor",
+        "local-04: clicked walker holds position during conversation",
+        "local-05: walking mesh is visible and in reach",
+        "local-05: walking mesh projects inside the viewport",
+        "local-05: real pointer selects the walking person",
+        "local-05: pointer conversation does not relocate the visitor",
+        "local-05: clicked walker holds position during conversation",
+        "No uncaught browser errors: "
+      ],
+      "clicks": [
+        {
+          "id": "local-00",
+          "speed": 0.30543137925144204,
+          "screen": [
+            836.1078922839292,
+            359.5588517273276
+          ],
+          "position": [
+            -2813.609091608184,
+            -1274.6642421866566,
+            18.304807170463864
+          ]
+        },
+        {
+          "id": "local-01",
+          "speed": 0.4117400000333785,
+          "screen": [
+            777.5075032379839,
+            405.6847272938792
+          ],
+          "position": [
+            -2811.0408341336183,
+            -1229.6574442268152,
+            18.360576037560175
+          ]
+        },
+        {
+          "id": "local-02",
+          "speed": 0.2737700000166893,
+          "screen": [
+            781.3428524135578,
+            410.85261983221983
+          ],
+          "position": [
+            -2808.3592177461855,
+            -1205.3442413672612,
+            18.428398362678568
+          ]
+        },
+        {
+          "id": "local-03",
+          "speed": 0.26732999998331064,
+          "screen": [
+            781.5934169865345,
+            400.9240043389711
+          ],
+          "position": [
+            -2771.629876554318,
+            -1306.0750581537493,
+            18.43749752266244
+          ]
+        },
+        {
+          "id": "local-04",
+          "speed": 0.3747099998831749,
+          "screen": [
+            798.9590778137783,
+            395.5611358937131
+          ],
+          "position": [
+            -2767.7340300604114,
+            -1228.2983878212558,
+            18.309899900441206
+          ]
+        },
+        {
+          "id": "local-05",
+          "speed": 0.35979181621268835,
+          "screen": [
+            781.9481035050101,
+            400.7341783981301
+          ],
+          "position": [
+            -2769.81209767224,
+            -1258.997580406227,
+            18.36415349257702
+          ]
+        }
+      ],
+      "errors": [],
+      "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
+    }
+  },
+  "javascript_tests": 223,
+  "production_build": "passed; existing bundle size warning",
+  "screenshots_inspected": [
+    "reaction-rest.png",
+    "reaction-transition.png",
+    "reaction-startled.png"
+  ],
+  "scope": "Deterministic browser frames for six real rigs, plus live district walking clicks. Fixes gesture transitions only; target poses remain stylized. Does not establish full biomechanical realism, continuous collision, native parity or 60 fps."
+}

@@ -50,4 +50,11 @@ screen coordinates; no simulation state is injected. Both scripts save images
 under `output/playwright/` and work with the optional bridge offline. They don't
 verify live Jev responses or native Unreal behavior.
 
+`preview/e2e/reaction-transitions.js` runs all six shipped rigs through resting,
+reaction, greeting and interrupted gestures. It measures actual bone rotations and
+wrist displacement each frame, rejecting one-frame pose changes above 0.15 radians
+or 6 cm at 60 Hz. Run it through the same Playwright CLI after starting dev. The
+fixture uses deterministic frames and does not establish facial expression quality,
+continuous collision, target-GPU performance or native Unreal parity.
+
 The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
