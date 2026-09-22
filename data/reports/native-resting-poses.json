@@ -1,0 +1,161 @@
+{
+  "recorded_at": "2026-09-22T14:23:09.928051+00:00",
+  "source_sha256": {
+    "unreal/Source/RiverOaks/Private/RiverProceduralAnimInstance.cpp": "aed8027cfebc53a866eec830eaef62ec50fcde4ad04c368ca5fafb607d746b12",
+    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "2404005f8360cb875667147e4e5a7b14a7303ca7e948862f80dd6cf3e71355b8",
+    "unreal/Source/RiverOaks/Public/RiverGaitBlend.h": "19de18afc29b141990879fdddee738a21df2f7be3f21f88ac7cfaa14cf2fed04",
+    "unreal/Source/RiverOaks/Private/Tests/RiverGaitBlendTests.cpp": "e2f508ba298514a5c39480b50d9127ef5db5f996e23611849d4d654d10dfe791"
+  },
+  "import_version": 3,
+  "profiles": 6,
+  "builds": {
+    "Editor Development": {
+      "result": "passed",
+      "log": "/tmp/river-native-rest-build.log"
+    },
+    "Game Development": {
+      "result": "passed",
+      "log": "/tmp/river-native-rest-game-build.log"
+    }
+  },
+  "native_tests": {
+    "succeeded": 21,
+    "failed": 0,
+    "notRun": 0
+  },
+  "tests": [
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.BoundsAndFiniteInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.FrameStepIndependent",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.IndependentInstances",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.InterruptsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.SettlesAfterStop",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.StartsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Coordinates",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanBackendSelection",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanPoseSequence",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Locomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeConversationInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeEncounters",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.PortrayalRecipe",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ProceduralGait",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Safety",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ScheduleAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalBackend",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalConfiguration",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalLocomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.NativeAssets.Residents",
+      "state": "Success"
+    }
+  ],
+  "red": {
+    "report": "/tmp/river-native-rest-red/index.json",
+    "failed": 5,
+    "cause": "Blend contracts and six-profile resting posture and stop continuity fail before implementation"
+  },
+  "green_report": "/tmp/river-native-rest-final-tests/index.json",
+  "calibration": {
+    "probe_report": "/tmp/river-native-rest-probe/index.json",
+    "wrist_height": "At or below pelvis within 1 cm; shorter rigs cannot reach a fixed 5 cm below pelvis without changing limb lengths",
+    "elbow": "Reduce imported flexion to a slight forward bend; retain hand/thigh clearance and limb lengths"
+  },
+  "runtime": {
+    "profile": "woman-casual",
+    "resident": "npc-0000",
+    "checks": [
+      "Rendered lowered shoulders and slight elbow bend",
+      "Rendered mid-stride pose",
+      "Rendered settled stance after stopping"
+    ],
+    "artifacts": [
+      {
+        "path": "/tmp/river-native-rest-front-rest.png",
+        "sha256": "9165bad677c2828d3f1ece6038a9a087ab04e6a1b0ce29e35edb2458b7fd70a9"
+      },
+      {
+        "path": "/tmp/river-native-rest-stride.png",
+        "sha256": "4317dd6334fddb1e34f0dfb1e2347581b12afce80c1e9e8ba0bdcb7925a00842"
+      },
+      {
+        "path": "/tmp/river-native-rest-settled.png",
+        "sha256": "bbe45f714236b00432d0b4e9cb0176ee914a251fb01b6509e417ced404163afb"
+      }
+    ],
+    "log": "/tmp/river-native-rest-runtime.log",
+    "exit_code": 0
+  },
+  "limits": [
+    "Rendered acceptance samples one profile; all six have automated pose coverage",
+    "Screenshots establish sampled poses; quantitative transition continuity comes from evaluated-mesh and blend tests",
+    "Possible visual ground-contact gap remains unmeasured",
+    "No authored animation clips, foot IK, native worker routines, full native dialogue parity, or proof of hyper-realistic motion",
+    "In-flight provider response timing during native encounters remains unverified"
+  ],
+  "additional_validation": {
+    "python": "98 passed",
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "independent_review": "No findings in final source, tests, report, and documentation review"
+  }
+}
