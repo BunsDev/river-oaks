@@ -69,7 +69,7 @@ export function buildLocals(world, locals) {
       person.position.set(local.position[0],terrainHeight(world.terrain,local.position[0],local.position[1])+(world.walkSurfaceOffset ?? 0.15),-local.position[1]);
       const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
-      person.visible = person.position.distanceTo(camera.position)<120 || state.selectedId===local.id;
+      person.visible = !local.abducted && (person.position.distanceTo(camera.position)<120 || state.selectedId===local.id);
       if (local.visitorReaction && visitor && !local.life?.visitId) {
         person.rotation.y=turnToward(person.rotation.y,Math.atan2(visitor[0]-person.position.x,-visitor[1]-person.position.z),delta);
       } else if(local.life?.speed>0.01 || local.life?.status==='turning') {

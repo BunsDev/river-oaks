@@ -466,12 +466,12 @@
   "verification": {
     "date": "2026-09-21",
     "scope": "Browser-first district polish merged with main (walk-in interiors, realism pass, Jev auto visitor mode and grounded motion); native WIP excluded",
-    "javascript_tests": 138,
+    "javascript_tests": 149,
     "python_tests": 74,
     "build": "passed",
     "ruff": "passed",
     "secrets": "passed",
-    "review": "Ten PR review findings fixed and re-run: hand-resolved merge with main, arm relaxation before rest capture, HUD/encounter feasibility parity, no facade crossing, stay-put talking range, greeting residents face the visitor, notice lifecycle, veto-aware volunteer finder, next-neighbor rotation, ui-improvements harness updated; second merge keeps indoor encounters on a line-of-sight rule and the meet/next pickers on the HUD same-space rule; ui-improvements, community-dialogue, store-interiors and store-encounters harnesses open the rail tab their controls live in; Oz rework: residents and store people dressed as the peoples of Oz, playable Dorothy/Scarecrow/Tin Man/Cowardly Lion replace the alien, player-forms harness re-run",
+    "review": "Ten PR review findings fixed and re-run: hand-resolved merge with main, arm relaxation before rest capture, HUD/encounter feasibility parity, no facade crossing, stay-put talking range, greeting residents face the visitor, notice lifecycle, veto-aware volunteer finder, next-neighbor rotation, ui-improvements harness updated; second merge keeps indoor encounters on a line-of-sight rule and the meet/next pickers on the HUD same-space rule; ui-improvements, community-dialogue, store-interiors and store-encounters harnesses open the rail tab their controls live in; Oz rework: residents and store people dressed as the peoples of Oz, playable Dorothy/Scarecrow/Tin Man/Cowardly Lion replace the alien, player-forms harness re-run; alien invasion scenario: simulation tests and a played-through harness as Jevica",
     "limits": [
       "Browser automation is Chromium on this host, not physical mobile-device or VoiceOver acceptance.",
       "Existing artist-interpreted geometry and authored resident dialogue remain.",
@@ -756,6 +756,23 @@
       "44px flight target",
       "No uncaught browser errors: "
     ],
+    "errors": []
+  },
+  "invasion": {
+    "checks": [
+      "The Lion cannot begin the invasion",
+      "The card explains who can cast",
+      "Jevica can begin",
+      "Five saucers arrive",
+      "Every crew member has a saucer",
+      "The crew are of more than one species",
+      "A spell banished an alien within 120 s (banished 1, phase active)",
+      "Status narrates the fight",
+      "The scenario ends and everyone returns (phase called-off, abducted 0)",
+      "The card offers another round",
+      "No page errors: "
+    ],
+    "banished": 1,
     "errors": []
   }
 }

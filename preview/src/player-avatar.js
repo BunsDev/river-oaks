@@ -25,7 +25,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
   const bubbles = document.createElement('div');bubbles.className = 'visitor-reactions';bubbles.setAttribute('aria-hidden', 'true');document.querySelector('#viewport').append(bubbles);
   const captions = Array.from({ length: 3 }, () => {const element = document.createElement('div');element.className = 'visitor-reaction';element.hidden = true;bubbles.append(element);return element;});
   const selector = panel.querySelector('#player-form'), cameraButton = panel.querySelector('#player-camera'), status = panel.querySelector('#player-status');
-  let avatar = null, outfit = null, vehicle = null, form = 'jevica', version = 0, previous = null, reactionPeople = [], lastNotice = '', disposed = false;
+  let avatar = null, outfit = null, vehicle = null, form = 'jevica', version = 0, previous = null, reactionPeople = [], lastNotice = '', disposed = false, castUntil = 0;
+  const listeners = new Set();
   const reactions = createVisitorReactions(), point = new THREE.Vector3();
   const flightButton=panel.querySelector('#player-flight');
   flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())status.textContent='Step outside to take flight.';});
@@ -59,6 +60,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
       panel.querySelector('#player-description').textContent = VISITOR_FORMS.find(item => item.id === form).description;
       status.textContent = value === 'visitor' ? 'Ready to explore.' : `${VISITOR_FORMS.find(item => item.id === form).label} transformation ready.`;
       host.dataset.playerForm = value;host.dataset.playerReady = 'true';
+      listeners.forEach(listener => listener(form));
     } catch {
       nextOutfit?.dispose();nextVehicle?.dispose();next?.dispose();
       if (generation === version) {selector.value = form;host.dataset.playerReady=String(Boolean(avatar));status.textContent = 'Character could not load. Try another transformation.';}
@@ -69,6 +71,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
   change('jevica');
   return {
     get form() {return form;},
+    cast(now) { castUntil = now + 520; },
+    onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     react(now) {
       const pose = walking.getPose();
       reactionPeople = reactions.update(getLocals() ?? [], pose, form, now, position => walking.canSee(position));
@@ -82,7 +86,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
         vehicle.object.visible=pose.flying;
         const dt = previous === null ? 0 : Math.min(0.08, (now - previous) / 1000);
         if (previous === null || pose.speed > 0.05) holder.rotation.y = turnToward(holder.rotation.y, pose.speed > 0.05 ? Math.atan2(pose.velocity[0], pose.velocity[1]) : pose.yaw + Math.PI, previous === null ? 1 : dt);
-        avatar.update(now, 'continue', false, {speed:pose.flying?0:pose.speed,distance:pose.distance,flying:pose.flying,vehicle:form}, pose.groundAt);outfit.update(pose.flying);
+        avatar.update(now, now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying?0:pose.speed,distance:pose.distance,flying:pose.flying,vehicle:form}, pose.groundAt);outfit.update(pose.flying);
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';

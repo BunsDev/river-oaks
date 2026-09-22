@@ -89,12 +89,12 @@ export function instantiateAvatar(source, { targetHeight, id }) {
   };
 }
 
-export async function loadResidentAvatar(index, id, profileOverride) {
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   const targetHeight = profile === 'jevica' ? 1.685 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
   const avatar = instantiateAvatar(source, { targetHeight, id });
   const { model, bones, rest } = avatar;
-  if(id !== 'player') applyOzFolk(avatar,id);
+  if(id !== 'player' && folk) applyOzFolk(avatar,id);
   const root = new THREE.Group();
   root.add(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);

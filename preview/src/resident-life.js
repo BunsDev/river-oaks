@@ -62,7 +62,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
   const activeVisits=state.physicalVisits && state.running && state.jobs.length>0;
   if(paused && !activeVisits) return;
   const dt=Math.min(delta,0.08);life.elapsed+=dt;
-  const held=local=>(!storm && !local.life.visitId && Boolean(local.visitorReaction)) || state.selectedId===local.id || (!local.life.visitId && visitor && distance(visitor,local.position)<2.8) || (!storm && local.status==='aid_en_route');
+  const held=local=>Boolean(local.abducted) || (!storm && !local.life.visitId && Boolean(local.visitorReaction)) || state.selectedId===local.id || (!local.life.visitId && visitor && distance(visitor,local.position)<2.8) || (!storm && local.status==='aid_en_route');
   // Rotate ownership of the route-search slot so inaccessible stops cannot starve others.
   let planned=planVolunteerVisit(life);const cursor=life.cursor;
   for(let offset=0;offset<state.locals.length;offset++) {
