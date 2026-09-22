@@ -2,8 +2,9 @@
   "recorded_at": "2026-09-22T12:05:42.264828+00:00",
   "baseline": "601c3aca5d4e8073c87021bba9d9349856e73fdb",
   "source_sha256": {
-    "preview/src/avatars.js": "5a3de7708822a503c7a8cdd8d33814b757b0d0e8036b93be71bdfd328700533a",
-    "preview/src/resident-gestures.js": "ff2dbd3bf8916e2575c3077bc3610b2447fd71636b206db036274363a0159ffd"
+    "preview/src/avatars.js": "74b2c8a599f6320fba22e71e2678a5c92d51b63bbcbca16bd48a856020167b2e",
+    "preview/src/resident-gestures.js": "ff2dbd3bf8916e2575c3077bc3610b2447fd71636b206db036274363a0159ffd",
+    "preview/src/locals.js": "7aca6ed3e44c64157e5c2c4475631869d946fd8b8e31e4b78d5eba8f00281f04"
   },
   "before": {
     "rigs": 6,
@@ -14,10 +15,10 @@
   "before_failures": 318,
   "after": {
     "rigs": 6,
-    "frames": 714,
-    "settledChecks": 42,
+    "frames": 903,
+    "settledChecks": 54,
     "maxJointStep": 0.10342787373785366,
-    "maxWristStep": 0.031957706444162716,
+    "maxWristStep": 0.03310450812664164,
     "failures": [],
     "errors": []
   },
@@ -85,80 +86,80 @@
       "clicks": [
         {
           "id": "local-00",
-          "speed": 0.30543137925144204,
+          "speed": 0.3420199986581502,
           "screen": [
-            836.1078922839292,
-            359.5588517273276
+            885.8477973835513,
+            319.08414241134443
           ],
           "position": [
-            -2813.609091608184,
-            -1274.6642421866566,
-            18.304807170463864
+            -2813.35583874753,
+            -1273.8440397783704,
+            18.309907341003008
           ]
         },
         {
           "id": "local-01",
-          "speed": 0.4117400000333785,
+          "speed": 0.2228099999666214,
           "screen": [
-            777.5075032379839,
-            405.6847272938792
+            780.7354253087086,
+            407.22828137603716
           ],
           "position": [
-            -2811.0408341336183,
-            -1229.6574442268152,
-            18.360576037560175
+            -2813.543021500318,
+            -1229.6424474991522,
+            18.29817140414531
           ]
         },
         {
           "id": "local-02",
-          "speed": 0.2737700000166893,
+          "speed": 0.3887799999833106,
           "screen": [
-            781.3428524135578,
-            410.85261983221983
+            794.0558341764656,
+            397.2659529606121
           ],
           "position": [
-            -2808.3592177461855,
-            -1205.3442413672612,
-            18.428398362678568
+            -2808.3375716957535,
+            -1209.4457606992028,
+            18.43012924632314
           ]
         },
         {
           "id": "local-03",
-          "speed": 0.26732999998331064,
+          "speed": 0.3534300000667571,
           "screen": [
-            781.5934169865345,
-            400.9240043389711
+            782.4897885036725,
+            408.98382583863986
           ],
           "position": [
-            -2771.629876554318,
-            -1306.0750581537493,
-            18.43749752266244
+            -2770.821491794057,
+            -1310.6907684399916,
+            18.4142959315224
           ]
         },
         {
           "id": "local-04",
-          "speed": 0.3747099998831749,
+          "speed": 0.2874199999332428,
           "screen": [
-            798.9590778137783,
-            395.5611358937131
+            786.6525265082906,
+            412.7295090599821
           ],
           "position": [
-            -2767.7340300604114,
-            -1228.2983878212558,
-            18.309899900441206
+            -2763.6307631687723,
+            -1228.3816242502671,
+            18.291619931702844
           ]
         },
         {
           "id": "local-05",
-          "speed": 0.35979181621268835,
+          "speed": 0.2578793369559545,
           "screen": [
-            781.9481035050101,
-            400.7341783981301
+            793.2153768762046,
+            380.555477673435
           ],
           "position": [
-            -2769.81209767224,
-            -1258.997580406227,
-            18.36415349257702
+            -2769.8661482053517,
+            -1259.3069954468983,
+            18.366735105651163
           ]
         }
       ],
@@ -181,5 +182,12 @@
     "maxJointStep": 0.2581323878414202,
     "maxWristStep": 0.09114322114995571
   },
-  "browser_regression_sequence": "Crowd and live walking checks preceded the culling correction. The reaction fixture was rerun with a two-second suspended-update gap after the correction."
+  "browser_regression_sequence": "Crowd checks preceded the culling corrections. The reaction fixture covers two-second and100ms gaps; it and live moving-person checks were rerun after explicit visibility suspension.",
+  "short_resume_before": {
+    "rigs": 6,
+    "frames": 903,
+    "settledChecks": 54,
+    "maxJointStep": 0.32410849923868434,
+    "maxWristStep": 0.10131861209455965
+  }
 }

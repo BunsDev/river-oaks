@@ -12,9 +12,10 @@ const avatars=await Promise.all(AVATAR_PROFILES.map((profile,index)=>loadResiden
 avatars.forEach((avatar,index)=>{avatar.object.position.x=(index-2.5)*1.25;scene.add(avatar.object);});
 let now=0;
 const bones=['head','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r'];
-function step(action,delta=1/60) {
+function step(action,delta=1/60,suspended=false) {
   now+=delta*1000;
   const samples=avatars.map(avatar=>{
+    if(suspended)avatar.suspend();
     avatar.update(now,action,false,{speed:0,distance:0},()=>0);avatar.object.updateWorldMatrix(true,true);
     return {profile:avatar.profile,joints:Object.fromEntries(bones.map(name=>[name,avatar.rig.model.getObjectByName(name).quaternion.toArray()])),wrists:['l','r'].map(side=>avatar.rig.model.getObjectByName(`hand_${side}`).getWorldPosition(new THREE.Vector3()).toArray())};
   });

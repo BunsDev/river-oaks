@@ -205,11 +205,14 @@ state now preserves angular velocity on interruption and eases back to rest.
 Reduced motion suppresses these gestures; grounded locomotion keeps its existing
 solver.
 
-The same 714-frame browser sequence, including rapid reaction changes, now has a
-maximum 0.104-radian joint step and 0.032 m wrist step at 60 Hz. Rest, transition and
+The expanded 903-frame browser sequence, including rapid reaction changes, now has a
+maximum 0.104-radian joint step and 0.034 m wrist step at 60 Hz. Rest, transition and
 settled screenshots were inspected. A two-second suspended-update test reproduced a further 9 cm wrist jump.
 Resuming now preserves the last displayed gesture state before normal frame
-updates continue; that regression also passes. The poses remain stylized; this fixes temporal
+updates continue; that regression also passes. A separate 100 ms cull reproduced
+a 10 cm wrist jump. The visibility owner now explicitly suspends the avatar clock
+for every hidden frame, covering short culls as well as long gaps. All 54 settled
+pose checks and the live walking-person regression pass after this correction. The poses remain stylized; this fixes temporal
 continuity without claiming complete expressive or biomechanical realism.
 Unit checks cover consistent settling at 30, 60 and 144 Hz, interruption velocity,
 independent residents and reduced motion. All 224 JavaScript tests and the

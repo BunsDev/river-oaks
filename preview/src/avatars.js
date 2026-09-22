@@ -111,6 +111,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   let previousTime=null,walkingSpeed=0;
   return {
     object:root, profile, rig:avatar,
+    // The visibility owner explicitly suspends the clock, even for brief culls.
+    suspend() {previousTime=null;},
     get carrying() {return kit.visible;},
     get feet() {return feet.legs;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y) {
