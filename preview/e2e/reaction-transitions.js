@@ -6,7 +6,7 @@ async page => {
     const actions=[['idle',60],['amazed',90],['idle',90],['startled',90],['enchanted',90],['greet',90],['idle',90],['startled',8],['greet',8],['amazed',8],['idle',90]];
     let previous=null,rest=null,maxJointStep=0,maxWristStep=0,frames=0,settledChecks=0;const failures=[];
     for(const [action,count] of actions)for(let frame=0;frame<count;frame++){
-      const samples=window.reactionFixture.step(action);frames++;
+      const samples=window.reactionFixture.step(action,action==='startled'&&count===8&&frame===0?2:1/60);frames++;
       rest??=structuredClone(samples);
       if(frame===count-1&&count>=90)samples.forEach((sample,i)=>{
         const q=sample.joints.lowerarm_r,reference=rest[i].joints.lowerarm_r;

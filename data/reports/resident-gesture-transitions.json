@@ -2,8 +2,8 @@
   "recorded_at": "2026-09-22T12:05:42.264828+00:00",
   "baseline": "601c3aca5d4e8073c87021bba9d9349856e73fdb",
   "source_sha256": {
-    "preview/src/avatars.js": "459aa9620d2136e793981dc784e767ca74bf2c160e0effbb4af719a7291cfca6",
-    "preview/src/resident-gestures.js": "ec6834d57c7e1bc2824be86298916ebd6801790dd4766a2112910940827c0573"
+    "preview/src/avatars.js": "5a3de7708822a503c7a8cdd8d33814b757b0d0e8036b93be71bdfd328700533a",
+    "preview/src/resident-gestures.js": "ff2dbd3bf8916e2575c3077bc3610b2447fd71636b206db036274363a0159ffd"
   },
   "before": {
     "rigs": 6,
@@ -166,12 +166,20 @@
       "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
     }
   },
-  "javascript_tests": 223,
+  "javascript_tests": 224,
   "production_build": "passed; existing bundle size warning",
   "screenshots_inspected": [
     "reaction-rest.png",
     "reaction-transition.png",
     "reaction-startled.png"
   ],
-  "scope": "Deterministic browser frames for six real rigs, plus live district walking clicks. Fixes gesture transitions only; target poses remain stylized. Does not establish full biomechanical realism, continuous collision, native parity or 60 fps."
+  "scope": "Deterministic browser frames for six real rigs, plus live district walking clicks. Fixes gesture transitions only; target poses remain stylized. Does not establish full biomechanical realism, continuous collision, native parity or 60 fps.",
+  "resume_before": {
+    "rigs": 6,
+    "frames": 714,
+    "settledChecks": 42,
+    "maxJointStep": 0.2581323878414202,
+    "maxWristStep": 0.09114322114995571
+  },
+  "browser_regression_sequence": "Crowd and live walking checks preceded the culling correction. The reaction fixture was rerun with a two-second suspended-update gap after the correction."
 }

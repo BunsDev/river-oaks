@@ -35,3 +35,12 @@ test('independent residents and reduced motion do not inherit another reaction',
   const before=copy(active.update('amazed',0));
   for(const delta of [-1,NaN,Infinity])assert.deepEqual(active.update('idle',delta),before,'invalid time cannot corrupt or rewind a pose');
 });
+
+test('resuming after culling preserves the pose before continuing the transition',()=>{
+  const motion=createResidentGestures();
+  for(let frame=0;frame<8;frame++)motion.update('startled',1/60);
+  const before=copy(motion.update('startled',0));
+  assert.deepEqual(motion.update('greet',2),before,'a hidden interval must not become a visible catch-up step');
+  const resumed=motion.update('greet',1/60);
+  assert.ok(Math.abs(resumed.lowerarm_r[2]-before.lowerarm_r[2])<0.15,'normal frame steps resume smoothly');
+});

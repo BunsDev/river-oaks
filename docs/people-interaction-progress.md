@@ -207,10 +207,12 @@ solver.
 
 The same 714-frame browser sequence, including rapid reaction changes, now has a
 maximum 0.104-radian joint step and 0.032 m wrist step at 60 Hz. Rest, transition and
-settled screenshots were inspected. The poses remain stylized; this fixes temporal
+settled screenshots were inspected. A two-second suspended-update test reproduced a further 9 cm wrist jump.
+Resuming now preserves the last displayed gesture state before normal frame
+updates continue; that regression also passes. The poses remain stylized; this fixes temporal
 continuity without claiming complete expressive or biomechanical realism.
 Unit checks cover consistent settling at 30, 60 and 144 Hz, interruption velocity,
-independent residents and reduced motion. All 223 JavaScript tests and the
+independent residents and reduced motion. All 224 JavaScript tests and the
 production build pass. Crowd passing and turns still complete on all six rigs,
 with 25,679 planted-foot samples and four actual walking-mesh clicks passing.
 The live district check also selected six walking rigs, held each conversation,

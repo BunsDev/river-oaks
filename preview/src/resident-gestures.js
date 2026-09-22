@@ -12,7 +12,9 @@ export function createResidentGestures({reducedMotion=false}={}) {
   const greeting={lowerarm_r:[0,0,0]};
   return {
     update(action,delta,time=0) {
-      if(reducedMotion)return pose;
+      // Culling suspends avatar updates. Resume from the last displayed pose;
+      // do not spend hidden time as a large first-visible catch-up step.
+      if(reducedMotion||delta>0.25)return pose;
       greeting.lowerarm_r[2]=-0.32+Math.sin(time*2)*0.025;
       const target=action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:{};
       const dt=Number.isFinite(delta)?Math.max(0,Math.min(0.08,delta)):0;

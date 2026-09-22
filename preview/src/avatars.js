@@ -115,10 +115,11 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
     get feet() {return feet.legs;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y) {
       const t=now/1000+index*0.7;
-      const dt=previousTime===null?0:Math.min(0.08,Math.max(0,(now-previousTime)/1000));previousTime=now;
+      const elapsed=previousTime===null?0:Math.max(0,(now-previousTime)/1000);
+      const dt=Math.min(0.08,elapsed);previousTime=now;
       walkingSpeed+=((locomotion?.speed ?? 0)-walkingSpeed)*(1-Math.exp(-18*dt));
       const gait=residentStride(locomotion?.distance ?? 0,walkingSpeed);
-      const gesture=gestures.update(action,dt,t);
+      const gesture=gestures.update(action,elapsed,t);
       const strength = Math.min(1,walkingSpeed/0.65);
       model.position.y = baseY - 0.018 - walkingDrop*strength + Math.cos((locomotion?.distance ?? 0)/1.1*Math.PI*4)*0.008*strength;
       for (const bone of bones) {
