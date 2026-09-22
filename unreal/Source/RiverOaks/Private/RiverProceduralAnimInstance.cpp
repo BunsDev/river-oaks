@@ -36,8 +36,9 @@ namespace
                 FQuat ReferenceRotation = Ref.GetRefBonePose()[MeshIndex].GetRotation();
                 for (int32 Parent = Ref.GetParentIndex(MeshIndex); Parent != INDEX_NONE; Parent = Ref.GetParentIndex(Parent))
                     ReferenceRotation = Ref.GetRefBonePose()[Parent].GetRotation() * ReferenceRotation;
-                // Meshes face X: lateral Y in component space becomes a bone-local gait axis.
-                const FVector Axis = ReferenceRotation.Inverse().RotateVector(FVector::YAxisVector);
+                // Neutral meshes face +Y; their lateral -X becomes world +Y after
+                // the backend's facing correction. Convert that axis to bone space.
+                const FVector Axis = ReferenceRotation.Inverse().RotateVector(-FVector::XAxisVector);
                 auto& Transform = Output.Pose[Index];
                 Transform.SetRotation((Transform.GetRotation() * FQuat(Axis, Angle)).GetNormalized());
             }

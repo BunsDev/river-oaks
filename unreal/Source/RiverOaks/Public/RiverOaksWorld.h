@@ -30,6 +30,7 @@ struct FRiverAgent
     int32 Target = 1;
     int32 Direction = 1;
     float Speed = 140.f;
+    float Heading = 0.f;
     double ActionUntil = 0.;
     bool bBlocked = false;
     // Visual state only. Backends receive these; they never write back into this struct.
@@ -47,6 +48,8 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     FVector ConstrainVisitor(const FVector& Position) const;
     FString GreetNearby(const FVector& Position);
+    bool UpdateConversation(const FVector& Position);
+    void EndConversation();
     FString NearbyVisitor(const FVector& Position) const;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
@@ -85,6 +88,8 @@ public:
 protected:
     virtual void BeginPlay() override;
 private:
+    friend class FRiverNativeEncounterTest;
+    friend class FRiverNativeInputTest;
     UPROPERTY() TObjectPtr<UStaticMesh> Cube;
     UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> People;
@@ -101,6 +106,11 @@ private:
     double NextWeather = 0.;
     int32 RequestTick = 0;
     bool bLoaded = false;
+    FString ConversationAgentId;
+    FVector ConversationVisitor = FVector::ZeroVector;
+    double ConversationUntil = 0.;
+    bool CanGreet(const FRiverAgent& Agent, const FVector& Position) const;
+    int32 NearbyAgentIndex(const FVector& Position) const;
     bool LoadManifest();
     UInstancedStaticMeshComponent* MakeInstances(FName Name, UStaticMesh* Mesh, const FLinearColor& Color, bool Collision);
     void SpawnAgents();

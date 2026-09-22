@@ -15,6 +15,7 @@ class RIVEROAKS_API ARiverStreetPawn : public APawn
 public:
     ARiverStreetPawn();
     virtual void Tick(float DeltaSeconds) override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     FString InteractionPrompt() const;
     FString Conversation;
 protected:
@@ -24,6 +25,7 @@ private:
     UPROPERTY() TObjectPtr<UCameraComponent> Camera;
     UPROPERTY() TObjectPtr<ARiverOaksWorld> District;
     double ConversationUntil = 0.;
+    bool bConversationActive = false;
 };
 
 UCLASS()

@@ -222,6 +222,58 @@ The live district check also selected six walking rigs, held each conversation,
 and resumed movement without relocating the visitor. Results are recorded in
 [`resident-gesture-transitions.json`](../data/reports/resident-gesture-transitions.json).
 
+## Native encounter holds (September 22)
+
+The native world previously selected residents using horizontal distance alone
+and let them keep walking during greetings. Selection now requires talking range,
+compatible height and an unobstructed eye-level trace against static geometry. A
+blocked nearest resident does not hide a farther visible candidate.
+
+A greeting holds the selected resident in place for up to ten seconds, turns them
+toward the visitor at a bounded rate, and preserves their route target/direction.
+E closes the encounter; leaving talking reach, new occlusion, expiry and pawn
+shutdown release it. Inference callbacks skip action and route writes for the
+held resident. The existing route resumes after release.
+
+The engine regression failed four behavioral assertions before the implementation:
+position hold, floor separation, wall rejection and visible-neighbor selection.
+The initial contract suite passed 13 tests, including those cases plus release,
+route-endpoint preservation and bounded turn checks. Editor and Game Development
+builds pass. Results and hashes are in
+[`native-encounter-holds.json`](../data/reports/native-encounter-holds.json).
+Those results cover native world/collision behavior under NullRHI. The follow-up
+below adds input, pawn-destruction and sampled rendered conversation evidence.
+In-flight HTTP timing remains unverified. Native dialogue is still the basic
+authored greeting, and native worker-role and motion parity remain open.
+
+### Native input and facing follow-up (September 22)
+
+The real controller input fixture now covers E open/close, held-key behavior,
+walking away, reopening, and initialized-pawn destruction. The engine suite
+passed 15 tests before the stronger geometry check was added. A rendered E
+open/close check also passed.
+
+Rendered acceptance exposed a separate import defect: the resident's numeric
+heading reaches the visitor, but the mesh faces sideways. The previous asset
+check only measured toe bones. The new eye-geometry check fails on the current
+imports: bones face +X while eye geometry faces -Y. A separate identity-yaw
+import of `woman-casual` aligns both bones and eye geometry with +Y. This isolates
+the mismatch to the import rotation path. Diagnostic receipts are
+`/tmp/river-native-mesh-facing-tests/index.json` and
+`/tmp/river-native-neutral-probe-tests/index.json`; runtime position/heading
+samples are in `/tmp/river-native-facing-runtime.log`.
+
+The correction imports with identity rotation, applies yaw -90 to the mesh
+component, and uses mesh-space -X as the gait axis. Importer version 3 assets
+were regenerated for all six profiles after preserving the old assets outside
+the project. The stronger suite checks toe bones and eye bind geometry at three
+world headings, plus forward rather than sideways foot swing. All 15 native tests
+pass with regenerated assets, as do Editor and Game Development builds. The
+rendered `woman-casual` encounter now visibly turns toward the visitor; E closes
+it, and reopening faces the visitor again. This is a one-profile visual sample,
+not a complete review of native animation. Results and source hashes are in
+[`native-resident-facing.json`](../data/reports/native-resident-facing.json).
+
 ## Still required for the full goal
 
 - Broaden sampled hand/body clearance to continuous motion, seated contacts and

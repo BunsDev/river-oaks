@@ -17,7 +17,7 @@ SOURCE = ROOT / "data/generated/native-characters"
 DESTINATION = "/Game/Generated/Residents"
 MAP = "/Game/Maps/RiverOaksDistrict"
 RECEIPT = SOURCE / "unreal-import.json"
-IMPORT_VERSION = 2
+IMPORT_VERSION = 3
 
 
 def glb_document(path):
@@ -91,9 +91,10 @@ def import_profile(entry):
     if unreal.EditorAssetLibrary.does_directory_exist(folder):
         raise RuntimeError("Refusing to overwrite unreceipted content: " + folder)
     pipeline = unreal.InterchangeGenericAssetsPipeline()
-    # Python's native MakeRotator uses roll/pitch/yaw order. Name yaw explicitly:
-    # glTF +Z forward becomes Unreal +Y, then yaw -90 maps it to +X.
-    pipeline.set_editor_property("import_offset_rotation", unreal.Rotator(yaw=-90))
+    # Preserve Interchange's +Y-facing mesh and skeleton together. In UE 5.8.2,
+    # an import yaw offset rotates their facing differently; the runtime component
+    # applies the +Y to +X correction once, to both geometry and bones.
+    pipeline.set_editor_property("import_offset_rotation", unreal.Rotator())
     pipeline.mesh_pipeline.set_editor_property("import_static_meshes", False)
     pipeline.mesh_pipeline.set_editor_property("import_skeletal_meshes", True)
     pipeline.mesh_pipeline.set_editor_property("create_physics_asset", False)
