@@ -3,7 +3,7 @@ async page => {
   const check=(condition,label)=>{if(!condition)throw new Error(label);checks.push(label);};
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
-  const ready=()=>page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';});
+  const ready=()=>page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';},null,{timeout:60000});
   await ready();
   const panel=async section=>{
     if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
@@ -17,9 +17,13 @@ async page => {
     await page.locator('#panel-toggle').click();await page.waitForTimeout(500);
   };
   const clickPerson=async id=>{
-    const person=await page.evaluate(id=>window.__riverPeople().find(person=>person.id===id),id);
+    // Aim at a body landmark; swinging limbs can put the bounding-box centre
+    // beside the visible torso. Animation remains enabled during real clicks.
+    const person=await page.evaluate(id=>window.__riverPeople('spine_03').find(person=>person.id===id),id);
     check(person.visible&&person.reachable,`${id}: visible and within reach`);
-    await page.mouse.click(...person.screen);await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
+    await page.mouse.click(...person.screen);
+    try {await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});}
+    catch(error){throw new Error(`${id}: pointer conversation failed after ${checks.join('; ')}; point ${JSON.stringify(person.screen)}; ${error.message}`);}
     check(await page.locator('#community-local').inputValue()===id,`${id}: pointer selects the actual person`);
     await page.locator('#community-close').click();
   };

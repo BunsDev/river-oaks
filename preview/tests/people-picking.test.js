@@ -37,3 +37,27 @@ test('clicking a posed limb refreshes both cached skinned bounds',()=>{
   assert.equal(pickPerson(ray,[mesh],[],()=>true),'animated-worker');
   mesh.skeleton.dispose();geometry.dispose();mesh.material.dispose();
 });
+
+test('storefront glass uses its rendered Fresnel opacity for person picking',async()=>{
+  const {thinStorefrontGlass}=await import('../src/storefront-materials.js');
+  const person=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial());person.userData.localId='shop-worker';
+  const glass=new THREE.InstancedMesh(new THREE.PlaneGeometry(100,100),thinStorefrontGlass(),1);
+  const ray=new THREE.Raycaster(new THREE.Vector3(0,0,5),new THREE.Vector3(0,0,-1));
+  glass.setMatrixAt(0,new THREE.Matrix4().makeTranslation(0,0,2));
+  assert.equal(glass.material.opacity,1,'shader, not the opacity field, controls the clear pane');
+  assert.equal(pickPerson(ray,[person],[glass],()=>true),'shop-worker','clear glass in front of camera must not block the worker');
+  glass.setMatrixAt(0,new THREE.Matrix4().makeRotationY(Math.acos(0.05)).setPosition(0,0,2));
+  assert.equal(pickPerson(ray,[person],[glass],()=>true),null,'nearly edge-on glass is visually opaque');
+  assert.equal(pickPerson(ray,[person],[],()=>false),null,'glass does not bypass actual talking reach');
+  for(const mesh of [person,glass]){mesh.geometry.dispose();mesh.material.dispose();}
+});
+
+test('a visible mannequin blocks picking a person behind it',()=>{
+  const person=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial());person.userData.localId='shopper';
+  const mannequin=new THREE.Mesh(person.geometry,person.material);mannequin.position.z=2;
+  const ray=new THREE.Raycaster(new THREE.Vector3(0,0,5),new THREE.Vector3(0,0,-1));
+  assert.equal(pickPerson(ray,[person,mannequin],[],()=>true),null);
+  mannequin.visible=false;
+  assert.equal(pickPerson(ray,[person,mannequin],[],()=>true),'shopper');
+  person.geometry.dispose();person.material.dispose();
+});

@@ -1,3 +1,4 @@
+import { Matrix3, Matrix4 } from 'three';
 import { ENCOUNTER_FAR } from './encounter.js';
 
 export function withinTalkingReach(local, pose, canSee) {
@@ -27,16 +28,28 @@ function visibleMeshes(roots) {
 }
 
 export function pickPerson(raycaster, people, occluders, canMeet) {
-  const person = raycaster.intersectObjects(visibleMeshes(people), false)
-    .find(hit => hit.object.userData.localId);
-  if (!person || !canMeet(person.object.userData.localId)) return null;
+  const person = raycaster.intersectObjects(visibleMeshes(people), false)[0];
+  let owner=person?.object;
+  while(owner&&!owner.userData.localId)owner=owner.parent;
+  const id=owner?.userData.localId;
+  if (!id || !canMeet(id)) return null;
   const previousFar = raycaster.far;
   raycaster.far = person.distance - 0.02;
   try {
     const blocked = raycaster.intersectObjects(visibleMeshes(occluders), false).some(hit => {
       const material = Array.isArray(hit.object.material) ? hit.object.material[hit.face?.materialIndex ?? 0] : hit.object.material;
-      return material.visible && (!material.transparent || material.opacity >= 0.5);
+      if(!material.visible)return false;
+      if(material.userData.thinStorefrontGlass){
+        // Match the thin-sheet shader: its stored opacity is 1, while the actual
+        // pane is clear head-on and reflective at grazing angles.
+        const world=hit.object.matrixWorld.clone();
+        if(hit.object.isInstancedMesh){const instance=new Matrix4();hit.object.getMatrixAt(hit.instanceId,instance);world.multiply(instance);}
+        const normal=(hit.normal??hit.face.normal).clone().applyNormalMatrix(new Matrix3().getNormalMatrix(world));
+        const facing=Math.min(1,Math.abs(normal.dot(raycaster.ray.direction)));
+        return 0.04+0.96*(1-facing)**5>=0.5;
+      }
+      return !material.transparent || material.opacity >= 0.5;
     });
-    return blocked ? null : person.object.userData.localId;
+    return blocked ? null : id;
   } finally { raycaster.far = previousFar; }
 }

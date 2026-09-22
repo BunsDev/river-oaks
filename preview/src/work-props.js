@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { createArmContacts, placePalm } from './arm-contact.js';
+import { fitSupportedHand } from './hand-support.js';
+import { fitTabletTouch, tabletTouchPoint } from './tablet-touch.js';
 
 const cache=new Map();
+const palmZ=-0.15; // Fingers support the rear overhang, clear of a docked worktop.
 const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);};
 export function workPropKind(theme, pose) {
   if(theme==='dining'&&pose==='carry')return 'tray';
@@ -60,14 +63,15 @@ function template(kind) {
 
 // Select a clear piece of the existing counter's near edge, never move fixtures.
 export function counterContact(room,spot,holder) {
-  const tops={counter:1.025,desk:0.78,reception:1.08,concession:1.06};
+  const tops={counter:1.025,desk:0.76,reception:1.08,concession:1.04};
   let best=null;
   for(const fixture of room.fixtures) {
-    if(!(fixture.kind in tops)||!Number.isFinite(fixture.d))continue;
-    const halfWidth=(fixture.w??1)/2-0.22,halfDepth=(fixture.l??0.65)/2-0.13;
+    if(!(fixture.kind in tops)||!Number.isFinite(fixture.d)||fixture.style==='host')continue;
+    const depth=fixture.kind==='counter'?0.68:(fixture.l??0.65)+(fixture.kind==='desk'?0:0.06);
+    const halfWidth=(fixture.w??1)/2-0.22,halfDepth=depth/2-0.015;
     const a=Math.max(fixture.a-halfWidth,Math.min(fixture.a+halfWidth,spot.a));
     const d=fixture.d+Math.sign(spot.d-fixture.d)*Math.max(0,halfDepth);
-    const [east,north]=room.toWorld(a,d),p=holder.worldToLocal(new THREE.Vector3(east,room.floor+tops[fixture.kind],-north));
+    const [east,north]=room.toWorld(a,d),p=holder.worldToLocal(new THREE.Vector3(east,room.floor+tops[fixture.kind]+0.006,-north));
     if(p.z<0.24||p.z>0.55||Math.abs(p.x)>0.28)continue;
     if(!best||p.lengthSq()<best.lengthSq())best=p;
   }
@@ -77,24 +81,35 @@ export function counterContact(room,spot,holder) {
 export function createWorkerTask(avatar,holder,room,spot) {
   const kind=workPropKind(room.theme,spot.pose),arms=createArmContacts(avatar.model,holder);
   if(arms.length!==2)return null;
+  for(const arm of arms){
+    const side=arm.side==='l'?1:-1,yaw=-side*THREE.MathUtils.degToRad(35);
+    // Let the fingers angle inward with the forearms instead of bending both
+    // wrists sideways to force parallel hands under the load.
+    arm.grip=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),yaw);
+    fitSupportedHand(avatar,arm,{halfWidth:0.18,halfDepth:0.125,palmX:side*0.13,palmZ,yaw});
+  }
+  if(kind==='tablet')fitTabletTouch(avatar,arms.find(arm=>arm.side==='r'));
   const object=template(kind).clone();object.name=`Worker ${kind}`;holder.add(object);
   object.traverse(item=>{item.userData.localId=holder.userData.localId;});
+  let dock=spot.pose==='attend'?counterContact(room,spot,holder):null;
+  if(dock) {
+    const frame=holder.getWorldQuaternion(new THREE.Quaternion());
+    const reachable=arms.every(arm=>{
+      const handFrame=frame.clone().multiply(arm.grip).multiply(arm.frameToHand);
+      const contacts=kind==='tablet'&&arm.side==='r'?[0,3,4.2].map(tabletTouchPoint):[new THREE.Vector3(arm.side==='l'?0.13:-0.13,0,palmZ)];
+      return contacts.every(contact=>{
+        const point=holder.localToWorld(dock.clone().add(contact));
+        point.sub(arm.palmOffset.clone().applyQuaternion(handFrame));
+        const distance=point.distanceTo(arm.thigh.getWorldPosition(new THREE.Vector3()));
+        return distance<arm.upperLength+arm.lowerLength-0.04&&distance>Math.abs(arm.upperLength-arm.lowerLength)+0.04;
+      });
+    });
+    if(!reachable||(kind==='tablet'&&dock.z<0.43))dock=null;
+  }
+  // Hold the load at chest height so the hands clear reception/host counters.
   const reach=Math.min(...arms.map(arm=>arm.upperLength+arm.lowerLength));
-  const shoulders=arms.map(arm=>holder.worldToLocal(arm.thigh.getWorldPosition(new THREE.Vector3())));
-  const raised=shoulders[0].clone().add(shoulders[1]).multiplyScalar(0.5);
-  raised.y-=reach*0.5;raised.z+=reach*0.55;
-  const rotation=holder.getWorldQuaternion(new THREE.Quaternion());
-  const candidate=spot.pose==='attend'?counterContact(room,spot,holder):null;
-  // A fixed counter can lie outside a shorter worker's reach. In that case keep
-  // the object supported at a height fitted to this rig instead of stretching.
-  const reachable=point=>arms.every(arm=>{
-    const target=point.clone().add(new THREE.Vector3(arm.side==='l'?0.13:-0.13,0,0));
-    const orientation=rotation.clone().multiply(arm.frameToHand);
-    const wrist=holder.localToWorld(target).sub(arm.palmOffset.clone().applyQuaternion(orientation));
-    const distance=wrist.distanceTo(arm.thigh.getWorldPosition(new THREE.Vector3()));
-    return distance<arm.upperLength+arm.lowerLength-0.04&&distance>Math.abs(arm.upperLength-arm.lowerLength)+0.04;
-  });
-  const dock=candidate&&reachable(candidate)?candidate:null;
+  const raised=new THREE.Vector3(0,kind==='tablet'?Math.max(Math.min(1.20,avatar.hipHeight+0.4),avatar.hipHeight+0.30):avatar.hipHeight+0.4,kind==='tablet'?0.48*Math.min(1,reach/0.44):0.32);
+  const rotation=new THREE.Quaternion();
   const contacts=[];
   return {kind,object,contacts,docked:Boolean(dock),
     update(time,attention) {
@@ -107,10 +122,13 @@ export function createWorkerTask(avatar,holder,room,spot) {
       contacts.length=0;
       for(const arm of arms) {
         const side=arm.side==='l'?1:-1;
-        const point=object.localToWorld(new THREE.Vector3(side*0.13,0,0));
-        const pole=holder.localToWorld(new THREE.Vector3(side*0.48,1.03,-0.05));
-        const actual=placePalm(arm,point,rotation,pole);
-        contacts.push({side:arm.side,target:point.toArray(),actual:actual.toArray(),error:arm.error});
+        // Support the near edge where it overhangs the counter; palms never need
+        // to pass through the solid worktop to pick up the load.
+        const touching=kind==='tablet'&&arm.side==='r';
+        const point=object.localToWorld(touching?tabletTouchPoint(time):new THREE.Vector3(side*0.13,0,palmZ));
+        const pole=holder.localToWorld(new THREE.Vector3(side*0.30,object.position.y+(touching?-0.18:-0.08),touching?-0.05:-0.12));
+        const actual=placePalm(arm,point,rotation.clone().multiply(arm.grip),pole);
+        contacts.push({side:arm.side,kind:touching?'touch':'support',target:point.toArray(),actual:actual.toArray(),error:arm.error});
       }
     },
     dispose(){object.removeFromParent();},

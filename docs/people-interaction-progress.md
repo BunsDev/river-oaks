@@ -77,6 +77,42 @@ other visitors, and character movement becomes hyper realistic end to end.
   World reload releases residents and disposes the old invasion before replacing
   the population, including when a crew model is still loading.
 
+## Worker contact integration (September 22)
+
+The current delivery also includes the hand-fitting and station-clearance work
+previously held in the original checkout. Standing staff now clear counter
+fronts and low display ledges; bartenders occupy the open service end. Fixtures
+and building footprints retain their existing coordinates.
+
+Supporting palms fit the actual skinned pads and angle inward with the forearms.
+Forearm rotation distributes the twist instead of sharply bending the wrist.
+Fifteen tablet users support the device in one hand and tap with the other index
+finger, with curled remaining fingers, deliberate contact/lift phases and
+conversation pauses. Hold distance and height adapt to shorter rigs; counter
+reach checks include the full tablet touch range.
+
+Clear storefront glass no longer blocks clicks merely because its material's
+stored opacity is 1. Picking evaluates the shader's angle-dependent opacity,
+including instance transforms; opaque fixtures and reflective grazing angles
+still occlude people. Talking distance, room and abduction gates remain enforced.
+
+The worker browser fixture includes furnished rooms and samples actual hand,
+body and clothing vertices against nearby box furniture. These checks broaden
+contact evidence; they do not establish continuous collision, rounded/sloped
+fixture clearance, handovers, tool manipulation or complete hyper-realism.
+
+Review integration also excludes abducted residents from passing, occupancy and
+arrival spacing. The nearest visible people-layer mesh now owns picking, so a
+mannequin cannot be clicked through; attached props inherit the resident's ID.
+Indoor HUD eligibility uses the same room and unoccupied-approach validation
+as opening the conversation.
+
+The renderer review concern did not reproduce: in Three.js 0.186, GTAO restores
+and clears its visibility cache, making the second restore idempotent. Existing
+normal-pass and thrown-render regressions verify foliage restoration. Outdoor
+sight-line precision remains at 0.15 m; HUD neighbor searches are throttled to
+150 ms, rather than run every frame. Broader frame-time work remains open.
+
 ## Verification
 
 The September 22, 2026 isolated-branch run is recorded in
@@ -140,11 +176,31 @@ and raw receipts are in local `output/playwright/`. Representative conversation,
 worker and reload screenshots were inspected; this is not a human acceptance
 review of every animation or occupation. No deployment was performed.
 
+## Latest integration verification (September 22)
+
+[`people-motion-delivery.json`](../data/reports/people-motion-delivery.json)
+records the integrated runtime hashes and seven browser receipts. The final
+JavaScript suite passed all 220 tests, and the production build passed. Local
+Python 3.12 passed 87 tests; Ruff lint and format, the offline demo, the expected
+synthetic-data verification exit 2, and secret scans passed.
+
+The worker fixture covered all 62 workers and six prop types, including 17
+reachable counter docks, 52,204 contact samples, 1,364 skin-contact samples and
+372 sampled body poses. Tablet fingertip error stayed below 0.001 mm in 165
+samples. These are sampled geometric checks, not continuous collision proof.
+
+Browser acceptance passed for worker contacts, all 193 people, player forms,
+interaction lifecycle, all 30 store encounters, six moving rigs and invasion.
+The last four checks were rerun after the occupancy, mannequin-picking and HUD
+review corrections. The report distinguishes that sequence from the earlier
+14-script acceptance above. Dev is served from the isolated integration worktree;
+the original checkout's concurrent changes remain preserved.
+
 ## Still required for the full goal
 
-- Complete the separate hand-fitting and full-body station-clearance work.
-  Established palm contact does not prove finger grip, skin clearance, wrist
-  deformation or that a worker's torso and clothing clear every fixture.
+- Broaden sampled hand/body clearance to continuous motion, seated contacts and
+  rounded or sloped furniture. Add wrapping and pinch grips beyond flat support
+  and the fitted tablet-tapping pose.
 - Expand live pointer acceptance beyond six walking rigs to tightly clustered
   crossings, partial occlusion and touch gestures. Rendered fixture acceptance
   covers walking poses and foreground obstruction; district acceptance covers
@@ -176,6 +232,6 @@ interaction and movement recovery, pointer fixes, rendering cost reductions and
 invasion integration fixes. A PR from this branch supersedes the code in #14;
 review and close that overlapping PR when this replacement is accepted.
 
-The active hand-fitting changes remain in the original checkout. Native Unreal
+The latest hand-fitting changes are included in this delivery. Native Unreal
 parity, live Jev availability and the remaining realism targets remain separate
-work. Neither branch has been merged or deployed by this verification pass.
+work. The broader movement goal remains active.

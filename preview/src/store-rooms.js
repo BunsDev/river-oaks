@@ -1,4 +1,5 @@
 import { terrainHeight } from './geometry.js';
+import { clearStandingStations } from './store-clearance.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
@@ -125,6 +126,7 @@ function wall(room, kind, side, d0, d1, extra = {}) {
   const a = side * (room.width / 2 - 0.24);
   room.fixtures.push({ kind, side, a, d0, d1, ...extra });
   room.obstacles.push({ a0: Math.min(a - 0.3, a + 0.3), a1: Math.max(a - 0.3, a + 0.3), d0, d1 });
+  if(kind==='bar')room.obstacles.push({a0:a-side*0.5-0.36,a1:a-side*0.5+0.36,d0:d0-0.02,d1:d1+0.02});
 }
 function person(room, role, pose, a, d, facing, extra = {}) {
   room.people.push({ role, pose, a, d, facing, ...extra });
@@ -147,6 +149,7 @@ function layoutRoom(room) {
   for (const item of room.obstacles) { item.a0 += room.center; item.a1 += room.center; }
   // Keep the entrance clear of fixtures so the doorway is always walkable.
   room.obstacles = room.obstacles.filter(o => !(o.d0 < 1.4 && o.a1 > -DOOR_HALF_WIDTH - 0.5 && o.a0 < DOOR_HALF_WIDTH + 0.5));
+  clearStandingStations(room);
   room.summary = {
     label: THEME_LABELS[room.theme],
     staff: room.people.filter(p => p.role === 'staff').length,
@@ -258,7 +261,8 @@ const LAYOUTS = {
     }
     person(room, 'staff', 'carry', W * 0.05, D * 0.55, [0, -1]);
     if (W > 5.5) {
-      person(room, 'staff', 'attend', half - 0.7, 3.2, [-1, 0]);
+      // The bar has no rear service aisle. Staff work at its open end.
+      person(room, 'staff', 'attend', half - 0.74, Math.min(D - 1.2, 7.5) + 0.42, [0, -1]);
       person(room, 'guest', 'seated', half - 1.35, 3.5, [1, 0], { seat: 0.74, seed: room.index * 13 });
     }
   },

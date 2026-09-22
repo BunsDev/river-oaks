@@ -48,7 +48,7 @@ function plan(life,local,index) {
 
 function passingHeading(life,local,heading,speed,visitor) {
   const forward=[Math.sin(heading),-Math.cos(heading)],right=[forward[1],-forward[0]];
-  const neighbors=life.state.locals.filter(other=>other!==local && !other.indoor).map(other=>({position:other.position,speed:other.life?.previousSpeed ?? 0,heading:other.life?.heading ?? 0}));
+  const neighbors=life.state.locals.filter(other=>other!==local && !other.abducted && !other.indoor).map(other=>({position:other.position,speed:other.life?.previousSpeed ?? 0,heading:other.life?.heading ?? 0}));
   if(visitor)neighbors.push({position:visitor,speed:0,heading:0});
   let offset=0;
   for(const other of neighbors) {
@@ -139,7 +139,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
     while(motion.route.length>1 && distance(local.position,motion.route[0])<0.025) motion.route.shift();
     const target=motion.route[0],length=distance(local.position,target);
     const occupiedArrival=!visit && motion.route.length===1 && length<1 && life.navigation.canWalk(local.position,target)
-      && state.locals.some(other=>other!==local && distance(other.position,target)<0.7 && distance(local.position,other.position)>=0.7
+      && state.locals.some(other=>other!==local && !other.abducted && distance(other.position,target)<0.7 && distance(local.position,other.position)>=0.7
         && (!other.life?.route.length || distance(other.life.route.at(-1),target)<0.25));
     if(length<0.025 || occupiedArrival) {
       motion.route.shift();
@@ -171,7 +171,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
     const speed=previous+clamp(desired-previous,-rate*dt,rate*dt);
     const travel=Math.min(length,(previous+speed)*0.5*dt)*turnAllowance;
     const dx=Math.sin(motion.heading),dy=-Math.cos(motion.heading);
-    const occupied=point=>state.locals.some(other=>other!==local && distance(point,other.position)<0.7 && distance(point,other.position)<distance(local.position,other.position)) || (visitor && distance(point,visitor)<0.7 && distance(point,visitor)<distance(local.position,visitor));
+    const occupied=point=>state.locals.some(other=>other!==local && !other.abducted && distance(point,other.position)<0.7 && distance(point,other.position)<distance(local.position,other.position)) || (visitor && distance(point,visitor)<0.7 && distance(point,visitor)<distance(local.position,visitor));
     const clear=point=>!occupied(point) && life.navigation.canWalk(local.position,point);
     const next=[local.position[0]+dx*travel,local.position[1]+dy*travel];
     motion.blocked=!clear(next);
