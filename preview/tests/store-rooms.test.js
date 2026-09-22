@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { planStoreRooms, storeRoomsFor, roomAt, rectanglesOverlap, DOOR_HALF_WIDTH } from '../src/store-rooms.js';
+import { planStoreRooms, storeRoomsFor, roomAt, roomBlocked, rectanglesOverlap, DOOR_HALF_WIDTH } from '../src/store-rooms.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -70,4 +70,27 @@ test('the oriented overlap test catches crossings that corner checks miss', () =
   assert.equal(rectanglesOverlap(square, [[4, 0], [8, 0], [8, 4], [4, 4]]), false, 'sharing an edge is not an overlap');
   assert.equal(rectanglesOverlap(square, [[-1, 1.5], [5, 1.5], [5, 2.5], [-1, 2.5]]), true, 'a bar crossing the square has no corner inside it');
   assert.equal(rectanglesOverlap(square, [[2, -2], [6, 2], [2, 6], [-2, 2]]), true, 'rotated overlap');
+});
+
+
+test('standing people have body clearance from fixtures, walls and other people',()=>{
+  for(const room of planStoreRooms(world))for(const person of room.people){
+    if(person.role==='mannequin'||person.pose==='seated')continue;
+    const point=room.toWorld(person.a,person.d);
+    assert.ok(room.contains(...point,0.28),`${room.name}: ${person.role} intersects a wall`);
+    assert.equal(roomBlocked(room,...point,0.24),false,`${room.name}: ${person.role} intersects a fixture`);
+    for(const other of room.people)if(other!==person)assert.ok(Math.hypot(other.a-person.a,other.d-person.d)>=0.55,`${room.name}: people overlap`);
+    for(const bar of room.fixtures.filter(f=>f.kind==='bar')){
+      const centre=bar.a-bar.side*0.5;
+      const across=Math.abs(person.a-centre),along=person.d;
+      assert.ok(across>=0.36+0.28||along<=bar.d0-0.02-0.28||along>=bar.d1+0.02+0.28,`${room.name}: person intersects the rendered bar counter`);
+    }
+  }
+});
+
+
+test('the rendered bar counter blocks walking as well as the back shelving',()=>{
+  for(const room of planStoreRooms(world))for(const bar of room.fixtures.filter(f=>f.kind==='bar')){
+    assert.equal(roomBlocked(room,...room.toWorld(bar.a-bar.side*0.75,(bar.d0+bar.d1)/2),0),true,`${room.name}: counter front is traversable`);
+  }
 });

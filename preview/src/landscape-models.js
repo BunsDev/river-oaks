@@ -51,9 +51,10 @@ export function buildMatureTrees(world) {
         out.push({geometry,material:materials.get(item.material.name),leafy});
       }});return out;
     });
-    // Spatial batches keep draw calls bounded and retain ordinary frustum culling.
+    // Twelve-meter batches limit offscreen instances without making each tree
+    // a separate draw call. Density, source meshes and stem positions stay fixed.
     const tiles=new Map();
-    placements.forEach(tree=>{const key=`${Math.floor(tree.position[0]/24)}:${Math.floor(tree.position[2]/24)}`;if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push(tree);});
+    placements.forEach(tree=>{const key=`${Math.floor(tree.position[0]/12)}:${Math.floor(tree.position[2]/12)}`;if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push(tree);});
     const dummy=new THREE.Object3D();
     for(const trees of tiles.values()) {
       const center=new THREE.Vector3();trees.forEach(tree=>center.add(new THREE.Vector3(...tree.position)));center.divideScalar(trees.length);

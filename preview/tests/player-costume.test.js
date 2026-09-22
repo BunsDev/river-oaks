@@ -32,7 +32,7 @@ function avatarFixture() {
   return {object,rig:{model,materials:new Map()}};
 }
 
-for(const form of ['jevica','witch','dorothy','scarecrow','tinman','lion']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
+for(const form of ['jevica','witch']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
   const avatar=avatarFixture(), originalChildren=avatar.object.children.length;
   const costume=createPlayerCostume(avatar,form);
   avatar.object.position.set(40,3,-20);avatar.object.rotation.y=1.3;
@@ -53,4 +53,15 @@ for(const form of ['jevica','witch','dorothy','scarecrow','tinman','lion']) test
   costume.dispose();
   assert.equal(avatar.object.children.length,originalChildren);
   assert.equal(disposed,geometries.size+materials.size,'Every attached geometry and material is released');
+});
+
+test('Grey costume detaches without disposing shared species assets',()=>{
+  const avatar=avatarFixture(),head=avatar.rig.model.getObjectByName('head');
+  const outfit=createPlayerCostume(avatar,'alien');
+  const anatomy=head.children.find(child=>child.name==='Grey anatomy');assert.ok(anatomy);
+  let disposed=0;
+  for(const part of anatomy.children){part.geometry.addEventListener('dispose',()=>disposed++);part.material.addEventListener('dispose',()=>disposed++);}
+  outfit.update();outfit.dispose();
+  assert.equal(anatomy.parent,null);assert.equal(disposed,0,'species geometry is a cached template shared by clones');
+  assert.throws(()=>createPlayerCostume(avatar,'dorothy'),/Unknown playable form/);
 });

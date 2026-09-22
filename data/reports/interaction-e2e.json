@@ -1,0 +1,624 @@
+{
+  "recorded_at": "2026-09-22T05:31:59.188434+00:00",
+  "base_revision": "e42940bf61e0294538353e4a01c619e66a8496fd",
+  "incorporated_pr": {
+    "number": 14,
+    "revision": "5a10b3dd08e6ac2330d911f6d14ff19593c28878"
+  },
+  "branch": "codex/district-interaction-ready",
+  "scope": "Isolated combined browser implementation on main after invasion PR 15; active worker-hand fitting changes excluded.",
+  "environment": {
+    "node": "24.18.1",
+    "python_test_versions": [
+      "3.11",
+      "3.12.10",
+      "3.13"
+    ],
+    "browser": "Local headed Chrome via Playwright CLI",
+    "server": "Vite development server on 127.0.0.1:4194"
+  },
+  "checks": {
+    "javascript_tests": 197,
+    "python_tests_per_version": 87,
+    "production_build": "passed; existing Three.js chunk size warning",
+    "ruff_lint": "passed",
+    "ruff_format": "79 files formatted",
+    "offline_demo": "passed",
+    "offline_verify_exit": 2,
+    "offline_verify_expected": "blocked for synthetic demo; exit 2 is the CI contract",
+    "worktree_secrets": "passed",
+    "staged_secrets": "passed",
+    "history_secrets": "passed"
+  },
+  "browser": {
+    "invasion": {
+      "checks": [
+        "The Alien form cannot begin the invasion",
+        "The card explains who can cast",
+        "Jevica can begin",
+        "Five saucers arrive",
+        "Every crew member has a saucer",
+        "The crew are of more than one species",
+        "A spell banished an alien within 120 s (banished 1, phase active)",
+        "Status narrates the fight",
+        "The scenario ends and everyone returns (phase called-off, abducted 0)",
+        "The card offers another round",
+        "The Witch can begin a second invasion",
+        "World reload clears the old invasion, crew and abductions",
+        "Reload restores the Begin invasion control",
+        "No page errors: "
+      ],
+      "banished": 1,
+      "errors": []
+    },
+    "pointer-gestures": {
+      "checks": [
+        "right click does not start a conversation",
+        "middle click does not start a conversation",
+        "Camera drag returning to its starting point does not select a person",
+        "Primary click still selects the actual mesh",
+        "Pointer gestures do not move the visitor",
+        "No uncaught browser errors: "
+      ],
+      "errors": []
+    },
+    "moving-people": {
+      "checks": [
+        "local-00: walking mesh is visible and in reach",
+        "local-00: walking mesh projects inside the viewport",
+        "local-00: real pointer selects the walking person",
+        "local-00: pointer conversation does not relocate the visitor",
+        "local-00: clicked walker holds position during conversation",
+        "local-01: walking mesh is visible and in reach",
+        "local-01: walking mesh projects inside the viewport",
+        "local-01: real pointer selects the walking person",
+        "local-01: pointer conversation does not relocate the visitor",
+        "local-01: clicked walker holds position during conversation",
+        "local-02: walking mesh is visible and in reach",
+        "local-02: walking mesh projects inside the viewport",
+        "local-02: real pointer selects the walking person",
+        "local-02: pointer conversation does not relocate the visitor",
+        "local-02: clicked walker holds position during conversation",
+        "local-03: walking mesh is visible and in reach",
+        "local-03: walking mesh projects inside the viewport",
+        "local-03: real pointer selects the walking person",
+        "local-03: pointer conversation does not relocate the visitor",
+        "local-03: clicked walker holds position during conversation",
+        "local-04: walking mesh is visible and in reach",
+        "local-04: walking mesh projects inside the viewport",
+        "local-04: real pointer selects the walking person",
+        "local-04: pointer conversation does not relocate the visitor",
+        "local-04: clicked walker holds position during conversation",
+        "local-05: walking mesh is visible and in reach",
+        "local-05: walking mesh projects inside the viewport",
+        "local-05: real pointer selects the walking person",
+        "local-05: pointer conversation does not relocate the visitor",
+        "local-05: clicked walker holds position during conversation",
+        "No uncaught browser errors: "
+      ],
+      "clicks": [
+        {
+          "id": "local-00",
+          "speed": 0.22436223198715388,
+          "screen": [
+            811.6369339378241,
+            382.4234454088599
+          ],
+          "position": [
+            -2813.562169153053,
+            -1274.5893112749065,
+            18.30592409280829
+          ]
+        },
+        {
+          "id": "local-01",
+          "speed": 0.24934000003337858,
+          "screen": [
+            780.9310734991687,
+            402.993015433332
+          ],
+          "position": [
+            -2811.5213701491225,
+            -1229.6536468520128,
+            18.348597338804954
+          ]
+        },
+        {
+          "id": "local-02",
+          "speed": 0.37135000008344643,
+          "screen": [
+            780.8831998331979,
+            412.5329775433165
+          ],
+          "position": [
+            -2808.352278419711,
+            -1206.1526076473729,
+            18.42950609249197
+          ]
+        },
+        {
+          "id": "local-03",
+          "speed": 0.3846500000834465,
+          "screen": [
+            782.5425748188178,
+            403.67518854186693
+          ],
+          "position": [
+            -2771.274881258699,
+            -1308.1163664418696,
+            18.44285775631936
+          ]
+        },
+        {
+          "id": "local-04",
+          "speed": 0.40976888072716944,
+          "screen": [
+            789.3160217605581,
+            415.9622646820066
+          ],
+          "position": [
+            -2766.0627390799964,
+            -1227.6185732868657,
+            18.275602877490456
+          ]
+        },
+        {
+          "id": "local-05",
+          "speed": 0.2652842066276603,
+          "screen": [
+            782.1310441184617,
+            399.2286399287136
+          ],
+          "position": [
+            -2769.8698889722136,
+            -1259.315117761,
+            18.36685298798705
+          ]
+        }
+      ],
+      "errors": [],
+      "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
+    },
+    "people-picking": {
+      "checks": [
+        "Third-person body remains visible indoors",
+        "store-osm-node-8172494967-person-6: in reach and rendered",
+        "store-osm-node-8172494967-person-6: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-6: conversation does not teleport the visitor",
+        "store-osm-node-8172494967-person-9: in reach and rendered",
+        "store-osm-node-8172494967-person-9: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-9: conversation does not teleport the visitor",
+        "Worker resumes their task after recognition and conversation",
+        "Worker holds the task and attends during conversation",
+        "Actual seated rigs keep feet within 1 mm of planted targets",
+        "Loaded workers support their props within 1 mm of each palm",
+        "No uncaught browser errors: "
+      ],
+      "seatedFeet": 94,
+      "maxFootError": 1.29043200702043e-06,
+      "palmContacts": 124,
+      "maxPalmError": 1.399391352450389e-07,
+      "errors": []
+    },
+    "interaction-lifecycle": {
+      "checks": [
+        "local-00: visible and within reach",
+        "local-00: pointer selects the actual person",
+        "store-osm-node-8172494969-person-2: visible and within reach",
+        "store-osm-node-8172494969-person-2: pointer selects the actual person",
+        "Interior layer hides the staff mesh",
+        "Hidden staff cannot be clicked",
+        "store-osm-node-8172494969-person-2: visible and within reach",
+        "store-osm-node-8172494969-person-2: pointer selects the actual person",
+        "store-osm-node-8172494969-person-2: visible and within reach",
+        "store-osm-node-8172494969-person-2: pointer selects the actual person",
+        "local-00: visible and within reach",
+        "local-00: pointer selects the actual person",
+        "No uncaught errors: "
+      ],
+      "errors": []
+    },
+    "store-encounters": {
+      "counts": {
+        "all": 193,
+        "indoor": 169
+      },
+      "errors": [],
+      "visitedCount": 30
+    },
+    "all-people": {
+      "errors": [],
+      "visitedCount": 193
+    },
+    "player-forms": {
+      "checks": [
+        "Jevica is the default",
+        "Only the three authorized forms are offered",
+        "jevica: real model portrait loads",
+        "jevica: description updates",
+        "jevica: third-person camera",
+        "jevica: matching flight vehicle",
+        "jevica: completes ascent to cruising altitude",
+        "jevica: ascent changes real altitude",
+        "jevica: HUD reflects flight",
+        "jevica: landed at ground level",
+        "witch: real model portrait loads",
+        "witch: description updates",
+        "witch: third-person camera",
+        "witch: matching flight vehicle",
+        "witch: completes ascent to cruising altitude",
+        "witch: ascent changes real altitude",
+        "witch: HUD reflects flight",
+        "witch: landed at ground level",
+        "alien: real model portrait loads",
+        "alien: description updates",
+        "alien: third-person camera",
+        "alien: matching flight vehicle",
+        "alien: completes ascent to cruising altitude",
+        "alien: ascent changes real altitude",
+        "alien: HUD reflects flight",
+        "alien: landed at ground level",
+        "jevica: real model portrait loads",
+        "jevica: description updates",
+        "jevica: third-person camera",
+        "jevica: matching flight vehicle",
+        "jevica: completes ascent to cruising altitude",
+        "jevica: ascent changes real altitude",
+        "jevica: HUD reflects flight",
+        "jevica: landed at ground level",
+        "First-person toggle",
+        "V restores third person",
+        "Mobile character controls start collapsed",
+        "No mobile horizontal overflow",
+        "Keyboard expands character controls",
+        "44px flight target",
+        "Mobile portrait matches the current form",
+        "No uncaught browser errors: "
+      ],
+      "errors": []
+    },
+    "worker-contact": {
+      "workers": 62,
+      "kinds": [
+        "fabric",
+        "jewelry",
+        "samples",
+        "eyewear",
+        "tray",
+        "tablet"
+      ],
+      "docked": 1,
+      "contacts": 52204,
+      "maxError": 1.7927936126450199e-07,
+      "errors": []
+    },
+    "crowd-motion": {
+      "results": [
+        {
+          "scenario": "passing",
+          "rigs": 6,
+          "frames": 1441,
+          "plantedSamples": 12854,
+          "maxFootErrorMeters": 9.747649735390878e-07,
+          "walkingMeshClicks": 4,
+          "opaqueForegroundRejections": 4,
+          "arrived": 6
+        },
+        {
+          "scenario": "turns",
+          "rigs": 6,
+          "frames": 1441,
+          "plantedSamples": 12825,
+          "maxFootErrorMeters": 9.865315110286478e-07,
+          "walkingMeshClicks": 0,
+          "opaqueForegroundRejections": 0,
+          "arrived": 6
+        }
+      ],
+      "errors": [],
+      "scope": "Actual resident simulation, avatar animation and pointer picker on fixtures; deterministic walking frames"
+    },
+    "grounded-motion": {
+      "rigs": 6,
+      "frames": 301,
+      "plantedSamples": 2052,
+      "maxFootErrorMeters": 9.75958288579981e-07,
+      "errors": [],
+      "scope": "Actual shipped skinned rigs and renderer on an inclined fixture; district paths checked separately"
+    },
+    "resident-life": {
+      "maxFootErrorMeters": 9.173785498006181e-07,
+      "residents": 24,
+      "traveling": 20,
+      "routeWorker": true,
+      "batchedRequests": 17,
+      "conversationHold": true,
+      "nearbyConversation": true,
+      "stormSheltered": 2,
+      "pauseStopsRequests": true,
+      "reducedMotion": true,
+      "uhd": [
+        3840,
+        2160
+      ],
+      "timing": {
+        "medianMs": 34.29999999999927,
+        "p95Ms": 51,
+        "maxMs": 66.80000000000291
+      },
+      "timingScope": "Local Chrome animation frames; not a target-GPU or UE5 benchmark",
+      "browserErrors": []
+    },
+    "volunteer-visits": {
+      "helperId": "local-22",
+      "cast": 193,
+      "walkedMeters": 49.848874786248544,
+      "arrivalSeparationMeters": 1.4400829785704141,
+      "physicalArrival": true,
+      "pause": true,
+      "stormHold": true,
+      "ambientPauseKeepsVisits": true,
+      "visibleSupplyBag": true,
+      "taskAwareDialogue": true,
+      "conversationHoldsVisit": true,
+      "needsResolved": true,
+      "resetReleasesHelper": true,
+      "browserErrors": []
+    },
+    "render-budget": {
+      "samples": [
+        {
+          "label": "jevica",
+          "medianMs": 67,
+          "p95Ms": 84.39999999999964,
+          "canvas": [
+            3840,
+            2160
+          ],
+          "pipeline": {
+            "ao": true,
+            "aoScale": 0.5,
+            "transmissionScale": 0.5
+          },
+          "render": {
+            "calls": 2076,
+            "triangles": 25056394,
+            "geometries": 219,
+            "textures": 297
+          }
+        },
+        {
+          "label": "witch",
+          "medianMs": 66.70000000000073,
+          "p95Ms": 83.69999999999709,
+          "canvas": [
+            3840,
+            2160
+          ],
+          "pipeline": {
+            "ao": true,
+            "aoScale": 0.5,
+            "transmissionScale": 0.5
+          },
+          "render": {
+            "calls": 2083,
+            "triangles": 24705354,
+            "geometries": 218,
+            "textures": 297
+          }
+        },
+        {
+          "label": "alien",
+          "medianMs": 66.79999999999563,
+          "p95Ms": 83.5,
+          "canvas": [
+            3840,
+            2160
+          ],
+          "pipeline": {
+            "ao": true,
+            "aoScale": 0.5,
+            "transmissionScale": 0.5
+          },
+          "render": {
+            "calls": 2063,
+            "triangles": 24664274,
+            "geometries": 215,
+            "textures": 297
+          }
+        },
+        {
+          "label": "jevica-bubble",
+          "medianMs": 66.70000000000437,
+          "p95Ms": 84.29999999999563,
+          "canvas": [
+            3840,
+            2160
+          ],
+          "pipeline": {
+            "ao": true,
+            "aoScale": 0.5,
+            "transmissionScale": 0.5
+          },
+          "render": {
+            "calls": 2149,
+            "triangles": 25810453,
+            "geometries": 224,
+            "textures": 307
+          }
+        }
+      ],
+      "fullResolutionRefractionAt1080p": true,
+      "errors": [],
+      "scope": "Local Chrome frame timing; moving residents and the full district remain enabled. No target-GPU performance claim."
+    }
+  },
+  "verification_note": "Application source remained unchanged. Two E2E scripts initially threw on a missing DOM element; readiness guards were hardened and affected scripts rerun. The invasion pilot also lost one scenario before reaching an alien; directory controls now establish its approach, followed by actual movement and Q casting. That invasion check passed twice consecutively.",
+  "limitations": [
+    "Optional inference is offline or mocked; no live Jev claim.",
+    "Worker scope is established palm contact; active finger, wrist and station-clearance work remains separate.",
+    "No native Unreal build or acceptance performed in this pass.",
+    "Local frame timings do not establish target-GPU performance or 60 fps.",
+    "Hosted PR checks have not run for this branch."
+  ],
+  "source_files_sha256": {
+    "preview/src/alien-species.js": "9e76bdf2c7af02a51df4f264b3c60a2e110a0167a2571585d9315046fa548cd5",
+    "preview/src/arm-contact.js": "775456efc4be06d8fe4cb03a8e65f67e121557c8c00a6723f2f387b2cfd632e3",
+    "preview/src/atmosphere.js": "7142785fbf1ce001b06e7f53539bdf5f36dd7154145b03608e62533489533c3c",
+    "preview/src/auto-ui.js": "5d1a81798045ebe6c340f99909ffb05e0f718d9b70d6c519f0e55754536870be",
+    "preview/src/auto-visitor.js": "b8490fa25ea99ebf36c00a13f963b9d8937ceb64170d9bf391548ae72e739bab",
+    "preview/src/auto.css": "b6abf7c42e3b55caed7e77aba670c7c39e30dee4c49065d40e5828c956ebb6f4",
+    "preview/src/avatar-stance.js": "c1f857d5a6d28f1a6436858030e3d94459304cba76136a7e5536684c54445a56",
+    "preview/src/avatars.js": "19d219f18ff6886c726d86ff02da4db2f5b16ed7256daf546b3e0b4b70e257b3",
+    "preview/src/community-dialogue.css": "028bc01b6c8f8c64bc9580a5ab5ee2fcfeaac5d73db5c0f4eeeac5e5cb4ec06d",
+    "preview/src/community-presentation.js": "268b0de14d092524e3011de3509471a9d1f8733e624ede5e3edd9ae0a5971ee7",
+    "preview/src/community-ui.js": "af43bd37983888b6302ba4a6327dada4f6e614d164730ca09b756abb99a35cf1",
+    "preview/src/community.css": "f519c2ec23bd77570aa32e193d0e4ee0bd41fbb95e1fe847c1fbdc63c4d71bba",
+    "preview/src/community.js": "9571b556de30041ce33d0a69f7376e9279cfc3fb58b51be45daf0ef3e5864c86",
+    "preview/src/conversation-sight.js": "874909df5138a3d52ce2a06f4332e0006f5afb35eaaaee0fb7c917330f5b68a4",
+    "preview/src/costume-batching.js": "740fec6f80a83a9f666fb873cb8b521bc301bbac0af88a8a0fcdfc610c93307d",
+    "preview/src/district-fantasy.js": "24c75d1f4e45c94c55481802411c92d7cb1eebe6dbb6ee2d02104df919b43800",
+    "preview/src/district-theme.css": "c84a79919a13dceaddd0c7e53c2e820024ad7b7c3306d39a6afcb3324a2a1328",
+    "preview/src/district-ui.js": "fe5bb15138a2d0cb8239a4730ff9e41f065abc5dea1d8f3fc4de630193f4ee9b",
+    "preview/src/district.js": "924111cb0b0d1eb60321f799085dfadeefbdee2ad3ff746cc1b63e25b03a1874",
+    "preview/src/economy.js": "b857c85c4ffb31af448a4112691963c40d8fa9276bf9d2e7cacb6578490c6031",
+    "preview/src/encounter.js": "f0b4368978c5e8efaf0c07ea8a9b64cd51c36176c546fdbad7cdaed9bb5258fd",
+    "preview/src/flight-vehicles.js": "0976e9657590fc8e8ad325a0194ec3cc86241f99c962b7c97bb5ca2482ee633c",
+    "preview/src/flight.js": "720d1788b360f96b895df3c10e1ff17dca0dee887fa5e849ffdc2e7b8832c4ed",
+    "preview/src/foliage.js": "0eebb8e786153da5269ac3b357e25cbcf0165a268eec1380a4181b898cd36e92",
+    "preview/src/foot-placement.js": "40cebf5f45c9f18f7729d4cd4ee14b448cf63698c5654323952b6706f6398828",
+    "preview/src/gait.js": "6e2b49c8dfd2e6aa95588b4b75675a74978d4bfcb27f427abc463dcd932e7d6c",
+    "preview/src/geometry.js": "8d75ea5db05da9c9a26b0d221b9aab1c4450dc92271ca5e1f8ee6e8b2e19f9b4",
+    "preview/src/head-fit.js": "f902f08d093dd7c6274d698a1398e642a7899d9d364e2d547709a7ae51b9db1e",
+    "preview/src/immersive.css": "76876d4293684f5cb4f7e9f5347e7f2e874ce052307c0482c5ec374973c2275a",
+    "preview/src/invaders.js": "3197cd3b75da53d01325421d93e2195094e72c7472ad9c471c22db977cd8d30d",
+    "preview/src/invasion-ui.js": "b83d1d5640b30847671859e3c40a2cd642b6cf360e9f79a45b83ca97623aaa2a",
+    "preview/src/invasion.css": "cef7b29ca109e6642a5615641501c0beaee99e0b5901115e43f2e10b5ed409ac",
+    "preview/src/invasion.js": "97ac1e5b6189b0e10195948e11fa5eae44c35280d49fa00cc7b65da988d2d1ad",
+    "preview/src/jevica-costume.js": "242f54f3c26e559575f1af4591e9e73de892e5300533852d0d8c62c6cd91cd67",
+    "preview/src/landscape-models.js": "ba113e1de126b9735b118c76246fd0f3549172733a26c1f8693cb4ba28a69bb8",
+    "preview/src/locals.js": "545a717078b315095a26ab4631522e65ada2c9380cde59fa853cd5d9a2a749f8",
+    "preview/src/main.js": "e809392342c8e71afc34a1ed1f4f9062f4f8831bf7107b7a4ac225d93d19ccaa",
+    "preview/src/materials.js": "4ee4a00d4f1e8065be52ac1052761954861d1aa5b0df971acba7d71449650476",
+    "preview/src/navigation-service.js": "28e18c73fe3b834269ad67f2595ec3e883b082457429611c1e573b75ea9f4dbf",
+    "preview/src/navigation-worker.js": "357be250cd68a9df92e458329e716cf871809a3ff1f68d03cc39c559eb2fe9ad",
+    "preview/src/navigation.js": "13306f9f2e47649a081c25e5aac0e33933df8658f2197a18410663e1b73d0158",
+    "preview/src/nearby-people.js": "634a424de0ddd109f95f5ea077e3ee830c4a284f7d3992441661ed989eff22af",
+    "preview/src/oz-folk.js": "eb60f1cfbbd21b36cbf9265b518cbef200471d5fbb47069d7f348c9ef2ec213b",
+    "preview/src/pedestrian-network.js": "b2bf7754eec7fcb393629bb27ecc8a807b7c4e469ca395ad0a96548dbaf39e07",
+    "preview/src/people-picking.js": "21c31c35ba0ea07b404e965c35538eb489b748aa2ab1cd3eea99a06b9c33e1e5",
+    "preview/src/personas.js": "3f8f0b0f6fc096510c4c59fc48c1b134da125d590408b28e9a3185f892b3f587",
+    "preview/src/player-avatar.css": "b8f010c4584e0665c979b654ebe62053ee5c9fd88566b02ea431f73e63151bbd",
+    "preview/src/player-avatar.js": "a86e8609ab1402b04ccfec18f1fa25411479b93af7b5a149e5c861fdaa2e65cf",
+    "preview/src/player-costume.js": "faa53acedf892ffeefdd0fdb3b342f53bdfda4ddcb1a50ec629b3993b771f997",
+    "preview/src/playground-theme.css": "15c4598539552a1b7bace3e175266e4db79573e7fae114802e4522b4e4b62592",
+    "preview/src/reflections.js": "4c0a7fc37e420364cdb890b8489df4cb6ffc16532be54bfec5f32dec26c8dcc9",
+    "preview/src/render-pipeline.js": "bf190866be9dab8742e193290acaa2d5562910d3303e5d6e89299d1e8241e954",
+    "preview/src/resident-life.js": "057f7eefcc37bd27a63bb832331d9f7d83978953b6abfa79e3e0ea2ab20097a4",
+    "preview/src/resident-style.js": "cb3240d0ff61514f39cb6b1b2bf1f7540d23ef765db39829f5eb06b18f97cbb6",
+    "preview/src/retail-displays.js": "84e4e948bbbf589f18ce9434e025a6817ddc8cd29292de536b1d72128cfc19ff",
+    "preview/src/retail-interiors.js": "0f22bfe113cbd6a55b7b40098f04f7b9f6e2728999a6aebc1bdc183dfa94f1d1",
+    "preview/src/sidebar.css": "ba4e3d77b804cd21524d701fcb9151554e3f532056cf1f20ac4af796d2a918fe",
+    "preview/src/sidebar.js": "a9387ee37f63e7de8b42f790c290177888076bc405a8c7ba6882f34e62659c56",
+    "preview/src/sidewalks.js": "c1964a37fac00b8f304f56f0f3982d4c404da63acd5bad62165fc80d3b8d55be",
+    "preview/src/speech.js": "3b62c3cb211b57581af6497d87c2b03cfb27d7ec9e9ef06d0dfc227267397135",
+    "preview/src/store-encounters.js": "3fc3164aa1dab8c4c83866c907245a86f15b418ce73c87407350dfea1021a06e",
+    "preview/src/store-interiors.js": "a951e12daf2a2001bac1e8cee7218f449ad795e55e09b15ad3f8831aa63726c3",
+    "preview/src/store-people.js": "6673fdc36d6d49b9b1da45b9dc1e9b26638db1fdd762052ec4509c92e7fcb2d9",
+    "preview/src/store-rooms.js": "6c9e78d229da9682dc0e1d1372fca1b3a01453f83ea7f83c0db37bfd36c0852b",
+    "preview/src/store-work.js": "870cc87a054bd5dd55bba66c74bbc65451533bbcda29548221b16faec6df7b04",
+    "preview/src/storefront-materials.js": "4ba20fd5df356ee5666fcd89d0fda2e481e3b2a0c85be9b144422f2a3e471db3",
+    "preview/src/street-furniture.js": "288ffdd3c14967448f7a2cee8133125abe74ab9ae91456e59b26ffa2de97c957",
+    "preview/src/style.css": "6272c8ec977a1b20967ab970b231d7545ccf774e20ea9ee3e9943878e988f480",
+    "preview/src/theme.js": "acc84ce41ec75a0ddbf20e7152a3d5d5a9c8280dc8b7550dea97f6582e19194c",
+    "preview/src/third-person.js": "2b885f405af41631ab4f798c3df8667e0d1ff203d4a294a987cde7eaf4197364",
+    "preview/src/vegetation.js": "a00f690933e9fe809cf4e55fb7469e4beb2e9828b982cc299c08d135fa73b6c3",
+    "preview/src/viewport.js": "afa79a041de8f70977ab0d9925c80d89dd70b4dfad956fadb830b9c6dd9d8d14",
+    "preview/src/visitor-persona.js": "762009f37eabb65099a308eec2b60134a4802e16eee15ba9ba36a060136f57e4",
+    "preview/src/visual-finish.css": "ec3ed1a2eceef63899d81352ae2f1fb015e2d344b684542788672a7072ee1872",
+    "preview/src/volunteer-visits.js": "28cd8c07a0489a6d2e077a4eea75548ddf5ff3ae5e220a2fd9c3dce875a17324",
+    "preview/src/walking-ui.js": "e0ec29d59b518405be3ac417be06b7a1d126760d21f9d52bc388ec35a4d1a54f",
+    "preview/src/walking.css": "fa543f42245db80038418d2782dd3bec2fcc4d0360736dd06d41f4b64d6b9748",
+    "preview/src/walking.js": "5d3b967a9115807771b38ddbd664637f8eea66b6ba8d1d386bdfe43487449032",
+    "preview/src/work-props.js": "cfc1f6be268ec828940b4b263bdb2a6a64377cf4b510543135851486c305cd76",
+    "preview/e2e/all-people.js": "c5725140fa61ab77de0ebc30250423fca284b908bd7903233f61fa13659f1f64",
+    "preview/e2e/auto-live.js": "6577b9b9c5f8a6e3bf16108133e2e9893fcdcd951fcdd4c169446202591862c4",
+    "preview/e2e/auto-mode.js": "fd2cd84be4a1103b3134eb62755f6690822e259a93fbd358be515940117e9e8f",
+    "preview/e2e/character-portraits.js": "02d2de6f2d61a1604d7e4b3e7e0b200ba27acb97af6a03cbfd118946374607eb",
+    "preview/e2e/community-dialogue.js": "1d0b533a60ba42a7b235db4316c86a186e2d5f627fb1597ffa871160eca7f001",
+    "preview/e2e/crowd-motion.js": "25e33c286b93a73d593ac53aa6996ab525f7ed92ed39f1aef993fba9ff3ce2c2",
+    "preview/e2e/district-polish.js": "6025e857bfab273829a8148cd71b6cd0c340e9e87754d5a81cda56f04f588d54",
+    "preview/e2e/district.js": "2b35f21336570fd63530321f8f427e7be8010fef1c59c66969cf63def65a8ca6",
+    "preview/e2e/fixtures/crowd.html": "a3d438696bb56182af432a2f34fcaba86a75a07f652f4e7fb0d67e787a28314e",
+    "preview/e2e/fixtures/crowd.js": "79c2f0f107f2b08f23c3ae9772cff7f2daaf3fd10780af1252996f3e5526668f",
+    "preview/e2e/fixtures/jevica.html": "930cf7f856b01aaaf6eab86bdf3185158e4145d63e6b50adc3486a27b73bc9c1",
+    "preview/e2e/fixtures/jevica.js": "a8bb5770d21f4b2dbaed8346a1f1342cebad145276fadf509bd62caa01a90a7b",
+    "preview/e2e/fixtures/motion.html": "7d8fd48f56a848d48d02157778c775f3fa5f13abe58a1a2dde5af591e31abf26",
+    "preview/e2e/fixtures/motion.js": "7ff247e8ddf89e0fc64d4671258cb421ce139163f4ad405faf3331cb5815cdad",
+    "preview/e2e/fixtures/workers.html": "fef61ff88fb16230cec0e25f24875127f00d74a10671df3b5ad3c841afc91df1",
+    "preview/e2e/fixtures/workers.js": "ea08fd2b037d52c3d7737abfb76701fb3eee59198630ef545fa7f6f189f49b28",
+    "preview/e2e/grounded-motion.js": "fdd78c2d3b556b5ddc1cc7b35af9e81c27d0c4a61391dc69bd86bb891cf496f6",
+    "preview/e2e/interaction-lifecycle.js": "65d0b19f9bdd78448c1cdba93e3b929a3943821563691288701c9db9d06326e3",
+    "preview/e2e/invasion.js": "b11478ef021ad4005bacb73325a76a44f74a3744d0c8f88d85d1ccbd5e7b8228",
+    "preview/e2e/moving-people.js": "92fd03937ef05e722cce495b09f343a3c30bbf7e26335efca6e361e781e46108",
+    "preview/e2e/people-picking.js": "4bc5905acf91178e4926b1b53de20d771c7c798d4b472bb478390a65823f9dac",
+    "preview/e2e/personas-voice.js": "4112bc196b118049f37910ffe09d1302ab374bdd139ae5dc54f67cf0bfa0bb01",
+    "preview/e2e/player-forms.js": "bdb671646f71d6bb6ca1ca280931c90270718baa57da0d8d1d1bb2ab27a2a11f",
+    "preview/e2e/pointer-gestures.js": "ecdcc7e97e51dc8b97b023b26d442a3b64e102971caca00c77f2b77d3bb76bfe",
+    "preview/e2e/render-budget.js": "51420d083dd0828e00f81eeef6cf7e8f906322cbb6c852787eab6b8cf4154358",
+    "preview/e2e/resident-life.js": "9f7240266419be0f045cb8c3c0af1df901369b28b35c18b056d25df345014e20",
+    "preview/e2e/sidebar.js": "f1ea075bb857cc6d36d5f980c3868ac948744425905f17532a00c52a8998d43d",
+    "preview/e2e/store-encounters.js": "2662b1a05ecd1fefa0eb9eb554558cc017824a1f9bdd107a62e6b8e23392e0eb",
+    "preview/e2e/store-interiors.js": "9954d911e977e67aba5491e4a3a36476dde12c0595c78d3c9ef302ed7c87ae8e",
+    "preview/e2e/storefront-lighting.js": "ddd0a307c91e3c7622e38e02a0e0ed388760cb59bb6e9540db37b3a596a82413",
+    "preview/e2e/street-level.js": "a5ee2e1baf86c172fbc64e8d32523c27c90fcb6262c5028e6151c882c2cc0c1d",
+    "preview/e2e/ui-improvements.js": "81ae59dc3f452ae3020b748e82468ee3e46ea2e6183b1c14abeb58e5e144af15",
+    "preview/e2e/visual-fidelity.js": "957fbf9e57bb2350c81b7c2ba285aa9b44ab751f1283cf2e2e46e221f5fd60ae",
+    "preview/e2e/volunteer-visits.js": "3d2c1d6f9fdd54ad1bd83f2b1148161b6fb84adfb40e6b352899ca8ebef5dd88",
+    "preview/e2e/worker-contact.js": "26c4cd6fc8064b02da010d689b8cc9e00342a30b2fdf5833e877a68d486c3ef0",
+    "preview/tests/arm-contact.test.js": "4db95437a4cfd0b839b55f94e91f745273b46fee4e3cc26cf90d2e1a01c927b6",
+    "preview/tests/atmosphere.test.js": "fe2cdba7f090d81d160d6b7f9ace7c982b9e70e18f4a0da605c07463b2a1e431",
+    "preview/tests/auto-navigation.test.js": "37d6e42f746f6c26e44ef38a2e35e27392e36f83a0271e617b460b5fb0192610",
+    "preview/tests/auto-visitor.test.js": "b78a5dfc7b50c6467eec717aa977ab93e0f5d5d137963659ab42bbe37c013cb3",
+    "preview/tests/avatar-stance.test.js": "8db4f3e314c3adc30e66bfc934262a56502121f238c7e9f92944309076e30207",
+    "preview/tests/avatars.test.js": "c00da623110c8ea167527a182988674eefaa5e4a286c486ca8015676f5463bb3",
+    "preview/tests/community-presentation.test.js": "53201b8afe642d047e83d4dc316192d36b6ae65b3de5d9a7b9b0b88e8b428492",
+    "preview/tests/community.test.js": "7152cef7d66d1a759b8bcffa7753bbadd74e1dfa30554bae8c6a7f8ef887a4e4",
+    "preview/tests/conversation-sight.test.js": "bb98461a53439fbf02e1c04e53e24a516fede98f4c6ae5cfed50daa83d4898ee",
+    "preview/tests/crowd-motion.test.js": "f1beb9a5eb93180e6a68110a7805a48f837b570f9a7090ebee9190d0e01c9cee",
+    "preview/tests/district.test.js": "bd45ad8c7a5f9b61b9c5503c7f8ca852279788417ae6ecdb8aaccb442f70c910",
+    "preview/tests/economy.test.js": "3282496af822de741bcdc84f51fbbf45e84dc453e3f18fee605215f2e3561167",
+    "preview/tests/encounter.test.js": "edaa4e4bb01a9e63f020bca4b438778255fd84177ad755f91951429b560f2c39",
+    "preview/tests/flight.test.js": "637bccebeb60839d696ec56205570901fe2ba24c3a652e1022d8138b4ff35bf4",
+    "preview/tests/foot-placement.test.js": "7010849d6e2cfc007e0b28225190e8055be9b8678bec5ef855b598e6969108b5",
+    "preview/tests/gait.test.js": "37c0578ea1ef8f665e51035a61491baa36245e4158387a7638597429f37b7c6a",
+    "preview/tests/geometry.test.js": "0d12b5e9ae0d8aeee2470f1ce5c3c47ea9679a0dbb0bda0d275b7ba88ca38ae5",
+    "preview/tests/head-fit.test.js": "887b4b883c238408af666a09aa626423cc0020630c5c556f4ed90368809c6fe2",
+    "preview/tests/invasion-integration.test.js": "eee92f5b73403bc01da0e66d3f0dd2423e02018bd3d3264ce520b2e3af71134f",
+    "preview/tests/invasion-reset.test.js": "2803b73eb76e87a60e98c8ca01e6b71527993563812aa9eef40c130e8d5dcafa",
+    "preview/tests/invasion.test.js": "4e435959a2f9298fb58b799a564bcfa7d87f5d263ef88d5d6ac3e657b04fd1a5",
+    "preview/tests/landscape-models.test.js": "b46c3419f668249af205404ceda6dfa58494ef63a4e6bdc21014cc92ecc3474d",
+    "preview/tests/navigation.test.js": "f849e8d2e90afcf8099f5bdb860c1131df5881d05db8a402c5c4c426a0a79ab8",
+    "preview/tests/nearby-people.test.js": "b8354f6fc464d97d0f84374f6b1f8220ab9f498e0ba1fbb58458cd479883e6db",
+    "preview/tests/oz-folk.test.js": "047d122f16f70867b76bc4977a58170c3f13ef6cc7ff3a6de45126d6c66611a6",
+    "preview/tests/people-picking.test.js": "7af18c8ef90ef8ba28c1a7c7000b02a57fa95d47c951f66b1fa0864d2fb2b2e7",
+    "preview/tests/personas.test.js": "3b7354d759db3ffae1f9c8d24026d8f6021001b66183e790878e5ff53df293ab",
+    "preview/tests/player-costume.test.js": "33355579d6717cac05711222f8e04fa6875fcfda5b448398ab2f2d356b210415",
+    "preview/tests/reflections.test.js": "ca0ee3cbd55323d29c5281d069947f97987960c26545eef6aeea2c2a07b6ce36",
+    "preview/tests/render-pipeline.test.js": "979813017e22acb824a81467e954a5ae11a08040aafd3b816a89f3c3d6304e8b",
+    "preview/tests/resident-life.test.js": "0804785c2aceee7cbcb998871fa205fc27fd362625ed147fa2e39b33f0b4e80b",
+    "preview/tests/resident-style.test.js": "13ef477c0aecc5f8725e4d69ed8aac0acdb5e5a026f175b0b3c23d486875b758",
+    "preview/tests/sidewalks.test.js": "f767afc000a400d7c4f5c1015c6ce066934fea5828bdc56da6e988442f95500d",
+    "preview/tests/speech.test.js": "958e712fb78b80236b212d4937447156951c8e840657133e38ee046e139a2113",
+    "preview/tests/store-encounters.test.js": "d86277230577f7b716665cdd8a1722b5ec31da4194f9e7b0b77157ebfbaf6fad",
+    "preview/tests/store-rooms.test.js": "549f0889c21cf4a84225560d90d3732c21bcc05f0dcf3a4aa095af83613607f7",
+    "preview/tests/store-work.test.js": "4acf7c75faf9bb6b2afcaea8b49adf01d19a0413861e62c40b4d4fe5ecf4ed7b",
+    "preview/tests/street-furniture.test.js": "4b11a7f37759c3ea54e4b0ff0fe2c60548dab78e6d8306c6d306f92c4505e6fb",
+    "preview/tests/theme.test.js": "f94c73978de4a780f6d3cae96d0ac499f24b687914a430ea33037463ab4cecda",
+    "preview/tests/vegetation.test.js": "b4d88f991f0d24c3da242cd878744e486283577650579b13dcb638a8c5acae03",
+    "preview/tests/viewport.test.js": "7550dec0ced118ec99e5d6c47de0f3adb2e234e2b0a3cb8734ab317da63b11f1",
+    "preview/tests/volunteer-visits.test.js": "552bede9a9ea10006d106e58ae25775e3077c5ad1ae3f8054a48293194fdb740",
+    "preview/tests/walking.test.js": "69795762c43262452cde8094b968c3e9ba73729d762e45b9283d97bdbba8fe45",
+    "preview/tests/work-props.test.js": "460aaa0ab7aa474ee5f6969235401043642ce6f9bafa4d1a41b7c4ae31a6db01"
+  }
+}

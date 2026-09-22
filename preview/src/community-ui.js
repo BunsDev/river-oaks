@@ -82,7 +82,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   progress.id = 'community-progress';
   const objectiveMeter = node('progress', 'scenario-meter'); objectiveMeter.id = 'community-objective'; objectiveMeter.setAttribute('aria-label', 'Neighbors supported');
   const nextRequest = button('Find an open request', 'community-next-request');
-  nextRequest.addEventListener('click', () => { const local = state?.locals.find(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id)); if (local) selectLocal(local.id); });
+  nextRequest.addEventListener('click', () => { const local = state?.locals.find(local => !local.abducted && local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id)); if (local) selectLocal(local.id); });
   const resources = node('p', 'community-resources');
   resources.id = 'community-resources';
   const visits=node('div','community-visits');visits.id='community-visits';
@@ -251,6 +251,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const visitRows=new Map();
   const visitDescription=job=>{
     if(!state.running) return 'Scenario paused';
+    if(state.locals.some(local=>local.abducted && (local.id===job.localId || local.id===job.helperId))) return 'Visit paused · waiting for neighbors to return';
     if(state.storm || job.phase==='storm_hold') return 'Storm hold · waiting for conditions to clear';
     if(job.phase==='assisting') return `Helping on site · ${Math.round(job.progress/job.duration*100)}%`;
     if(job.phase==='traveling') return `Walking to the neighbor · ${Math.ceil(remainingVisitDistance(state,job) ?? 0)} m left`;
@@ -319,7 +320,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const residents=state.locals.map(local=>({id:local.id,position:local.position,speed:local.life?.speed ?? 0,distance:local.life?.distance ?? 0,status:local.life?.status ?? 'resting',action:local.life?.action ?? local.action,source:local.life?.source ?? local.source,visitId:local.life?.visitId ?? null}));
     for(const option of chooser.options) {
       const local=state.locals.find(local=>local.id===option.value);
-      if(local) text(option,`${local.name} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
+      option.disabled=Boolean(local?.abducted);
+      if(local) text(option,`${local.name}${local.abducted ? ' · aboard a saucer' : ''} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
     }
     lifeStatus.dataset.residents=JSON.stringify(residents);
     const walking=residents.filter(local=>local.speed>0).length,covered=residents.filter(local=>local.status==='sheltered').length;
@@ -333,7 +335,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     run.setAttribute('aria-pressed', String(state.running));
     text(progress, `${state.supported} / ${state.target} neighbors supported · ${time(remaining)} sim left`);
     objectiveMeter.max = state.target; objectiveMeter.value = state.supported;
-    nextRequest.disabled = finished || !state.locals.some(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id));
+    nextRequest.disabled = finished || !state.locals.some(local => !local.abducted && local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id));
     text(resources, `${state.supplies} kits · ${state.helpBudget} volunteer visits left · ${state.jobs.length} active visits`);
     paintVisits();
     const mode = state.storm && state.running ? 'Storm hold: volunteer visits pause; unmet needs still grow.' : state.running ? 'Check needs, then choose how to spend shared resources.' : state.elapsed > 0 ? 'Paused. Needs and volunteer progress are frozen.' : 'Ready when you are. Meet the neighbors before starting.';
@@ -357,7 +359,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     replay.disabled = speech.mode === 'off';
     if (speech.mode === 'off') text(dialogueVoiceStatus, 'Voice is off. Choose a local voice to listen.');
     const helping=state.jobs.find(job=>job.helperId===local.id);
-    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.anchorName}`);
+    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.species ? `${local.species} · ` : ''}${local.anchorName}`);
     text(dialogueText, message);
     text(source, attribution);
     text(needLabel, local.status === 'supported' ? 'Supported · request resolved' : local.status === 'unmet' ? 'Support window missed' : local.needKnown ? local.priority ? `${state.scenario.need} · ${Math.round(local.need)} / 100 unmet need` : 'No support request' : 'Ask to learn what would help');
@@ -391,7 +393,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
 
   const selectLocal = (id) => {
     const local = state?.locals.find((item) => item.id === id);
-    if (!local) return false;
+    if (!local || local.abducted) return false;
     if (onFocus(local) === false) {
       notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
       return false;
@@ -422,7 +424,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const epoch = requestEpoch, currentState = state;
     const context = { generation: state.generation, tick: packet.tick };
     const fallback = { schema_version: 1, tick: packet.tick, latency_ms: 0, decisions: [{ id, action: state.storm ? 'seek_shelter' : 'greet', source: 'local_rules' }] };
-    const current = () => epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id;
+    const current = () => epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id && !state.locals.find(local=>local.id===id)?.abducted;
     attribution = 'Authored dialogue · checking immediate reaction…';
     paint();
     let deadline;
@@ -451,7 +453,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   };
 
   const interact = (action) => {
-    if (!state?.selectedId) return;
+    if (!state?.selectedId || state.locals.find(local=>local.id===state.selectedId)?.abducted) return;
     const activeControl = document.activeElement;
     const moveFocus = action === 'ask' && activeControl === ask;
     const result = interactWithLocal(state, state.selectedId, action);
@@ -467,20 +469,20 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   ask.addEventListener('click', () => interact('ask'));
   about.addEventListener('click', () => {
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (!local || request) return;
+    if (!local || local.abducted || request) return;
     currentTopic = 'about';
     message = conversationLine(local, 'about');
     attribution = 'Authored dialogue · checking immediate reaction…'; paint(); speech.speak(local,message); react(local.id, 'conversation');
   });
   district.addEventListener('click', () => {
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (!local || request) return;
+    if (!local || local.abducted || request) return;
     currentTopic = 'district';
     message = conversationLine(local, 'district');
     attribution = 'Authored dialogue · directory information'; paint(); speech.speak(local,message); react(local.id, 'directions');
   });
   story.addEventListener('click', () => {
-    const local=state?.locals.find(item=>item.id===state.selectedId); if(!local || request) return;
+    const local=state?.locals.find(item=>item.id===state.selectedId); if(!local || local.abducted || request) return;
     currentTopic = 'story';
     message=conversationLine(local,'story'); attribution='Authored dialogue · in-world perspective'; paint(); speech.speak(local,message); react(local.id,'conversation');
   });
@@ -488,11 +490,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     voiceMode.value = value; dialogueVoice.value = value;
     speech.setMode(value); paint();
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (local) speech.speak(local, message);
+    if (local && !local.abducted) speech.speak(local, message);
   };
   voiceMode.addEventListener('change', () => changeVoice(voiceMode.value));
   dialogueVoice.addEventListener('change', () => changeVoice(dialogueVoice.value));
-  replay.addEventListener('click', () => { const local=state?.locals.find(item=>item.id===state.selectedId); if(local) speech.speak(local,message); });
+  replay.addEventListener('click', () => { const local=state?.locals.find(item=>item.id===state.selectedId); if(local && !local.abducted) speech.speak(local,message); });
   supply.addEventListener('click', () => interact('supply'));
   dispatch.addEventListener('click', () => interact('dispatch'));
   meet.addEventListener('click', () => selectLocal(chooser.value));
@@ -505,7 +507,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const ordered = orderedLocals(), start = ordered.findIndex(local => local.id === state.selectedId);
     const rotated = [...ordered.slice(start + 1), ...ordered.slice(0, start + 1)];
     const candidates = () => [...nearbyPeople(state.locals.filter(sameSpace), getVisitor(), 40, Infinity).map(item => item.local), ...rotated.filter(sameSpace)]
-      .filter((local, index, list) => local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
+      .filter((local, index, list) => !local.abducted && local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
     let pool = candidates();
     if (!pool.length) { offered.clear(); if (state.selectedId) offered.add(state.selectedId); pool = candidates(); }
     for (const local of pool) { offered.add(local.id); if (selectLocal(local.id)) return true; }
@@ -557,7 +559,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     meetNearby,
     autoInteract(id, action) {
       const local = state?.locals.find(item => item.id === id), visitor = getVisitor();
-      if (!local || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
+      if (!local || local.abducted || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
           Math.hypot(visitor[0] - local.position[0], visitor[1] - local.position[1]) > 2.8) return { ok: false };
       const selected = state.selectedId;
       const result = interactWithLocal(state, id, action);
@@ -581,6 +583,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     },
     update(delta, now) {
       if (!state || document.hidden) return;
+      if(state.locals.find(local=>local.id===state.selectedId)?.abducted) closeDialogue();
       const previousStatus = state.status;
       const weather=getWeather();
       const economy=getEconomy();

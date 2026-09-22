@@ -23,7 +23,7 @@ const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
 const form=new URLSearchParams(location.search).get('form')??'jevica';
 const params=new URLSearchParams(location.search), resident=params.get('resident');
 const identity=VISITOR_FORMS.find(item=>item.id===form) ?? VISITOR_FORMS.at(-1);
-// ?resident=local-07&rig=2 inspects a dressed resident (folk hat included) on a given shared rig.
+// ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig.
 const avatar = resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
 const outfit = resident ? {update(){}} : createPlayerCostume(avatar,form); scene.add(avatar.object);
 function render(view='full',time=0,speed=0) {

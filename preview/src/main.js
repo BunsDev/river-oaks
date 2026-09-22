@@ -1,4 +1,5 @@
 import { buildDesignatedSidewalks } from './sidewalks.js';
+import { pickPerson, withinTalkingReach } from './people-picking.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
@@ -65,7 +66,8 @@ function showError(message) {
 }
 
 function initializeRenderer() {
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  // The composer antialiases the scene before the fullscreen output pass.
+  renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.info.autoReset = false;
   renderer.shadowMap.enabled = true;
@@ -96,8 +98,7 @@ function initializeRenderer() {
         if (room && (!position || !room.contains(position[0], position[1]))) {
           enterStore(world.stores.find(store => store.id === local.storeId));
         }
-        walking.lookAt(local.position);
-        return true;
+        return walking.focusPerson(local);
       }
       if (!walking.active) enterWalk();
       return walking.focusPerson(local);
@@ -230,6 +231,7 @@ function buildRoads(data) {
 }
 
 function populateWorld(data) {
+  invasion?.reset();
   walking?.exit();
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
@@ -457,20 +459,47 @@ function visibleInScene(object) {
   return true;
 }
 let pointerStart;
-host.addEventListener('pointerdown', (event) => { pointerStart = [event.clientX, event.clientY]; });
+host.addEventListener('pointerdown', (event) => {
+  pointerStart = event.button === 0 && event.isPrimary ? [event.clientX, event.clientY, event.pointerId] : null;
+});
+host.addEventListener('pointermove', (event) => {
+  // Once a gesture becomes a camera drag, returning to its origin is not a click.
+  if (pointerStart?.[2] === event.pointerId && Math.hypot(event.clientX - pointerStart[0], event.clientY - pointerStart[1]) > 5) pointerStart = null;
+});
+for (const type of ['pointercancel', 'lostpointercapture']) host.addEventListener(type, (event) => {
+  if (pointerStart?.[2] === event.pointerId) pointerStart = null;
+});
 host.addEventListener('pointerup', (event) => {
-  if (!localsGroup?.visible || !pointerStart || Math.hypot(event.clientX - pointerStart[0], event.clientY - pointerStart[1]) > 5) return;
+  const start = pointerStart; pointerStart = null;
+  if (!start || event.button !== 0 || start[2] !== event.pointerId || Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5) return;
   const rect = host.getBoundingClientRect();
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
-  const person = raycaster.intersectObjects([localsGroup, ...(interiorsLayer?.visible && storePeople ? [storePeople] : [])], true).find(hit => hit.object.userData.localId && visibleInScene(hit.object));
-  if (person?.object.userData.localId && (!walking.active || person.distance < 5)) { community.selectLocal(person.object.userData.localId); return; }
+  const pose = walking.getPose();
+  const id = pickPerson(raycaster, [localsGroup, storePeople].filter(Boolean),
+    [buildingMesh, buildingMesh?.userData.interiors].filter(Boolean),
+    id => !walking.active || withinTalkingReach(community.state.locals.find(local => local.id === id), pose, point => walking.canSee(point)));
+  if (id) community.selectLocal(id);
 
 });
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverPeople = (bone = 'head') => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
+    .filter(person => person.id).map(person => {
+      person.holder.updateWorldMatrix(true,true);
+      const bounds = new THREE.Box3().setFromObject(person.holder), point = bounds.getCenter(new THREE.Vector3());
+      point.y = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.86;
+      // A rig landmark stays on the body as swinging limbs change its bounds.
+      const landmark = person.holder.getObjectByName(bone);
+      if (landmark) { landmark.getWorldPosition(point); if (bone === 'head') point.y += 0.07; }
+      point.project(camera);
+      const rect = host.getBoundingClientRect();
+      const local=community.state.locals.find(local=>local.id===person.id);
+      return {id:person.id, role:person.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
+        reachable:withinTalkingReach(local,walking.getPose(),point=>walking.canSee(point)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+    });
   window.__riverMotion = () => (localsGroup?.userData.models ?? []).filter(person=>person.visible && person.userData.avatar).map(person=>({
     id:person.userData.localId, status:community.state.locals.find(local=>local.id===person.userData.localId)?.life?.status,
     feet:person.userData.avatar.feet.filter(leg=>leg.target).map(leg=>({

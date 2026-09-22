@@ -1,5 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { storeRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
+import { roomBlocksConversation } from './conversation-sight.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -48,7 +49,15 @@ export function createWalkingEnvironment(world) {
     const ceiling=Math.max(20,...roofs.map(building=>building.size[2]));
     return altitude>terrainHeight(world.terrain,x,-z)+ceiling+2;
   };
-  return { groundAt, isFree, canFly, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  const hasSightLine=(from,to)=>{
+    const room=roomFor(from[0],-from[1],0),targetRoom=roomFor(to[0],-to[1],0);
+    if((room?.storeId??null)!==(targetRoom?.storeId??null))return false;
+    if(room)return !roomBlocksConversation(room,from,to);
+    const steps=Math.max(1,Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/0.15));
+    for(let i=0;i<=steps;i++){const t=i/steps,x=from[0]+(to[0]-from[0])*t,z=-from[1]-(to[1]-from[1])*t;if(!isFree(x,z)||roomFor(x,z,0))return false;}
+    return true;
+  };
+  return { groundAt, isFree, canFly, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

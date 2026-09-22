@@ -45,21 +45,22 @@ BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
   data/raw/characters/jevica-build/bin/python scripts/build_jevica.py
 ```
 
-The other playable forms are Baum's Oz travellers, built from the public-domain
-novel's descriptions rather than any film design: Dorothy (gingham pinafore,
-braids, basket and silver shoes), the Scarecrow (patched burlap, straw cuffs and
-a floppy hat), the Tin Man (riveted tin, jointed limbs, funnel hat, oil can) and
-the Cowardly Lion (tawny fur, a bowed mane and a tufted tail), plus the Wicked
-Witch in velvet robes and cape. Costumes are player-only. Residents and store
-people are dressed by `preview/src/oz-folk.js` as the peoples of the five Oz
-countries (Munchkin, Winkie, Quadling, Gillikin and Emerald City): the shared
-suit is tinted to the country colour and a country hat follows the head bone.
-`preview/src/head-fit.js` measures each rig's skull and hair around the head
-joint from the skinned mesh (cached per template, scaled per instance), and
-every hat — folk hats and the player hats alike — is cut to those measurements,
-so brims clear the hair, crowns sit on it, hoods replace it and the Emerald
-spectacles sit at the eye line. `e2e/fixtures/jevica.html?resident=local-04&rig=1`
-renders a dressed resident on a given shared rig for inspection.
+The selectable player forms are **Alien, Witch and Jevica**, with Jevica as the
+default. The Witch has a fitted crooked hat, dark clothing and flying broom;
+Jevica flies in a bubble; the Grey Alien uses a small UFO. Procedural costume and
+anatomy additions belong to the player instances. Residents, shoppers and staff
+use the six original human rigs with their skin, hair and eyes intact. See
+[character forms](../../../../docs/character-forms.md) and
+[world direction](../../../../docs/world-direction.md).
+
+Workers use the rigs' actual arm and finger joints for palm-up support poses.
+Tablet users support the device with one hand and tap with the other index finger,
+with the fingertip contact fitted to the skinned pad and the remaining fingers curled.
+Hands angle inward with the forearms, and surface fitting accounts for skinned
+pads rather than putting the wrist or palm bone on the load. These runtime poses
+do not change the GLB meshes, textures, bind skeletons or source receipts.
+`e2e/fixtures/jevica.html?resident=local-04&rig=1` renders a human resident on a
+given shared rig for inspection.
 The `*-portrait.png` files are actual renderer captures of these models, made
 with `e2e/fixtures/jevica.html?form=<id>` at 288 × 352 and
 `window.jevicaFixture.render('portrait')`.

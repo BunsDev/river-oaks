@@ -20,6 +20,7 @@ Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geome
 | Resident motion crosses geometry or stalls the render thread | Bounded routes avoid footprints/trunks; actual browser navigation runs in a worker; speed caps, passing pedestrians, pause and conversation holds preserve positions |
 | Old routes or reactions override a new situation | Weather, scene generation, request tick/age and current action fence late work; expired shelter reactions release residents |
 | A visit awards support without anyone arriving | District work requires the assigned helper within 1.5 m; real routes go around footprints; pause and storms hold visits; inaccessible paths return unused capacity once; reset discards late routes |
+| Invasion leaves unavailable neighbors interactive or breaks visits | Abduction blocks encounters, support, recruitment and inference; queued, traveling and assisting visits hold and resume without refunding capacity; world reload disposes old crew and releases residents |
 | Street furniture leaves the mapped streets or blocks a junction | Kerb strips sit at their own lane edge and clear joining lanes; lamps, planters and bins stay beside a lane, outside footprints and off inner bends; window rows fit under every mapped parapet |
 | Time of day only rotates shadows | Dusk lowers sun, sky, environment and exposure together and warms the light; every hour and weather stays finite and continuous |
 | Secret accidentally committed | Index scan catches a synthetic token despite a clean unstaged replacement; `.env` force-add is rejected; missing scanner fails closed; actual Git commit is blocked in a temporary repository |
@@ -31,5 +32,22 @@ The 500-agent timing script records measurements without enforcing host-dependen
 Unreal Editor/Game builds and native automation have run on UE 5.8.2. See [native resident validation](native-residents.md#animation-and-verification) and [engine acceptance](engine-acceptance.md) for measured results. Source-only hosts can run `RiverOaks.Contracts`; the full `RiverOaks` group additionally requires the imported resident assets. These checks do not establish packaging, complete collision integration or target performance.
 
 With both development servers running, the browser CLI scripts `preview/e2e/district.js`, `sidebar.js`, `personas-voice.js`, `resident-life.js`, `volunteer-visits.js`, and `visual-fidelity.js` operate real controls and record UHD/mobile screenshots. The voice script additionally needs the optional model and tests actual local synthesis/playback, alongside the hermetic unit tests. It does not run in dependency-only CI. None of these browser checks establishes target-GPU 60 fps or photographic accuracy.
+
+For pointer regressions, start `npm run dev`, then run the Playwright CLI scripts:
+
+```sh
+npx --yes --package @playwright/cli playwright-cli -s=river-oaks open http://127.0.0.1:5173/ --headed
+npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --filename preview/e2e/pointer-gestures.js
+npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --filename preview/e2e/moving-people.js
+```
+
+`pointer-gestures.js` rejects secondary clicks and camera drags that return to
+their starting point, then verifies primary selection. `moving-people.js` uses
+the directory and keyboard to approach six rigs, clicks them while walking, and
+checks conversation holds, resumed motion, and unchanged visitor positions.
+The district simulation remains active. Read-only development diagnostics supply
+screen coordinates; no simulation state is injected. Both scripts save images
+under `output/playwright/` and work with the optional bridge offline. They don't
+verify live Jev responses or native Unreal behavior.
 
 The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.

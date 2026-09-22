@@ -20,16 +20,12 @@ export function createFlightVehicle(form) {
     const shimmer=material('#fae8ff',{transparent:true,opacity:0.38,depthWrite:false,emissive:'#b578d8',emissiveIntensity:0.25});
     const ring=mesh(new THREE.TorusGeometry(1.295,0.006,6,96),shimmer,[0,1,0]);ring.scale.set(0.88,1.08,0.88);ring.castShadow=false;
   } else {
-    // The Wizard's balloon: green silk with gold seams, a wicker basket and sandbags.
-    const silk=material('#2f8f5b',{roughness:0.55,sheen:0.8,sheenColor:new THREE.Color('#bfe8c9')}),gold=material('#d9b53a',{metalness:0.6,roughness:0.35});
-    const envelope=mesh(new THREE.SphereGeometry(1.55,48,32),silk,[0,4.1,0]);envelope.scale.set(1,1.12,1);
-    mesh(new THREE.ConeGeometry(0.62,1.1,32,1,true),silk,[0,2.35,0],[Math.PI,0,0]);
-    for(let i=0;i<8;i++){const angle=i/8*Math.PI*2;const seam=mesh(new THREE.TorusGeometry(1.556,0.01,6,80,Math.PI),gold,[0,4.1,0],[0,angle,0]);seam.scale.set(1,1.12,1);seam.castShadow=false;}
-    mesh(new THREE.TorusGeometry(1.0,0.012,6,64),gold,[0,4.9,0],[Math.PI/2,0,0]);
-    mesh(new THREE.CylinderGeometry(0.62,0.55,0.62,20,1,true),fiber,[0,0.31,0]);
-    mesh(new THREE.CircleGeometry(0.55,20),fiber,[0,0.005,0],[-Math.PI/2,0,0]);
-    mesh(new THREE.TorusGeometry(0.62,0.02,8,32),wood,[0,0.62,0],[Math.PI/2,0,0]);
-    for(let i=0;i<6;i++){const angle=i/6*Math.PI*2;const rope=mesh(new THREE.CylinderGeometry(0.008,0.008,1.24,6),fiber,[Math.cos(angle)*0.6,1.2,Math.sin(angle)*0.6]);rope.rotation.set(-Math.sin(angle)*0.05,0,Math.cos(angle)*0.05);if(i%2===0)mesh(new THREE.SphereGeometry(0.1,10,8),fiber,[Math.cos(angle)*0.66,0.42,Math.sin(angle)*0.66]);}
+    const hull=mesh(new THREE.SphereGeometry(1,48,20),metal,[0,0.12,0]);hull.scale.set(1.05,0.19,1.05);
+    const lower=mesh(new THREE.SphereGeometry(1,32,16),material('#203349',{metalness:0.7}),[0,-0.015,0]);lower.scale.set(0.65,0.16,0.65);
+    const light=material('#84eefa',{emissive:'#34d7fc',emissiveIntensity:1.4});
+    mesh(new THREE.TorusGeometry(0.91,0.025,8,64),light,[0,0.17,0],[Math.PI/2,0,0]);
+    for(let i=0;i<8;i++){const angle=i/8*Math.PI*2;const lamp=mesh(new THREE.SphereGeometry(0.045,12,8),light,[Math.cos(angle)*0.84,0.04,Math.sin(angle)*0.84]);lamp.castShadow=false;}
+    const canopy=mesh(new THREE.SphereGeometry(1,40,24,0,Math.PI*2,0,Math.PI/2),material('#bfe5f3',{transparent:true,opacity:0.15,depthWrite:false,roughness:0.12,metalness:0.25,clearcoat:1}),[0,0.28,0]);canopy.scale.set(0.72,1.75,0.72);canopy.castShadow=false;
   }
   return {object:group,dispose(){owned.forEach(item=>item.dispose());group.removeFromParent();}};
 }

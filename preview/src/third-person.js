@@ -10,7 +10,10 @@ export function thirdPersonPose(state, environment) {
   let fraction = 0;
   for (let step = 1; step <= 42; step++) {
     const t = step / 42, px = x + boom[0] * t, pz = z + boom[2] * t;
-    if (!(environment.canFly?.(px,target[1]+boom[1]*t,pz) ?? environment.isFree(px,pz)) || (environment.roomAt?.(px, pz)?.storeId ?? null) !== room) break;
+    // Indoor rooms already define traversable floor space. Outdoor roof-height
+    // restrictions would collapse the camera into the visitor inside every shop.
+    const clear = room !== null ? environment.isFree(px, pz) : (environment.canFly?.(px, target[1] + boom[1] * t, pz) ?? environment.isFree(px, pz));
+    if (!clear || (environment.roomAt?.(px, pz)?.storeId ?? null) !== room) break;
     if (target[1] + boom[1] * t < environment.groundAt(px, pz) + 0.25) break;
     fraction = t;
   }
