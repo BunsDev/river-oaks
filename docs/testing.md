@@ -58,3 +58,17 @@ fixture uses deterministic frames and does not establish facial expression quali
 continuous collision, target-GPU performance or native Unreal parity.
 
 The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
+
+## Manual Jev key override
+
+Run `uv run pytest -q tests/test_jev_settings.py` to verify credential selection
+for both inference engines, replacement, restoration, validation, and responses
+that omit keys. These tests use a mocked provider.
+
+The browser regression in `preview/e2e/jev-settings.js` expects the preview at
+`http://127.0.0.1:5181` and a local bridge with no configured key. It submits only
+fixture keys and intercepts inference requests so they never reach Jev. It checks
+masked input, key clearing, browser storage, reload, replacement, reset, bridge
+failure, and a save that succeeds on the bridge but loses its response.
+Successful settings acceptance does not establish that a supplied key is valid
+with the provider. Jev validates it on the next inference request.
