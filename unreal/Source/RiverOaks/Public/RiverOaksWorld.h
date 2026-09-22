@@ -89,6 +89,7 @@ protected:
     virtual void BeginPlay() override;
 private:
     friend class FRiverNativeEncounterTest;
+    friend class FRiverNativeInputTest;
     UPROPERTY() TObjectPtr<UStaticMesh> Cube;
     UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> People;
