@@ -1,0 +1,39 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import { pickPerson, withinTalkingReach } from '../src/people-picking.js';
+
+test('talking reach follows player position, room and altitude, independent of the camera', () => {
+  const local={position:[0,0,0],storeId:'cafe'},pose={position:[0,1.68,4],ground:0,altitude:0,roomId:'cafe'};
+  assert.equal(withinTalkingReach(local,pose,()=>true),true);
+  for(const change of [{roomId:null},{altitude:3},{position:[0,1.68,5]}])assert.equal(withinTalkingReach(local,{...pose,...change},()=>true),false);
+  assert.equal(withinTalkingReach(local,pose,()=>false),false);
+});
+test('pointer respects opaque fixtures, hidden parents and the first person hit', () => {
+  const mesh=(z,id)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial());m.position.z=z;if(id)m.userData.localId=id;return m;};
+  const person=mesh(0,'seated-guest'),wall=mesh(2),ray=new THREE.Raycaster(new THREE.Vector3(0,0,5),new THREE.Vector3(0,0,-1));
+  assert.equal(pickPerson(ray,[person],[],()=>true),'seated-guest');
+  assert.equal(pickPerson(ray,[person],[wall],()=>true),null);
+  assert.equal(ray.far,Infinity);
+  wall.material.transparent=true;wall.material.opacity=0.2;
+  assert.equal(pickPerson(ray,[person],[wall],()=>true),'seated-guest');
+  const hidden=new THREE.Group();hidden.add(person);hidden.visible=false;
+  assert.equal(pickPerson(ray,[person],[],()=>true),null);
+  hidden.visible=true;
+  const nearer=mesh(2,'neighbor');
+  assert.equal(pickPerson(ray,[person,nearer],[],id=>id==='seated-guest'),null,'cannot reach through another character');
+  for(const item of [person,wall,nearer]){item.geometry.dispose();item.material.dispose();}
+});
+test('clicking a posed limb refreshes both cached skinned bounds',()=>{
+  const geometry=new THREE.BoxGeometry(0.4,0.4,0.4),count=geometry.attributes.position.count;
+  geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(new Uint16Array(count*4),4));
+  const weights=new Float32Array(count*4);for(let i=0;i<count;i++)weights[i*4]=1;
+  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+  const mesh=new THREE.SkinnedMesh(geometry,new THREE.MeshBasicMaterial()),bone=new THREE.Bone();
+  mesh.add(bone);mesh.bind(new THREE.Skeleton([bone]));mesh.userData.localId='animated-worker';
+  mesh.computeBoundingBox();mesh.computeBoundingSphere();
+  bone.position.x=2;mesh.updateMatrixWorld(true);mesh.skeleton.update();
+  const ray=new THREE.Raycaster(new THREE.Vector3(2,0,5),new THREE.Vector3(0,0,-1));
+  assert.equal(pickPerson(ray,[mesh],[],()=>true),'animated-worker');
+  mesh.skeleton.dispose();geometry.dispose();mesh.material.dispose();
+});

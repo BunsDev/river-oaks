@@ -1,4 +1,4 @@
-import { applyOzFolk } from './oz-folk.js';
+import { applyResidentStyle } from './resident-style.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
@@ -51,7 +51,7 @@ export function loadAvatarTemplate(profile) { return template(profile); }
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
-export function instantiateAvatar(source, { targetHeight, id }) {
+export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
   const model = clone(source.scene), materials = new Map(), skeletons = new Set();
   const scale = targetHeight/source.height;
   model.scale.setScalar(scale); model.position.y=-source.floor*scale;
@@ -73,7 +73,7 @@ export function instantiateAvatar(source, { targetHeight, id }) {
   });
   // Relax the imported arm pose before the rest quaternions are captured;
   // update() restores `rest` every frame, so anything applied later is undone.
-  relaxResidentArms(model);
+  relaxResidentArms(model, armSpread);
   const bones=BONES.map(name=>model.getObjectByName(name)).filter(Boolean);
   const rest=new Map(bones.map(bone=>[bone,bone.quaternion.clone()]));
   model.updateMatrixWorld(true);
@@ -92,9 +92,9 @@ export function instantiateAvatar(source, { targetHeight, id }) {
 export async function loadResidentAvatar(index, id, profileOverride, { folk = true } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   const targetHeight = profile === 'jevica' ? 1.685 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
-  const avatar = instantiateAvatar(source, { targetHeight, id });
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.42:undefined });
   const { model, bones, rest } = avatar;
-  if(id !== 'player' && folk) applyOzFolk(avatar,id);
+  if(id !== 'player' && folk) applyResidentStyle(avatar,id);
   const root = new THREE.Group();
   root.add(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);

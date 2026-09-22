@@ -56,6 +56,14 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
     $('#invasion-brief').textContent = 'Saucers land at the edge of the district and their crew beam neighbors aboard. Only magic sends them home.';
     if (message) say(message); publish();
   };
+  const reset = () => {
+    if (state) releaseResidents(state, getLocals() ?? []);
+    invaders?.dispose(); invaders = null;
+    state = null; environment = null; world = null; lastCast = 0;
+    counts.hidden = true;
+    $('#invasion-aliens').textContent = '0'; $('#invasion-safe').textContent = '0';
+    finish(); refreshGate();
+  };
   const tryCast = () => {
     if (!state || state.phase !== 'active') return;
     const pose = walking.getPose(); if (!pose) return;
@@ -95,6 +103,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
       if (state.phase === 'active') publish();
     },
     refreshGate,
-    dispose() { finish(); invaders?.dispose(); panel.remove(); },
+    reset,
+    dispose() { reset(); panel.remove(); },
   };
 }

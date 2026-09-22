@@ -1,5 +1,7 @@
-import { applyOzFolk } from './oz-folk.js';
-import { turnToward } from './gait.js';
+import { applyResidentStyle } from './resident-style.js';
+import { staffWorkPose, blendStationPose } from './store-work.js';
+import { createFootPlacement, applyLegIK } from './foot-placement.js';
+import { createWorkerTask } from './work-props.js';
 import { storePersonId } from './store-encounters.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadAvatarTemplate, instantiateAvatar } from './avatars.js';
@@ -52,17 +54,27 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
   const host = document.querySelector('#canvas-host');
   const adjustment = new THREE.Quaternion();
   const applyPose = (figure, t) => {
-    const { avatar, pose, sway } = figure;
+    const { avatar, sway } = figure;
+    const work = figure.role === 'staff' && t !== null ? staffWorkPose(figure.theme,figure.workTime) : {};
+    const pose = blendStationPose(figure.pose,work,figure.attention,figure.lookYaw);
     for (const bone of avatar.bones) {
       bone.quaternion.copy(avatar.rest.get(bone));
-      const reactionPose = figure.reaction ? { head: [-0.07,0,0], upperarm_r: [-0.65,0,0], lowerarm_r: [0,0,1.4] } : null;
-      const angles = reactionPose?.[bone.name] ?? pose[bone.name];
+      const angles = pose[bone.name];
       const axes = avatar.axes.get(bone);
       if (angles) for (const [index, axis] of ['x', 'y', 'z'].entries()) if (angles[index]) { adjustment.setFromAxisAngle(axes[axis], angles[index]); bone.quaternion.multiply(adjustment); }
       if (t === null) continue;
       const idle = bone.name === 'head' ? Math.sin(t * 0.9) * 0.02 : bone.name === 'spine_03' ? Math.sin(t * 1.4) * 0.008 : bone.name === 'lowerarm_r' && sway ? Math.sin(t * 1.7) * 0.03 : 0;
       if (idle) { adjustment.setFromAxisAngle(bone.name === 'lowerarm_r' ? axes.z : axes.x, idle); bone.quaternion.multiply(adjustment); }
     }
+    if (figure.seatedFeet) {
+      figure.holder.updateWorldMatrix(true,true);
+      const forward=new THREE.Vector3(0,0,1).applyQuaternion(figure.holder.getWorldQuaternion(new THREE.Quaternion()));
+      for(const leg of figure.seatedFeet) {
+        const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
+        leg.error=applyLegIK(leg,leg.target,pole);
+      }
+    }
+    figure.task?.update(figure.workTime,figure.attention);
   };
   rooms.forEach(room => {
     const roomGroup = new THREE.Group();
@@ -78,7 +90,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
         const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
         dress(avatar, spot, room.theme, seed);
-        applyOzFolk(avatar,storePersonId(room,spotIndex));
+        if(spot.role!=='mannequin')applyResidentStyle(avatar,storePersonId(room,spotIndex),{staff:spot.role==='staff'});
         const holder = new THREE.Group();
         const [east, north] = room.toWorld(spot.a, spot.d);
         const seated = spot.pose === 'seated';
@@ -91,9 +103,19 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         avatar.model.traverse(item => { if (item.isMesh) { item.frustumCulled = true; item.castShadow = false; } });
         holder.add(avatar.model);
         holder.userData.storeId = room.storeId; holder.userData.role = spot.role;
+        if(spot.role!=='mannequin')holder.userData.localId=storePersonId(room,spotIndex);
         avatar.model.traverse(item => { item.userData.storeId = room.storeId; item.userData.role = spot.role;if(spot.role==='mannequin')delete item.userData.localId; });
         roomGroup.add(holder);
-        const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, phase: seed * 0.61, animated: false };
+        const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, theme:room.theme, phase: seed * 0.61, workTime:seed*0.61, attention:0, lookYaw:0, animated: false };
+        if (seated) {
+          figure.seatedFeet=createFootPlacement(avatar.model,holder).legs;
+          for(const leg of figure.seatedFeet) {
+            const target=leg.rest.clone();target.z+=leg.upperLength*0.85;
+            leg.target=holder.localToWorld(target);leg.target.y=room.floor+leg.rest.y;
+            leg.orientation=leg.foot.getWorldQuaternion(new THREE.Quaternion());
+          }
+        }
+        if(spot.role==='staff')figure.task=createWorkerTask(avatar,holder,room,spot);
         applyPose(figure, null);
         figures.push(figure); ready++;
         host.dataset.storePeopleReady = String(ready);
@@ -115,17 +137,21 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       if (!figure.holder.parent?.visible) continue;
       const local = state?.locals.find(local => local.id === figure.id);
       figure.reaction = local?.visitorReaction;
-      const attending = visitor && (figure.reaction || state?.selectedId === figure.id);
-      // Seated figures retain the chair-facing body; their head/arms can react.
-      if (figure.pose !== POSES.seated) figure.holder.rotation.y = turnToward(figure.holder.rotation.y, attending ? Math.atan2(visitor[0] - figure.holder.position.x, -visitor[1] - figure.holder.position.z) : figure.heading, delta);
+      const attending = Boolean(visitor && (figure.reaction || state?.selectedId === figure.id));
+      const smoothing = 1-Math.exp(-5*Math.min(0.1,Math.max(0,delta)));
+      figure.attention += ((attending?1:0)-figure.attention)*smoothing;
+      const targetYaw = attending ? Math.atan2(visitor[0]-figure.holder.position.x,-visitor[1]-figure.holder.position.z)-figure.heading : 0;
+      const wrappedYaw=Math.atan2(Math.sin(targetYaw),Math.cos(targetYaw));
+      figure.lookYaw+=(wrappedYaw-figure.lookYaw)*smoothing;
+      if (!attending && !reducedMotion) figure.workTime+=Math.min(0.1,Math.max(0,delta));
       const near = figure.holder.position.distanceToSquared(camera.position) < 16 * 16;
       if (near && !reducedMotion && figure.role !== 'mannequin') { applyPose(figure, t + figure.phase); figure.animated = true; }
-      else if (figure.animated) { applyPose(figure, null); figure.animated = false; }
+      else if (figure.animated || attending || figure.attention>0.001) { applyPose(figure, null); figure.animated = false; }
     }
   };
   group.userData.dispose = () => {
     disposed = true;
-    for (const figure of figures) figure.avatar.dispose();
+    for (const figure of figures) {figure.task?.dispose();figure.avatar.dispose();}
     figures.length = 0; group.clear();
   };
   return group;

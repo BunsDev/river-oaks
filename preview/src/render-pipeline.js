@@ -42,6 +42,24 @@ export function createRenderPipeline(renderer, scene, camera) {
     hidden.forEach(object => { object.visible = true; });
     hidden.length = 0;
   };
+  const renderGeometry = occlusion._renderOverride.bind(occlusion);
+  const geometryClearColor = new THREE.Color();
+  occlusion._renderOverride = (renderer, ...args) => {
+    // The beauty pass has already updated this frame's transforms and shadows.
+    // Normal/depth rendering needs neither a second skeleton traversal nor a
+    // second sun-shadow render with the foliage temporarily hidden.
+    const shadowAuto=renderer.shadowMap.autoUpdate,shadowNeeds=renderer.shadowMap.needsUpdate;
+    const matrixAuto=scene.matrixWorldAutoUpdate,override=scene.overrideMaterial,autoClear=renderer.autoClear;
+    const clearAlpha=renderer.getClearAlpha();renderer.getClearColor(geometryClearColor);
+    renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=false;scene.matrixWorldAutoUpdate=false;
+    try { return renderGeometry(renderer,...args); }
+    finally {
+      renderer.shadowMap.autoUpdate=shadowAuto;renderer.shadowMap.needsUpdate=shadowNeeds;
+      scene.matrixWorldAutoUpdate=matrixAuto;scene.overrideMaterial=override;renderer.autoClear=autoClear;
+      renderer.setClearColor(geometryClearColor,clearAlpha);
+      occlusion._restoreVisibility();
+    }
+  };
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.055, 0.2, 2.0);
   const output = new OutputPass();
   composer.addPass(render); composer.addPass(occlusion); composer.addPass(bloom); composer.addPass(output);
@@ -52,10 +70,13 @@ export function createRenderPipeline(renderer, scene, camera) {
       size = { width, height, pixelRatio };
       composer.setPixelRatio(pixelRatio); composer.setSize(width, height);
       const scale = aoResolutionScale(width * pixelRatio, height * pixelRatio);
+      // Crystal and glass refraction samples a separate opaque-scene texture.
+      // Bound that texture at UHD, without reducing the main image or geometry.
+      renderer.transmissionResolutionScale=scale;
       occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
-    get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio) }; },
+    get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { composer.render(delta); },
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };

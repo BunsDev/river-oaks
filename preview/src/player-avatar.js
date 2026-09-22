@@ -46,7 +46,10 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
     let next, nextOutfit, nextVehicle;
     try {
       const chosen = VISITOR_FORMS.find(item => item.id === value) ?? VISITOR_FORMS.at(-1);
+      const portrait = new Image();portrait.src = `/assets/characters/${chosen.id}-portrait.png`;
+      const portraitReady = portrait.decode().then(() => true, () => false);
       next = await loadResidentAvatar(chosen.avatar, 'player', chosen.profile);
+      const hasPortrait = await portraitReady;
       if (disposed || generation !== version) {next.dispose();return;}
       nextOutfit = createPlayerCostume(next, value);nextVehicle = createFlightVehicle(value);
       outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
@@ -56,9 +59,10 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
       panel.dataset.form = form;
       panel.querySelector('#player-name').textContent = identity.label;
       panel.querySelector('#player-role').textContent = identity.role;
-      panel.querySelector('.player-portrait img').src = `/assets/characters/${form}-portrait.png`;
+      const portraitImage=panel.querySelector('.player-portrait img');
+      portraitImage.src=portrait.src;portraitImage.hidden=!hasPortrait;
       panel.querySelector('#player-description').textContent = VISITOR_FORMS.find(item => item.id === form).description;
-      status.textContent = value === 'visitor' ? 'Ready to explore.' : `${VISITOR_FORMS.find(item => item.id === form).label} transformation ready.`;
+      status.textContent = `${VISITOR_FORMS.find(item => item.id === form).label} transformation ready.`;
       host.dataset.playerForm = value;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
     } catch {

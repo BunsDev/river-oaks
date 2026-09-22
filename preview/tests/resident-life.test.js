@@ -113,6 +113,8 @@ test('redirect reverses the current walking direction within local clearance',()
   const local=state.locals[0],position=[...local.position],heading=local.life.heading;
   const packet=residentPacket(life,1);applyResidentDecisions(life,reply(packet,'redirect'));
   step(life,15);
+  assert.deepEqual(local.position,position,'A reversal starts with a planted turn, not a backward slide');
+  step(life,75);
   const forward=(local.position[0]-position[0])*Math.sin(heading)-(local.position[1]-position[1])*Math.cos(heading);
   assert.ok(forward<0,'Redirect must reverse, not choose another arbitrary forward destination');
 });

@@ -2,7 +2,7 @@ import { createFlightState, stepFlight } from './flight.js';
 import { thirdPersonPose } from './third-person.js';
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
-import { ENCOUNTER_FAR, clearEncounterLine, encounterPosition } from './encounter.js';
+import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {} }) {
@@ -34,12 +34,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // street residents need a personal-space placement, people at work only a clear line across the room.
   const visitorPosition = () => [state.position[0], -state.position[2], state.position[1]];
   const canMeet = local => local.indoor
-    ? clearEncounterLine(environment, visitorPosition(), local.position)
+    ? clearConversationLine(environment, visitorPosition(), local.position,local.eyeHeight)
     : encounterPosition(environment, local, visitorPosition(), getLocals() ?? []) !== null;
   const findNearest = () => {
     let result = null, distance = ENCOUNTER_FAR;
     const room = currentRoom();
     for (const local of getLocals() ?? []) {
+      if (local.abducted) continue;
       if ((local.storeId ?? null) !== (room?.storeId ?? null)) continue;
       if (Math.abs(local.position[2] - environment.groundAt(state.position[0], state.position[2])) > 4) continue;
       const d = Math.hypot(local.position[0] - state.position[0], -local.position[1] - state.position[2]);
@@ -132,16 +133,15 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     getPose() { return active && state ? { position: [...state.position], ground: environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point) {
       if (!state) return false;
-      const distance = Math.hypot(point[0] - state.position[0], -point[1] - state.position[2]);
-      for (let t = 0.5; t < distance; t += 0.5) { const f = t / distance; if (!environment.isFree(state.position[0] + (point[0] - state.position[0]) * f, state.position[2] + (-point[1] - state.position[2]) * f)) return false; }
-      return true;
+      const local=(getLocals()??[]).find(local=>local.position===point);
+      return clearConversationLine(environment,visitorPosition(),point,local?.eyeHeight);
     },
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
     get roomId() { return active && state ? currentRoom()?.storeId ?? null : null; },
     focusPerson(local) {
       if (!state) return false;
       const visitor = this.getPosition();
-      const position = encounterPosition(environment, local, visitor, getLocals() ?? []);
+      const position = (local.indoor?indoorEncounterPosition:encounterPosition)(environment, local, visitor, getLocals() ?? []);
       if (!position) return false;
       clear();
       // Already within talking range: turn toward them and stay put.
@@ -207,13 +207,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
-      $('.walking-title strong').textContent = room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = !room && !door;
       enter.textContent = room ? 'Step outside · F' : door ? `Step inside ${door.name} · F` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
-      $('#walking-place').textContent = room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
+      $('#walking-place').textContent = flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.yaw = state.yaw.toFixed(3);

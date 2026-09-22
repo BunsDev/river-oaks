@@ -1,4 +1,4 @@
-import { createPedestrianNetwork } from './sidewalks.js';
+import { createPedestrianNetwork } from './pedestrian-network.js';
 import { createWalkingEnvironment } from './walking.js';
 
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -143,5 +143,13 @@ export function createResidentNavigation(world) {
     const exit=interiorExit(room,start);if(!exit) return null;
     const rest=gridRoute(exit.at(-1),end);return rest ? [...exit,...rest] : null;
   };
-  return { route,canTravel,canWalk:walkable,free,ground,pedestrian };
+  const sidewalkPoint = point => {
+    if(pedestrian.classify(point)!=='road')return [...point.slice(0,2)];
+    for(let radius=0.5;radius<=10;radius+=0.5)for(let i=0;i<48;i++) {
+      const angle=i/48*Math.PI*2,p=[point[0]+Math.cos(angle)*radius,point[1]+Math.sin(angle)*radius];
+      if(pedestrian.classify(p)==='sidewalk' && free(p) && canTravel(point,p))return p;
+    }
+    return [...point.slice(0,2)];
+  };
+  return { route,canTravel,canWalk:walkable,free,ground,pedestrian,sidewalkPoint };
 }
