@@ -289,3 +289,20 @@ button:disabled { cursor: not-allowed; }
   .invasion-counts { flex-direction: column; gap: 6px; }
   .invasion-counts > span { white-space: nowrap; }
 }
+
+/* A conversation takes the auto-visit card's corner: the card steps aside unless a visit is running, in which case the dialogue starts below it. */
+@media (min-width: 701px) {
+  #viewport > .auto-controls { transition: opacity 160ms ease, visibility 160ms; }
+  body:has(#community-dialogue:not([hidden])) #viewport > .auto-controls:not(:has([aria-pressed=true])) { opacity: 0; visibility: hidden; pointer-events: none; }
+  body:has(#viewport > .auto-controls [aria-pressed=true]) #community-dialogue { max-height: calc(100% - 250px); }
+}
+/* Movement controls read as a legend, not a terminal. */
+:root[data-theme] .walking-help { font: 400 10px/1.7 inherit; font-family: inherit; color: #c9c5d2; margin: 10px 0 6px; letter-spacing: .01em; }
+:root[data-theme] .walking-help kbd, :root[data-theme] .walking-console kbd { font: 500 10px/1 system-ui, sans-serif; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid #ffffff40; border-radius: 5px; margin-left: 6px; opacity: .8; }
+:root[data-theme] .walking-pad { gap: 6px; margin-top: 4px; }
+:root[data-theme] .walking-pad button { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; background: #ffffff12; border: 1px solid #ffffff22; box-shadow: inset 0 1px 0 #ffffff14; }
+:root[data-theme] .walking-pad button:hover { background: #ffffff1f; }
+:root[data-theme] #walking-controls-toggle, :root[data-theme] #walking-meet-nearby.walking-secondary { border-color: transparent; background: transparent; }
+:root[data-theme] #walking-controls-toggle:hover, :root[data-theme] #walking-meet-nearby.walking-secondary:hover { background: #ffffff0f; }
+@media (prefers-reduced-motion: reduce) { #viewport > .auto-controls { transition: none; } }
+.walking-pad button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
