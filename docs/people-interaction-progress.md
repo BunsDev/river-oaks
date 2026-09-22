@@ -274,6 +274,35 @@ it, and reopening faces the visitor again. This is a one-profile visual sample,
 not a complete review of native animation. Results and source hashes are in
 [`native-resident-facing.json`](../data/reports/native-resident-facing.json).
 
+### Native resting poses and gait transitions (September 22)
+
+Native residents now stand with their arms at their sides and a slight elbow
+bend. Component-space rotations account for already adjusted parents, so
+lowering a shoulder preserves the intended elbow and gait axes. Limb lengths
+and the authoritative component transform stay unchanged.
+
+Each animation proxy blends gait strength with a critically damped spring.
+Starting, stopping, and interrupted transitions preserve blend velocity; stopping
+retains the accepted-distance stride phase while the pose settles. Idle and
+shelter no longer snap directly from a moving pose to the reference A-pose.
+
+The regression first failed the blend contracts and six-profile asset test.
+Joint probes then corrected an unrealistic fixed wrist-height target for shorter
+arms: wrists must reach pelvis height within 1 cm without stretching the rig.
+All 21 native tests now pass, including six blend contracts and per-profile
+resting posture, forward stride, stop continuity, facing, and root authority.
+The review follow-up also compares evaluated slow-walk, walk, and jog amplitudes
+at equal phase and checks idle suppression despite accepted displacement.
+Editor and Game Development builds pass. Rendered acceptance sampled
+`woman-casual` at rest, mid-stride, and after settling; the other five profiles
+have automated pose coverage. Evidence and source hashes are in
+[`native-resting-poses.json`](../data/reports/native-resting-poses.json).
+
+This improves a procedural prototype. Foot contact, weight transfer, authored
+movement, native worker routines, full native dialogue, and broader rendered
+motion acceptance still need work. The rendered sample suggests a possible
+ground-contact gap that must be measured before claiming planted feet.
+
 ## Still required for the full goal
 
 - Broaden sampled hand/body clearance to continuous motion, seated contacts and
@@ -298,9 +327,10 @@ not a complete review of native animation. Results and source hashes are in
 - Bring native Unreal to the same interaction and motion scope, then verify it.
   Source audit: `RiverStreetPawn.cpp` provides E greetings through `GreetNearby`;
   `RiverOaksWorld.cpp` currently returns a generic greeting. The procedural native
-  animation proxy applies stride rotations to the reference pose, without the
+  animation proxy blends stride rotations over a relaxed standing pose, without the
   browser's ground-contact solver, station routines or encounter directory.
-  No native compile or rendered acceptance was performed for this browser pass.
+  The native follow-ups above add compile, automation, and sampled rendering
+  evidence; they do not establish full browser/native parity.
 
 ## Consolidated PR boundary
 

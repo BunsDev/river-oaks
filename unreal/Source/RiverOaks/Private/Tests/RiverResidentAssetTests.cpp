@@ -65,6 +65,27 @@ bool FRiverResidentAssetsTest::RunTest(const FString& Parameters)
         const FVector Head = Component->GetSocketTransform(TEXT("head"), RTS_Component).GetLocation();
         const FVector Foot = Component->GetSocketTransform(TEXT("foot_l"), RTS_Component).GetLocation();
         TestTrue(Id + TEXT(" upright head above feet"), Head.Z - Foot.Z > Mesh->GetImportedBounds().BoxExtent.Z);
+        const FVector Pelvis = Component->GetSocketTransform(TEXT("pelvis"), RTS_Component).GetLocation();
+        for (const FString Side : {TEXT("l"), TEXT("r")})
+        {
+            const auto Joint = [&](const TCHAR* Prefix)
+            {
+                return Component->GetSocketTransform(FName(FString(Prefix) + Side), RTS_Component).GetLocation();
+            };
+            const FVector Shoulder = Joint(TEXT("upperarm_")), Elbow = Joint(TEXT("lowerarm_"));
+            const FVector Hand = Joint(TEXT("hand_")), Thigh = Joint(TEXT("thigh_"));
+            const FString Case = Id + TEXT(" resting ") + Side;
+            AddInfo(FString::Printf(TEXT("%s shoulder=%s elbow=%s wrist=%s pelvis=%s"),
+                *Case, *Shoulder.ToString(), *Elbow.ToString(), *Hand.ToString(), *Pelvis.ToString()));
+            // The shorter rigs' combined arm length only reaches the pelvis joint;
+            // imposing a fixed distance below it would require stretching the bones.
+            TestTrue(Case + TEXT(" wrist rests at or below the pelvis"), Hand.Z < Pelvis.Z + 1.);
+            TestTrue(Case + TEXT(" forearm hangs below its elbow"), Elbow.Z > Hand.Z + 10.);
+            TestTrue(Case + TEXT(" forearm retains a small forward bend"),
+                Hand.Y > Elbow.Y && Hand.Y < Elbow.Y + 8.);
+            TestTrue(Case + TEXT(" arm rests near its side"), FMath::Abs(Hand.X - Shoulder.X) < 15.);
+            TestTrue(Case + TEXT(" wrist stays outside the thigh"), FMath::Abs(Hand.X) > FMath::Abs(Thigh.X) + 3.);
+        }
 
 #if WITH_EDITOR
         // The rendered eyes must face the same direction as the toe bones.
@@ -121,8 +142,11 @@ bool FRiverResidentAssetsTest::RunTest(const FString& Parameters)
         Pose.Locomotion = TEXT("walk");
         Backend.ApplyPose(Handle, Pose);
         const FTransform Authoritative = Component->GetComponentTransform();
-        Component->TickAnimation(.033f, false);
-        Component->RefreshBoneTransforms();
+        for (int32 Frame = 0; Frame < 20; ++Frame)
+        {
+            Component->TickAnimation(1.f / 60.f, false);
+            Component->RefreshBoneTransforms();
+        }
         const FQuat Walking = Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation();
         TestFalse(Id + TEXT(" walking evaluates a leg pose"), Rest.Equals(Walking, .01));
         const FVector FootSwing = Component->GetComponentTransform().TransformVector(
@@ -135,10 +159,47 @@ bool FRiverResidentAssetsTest::RunTest(const FString& Parameters)
         Pose.SimTimeSeconds = 2.;
         Pose.Locomotion = TEXT("shelter");
         Backend.ApplyPose(Handle, Pose);
-        Component->TickAnimation(.033f, false);
+        Component->TickAnimation(1.f / 60.f, false);
         Component->RefreshBoneTransforms();
-        TestTrue(Id + TEXT(" shelter returns to stationary pose"),
+        const FQuat Stopping = Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation();
+        TestTrue(Id + TEXT(" stopping retains a continuous leg pose"), Walking.AngularDistance(Stopping) < .02);
+        TestFalse(Id + TEXT(" stopping does not snap to rest"), Rest.Equals(Stopping, .01));
+        for (int32 Frame = 0; Frame < 60; ++Frame)
+        {
+            Component->TickAnimation(1.f / 60.f, false);
+            Component->RefreshBoneTransforms();
+        }
+        TestTrue(Id + TEXT(" shelter settles into the stationary pose"),
             Rest.Equals(Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation(), .01));
+
+        // Advance one full stride per accepted pose, keeping phase equal while
+        // exercising speed and locomotion selection through the real backend.
+        const auto EvaluateGait = [&](FName Locomotion, double Speed)
+        {
+            ++Pose.Sequence;
+            Pose.SimTimeSeconds += 110. / Speed;
+            Pose.Root.AddToTranslation(FVector(110., 0., 0.));
+            Pose.Locomotion = Locomotion;
+            TestTrue(Id + TEXT(" accepts gait comparison pose"), Backend.ApplyPose(Handle, Pose));
+            const FTransform ExpectedRoot = Component->GetComponentTransform();
+            for (int32 Frame = 0; Frame < 60; ++Frame)
+            {
+                Component->TickAnimation(1.f / 60.f, false);
+                Component->RefreshBoneTransforms();
+            }
+            TestTrue(Id + TEXT(" gait comparison preserves root authority"),
+                ExpectedRoot.Equals(Component->GetComponentTransform()));
+            return Rest.AngularDistance(Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation());
+        };
+        const double WalkAngle = EvaluateGait(TEXT("walk"), 110.);
+        const double SlowAngle = EvaluateGait(TEXT("walk_slow"), 55.);
+        const double JogAngle = EvaluateGait(TEXT("jog"), 280.);
+        TestTrue(Id + TEXT(" slow walk evaluates a smaller stride at equal phase"),
+            SlowAngle > WalkAngle * .45 && SlowAngle < WalkAngle * .55);
+        TestTrue(Id + TEXT(" jog evaluates a stronger stride at equal phase"),
+            JogAngle > WalkAngle * 1.25 && JogAngle < WalkAngle * 1.35);
+        TestTrue(Id + TEXT(" idle suppresses gait even with accepted displacement"),
+            EvaluateGait(TEXT("idle"), 140.) < .01);
         Backend.DestroyComponents();
     }
     World->DestroyWorld(false);

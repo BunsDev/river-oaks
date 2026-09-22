@@ -62,8 +62,11 @@ doing this. The importer never performs that replacement automatically.
 `URiverProceduralAnimInstance` evaluates a small procedural gait on the imported
 rig. The simulation supplies state, horizontal speed and accepted travel
 distance; animation changes limb rotations without moving the component.
-Idle and shelter return to the reference pose. Slow walking, walking and jogging
-share a distance-driven stride with speed/state-dependent amplitude.
+Idle and shelter settle into a relaxed standing pose with lowered shoulders and
+slightly bent elbows. Slow walking, walking, and jogging share a distance-driven
+stride with speed/state-dependent amplitude. Each proxy blends that amplitude
+with a critically damped spring, preserving its velocity when movement changes
+and retaining the accepted-distance phase through a stop.
 
 Run `Automation RunTests RiverOaks.Contracts` for source-only native contracts.
 After importing assets, run `Automation RunTests RiverOaks` to include
@@ -100,8 +103,18 @@ confirmed facing the visitor, E close, and reopening; the other five profiles
 have automated geometry coverage but still need rendered inspection. Evidence is
 in [`native-resident-facing.json`](../data/reports/native-resident-facing.json).
 
-Stationary residents retain the source rig's relaxed A-pose. This is prototype
-locomotion, without authored animation clips, foot IK or
+The September 22 resting-pose follow-up passed all 21 native tests and both
+Development builds. The six-profile asset suite checks wrist height, elbow
+flexion, thigh clearance, forward stride, and evaluated stop continuity. It also
+compares slow-walk, walk, and jog amplitudes at equal phase and checks that idle
+suppresses gait despite accepted displacement. Separate
+contracts check the blend at 30, 60, and 144 Hz, interrupted transitions, and
+invalid inputs. A rendered `woman-casual` sample confirms lowered arms, a moving
+stride, and the settled stance after stopping. Quantitative transition continuity
+comes from automation; the screenshots are sampled poses, not a complete motion
+review. See [`native-resting-poses.json`](../data/reports/native-resting-poses.json).
+
+This is prototype locomotion, without authored animation clips, foot IK, or
 collision-aware foot placement. Source hair transparency is rendered with a
 two-sided masked material. Native interactions still provide a basic greeting;
 the browser has the fuller conversation interface. Native greetings now hold the
