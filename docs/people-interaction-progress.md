@@ -53,8 +53,7 @@ Landing checks on September 21, 2026, in an isolated checkout:
   person. The directory contains 193 people (169 indoor plus 24 outdoor).
 - `preview/e2e/people-picking.js`: actual seated/staff mesh clicks retain identity
   without relocating the visitor; work holds during conversation and resumes.
-  All 94 seated foot targets are within 0.002 mm. The 124 palm contacts across six
-  prop types are within 0.001 mm. These measurements establish contact, not
+  All 94 seated foot targets are within 0.001 m (1 mm). The 124 palm contacts across six prop types are within 0.001 m (1 mm). These measurements establish contact, not
   physical task simulation or a complete visual acceptance of every occupation.
 - `preview/e2e/grounded-motion.js`: all six shipped rigs over 301 frames on an
   inclined fixture, with acceleration, turning and stopping. 2,052 planted
