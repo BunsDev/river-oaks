@@ -152,7 +152,7 @@ bool ARiverOaksWorld::LoadManifest()
     }
     auto* Ground = MakeInstances(TEXT("Ground"), Cube, FLinearColor(.13f, .21f, .1f), true);
     Ground->AddInstance(FTransform(FQuat::Identity, FVector((X0 + X1) * 50., -(Y0 + Y1) * 50., -55.), FVector(X1 - X0, Y1 - Y0, 1.)), true);
-    auto* Asphalt = MakeInstances(TEXT("Roads"), Cube, FLinearColor(.07f, .075f, .08f), false);
+    auto* Asphalt = MakeInstances(TEXT("Roads"), Cube, FLinearColor(.07f, .075f, .08f), true);
     for (const auto& Value : *Roads)
     {
         const auto Road = Value->AsObject();
@@ -326,6 +326,11 @@ void ARiverOaksWorld::SpawnAgents()
         Agent.Position = FMath::Lerp(Route.Points[Agent.Target - 1] + (RouteTarget(Agent) - Route.Points[Agent.Target]), RouteTarget(Agent), Random.FRand());
         Agent.Position.X = FMath::Clamp(Agent.Position.X, Bounds.Min.X + 100., Bounds.Max.X - 100.);
         Agent.Position.Y = FMath::Clamp(Agent.Position.Y, Bounds.Min.Y + 100., Bounds.Max.Y - 100.);
+        if (!GroundResident(Agent.Position))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("River Oaks: no walkable support for %s; skipping spawn."), *Agent.Id);
+            continue;
+        }
         Agent.Heading = (RouteTarget(Agent) - Agent.Position).Rotation().Yaw;
         // Resolved from the catalogue and validated before any backend sees it. Never authored
         // here: a portrayal persona is locked to its fixed generic preset (section 9).
@@ -354,6 +359,22 @@ void ARiverOaksWorld::SpawnAgents()
     HumanBackend->Tick(0.f);
 }
 
+bool ARiverOaksWorld::GroundResident(FVector& Root) const
+{
+    if (Root.ContainsNaN()) return false;
+    // Sample near the previous sole height, so another storey or a large drop
+    // cannot teleport a resident between floors. The simulation owns this Z.
+    constexpr double MaxStepCm = 30.;
+    constexpr double MinUpNormal = .7071067811865476; // 45 degrees
+    const FVector Sole = Root - FVector(0, 0, RiverOaksRules::HumanRootHeightCm);
+    FHitResult Hit;
+    if (!GetWorld()->LineTraceSingleByObjectType(Hit, Sole + FVector(0,0,MaxStepCm),
+        Sole - FVector(0,0,MaxStepCm), FCollisionObjectQueryParams(ECC_WorldStatic)) ||
+        Hit.bStartPenetrating || Hit.ImpactNormal.Z < MinUpNormal) return false;
+    Root.Z = Hit.ImpactPoint.Z + RiverOaksRules::HumanRootHeightCm;
+    return true;
+}
+
 void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
 {
     UpdateConversation(ConversationVisitor);
@@ -374,8 +395,8 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
             Agent.Target += Agent.Direction;
         }
         const float Speed = Agent.Speed * RiverOaksRules::SpeedMultiplier(EffectiveAction, false);
-        const FVector Next = Agent.Position + ToTarget.GetSafeNormal2D() * FMath::Min(Speed * DeltaSeconds, static_cast<float>(ToTarget.Size2D()));
-        Agent.bBlocked = !Bounds.IsInsideXY(Next);
+        FVector Next = Agent.Position + ToTarget.GetSafeNormal2D() * FMath::Min(Speed * DeltaSeconds, static_cast<float>(ToTarget.Size2D()));
+        Agent.bBlocked = !Bounds.IsInsideXY(Next) || (!bConversing && !GroundResident(Next));
         FHitResult Hit;
         // Static mesh collision remains authoritative even when inference says continue.
         if (!Agent.bBlocked && GetWorld()->SweepSingleByObjectType(Hit, Agent.Position + FVector(0, 0, 90), Next + FVector(0, 0, 90), FQuat::Identity,

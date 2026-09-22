@@ -11,11 +11,27 @@
 #include "HAL/PlatformTime.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+namespace
+{
+    void AddEncounterFloor(UWorld* World)
+    {
+        auto* Actor = World->SpawnActor<AActor>();
+        auto* Floor = NewObject<UBoxComponent>(Actor);
+        Actor->SetRootComponent(Floor);
+        Floor->SetBoxExtent(FVector(2000,2000,10));
+        Floor->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        Floor->SetCollisionObjectType(ECC_WorldStatic);
+        Floor->SetCollisionResponseToAllChannels(ECR_Block);
+        Floor->RegisterComponent();
+        Actor->SetActorLocation(FVector(0,0,-10));
+    }
+}
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRiverNativeEncounterTest, "RiverOaks.Contracts.NativeEncounters",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FRiverNativeEncounterTest::RunTest(const FString& Parameters)
 {
     UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+    AddEncounterFloor(World);
     auto* District = World->SpawnActor<ARiverOaksWorld>();
     District->Bounds = FBox(FVector(-2000), FVector(2000));
     District->Hour = 9.f;
@@ -79,6 +95,7 @@ bool FRiverNativeInputTest::RunTest(const FString& Parameters)
     UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
     World->InitializeActorsForPlay(FURL());
+    AddEncounterFloor(World);
     auto* District = World->SpawnActor<ARiverOaksWorld>();
     District->Bounds = FBox(FVector(-2000), FVector(2000));
     District->Hour = 9.f;

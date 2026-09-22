@@ -90,6 +90,8 @@ protected:
 private:
     friend class FRiverNativeEncounterTest;
     friend class FRiverNativeInputTest;
+    friend class FRiverNativeGroundTest;
+    friend class FRiverNativeDistrictGroundTest;
     UPROPERTY() TObjectPtr<UStaticMesh> Cube;
     UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> People;
@@ -122,4 +124,5 @@ private:
     void RequestDecisions();
     void UpdateWeather();
     FVector RouteTarget(const FRiverAgent& Agent) const;
+    bool GroundResident(FVector& Root) const;
 };

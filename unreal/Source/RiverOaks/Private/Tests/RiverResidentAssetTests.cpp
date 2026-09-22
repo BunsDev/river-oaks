@@ -66,6 +66,41 @@ bool FRiverResidentAssetsTest::RunTest(const FString& Parameters)
         const FVector Foot = Component->GetSocketTransform(TEXT("foot_l"), RTS_Component).GetLocation();
         TestTrue(Id + TEXT(" upright head above feet"), Head.Z - Foot.Z > Mesh->GetImportedBounds().BoxExtent.Z);
         const FVector Pelvis = Component->GetSocketTransform(TEXT("pelvis"), RTS_Component).GetLocation();
+
+#if WITH_EDITOR
+        // Idle leaves the leg bones at their reference pose, so the imported bind geometry
+        // provides an independent check that MeshToRoot maps the shoe sole to ground Z=0.
+        // This validates the resting mesh-to-ground mapping only; it does not prove moving
+        // skinned-foot placement while an animation is driving the leg bones.
+        int32 ShoeVertices = 0;
+        double SoleZ = TNumericLimits<double>::Max();
+        const FSkeletalMeshModel* ImportedModel = Mesh->GetImportedModel();
+        if (ImportedModel && ImportedModel->LODModels.Num() > 0)
+        {
+            for (const auto& Section : ImportedModel->LODModels[0].Sections)
+            {
+                if (!Mesh->GetMaterials().IsValidIndex(Section.MaterialIndex) ||
+                    !Mesh->GetMaterials()[Section.MaterialIndex].ImportedMaterialSlotName.ToString().StartsWith(TEXT("shoes")))
+                    continue;
+                for (const auto& Vertex : Section.SoftVertices)
+                {
+                    SoleZ = FMath::Min(SoleZ,
+                        static_cast<double>(Component->GetComponentTransform().TransformPosition(
+                            FVector(Vertex.Position)).Z));
+                    ++ShoeVertices;
+                }
+            }
+        }
+        TestTrue(Id + TEXT(" shoe geometry exists"), ShoeVertices > 0);
+        if (ShoeVertices > 0)
+        {
+            AddInfo(FString::Printf(TEXT("%s resting imported shoe sole Z=%.4f cm (%d vertices)"),
+                *Id, SoleZ, ShoeVertices));
+            TestTrue(Id + TEXT(" resting imported shoe sole meets ground Z=0"),
+                FMath::IsNearlyEqual(SoleZ, 0., .2));
+        }
+#endif
+
         for (const FString Side : {TEXT("l"), TEXT("r")})
         {
             const auto Joint = [&](const TCHAR* Prefix)

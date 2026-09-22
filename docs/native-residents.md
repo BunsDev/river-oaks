@@ -70,7 +70,8 @@ and retaining the accepted-distance phase through a stop.
 
 Run `Automation RunTests RiverOaks.Contracts` for source-only native contracts.
 After importing assets, run `Automation RunTests RiverOaks` to include
-`RiverOaks.NativeAssets.Residents`. The latter loads every profile, checks its
+`RiverOaks.NativeAssets.Residents` and the generated-district ground check.
+The resident suite loads every profile, checks its
 five material slots and rig, checks toe bones and eye bind geometry against three
 world headings, evaluates forward leg swing and shelter poses, and checks
 that animation preserves the authoritative component transform. Inspect the
@@ -113,6 +114,27 @@ invalid inputs. A rendered `woman-casual` sample confirms lowered arms, a moving
 stride, and the settled stance after stopping. Quantitative transition continuity
 comes from automation; the screenshots are sampled poses, not a complete motion
 review. See [`native-resting-poses.json`](../data/reports/native-resting-poses.json).
+
+Resident roots now follow static support near their current sole height. The
+query accepts surfaces up to 30 cm above or below that height with normals no
+steeper than 45 degrees. Missing support, larger steps, and steep surfaces block
+movement; unsupported spawn points are skipped. Held conversation partners keep
+their accepted position. Roads participate in collision queries at their existing
+rendered height, without changing the district geometry.
+
+`RiverOaks.Contracts.NativeGroundContact` uses synthetic floors and requires no
+generated district. `RiverOaks.NativeAssets.DistrictGroundContact` measures the
+24 spawn positions against the locally generated district. The resident asset
+suite also measures each profile's resting shoe bind geometry. These checks
+establish standing placement and supported roots. Moving feet still need contact
+solving, and curb height changes need step animation.
+
+The support-height follow-up passed 23 native tests, both Development builds,
+and a 21-test Contracts run with the generated manifest absent. All 24 district
+spawn roots measured zero gap to support, and all six resting shoe meshes met
+their expected ground height. Rendered acceptance sampled `woman-casual` on the
+road and confirmed E open/close. Results and coverage limits are in
+[`native-ground-contact.json`](../data/reports/native-ground-contact.json).
 
 This is prototype locomotion, without authored animation clips, foot IK, or
 collision-aware foot placement. Source hair transparency is rendered with a

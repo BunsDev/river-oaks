@@ -1,0 +1,326 @@
+{
+  "recorded_at": "2026-09-22T14:49:08.422000+00:00",
+  "source_sha256": {
+    "unreal/Source/RiverOaks/Private/RiverOaksWorld.cpp": "349a0c3d91eca3b4ba073ac8754c988897be419c2edb7dc5a141f6227cc728e1",
+    "unreal/Source/RiverOaks/Public/RiverOaksWorld.h": "92f060d4e2ccd0d37cfcbb21f48b51755f0d72992388969a75cb4187fcc99b77",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeGroundTests.cpp": "772a818d8b66b2bf95dc61430eb50838805a9602ffe038256a77a25aa13784bb",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeEncounterTests.cpp": "73a0722b56637904b55b08ce5d120c786ed218c06aead00482f28242776e64d4",
+    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "298a270b10691822137c35092be9e577d11d8c1f46d57e9f8274097e55ec879f"
+  },
+  "import_version": 3,
+  "native_tests": {
+    "succeeded": 23,
+    "failed": 0,
+    "notRun": 0
+  },
+  "tests": [
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.BoundsAndFiniteInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.FrameStepIndependent",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.IndependentInstances",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.InterruptsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.SettlesAfterStop",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.StartsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Coordinates",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanBackendSelection",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanPoseSequence",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Locomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeConversationInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeEncounters",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeGroundContact",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.PortrayalRecipe",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ProceduralGait",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Safety",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ScheduleAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalBackend",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalConfiguration",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalLocomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.NativeAssets.DistrictGroundContact",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.NativeAssets.Residents",
+      "state": "Success"
+    }
+  ],
+  "green_report": "/tmp/river-native-ground-reviewed-tests/index.json",
+  "red": {
+    "report": "/tmp/river-native-ground-red/index.json",
+    "failed": 1,
+    "cause": "All 24 roots were 5 cm above collision ground and roads had no query collision; support/step/edge assertions failed",
+    "road_note": "The old collision ground was Z=-5 while visible asphalt was Z=4, so zero-height soles could also intersect rendered roads"
+  },
+  "source_only": {
+    "report": "/tmp/river-native-ground-source-only-tests/index.json",
+    "succeeded": 21,
+    "failed": 0,
+    "notRun": 0,
+    "generated_manifest_absent": true,
+    "generated_manifest_restored": true
+  },
+  "measurements": {
+    "residents": [
+      {
+        "resident": "npc-0000",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0001",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0002",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0003",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0004",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0005",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0006",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0007",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0008",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0009",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0010",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0011",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0012",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0013",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0014",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0015",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0016",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0017",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0018",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0019",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0020",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0021",
+        "sole_cm": -5.0,
+        "surface_cm": -5.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0022",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      },
+      {
+        "resident": "npc-0023",
+        "sole_cm": 4.0,
+        "surface_cm": 4.0,
+        "gap_cm": 0.0
+      }
+    ],
+    "max_absolute_root_gap_cm": 0.0,
+    "shoe_bind_geometry": [
+      "woman-casual resting imported shoe sole Z=0.0000 cm (1738 vertices)",
+      "man-casual resting imported shoe sole Z=-0.0000 cm (1846 vertices)",
+      "woman-tailored resting imported shoe sole Z=0.0000 cm (1738 vertices)",
+      "man-tailored resting imported shoe sole Z=0.0000 cm (2510 vertices)",
+      "woman-daywear resting imported shoe sole Z=-0.0000 cm (1846 vertices)",
+      "man-workwear resting imported shoe sole Z=-0.0000 cm (1846 vertices)"
+    ]
+  },
+  "builds": {
+    "Editor Development": {
+      "result": "passed",
+      "log": "/tmp/river-native-ground-reviewed-build.log"
+    },
+    "Game Development": {
+      "result": "passed",
+      "log": "/tmp/river-native-ground-reviewed-game-build.log"
+    }
+  },
+  "additional_validation": {
+    "python": "98 passed",
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "independent_review": "Spec and source review passed after moving generated-district measurements into the opt-in NativeAssets suite; manifest-absent Contracts run passes"
+  },
+  "limits": [
+    "Rendered contact sampled one profile on the road; all six profiles have resting shoe geometry coverage",
+    "Standing shoe test measures bind geometry with unchanged resting leg pose, not animated skinned feet",
+    "Root support uses a single vertical query; foot IK and foot orientation on slopes remain open",
+    "Curb root-height transitions still need step animation",
+    "Native worker routines, dialogue parity, and broad rendered motion acceptance remain open"
+  ],
+  "runtime": {
+    "profile": "woman-casual",
+    "resident": "npc-0000",
+    "checks": [
+      "Rendered standing shoes meet road surface",
+      "E opens greeting at corrected root height",
+      "E closes greeting"
+    ],
+    "artifacts": [
+      {
+        "path": "/tmp/river-native-ground-back.png",
+        "sha256": "f0ea3d25c76c83ec01fe87b8a3faf0130dba5552cdbc40285d8d8ef1d39d0920"
+      },
+      {
+        "path": "/tmp/river-native-ground-front.png",
+        "sha256": "f59254546ebfdcb5c3874808cdbf11282bf9300ed5589fc7dd0c36dd73a67358"
+      }
+    ],
+    "log": "/tmp/river-native-ground-runtime.log",
+    "exit_code": 0
+  }
+}
