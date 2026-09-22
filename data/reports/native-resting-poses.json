@@ -2,7 +2,7 @@
   "recorded_at": "2026-09-22T14:23:09.928051+00:00",
   "source_sha256": {
     "unreal/Source/RiverOaks/Private/RiverProceduralAnimInstance.cpp": "aed8027cfebc53a866eec830eaef62ec50fcde4ad04c368ca5fafb607d746b12",
-    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "2404005f8360cb875667147e4e5a7b14a7303ca7e948862f80dd6cf3e71355b8",
+    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "268a72953607c9395711e4ae8f31962edca9531c4d9dd0969aee98b457f4981f",
     "unreal/Source/RiverOaks/Public/RiverGaitBlend.h": "19de18afc29b141990879fdddee738a21df2f7be3f21f88ac7cfaa14cf2fed04",
     "unreal/Source/RiverOaks/Private/Tests/RiverGaitBlendTests.cpp": "e2f508ba298514a5c39480b50d9127ef5db5f996e23611849d4d654d10dfe791"
   },
@@ -11,11 +11,11 @@
   "builds": {
     "Editor Development": {
       "result": "passed",
-      "log": "/tmp/river-native-rest-build.log"
+      "log": "/tmp/river-native-rest-review-build.log"
     },
     "Game Development": {
       "result": "passed",
-      "log": "/tmp/river-native-rest-game-build.log"
+      "log": "/tmp/river-native-rest-review-game-build.log"
     }
   },
   "native_tests": {
@@ -114,7 +114,7 @@
     "failed": 5,
     "cause": "Blend contracts and six-profile resting posture and stop continuity fail before implementation"
   },
-  "green_report": "/tmp/river-native-rest-final-tests/index.json",
+  "green_report": "/tmp/river-native-rest-review-tests/index.json",
   "calibration": {
     "probe_report": "/tmp/river-native-rest-probe/index.json",
     "wrist_height": "At or below pelvis within 1 cm; shorter rigs cannot reach a fixed 5 cm below pelvis without changing limb lengths",
@@ -157,5 +157,6 @@
     "ruff_check": "passed",
     "ruff_format": "passed",
     "independent_review": "No findings in final source, tests, report, and documentation review"
-  }
+  },
+  "review_followup": "Evaluated backend coverage compares slow walk, walk, and jog at equal stride phase, preserves root authority, and checks idle suppression despite accepted displacement. Expanded suite passes 21 tests."
 }

@@ -105,7 +105,9 @@ in [`native-resident-facing.json`](../data/reports/native-resident-facing.json).
 
 The September 22 resting-pose follow-up passed all 21 native tests and both
 Development builds. The six-profile asset suite checks wrist height, elbow
-flexion, thigh clearance, forward stride, and evaluated stop continuity. Separate
+flexion, thigh clearance, forward stride, and evaluated stop continuity. It also
+compares slow-walk, walk, and jog amplitudes at equal phase and checks that idle
+suppresses gait despite accepted displacement. Separate
 contracts check the blend at 30, 60, and 144 Hz, interrupted transitions, and
 invalid inputs. A rendered `woman-casual` sample confirms lowered arms, a moving
 stride, and the settled stance after stopping. Quantitative transition continuity

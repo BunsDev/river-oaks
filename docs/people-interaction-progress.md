@@ -291,6 +291,8 @@ Joint probes then corrected an unrealistic fixed wrist-height target for shorter
 arms: wrists must reach pelvis height within 1 cm without stretching the rig.
 All 21 native tests now pass, including six blend contracts and per-profile
 resting posture, forward stride, stop continuity, facing, and root authority.
+The review follow-up also compares evaluated slow-walk, walk, and jog amplitudes
+at equal phase and checks idle suppression despite accepted displacement.
 Editor and Game Development builds pass. Rendered acceptance sampled
 `woman-casual` at rest, mid-stride, and after settling; the other five profiles
 have automated pose coverage. Evidence and source hashes are in

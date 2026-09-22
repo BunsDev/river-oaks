@@ -171,6 +171,35 @@ bool FRiverResidentAssetsTest::RunTest(const FString& Parameters)
         }
         TestTrue(Id + TEXT(" shelter settles into the stationary pose"),
             Rest.Equals(Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation(), .01));
+
+        // Advance one full stride per accepted pose, keeping phase equal while
+        // exercising speed and locomotion selection through the real backend.
+        const auto EvaluateGait = [&](FName Locomotion, double Speed)
+        {
+            ++Pose.Sequence;
+            Pose.SimTimeSeconds += 110. / Speed;
+            Pose.Root.AddToTranslation(FVector(110., 0., 0.));
+            Pose.Locomotion = Locomotion;
+            TestTrue(Id + TEXT(" accepts gait comparison pose"), Backend.ApplyPose(Handle, Pose));
+            const FTransform ExpectedRoot = Component->GetComponentTransform();
+            for (int32 Frame = 0; Frame < 60; ++Frame)
+            {
+                Component->TickAnimation(1.f / 60.f, false);
+                Component->RefreshBoneTransforms();
+            }
+            TestTrue(Id + TEXT(" gait comparison preserves root authority"),
+                ExpectedRoot.Equals(Component->GetComponentTransform()));
+            return Rest.AngularDistance(Component->GetSocketTransform(TEXT("thigh_l"), RTS_Component).GetRotation());
+        };
+        const double WalkAngle = EvaluateGait(TEXT("walk"), 110.);
+        const double SlowAngle = EvaluateGait(TEXT("walk_slow"), 55.);
+        const double JogAngle = EvaluateGait(TEXT("jog"), 280.);
+        TestTrue(Id + TEXT(" slow walk evaluates a smaller stride at equal phase"),
+            SlowAngle > WalkAngle * .45 && SlowAngle < WalkAngle * .55);
+        TestTrue(Id + TEXT(" jog evaluates a stronger stride at equal phase"),
+            JogAngle > WalkAngle * 1.25 && JogAngle < WalkAngle * 1.35);
+        TestTrue(Id + TEXT(" idle suppresses gait even with accepted displacement"),
+            EvaluateGait(TEXT("idle"), 140.) < .01);
         Backend.DestroyComponents();
     }
     World->DestroyWorld(false);
