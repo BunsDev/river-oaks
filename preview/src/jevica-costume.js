@@ -24,7 +24,10 @@ export function createJevicaCostume(avatar) {
   const silk = surface({color:'#c66e8c', roughness:0.36, sheen:0.8, sheenColor:new THREE.Color('#fbe1d9'), sheenRoughness:0.48, bumpMap:weave, bumpScale:0.0007, side:THREE.DoubleSide});
   const organza = surface({color:'#d992a9', roughness:0.43, sheen:0.9, sheenColor:new THREE.Color('#fff0df'), sheenRoughness:0.65, side:THREE.DoubleSide});
   const platinum = surface({color:'#e5e2eb', metalness:0.92, roughness:0.22});
-  const crystal = surface({color:'#fff5ee', roughness:0.08, metalness:0.08, clearcoat:1, ior:1.8, transmission:0.35, thickness:0.012});
+  // Millimetre gems read through clearcoat and thin-film sparkle. Transmission
+  // would make three redraw every opaque object into a refraction buffer each
+  // frame she is on screen, for crystals a few pixels across.
+  const crystal = surface({color:'#fff5ee', roughness:0.06, metalness:0.2, clearcoat:1, ior:1.8, iridescence:0.55, iridescenceIOR:1.8});
   const embroiderySize=512, embroideryData=new Uint8Array(embroiderySize*embroiderySize*4);
   for(let y=0;y<embroiderySize;y++)for(let x=0;x<embroiderySize;x++) {
     const u=x/embroiderySize,v=y/embroiderySize;
@@ -125,7 +128,7 @@ export function createJevicaCostume(avatar) {
   const belt = mesh(waist, new THREE.TorusGeometry(0.16,0.004,8,80), platinum, [0,0.065,0]);
   belt.rotation.x = Math.PI / 2; belt.scale.y = 0.78;
   const hand = attach('hand_r');
-  const roseCrystal=surface({color:'#efb7d7',roughness:0.13,clearcoat:1,metalness:0.12,transmission:0.15,thickness:0.015});
+  const roseCrystal=surface({color:'#efb7d7',roughness:0.1,clearcoat:1,metalness:0.18,iridescence:0.4,iridescenceIOR:1.6});
   mesh(hand,new THREE.CylinderGeometry(0.006,0.004,0.69,16),crystal,[0,0.24,0.03]);
   mesh(hand,new THREE.IcosahedronGeometry(0.037,1),roseCrystal,[0,0.60,0.03]);
   for(let i=0;i<12;i++) {

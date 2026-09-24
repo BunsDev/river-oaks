@@ -6,7 +6,10 @@ export function buildDistrictFantasy(world) {
   const group = new THREE.Group();
   group.name = 'Imagined district details';
   const silver = new THREE.MeshStandardMaterial({ color: '#d8d5e1', metalness: 0.7, roughness: 0.32 });
-  const pearl = new THREE.MeshPhysicalMaterial({ color: '#f7edf5', metalness: 0, roughness: 0.08, transmission: 0.82, thickness: 0.35, ior: 1.46, clearcoat: 1, attenuationColor: '#e2a1c9', attenuationDistance: 2 });
+  // Facade jewels are a few hand-spans across. Refraction made three redraw the
+  // whole opaque district into a transmission buffer every frame they were on
+  // screen; a pearly thin film and a faint inner glow read the same at street scale.
+  const pearl = new THREE.MeshPhysicalMaterial({ color: '#f7edf5', metalness: 0, roughness: 0.08, ior: 1.46, clearcoat: 1, iridescence: 0.6, iridescenceIOR: 1.5, sheen: 0.4, sheenColor: '#e2a1c9', emissive: '#e2a1c9', emissiveIntensity: 0.06 });
   const glow = new THREE.MeshStandardMaterial({ color: '#f7e8f1', emissive: '#e2a1c9', emissiveIntensity: 2.4, roughness: 0.35 });
   const colors = ['#ad267e', '#e2a1c9', '#ca78ad', '#392b38'];
   const enamels = colors.map(color => new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.38 }));

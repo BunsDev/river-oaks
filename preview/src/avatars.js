@@ -49,11 +49,31 @@ function template(profile) {
 const BONES=['head','neck_01','spine_01','spine_02','spine_03','clavicle_l','clavicle_r','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r','hand_l','hand_r','thigh_l','thigh_r','calf_l','calf_r','foot_l','foot_r'];
 export function loadAvatarTemplate(profile) { return template(profile); }
 
+// SkeletonUtils.clone gives every skinned mesh its own Skeleton, even when the
+// body, clothes and hair are bound to the same bones. Each copy recomputes and
+// uploads identical bone matrices every frame, so meshes bound to the same
+// bones with the same inverse bind matrices share one skeleton again.
+export function shareSkeletons(model) {
+  const shared = [], dropped = new Set();
+  model.traverse(item => {
+    if (!item.isSkinnedMesh || !item.skeleton) return;
+    const skeleton = item.skeleton;
+    const match = shared.find(candidate => candidate !== skeleton && candidate.bones.length === skeleton.bones.length
+      && candidate.bones.every((bone, index) => bone === skeleton.bones[index])
+      && candidate.boneInverses.every((inverse, index) => inverse.equals(skeleton.boneInverses[index])));
+    if (match) { item.skeleton = match; dropped.add(skeleton); }
+    else if (!shared.includes(skeleton)) shared.push(skeleton);
+  });
+  for (const skeleton of dropped) if (!shared.includes(skeleton)) skeleton.dispose();
+  return shared;
+}
+
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
 export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
   const model = clone(source.scene), materials = new Map(), skeletons = new Set();
+  shareSkeletons(model);
   const scale = targetHeight/source.height;
   model.scale.setScalar(scale); model.position.y=-source.floor*scale;
   model.traverse(item => {

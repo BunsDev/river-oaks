@@ -21,7 +21,38 @@ export function isOcclusionExcluded(object) {
   return Boolean(object.userData?.aoExclude);
 }
 
-export function createRenderPipeline(renderer, scene, camera) {
+// Three advances its frame counter on every renderer.render() call, and the
+// composer makes several per animation frame (beauty, AO normals, refraction).
+// Each call recomputed every skeleton and re-uploaded its bone texture. Bones
+// only move between animation frames, so while the composer runs each skeleton
+// updates once. Explicit skeleton.update() calls outside rendering still run.
+const composedSkeletons = new WeakMap();
+let composeFrameCount = 0, composing = false;
+const updateSkeleton = THREE.Skeleton.prototype.update;
+function updateSkeletonOncePerFrame() {
+  if (composing) {
+    if (composedSkeletons.get(this) === composeFrameCount) return;
+    composedSkeletons.set(this, composeFrameCount);
+  }
+  updateSkeleton.call(this);
+}
+if (THREE.Skeleton.prototype.update === updateSkeleton) THREE.Skeleton.prototype.update = updateSkeletonOncePerFrame;
+export function composeFrame(render) {
+  composeFrameCount++; composing = true;
+  try { return render(); } finally { composing = false; }
+}
+
+// Objects the AO normal pass hides: excluded foliage and glazing plus the
+// points and lines GTAO hides itself. Walking the whole scene twice per frame
+// cost more CPU than the AO shading, so candidates refresh about once a second.
+export const OCCLUSION_CANDIDATE_REFRESH_MS = 1000;
+function occlusionCandidates(scene) {
+  const found = [];
+  scene.traverse(object => { if (isOcclusionExcluded(object) || object.isPoints || object.isLine || object.isLine2) found.push(object); });
+  return found;
+}
+
+export function createRenderPipeline(renderer, scene, camera, { now = () => performance.now() } = {}) {
   const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(4, renderer.capabilities.maxSamples) });
   const composer = new EffectComposer(renderer, target);
   const render = new RenderPass(scene, camera);
@@ -31,14 +62,13 @@ export function createRenderPipeline(renderer, scene, camera) {
   occlusion.output = GTAOPass.OUTPUT.Default;
   occlusion.blendIntensity = 1.0;
   const hidden = [];
-  const overrideVisibility = occlusion._overrideVisibility.bind(occlusion);
-  const restoreVisibility = occlusion._restoreVisibility.bind(occlusion);
+  let candidates = [], candidatesAt = -Infinity;
   occlusion._overrideVisibility = () => {
-    scene.traverse(object => { if (object.visible && isOcclusionExcluded(object)) { object.visible = false; hidden.push(object); } });
-    overrideVisibility();
+    const time = now();
+    if (time - candidatesAt >= OCCLUSION_CANDIDATE_REFRESH_MS) { candidates = occlusionCandidates(scene); candidatesAt = time; }
+    for (const object of candidates) if (object.visible) { object.visible = false; hidden.push(object); }
   };
   occlusion._restoreVisibility = () => {
-    restoreVisibility();
     hidden.forEach(object => { object.visible = true; });
     hidden.length = 0;
   };
@@ -77,7 +107,9 @@ export function createRenderPipeline(renderer, scene, camera) {
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
     get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio), transmissionScale:renderer.transmissionResolutionScale }; },
-    render(delta) { composer.render(delta); },
+    render(delta) { composeFrame(() => composer.render(delta)); },
+    // Newly added foliage or glazing joins the AO exclusions on the next pass.
+    refreshOcclusionCandidates() { candidatesAt = -Infinity; },
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }
