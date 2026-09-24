@@ -17,6 +17,7 @@ import { buildLocals } from './locals.js';
 import { buildStorePeople } from './store-people.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
+import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { buildStreetFurniture } from './street-furniture.js';
@@ -24,6 +25,9 @@ import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
+import { createQualityControl } from './render-quality.js';
+import { mountAssetProgress } from './asset-progress.js';
+import { createClearView } from './clear-view.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -40,7 +44,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
 let layers = {}, loading = false;
-let lastRenderStats = 0;
+let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
 const scene = new THREE.Scene();
 // Street level only: the range reaches the fogged context ground while keeping
@@ -77,6 +81,12 @@ function initializeRenderer() {
   configureMaterials(renderer);
   pipeline = createRenderPipeline(renderer, scene, camera);
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
+  // The storefront probe renders fixed-size cube faces outside the composer,
+  // so quality changes never invalidate it.
+  quality = createQualityControl({ apply({ scale, occlusion }) {
+    pipeline.setRenderScale(scale);
+    if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
+  } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
   loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
@@ -104,7 +114,7 @@ function initializeRenderer() {
       return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
-  setupSidebarSections();
+  setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals });
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
@@ -119,10 +129,12 @@ function initializeRenderer() {
   const phoneLayout = window.matchMedia('(max-width: 700px)');
   const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
   placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
+  createClearView({ viewport: $('#viewport') });
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
+  treeShadows = castShadowsFromProxies(sun, () => layers.trees?.userData.shadowProxies ?? []);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -368,6 +380,11 @@ async function loadWorld() {
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     data.vegetation = validateVegetation(data, vegetation);
     populateWorld(data);
+    // Reveal a finished street: stone, asphalt and sky first. Trees, people
+    // and interiors keep streaming behind the progress pill. On a slow link
+    // every download shares the bandwidth, so the wait is capped.
+    $('#loading p').textContent = 'Laying the stone and lighting the sky…';
+    await assetProgress?.settled(url => /\/assets\/materials\//.test(url), { timeout: 4000 });
     $('#verification-state').textContent = 'A real district, reimagined';
     $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
     $('#verification-dot').className = 'status-dot pass';
@@ -409,6 +426,8 @@ function followSunShadow() {
 
 function render(now) {
   clock.update();
+  if (lastFrame !== null) quality.sample(now - lastFrame);
+  lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
   playerAvatar?.react(now);
   community?.update(delta, now);
@@ -426,6 +445,7 @@ function render(now) {
   invasion?.update(delta, now);
   playerAvatar?.update(now, camera);
   followSunShadow();
+  treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
@@ -441,6 +461,7 @@ function render(now) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
     host.dataset.pipeline = JSON.stringify(pipeline.stats);
+    host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
 }
@@ -509,6 +530,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
 }
 
 try {
+  assetProgress = mountAssetProgress({ viewport: $('#viewport'), overlay: $('#loading'), manager: THREE.DefaultLoadingManager, reducedMotion });
   initializeRenderer();
   loadWorld();
 } catch (error) {
