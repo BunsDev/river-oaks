@@ -26,6 +26,7 @@ import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
 import { createQualityControl } from './render-quality.js';
+import { mountAssetProgress } from './asset-progress.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -42,7 +43,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
 let layers = {}, loading = false;
-let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null;
+let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
 const scene = new THREE.Scene();
 // Street level only: the range reaches the fogged context ground while keeping
@@ -376,6 +377,11 @@ async function loadWorld() {
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     data.vegetation = validateVegetation(data, vegetation);
     populateWorld(data);
+    // Reveal a finished street: stone, asphalt and sky first. Trees, people
+    // and interiors keep streaming behind the progress pill. On a slow link
+    // every download shares the bandwidth, so the wait is capped.
+    $('#loading p').textContent = 'Laying the stone and lighting the sky…';
+    await assetProgress?.settled(url => /\/assets\/materials\//.test(url), { timeout: 4000 });
     $('#verification-state').textContent = 'A real district, reimagined';
     $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
     $('#verification-dot').className = 'status-dot pass';
@@ -521,6 +527,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
 }
 
 try {
+  assetProgress = mountAssetProgress({ viewport: $('#viewport'), overlay: $('#loading'), manager: THREE.DefaultLoadingManager, reducedMotion });
   initializeRenderer();
   loadWorld();
 } catch (error) {
