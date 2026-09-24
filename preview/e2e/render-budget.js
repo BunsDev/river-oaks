@@ -4,7 +4,12 @@ async page => {
   await page.setViewportSize({width:3840,height:2160});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5173/');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady==='194'&&d.matureTrees==='230'&&d.plantedBeds==='38';});
-  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+  // Measure the full-quality budget: Sharpest pins native resolution and AO,
+  // where Auto would trade resolution for frame rate on a busy GPU.
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=settings-section]').click();await page.locator('[data-quality=sharp]').click();
+  await page.waitForFunction(()=>JSON.parse(document.querySelector('#canvas-host').dataset.quality||'{}').mode==='sharp');
+  await page.locator('#panel-toggle').click();
   const measure=async label=>{
     await page.waitForTimeout(1500);
     const result=await page.evaluate(()=>new Promise(resolve=>{
@@ -15,7 +20,7 @@ async page => {
       };requestAnimationFrame(frame);
     }));
     check(result.canvas[0]===3840&&result.canvas[1]===2160,`${label}: output must remain native UHD`);
-    check(result.pipeline.ao&&result.pipeline.aoScale===0.5&&result.pipeline.transmissionScale===0.5,`${label}: bounded auxiliary buffers`);
+    check(result.pipeline.renderScale===1&&result.pipeline.ao&&result.pipeline.aoScale===0.5&&result.pipeline.transmissionScale===0.5,`${label}: bounded auxiliary buffers`);
     await page.screenshot({path:`output/playwright/render-budget-${label}.png`});samples.push({label,...result});
   };
   for(const form of ['jevica','witch','alien']) {

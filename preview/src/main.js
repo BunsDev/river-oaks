@@ -25,6 +25,7 @@ import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
+import { createQualityControl } from './render-quality.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -41,7 +42,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
 let layers = {}, loading = false;
-let lastRenderStats = 0, treeShadows = null;
+let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null;
 
 const scene = new THREE.Scene();
 // Street level only: the range reaches the fogged context ground while keeping
@@ -78,6 +79,11 @@ function initializeRenderer() {
   configureMaterials(renderer);
   pipeline = createRenderPipeline(renderer, scene, camera);
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
+  quality = createQualityControl({ apply({ scale, occlusion }) {
+    pipeline.setRenderScale(scale);
+    if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
+    storefrontReflections?.invalidate();
+  } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
   loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
@@ -105,7 +111,7 @@ function initializeRenderer() {
       return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
-  setupSidebarSections();
+  setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals });
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
@@ -411,6 +417,8 @@ function followSunShadow() {
 
 function render(now) {
   clock.update();
+  if (lastFrame !== null) quality.sample(now - lastFrame);
+  lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
   playerAvatar?.react(now);
   community?.update(delta, now);
@@ -444,6 +452,7 @@ function render(now) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
     host.dataset.pipeline = JSON.stringify(pipeline.stats);
+    host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
 }

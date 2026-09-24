@@ -93,20 +93,29 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.055, 0.2, 2.0);
   const output = new OutputPass();
   composer.addPass(render); composer.addPass(occlusion); composer.addPass(bloom); composer.addPass(output);
-  let size = { width: 1, height: 1, pixelRatio: 1 };
+  let size = { width: 1, height: 1, pixelRatio: 1 }, renderScale = 1;
+  const applySize = () => {
+    // The canvas keeps its native pixel ratio. The scene and every pass buffer
+    // render at renderScale of it, and the output pass upsamples to the canvas.
+    const { width, height } = size, pixelRatio = size.pixelRatio * renderScale;
+    composer.setPixelRatio(pixelRatio); composer.setSize(width, height);
+    const scale = aoResolutionScale(width * pixelRatio, height * pixelRatio);
+    // Crystal and glass refraction samples a separate opaque-scene texture.
+    // Bound that texture at UHD, without reducing the main image or geometry.
+    renderer.transmissionResolutionScale=scale;
+    occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
+  };
   return {
     occlusion,
-    resize(width, height, pixelRatio) {
-      size = { width, height, pixelRatio };
-      composer.setPixelRatio(pixelRatio); composer.setSize(width, height);
-      const scale = aoResolutionScale(width * pixelRatio, height * pixelRatio);
-      // Crystal and glass refraction samples a separate opaque-scene texture.
-      // Bound that texture at UHD, without reducing the main image or geometry.
-      renderer.transmissionResolutionScale=scale;
-      occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
+    resize(width, height, pixelRatio) { size = { width, height, pixelRatio }; applySize(); },
+    // Graphics quality: 1 is native resolution. Changing it reallocates buffers.
+    setRenderScale(scale) {
+      const next = Math.min(1, Math.max(0.25, Number(scale) || 1));
+      if (next === renderScale) return;
+      renderScale = next; applySize();
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
-    get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio), transmissionScale:renderer.transmissionResolutionScale }; },
+    get stats() { return { ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { composeFrame(() => composer.render(delta)); },
     // Newly added foliage or glazing joins the AO exclusions on the next pass.
     refreshOcclusionCandidates() { candidatesAt = -Infinity; },
