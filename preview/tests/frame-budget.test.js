@@ -62,3 +62,16 @@ test('the AO pass hides excluded objects from a cached list that refreshes', () 
     assert.ok(leaf.visible && late.visible && saucer.visible, 'visibility is restored after the pass');
   } finally { pipeline.dispose(); }
 });
+
+test('every shipped resident rig renders from one shared skeleton', async () => {
+  const { loadCharacterRig } = await import('./helpers/character-rig.js');
+  const { clone } = await import('three/addons/utils/SkeletonUtils.js');
+  for (const profile of ['woman-casual', 'man-tailored', 'jevica']) {
+    const model = clone((await loadCharacterRig(profile)).scene);
+    const before = new Set(); model.traverse(item => { if (item.isSkinnedMesh) before.add(item.skeleton); });
+    shareSkeletons(model);
+    const after = new Set(); model.traverse(item => { if (item.isSkinnedMesh) after.add(item.skeleton); });
+    assert.ok(before.size > 1, `${profile}: SkeletonUtils.clone splits the skeleton`);
+    assert.equal(after.size, 1, `${profile}: one skeleton uploads per frame`);
+  }
+});
