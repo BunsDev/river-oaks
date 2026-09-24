@@ -308,3 +308,36 @@ button:disabled { cursor: not-allowed; }
 .loading-state .loading-progress { width: min(240px, 60%); margin-top: 4px; }
 @media (max-width: 700px) { .asset-progress { top: 12px; padding: 6px 12px; font-size: 11px; } .asset-progress-bar { width: 48px; } }
 @media (prefers-reduced-motion: reduce) { .asset-progress, .asset-progress-bar i { transition: none; } }
+
+/* The place name sits on open sky; a soft local scrim keeps it readable
+   over bright clouds without boxing it in. */
+.walking-title { isolation: isolate; }
+.walking-title::before {
+  content: ""; position: absolute; z-index: -1; inset: -26px -64px -22px -44px; pointer-events: none;
+  background: radial-gradient(closest-side, #0c1511a8, #0c151147 60%, transparent);
+}
+
+/* Clear view: the street without the visit cards. */
+.clear-view-toggle {
+  position: absolute; z-index: 6; right: 18px; bottom: 44px;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 8px 6px 14px;
+  border-radius: 999px; border: 1px solid var(--edge-light); color: var(--ink);
+  background: linear-gradient(145deg, var(--edge-light), transparent 38%), var(--glass);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent), var(--surface-shadow);
+  backdrop-filter: blur(28px) saturate(1.15); -webkit-backdrop-filter: blur(28px) saturate(1.15);
+  font: 500 12px/1 system-ui, sans-serif; cursor: pointer;
+}
+.clear-view-toggle kbd { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 6px; font: 500 10px/1 system-ui, sans-serif; color: var(--muted); }
+.clear-view-toggle:hover { border-color: var(--accent); }
+.clear-view-toggle[aria-pressed=true] { background: var(--accent); color: #fff; border-color: transparent; }
+.clear-view-toggle[aria-pressed=true] kbd { color: #fff; border-color: #fff8; }
+body:not(.walking) .clear-view-toggle { display: none; }
+body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-console, .compass, .asset-progress) {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.visit-tools, .auto-controls, .walking-title, .walking-console, .compass) { transition: opacity 200ms ease, visibility 200ms; }
+  .clear-view-toggle { transition: background-color 150ms ease, border-color 150ms ease, scale 120ms cubic-bezier(.2, 0, 0, 1); }
+  .clear-view-toggle:active { scale: .96; }
+}
+@media (max-width: 700px) { .clear-view-toggle { bottom: auto; top: 12px; right: 12px; min-height: 32px; padding: 4px 6px 4px 12px; } .clear-view-toggle kbd { display: none; } }

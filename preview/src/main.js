@@ -27,6 +27,7 @@ import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
+import { createClearView } from './clear-view.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -127,6 +128,7 @@ function initializeRenderer() {
   const phoneLayout = window.matchMedia('(max-width: 700px)');
   const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
   placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
+  createClearView({ viewport: $('#viewport') });
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);

@@ -57,6 +57,24 @@ or 6 cm at 60 Hz. Run it through the same Playwright CLI after starting dev. The
 fixture uses deterministic frames and does not establish facial expression quality,
 continuous collision, target-GPU performance or native Unreal parity.
 
+## Frame budget and HUD
+
+`preview/tests/frame-budget.test.js` checks that each skeleton uploads once per
+composed frame, that every shipped rig renders from one shared skeleton, and
+that the AO pass hides excluded objects from a cached list.
+`render-quality.test.js` covers the Auto resolution controller: it steps down
+when a 60 Hz display misses refreshes, recovers gradually, settles on a
+borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
+streaming count and the capped wait for surface textures.
+
+`preview/e2e/hud-and-quality.js` runs against `npm run dev`. It waits for the
+progress pill to count every file and step aside, switches Settings > Graphics
+between Auto, Smoothest and Sharpest while the canvas keeps native size,
+reloads to check the choice persists, and toggles Clear view with H and the
+chip. `render-budget.js` pins Sharpest, since it measures the full-quality
+budget. Frame times on a shared GPU vary with load, so compare against an
+unmodified checkout in interleaved runs before claiming a change.
+
 The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
 
 ## Manual Jev key override
