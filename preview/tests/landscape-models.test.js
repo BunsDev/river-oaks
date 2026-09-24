@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { matureTreePlacements } from '../src/landscape-models.js';
+import * as THREE from 'three';
+import { castShadowsFromProxies, matureTreePlacements, treeDetailLevel, TREE_LEAF_LAYERS, TREE_LOD_DISTANCES } from '../src/landscape-models.js';
 import { terrainHeight } from '../src/geometry.js';
 
 const read = path => readFileSync(new URL(path, import.meta.url));
@@ -44,4 +45,27 @@ test('shipped vegetation has reproducible receipts, embedded PBR maps and bounde
   assert.equal(counts.length, 3);
   assert.ok(counts[0] < 110000 && counts[1] < 26000 && counts[2] < 7000);
   assert.ok(counts[0] > counts[1] && counts[1] > counts[2]);
+});
+
+test('crowns step down in detail with distance and never add leaf layers', () => {
+  assert.equal(treeDetailLevel(0), 0);
+  assert.equal(treeDetailLevel(TREE_LOD_DISTANCES[0] - 0.01), 0);
+  assert.equal(treeDetailLevel(TREE_LOD_DISTANCES[0]), 1);
+  assert.equal(treeDetailLevel(TREE_LOD_DISTANCES[1]), 2);
+  assert.equal(treeDetailLevel(5000), 2);
+  assert.ok(TREE_LEAF_LAYERS.every((layers, index) => index === 0 || layers <= TREE_LEAF_LAYERS[index - 1]));
+});
+
+test('tree shadow proxies appear only for shadow casting inside the sun frustum', () => {
+  const sun = new THREE.DirectionalLight(); sun.position.set(0, 100, 0); sun.target.position.set(0, 0, 0);
+  Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 300 });
+  sun.shadow.camera.updateProjectionMatrix(); sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+  const proxy = at => { const mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial()); mesh.position.set(at, 0, 0); mesh.updateMatrixWorld(); mesh.visible = false; return mesh; };
+  const near = proxy(10), far = proxy(400);
+  const shadows = castShadowsFromProxies(sun, () => [near, far]);
+  sun.shadow.updateMatrices(sun);
+  assert.equal(near.visible, true, 'drawn into the shadow map this frame');
+  assert.equal(far.visible, false, 'culled proxies stay hidden, so they cannot leak into the view');
+  shadows.hide();
+  assert.equal(near.visible, false, 'the beauty pass never sees a proxy');
 });

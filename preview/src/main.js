@@ -17,6 +17,7 @@ import { buildLocals } from './locals.js';
 import { buildStorePeople } from './store-people.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
+import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { buildStreetFurniture } from './street-furniture.js';
@@ -40,7 +41,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
 let layers = {}, loading = false;
-let lastRenderStats = 0;
+let lastRenderStats = 0, treeShadows = null;
 
 const scene = new THREE.Scene();
 // Street level only: the range reaches the fogged context ground while keeping
@@ -123,6 +124,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
+  treeShadows = castShadowsFromProxies(sun, () => layers.trees?.userData.shadowProxies ?? []);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -426,6 +428,7 @@ function render(now) {
   invasion?.update(delta, now);
   playerAvatar?.update(now, camera);
   followSunShadow();
+  treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
