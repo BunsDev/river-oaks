@@ -33,7 +33,8 @@ def untextured(source, target):
             material.pop(key, None)
     used = [name for name in gltf.get("extensionsUsed", []) if name != "KHR_texture_transform"]
     gltf["extensionsUsed"] = used
-    gltf["extensionsRequired"] = [name for name in gltf.get("extensionsRequired", []) if name in used]
+    required = gltf.get("extensionsRequired", [])
+    gltf["extensionsRequired"] = [name for name in required if name in used]
     for key in ("extensionsUsed", "extensionsRequired"):
         if not gltf[key]:
             del gltf[key]
@@ -65,7 +66,11 @@ def main():
         run("webp", RAW / source / f"{source}.gltf", OUTPUT / f"{name}.glb", "--quality", 88)
         models.append((name, source))
     receipts = json.loads((RAW / "sources.json").read_text())
-    processing = "glTF Transform 4.3.0; mesh LODs; 2k PBR maps, WebP quality 88, on the high LOD and ground cover; mid and low LODs are geometry only and share the high LOD materials at runtime"
+    processing = (
+        "glTF Transform 4.3.0; mesh LODs; 2k PBR maps, WebP quality 88, on the high LOD "
+        "and ground cover; mid and low LODs are geometry only and share the high LOD "
+        "materials at runtime"
+    )
     derivatives = [
         {
             "path": f"/assets/landscape/{name}.glb",
