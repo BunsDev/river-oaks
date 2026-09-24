@@ -81,10 +81,11 @@ function initializeRenderer() {
   configureMaterials(renderer);
   pipeline = createRenderPipeline(renderer, scene, camera);
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
+  // The storefront probe renders fixed-size cube faces outside the composer,
+  // so quality changes never invalidate it.
   quality = createQualityControl({ apply({ scale, occlusion }) {
     pipeline.setRenderScale(scale);
     if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
-    storefrontReflections?.invalidate();
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
