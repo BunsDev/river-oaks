@@ -21,12 +21,19 @@ export const ENCOUNTER_NEAR = 1.0, ENCOUNTER_FAR = 4.5;
 // Indoor directory visits approach the chosen person, including staff behind a
 // counter, without stepping into fixtures or another room.
 export function indoorEncounterPosition(environment,local,visitor,locals=[]) {
+<<<<<<< Updated upstream
   if(local.abducted)return null;
+=======
+>>>>>>> Stashed changes
   const target=local.position;
   const valid=position=>{
     if(!environment.isFree(position[0],-position[1])||environment.roomAt(position[0],-position[1])?.storeId!==local.storeId)return false;
     if(!clearConversationLine(environment,[position[0],position[1],environment.groundAt(position[0],-position[1])+1.68],target,local.eyeHeight))return false;
+<<<<<<< Updated upstream
     return locals.every(person=>person.abducted||person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
+=======
+    return locals.every(person=>person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
+>>>>>>> Stashed changes
   };
   const distance=visitor?Math.hypot(visitor[0]-target[0],visitor[1]-target[1]):Infinity;
   if(distance>=ENCOUNTER_NEAR&&distance<=ENCOUNTER_FAR&&valid(visitor))return visitor;

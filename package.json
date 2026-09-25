@@ -16,7 +16,11 @@
     "server:redis": "node --env-file-if-exists=.env server/redis-start.js"
   },
   "dependencies": {
+<<<<<<< Updated upstream
     "@workos-inc/node": "^10.14.0",
+=======
+    "@workos-inc/node": "^10.13.0",
+>>>>>>> Stashed changes
     "ioredis": "^6.0.0",
     "three": "0.186.0",
     "ws": "^8.21.3"

@@ -127,6 +127,7 @@ test('an in-flight recovery is bounded and cannot overwrite a newer redirect',as
   pending[0].resolve([[6,0]]);await Promise.resolve();
   assert.deepEqual(local.life.route,route,'The old route must not replace the redirect');
 });
+<<<<<<< Updated upstream
 
 test('an abducted resident does not alter passing, clearance or arrival',()=>{
   for(const hiddenPosition of [[-3.5,0,0],[-4.5,0,0],[5,0,0]]){
@@ -142,3 +143,5 @@ test('an abducted resident does not alter passing, clearance or arrival',()=>{
     }
   }
 });
+=======
+>>>>>>> Stashed changes

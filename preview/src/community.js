@@ -160,7 +160,11 @@ export function stepCommunity(state, realDelta, economy) {
       if (local.abducted || local.status !== 'aid_en_route') continue;
       if(state.physicalVisits) {
         const helper=state.locals.find(item=>item.id===job.helperId);
+<<<<<<< Updated upstream
         if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.abducted || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
+=======
+        if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
+>>>>>>> Stashed changes
         if(helper.wish || helper.wishDisruption || local.wish || local.wishDisruption) continue;
         if(helper.id===state.selectedId || ['pause','stop','redirect','seek_shelter'].includes(helper.life?.action)) continue;
       }

@@ -55,6 +55,7 @@ test('UHD refraction uses a bounded offscreen buffer while the output keeps nati
     assert.equal(renderer.transmissionResolutionScale,0.5,'Retina and native UHD have the same pixel budget');
   } finally {pipeline.dispose();}
 });
+<<<<<<< Updated upstream
 
 test('graphics quality scales the scene buffers while the canvas keeps native size',()=>{
   const {renderer,pipeline}=fixture();
@@ -72,3 +73,5 @@ test('graphics quality scales the scene buffers while the canvas keeps native si
     assert.equal(pipeline.stats.renderScale,1,'invalid scales fall back to native');
   } finally {pipeline.dispose();}
 });
+=======
+>>>>>>> Stashed changes

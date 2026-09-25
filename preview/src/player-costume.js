@@ -1,9 +1,12 @@
+<<<<<<< Updated upstream
 import { batchCostumeAttachments } from './costume-batching.js';
 import { applyAlienSpecies, GREY_SPECIES } from './alien-species.js';
 import * as THREE from 'three';
+=======
+>>>>>>> Stashed changes
 import { createJevicaCostume } from './jevica-costume.js';
-import { measureHead } from './head-fit.js';
 
+<<<<<<< Updated upstream
 const isSkin = name => /^(young|middleage|old)_/.test(name);
 const isHair = name => /^(bob|short|ponytail|long|afro|curly)/.test(name);
 const isEyes = name => /^brown/.test(name);
@@ -93,4 +96,10 @@ export function createPlayerCostume(avatar, form) {
     },
     dispose() { attachments.forEach(({ group }) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };
+=======
+// The player has one identity; resident and invasion assets remain independent.
+export function createPlayerCostume(avatar, form) {
+  if (form !== 'jevica') throw new Error(`Unknown playable form: ${form}`);
+  return createJevicaCostume(avatar);
+>>>>>>> Stashed changes
 }

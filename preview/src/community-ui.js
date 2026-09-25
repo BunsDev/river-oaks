@@ -419,6 +419,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     } catch(error) {
       const message = error.message || 'The town could not confirm this action.';
       notify(message); return {ok:false,message};
+<<<<<<< Updated upstream
     }
   };
   const handleWish = async kind => {
@@ -452,6 +453,30 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     return openConversation(local, id);
   };
   const selectShared = async (local, id) => {
+=======
+    }
+  };
+  const handleWish = async kind => {
+    if (!state || dialogue.hidden) return { ok: false };
+    const local = state.locals.find(person => person.id === state.selectedId);
+    if (!local) return { ok: false };
+    invalidate();
+    const currentState = state;
+    const result = getMultiplayer()
+      ? await sharedCommand(kind ? {type:'wish',localId:local.id,kind} : {type:'undoWish',localId:local.id})
+      : kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
+    if (state !== currentState || state.selectedId !== local.id || dialogue.hidden) return result;
+    if (result.ok) {
+      message = result.message; attribution = 'Jevica’s magic'; currentTopic = null;
+      onWish(); paint(); speech.speak(local, message);
+    }
+    return result;
+  };
+
+  const selectLocal = async (id) => {
+    const local = state?.locals.find((item) => item.id === id);
+    if (!local || selecting) return false;
+>>>>>>> Stashed changes
     const currentState = state, epoch = selectionEpoch;
     selecting = true;
     try {
@@ -460,6 +485,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
         return false;
       }
       if (state !== currentState || epoch !== selectionEpoch) return false;
+<<<<<<< Updated upstream
       if (!(await sharedCommand({type:'focus',localId:id})).ok) return false;
       if (state !== currentState || epoch !== selectionEpoch) return false;
     } catch(error) {notify(error.message || 'This neighbor could not be reached.');return false;}
@@ -467,6 +493,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     return openConversation(local, id);
   };
   const openConversation = (local, id) => {
+=======
+      if (getMultiplayer() && !(await sharedCommand({type:'focus',localId:id})).ok) return false;
+      if (state !== currentState || epoch !== selectionEpoch) return false;
+    } catch(error) {notify(error.message || 'This neighbor could not be reached.');return false;}
+    finally {selecting = false;}
+>>>>>>> Stashed changes
     notify('');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
@@ -494,7 +526,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const epoch = requestEpoch, currentState = state;
     const context = { generation: state.generation, tick: packet.tick };
     const fallback = { schema_version: 1, tick: packet.tick, latency_ms: 0, decisions: [{ id, action: state.storm ? 'seek_shelter' : 'greet', source: 'local_rules' }] };
+<<<<<<< Updated upstream
     const current = () => !getMultiplayer() && epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id && !state.locals.find(local=>local.id===id)?.abducted;
+=======
+    const current = () => !getMultiplayer() && epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id;
+>>>>>>> Stashed changes
     attribution = 'Authored dialogue · checking immediate reaction…';
     paint();
     let deadline;
@@ -523,7 +559,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   };
 
   const interact = async (action) => {
+<<<<<<< Updated upstream
     if (!state?.selectedId || actionPending || state.locals.find(local=>local.id===state.selectedId)?.abducted) return;
+=======
+    if (!state?.selectedId || actionPending) return;
+>>>>>>> Stashed changes
     const activeControl = document.activeElement;
     const moveFocus = action === 'ask' && activeControl === ask;
     const localId = state.selectedId, currentState = state, shared = Boolean(getMultiplayer());
@@ -693,7 +733,10 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     },
     update(delta, now) {
       if (!state || document.hidden) return;
+<<<<<<< Updated upstream
       if(state.locals.find(local=>local.id===state.selectedId)?.abducted) closeDialogue();
+=======
+>>>>>>> Stashed changes
       if (getMultiplayer()) {
         if (now - lastPaint >= 150) {paint();lastPaint = now;}
         return;

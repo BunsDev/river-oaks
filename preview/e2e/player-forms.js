@@ -7,11 +7,18 @@ async page => {
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
+<<<<<<< Updated upstream
   check(await page.locator('#player-form').inputValue()==='jevica','Jevica is the default');
   check(JSON.stringify(await page.locator('#player-form option').evaluateAll(options=>options.map(o=>o.value)))===JSON.stringify(['alien','witch','jevica']),'Only the three authorized forms are offered');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   for(const form of ['jevica','witch','alien','jevica']) {
     await page.locator('#player-form').selectOption(form);
+=======
+  check(await page.locator('#canvas-host').getAttribute('data-player-form')==='jevica','Jevica is the only character');
+  check(await page.locator('#player-form').count()===0,'No character switcher is offered');
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+  for(const form of ['jevica']) {
+>>>>>>> Stashed changes
     await page.waitForFunction(form=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.playerForm===form;},form);
     await page.locator('.player-portrait img').evaluate(img=>img.decode());
     check(await page.locator('.player-portrait img').evaluate(img=>img.complete&&img.naturalWidth>0),`${form}: real model portrait loads`);
@@ -49,13 +56,18 @@ async page => {
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'No mobile horizontal overflow');
   await page.screenshot({path:'output/playwright/jevica-ui-mobile.png'});
   await page.locator('.player-settings summary').focus();await page.keyboard.press('Enter');
-  check(await page.locator('#player-form').isVisible(),'Keyboard expands character controls');
+  check(await page.locator('#player-flight').isVisible(),'Keyboard expands character controls');
   check(await page.locator('#player-flight').evaluate(el=>el.getBoundingClientRect().height>=44),'44px flight target');
+<<<<<<< Updated upstream
   await page.locator('#player-form').selectOption('alien');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerForm==='alien');
   await page.locator('.player-portrait img').evaluate(img=>img.decode());
   check(await page.locator('.player-portrait img').evaluate(img=>new URL(img.src).pathname)==='/assets/characters/alien-portrait.png','Mobile portrait matches the current form');
   await page.screenshot({path:'output/playwright/alien-ui-mobile-expanded.png'});
+=======
+  check(await page.locator('.player-portrait img').evaluate(img=>new URL(img.src).pathname)==='/assets/characters/jevica-portrait.png','Mobile portrait remains Jevica');
+  await page.screenshot({path:'output/playwright/jevica-ui-mobile-expanded.png'});
+>>>>>>> Stashed changes
   check(errors.length===0,`No uncaught browser errors: ${errors.join('; ')}`);
   return {checks,errors};
 }

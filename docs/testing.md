@@ -2,7 +2,11 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
+<<<<<<< Updated upstream
 Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. `npm run dev` joins the local shared town, which locks the character to Jevica and hides the invasion and auto visit. Run the solo browser scripts below (character forms, invasion, auto visit, render budget) against `VITE_MULTIPLAYER=off npm run dev`. `preview/e2e/multiplayer-dev.js` covers the town itself: two browsers join as development identities with no WorkOS, see each other, and arrive on separate spots. Production builds stay single player unless built with `VITE_MULTIPLAYER=required`.
+=======
+Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. Existing standalone browser scripts below require `VITE_SINGLE_PLAYER=true npm run dev`; default and production play use authenticated multiplayer.
+>>>>>>> Stashed changes
 
 For two-player browser acceptance, run `node server/tests/browser-fixture.js`, then:
 
@@ -71,6 +75,7 @@ screen coordinates; no simulation state is injected. Both scripts save images
 under `output/playwright/` and work with the optional bridge offline. They don't
 verify live Jev responses or native Unreal behavior.
 
+<<<<<<< Updated upstream
 `preview/e2e/reaction-transitions.js` runs all six shipped rigs through resting,
 reaction, greeting and interrupted gestures. It measures actual bone rotations and
 wrist displacement each frame, rejecting one-frame pose changes above 0.15 radians
@@ -112,6 +117,10 @@ failure, and a save that succeeds on the bridge but loses its response.
 Successful settings acceptance does not establish that a supplied key is valid
 with the provider. Jev validates it on the next inference request.
 
+=======
+The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
+
+>>>>>>> Stashed changes
 ## Jevica wishes
 
 Run `npm test` to check the five wish lifecycles, room boundaries, overlapping

@@ -107,6 +107,7 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
   };
   return {
     occlusion,
+<<<<<<< Updated upstream
     resize(width, height, pixelRatio) { size = { width, height, pixelRatio }; applySize(); },
     // Graphics quality: 1 is native resolution. Changing it reallocates buffers.
     setRenderScale(scale) {
@@ -119,6 +120,20 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
     render(delta) { composeFrame(() => composer.render(delta)); },
     // Newly added foliage or glazing joins the AO exclusions on the next pass.
     refreshOcclusionCandidates() { candidatesAt = -Infinity; },
+=======
+    resize(width, height, pixelRatio) {
+      size = { width, height, pixelRatio };
+      composer.setPixelRatio(pixelRatio); composer.setSize(width, height);
+      const scale = aoResolutionScale(width * pixelRatio, height * pixelRatio);
+      // Crystal and glass refraction samples a separate opaque-scene texture.
+      // Bound that texture at UHD, without reducing the main image or geometry.
+      renderer.transmissionResolutionScale=scale;
+      occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
+    },
+    setOcclusion(enabled) { occlusion.enabled = enabled; },
+    get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio), transmissionScale:renderer.transmissionResolutionScale }; },
+    render(delta) { composer.render(delta); },
+>>>>>>> Stashed changes
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }

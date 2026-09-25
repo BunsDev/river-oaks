@@ -2,7 +2,11 @@ import { Matrix3, Matrix4 } from 'three';
 import { ENCOUNTER_FAR } from './encounter.js';
 
 export function withinTalkingReach(local, pose, canSee) {
+<<<<<<< Updated upstream
   if (!local || local.abducted || !pose || (local.storeId ?? null) !== pose.roomId || pose.altitude > 2.5) return false;
+=======
+  if (!local || !pose || (local.storeId ?? null) !== pose.roomId || pose.altitude > 2.5) return false;
+>>>>>>> Stashed changes
   return Math.hypot(local.position[0] - pose.position[0], local.position[1] + pose.position[2]) <= ENCOUNTER_FAR
     && Math.abs(local.position[2] - pose.ground) < 4 && canSee(local.position);
 }
@@ -28,11 +32,17 @@ function visibleMeshes(roots) {
 }
 
 export function pickPerson(raycaster, people, occluders, canMeet) {
+<<<<<<< Updated upstream
   const person = raycaster.intersectObjects(visibleMeshes(people), false)[0];
   let owner=person?.object;
   while(owner&&!owner.userData.localId)owner=owner.parent;
   const id=owner?.userData.localId;
   if (!id || !canMeet(id)) return null;
+=======
+  const person = raycaster.intersectObjects(visibleMeshes(people), false)
+    .find(hit => hit.object.userData.localId);
+  if (!person || !canMeet(person.object.userData.localId)) return null;
+>>>>>>> Stashed changes
   const previousFar = raycaster.far;
   raycaster.far = person.distance - 0.02;
   try {
@@ -50,6 +60,10 @@ export function pickPerson(raycaster, people, occluders, canMeet) {
       }
       return !material.transparent || material.opacity >= 0.5;
     });
+<<<<<<< Updated upstream
     return blocked ? null : id;
+=======
+    return blocked ? null : person.object.userData.localId;
+>>>>>>> Stashed changes
   } finally { raycaster.far = previousFar; }
 }

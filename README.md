@@ -1,10 +1,16 @@
 # River Oaks District
 
 
+<<<<<<< Updated upstream
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Start as **Jevica**, explore in third person, or transform into a witch with a flying broom or an alien with a small UFO. Jevica flies in her bubble. See [the creative direction and controls](docs/world-direction.md).
+=======
+An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents. Play as **Jevica**, explore in third person, and fly in her bubble. Grant residents wishes with troublesome catches, then help undo the consequences. Jevica is the only playable character. See [the creative direction and controls](docs/world-direction.md).
+>>>>>>> Stashed changes
 ## Run the live showcase
 
-Start the browser development server with `npm ci` and `npm run dev`. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
+The default game uses WorkOS sign-in and one shared town server. Players see each other as Jevica and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production requires authenticated, verified accounts.
+
+For the standalone development showcase described below, start Vite with `VITE_SINGLE_PLAYER=true npm run dev`. This explicit development-only mode supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. It is unavailable in production builds. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -13,7 +19,7 @@ uv run river-oaks serve
 
 ```sh
 npm ci
-npm run dev
+VITE_SINGLE_PLAYER=true npm run dev
 ```
 
 Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
@@ -24,11 +30,19 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
+<<<<<<< Updated upstream
 The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Alien, Witch and Jevica are the only playable forms. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
 Residents have roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Clothed CC0 human rigs retain their natural faces, skin and hair, with six coordinated fashion palettes inspired by the playable characters. Shop workers inspect, prepare, serve or present at their stations, pause to attend to conversations, and resume work afterward. Storefronts are deliberately imaginative interpretations; see [visual evidence and asset provenance](docs/visual-fidelity.md).
+=======
+The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Jevica is the only playable character. In a conversation, choose **A wish from Jevica → Grant wish**. Track incidents in **Wishes & consequences** in the People panel, and use **Undo wish** to restore a resident. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+
+Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
+
+Residents have roles, interests, routines, and per-scene conversation memories. Ima Hogg, Barbara Jordan, Hakeem Olajuwon, and Beyoncé are explicitly fictional cultural encounters with linked public biographies. Their dialogue is authored; Jev receives bounded role context and chooses immediate reactions. Residents use clothed CC0 human skeletal rigs with their original skin, hair and eyes. Shop workers inspect, prepare, serve or present at their stations, pause to attend to conversations, and resume work afterward. Storefronts are deliberately imaginative interpretations; see [visual evidence and asset provenance](docs/visual-fidelity.md).
+>>>>>>> Stashed changes
 
 Workers support role-specific trays, samples and other props with their hands; reachable counter stations lift and return the load. You can talk across low counters, and selecting a person in the directory brings you within speaking range in their room. See [interaction and movement evidence](docs/people-interaction-progress.md) for tested coverage and remaining realism work.
 

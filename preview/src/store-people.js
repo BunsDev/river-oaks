@@ -1,4 +1,7 @@
+<<<<<<< Updated upstream
 import { applyResidentStyle } from './resident-style.js';
+=======
+>>>>>>> Stashed changes
 import { createWishVisual } from './wish-effects.js';
 import { staffWorkPose, blendStationPose } from './store-work.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
@@ -91,7 +94,10 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
         const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
         dress(avatar, spot, room.theme, seed);
+<<<<<<< Updated upstream
         if(spot.role!=='mannequin')applyResidentStyle(avatar,storePersonId(room,spotIndex),{staff:spot.role==='staff'});
+=======
+>>>>>>> Stashed changes
         const holder = new THREE.Group();
         const [east, north] = room.toWorld(spot.a, spot.d);
         const seated = spot.pose === 'seated';

@@ -1,4 +1,7 @@
+<<<<<<< Updated upstream
 import { applyResidentStyle } from './resident-style.js';
+=======
+>>>>>>> Stashed changes
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
@@ -115,7 +118,10 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const targetHeight = profile === 'jevica' ? 1.685 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.42:undefined });
   const { model, bones, rest } = avatar;
+<<<<<<< Updated upstream
   if(id !== 'player' && folk) applyResidentStyle(avatar,id);
+=======
+>>>>>>> Stashed changes
   const root = new THREE.Group();
   root.add(model);
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
@@ -156,12 +162,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         const pose=gesture[bone.name];if(!pose)continue;
         for(const [i,axis] of ['x','y','z'].entries())if(pose[i]){adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}
       }
-      if(locomotion?.flying) {
-        if(locomotion.vehicle==='witch') for(const bone of bones) {
-          const angle=bone.name.startsWith('thigh_')?1.1:bone.name.startsWith('calf_')?-1.25:bone.name.startsWith('upperarm_')?-0.6:0;
-          if(angle){adjustment.setFromAxisAngle(avatar.axes.get(bone).x,angle);bone.quaternion.multiply(adjustment);}
-        }
-      } else feet.update(dt, locomotion, groundAt);
+      if(!locomotion?.flying) feet.update(dt, locomotion, groundAt);
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
     },

@@ -33,8 +33,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // The HUD only promises what focusing will accept, so E and the meet button never dead-end:
   // street residents need a personal-space placement, people at work only a clear line across the room.
   const visitorPosition = () => [state.position[0], -state.position[2], state.position[1]];
+<<<<<<< Updated upstream
   const canMeet = local => !local.abducted && (local.storeId??null)===(currentRoom()?.storeId??null)
     && (local.indoor?indoorEncounterPosition:encounterPosition)(environment,local,visitorPosition(),getLocals()??[])!==null;
+=======
+  const canMeet = local => local.indoor
+    ? clearConversationLine(environment, visitorPosition(), local.position,local.eyeHeight)
+    : encounterPosition(environment, local, visitorPosition(), getLocals() ?? []) !== null;
+>>>>>>> Stashed changes
   const findNearest = () => {
     let result = null, distance = ENCOUNTER_FAR;
     const room = currentRoom();

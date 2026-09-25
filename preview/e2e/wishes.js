@@ -6,9 +6,13 @@ async page => {
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.charactersReady==='24');
+<<<<<<< Updated upstream
   // In the shared town everyone is Jevica: the selector stays, locked. Solo play keeps the choice.
   const inTown=await page.locator('#canvas-host').getAttribute('data-multiplayer')==='joined';
   check(await page.locator('#player-form').inputValue()==='jevica'&&await page.locator('#player-form').isDisabled()===inTown,'Jevica grants wishes; only the shared town locks the character');
+=======
+  check(await page.locator('#player-form').count()===0,'Jevica has no alternate character selector');
+>>>>>>> Stashed changes
   check(await page.locator('#canvas-host').getAttribute('data-player-form')==='jevica','Jevica is loaded');
   await page.getByRole('button',{name:'Meet someone nearby',exact:true}).click();
   await page.locator('#wish-grant').waitFor({state:'visible'});

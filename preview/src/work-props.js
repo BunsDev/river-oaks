@@ -96,6 +96,7 @@ export function createWorkerTask(avatar,holder,room,spot) {
     const frame=holder.getWorldQuaternion(new THREE.Quaternion());
     const reachable=arms.every(arm=>{
       const handFrame=frame.clone().multiply(arm.grip).multiply(arm.frameToHand);
+<<<<<<< Updated upstream
       const contacts=kind==='tablet'&&arm.side==='r'?[0,3,4.2].map(tabletTouchPoint):[new THREE.Vector3(arm.side==='l'?0.13:-0.13,0,palmZ)];
       return contacts.every(contact=>{
         const point=holder.localToWorld(dock.clone().add(contact));
@@ -103,12 +104,22 @@ export function createWorkerTask(avatar,holder,room,spot) {
         const distance=point.distanceTo(arm.thigh.getWorldPosition(new THREE.Vector3()));
         return distance<arm.upperLength+arm.lowerLength-0.04&&distance>Math.abs(arm.upperLength-arm.lowerLength)+0.04;
       });
+=======
+      const contact=kind==='tablet'&&arm.side==='r'?tabletTouchPoint(0):new THREE.Vector3(arm.side==='l'?0.13:-0.13,0,palmZ);
+      const point=holder.localToWorld(dock.clone().add(contact));
+      point.sub(arm.palmOffset.clone().applyQuaternion(handFrame));
+      return point.distanceTo(arm.thigh.getWorldPosition(new THREE.Vector3())) < arm.upperLength+arm.lowerLength-0.04;
+>>>>>>> Stashed changes
     });
     if(!reachable||(kind==='tablet'&&dock.z<0.43))dock=null;
   }
   // Hold the load at chest height so the hands clear reception/host counters.
+<<<<<<< Updated upstream
   const reach=Math.min(...arms.map(arm=>arm.upperLength+arm.lowerLength));
   const raised=new THREE.Vector3(0,kind==='tablet'?Math.max(Math.min(1.20,avatar.hipHeight+0.4),avatar.hipHeight+0.30):avatar.hipHeight+0.4,kind==='tablet'?0.48*Math.min(1,reach/0.44):0.32);
+=======
+  const raised=new THREE.Vector3(0,kind==='tablet'?Math.max(1.20,avatar.hipHeight+0.30):avatar.hipHeight+0.4,kind==='tablet'?0.48:0.32);
+>>>>>>> Stashed changes
   const rotation=new THREE.Quaternion();
   const contacts=[];
   return {kind,object,contacts,docked:Boolean(dock),

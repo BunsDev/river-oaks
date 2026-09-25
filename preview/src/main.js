@@ -25,11 +25,15 @@ import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
+<<<<<<< Updated upstream
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
+=======
+import { createMultiplayer } from './multiplayer-client.js';
+>>>>>>> Stashed changes
 import { createRemotePlayers } from './remote-players.js';
 import './style.css';
 import './playground-theme.css';
@@ -47,7 +51,11 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
 let multiplayer, remotePlayers;
+<<<<<<< Updated upstream
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
+=======
+const singlePlayer = import.meta.env.DEV && import.meta.env.VITE_SINGLE_PLAYER === 'true';
+>>>>>>> Stashed changes
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
@@ -107,13 +115,21 @@ function initializeRenderer() {
     onWish: () => playerAvatar?.cast(performance.now()),
     getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
-    onFocus(local) {
+    async onFocus(local) {
       autoControls?.stop();
+<<<<<<< Updated upstream
       // The town confirms travel asynchronously; solo focus stays synchronous.
       if (multiplayer) return multiplayer.travel({ localId: local.id }).then(result => {
         if (result.ok) walking.lookAt(local.position);
         return result.ok;
       });
+=======
+      if (multiplayer) {
+        const result = await multiplayer.travel({ localId: local.id });
+        if (result.ok) walking.lookAt(local.position);
+        return result.ok;
+      }
+>>>>>>> Stashed changes
       if (local.indoor) {
         const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
         const position = walking.active ? walking.getPosition() : null;
@@ -141,6 +157,7 @@ function initializeRenderer() {
   const phoneLayout = window.matchMedia('(max-width: 700px)');
   const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
   placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
+<<<<<<< Updated upstream
   createClearView({ viewport: $('#viewport') });
   if (multiplayerMode === 'required') startMultiplayer();
   else if (multiplayerMode === 'auto') probeTown().then(town => {
@@ -149,6 +166,20 @@ function initializeRenderer() {
     else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
   });
   else host.dataset.multiplayer = 'off';
+=======
+  if (!singlePlayer) {
+    // These tools run independent local simulations; shared play uses the town server.
+    $('.auto-controls').hidden = true;
+    invasion.panel.hidden = true;
+    remotePlayers = createRemotePlayers(scene, host);
+    multiplayer = createMultiplayer({
+      getPose: () => walking?.getPose(),
+      onSnapshot: snapshot => { if (world) community.applyRemote(snapshot); },
+      onCorrection: player => { if (world && player) walking.applyServerPose(player); },
+      onPlayers: (players, selfId) => remotePlayers.sync(players, selfId),
+    });
+  }
+>>>>>>> Stashed changes
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
@@ -485,10 +516,17 @@ function render(now) {
     buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
   }
   updateStoreLights();
+<<<<<<< Updated upstream
   if (!multiplayer) autoControls?.update(delta);
   if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   if (!multiplayer) invasion?.update(delta, now);
+=======
+  if (singlePlayer) autoControls?.update(delta);
+  if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
+  else walking?.halt();
+  if (singlePlayer) invasion?.update(delta, now);
+>>>>>>> Stashed changes
   multiplayer?.update(now);
   remotePlayers?.update(now, camera);
   playerAvatar?.update(now, camera);
@@ -556,6 +594,7 @@ host.addEventListener('pointerup', (event) => {
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats() });
+<<<<<<< Updated upstream
   window.__riverPeople = (bone = 'head') => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id).map(person => {
       person.holder.updateWorldMatrix(true,true);
@@ -564,6 +603,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       // A rig landmark stays on the body as swinging limbs change its bounds.
       const landmark = person.holder.getObjectByName(bone);
       if (landmark) { landmark.getWorldPosition(point); if (bone === 'head') point.y += 0.07; }
+=======
+  window.__riverPeople = (bone = null) => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
+    .filter(person => person.id).map(person => {
+      const bounds = new THREE.Box3().setFromObject(person.holder), point = bounds.getCenter(new THREE.Vector3());
+      point.y = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.86;
+      // A rig landmark stays on the body as swinging limbs change its bounds.
+      if (bone) person.holder.getObjectByName(bone)?.getWorldPosition(point);
+>>>>>>> Stashed changes
       point.project(camera);
       const rect = host.getBoundingClientRect();
       const local=community.state.locals.find(local=>local.id===person.id);

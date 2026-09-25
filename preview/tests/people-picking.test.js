@@ -51,6 +51,7 @@ test('storefront glass uses its rendered Fresnel opacity for person picking',asy
   assert.equal(pickPerson(ray,[person],[],()=>false),null,'glass does not bypass actual talking reach');
   for(const mesh of [person,glass]){mesh.geometry.dispose();mesh.material.dispose();}
 });
+<<<<<<< Updated upstream
 
 test('a visible mannequin blocks picking a person behind it',()=>{
   const person=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial());person.userData.localId='shopper';
@@ -61,3 +62,5 @@ test('a visible mannequin blocks picking a person behind it',()=>{
   assert.equal(pickPerson(ray,[person,mannequin],[],()=>true),'shopper');
   person.geometry.dispose();person.material.dispose();
 });
+=======
+>>>>>>> Stashed changes

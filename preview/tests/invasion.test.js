@@ -8,9 +8,9 @@ const open = { isFree: () => true, groundAt: () => 0 };
 const run = (state, seconds, context) => { for (let t = 0; t < seconds; t += 0.05) stepInvasion(state, 0.05, context); return state; };
 
 test('only the magical forms can cast', () => {
-  assert.deepEqual(MAGIC_FORMS, ['witch', 'jevica']);
-  for (const form of ['witch', 'jevica']) assert.ok(canCast(form));
-  for (const form of ['dorothy', 'scarecrow', 'tinman', 'lion', 'visitor', undefined]) assert.ok(!canCast(form), String(form));
+  assert.deepEqual(MAGIC_FORMS, ['jevica']);
+  for (const form of ['jevica']) assert.ok(canCast(form));
+  for (const form of ['alien', 'witch', 'dorothy', 'scarecrow', 'tinman', 'lion', 'visitor', undefined]) assert.ok(!canCast(form), String(form));
 });
 
 test('saucers land on free ground around the edge of the district', () => {
@@ -46,7 +46,7 @@ test('a spell from a magical visitor banishes the nearest alien in range and in 
   const state = createInvasion(world, { count: 2, ...open });
   run(state, LANDING_SECONDS + 0.1, open);
   const [near, far] = state.aliens;
-  const player = { form: 'witch', position: [near.position[0] + 5, near.position[1], 0] };
+  const player = { form: 'jevica', position: [near.position[0] + 5, near.position[1], 0] };
   assert.equal(castSpell(state, { ...player, form: 'lion' }), null, 'the Lion has no magic');
   assert.equal(castSpell(state, { ...player, position: [near.position[0] + SPELL_RANGE + 1, near.position[1], 0] }), null, 'out of range');
   assert.equal(castSpell(state, player, { canSee: () => false }), null, 'no line of sight');
@@ -61,11 +61,11 @@ test('the crew turn on a magical visitor within 20 m, stand off at 4 m, and igno
   const state = createInvasion(world, { count: 1, ...open });
   const alien = state.aliens[0];
   const residents = [{ id: 'r', position: [alien.position[0] + 15, alien.position[1], 0] }];
-  const witch = { form: 'witch', position: [alien.position[0] - 8, alien.position[1], 0] };
-  run(state, LANDING_SECONDS + 6, { ...open, residents, player: witch });
+  const jevica = { form: 'jevica', position: [alien.position[0] - 8, alien.position[1], 0] };
+  run(state, LANDING_SECONDS + 6, { ...open, residents, player: jevica });
   assert.equal(alien.status, 'menacing'); assert.equal(alien.targetId, 'player');
-  assert.ok(Math.abs(Math.hypot(alien.position[0] - witch.position[0], alien.position[1] - witch.position[1]) - 4) < 1.4, 'stands off at about four metres');
-  assert.equal(castSpell(state, { ...witch }), alien.id, 'a menacing alien can be banished');
+  assert.ok(Math.abs(Math.hypot(alien.position[0] - jevica.position[0], alien.position[1] - jevica.position[1]) - 4) < 1.4, 'stands off at about four metres');
+  assert.equal(castSpell(state, { ...jevica }), alien.id, 'a menacing alien can be banished');
   const ignore = createInvasion(world, { count: 1, ...open }), other = ignore.aliens[0];
   run(ignore, LANDING_SECONDS + 3, { ...open, residents: [{ id: 'r', position: [other.position[0] + 15, other.position[1], 0] }], player: { form: 'lion', position: [other.position[0] - 5, other.position[1], 0] } });
   assert.equal(other.targetId, 'r', 'the Lion is not a threat, so the crew keep hunting neighbors');

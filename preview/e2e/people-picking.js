@@ -17,7 +17,11 @@ async page => {
   const start=await page.locator('#walking-hud').getAttribute('data-position');
   for(const suffix of [6,9]) {
     const id=`store-osm-node-8172494967-person-${suffix}`;
+<<<<<<< Updated upstream
     const person=await page.evaluate(id=>window.__riverPeople().find(person=>person.id===id),id);
+=======
+    const person=await page.evaluate(id=>window.__riverPeople('head').find(person=>person.id===id),id);
+>>>>>>> Stashed changes
     check(person.visible&&person.reachable,`${id}: in reach and rendered`);
     await page.mouse.click(...person.screen);
     await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
@@ -28,6 +32,7 @@ async page => {
   }
   const staff='store-osm-node-8172494967-person-9';
   await page.waitForTimeout(6500); // Recognition expires before work/attention sampling.
+<<<<<<< Updated upstream
   const before=await page.evaluate(id=>window.__riverPeople().find(p=>p.id===id),staff);
   await page.waitForTimeout(800);
   const working=await page.evaluate(id=>window.__riverPeople().find(p=>p.id===id),staff);
@@ -37,14 +42,31 @@ async page => {
   const held=await page.evaluate(id=>window.__riverPeople().find(p=>p.id===id).workTime,staff);
   await page.waitForTimeout(700);
   const listening=await page.evaluate(id=>window.__riverPeople().find(p=>p.id===id),staff);
+=======
+  const before=await page.evaluate(id=>window.__riverPeople('head').find(p=>p.id===id),staff);
+  await page.waitForTimeout(800);
+  const working=await page.evaluate(id=>window.__riverPeople('head').find(p=>p.id===id),staff);
+  check(working.workTime>before.workTime,'Worker resumes their task after recognition and conversation');
+  await page.mouse.click(...working.screen);
+  await page.locator('#community-dialogue').waitFor({state:'visible'});
+  const held=await page.evaluate(id=>window.__riverPeople('head').find(p=>p.id===id).workTime,staff);
+  await page.waitForTimeout(700);
+  const listening=await page.evaluate(id=>window.__riverPeople('head').find(p=>p.id===id),staff);
+>>>>>>> Stashed changes
   check(listening.attention>0.9&&Math.abs(listening.workTime-held)<0.05,'Worker holds the task and attends during conversation');
   const feet=await page.evaluate(()=>window.__riverPeople().flatMap(p=>p.feet??[]));
   const error=Math.max(...feet.map(foot=>Math.hypot(...foot.actual.map((value,index)=>value-foot.target[index]))));
   check(feet.length>30&&error<0.001,'Actual seated rigs keep feet within 1 mm of planted targets');
+<<<<<<< Updated upstream
   const contacts=await page.evaluate(()=>window.__riverPeople().flatMap(p=>p.task?.contacts??[]));
   const maxPalmError=Math.max(...contacts.map(contact=>contact.error));
   check(contacts.length>100&&maxPalmError<0.001,'Loaded workers support their props within 1 mm of each palm');
   await page.screenshot({path:'output/playwright/people-picking.png'});
   check(errors.length===0,`No uncaught browser errors: ${errors.join('; ')}`);
   return {checks,seatedFeet:feet.length,maxFootError:error,palmContacts:contacts.length,maxPalmError,errors};
+=======
+  await page.screenshot({path:'output/playwright/people-picking.png'});
+  check(errors.length===0,`No uncaught browser errors: ${errors.join('; ')}`);
+  return {checks,seatedFeet:feet.length,maxFootError:error,errors};
+>>>>>>> Stashed changes
 }

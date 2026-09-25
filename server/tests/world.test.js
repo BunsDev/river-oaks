@@ -363,6 +363,7 @@ test('checkpoint JSON preserves infinite resident waits and full district routes
   assert.deepEqual(restored.checkpoint(),original.checkpoint());
   assert.equal('ledgers' in restored.snapshot(),false,'private cooldown ledger is never in client snapshots');
 });
+<<<<<<< Updated upstream
 
 test('players arriving together each get their own spot near the spawn', async () => {
   const { readFile } = await import('node:fs/promises');
@@ -375,3 +376,5 @@ test('players arriving together each get their own spot near the spawn', async (
   }
   assert.ok(spots.every(spot => Math.hypot(spot[0] - spots[0][0], spot[1] - spots[0][1]) < 7), 'everyone still arrives together');
 });
+=======
+>>>>>>> Stashed changes

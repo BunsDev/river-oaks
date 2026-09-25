@@ -54,6 +54,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   const clearExpiredLedgers = time => {
     for (const [id,ledger] of ledgers) if (!players.has(id) && time-ledger.seen >= LEDGER_TTL_MS) ledgers.delete(id);
   };
+<<<<<<< Updated upstream
   // Everyone arrives at the same walk spawn; without spreading, two players
   // stood inside each other. Each takes the first free spot on rings around
   // the spawn at least 1.2 m from anyone already in town.
@@ -67,6 +68,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     }
     return [x0, north0];
   }
+=======
+>>>>>>> Stashed changes
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -77,8 +80,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if (ledgers.size >= MAX_LEDGERS) return reject('world_busy');
       ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,tokens:12,tokenAt:time,seen:time});
     }
+<<<<<<< Updated upstream
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
     const player = {id:identity.userId,name:identity.name.slice(0,80),position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
+=======
+    const spawn = createWalkingState(environment).position;
+    const player = {id:identity.userId,name:identity.name.slice(0,80),position:[spawn[0],-spawn[2],spawn[1]-1.68],yaw:0,altitude:0,
+>>>>>>> Stashed changes
       poseAt:time,moveBudget:0.1,liftBudget:0.1};
     players.set(player.id,player);
     revision++;

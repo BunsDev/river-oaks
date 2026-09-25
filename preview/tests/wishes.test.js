@@ -7,6 +7,7 @@ const setup = () => ({ wishes: createWishState(), locals: [
   { id: 'theo', name: 'Theo', position: [3, 0, 0] },
   { id: 'far', name: 'June', position: [80, 0, 0] },
 ] });
+<<<<<<< Updated upstream
 test('only Jevica grants and undoes wishes, whichever forms are playable', () => {
   assert.ok(VISITOR_FORMS.some(form => form.id === 'jevica'));
   assert.equal(formFor('unknown'), null);
@@ -18,6 +19,11 @@ test('only Jevica grants and undoes wishes, whichever forms are playable', () =>
   const state = setup();
   assert.equal(grantWish(state, 'maya', WISHES[0].id, 'jevica').ok, true);
   assert.equal(undoWish(state, 'maya', 'witch').ok, false, 'another form cannot undo Jevica’s wish');
+=======
+test('Jevica is the only playable identity', () => {
+  assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['jevica']);
+  for (const id of ['alien', 'witch', 'unknown']) assert.equal(formFor(id), null);
+>>>>>>> Stashed changes
 });
 for (const definition of WISHES) test(`${definition.id}: gift becomes trouble, resident requests removal, undo releases the town`, () => {
   const state = setup();

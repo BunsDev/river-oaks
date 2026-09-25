@@ -211,12 +211,15 @@ button:disabled { cursor: not-allowed; }
 @media (max-height: 600px) and (min-width: 701px) {
   .visit-tools { width: auto; grid-template-columns: 218px 264px; }
 }
+<<<<<<< Updated upstream
 .player-controls[data-form=witch] { --accent: #704980; --accent-soft: #ede5f1; }
 :root[data-theme=dark] .player-controls[data-form=witch] { --accent: #d6b9e3; --accent-soft: #43324b; }
 :root[data-theme] .player-controls[data-form=witch] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#675072,#3b2c45); border-color: #8b6c9b; }
 .player-controls[data-form=alien] { --accent: #3b6c67; --accent-soft: #e2eeeb; }
 :root[data-theme=dark] .player-controls[data-form=alien] { --accent: #acd6c9; --accent-soft: #263f3a; }
 :root[data-theme] .player-controls[data-form=alien] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#456e66,#263e3b); border-color: #668f84; }
+=======
+>>>>>>> Stashed changes
 
 /* Visit tools as one family: the invasion card shares the character card's glass, controls and type. */
 :root[data-theme] .invasion-controls {

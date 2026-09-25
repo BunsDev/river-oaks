@@ -22,7 +22,7 @@ BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
 
 The fetcher verifies both archive hashes and bounds downloads/extraction. The builder uses an isolated extension repository, generates relaxed standing poses, reduces texture resolution, and exports self-contained GLBs. It does not save user Blender preferences. Source archives and the build environment remain ignored under `data/raw/characters/`.
 
-## Jevica and playable forms
+## Jevica
 
 `jevica.glb` is a separate hero asset built from the same CC0 system pack. It
 retains the existing female proportions, adds one level of body subdivision,
@@ -45,10 +45,16 @@ BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
   data/raw/characters/jevica-build/bin/python scripts/build_jevica.py
 ```
 
+<<<<<<< Updated upstream
 The selectable player forms are **Alien, Witch and Jevica**, with Jevica as the
 default. The Witch has a fitted crooked hat, dark clothing and flying broom;
 Jevica flies in a bubble; the Grey Alien uses a small UFO. Procedural costume and
 anatomy additions belong to the player instances. Residents, shoppers and staff
+=======
+**Jevica is the only playable character** and flies in a bubble. The retired
+Witch and Alien costumes, portraits, flying broom and personal UFO were removed.
+Her procedural costume belongs to the player instance. Residents, shoppers and staff
+>>>>>>> Stashed changes
 use the six original human rigs with their skin, hair and eyes intact. See
 [character forms](../../../../docs/character-forms.md) and
 [world direction](../../../../docs/world-direction.md).
@@ -61,8 +67,13 @@ pads rather than putting the wrist or palm bone on the load. These runtime poses
 do not change the GLB meshes, textures, bind skeletons or source receipts.
 `e2e/fixtures/jevica.html?resident=local-04&rig=1` renders a human resident on a
 given shared rig for inspection.
+<<<<<<< Updated upstream
 The `*-portrait.png` files are actual renderer captures of these models, made
 with `e2e/fixtures/jevica.html?form=<id>` at 288 × 352 and
+=======
+`jevica-portrait.png` is an actual renderer capture of Jevica, made
+with `e2e/fixtures/jevica.html` and
+>>>>>>> Stashed changes
 `window.jevicaFixture.render('portrait')`.
 Use `e2e/player-forms.js` with the repository's Playwright browser runner to
-check transformations, camera mode, flight, responsive controls and portraits.
+check Jevica's identity, camera mode, flight, responsive controls and portrait.

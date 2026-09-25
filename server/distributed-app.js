@@ -1,7 +1,10 @@
 import { createServer } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
+<<<<<<< Updated upstream
 import { sendFrame } from './backpressure.js';
+=======
+>>>>>>> Stashed changes
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 
@@ -19,7 +22,15 @@ export function createDistributedServer({ auth, room, security, origin, moderato
   const connections = new Map(), moderatorIds = new Set(moderators);
   const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
+<<<<<<< Updated upstream
   const send = (ws, value, options) => sendFrame(ws, value, options);
+=======
+  const send = (ws, value) => {
+    if (ws.readyState !== WebSocket.OPEN) return;
+    if (ws.bufferedAmount > 512 * 1024) { ws.close(1013, 'Connection too slow'); return; }
+    ws.send(JSON.stringify(value));
+  };
+>>>>>>> Stashed changes
   const access = req => {
     const ip = address(req);
     return localAccess(ip) && security.allow('access', ip, 120, 60_000);
@@ -55,7 +66,11 @@ export function createDistributedServer({ auth, room, security, origin, moderato
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
       if (!active) { ws.close(4003, 'Session ended or account removed from the town.'); continue; }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
+<<<<<<< Updated upstream
       send(ws, view.snapshot, { snapshot: true });
+=======
+      send(ws, view.snapshot);
+>>>>>>> Stashed changes
     }
   }
   const server = createServer(async (req, res) => {

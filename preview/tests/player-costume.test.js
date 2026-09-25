@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import * as THREE from 'three';
+import { createFlightVehicle } from '../src/flight-vehicles.js';
 import { createPlayerCostume } from '../src/player-costume.js';
 
 test('Jevica ships a self-contained, skinned hero asset with a reproducible receipt', () => {
@@ -32,7 +33,11 @@ function avatarFixture() {
   return {object,rig:{model,materials:new Map()}};
 }
 
+<<<<<<< Updated upstream
 for(const form of ['jevica','witch']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
+=======
+for(const form of ['jevica']) test(`${form} has finite geometry and follows the rig under rotation, translation and disposal`,()=>{
+>>>>>>> Stashed changes
   const avatar=avatarFixture(), originalChildren=avatar.object.children.length;
   const costume=createPlayerCostume(avatar,form);
   avatar.object.position.set(40,3,-20);avatar.object.rotation.y=1.3;
@@ -55,6 +60,7 @@ for(const form of ['jevica','witch']) test(`${form} has finite geometry and foll
   assert.equal(disposed,geometries.size+materials.size,'Every attached geometry and material is released');
 });
 
+<<<<<<< Updated upstream
 test('Grey costume detaches without disposing shared species assets',()=>{
   const avatar=avatarFixture(),head=avatar.rig.model.getObjectByName('head');
   const outfit=createPlayerCostume(avatar,'alien');
@@ -64,4 +70,23 @@ test('Grey costume detaches without disposing shared species assets',()=>{
   outfit.update();outfit.dispose();
   assert.equal(anatomy.parent,null);assert.equal(disposed,0,'species geometry is a cached template shared by clones');
   assert.throws(()=>createPlayerCostume(avatar,'dorothy'),/Unknown playable form/);
+=======
+test('retired characters cannot create costumes or flight vehicles',()=>{
+  for(const form of ['witch','alien','dorothy']) {
+    assert.throws(()=>createPlayerCostume(avatarFixture(),form),/Unknown playable form/);
+    assert.throws(()=>createFlightVehicle(form),/Unknown playable form/);
+  }
+});
+
+test('Jevica bubble retains finite geometry and releases its owned resources',()=>{
+  const vehicle=createFlightVehicle('jevica'),resources=new Set();
+  vehicle.object.traverse(item=>{
+    if(!item.isMesh)return;
+    assert.ok(item.geometry.attributes.position.array.every(Number.isFinite));
+    resources.add(item.geometry);resources.add(item.material);
+  });
+  assert.ok(resources.size>0);
+  let disposed=0;for(const resource of resources)resource.addEventListener('dispose',()=>disposed++);
+  vehicle.dispose();assert.equal(disposed,resources.size);
+>>>>>>> Stashed changes
 });

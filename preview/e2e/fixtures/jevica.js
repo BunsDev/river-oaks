@@ -20,16 +20,20 @@ const fill = new THREE.DirectionalLight('#dbe9ff',1.3); fill.position.set(-3,2,-
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshStandardMaterial({color:'#c8c1bc',roughness:0.85}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
-const form=new URLSearchParams(location.search).get('form')??'jevica';
+const form='jevica';
 const params=new URLSearchParams(location.search), resident=params.get('resident');
 const identity=VISITOR_FORMS.find(item=>item.id===form) ?? VISITOR_FORMS.at(-1);
+<<<<<<< Updated upstream
 // ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig.
+=======
+// ?resident=local-07&rig=2 inspects a human resident on a given shared rig.
+>>>>>>> Stashed changes
 const avatar = resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
 const outfit = resident ? {update(){}} : createPlayerCostume(avatar,form); scene.add(avatar.object);
 function render(view='full',time=0,speed=0) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : 0;
   if (view === 'portrait') {camera.position.set(0,1.61,1.40);camera.lookAt(0,1.48,0);}
-  else {camera.position.set(2.1,1.4,form==='witch'?5.7:4.4);camera.lookAt(0,form==='witch'?1.1:0.90,0);}
+  else {camera.position.set(2.1,1.4,4.4);camera.lookAt(0,0.90,0);}
   avatar.update(time,'continue',false,{speed,distance:time/1000*speed},()=>0); outfit.update();
   renderer.render(scene,camera);
   return {profile:avatar.profile, bounds:new THREE.Box3().setFromObject(avatar.object).getSize(new THREE.Vector3()).toArray(), calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};

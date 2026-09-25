@@ -9,6 +9,7 @@ async page => {
   await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.charactersReady === '24' && document.querySelector('#canvas-host').dataset.playerReady === 'true');
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   const read = () => page.locator('.invasion-controls').evaluate(el => JSON.parse(el.dataset.state));
+<<<<<<< Updated upstream
   // A non-magical form cannot begin the scenario.
   await page.locator('#player-form').selectOption('alien');
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerForm === 'alien' && document.querySelector('#canvas-host').dataset.playerReady === 'true');
@@ -16,6 +17,10 @@ async page => {
   check((await page.locator('#invasion-status').textContent()).includes('Wicked Witch or Jevica'), 'The card explains who can cast');
   await page.locator('#player-form').selectOption('jevica');
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerForm === 'jevica' && document.querySelector('#canvas-host').dataset.playerReady === 'true');
+=======
+  check(await page.locator('#player-form').count() === 0, 'Jevica is the only playable character');
+  check(await page.locator('#canvas-host').getAttribute('data-player-form') === 'jevica', 'Jevica is ready');
+>>>>>>> Stashed changes
   check(!await page.locator('#invasion-toggle').isDisabled(), 'Jevica can begin');
   await page.locator('#invasion-toggle').click();
   check((await read()).phase === 'active' && (await read()).remaining === 5, 'Five saucers arrive');

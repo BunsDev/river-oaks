@@ -1,5 +1,6 @@
 # Deploy the shared town
 
+<<<<<<< Updated upstream
 ## Develop locally without WorkOS
 
 `npm run dev` starts the shared town inside the Vite dev server. With no WorkOS
@@ -25,6 +26,8 @@ backend always require WorkOS and fail closed with `503` without it.
 While the town runs, the character locks to Jevica and the solo-only invasion
 and auto visit are hidden, since each would diverge from the shared town.
 
+=======
+>>>>>>> Stashed changes
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
 ## Shared storage and coordination
@@ -102,7 +105,11 @@ node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.
 
 Store that output privately. Keep WorkOS credentials and the cookie secret out of Git, build arguments, browser bundles, and `VITE_` variables. HTTPS sessions use `Secure`, `HttpOnly`, and `SameSite=Lax` cookies.
 
+<<<<<<< Updated upstream
 Production multiplayer requires WorkOS authentication and a verified email. There is no anonymous bypass, and development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
+=======
+Production multiplayer requires WorkOS authentication and a verified email. There is no anonymous or development-auth bypass. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
+>>>>>>> Stashed changes
 
 ## Standalone mode: one instance and file moderation
 

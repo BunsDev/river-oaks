@@ -82,7 +82,10 @@ export function buildLocals(world, locals) {
       const action=local.wishDisruption ? 'pause' : local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
       if(person.userData.avatar) {
         if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
+<<<<<<< Updated upstream
         else person.userData.avatar.suspend();
+=======
+>>>>>>> Stashed changes
         if (local.wish && !person.userData.wishVisual) person.userData.wishVisual = createWishVisual(person, person.userData.avatar.object);
         if (person.userData.wishVisual) {
           person.userData.wishVisual.update(local.wish, { baseY: person.position.y, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });

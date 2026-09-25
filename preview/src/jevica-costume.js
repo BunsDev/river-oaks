@@ -128,7 +128,11 @@ export function createJevicaCostume(avatar) {
   const belt = mesh(waist, new THREE.TorusGeometry(0.16,0.004,8,80), platinum, [0,0.065,0]);
   belt.rotation.x = Math.PI / 2; belt.scale.y = 0.78;
   const hand = attach('hand_r');
+<<<<<<< Updated upstream
   const roseCrystal=surface({color:'#efb7d7',roughness:0.1,clearcoat:1,metalness:0.18,iridescence:0.4,iridescenceIOR:1.6});
+=======
+  const roseCrystal=surface({color:'#efb7d7',roughness:0.13,clearcoat:1,metalness:0.12,transmission:0.15,thickness:0.015});
+>>>>>>> Stashed changes
   mesh(hand,new THREE.CylinderGeometry(0.006,0.004,0.69,16),crystal,[0,0.24,0.03]);
   mesh(hand,new THREE.IcosahedronGeometry(0.037,1),roseCrystal,[0,0.60,0.03]);
   for(let i=0;i<12;i++) {

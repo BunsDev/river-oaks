@@ -15,7 +15,6 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
     <span id="player-mode" class="player-mode">On foot</span>
   </header>
   <details class="player-settings" open><summary>Character controls<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>
-    <label for="player-form">Appearance</label><select id="player-form" aria-describedby="player-description">${VISITOR_FORMS.map(form => `<option value="${form.id}">${form.label}</option>`).join('')}</select>
     <p id="player-description"></p>
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button></div>
     <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
@@ -24,7 +23,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
   panel.querySelector('.player-settings').open = !window.matchMedia('(max-width: 700px)').matches;
   const bubbles = document.createElement('div');bubbles.className = 'visitor-reactions';bubbles.setAttribute('aria-hidden', 'true');document.querySelector('#viewport').append(bubbles);
   const captions = Array.from({ length: 3 }, () => {const element = document.createElement('div');element.className = 'visitor-reaction';element.hidden = true;bubbles.append(element);return element;});
-  const selector = panel.querySelector('#player-form'), cameraButton = panel.querySelector('#player-camera'), status = panel.querySelector('#player-status');
+  const cameraButton = panel.querySelector('#player-camera'), status = panel.querySelector('#player-status');
   let avatar = null, outfit = null, vehicle = null, form = 'jevica', version = 0, previous = null, reactionPeople = [], lastNotice = '', disposed = false, castUntil = 0;
   const listeners = new Set();
   const reactions = createVisitorReactions(), point = new THREE.Vector3();
@@ -41,7 +40,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
   host.addEventListener('keydown', event => {if (event.code === 'KeyV' && !event.repeat) {event.preventDefault();toggleCamera(!walking.thirdPerson);} });
   const change = async value => {
     const generation = ++version;
-    selector.value = value;panel.setAttribute('aria-busy', 'true');status.textContent = 'Changing character…';
+    value = 'jevica';
+    panel.setAttribute('aria-busy', 'true');status.textContent = 'Preparing Jevica…';
     host.dataset.playerReady = 'false';
     let next, nextOutfit, nextVehicle;
     try {
@@ -62,16 +62,19 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
       const portraitImage=panel.querySelector('.player-portrait img');
       portraitImage.src=portrait.src;portraitImage.hidden=!hasPortrait;
       panel.querySelector('#player-description').textContent = VISITOR_FORMS.find(item => item.id === form).description;
+<<<<<<< Updated upstream
       status.textContent = `${VISITOR_FORMS.find(item => item.id === form).label} transformation ready.`;
+=======
+      status.textContent = `${VISITOR_FORMS.find(item => item.id === form).label} is ready. Meet a neighbor to grant a wish.`;
+>>>>>>> Stashed changes
       host.dataset.playerForm = value;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
     } catch {
       nextOutfit?.dispose();nextVehicle?.dispose();next?.dispose();
-      if (generation === version) {selector.value = form;host.dataset.playerReady=String(Boolean(avatar));status.textContent = 'Character could not load. Try another transformation.';}
+      if (generation === version) {host.dataset.playerReady=String(Boolean(avatar));status.textContent = 'Jevica could not load. Reload to try again.';}
     }
     finally {if (generation === version) panel.setAttribute('aria-busy', 'false');}
   };
-  selector.addEventListener('change', () => change(selector.value));
   change('jevica');
   return {
     get form() {return form;},
