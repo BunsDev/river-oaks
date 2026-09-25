@@ -363,3 +363,15 @@ test('checkpoint JSON preserves infinite resident waits and full district routes
   assert.deepEqual(restored.checkpoint(),original.checkpoint());
   assert.equal('ledgers' in restored.snapshot(),false,'private cooldown ledger is never in client snapshots');
 });
+
+test('players arriving together each get their own spot near the spawn', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url), 'utf8'));
+  data.vegetation = JSON.parse(await readFile(new URL('../../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
+  const town = createSharedWorld(data);
+  const spots = ['a', 'b', 'c', 'd', 'e'].map(id => town.join({ userId: id, name: id, sessionId: id }).player.position);
+  for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++) {
+    assert.ok(Math.hypot(spots[i][0] - spots[j][0], spots[i][1] - spots[j][1]) >= 1.2, `players ${i} and ${j} overlap`);
+  }
+  assert.ok(spots.every(spot => Math.hypot(spot[0] - spots[0][0], spot[1] - spots[0][1]) < 7), 'everyone still arrives together');
+});

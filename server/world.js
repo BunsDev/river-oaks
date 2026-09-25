@@ -54,6 +54,19 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   const clearExpiredLedgers = time => {
     for (const [id,ledger] of ledgers) if (!players.has(id) && time-ledger.seen >= LEDGER_TTL_MS) ledgers.delete(id);
   };
+  // Everyone arrives at the same walk spawn; without spreading, two players
+  // stood inside each other. Each takes the first free spot on rings around
+  // the spawn at least 1.2 m from anyone already in town.
+  function arrivalSpot(x0, north0) {
+    const taken = [...players.values()];
+    const clear = (x, north) => taken.every(other => Math.hypot(other.position[0]-x, other.position[1]-north) >= 1.2);
+    if (clear(x0, north0)) return [x0, north0];
+    for (let ring = 1; ring <= 4; ring++) for (let step = 0; step < ring * 6; step++) {
+      const angle = step / (ring * 6) * Math.PI * 2, x = x0 + Math.cos(angle) * ring * 1.6, north = north0 + Math.sin(angle) * ring * 1.6;
+      if (environment.isFree(x, -north) && clear(x, north)) return [x, north];
+    }
+    return [x0, north0];
+  }
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -64,8 +77,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if (ledgers.size >= MAX_LEDGERS) return reject('world_busy');
       ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,tokens:12,tokenAt:time,seen:time});
     }
-    const spawn = createWalkingState(environment).position;
-    const player = {id:identity.userId,name:identity.name.slice(0,80),position:[spawn[0],-spawn[2],spawn[1]-1.68],yaw:0,altitude:0,
+    const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
+    const player = {id:identity.userId,name:identity.name.slice(0,80),position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
       poseAt:time,moveBudget:0.1,liftBudget:0.1};
     players.set(player.id,player);
     revision++;

@@ -18,6 +18,8 @@ async page => {
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
   check(a.form === true && a.invasion === true, 'shared play locks the character and hides the local invasion');
+  const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
+  check(spacing >= 1.2, `players arrive on separate spots (${spacing.toFixed(2)} m apart)`);
   await page.screenshot({ path: 'output/playwright/multiplayer-dev.png' });
   check(!errors.length, errors.join('; '));
   await second.context().close();
