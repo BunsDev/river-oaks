@@ -1,3 +1,4 @@
+import { createWishVisual } from './wish-effects.js';
 import { turnToward } from './gait.js';
 import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
@@ -56,6 +57,7 @@ export function buildLocals(world, locals) {
   group.userData.dispose=()=>{
     disposed=true;
     for(const person of models) {
+      person.userData.wishVisual?.dispose();
       if(person.userData.avatar) person.userData.avatar.dispose(); else disposePlaceholder(person);
     }
     group.clear();
@@ -77,10 +79,15 @@ export function buildLocals(world, locals) {
       } else if(partner && state.selectedId!==local.id) person.rotation.y=turnToward(person.rotation.y, Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z), delta);
       // Only the person in conversation or one held to greet the visitor turns to the camera; passers-by keep their heading.
       else if (state.selectedId === local.id || local.life?.status === 'greeting visitor') person.rotation.y = turnToward(person.rotation.y, Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z), delta);
-      const action=local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
+      const action=local.wishDisruption ? 'pause' : local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
       if(person.userData.avatar) {
         if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
         else person.userData.avatar.suspend();
+        if (local.wish && !person.userData.wishVisual) person.userData.wishVisual = createWishVisual(person, person.userData.avatar.object);
+        if (person.userData.wishVisual) {
+          person.userData.wishVisual.update(local.wish, { baseY: person.position.y, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+          if (!local.wish) { person.userData.wishVisual.dispose(); delete person.userData.wishVisual; }
+        }
         return;
       }
       const arm = person.userData.greetingArm;

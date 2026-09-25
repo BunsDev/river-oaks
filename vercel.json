@@ -5,7 +5,62 @@
   "outputDirectory": "dist/preview",
   "cleanUrls": true,
   "headers": [
-    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
-    { "source": "/data/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] }
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/server.js": {
+      "maxDuration": 300,
+      "includeFiles": "preview/public/data/district*.json"
+    }
+  },
+  "regions": [
+    "iad1"
+  ],
+  "rewrites": [
+    {
+      "source": "/auth/login",
+      "destination": "/api/server?_river_path=/auth/login"
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/api/server?_river_path=/auth/callback"
+    },
+    {
+      "source": "/auth/session",
+      "destination": "/api/server?_river_path=/auth/session"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "/api/server?_river_path=/auth/logout"
+    },
+    {
+      "source": "/api/multiplayer/ticket",
+      "destination": "/api/server?_river_path=/api/multiplayer/ticket"
+    },
+    {
+      "source": "/api/moderation/ban",
+      "destination": "/api/server?_river_path=/api/moderation/ban"
+    },
+    {
+      "source": "/multiplayer",
+      "destination": "/api/server?_river_path=/multiplayer"
+    }
   ]
 }

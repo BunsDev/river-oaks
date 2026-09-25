@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-09-23T06:25:14.936991+00:00",
+  "project": "0xbuns/river-oaks",
+  "deployment_id": "dpl_8LdqcVR7FhjetD8TXb417LJVm3wT",
+  "url": "https://river-oaks-4bqjh0b5e-0xbuns.vercel.app",
+  "inspector_url": "https://vercel.com/0xbuns/river-oaks/8LdqcVR7FhjetD8TXb417LJVm3wT",
+  "target": "production",
+  "promoted_to_custom_domain": false,
+  "custom_domain": "sim.jev.works",
+  "custom_domain_deployment_id": "dpl_ByHC4mo2292FuYHcMS67YtXD1odt",
+  "checks": {
+    "frontend_http": 200,
+    "auth_without_workos_credentials_http": 503,
+    "anonymous_multiplayer_ticket_http": 401,
+    "anonymous_websocket_upgrade_http": 401,
+    "server_tests": 95,
+    "game_tests": 225,
+    "public_bundle_secret_matches": 0,
+    "vercel_build": "passed"
+  },
+  "remaining": [
+    "Configure production WORKOS_API_KEY and WORKOS_CLIENT_ID privately and register callback URLs.",
+    "Verify real WorkOS sign-in, authenticated hosted WebSockets, and hosted reconnect/ban behavior.",
+    "Promote the verified deployment to sim.jev.works after live acceptance."
+  ]
+}

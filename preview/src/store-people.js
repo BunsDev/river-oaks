@@ -1,4 +1,5 @@
 import { applyResidentStyle } from './resident-style.js';
+import { createWishVisual } from './wish-effects.js';
 import { staffWorkPose, blendStationPose } from './store-work.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { createWorkerTask } from './work-props.js';
@@ -66,7 +67,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       const idle = bone.name === 'head' ? Math.sin(t * 0.9) * 0.02 : bone.name === 'spine_03' ? Math.sin(t * 1.4) * 0.008 : bone.name === 'lowerarm_r' && sway ? Math.sin(t * 1.7) * 0.03 : 0;
       if (idle) { adjustment.setFromAxisAngle(bone.name === 'lowerarm_r' ? axes.z : axes.x, idle); bone.quaternion.multiply(adjustment); }
     }
-    if (figure.seatedFeet) {
+    if (figure.seatedFeet && figure.wishKind !== 'flight') {
       figure.holder.updateWorldMatrix(true,true);
       const forward=new THREE.Vector3(0,0,1).applyQuaternion(figure.holder.getWorldQuaternion(new THREE.Quaternion()));
       for(const leg of figure.seatedFeet) {
@@ -106,7 +107,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         if(spot.role!=='mannequin')holder.userData.localId=storePersonId(room,spotIndex);
         avatar.model.traverse(item => { item.userData.storeId = room.storeId; item.userData.role = spot.role;if(spot.role==='mannequin')delete item.userData.localId; });
         roomGroup.add(holder);
-        const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, theme:room.theme, phase: seed * 0.61, workTime:seed*0.61, attention:0, lookYaw:0, animated: false };
+        const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, theme:room.theme, groundOffset:room.floor-holder.position.y, phase: seed * 0.61, workTime:seed*0.61, attention:0, lookYaw:0, animated: false };
         if (seated) {
           figure.seatedFeet=createFootPlacement(avatar.model,holder).legs;
           for(const leg of figure.seatedFeet) {
@@ -137,13 +138,20 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       if (!figure.holder.parent?.visible) continue;
       const local = state?.locals.find(local => local.id === figure.id);
       figure.reaction = local?.visitorReaction;
+      figure.wishKind = local?.wish?.kind;
+      if (figure.task) figure.task.object.visible = figure.wishKind !== 'dog';
       const attending = Boolean(visitor && (figure.reaction || state?.selectedId === figure.id));
       const smoothing = 1-Math.exp(-5*Math.min(0.1,Math.max(0,delta)));
       figure.attention += ((attending?1:0)-figure.attention)*smoothing;
       const targetYaw = attending ? Math.atan2(visitor[0]-figure.holder.position.x,-visitor[1]-figure.holder.position.z)-figure.heading : 0;
       const wrappedYaw=Math.atan2(Math.sin(targetYaw),Math.cos(targetYaw));
       figure.lookYaw+=(wrappedYaw-figure.lookYaw)*smoothing;
-      if (!attending && !reducedMotion) figure.workTime+=Math.min(0.1,Math.max(0,delta));
+      if (!attending && !reducedMotion && !local?.wish && !local?.wishDisruption) figure.workTime+=Math.min(0.1,Math.max(0,delta));
+      if (local?.wish && !figure.wishVisual) figure.wishVisual = createWishVisual(figure.holder, figure.avatar.model, { groundOffset:figure.groundOffset });
+      if (figure.wishVisual) {
+        figure.wishVisual.update(local?.wish, { reducedMotion });
+        if (!local?.wish) { figure.wishVisual.dispose(); figure.wishVisual = null; }
+      }
       const near = figure.holder.position.distanceToSquared(camera.position) < 16 * 16;
       if (near && !reducedMotion && figure.role !== 'mannequin') { applyPose(figure, t + figure.phase); figure.animated = true; }
       else if (figure.animated || attending || figure.attention>0.001) { applyPose(figure, null); figure.animated = false; }
@@ -151,7 +159,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
   };
   group.userData.dispose = () => {
     disposed = true;
-    for (const figure of figures) {figure.task?.dispose();figure.avatar.dispose();}
+    for (const figure of figures) {figure.wishVisual?.dispose();figure.task?.dispose();figure.avatar.dispose();}
     figures.length = 0; group.clear();
   };
   return group;

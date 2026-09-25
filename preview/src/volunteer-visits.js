@@ -33,12 +33,12 @@ export function planVolunteerVisit(life) {
   for(const job of state.jobs) {
     if(job.phase!=='queued' || job.generation!==state.generation) continue;
     const recipient=state.locals.find(local=>local.id===job.localId);
-    if(recipient.abducted) continue;
+    if(recipient.abducted || recipient.wish || recipient.wishDisruption) continue;
     const pool=state.locals.filter(local=>!local.indoor && !local.priority && local!==recipient);
     job.rejectedHelpers ??= [];
     let helper=state.locals.find(local=>local.id===job.helperId);
     if(!helper) {
-      helper=pool.filter(local=>!local.abducted && local.id!==state.selectedId && !local.life.visitId && !job.rejectedHelpers.includes(local.id)).sort((a,b)=>distance(a.position,recipient.position)-distance(b.position,recipient.position))[0];
+      helper=pool.filter(local=>!local.abducted && !local.wish && !local.wishDisruption && local.id!==state.selectedId && !local.life.visitId && !job.rejectedHelpers.includes(local.id)).sort((a,b)=>distance(a.position,recipient.position)-distance(b.position,recipient.position))[0];
       if(!helper) {
         if(!pool.length || pool.every(local=>job.rejectedHelpers.includes(local.id))) returnUnroutableVisit(state,job.id);
         continue;
@@ -48,7 +48,7 @@ export function planVolunteerVisit(life) {
       helper.life.visitId=job.id;helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;
     }
     const motion=helper.life;
-    if(helper.abducted || helper.id===state.selectedId || motion.reactionUntil>life.elapsed && ['pause','stop','greet','redirect','seek_shelter'].includes(motion.action)) continue;
+    if(helper.abducted || helper.wish || helper.wishDisruption || helper.id===state.selectedId || motion.reactionUntil>life.elapsed && ['pause','stop','greet','redirect','seek_shelter'].includes(motion.action)) continue;
     const angle=Math.atan2(helper.position[1]-recipient.position[1],helper.position[0]-recipient.position[0]);
     const approaches=[0,1,-1,2,-2,3,-3,4].map(offset=>[recipient.position[0]+Math.cos(angle+offset*Math.PI/4)*1.2,recipient.position[1]+Math.sin(angle+offset*Math.PI/4)*1.2]).filter(point=>navigation.canTravel(point,recipient.position));
     const approach=approaches[job.approachAttempt ?? 0];

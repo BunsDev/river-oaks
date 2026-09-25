@@ -114,7 +114,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
   const activeVisits=state.physicalVisits && state.running && state.jobs.length>0;
   if(paused && !activeVisits) return;
   const dt=Math.min(delta,0.08);life.elapsed+=dt;
-  const held=local=>Boolean(local.abducted) || (!storm && !local.life.visitId && Boolean(local.visitorReaction)) || state.selectedId===local.id || (!local.life.visitId && visitor && distance(visitor,local.position)<2.8) || (!storm && local.status==='aid_en_route');
+  const held=local=>Boolean(local.abducted || local.wish || local.wishDisruption) || (!storm && !local.life.visitId && Boolean(local.visitorReaction)) || state.selectedId===local.id || (!local.life.visitId && visitor && distance(visitor,local.position)<2.8) || (!storm && local.status==='aid_en_route');
   // Rotate ownership of the route-search slot so inaccessible stops cannot starve others.
   let planned=planVolunteerVisit(life);const cursor=life.cursor;
   for(let offset=0;offset<state.locals.length;offset++) {
@@ -129,7 +129,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,storm=fal
       if(motion.destination?.shelter) {motion.routeVersion++;motion.route=[];motion.destination=null;motion.waitUntil=life.elapsed;}
       motion.action=hour<6 || hour>=22?'pause':humidity>0.85?'slow':'continue';motion.source='local_rules';
     }
-    if(held(local)) {motion.status=state.selectedId===local.id?'chatting':'greeting visitor';continue;}
+    if(held(local)) {motion.status=local.wishDisruption ?? (local.wish ? 'enchanted' : state.selectedId===local.id?'chatting':'greeting visitor');continue;}
     if(visit && (!state.running || !storm && ['routing','assisting'].includes(visit.phase))) {motion.status=!state.running?'visit paused':visit.phase==='assisting'?'helping neighbor':'preparing visit';continue;}
     if(['pause','greet','stop'].includes(motion.action)) {motion.status=motion.action==='greet'?'greeting':'paused';continue;}
     if(!motion.route.length && life.elapsed>=motion.waitUntil && !planned && !life.planning && (!visit || storm || motion.action==='seek_shelter')) {

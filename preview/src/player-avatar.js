@@ -75,6 +75,11 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, reducedMot
   change('jevica');
   return {
     get form() {return form;},
+    // The shared town plays as one character; single player keeps the choice.
+    lockForm(value, reason) {
+      selector.disabled = true; selector.title = reason ?? '';
+      if (form !== value) return change(value);
+    },
     cast(now) { castUntil = now + 520; },
     onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     react(now) {

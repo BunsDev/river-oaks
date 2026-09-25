@@ -121,6 +121,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   return {
     get active() { return active; },
     get thirdPerson() { return thirdPerson; },
+    halt() { clear(); autoInput = null; },
+    applyServerPose(player) {
+      if (!active || !state || !player) return;
+      clear(); autoInput = null;
+      state.position = [player.position[0], player.position[2] + 1.68 + player.altitude, -player.position[1]];
+      state.yaw = player.yaw; state.speed = 0;
+      flight = createFlightState();
+      if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
+      place();
+    },
     toggleFlight() {
       if (!active || currentRoom()) return false;
       onManual();autoInput=null;clear();
