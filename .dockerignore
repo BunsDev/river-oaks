@@ -1,0 +1,16 @@
+# Only application build inputs enter the image context.
+**
+!package.json
+!package-lock.json
+!preview/
+!preview/**
+!server/
+!server/**
+!Dockerfile
+!.dockerignore
+**/node_modules
+**/.env
+**/.env.*
+**/.runtime
+preview/tests
+server/tests

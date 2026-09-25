@@ -21,6 +21,12 @@ export function distanceToRoad(road, x, z) {
   return nearest;
 }
 
+// Every mapped road is drawn as asphalt, including 3 m service lanes and
+// drives, so no fixture may stand on any of them, whatever the lane width.
+export function clearOfRoads(world, x, z, clearance = 0.7) {
+  return !world.roads.some(road => distanceToRoad(road, x, z) < road.width_m / 2 + clearance);
+}
+
 // Kerbs stop short of junctions instead of crossing the joining lane, and
 // fixtures keep clear of every lane edge, including their own at inner bends.
 function crossesAnotherLane(world, road, x, z, clearance = 0.4) {
@@ -61,12 +67,12 @@ export function laneFixtures(world, isFree = () => true) {
       const { position: [x, , z], direction } = sampleRoute(route, distance);
       const side = (count + roadIndex) % 2 ? 1 : -1;
       const px = x - direction[1] * offset * side, pz = z + direction[0] * offset * side;
-      if (!isFree(px, pz) || crossesAnotherLane(world, road, px, pz, 0.7) || distanceToRoad(road, px, pz) < road.width_m / 2 + 0.7) continue;
+      if (!isFree(px, pz) || !clearOfRoads(world, px, pz)) continue;
       const yaw = Math.atan2(direction[0], direction[1]);
       lamps.push([px, terrainHeight(world.terrain, px, -pz), pz, yaw, side]);
       const mid = sampleRoute(route, Math.min(route.length - 2, distance + LAMP_SPACING / 2));
       const qx = mid.position[0] + mid.direction[1] * offset * side, qz = mid.position[2] - mid.direction[0] * offset * side;
-      if (isFree(qx, qz) && !crossesAnotherLane(world, road, qx, qz, 0.7) && distanceToRoad(road, qx, qz) >= road.width_m / 2 + 0.7) (count % 3 === 2 ? bins : planters).push([qx, terrainHeight(world.terrain, qx, -qz), qz, Math.atan2(mid.direction[0], mid.direction[1])]);
+      if (isFree(qx, qz) && clearOfRoads(world, qx, qz)) (count % 3 === 2 ? bins : planters).push([qx, terrainHeight(world.terrain, qx, -qz), qz, Math.atan2(mid.direction[0], mid.direction[1])]);
     }
   });
   return { lamps, planters, bins };

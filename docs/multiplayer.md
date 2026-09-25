@@ -1,0 +1,170 @@
+# Deploy the shared town
+
+## Develop locally without WorkOS
+
+`npm run dev` starts the shared town inside the Vite dev server. With no WorkOS
+credentials, every browser that opens the preview gets its own development
+resident (for example "Wren (dev)") and joins the town without a sign-in step.
+Open a second browser profile to see a second player. No `.env` is needed.
+
+- `VITE_MULTIPLAYER` chooses how the preview joins. `auto` is the development
+  default: join when the town answers with a session, otherwise play solo
+  without blocking. `off` is the production default, so the live site stays
+  single player. `required` shows the sign-in gate and is for the launched town.
+- `VITE_MULTIPLAYER=off npm run dev` plays solo with the invasion and auto visits.
+- `RIVER_OAKS_DEV_AUTH=workos npm run dev` uses real WorkOS sign-in instead;
+  register `http://127.0.0.1:5173/auth/callback` in that WorkOS environment.
+- `npm run server -- --dev` runs the town as its own process for a separate
+  `npm run dev`; the dev server then uses it instead of starting its own.
+
+Development identities only exist on a loopback `http` origin, outside
+`NODE_ENV=production`, and never on Vercel (`VERCEL` set). They live only in
+the standalone server (`server/dev-auth.js`). The Vercel function and the Redis
+backend always require WorkOS and fail closed with `503` without it.
+
+While the town runs, the character locks to Jevica and the solo-only invasion
+and auto visit are hidden, since each would diverge from the shared town.
+
+The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
+
+## Shared storage and coordination
+
+Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json).
+
+The Redis backend stores OAuth state, sessions, single-use socket tickets, request limits, bans, and the last 10,000 audit records. Session refresh and logout use atomic transactions across instances. Bans persist without an expiry, and banning invalidates outstanding connection tickets. Login requires a verified WorkOS email; missing configuration fails closed.
+
+One renewable Redis lease controls simulation writes. A fenced transaction commits the compressed world checkpoint, public snapshot, consumed operation batch, and command acknowledgments together. A replacement instance restores residents, wishes, movement budgets, cooldowns, and conversation holds. An expired lease cannot overwrite the replacement's state. The world pauses without players; it does not simulate all elapsed offline time.
+
+Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+
+Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
+
+## Deployment readiness
+
+Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. Authenticated hosted WebSocket routing and live WorkOS sign-in still need acceptance.
+
+Production WorkOS credentials are still required. `PUBLIC_ORIGIN` and `WORKOS_COOKIE_PASSWORD` are configured in Production. Set `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` privately in that environment. Register the exact URLs below in that WorkOS environment. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
+
+Before enabling the site, verify two real WorkOS accounts on the deployed endpoint, reconnect during instance replacement with an active wish, and cross-instance logout/ban enforcement. A Production-targeted candidate is staged with `--skip-domain` at the URL in the receipt. `sim.jev.works` still points to the previous deployment. The original single-process acceptance report is not Vercel acceptance evidence.
+
+## Run the Redis API locally
+
+Use Node 22.12 or newer and configure `REDIS_URL`, `REDIS_NAMESPACE=river-oaks:development:v1`, WorkOS credentials, and a localhost `PUBLIC_ORIGIN` in private `.env`. Run `npm run server:redis` and `npm run dev` in separate terminals. The Redis server exposes APIs and WebSockets; Vite serves the frontend. The standalone server below remains available for development without Redis.
+
+## Run the current standalone server
+
+The implementation below serves the frontend, WorkOS authentication, and multiplayer WebSocket from one Node.js process. Use Node.js 22.12 or newer. These standalone/container instructions are for local verification or a persistent host, not a Vercel Function deployment.
+
+After configuring the private environment and WorkOS URLs below, run from the repository root:
+
+```sh
+npm ci
+npm run build
+npm start
+```
+
+`npm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
+
+## Configure WorkOS and private settings
+
+Configure the WorkOS environment whose credentials you'll use with these exact URLs:
+
+| Setting | Production value |
+| --- | --- |
+| Redirect URI for the authorization callback | `https://sim.jev.works/auth/callback` |
+| Sign-in initiation URL | `https://sim.jev.works/auth/login` |
+| Application home URL | `https://sim.jev.works/` |
+| Allowed logout return URL | `https://sim.jev.works/` |
+
+The callback redirects to `/` after sign-in. The application signs out through `POST /auth/logout` with its CSRF token, then follows WorkOS's logout URL with the home URL as `returnTo`. Register the home URL as the logout destination, rather than the application's POST endpoint.
+
+Copy `.env.example` to `.env` if you don't already have a private environment file. Preserve your existing sidecar settings. Fill these server settings through your deployment's secret store or private environment file:
+
+| Variable | Value |
+| --- | --- |
+| `PUBLIC_ORIGIN` | `https://sim.jev.works`, with no trailing slash or path |
+| `WORKOS_API_KEY` | API key from the matching WorkOS environment |
+| `WORKOS_CLIENT_ID` | Client ID from that same environment |
+| `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters |
+| `HOST` | `127.0.0.1` behind a host proxy, or `0.0.0.0` inside the container |
+| `PORT` | `8787` unless your platform requires another port |
+| `REDIS_URL` | Marketplace secret for the shared backend |
+| `REDIS_NAMESPACE` | Explicit isolated namespace for preview/local Redis; Production defaults to `river-oaks:production:v1` |
+| `MODERATION_FILE` | Standalone server only: path on a private writable volume |
+| `MODERATOR_USER_IDS` | Comma-separated WorkOS user IDs, or empty for no moderators |
+| `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none |
+
+Generate a cookie secret locally:
+
+```sh
+node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("hex"))'
+```
+
+Store that output privately. Keep WorkOS credentials and the cookie secret out of Git, build arguments, browser bundles, and `VITE_` variables. HTTPS sessions use `Secure`, `HttpOnly`, and `SameSite=Lax` cookies.
+
+Production multiplayer requires WorkOS authentication and a verified email. There is no anonymous bypass, and development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
+
+## Standalone mode: one instance and file moderation
+
+Run exactly one Node process and one replica. World state, active wishes, player positions, authentication sessions, and pending login attempts live in RAM. Restarting resets the town, disconnects everyone, and invalidates local sessions. Players must sign in again. Multiple replicas or cluster workers would create separate towns and break login/session routing. The world clock advances while players are connected.
+
+Mount the entire directory containing `MODERATION_FILE`. The server writes the ban list through a temporary file and atomic rename, and writes reports and moderation actions to adjacent audit files. For example, mount `.runtime` and set:
+
+```dotenv
+MODERATION_FILE=/app/.runtime/moderation.json
+```
+
+Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previous` file private and backed up. The process needs write access to their directory. Mounting just the JSON file prevents the atomic replacement from working reliably.
+
+## Container deployment
+
+The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
+
+```sh
+docker build -t river-oaks:local .
+docker volume create river-oaks-moderation
+docker run -d --name river-oaks --restart unless-stopped \
+  --env-file .env.production \
+  -e HOST=0.0.0.0 \
+  -e PUBLIC_ORIGIN=https://sim.jev.works \
+  -e MODERATION_FILE=/app/.runtime/moderation.json \
+  -p 127.0.0.1:8787:8787 \
+  -v river-oaks-moderation:/app/.runtime \
+  river-oaks:local
+```
+
+Create `.env.production` privately with the WorkOS settings above before running the container. The named volume preserves moderation across container replacements. If you use a bind mount instead, make it writable by the container's `node` user (UID 1000). Run only one container against that volume.
+
+## Configure the TLS proxy
+
+Terminate TLS for `sim.jev.works` and forward all paths to the single Node listener. Preserve request cookies, the `Origin` header, and response `Set-Cookie` headers. Forward WebSocket upgrades at `/multiplayer`, including the query string containing the short-lived connection ticket. Use an idle timeout longer than the server's 15-second WebSocket heartbeat, such as 60 seconds.
+
+Route `/auth/*`, `/api/*`, and `/multiplayer` directly to Node without caching or HTML fallback. Exclude WebSocket ticket query strings and authentication callback query strings from access logs. Redirect public HTTP traffic to HTTPS. The Node listener itself speaks HTTP; `PUBLIC_ORIGIN` determines the external authentication URLs and secure-cookie behavior.
+
+Configure `TRUSTED_PROXY_IPS` so visitors behind your proxy receive separate request-limit buckets. For a host-local proxy connecting over IPv4, use `TRUSTED_PROXY_IPS=127.0.0.1`; include `::1` only if it also connects over IPv6. For a container, use the exact proxy or gateway address seen by the Node socket, not an assumed loopback address or a whole private subnet. Keep the Node port private so only your intended proxy can reach it.
+
+At the public edge, overwrite incoming `X-Forwarded-For` with the actual client IP. If you have additional trusted proxy hops, each hop must append its observed peer and you must list those exact proxy IPs. The resolver trusts the header only from a listed direct peer, walks it from right to left, and stops at the nearest untrusted hop. IPv4-mapped IPv6 addresses are normalized. Malformed headers and chains over 16 entries or 1024 characters fall back to the direct peer. Hostnames, CIDR ranges, and wildcard trust entries are rejected.
+
+With an empty trust list, forwarded headers are ignored. Behind a proxy this shares one request-limit bucket across all visitors, so configure and test the trusted proxy addresses before production traffic. Never trust a forwarding header supplied directly by a public client.
+
+Check the Node listener with `curl http://127.0.0.1:8787/health`. Before opening the deployment to players, verify with two real WorkOS accounts that sign-in returns to the town, both clients see the same changes, logout closes the connection, and a persisted ban survives a restart. Live WorkOS sign-in and the production proxy still require deployment acceptance testing.
+
+## Develop with Vite and the Node server
+
+Use a WorkOS development environment and register `http://localhost:5173/auth/callback` as its redirect URI, `http://localhost:5173/auth/login` as the sign-in URL, and `http://localhost:5173/` as its home and logout return URL. Put its credentials and a cookie secret in your private `.env`.
+
+Start Node in one terminal:
+
+```sh
+PUBLIC_ORIGIN=http://localhost:5173 HOST=127.0.0.1 PORT=8787 npm run server
+```
+
+Start Vite in another terminal:
+
+```sh
+npm run dev
+```
+
+Open `http://localhost:5173` consistently. Vite proxies authentication, multiplayer API requests, moderation requests, and WebSocket connections to Node on port `8787`. Don't substitute `127.0.0.1` in the browser because the origin and cookies must match. Vite's `/health` route belongs to the optional sidecar; check Node health directly at `http://127.0.0.1:8787/health`.
+
+Local HTTP cookies omit `Secure`, but development still requires WorkOS authentication. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.

@@ -1,0 +1,32 @@
+{
+  "recorded_at": "2026-09-23T05:51:20.376805+00:00",
+  "project": "0xbuns/river-oaks",
+  "public_origin": "https://sim.jev.works",
+  "integration": "redis",
+  "resource_name": "river-oaks-town",
+  "resource_id": "store_sBZWyUreftLzcYAp",
+  "billing_plan_id": "26492",
+  "monthly_price_usd": 6,
+  "capacity_mb": 250,
+  "region": "iad1",
+  "persistence": true,
+  "high_availability": false,
+  "environments": [
+    "production"
+  ],
+  "secret_variable": "REDIS_URL",
+  "verification": "Authenticated Redis PING and live auth/security/room/transport integration tests passed.",
+  "dashboard": "https://vercel.com/d/dashboard/integrations/redis/icfg_G3t1NlfafXPgUZmLwTGERjOo/resources/store_sBZWyUreftLzcYAp",
+  "limitations": [
+    "Production WorkOS API key and client ID are still missing.",
+    "Authenticated hosted acceptance and custom-domain promotion remain pending."
+  ],
+  "last_observed_marketplace_status": "initializing",
+  "server_test_count": 95,
+  "game_test_count": 225,
+  "configured_production_settings": [
+    "REDIS_URL",
+    "PUBLIC_ORIGIN",
+    "WORKOS_COOKIE_PASSWORD"
+  ]
+}

@@ -48,6 +48,9 @@ In **People & place → Spoken dialogue**, choose **Kokoro · local neural voice
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
+
+**Shared town (in development).** `npm run dev` also runs a multiplayer town where every browser joins as its own Jevica, with no account or WorkOS setup. The live site stays single player until the town launches. See [docs/multiplayer.md](docs/multiplayer.md).
+
 ## Optional source-data tooling
 
 ```sh

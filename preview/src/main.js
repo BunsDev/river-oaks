@@ -28,6 +28,9 @@ import { createInvasionControls } from './invasion-ui.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
+import { createMultiplayer } from './multiplayer-client.js';
+import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
+import { createRemotePlayers } from './remote-players.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -43,6 +46,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion;
+let multiplayer, remotePlayers;
+const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
@@ -97,11 +102,18 @@ function initializeRenderer() {
   });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
     getVisitor: () => walking?.active ? walking.getPosition() : null,
-    getPersona: () => playerAvatar?.form ?? 'visitor',
+    getPersona: () => playerAvatar?.form ?? 'jevica',
+    getMultiplayer: () => multiplayer,
+    onWish: () => playerAvatar?.cast(performance.now()),
     getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
       autoControls?.stop();
+      // The town confirms travel asynchronously; solo focus stays synchronous.
+      if (multiplayer) return multiplayer.travel({ localId: local.id }).then(result => {
+        if (result.ok) walking.lookAt(local.position);
+        return result.ok;
+      });
       if (local.indoor) {
         const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
         const position = walking.active ? walking.getPosition() : null;
@@ -130,6 +142,13 @@ function initializeRenderer() {
   const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
   placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
   createClearView({ viewport: $('#viewport') });
+  if (multiplayerMode === 'required') startMultiplayer();
+  else if (multiplayerMode === 'auto') probeTown().then(town => {
+    host.dataset.multiplayer = town.reason;
+    if (town.join) startMultiplayer();
+    else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
+  });
+  else host.dataset.multiplayer = 'off';
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
@@ -151,6 +170,25 @@ function initializeRenderer() {
   }).observe(host);
   updateAtmosphere();
   renderer.setAnimationLoop(render);
+}
+
+// Join the shared town. Local simulations (auto visits, the invasion) would
+// diverge from everyone else's town, so they stop and hide; the character
+// locks to Jevica, the town's shared protagonist.
+function startMultiplayer() {
+  if (multiplayer) return;
+  autoControls?.stop(); invasion?.reset();
+  $('.auto-controls').hidden = true;
+  invasion.panel.hidden = true;
+  playerAvatar?.lockForm('jevica', 'Everyone in the shared town plays as Jevica.');
+  remotePlayers = createRemotePlayers(scene, host);
+  multiplayer = createMultiplayer({
+    getPose: () => walking?.getPose(),
+    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot); },
+    onCorrection: player => { if (world && player) walking.applyServerPose(player); },
+    onPlayers: (players, selfId) => remotePlayers.sync(players, selfId),
+  });
+  host.dataset.multiplayer = 'joined';
 }
 
 function geometryFromTriangles(positions) {
@@ -308,6 +346,7 @@ function enterWalk(position, lookAt, pitch = 0) {
 }
 
 function enterStore(store) {
+  if (multiplayer) { districtUI.select(store.id); return multiplayer.travel({storeId:store.id,mode:'enter'}); }
   const room = storeRoomsFor(world).find(item => item.storeId === store.id);
   if (!room) return arriveAtStore(store);
   const [east, north] = room.toWorld(0, 2.4), [lookEast, lookNorth] = room.toWorld(room.center, room.depth - 1);
@@ -316,6 +355,7 @@ function enterStore(store) {
 }
 
 function leaveStore(store) {
+  if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'leave'});
   // Step out onto the threshold, facing the door you just came through.
   const [x, north, base] = store.facade, [nx, ny] = store.outward;
   enterWalk([x + nx * 2.6, north + ny * 2.6, base], [x, north], 0.05);
@@ -330,6 +370,7 @@ function describeInterior(store) {
 }
 
 function arriveAtStore(store) {
+  if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
   const position = [...store.visit];
   position[0] += store.outward[0] * 4;
   position[1] += store.outward[1] * 4;
@@ -390,6 +431,10 @@ async function loadWorld() {
     $('#verification-dot').className = 'status-dot pass';
     $('#loading').hidden = true;
     enterWalk(data.walkSpawn, data.walkLookAt);
+    if (multiplayer?.snapshot) {
+      community.applyRemote(multiplayer.snapshot);
+      walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+    }
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
   } finally {
@@ -440,9 +485,12 @@ function render(now) {
     buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
   }
   updateStoreLights();
-  autoControls?.update(delta);
-  walking?.update(delta, now);
-  invasion?.update(delta, now);
+  if (!multiplayer) autoControls?.update(delta);
+  if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
+  else walking?.halt();
+  if (!multiplayer) invasion?.update(delta, now);
+  multiplayer?.update(now);
+  remotePlayers?.update(now, camera);
   playerAvatar?.update(now, camera);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
@@ -507,6 +555,7 @@ host.addEventListener('pointerup', (event) => {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats() });
   window.__riverPeople = (bone = 'head') => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id).map(person => {
       person.holder.updateWorldMatrix(true,true);
@@ -520,6 +569,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       const local=community.state.locals.find(local=>local.id===person.id);
       return {id:person.id, role:person.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
         reachable:withinTalkingReach(local,walking.getPose(),point=>walking.canSee(point)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+    });
+  window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
+    .map(person => {
+      const local=community.state.locals.find(local=>local.id===person.id),effect=person.holder.getObjectByName('Wish effects');
+      let skin=0,clothes=0;
+      person.model?.traverse(item=>{if(item.isMesh && item.visible){if(/^(young|middleage|old)_/.test(item.material?.name ?? ''))skin++;else clothes++;}});
+      return {id:person.id,wish:local?.wish,disrupted:Boolean(local?.wishDisruption),modelReady:Boolean(person.model),bodyVisible:person.model?.visible,height:person.holder.position.y-local.position[2],skin,clothes,props:effect?.children.filter(child=>child.visible).map(child=>child.name) ?? []};
     });
   window.__riverMotion = () => (localsGroup?.userData.models ?? []).filter(person=>person.visible && person.userData.avatar).map(person=>({
     id:person.userData.localId, status:community.state.locals.find(local=>local.id===person.userData.localId)?.life?.status,
