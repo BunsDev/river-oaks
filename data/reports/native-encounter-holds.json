@@ -1,0 +1,119 @@
+{
+  "recorded_at": "2026-09-22T12:27:59.198866+00:00",
+  "baseline": "af3cdfb201f9d5c8e1efce6cf45e34656609f809",
+  "source_sha256": {
+    "unreal/Source/RiverOaks/Private/RiverOaksWorld.cpp": "c50e401bbbc3a35b347120cb29e360c744dd1508ca9283abe80d3033f919ce18",
+    "unreal/Source/RiverOaks/Private/RiverStreetPawn.cpp": "52dc06fd5009e856c7aeaa11f4d61b63714f19e0a82080fe76cbf2edff307b80",
+    "unreal/Source/RiverOaks/Public/RiverOaksWorld.h": "c2ab4535b79074c3db449f92f573658841abe03e163e01b86100d51a583429fc",
+    "unreal/Source/RiverOaks/Public/RiverStreetPawn.h": "00a7b38ce1fc7ba9a418d61efe76b68a5ac68d285947fda131b5a736f5271609",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeEncounterTests.cpp": "1af4d03d47474ebbc273494e8a8c6796a2fd96d19f606542659278e50761d68a"
+  },
+  "builds": {
+    "Editor Development": "passed",
+    "Game Development": "passed"
+  },
+  "contracts": {
+    "succeeded": 13,
+    "failed": 0,
+    "notRun": 0,
+    "tests": [
+      {
+        "name": "RiverOaks.Contracts.Coordinates",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.HumanAuthority",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.HumanBackendSelection",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.HumanPoseSequence",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.Locomotion",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.NativeEncounters",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.PortrayalRecipe",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.ProceduralGait",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.Safety",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.ScheduleAuthority",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.SkeletalBackend",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.SkeletalConfiguration",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "name": "RiverOaks.Contracts.SkeletalLocomotion",
+        "state": "Success",
+        "errors": 0,
+        "warnings": 0
+      }
+    ]
+  },
+  "red_failures": [
+    "conversation holds the authoritative resident position",
+    "selection does not reach through another floor",
+    "opaque wall blocks interaction",
+    "blocked nearest person does not hide a reachable neighbor"
+  ],
+  "coverage": [
+    "Actual UWorld resident hold and route resumption",
+    "Height and static collision selection",
+    "Blocked nearest candidate and visible neighbor",
+    "Explicit close, distance, expiry and new occlusion release",
+    "Route endpoint target/direction retained",
+    "Bounded turn toward visitor"
+  ],
+  "limits": [
+    "NullRHI world/collision automation, not rendered acceptance.",
+    "Actual E input, pawn destruction and in-flight HTTP timing not exercised by this test.",
+    "Native worker roles, full dialogue and motion parity remain open."
+  ]
+}

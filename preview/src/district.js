@@ -5,7 +5,7 @@ import { buildRetailDisplays } from './retail-displays.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { physicalSurface } from './materials.js';
 import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.js';
-import { hedgeClusters } from './street-furniture.js';
+import { clearOfRoads, hedgeClusters } from './street-furniture.js';
 import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 
@@ -399,15 +399,33 @@ export function buildDistrictBuildings(world) {
   return group;
 }
 
+// A bench and lamp column beside every third storefront, on the pavement: the
+// first of a few spots off the shopfront that clears every drawn road, lamp
+// arm included. A storefront with no clear spot simply goes without.
+export function storefrontBenchSpots(world) {
+  const spots = [];
+  world.stores.forEach((store, index) => {
+    if (index % 3) return;
+    const [nx, ny] = store.outward;
+    const candidates = [];
+    for (const out of [2.8, 1.8, 1.1]) for (const along of [4, -4, 6.5, -6.5, 9, -9]) candidates.push([out, along]);
+    for (const [out, along] of candidates) {
+      const x = store.visit[0] + nx * out + ny * along, north = store.visit[1] + ny * out - nx * along;
+      const lamp = [x + nx * 1.2, north + ny * 1.2];
+      if (clearOfRoads(world, x, -north, 1.2) && clearOfRoads(world, lamp[0], -lamp[1], 0.9)) { spots.push({ storeId: store.id, x, north, outward: [nx, ny] }); return; }
+    }
+  });
+  return spots;
+}
+
 export function buildDistrictDetail(world) {
   const group = new THREE.Group(), objects = [];
   const dummy = new THREE.Object3D();
   const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.6 });
   const timber = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.85 });
   const box = new THREE.BoxGeometry(1, 1, 1);
-  const benches = world.stores.filter((_, i) => i % 3 === 0);
-  for (const store of benches) {
-    const [nx, ny] = store.outward, x = store.visit[0] + nx*2.8 + ny*4, north = store.visit[1] + ny*2.8 - nx*4;
+  for (const spot of storefrontBenchSpots(world)) {
+    const { x, north, outward: [nx, ny] } = spot;
     const ground = groundSurfaceHeight(world,x,-north), yaw = Math.atan2(nx, -ny);
     for (let i = 0; i < 5; i++) objects.push({ material: timber, p: [x+nx*(i-2)*0.11, ground+0.5, -north-ny*(i-2)*0.11], s: [1.8, 0.06, 0.09], yaw });
     for (const side of [-1, 1]) objects.push({ material: bronze, p: [x+ny*side*0.65, ground+0.25, -north+nx*side*0.65], s: [0.1, 0.5, 0.5], yaw });

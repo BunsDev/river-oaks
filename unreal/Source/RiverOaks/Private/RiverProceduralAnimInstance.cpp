@@ -1,4 +1,5 @@
 #include "RiverProceduralAnimInstance.h"
+#include "RiverGaitBlend.h"
 #include "Animation/AnimInstanceProxy.h"
 
 namespace
@@ -12,14 +13,17 @@ namespace
         {
             FAnimInstanceProxy::PreUpdate(Instance, DeltaSeconds);
             const auto* River = CastChecked<URiverProceduralAnimInstance>(Instance);
-            State = River->State;
             Distance = River->TravelDistanceCm;
-            Speed = River->GroundSpeed;
+            const bool bMoving = River->State == ERiverLocomotionState::WalkSlow ||
+                River->State == ERiverLocomotionState::Walk || River->State == ERiverLocomotionState::Jog;
+            TargetStrength = bMoving ? FMath::Clamp(River->GroundSpeed / 110., 0., 1.) *
+                (River->State == ERiverLocomotionState::Jog ? 1.3 : 1.) : 0.;
         }
 
         virtual void UpdateAnimationNode(const FAnimationUpdateContext& Context) override
         {
             UpdateCounter.Increment();
+            Blend.Update(Context.GetDeltaTime(), TargetStrength);
         }
 
         virtual bool Evaluate(FPoseContext& Output) override
@@ -31,22 +35,39 @@ namespace
             {
                 const int32 MeshIndex = Bones.MakeMeshPoseIndex(Index).GetInt();
                 const FName Name = Ref.GetBoneName(MeshIndex);
-                const double Angle = URiverLocomotionAnimInstance::StrideAngle(Name, State, Distance, Speed);
-                if (FMath::IsNearlyZero(Angle)) continue;
-                FQuat ReferenceRotation = Ref.GetRefBonePose()[MeshIndex].GetRotation();
-                for (int32 Parent = Ref.GetParentIndex(MeshIndex); Parent != INDEX_NONE; Parent = Ref.GetParentIndex(Parent))
-                    ReferenceRotation = Ref.GetRefBonePose()[Parent].GetRotation() * ReferenceRotation;
-                // Meshes face X: lateral Y in component space becomes a bone-local gait axis.
-                const FVector Axis = ReferenceRotation.Inverse().RotateVector(FVector::YAxisVector);
-                auto& Transform = Output.Pose[Index];
-                Transform.SetRotation((Transform.GetRotation() * FQuat(Axis, Angle)).GetNormalized());
+                const auto Rotate = [&](const FVector& ComponentAxis, double Angle)
+                {
+                    if (FMath::IsNearlyZero(Angle)) return;
+                    auto& Transform = Output.Pose[Index];
+                    FQuat ComponentRotation = Transform.GetRotation();
+                    // Parents have already been evaluated. Include their resting
+                    // corrections when mapping elbow and stride axes into bone space.
+                    for (auto Parent = Output.Pose.GetParentBoneIndex(Index); Parent != INDEX_NONE;
+                        Parent = Output.Pose.GetParentBoneIndex(Parent))
+                        ComponentRotation = Output.Pose[Parent].GetRotation() * ComponentRotation;
+                    const FVector Axis = ComponentRotation.Inverse().RotateVector(ComponentAxis);
+                    Transform.SetRotation((Transform.GetRotation() * FQuat(Axis, Angle)).GetNormalized());
+                };
+                // The catalogue's A-pose is for skinning, not standing. Lower the
+                // shoulders symmetrically and reduce the imported elbow flexion
+                // to a small forward bend, without changing limb lengths.
+                if (Name == TEXT("upperarm_l")) Rotate(FVector::YAxisVector, .65);
+                else if (Name == TEXT("upperarm_r")) Rotate(FVector::YAxisVector, -.65);
+                else if (Name == TEXT("lowerarm_l") || Name == TEXT("lowerarm_r"))
+                    Rotate(-FVector::XAxisVector, .60);
+
+                // Preserve the distance-driven phase through a stop while strength
+                // settles; selecting Idle must not instantly reset all limb rotations.
+                const double Angle = URiverLocomotionAnimInstance::StrideAngle(Name,
+                    ERiverLocomotionState::Walk, Distance, 110.) * Blend.Strength;
+                Rotate(-FVector::XAxisVector, Angle);
             }
             return true;
         }
 
     private:
-        ERiverLocomotionState State = ERiverLocomotionState::Idle;
-        double Distance = 0., Speed = 0.;
+        FRiverGaitBlend Blend;
+        double Distance = 0., TargetStrength = 0.;
     };
 }
 

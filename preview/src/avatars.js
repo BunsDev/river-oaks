@@ -56,6 +56,12 @@ function template(profile) {
 const BONES=['head','neck_01','spine_01','spine_02','spine_03','clavicle_l','clavicle_r','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r','hand_l','hand_r','thigh_l','thigh_r','calf_l','calf_r','foot_l','foot_r','ball_l','ball_r'];
 export function loadAvatarTemplate(profile) { return template(profile); }
 
+// SkeletonUtils.clone gives every skinned mesh its own Skeleton, even when the
+// body, clothes and hair are bound to the same bones. Each copy recomputes and
+// uploads identical bone matrices every frame, so meshes bound to the same
+// bones with the same inverse bind matrices share one skeleton again.
+export function shareSkeletons(model) { return [...shareAvatarSkeletons(model)]; }
+
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.

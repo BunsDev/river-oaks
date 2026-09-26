@@ -2,6 +2,27 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
+Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. `npm run dev` joins the local shared town, which locks the character to Jevica and hides the invasion and auto visit. Run the solo browser scripts below (character forms, invasion, auto visit, render budget) against `VITE_MULTIPLAYER=off npm run dev`. `preview/e2e/multiplayer-dev.js` covers the town itself: two browsers join as development identities with no WorkOS, see each other, and arrive on separate spots. Production builds stay single player unless built with `VITE_MULTIPLAYER=required`.
+
+For two-player browser acceptance, run `node server/tests/browser-fixture.js`, then:
+
+```sh
+npx --yes --package @playwright/cli playwright-cli -s=multiplayer open 'http://127.0.0.1:5180/?motion-debug=1' --headed
+npx --yes --package @playwright/cli playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer.js
+npx --yes --package @playwright/cli playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer-gate.js
+```
+
+This loopback fixture injects test identities in isolated browser contexts and uses the real WebSocket transport, world simulation, and rendered game. It checks peer avatars, shared wish consequences and undo, reconnect, movement, mobile layout, duplicate-account replacement, and logout. The [local acceptance report](../data/reports/multiplayer-e2e.json) records the checked scope. It does not establish live WorkOS sign-in, container deployment, or production proxy behavior. The fixture is excluded from the container image; production has no test login route. See [deployment acceptance](multiplayer.md).
+
+For the Redis backend, put a test database URL in a private env file and run:
+
+```sh
+node --env-file=.env.redis-test --test server/tests/*.test.js
+node --env-file=.env.redis-test server/tests/redis-browser-fixture.js
+```
+
+Run the same browser scripts against the Redis fixture. The [Redis browser receipt](../data/reports/redis-multiplayer-e2e.json) records the separate-instance acceptance run. Alice and Bob connect to separate backend servers; HTTP tickets may come from a different server than the socket. Redis tests use random `river-oaks:test` namespaces and delete only their own keys. They skip when `REDIS_URL` is absent; a skipped run is not Redis verification. Never use `FLUSHDB` for cleanup. The fixture uses test identities, so live WorkOS login and hosted Vercel routing remain separate acceptance checks.
+
 | Risk | Test evidence |
 | --- | --- |
 | Wrong units or handedness | Python projection round trip in meters; separate UE coordinate tests |
@@ -57,6 +78,24 @@ or 6 cm at 60 Hz. Run it through the same Playwright CLI after starting dev. The
 fixture uses deterministic frames and does not establish facial expression quality,
 continuous collision, target-GPU performance or native Unreal parity.
 
+## Frame budget and HUD
+
+`preview/tests/frame-budget.test.js` checks that each skeleton uploads once per
+composed frame, that every shipped rig renders from one shared skeleton, and
+that the AO pass hides excluded objects from a cached list.
+`render-quality.test.js` covers the Auto resolution controller: it steps down
+when a 60 Hz display misses refreshes, recovers gradually, settles on a
+borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
+streaming count and the capped wait for surface textures.
+
+`preview/e2e/hud-and-quality.js` runs against `npm run dev`. It waits for the
+progress pill to count every file and step aside, switches Settings > Graphics
+between Auto, Smoothest and Sharpest while the canvas keeps native size,
+reloads to check the choice persists, and toggles Clear view with H and the
+chip. `render-budget.js` pins Sharpest, since it measures the full-quality
+budget. Frame times on a shared GPU vary with load, so compare against an
+unmodified checkout in interleaved runs before claiming a change.
+
 The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
 
 ## Manual Jev key override
@@ -72,3 +111,23 @@ masked input, key clearing, browser storage, reload, replacement, reset, bridge
 failure, and a save that succeeds on the bridge but loses its response.
 Successful settings acceptance does not establish that a supplied key is valid
 with the provider. Jev validates it on the next inference request.
+
+## Jevica wishes
+
+Run `npm test` to check the five wish lifecycles, room boundaries, overlapping
+incidents, rendering restoration, and volunteer pause/resume rules. With the
+preview running, verify the controls and effects with:
+
+```sh
+npx --yes --package @playwright/cli playwright-cli -s=jevica-wishes open http://127.0.0.1:5173/ --headed
+npx --yes --package @playwright/cli playwright-cli -s=jevica-wishes run-code --filename preview/e2e/wishes.js
+```
+
+The script grants and undoes each wish through the conversation controls. It
+checks the loaded resident models, egg hatching, flight height, clothes-only
+invisibility, sadness, dog replacement, restored visibility, keyboard focus,
+and mobile controls. It uses read-only development diagnostics and doesn't
+inject simulation state. Results are recorded in
+[the wish receipt](../data/reports/jevica-wishes-e2e.json); screenshots go to
+`output/playwright/wish-*.png`. This covers the browser preview, not native Unreal
+or human accessibility acceptance.

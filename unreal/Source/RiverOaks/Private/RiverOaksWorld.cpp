@@ -152,7 +152,7 @@ bool ARiverOaksWorld::LoadManifest()
     }
     auto* Ground = MakeInstances(TEXT("Ground"), Cube, FLinearColor(.13f, .21f, .1f), true);
     Ground->AddInstance(FTransform(FQuat::Identity, FVector((X0 + X1) * 50., -(Y0 + Y1) * 50., -55.), FVector(X1 - X0, Y1 - Y0, 1.)), true);
-    auto* Asphalt = MakeInstances(TEXT("Roads"), Cube, FLinearColor(.07f, .075f, .08f), false);
+    auto* Asphalt = MakeInstances(TEXT("Roads"), Cube, FLinearColor(.07f, .075f, .08f), true);
     for (const auto& Value : *Roads)
     {
         const auto Road = Value->AsObject();
@@ -309,7 +309,7 @@ void ARiverOaksWorld::SpawnAgents()
         FRiverHumanPose Spawn;
         Spawn.Sequence = ++Agent.PoseSequence;
         Spawn.SimTimeSeconds = FPlatformTime::Seconds();
-        Spawn.Root = FTransform(FQuat::Identity, Agent.Position);
+        Spawn.Root = FTransform(FRotator(0, Agent.Heading, 0), Agent.Position);
         Spawn.Locomotion = FName(TEXT("idle"));
         HumanBackend->ApplyPose(Agent.HumanHandle, Spawn);
     };
@@ -326,6 +326,12 @@ void ARiverOaksWorld::SpawnAgents()
         Agent.Position = FMath::Lerp(Route.Points[Agent.Target - 1] + (RouteTarget(Agent) - Route.Points[Agent.Target]), RouteTarget(Agent), Random.FRand());
         Agent.Position.X = FMath::Clamp(Agent.Position.X, Bounds.Min.X + 100., Bounds.Max.X - 100.);
         Agent.Position.Y = FMath::Clamp(Agent.Position.Y, Bounds.Min.Y + 100., Bounds.Max.Y - 100.);
+        if (!GroundResident(Agent.Position))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("River Oaks: no walkable support for %s; skipping spawn."), *Agent.Id);
+            continue;
+        }
+        Agent.Heading = (RouteTarget(Agent) - Agent.Position).Rotation().Yaw;
         // Resolved from the catalogue and validated before any backend sees it. Never authored
         // here: a portrayal persona is locked to its fixed generic preset (section 9).
         Agent.Appearance = URiverAppearanceCatalogue::Resolve(Index);
@@ -353,17 +359,35 @@ void ARiverOaksWorld::SpawnAgents()
     HumanBackend->Tick(0.f);
 }
 
+bool ARiverOaksWorld::GroundResident(FVector& Root) const
+{
+    if (Root.ContainsNaN()) return false;
+    // Sample near the previous sole height, so another storey or a large drop
+    // cannot teleport a resident between floors. The simulation owns this Z.
+    constexpr double MaxStepCm = 30.;
+    constexpr double MinUpNormal = .7071067811865476; // 45 degrees
+    const FVector Sole = Root - FVector(0, 0, RiverOaksRules::HumanRootHeightCm);
+    FHitResult Hit;
+    if (!GetWorld()->LineTraceSingleByObjectType(Hit, Sole + FVector(0,0,MaxStepCm),
+        Sole - FVector(0,0,MaxStepCm), FCollisionObjectQueryParams(ECC_WorldStatic)) ||
+        Hit.bStartPenetrating || Hit.ImpactNormal.Z < MinUpNormal) return false;
+    Root.Z = Hit.ImpactPoint.Z + RiverOaksRules::HumanRootHeightCm;
+    return true;
+}
+
 void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
 {
+    UpdateConversation(ConversationVisitor);
     const double Now = FPlatformTime::Seconds();
     for (int32 Index = 0; Index < Agents.Num(); ++Index)
     {
         auto& Agent = Agents[Index];
         if (Now > Agent.ActionUntil) Agent.Action = RiverOaksRules::FallbackAction(Agent.Kind, Hour, Rain, Humidity, bStorm);
-        const FString EffectiveAction = RiverOaksRules::ConstrainAction(Agent.Action, Agent.Kind, Hour, Rain, Humidity, bStorm);
+        const bool bConversing = Agent.Id == ConversationAgentId;
+        const FString EffectiveAction = bConversing ? TEXT("greet") : RiverOaksRules::ConstrainAction(Agent.Action, Agent.Kind, Hour, Rain, Humidity, bStorm);
         const FVector Target = RouteTarget(Agent);
         const FVector ToTarget = Target - Agent.Position;
-        if (ToTarget.Size2D() < 100.)
+        if (!bConversing && ToTarget.Size2D() < 100.)
         {
             const int32 Last = Routes[Agent.Route].Points.Num() - 1;
             if (Agent.Target == Last) Agent.Direction = -1;
@@ -371,8 +395,8 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
             Agent.Target += Agent.Direction;
         }
         const float Speed = Agent.Speed * RiverOaksRules::SpeedMultiplier(EffectiveAction, false);
-        const FVector Next = Agent.Position + ToTarget.GetSafeNormal2D() * FMath::Min(Speed * DeltaSeconds, static_cast<float>(ToTarget.Size2D()));
-        Agent.bBlocked = !Bounds.IsInsideXY(Next);
+        FVector Next = Agent.Position + ToTarget.GetSafeNormal2D() * FMath::Min(Speed * DeltaSeconds, static_cast<float>(ToTarget.Size2D()));
+        Agent.bBlocked = !Bounds.IsInsideXY(Next) || (!bConversing && !GroundResident(Next));
         FHitResult Hit;
         // Static mesh collision remains authoritative even when inference says continue.
         if (!Agent.bBlocked && GetWorld()->SweepSingleByObjectType(Hit, Agent.Position + FVector(0, 0, 90), Next + FVector(0, 0, 90), FQuat::Identity,
@@ -381,7 +405,7 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
             if (Other != Index && FVector::DistSquared2D(Next, Agents[Other].Position) < FMath::Square(70.f) &&
                 FVector::DistSquared2D(Next, Agents[Other].Position) < FVector::DistSquared2D(Agent.Position, Agents[Other].Position)) Agent.bBlocked = true;
         if (!Agent.bBlocked) Agent.Position = Next;
-        else if (Now > Agent.ActionUntil)
+        else if (!bConversing && Now > Agent.ActionUntil)
         {
             Agent.Direction *= -1;
             Agent.Target = FMath::Clamp(Agent.Target + Agent.Direction, 0, Routes[Agent.Route].Points.Num() - 1);
@@ -391,7 +415,9 @@ void ARiverOaksWorld::MoveAgents(float DeltaSeconds)
         FRiverHumanPose Pose;
         Pose.Sequence = ++Agent.PoseSequence;
         Pose.SimTimeSeconds = Now;
-        Pose.Root = FTransform(ToTarget.Rotation(), Agent.Position);
+        const FVector Facing = bConversing ? ConversationVisitor - Agent.Position : ToTarget;
+        if (!Facing.IsNearlyZero()) Agent.Heading = FMath::FixedTurn(Agent.Heading, Facing.Rotation().Yaw, 180.f * DeltaSeconds);
+        Pose.Root = FTransform(FRotator(0, Agent.Heading, 0), Agent.Position);
         Pose.Locomotion = RiverOaksRules::Locomotion(EffectiveAction, Agent.Kind, Agent.bBlocked);
         if (HumanBackend && Agent.HumanHandle != INDEX_NONE) HumanBackend->ApplyPose(Agent.HumanHandle, Pose);
     }
@@ -418,7 +444,7 @@ void ARiverOaksWorld::RequestDecisions()
         Record->SetStringField(TEXT("id"), Agent.Id);
         Record->SetStringField(TEXT("kind"), Agent.Kind);
         Record->SetArrayField(TEXT("position"), JsonPosition(Agent.Position));
-        Record->SetStringField(TEXT("activity"), RiverOaksRules::ConstrainAction(Agent.Action, Agent.Kind, Hour, Rain, Humidity, bStorm));
+        Record->SetStringField(TEXT("activity"), Agent.Id == ConversationAgentId ? TEXT("greet") : RiverOaksRules::ConstrainAction(Agent.Action, Agent.Kind, Hour, Rain, Humidity, bStorm));
         Record->SetBoolField(TEXT("blocked"), Agent.bBlocked);
         Record->SetField(TEXT("vehicle_distance_m"), MakeShared<FJsonValueNull>());
         FValues Nearby;
@@ -473,7 +499,7 @@ void ARiverOaksWorld::RequestDecisions()
                 Actions.Add(Id, Action);
             }
             for (auto& Agent : Agents)
-                if (const FString* Action = Actions.Find(Agent.Id))
+                if (const FString* Action = Actions.Find(Agent.Id); Action && Agent.Id != ConversationAgentId)
                 {
                     Agent.Action = *Action;
                     Agent.ActionUntil = FPlatformTime::Seconds() + 1.5;
@@ -530,6 +556,7 @@ void ARiverOaksWorld::Tick(float DeltaSeconds)
 
 void ARiverOaksWorld::EndPlay(const EEndPlayReason::Type Reason)
 {
+    EndConversation();
     TeardownHumans();
     if (PendingRequest)
     {
@@ -547,22 +574,62 @@ FVector ARiverOaksWorld::ConstrainVisitor(const FVector& Position) const
         FMath::Clamp(Position.Y, Bounds.Min.Y + 40., Bounds.Max.Y - 40.), 88.);
 }
 
+bool ARiverOaksWorld::CanGreet(const FRiverAgent& Agent, const FVector& Position) const
+{
+    if (Position.ContainsNaN() || Agent.Position.ContainsNaN() ||
+        FMath::Abs(Position.Z - Agent.Position.Z) > 120. ||
+        FVector::DistSquared(Position, Agent.Position) >= FMath::Square(450.)) return false;
+    FHitResult Hit;
+    // Eye-height geometry is authoritative; a nearer person behind a wall must
+    // not prevent selection of another visible resident.
+    return !GetWorld()->LineTraceSingleByObjectType(Hit, Position + FVector(0,0,70),
+        Agent.Position + FVector(0,0,70), FCollisionObjectQueryParams(ECC_WorldStatic));
+}
+
+int32 ARiverOaksWorld::NearbyAgentIndex(const FVector& Position) const
+{
+    int32 Nearest = INDEX_NONE;
+    double Distance = FMath::Square(450.);
+    for (int32 Index = 0; Index < Agents.Num(); ++Index)
+    {
+        const double Current = FVector::DistSquared(Position, Agents[Index].Position);
+        if (Current < Distance && CanGreet(Agents[Index], Position)) { Nearest = Index; Distance = Current; }
+    }
+    return Nearest;
+}
+
 FString ARiverOaksWorld::NearbyVisitor(const FVector& Position) const
 {
-    const FRiverAgent* Nearest = nullptr;
-    double Distance = FMath::Square(450.);
-    for (const auto& Agent : Agents)
+    const int32 Index = NearbyAgentIndex(Position);
+    return Index == INDEX_NONE ? FString() : FString::Printf(TEXT("a %s (%s)"), *Agents[Index].Kind, *Agents[Index].Id);
+}
+
+void ARiverOaksWorld::EndConversation()
+{
+    ConversationAgentId.Empty();
+    ConversationUntil = 0.;
+}
+
+bool ARiverOaksWorld::UpdateConversation(const FVector& Position)
+{
+    const FRiverAgent* Agent = Agents.FindByPredicate([this](const FRiverAgent& Candidate) { return Candidate.Id == ConversationAgentId; });
+    if (!Agent || GetWorld()->GetTimeSeconds() >= ConversationUntil || !CanGreet(*Agent, Position))
     {
-        const double Current = FVector::DistSquared2D(Position, Agent.Position);
-        if (Current < Distance) { Nearest = &Agent; Distance = Current; }
+        EndConversation();
+        return false;
     }
-    return Nearest ? FString::Printf(TEXT("a %s (%s)"), *Nearest->Kind, *Nearest->Id) : FString();
+    ConversationVisitor = Position;
+    return true;
 }
 
 FString ARiverOaksWorld::GreetNearby(const FVector& Position)
 {
-    const FString Person = NearbyVisitor(Position);
-    if (Person.IsEmpty()) return TEXT("Move closer to someone on the walkway.");
+    const int32 Index = NearbyAgentIndex(Position);
+    EndConversation();
+    if (Index == INDEX_NONE) return TEXT("Move closer to someone on the walkway.");
+    ConversationAgentId = Agents[Index].Id;
+    ConversationVisitor = Position;
+    ConversationUntil = GetWorld()->GetTimeSeconds() + 10.;
     return bStorm ? TEXT("Visitor: Let's find cover until the rain passes.") :
         TEXT("Visitor: Hello! I'm taking a break between the shops. Enjoy your walk.");
 }

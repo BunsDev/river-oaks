@@ -40,7 +40,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     else status.textContent=carriage.board()?'W/S to ride or reverse. A/D or arrows to steer.':'Walk closer to your carriage before boarding.';
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null, sharedMode = false;
   const listeners = new Set();
   const reactions = createVisitorReactions(),attention=createPlayerAttention();
   const flightButton=panel.querySelector('#player-flight');
@@ -90,6 +90,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     get carriage(){return carriage;},
     get object(){return holder;},
     get form() {return form;},
+    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);carriageButton.parentElement.hidden=value;},
     get rig() {return avatar?.rig;},
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},
@@ -105,8 +106,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     update(now,camera,viewportHeight) {
       const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       carriage.update(now);
-      carriageButton.disabled=!pose||Boolean(pose.roomId)||pose.flying||carriage.riding;
-      rideButton.disabled=!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement;
+      carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding;
+      rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement;
       rideButton.textContent=carriage.riding?'Leave carriage':'Ride carriage';
       host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding;
       carriageButton.title=pose?.roomId?'Step outside to call your carriage':pose?.flying?'Land to call your carriage':'';

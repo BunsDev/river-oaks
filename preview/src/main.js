@@ -21,6 +21,7 @@ import { buildLocals } from './locals.js';
 import { buildStorePeople } from './store-people.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
+import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
@@ -29,6 +30,12 @@ import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createAutoControls } from './auto-ui.js';
 import { createInvasionControls } from './invasion-ui.js';
+import { createQualityControl } from './render-quality.js';
+import { mountAssetProgress } from './asset-progress.js';
+import { createClearView } from './clear-view.js';
+import { createMultiplayer } from './multiplayer-client.js';
+import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
+import { createRemotePlayers } from './remote-players.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -48,8 +55,10 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
+let multiplayer, remotePlayers;
+const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
-let lastRenderStats = 0;
+let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
 const scene = new THREE.Scene();
 // Street level only: the range reaches the fogged context ground while keeping
@@ -87,6 +96,12 @@ function initializeRenderer() {
   configureMaterials(renderer);
   pipeline = createRenderPipeline(renderer, scene, camera);
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
+  // The storefront probe renders fixed-size cube faces outside the composer,
+  // so quality changes never invalidate it.
+  quality = createQualityControl({ apply({ scale, occlusion }) {
+    pipeline.setRenderScale(scale);
+    if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
+  } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
   loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
@@ -101,10 +116,16 @@ function initializeRenderer() {
     getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
     getPersona: () => playerAvatar?.form ?? 'visitor',
     onWish: () => playerAvatar?.cast(performance.now()),
+    getMultiplayer: () => multiplayer,
     getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
       autoControls?.stop();
+      // The town confirms travel asynchronously; solo focus stays synchronous.
+      if (multiplayer) return multiplayer.travel({ localId: local.id }).then(result => {
+        if (result.ok) walking.lookAt(local.position);
+        return result.ok;
+      });
       if (local.indoor) {
         const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
         const position = walking.active ? walking.getPosition() : null;
@@ -122,7 +143,7 @@ function initializeRenderer() {
       return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
-  setupSidebarSections();
+  setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world });
   breakableGlass=createBreakableGlass({reducedMotion,
@@ -137,7 +158,7 @@ function initializeRenderer() {
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
   visitTools.append($('.player-controls'), invasion.panel);
-  force=createForceControls({host,walking,
+  force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
       ...(storePeople?.userData.figures??[]).filter(figure=>figure.id).map(figure=>({object:figure.holder,id:figure.id})),
@@ -153,10 +174,19 @@ function initializeRenderer() {
   const phoneLayout = window.matchMedia('(max-width: 700px)');
   const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
   placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
+  createClearView({ viewport: $('#viewport') });
+  if (multiplayerMode === 'required') startMultiplayer();
+  else if (multiplayerMode === 'auto') probeTown().then(town => {
+    host.dataset.multiplayer = town.reason;
+    if (town.join) startMultiplayer();
+    else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
+  });
+  else host.dataset.multiplayer = 'off';
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
+  treeShadows = castShadowsFromProxies(sun, () => layers.trees?.userData.shadowProxies ?? []);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -173,6 +203,26 @@ function initializeRenderer() {
   }).observe(host);
   updateAtmosphere();
   renderer.setAnimationLoop(render);
+}
+
+// Join the shared town. Local simulations (auto visits, the invasion) would
+// diverge from everyone else's town, so they stop and hide; the character
+// locks to Jevica, the town's shared protagonist.
+function startMultiplayer() {
+  if (multiplayer) return;
+  autoControls?.stop(); invasion?.reset();
+  $('.auto-controls').hidden = true;
+  invasion.panel.hidden = true;
+  force?.reset();force.panel.hidden=true;
+  playerAvatar?.setSharedMode(true);
+  remotePlayers = createRemotePlayers(scene, host);
+  multiplayer = createMultiplayer({
+    getPose: () => walking?.getPose(),
+    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot); },
+    onCorrection: player => { if (world && player) walking.applyServerPose(player); },
+    onPlayers: (players, selfId) => remotePlayers.sync(players, selfId),
+  });
+  host.dataset.multiplayer = 'joined';
 }
 
 function geometryFromTriangles(positions) {
@@ -343,6 +393,7 @@ function enterWalk(position, lookAt, pitch = 0) {
 }
 
 function enterStore(store) {
+  if (multiplayer) { districtUI.select(store.id); return multiplayer.travel({storeId:store.id,mode:'enter'}); }
   const room = storeRoomsFor(world).find(item => item.storeId === store.id);
   if (!room) return arriveAtStore(store);
   const [east, north] = room.toWorld(0, 2.4), [lookEast, lookNorth] = room.toWorld(room.center, room.depth - 1);
@@ -351,6 +402,7 @@ function enterStore(store) {
 }
 
 function leaveStore(store) {
+  if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'leave'});
   // Step out onto the threshold, facing the door you just came through.
   const [x, north, base] = store.facade, [nx, ny] = store.outward;
   enterWalk([x + nx * 2.6, north + ny * 2.6, base], [x, north], 0.05);
@@ -365,6 +417,7 @@ function describeInterior(store) {
 }
 
 function arriveAtStore(store) {
+  if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
   const position = [...store.visit];
   position[0] += store.outward[0] * 4;
   position[1] += store.outward[1] * 4;
@@ -415,11 +468,20 @@ async function loadWorld() {
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     data.vegetation = validateVegetation(data, vegetation);
     populateWorld(data);
+    // Reveal a finished street: stone, asphalt and sky first. Trees, people
+    // and interiors keep streaming behind the progress pill. On a slow link
+    // every download shares the bandwidth, so the wait is capped.
+    $('#loading p').textContent = 'Laying the stone and lighting the sky…';
+    await assetProgress?.settled(url => /\/assets\/materials\//.test(url), { timeout: 4000 });
     $('#verification-state').textContent = 'A real district, reimagined';
     $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
     $('#verification-dot').className = 'status-dot pass';
     $('#loading').hidden = true;
     enterWalk(data.walkSpawn, data.walkLookAt);
+    if (multiplayer?.snapshot) {
+      community.applyRemote(multiplayer.snapshot);
+      walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+    }
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
   } finally {
@@ -456,8 +518,10 @@ function followSunShadow() {
 
 function render(now) {
   clock.update();
+  if (lastFrame !== null) quality.sample(now - lastFrame);
+  lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
-  force?.update(delta,now);
+  if(!multiplayer)force?.update(delta,now);
   breakableGlass?.update(delta);
   playerAvatar?.react(now);
   community?.update(delta, now);
@@ -471,13 +535,17 @@ function render(now) {
     buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
   }
   updateStoreLights();
-  autoControls?.update(delta);
-  walking?.update(delta, now);
-  invasion?.update(delta, now);
+  if (!multiplayer) autoControls?.update(delta);
+  if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
+  else walking?.halt();
+  if (!multiplayer) invasion?.update(delta, now);
+  multiplayer?.update(now);
+  remotePlayers?.update(now, camera);
   renderer.getDrawingBufferSize(drawingSize);
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y);
   liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
   followSunShadow();
+  treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
@@ -493,6 +561,7 @@ function render(now) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
     host.dataset.pipeline = JSON.stringify(pipeline.stats);
+    host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
 }
@@ -530,7 +599,7 @@ host.addEventListener('pointerup', (event) => {
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
-  if(force?.pick(raycaster))return;
+  if(!multiplayer&&force?.pick(raycaster))return;
   const pose = walking.getPose();
   const id = pickPerson(raycaster, [localsGroup, storePeople, playerAvatar?.carriage.driver].filter(Boolean),
     [buildingMesh, buildingMesh?.userData.interiors, playerAvatar?.carriage.object].filter(Boolean),
@@ -541,6 +610,7 @@ host.addEventListener('pointerup', (event) => {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats() });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);
@@ -561,7 +631,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   };
   window.__riverCarriage = () => ({placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
-    .filter(person => person.id).map(person => {
+    .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);
       const bounds = new THREE.Box3().setFromObject(person.holder), point = bounds.getCenter(new THREE.Vector3());
       point.y = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.86;
@@ -573,6 +643,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       const local=community.state.locals.find(local=>local.id===person.id);
       return {id:person.id, position:[...local.position], renderedPosition:person.holder.getWorldPosition(new THREE.Vector3()).toArray(), role:person.role??local.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
         reachable:withinTalkingReach(local,walking.getPose(),(point,eyeHeight)=>walking.canSee(point,eyeHeight)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+    });
+  window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
+    .map(person => {
+      const local=community.state.locals.find(local=>local.id===person.id),effect=person.holder.getObjectByName('Wish effects');
+      let skin=0,clothes=0;
+      person.model?.traverse(item=>{if(item.isMesh && item.visible){if(/^(young|middleage|old)_/.test(item.material?.name ?? ''))skin++;else clothes++;}});
+      return {id:person.id,wish:local?.wish,disrupted:Boolean(local?.wishDisruption),modelReady:Boolean(person.model),bodyVisible:person.model?.visible,height:person.holder.position.y-local.position[2],skin,clothes,props:effect?.children.filter(child=>child.visible).map(child=>child.name) ?? []};
     });
   window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
     .map(person => {
@@ -593,6 +670,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
 }
 
 try {
+  assetProgress = mountAssetProgress({ viewport: $('#viewport'), overlay: $('#loading'), manager: THREE.DefaultLoadingManager, reducedMotion });
   initializeRenderer();
   loadWorld();
 } catch (error) {

@@ -4,7 +4,9 @@
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
 ## Run the live showcase
 
-Start the browser development server with `npm ci` and `npm run dev`. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
+The default game uses WorkOS sign-in and one shared town server. Players see each other as Jevica and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production requires authenticated, verified accounts.
+
+For the standalone development showcase described below, start Vite with `VITE_SINGLE_PLAYER=true npm run dev`. This explicit development-only mode supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. It is unavailable in production builds. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -13,7 +15,7 @@ uv run river-oaks serve
 
 ```sh
 npm ci
-npm run dev
+VITE_SINGLE_PLAYER=true npm run dev
 ```
 
 Open **http://127.0.0.1:5173/**. The default is a walkable retrofuturistic River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
@@ -49,6 +51,9 @@ On macOS, install eSpeak NG once with `brew install espeak-ng`. After upgrading 
 In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
+
+
+**Shared town (in development).** `npm run dev` also runs a multiplayer town where every browser joins as its own Jevica, with no account or WorkOS setup. The live site stays single player until the town launches. See [docs/multiplayer.md](docs/multiplayer.md).
 
 ## Optional source-data tooling
 

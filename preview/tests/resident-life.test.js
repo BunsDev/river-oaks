@@ -260,3 +260,17 @@ test('pausing routes still allows an explicit conversation to turn without catch
   assert.deepEqual(local.position,position);
   assert.equal(life.elapsed,0);
 });
+
+test('wish incidents stop nearby walkers and undo lets them continue',async()=>{
+  const {grantWish,undoWish,stepWishes}=await import('../src/wishes.js');
+  const street={scene:'district',bounds_m:[-30,-30,30,30],collisionPolygons:[],communityLocations:[
+    {id:'a',name:'West',position:[-5,0,0]}, {id:'b',name:'East',position:[-3,0,0]},
+  ]};
+  const state=createCommunity(street),life=createResidentLife(street,state);
+  for(const local of state.locals){local.life.route=[[15,0]];local.life.destination={id:'east',name:'East'};}
+  grantWish(state,state.locals[0].id,'dragon','jevica');stepWishes(state,15);
+  const positions=state.locals.map(local=>[...local.position]);step(life,120);
+  assert.deepEqual(state.locals.map(local=>local.position),positions);
+  undoWish(state,state.locals[0].id,'jevica');step(life,120);
+  assert.ok(state.locals.some((local,index)=>local.position[0]!==positions[index][0]));
+});

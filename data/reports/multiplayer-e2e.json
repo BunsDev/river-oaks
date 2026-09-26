@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "checks": [
+    "Jevica is the only playable form",
+    "Two accounts share the roster and rendered Jevica avatars",
+    "Confirmed grant moves keyboard focus to undo",
+    "Second player sees server-owned dragon wish",
+    "Egg hatches into a visible dragon",
+    "The same wish disrupts town residents for both players",
+    "Confirmed undo restores keyboard focus",
+    "Invisible resident keeps visible clothing in shared play",
+    "Reload rejoins the existing town and keeps its active wishes",
+    "Walking is validated and visible to the other player",
+    "Shared town has no mobile horizontal overflow",
+    "Sign-out revokes play and returns to the sign-in gate",
+    "No uncaught errors: "
+  ],
+  "errors": [],
+  "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance.",
+  "recorded_at": "2026-09-23T05:21:45.615647+00:00",
+  "script": "preview/e2e/multiplayer.js",
+  "game_tests": 225,
+  "server_tests": 47,
+  "public_origin": "https://sim.jev.works",
+  "limitations": [
+    "Test-only identities; live WorkOS login not verified.",
+    "Hosting, TLS proxy, and container image not deployed or verified.",
+    "Shared town state is in memory; restart resets it.",
+    "Local invasion and Jev auto visit remain development-only."
+  ],
+  "terminal_gate": {
+    "passed": true,
+    "checks": [
+      "Duplicate account closes the old connection",
+      "Locked game retains accessible sign-out",
+      "Gate sign-out returns to anonymous login"
+    ],
+    "errors": []
+  },
+  "build": "npm run build passed",
+  "production_smoke": "Built game served; missing WorkOS config fails closed; anonymous ticket denied; private .env inaccessible."
+}

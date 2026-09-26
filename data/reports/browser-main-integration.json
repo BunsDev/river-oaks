@@ -1,0 +1,103 @@
+{
+  "main_base": "b422d39d80ece316a5dd7f56d65f893c8261d35f",
+  "browser_commit": "79469df",
+  "solo": [
+    {
+      "checks": [
+        "The summoned carriage has two loaded unicorns",
+        "Parking reserves clearance for the complete team",
+        "Both unicorns remain on the district road at real world coordinates",
+        "Both unicorns blend into their contact-driven gait while pulling",
+        "The team travels with the actual coach",
+        "Animated unicorns retain road contact while riding",
+        "Gait blends back to idle after braking",
+        "Jevica can leave the complete unicorn carriage",
+        "No uncaught runtime or shader errors"
+      ],
+      "errors": []
+    },
+    {
+      "checks": [
+        "The directory opens a real conversation with Jules",
+        "The rendered coachman is within speaking reach",
+        "A real pointer click on the coachman opens his conversation",
+        "The same coachman identity travels with the moving carriage",
+        "No uncaught browser errors"
+      ],
+      "errors": []
+    },
+    {
+      "checks": [
+        "T enables Force mode",
+        "A real pointer click targets the person in Force mode",
+        "Force picking does not open a conversation",
+        "G acquires the selected person",
+        "The rendered person rises, not just the state",
+        "Force hold suspends pedestrian navigation",
+        "Wand and person both emit lift sparkles",
+        "X gently lands and releases the person",
+        "Sparkles finish fading after landing",
+        "Released person resumes walking",
+        "A Force push displaces a person and lands them",
+        "An existing street bin can be targeted through normal travel",
+        "The complete bin rises with its lid",
+        "Pointer spell controls return focus to walking",
+        "Walking preserves the active lift",
+        "Jevica walks while holding a target",
+        "The lifted bin follows her movement",
+        "Both sparkle emitters remain active within the pool budget while carrying",
+        "Jevica keeps facing the carried object after backpedalling",
+        "R pushes a real object and it settles at its new position",
+        "Indoor stations lift in place without crossing work surfaces",
+        "A levitated worker pauses their task",
+        "Escape lowers the worker and their task resumes",
+        "Force mode can be disabled",
+        "No uncaught browser errors"
+      ],
+      "errors": []
+    }
+  ],
+  "shared": {
+    "passed": true,
+    "checks": [
+      "Jevica is the only playable form",
+      "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+      "Shared diagnostics and town exclude the solo coachman",
+      "Force shortcut cannot bypass shared-mode gating",
+      "Two accounts share the roster and rendered Jevica avatars",
+      "Confirmed grant moves keyboard focus to undo",
+      "Second player sees server-owned dragon wish",
+      "Egg hatches into a visible dragon",
+      "The same wish disrupts town residents for both players",
+      "Confirmed undo restores keyboard focus",
+      "Invisible resident keeps visible clothing in shared play",
+      "Reload rejoins the existing town and keeps its active wishes",
+      "Walking is validated and visible to the other player",
+      "Shared town has no mobile horizontal overflow",
+      "Sign-out revokes play and returns to the sign-in gate",
+      "No uncaught errors: "
+    ],
+    "errors": [],
+    "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+  },
+  "scope": "Browser integration only. Upstream native source preserved. Shared acceptance uses local fixture identities, not live WorkOS or hosted Redis.",
+  "validation": {
+    "browser_unit": {
+      "passed": 451,
+      "failed": 0
+    },
+    "server_unit": {
+      "passed": 66,
+      "failed": 0,
+      "skipped": 27,
+      "skip_reason": "Redis integration requires a configured isolated test Redis"
+    },
+    "python": {
+      "passed": 107,
+      "failed": 0
+    },
+    "build": "passed",
+    "ruff": "passed",
+    "offline_demo": "passed; verification exits 2 for synthetic fixture as expected"
+  }
+}

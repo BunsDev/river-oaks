@@ -102,3 +102,14 @@ test('volunteers describe their actual task and include it in local reaction con
   chooseCommunityScenario(state,'storm');stepResidentLife(life,1/60,{paused:true});
   assert.doesNotMatch(conversationLine(helper,'greeting'),/cooling supplies/,'Canceled work must leave the conversation context');
 });
+
+test('a wished volunteer remains available after undo rather than being assigned or refunded early',async()=>{
+  const {grantWish,undoWish}=await import('../src/wishes.js');
+  const {state,life,helper}=create();
+  grantWish(state,helper.id,'flight','jevica');advance(life,1);
+  assert.equal(state.jobs.length,1);
+  assert.equal(state.jobs[0].helperId,null);
+  assert.equal(state.helpBudget,3);
+  undoWish(state,helper.id,'jevica');advance(life,1);
+  assert.equal(state.jobs[0].helperId,helper.id);
+});

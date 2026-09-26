@@ -38,7 +38,7 @@ ongoing people-interaction and movement work.
 | --- | --- | --- |
 | Curb touchdown endpoint | Corrected | Planned contact X/Z now stays fixed at touchdown. 168 unit curb cases pass; synthetic whole-body peak falls from 5.60 to 1.61 m/s. Other ankle landing discontinuities remain; see `browser-curb-touchdown.json`. |
 | Window impact registration | Implemented | 1,324 real panes registered without splitting facade batches; moving doors retain their transforms. |
-| Glass break and restoration | Browser verified | Normal R throw breaks one pane, stops outside the display backing, emits 32 pooled triangles and restores after 20 simulation seconds. Six unit tests and ten browser assertions pass; combined browser unit suite passes 420 tests and the build. |
+| Glass break and restoration | Browser verified | Normal R throw breaks one pane, stops outside the display backing, emits 32 pooled triangles and restores after 20 simulation seconds. Six unit tests and ten browser assertions pass; combined browser unit suite passes 451 tests and the build. |
 | Complete-scene performance | Pending | Existing profiles include roughly 18 million rendered triangles across passes. Attribute costs before selecting geometry/LOD changes; avoid treating isolated CPU timings as FPS proof. |
 | Smoke grenade and evacuation | Pending | Integrate with indoor navigation, NPC visibility and interaction ownership. Add bounded smoke/shard resources and prevent overlapping cinematics. |
 | Jevica evacuation cutscene | Pending | Use production avatar movement and the real doorway, with skip and reliable control/camera restoration. |
@@ -52,3 +52,26 @@ ongoing people-interaction and movement work.
 Current glass and coach evidence is in `data/reports/browser-glass-and-coach.json`.
 Smoke, evacuation, hydraulics, autopilot and dance remain unimplemented. Broader clothing and movement realism gaps remain
 open in `people-interaction-progress.md`.
+
+## Main integration — September 26
+
+Reconciled the browser delivery with main's graphics quality, loading progress,
+clear-view controls, tree LOD/shadows and shared-town features. Main contained
+committed conflict markers; those are resolved in the integration. Native files
+match the incoming main revision.
+
+AO now visits visible branches once per pass and prunes hidden rooms and excluded
+groups. This preserves immediate exclusion of newly loaded props and leaves
+hidden descendants untouched, replacing the older timed exclusion cache. Shared
+skeleton uploads still run once per composed frame.
+
+Carriage driving, its coachman and telekinesis currently run in solo play. Shared
+play retains server-owned travel, residents and wishes; these local actions stay
+disabled until their state has a server protocol. The development preview for
+this delivery runs with `VITE_MULTIPLAYER=off RIVER_OAKS_DEV_TOWN=off`.
+
+The integration passes 39 solo browser checks and 16 shared browser checks,
+including asynchronous asset loading, shared wishes, reload, movement and sign-out.
+See `data/reports/browser-main-integration.json`. A fully collapsed camera boom
+now retains the requested view direction, so the coachman stays selectable when
+a nearby tree blocks the third-person camera.

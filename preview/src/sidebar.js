@@ -36,7 +36,7 @@ export function setupSidebar() {
 
 // One task at a time. Secondary controls stay in labeled disclosures rather
 // than competing with the nearby people and destination actions.
-export function setupSidebarSections() {
+export function setupSidebarSections({ graphics = null } = {}) {
   const panel = document.querySelector('#control-panel');
   const people = panel.querySelector('#community-section');
   const places = panel.querySelector('#explore-section');
@@ -56,7 +56,7 @@ export function setupSidebarSections() {
   const appearance = panel.querySelector('.appearance-control');
   const voice = ['#community-voice', '#community-voice-status', '#community-life', '#community-life-status'];
   const voiceLabel = panel.querySelector('label[for="community-voice"]');
-  settings.append(heading, ...atmosphereChildren, appearance,
+  settings.append(heading, ...atmosphereChildren, appearance, ...(graphics ? [graphics] : []),
     createJevSettings(), disclosure('Voices & resident walks', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
   atmosphere.remove(); about.remove();
   const more = panel.querySelector('#community-more');

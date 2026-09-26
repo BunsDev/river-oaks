@@ -10,7 +10,7 @@ const position=target=>target.local
   ?[target.local.position[0],target.local.position[2]+(target.local.force?.height??0),-target.local.position[1]]
   :target.object.getWorldPosition(new THREE.Vector3()).toArray();
 
-export function createForceControls({host,walking,getTargets,getObstacles,getCarriage,onCast,onManual,onProjectileMove=()=>null}) {
+export function createForceControls({host,walking,getTargets,getObstacles,getCarriage,onCast,onManual,onProjectileMove=()=>null,isAvailable=()=>true}) {
   const panel=document.createElement('details');panel.className='force-controls';
   panel.innerHTML=`<summary><span>Force · telekinesis</span><span id="force-state" class="force-state">Off</span></summary>
     <button id="force-toggle" type="button" aria-pressed="false" aria-controls="force-actions"><span>Enable Force</span><kbd>T</kbd></button>
@@ -24,7 +24,7 @@ export function createForceControls({host,walking,getTargets,getObstacles,getCar
   const removers=[];
   const say=text=>{if($('status').textContent!==text)$('status').textContent=text;};
   const eligible=target=>{
-    const pose=walking.getPose();if(!environment||!pose||pose.riding||!visible(target.object))return false;
+    const pose=walking.getPose();if(!isAvailable()||!environment||!pose||pose.riding||!visible(target.object))return false;
     if(target.local?.abducted||target.local?.wish)return false;
     const p=position(target);
     if((target.local?target.local.storeId??null:environment.roomAt(p[0],p[2])?.id??null)!==pose.roomId)return false;
@@ -97,7 +97,7 @@ export function createForceControls({host,walking,getTargets,getObstacles,getCar
   });
   choice.addEventListener('change',paint);choice.addEventListener('blur',paint);
   const key=event=>{
-    if(event.repeat)return;
+    if(event.repeat||!isAvailable())return;
     const action=event.code==='KeyT'?toggle:enabled?({KeyG:lift,KeyR:push,KeyX:lower,Escape:lower})[event.code]:null;
     if(action){event.preventDefault();action();}
   };

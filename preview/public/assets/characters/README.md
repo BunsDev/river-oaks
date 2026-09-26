@@ -22,7 +22,7 @@ BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
 
 The fetcher verifies both archive hashes and bounds downloads/extraction. The builder uses an isolated extension repository, generates relaxed standing poses, reduces texture resolution, and exports self-contained GLBs. It does not save user Blender preferences. Source archives and the build environment remain ignored under `data/raw/characters/`.
 
-## Jevica and playable forms
+## Jevica
 
 `jevica.glb` is a separate hero asset built from the same CC0 system pack. It
 uses authored feminine face and shoulder proportions, adds one level of body subdivision,

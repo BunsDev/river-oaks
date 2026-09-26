@@ -30,11 +30,38 @@ export function matureTreePlacements(world) {
   }));
 }
 
+// Crowns switch detail at these distances (m). Near crowns layer three leaf
+// shells for density; farther ones need fewer, since their shells overlap in a
+// few pixels while each still costs a full alpha-tested overdraw pass.
+export const TREE_LOD_DISTANCES = [22, 60];
+export const TREE_LEAF_LAYERS = [3, 2, 2];
+export function treeDetailLevel(distance) {
+  return distance < TREE_LOD_DISTANCES[0] ? 0 : distance < TREE_LOD_DISTANCES[1] ? 1 : 2;
+}
+// Sun shadows come from mid-detail crowns drawn only into the shadow map: a
+// quarter of the triangles, soft enough at shadow-map resolution to match, and
+// every tree in the shadow frustum casts whatever its visible detail level.
+// Three builds the beauty render list before it renders shadows, so a proxy
+// shown as the light prepares its shadow and hidden after its own shadow draw
+// never reaches the beauty, AO or reflection passes.
+export function castShadowsFromProxies(light, proxies) {
+  const updateMatrices = light.shadow.updateMatrices.bind(light.shadow);
+  light.shadow.updateMatrices = (...args) => {
+    const result = updateMatrices(...args), frustum = light.shadow.getFrustum();
+    // Only proxies three will actually draw, so each one hides itself again.
+    for (const proxy of proxies()) proxy.visible = frustum.intersectsObject(proxy);
+    return result;
+  };
+  return { hide() { for (const proxy of proxies()) proxy.visible = false; } };
+}
+function hideAfterShadow() { this.visible = false; }
+
 // Dense authored tree models replace only the visual crowns at existing stems.
 // Terrain, navigation, source vegetation records and all street fixtures stay put.
 export function buildMatureTrees(world) {
   const group=new THREE.Group();group.name='Mature urban shade trees';
-  const placements=matureTreePlacements(world),levels=[];
+  const placements=matureTreePlacements(world),levels=[],shadowProxies=[];
+  group.userData.shadowProxies=shadowProxies;
   let disposed=false;
   group.userData.observedVoxels=world.vegetation?.voxels.length ?? 0;
   group.userData.treeCount=placements.length;
@@ -59,8 +86,8 @@ export function buildMatureTrees(world) {
     const dummy=new THREE.Object3D();
     for(const trees of tiles.values()) {
       const center=new THREE.Vector3();trees.forEach(tree=>center.add(new THREE.Vector3(...tree.position)));center.divideScalar(trees.length);
-      const batches=parts.map((level,index)=>level.map(part=>{
-        const copies=part.leafy?3:1;
+      const instance=(level,index,shadow)=>level.map(part=>{
+        const copies=part.leafy?TREE_LEAF_LAYERS[shadow?0:index]:1;
         const mesh=new THREE.InstancedMesh(part.geometry,part.material,trees.length*copies);
         trees.forEach((tree,i)=>{for(let layer=0;layer<copies;layer++){
           dummy.position.fromArray(tree.position);dummy.position.y-=bounds.min.y*tree.height/size.y;
@@ -69,15 +96,18 @@ export function buildMatureTrees(world) {
           dummy.rotation.set(0,tree.yaw+layer*1.618,0);dummy.updateMatrix();mesh.setMatrixAt(i*copies+layer,dummy.matrix);
           mesh.setColorAt(i*copies+layer,new THREE.Color().setHSL(0.22+(i%5)*0.003,0.07,0.86+(i%4)*0.025));
         }});
-        mesh.castShadow=index===0;mesh.receiveShadow=true;mesh.visible=index===0;
+        if(shadow){mesh.castShadow=true;mesh.receiveShadow=false;mesh.visible=false;mesh.onAfterShadow=hideAfterShadow;shadowProxies.push(mesh);}
+        else {mesh.castShadow=false;mesh.receiveShadow=true;mesh.visible=index===0;}
         if(part.leafy)mesh.userData.aoExclude=true;
         mesh.computeBoundingSphere();group.add(mesh);return mesh;
-      }));
+      });
+      const batches=parts.map((level,index)=>instance(level,index,false));
+      instance(parts[1],1,true);
       levels.push({center,batches});
     }
     const host=document.querySelector('#canvas-host');if(host)host.dataset.matureTrees=String(placements.length);
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
-  group.userData.update=position=>{for(const tile of levels){const distance=position.distanceTo(tile.center);const selected=distance<28?0:distance<75?1:2;tile.batches.forEach((meshes,index)=>meshes.forEach(mesh=>{mesh.visible=index===selected;}));}};
+  group.userData.update=position=>{for(const tile of levels){const selected=treeDetailLevel(position.distanceTo(tile.center));tile.batches.forEach((meshes,index)=>meshes.forEach(mesh=>{mesh.visible=index===selected;}));}};
   return group;
 }
 

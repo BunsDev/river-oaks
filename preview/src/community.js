@@ -61,8 +61,8 @@ function makeLocals(world) {
   });
 }
 
-export function createCommunity(world, rooms = []) {
-  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms), ...createCarriageEncounter(world)], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
+export function createCommunity(world, rooms = [], { carriage = true } = {}) {
+  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms), ...(carriage ? createCarriageEncounter(world) : [])], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }
@@ -162,7 +162,7 @@ export function stepCommunity(state, realDelta, economy) {
       if(state.physicalVisits) {
         const helper=state.locals.find(item=>item.id===job.helperId);
         if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.abducted || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
-        if(helper.wish || helper.wishDisruption) continue;
+        if(helper.wish || helper.wishDisruption || local.wish || local.wishDisruption) continue;
         if(helper.id===state.selectedId || ['pause','stop','redirect','seek_shelter'].includes(helper.life?.action)) continue;
       }
       job.progress = Math.min(job.duration, job.progress + workRate);

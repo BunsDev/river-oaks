@@ -173,3 +173,11 @@ output/playwright/
 .playwright-mcp/
 
 unreal/**/Content/Data/district.json
+
+# Private multiplayer moderation state and server credentials
+.runtime/
+.env
+.env.local
+.env.*
+!.env.example
+.vercel

@@ -1,0 +1,111 @@
+{
+  "recorded_at": "2026-09-22T13:43:12.012343+00:00",
+  "source_sha256": {
+    "unreal/Content/Python/import_residents.py": "eea60e0b27ace1d3704d5aa7c46d54e4a50445887f468ff288842afebf9c9dfe",
+    "unreal/Source/RiverOaks/Private/RiverSkeletalBackend.cpp": "495c388a73565ba88c96554d7cb59b90453bc2fa9a45bd33f12db872735deadf",
+    "unreal/Source/RiverOaks/Private/RiverProceduralAnimInstance.cpp": "8319b457afd8ecd25776f2475328b0a7190476cecf5fb25b923434ee669940cf",
+    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "57cc7291efc2a49f640c76d0cc92d4afc8edee5c89316bf03c599b84117e0aeb",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeEncounterTests.cpp": "d9015da56883469e6ab47cd0a824233f658920691c6dce10d0150c0f81ff68ec",
+    "unreal/Source/RiverOaks/Public/RiverSkeletalBackend.h": "7db157125510c3ae2e2ee67bdfb9a2c5dbd128d3c03437ff09e2876dacbb738c",
+    "unreal/Source/RiverOaks/Public/RiverOaksWorld.h": "001935eeffe953244f15ea5bc66395271dff2163da0b2488f33015f1b587b92e"
+  },
+  "import_version": 3,
+  "profiles": 6,
+  "builds": {
+    "Editor Development": "passed",
+    "Game Development": "passed"
+  },
+  "native_tests": {
+    "succeeded": 15,
+    "failed": 0,
+    "notRun": 0
+  },
+  "tests": [
+    {
+      "name": "RiverOaks.Contracts.Coordinates",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanBackendSelection",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanPoseSequence",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Locomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeConversationInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeEncounters",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.PortrayalRecipe",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ProceduralGait",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Safety",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ScheduleAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalBackend",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalConfiguration",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalLocomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.NativeAssets.Residents",
+      "state": "Success"
+    }
+  ],
+  "red": {
+    "report": "/tmp/river-native-facing-v3-red/index.json",
+    "failed": 1,
+    "cause": "Old v2 meshes and bones fail world-facing assertions at three headings"
+  },
+  "green_report": "/tmp/river-native-facing-v3-tests/index.json",
+  "runtime": {
+    "profile": "woman-casual",
+    "resident": "npc-0000",
+    "checks": [
+      "E opens greeting",
+      "Resident visibly turns toward visitor",
+      "E closes greeting",
+      "Reopening visibly faces visitor"
+    ],
+    "screenshot": "/tmp/river-native-facing-v3.png",
+    "screenshot_sha256": "2ad85b4e9e3e87e042d83a31ebaed67ba459d50f6619d188934a0c811abd9a21",
+    "log": "/tmp/river-native-facing-v3-runtime.log",
+    "exit_code": 0
+  },
+  "limits": [
+    "Rendered facing sampled one profile; all six have geometry and bone automation coverage",
+    "Eye geometry assertion tests transformed bind vertices, not final skinned rendering",
+    "Native poses and gait remain prototypes; foot IK, worker routines, full dialogue parity and hyper-realistic motion remain open",
+    "In-flight provider response timing during native encounters is not verified"
+  ]
+}

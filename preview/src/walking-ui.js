@@ -29,6 +29,12 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     if (thirdPerson) {
       const pose = thirdPersonPose({...state,position:transport?.pose.cameraTarget??state.position,cameraDistance:transport?10.4:4.2}, environment);
       const clearDistance=Math.hypot(...pose.position.map((v,i)=>v-pose.target[i]));
+      if(clearDistance<.05){
+        // A wall or tree can fully collapse the boom. Looking at the camera's
+        // own position loses the requested heading, so use the visitor's view.
+        cameraBoom.update(0,0);camera.position.fromArray(state.position);
+        camera.rotation.set(state.pitch,state.yaw,0,'YXZ');bodyVisible=false;return;
+      }
       const distance=cameraBoom.update(clearDistance,reducedMotion?0:delta);
       if(clearDistance>1e-6)pose.position=pose.position.map((v,i)=>pose.target[i]+(v-pose.target[i])*distance/clearDistance);
       camera.position.fromArray(pose.position);camera.lookAt(...pose.target);
@@ -150,6 +156,17 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.speed=0;place();host.focus({preventScroll:true});
     },
     get thirdPerson() { return thirdPerson; },
+    halt() { clear(); autoInput = null; },
+    applyServerPose(player) {
+      transport?.stop();transport=null;
+      if (!active || !state || !player) return;
+      clear(); autoInput = null;
+      state.position = [player.position[0], player.position[2] + 1.68 + player.altitude, -player.position[1]];
+      state.yaw = player.yaw; state.speed = 0;
+      flight = createFlightState();
+      if (player.altitude > 0) Object.assign(flight, { active: true, altitude: player.altitude, target: player.altitude });
+      place();
+    },
     toggleFlight() {
       if (!active || currentRoom() || transport) return false;
       onManual();autoInput=null;clear();

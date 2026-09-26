@@ -14,9 +14,9 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   const driver=createCarriageDriver({scene,getLocals,getConversation});
   let previousTime=null;
   let placement=null,loadedWorld=null,environment=null,network=null,mounted=false;
-  let unicorns=null,disposed=false;
-  loadUnicornAsset().then(asset=>{if(disposed)return;unicorns=createUnicornTeam({scene,coach:model.object,groundAt:(x,z)=>environment?.groundAt(x,z)??0,asset});document.querySelector('#canvas-host').dataset.unicornsReady='true';}).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
-  const removeObstacle=walking.addObstacle({contains:(...point)=>!mounted&&carriageContains(placement,...point)});
+  let unicorns=null,disposed=false,enabled=true;
+  loadUnicornAsset().then(asset=>{if(disposed)return;unicorns=createUnicornTeam({scene,coach:model.object,groundAt:(x,z)=>environment?.groundAt(x,z)??0,asset});unicorns.object.visible=enabled&&model.object.visible;document.querySelector('#canvas-host').dataset.unicornsReady='true';}).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
+  const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
   const apply=()=>{
     model.object.position.fromArray(placement.position);
     model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
@@ -40,7 +40,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     stop(){mounted=false;if(placement)placement.speed=0;},
   };
   const summon=()=>{
-    if(mounted)return false;
+    if(!enabled||mounted)return false;
     const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],scale,true);
     if(!next)return false;
     spinnerMotion.reset();unicorns?.reset();placement={...next,speed:0,distance:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
@@ -49,6 +49,14 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   };
   return {
     object:model.object,
+    setEnabled(value){
+      enabled=value;
+      if(!enabled){
+        if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}
+        placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;
+        if(unicorns)unicorns.object.visible=false;
+      }
+    },
     get driver(){return driver.object;},
     get unicorns(){return unicorns?.inspect()??[];},
     get placement(){return placement;},
@@ -74,7 +82,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     },
     board(){
       const pose=walking.getPose();
-      if(!placement||!pose||pose.flying||pose.roomId||(Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8&&!carriageContains(placement,pose.position[0],placement.position[1]+1,pose.position[2],3)))return false;
+      if(!enabled||!placement||!pose||pose.flying||pose.roomId||(Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8&&!carriageContains(placement,pose.position[0],placement.position[1]+1,pose.position[2],3)))return false;
       mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;
     },
     leave(){
@@ -85,6 +93,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     },
     summon,
     update(now=performance.now()){
+      if(!enabled){previousTime=now;return;}
       const delta=previousTime===null?0:Math.max(0,(now-previousTime)/1000);previousTime=now;
       if(placement){spinnerMotion.update(delta,placement.speed);apply();driver.update(model.object,now,walking.getPosition());unicorns?.update(now/1000,Math.min(delta,.08),placement.speed,placement.distance,driver.object);}
       const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
