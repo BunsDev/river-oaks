@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { terrainHeight } from './geometry.js';
+import { groundSurfaceHeight } from './world-surface.js';
+import { spatialInstanceBatches } from './spatial-instances.js';
 
 const loader = new GLTFLoader(), templates = new Map();
 function template(name) {
@@ -22,7 +23,7 @@ function materialFrom(source, foliage = false) {
 export function matureTreePlacements(world) {
   const supports=world.vegetation?.branch_supports;
   return (supports?.length?supports:(world.trees ?? []).map(tree=>({position:tree.position,height_m:tree.height_m,radius_m:tree.crown_radius_m}))).map((tree,index)=>({
-    position:[tree.position[0],terrainHeight(world.terrain,...tree.position),-tree.position[1]],
+    position:[tree.position[0],groundSurfaceHeight(world,tree.position[0],-tree.position[1]),-tree.position[1]],
     height:Math.max(7.5,Math.min(16,tree.height_m)),
     radius:Math.max(3.1,Math.min(5.2,tree.radius_m*1.3)),
     yaw:index*2.399963,
@@ -111,7 +112,10 @@ export function buildPlanterPlanting(planters) {
       for(let i=0;i<3;i++)place(hedges,index*3+i,planter,(i-1)*0.29,0,0,[0.48,0.48+(index%3)*0.025,0.57],i*Math.PI);
       for(let i=0;i<4;i++)place(grasses,index*4+i,planter,(i<2?-1:1)*0.57,(i%2?1:-1)*0.08,0,[0.56,0.73+(i%2)*0.16,0.56],i*2.4);
     });
-    for(const mesh of [hedges,grasses]){mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();mesh.userData.aoExclude=true;group.add(mesh);}
+    for(const mesh of [hedges,grasses]){
+      mesh.castShadow=mesh.receiveShadow=true;mesh.userData.aoExclude=true;
+      group.add(...spatialInstanceBatches(mesh));mesh.dispose();
+    }
     // Fine arching flower heads soften the clipped hedge silhouette.
     const curves=[];
     for(let i=0;i<7;i++) {

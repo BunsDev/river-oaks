@@ -1,3 +1,5 @@
+import { grantWish, undoWish, stepWishes } from './wishes.js';
+import { createWishPanel } from './wishes-ui.js';
 import { visitorGreeting } from './visitor-persona.js';
 import { nearbyPeople } from './nearby-people.js';
 import { COMMUNITY_SCENARIOS, createCommunity, stepCommunity, interactWithLocal, chooseCommunityScenario, snapshotForLocal, applyLocalReaction } from './community.js';
@@ -5,6 +7,7 @@ import './community.css';
 import './community-dialogue.css';
 import { supportAvailability } from './community-presentation.js';
 import { createLocalSpeech } from './speech.js';
+import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
 import { createResidentLife,stepResidentLife,residentPacket,applyResidentDecisions } from './resident-life.js';
 import { createNavigationService } from './navigation-service.js';
@@ -28,7 +31,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, onWish = () => {}, reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -48,14 +51,14 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const speech = createLocalSpeech(status => {
     text(voiceStatus, status);
     if (dialogueVoiceStatus) text(dialogueVoiceStatus, status);
-  });
+  }, {prepare:prepareSpeechAvatar});
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
   // People in the visitor's own space: the street, or the boutique they are standing in (same rule as the HUD).
   const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
-  const meetNearby = () => nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
+  const meetNearby = () => nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, Infinity).some(item => selectLocal(item.local.id));
   const chooserLabel = node('label', 'community-label', 'Meet a local');
   chooserLabel.htmlFor = 'community-local';
   const chooser = node('select', 'community-select');
@@ -205,7 +208,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const activities = node('details', 'community-activities');
   activities.id = 'community-activities';
   activities.append(node('summary', '', 'Community activities'), supportCard, mission);
-  body.append(conversation, activities, provenance);
+  const wishPanel = createWishPanel({
+    onGrant: kind => handleWish(kind), onUndo: () => handleWish(null), onSelect: id => selectLocal(id),
+  });
+  section.append(wishPanel.journal);
+  body.append(conversation, wishPanel.card, activities, provenance);
   const footer = node('footer', 'community-dialogue-footer');
   const next = button('Meet another neighbor →', 'community-next', 'community-next');
   footer.append(next);
@@ -233,7 +240,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const lifeMayRun=()=>life && (lifeEnabled || state.running && state.physicalVisits && state.jobs.some(job=>job.helperId));
   lifeToggle.addEventListener('click',()=>{lifeEnabled=!lifeEnabled;invalidateLife();paint();});
   const dispatchLife=async(now,weather)=>{
-    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor()});
+    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose()});
     if(!packet) return;
     const currentLife=life,epoch=lifeEpoch,controller=new AbortController();lifeRequest=controller;nextLifeRequest=now+2000;
     const current=()=>life===currentLife && epoch===lifeEpoch && lifeMayRun() && !document.hidden;
@@ -342,10 +349,13 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     text(outcome, state.result ?? mode);
     outcome.dataset.state = state.status;
     const local = state.locals.find((item) => item.id === state.selectedId);
+    wishPanel.update(state, local, getPersona());
     if (!local || dialogue.hidden) return;
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
     text(avatar, local.name.split(/\s+/).map(part => part[0]).slice(0, 2).join(''));
+    text(about, local.persona?.work ? 'About your work' : 'What brings you here?');
+    text(story, local.persona?.work ? 'A detail from your work' : 'A local perspective');
     for (const [topic, control] of [['about', about], ['district', district], ['story', story]]) {
       control.setAttribute('aria-disabled', String(Boolean(request)));
       control.setAttribute('aria-pressed', String(currentTopic === topic));
@@ -391,6 +401,19 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     text(kits, String(state.supplies)); text(visitBudget, String(state.helpBudget)); text(missionTime, time(remaining));
   };
 
+  const handleWish = kind => {
+    if (!state || dialogue.hidden) return { ok: false };
+    const local = state.locals.find(person => person.id === state.selectedId);
+    if (!local) return { ok: false };
+    invalidate();
+    const result = kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
+    if (result.ok) {
+      message = result.message; attribution = 'Jevica’s magic'; currentTopic = null;
+      onWish(); paint(); speech.speak(local, message);
+    }
+    return result;
+  };
+
   const selectLocal = (id) => {
     const local = state?.locals.find((item) => item.id === id);
     if (!local || local.abducted) return false;
@@ -405,7 +428,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     chooser.value = id;
     currentTopic = null;
     const reaction = visitorGreeting(local, getPersona()), greeting = conversationLine(local, 'greeting');
-    message = reaction ? `${reaction} ${greeting}` : greeting;
+    message = local.wish?.message ?? (reaction ? `${reaction} ${greeting}` : greeting);
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;
@@ -555,6 +578,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   return {
     get state() { return state; },
     get speakingId() { return speech.speakingId; },
+    updateSpeech: speech.update,
     selectLocal,
     meetNearby,
     autoInteract(id, action) {
@@ -588,8 +612,19 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       const weather=getWeather();
       const economy=getEconomy();
       stepCommunity(state, delta,{...economy,config:{...economy?.config,storm:weather.storm ?? economy?.config?.storm ?? false}});
+      const previousEvent = state.wishes.events.at(-1);
+      stepWishes(state, delta);
+      const wishEvent = state.wishes.events.at(-1);
+      if (wishEvent && wishEvent !== previousEvent) {
+        notify(wishEvent.message);
+        const selected = state.locals.find(person => person.id === state.selectedId);
+        if (selected?.wish && wishEvent.localId === selected.id) {
+          invalidate(); message = selected.wish.message; attribution = 'A wish gone sideways';
+          speech.speak(selected, message);
+        }
+      }
       const revision=life?.revision;
-      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),paused:!lifeEnabled});
+      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose(),obstacles:getObstacles(),paused:!lifeEnabled});
       if(life && revision!==life.revision) invalidateLife();
       if(lifeMayRun() && !lifeRequest && now>=nextLifeRequest) dispatchLife(now,weather);
       if (state.status !== previousStatus && terminal(state)) invalidate();

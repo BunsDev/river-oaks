@@ -1,0 +1,326 @@
+{
+  "createdAt": "2026-09-26T06:46:31.432165+00:00",
+  "scope": "Reuse bone transforms for browser Jevica gown contact sampling. No appearance or movement policy changes; no Unreal work.",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/jevica-drape.js": "e690d07548849720d2719b2e766b627510b53e758ee5b68fa6a1bfa3949aee1b",
+    "preview/src/skinned-vertex-sampler.js": "2d7783aa8ed9cc25a71b15ce85c39ec5ae2b1e731bbc9a827bae012daf65b3f5",
+    "preview/tests/skinned-vertex-sampler.test.js": "b409b2417687507b3909153ccaa2ae7c1cbc6b4c6021527ac92dceaf21c69b11",
+    "preview/e2e/gown-sampling.js": "855b3a5d9d09fdcac965a081e0c09e1d896f3820a061380aba178c9cae5a523a"
+  },
+  "pairedBrowser": {
+    "checks": [
+      "Run 1: all sampled gown vertices exactly match Three skinning",
+      "Run 1: eight rendered poses match the reference pixel hashes",
+      "Run 2: all sampled gown vertices exactly match Three skinning",
+      "Run 2: eight rendered poses match the reference pixel hashes",
+      "Run 3: all sampled gown vertices exactly match Three skinning",
+      "Run 3: eight rendered poses match the reference pixel hashes",
+      "Run 4: all sampled gown vertices exactly match Three skinning",
+      "Run 4: eight rendered poses match the reference pixel hashes",
+      "No uncaught browser errors"
+    ],
+    "runs": [
+      {
+        "mode": "reference",
+        "costumeUpdateMs": {
+          "median": 3.6999999284744263,
+          "p95": 4.099999904632568
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2310628472
+          },
+          {
+            "frame": 59,
+            "pixelHash": 1042021713
+          },
+          {
+            "frame": 89,
+            "pixelHash": 3082273496
+          },
+          {
+            "frame": 119,
+            "pixelHash": 55082076
+          },
+          {
+            "frame": 149,
+            "pixelHash": 3540770510
+          },
+          {
+            "frame": 179,
+            "pixelHash": 315738583
+          },
+          {
+            "frame": 209,
+            "pixelHash": 770510111
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1067574484
+          }
+        ]
+      },
+      {
+        "mode": "cached",
+        "costumeUpdateMs": {
+          "median": 2.299999952316284,
+          "p95": 2.600000023841858
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2310628472
+          },
+          {
+            "frame": 59,
+            "pixelHash": 1042021713
+          },
+          {
+            "frame": 89,
+            "pixelHash": 3082273496
+          },
+          {
+            "frame": 119,
+            "pixelHash": 55082076
+          },
+          {
+            "frame": 149,
+            "pixelHash": 3540770510
+          },
+          {
+            "frame": 179,
+            "pixelHash": 315738583
+          },
+          {
+            "frame": 209,
+            "pixelHash": 770510111
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1067574484
+          }
+        ]
+      },
+      {
+        "mode": "cached",
+        "costumeUpdateMs": {
+          "median": 2.200000047683716,
+          "p95": 2.5
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2310628472
+          },
+          {
+            "frame": 59,
+            "pixelHash": 1042021713
+          },
+          {
+            "frame": 89,
+            "pixelHash": 3082273496
+          },
+          {
+            "frame": 119,
+            "pixelHash": 55082076
+          },
+          {
+            "frame": 149,
+            "pixelHash": 3540770510
+          },
+          {
+            "frame": 179,
+            "pixelHash": 315738583
+          },
+          {
+            "frame": 209,
+            "pixelHash": 770510111
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1067574484
+          }
+        ]
+      },
+      {
+        "mode": "reference",
+        "costumeUpdateMs": {
+          "median": 3.600000023841858,
+          "p95": 4
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2310628472
+          },
+          {
+            "frame": 59,
+            "pixelHash": 1042021713
+          },
+          {
+            "frame": 89,
+            "pixelHash": 3082273496
+          },
+          {
+            "frame": 119,
+            "pixelHash": 55082076
+          },
+          {
+            "frame": 149,
+            "pixelHash": 3540770510
+          },
+          {
+            "frame": 179,
+            "pixelHash": 315738583
+          },
+          {
+            "frame": 209,
+            "pixelHash": 770510111
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1067574484
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Paired ABBA costume CPU timings and exact sampled geometry/pixel hashes; not district frame-rate acceptance"
+  },
+  "regressions": {
+    "jevica-gown": {
+      "checks": [],
+      "errors": [],
+      "rawLog": "/tmp/gown-regression-jevica-gown.log"
+    },
+    "casting-motion": {
+      "checks": [
+        "backpedal: actual Jevica rig reaches its foot targets",
+        "backpedal: support targets remain planted",
+        "backpedal: walking continues throughout the cast",
+        "strafe-left: actual Jevica rig reaches its foot targets",
+        "strafe-left: support targets remain planted",
+        "strafe-left: walking continues throughout the cast",
+        "strafe-right: actual Jevica rig reaches its foot targets",
+        "strafe-right: support targets remain planted",
+        "strafe-right: walking continues throughout the cast",
+        "No uncaught casting fixture errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/gown-regression-casting-motion.log"
+    },
+    "force": {
+      "checks": [
+        "T enables Force mode",
+        "A real pointer click targets the person in Force mode",
+        "Force picking does not open a conversation",
+        "G acquires the selected person",
+        "The rendered person rises, not just the state",
+        "Force hold suspends pedestrian navigation",
+        "Wand and person both emit lift sparkles",
+        "X gently lands and releases the person",
+        "Sparkles finish fading after landing",
+        "Released person resumes walking",
+        "A Force push displaces a person and lands them",
+        "An existing street bin can be targeted through normal travel",
+        "The complete bin rises with its lid",
+        "Pointer spell controls return focus to walking",
+        "Walking preserves the active lift",
+        "Jevica walks while holding a target",
+        "The lifted bin follows her movement",
+        "Both sparkle emitters remain active within the pool budget while carrying",
+        "Jevica keeps facing the carried object after backpedalling",
+        "R pushes a real object and it settles at its new position",
+        "Indoor stations lift in place without crossing work surfaces",
+        "A levitated worker pauses their task",
+        "Escape lowers the worker and their task resumes",
+        "Force mode can be disabled",
+        "No uncaught browser errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/gown-regression-force.log"
+    },
+    "carriage": {
+      "checks": [
+        "riding: both soles contact the actual transformed footboard",
+        "riding-slope: both soles contact the actual transformed footboard",
+        "Calling places a visible carriage near Jevica",
+        "All four parked tyres meet rendered paving",
+        "Flight cannot start while seated",
+        "A ridden carriage cannot be summoned elsewhere",
+        "Riding moves the real carriage and rider through the district",
+        "All four moving tyres follow the rendered road",
+        "Dismount preserves a clear third-person camera",
+        "Dismounted Jevica stands on the rendered pavement",
+        "Walking resumes after leaving the carriage",
+        "Takeoff is rejected while the bubble overlaps the parked coach",
+        "Boarding is unavailable in flight",
+        "No uncaught browser errors: "
+      ],
+      "errors": [],
+      "rawLog": "/tmp/gown-regression-carriage.log"
+    },
+    "ui-polish": {
+      "checks": [
+        "Arrow keys select Places and preserve tab focus",
+        "Places panel remains accessible",
+        "Keyboard selects Settings",
+        "Keyboard navigation does not wait on panel animation",
+        "Dark theme switches cleanly",
+        "Theme transition suppression clears",
+        "Conversation opens with a reachable close control",
+        "Conversation topics still produce dialogue",
+        "Wishes remain reachable in conversation",
+        "Conversation exit finishes without an invisible input blocker",
+        "Collapsed controls are inert",
+        "Closing the rail returns pointer play to the canvas",
+        "Rapid interrupted toggles settle in the requested state",
+        "Rail finishes its exit",
+        "Opening 1: focus works in the first animation frame",
+        "Opening 1: immediate keyboard navigation works",
+        "Opening 2: focus works in the first animation frame",
+        "Opening 2: immediate keyboard navigation works",
+        "Opening 3: focus works in the first animation frame",
+        "Opening 3: immediate keyboard navigation works",
+        "Opening 4: focus works in the first animation frame",
+        "Opening 4: immediate keyboard navigation works",
+        "Opening 5: focus works in the first animation frame",
+        "Opening 5: immediate keyboard navigation works",
+        "Pointer camera controls return focus to movement",
+        "Pointer press feedback reaches the shared restrained scale",
+        "Press feedback releases cleanly",
+        "Reduced motion removes UI transitions across the rail, spell controls and dialogue",
+        "Desktop UI has no horizontal overflow",
+        "No uncaught UI errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/gown-regression-ui-polish.log"
+    }
+  },
+  "clearance": {
+    "poses": 54,
+    "ratesHz": [
+      30,
+      60,
+      120
+    ],
+    "minimumLegMeters": 0.017815597753422785,
+    "minimumArmMeters": 0.028645524320514287
+  },
+  "validation": {
+    "javascriptTests": 395,
+    "browserAssertions": 88,
+    "unitLog": "/tmp/gown-sampling-unit.log",
+    "productionBuild": "pass",
+    "buildLog": "/tmp/gown-sampling-build.log",
+    "buildWarning": "Existing Three.js chunk exceeds 500 kB"
+  },
+  "limitations": [
+    "CPU fixture timings are not sustained district FPS or target-hardware acceptance.",
+    "Clearance covers sampled poses, not continuous cloth collision.",
+    "Broader facial acting, skin/material realism, physical cloth and frame pacing remain open."
+  ],
+  "devUrl": "http://127.0.0.1:5181/"
+}

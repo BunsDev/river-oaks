@@ -97,3 +97,33 @@ test('playback rejection and mute release audio resources and fence late media c
   assert.equal(speech.speakingId,null); assert.equal(status.at(-1),'Muted');
   assert.equal(media[1].onended,null); assert.equal(media[1].paused,true); assert.equal(revoked.length,2);
 });
+
+test('a superseded face preparation cannot attach itself or start late audio',async t=>{
+ const {timedWave}=await import('./helpers/timed-wave.js');
+ const saved={window:globalThis.window,document:globalThis.document};
+ t.after(()=>{for(const [key,value]of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}});
+ globalThis.window=new EventTarget();globalThis.document=new EventTarget();
+ t.mock.method(globalThis,'fetch',async()=>new Response(timedWave({version:1,duration:.1,phonemes:[{phoneme:'a',start:0,end:.1}]}),{headers:{'Content-Type':'audio/wav'}}));
+ let prepared,ready,attached=0;const reached=new Promise(r=>ready=r);
+ const speech=createLocalSpeech(()=>{},{prepare:()=>new Promise(resolve=>{prepared=resolve;ready();})});speech.setMode('kokoro');
+ const pending=speech.speak({id:'local-0'},'Hello');await reached;speech.setMode('off');prepared(()=>{attached++;});
+ assert.equal(await pending,false);assert.equal(attached,0);assert.equal(speech.speakingId,null);
+});
+
+test('facial playback follows the audio clock and releases on mute or hidden-page suspension',async t=>{
+ const {timedWave}=await import('./helpers/timed-wave.js');
+ const saved=Object.fromEntries(['window','document','Audio'].map(k=>[k,globalThis[k]]));t.after(()=>{for(const [key,value]of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}});
+ globalThis.window=new EventTarget();globalThis.document=new EventTarget();
+ let ready;const faces=[],media=[];
+ globalThis.Audio=class{constructor(){this.currentTime=.04;this.paused=true;media.push(this);ready?.();}play(){this.paused=false;return Promise.resolve();}pause(){this.paused=true;}};
+ t.mock.method(URL,'createObjectURL',()=>`blob:timed-${media.length}`);t.mock.method(URL,'revokeObjectURL',()=>{});
+ t.mock.method(globalThis,'fetch',async()=>new Response(timedWave({version:1,duration:.1,phonemes:[{phoneme:'ɑ',start:.01,end:.09}]}),{headers:{'Content-Type':'audio/wav'}}));
+ const speech=createLocalSpeech(()=>{},{prepare:async()=>cues=>{
+  assert.equal(cues[0].phoneme,'ɑ');const face={times:[],released:false,disposed:false,update(time){this.times.push(time);if(this.released){this.dispose();return false;}return true;},release(){this.released=true;},dispose(){this.disposed=true;}};faces.push(face);return face;
+ }});
+ speech.setMode('kokoro');const started=new Promise(r=>ready=r),pending=speech.speak({id:'local-0'},'Ah');await started;
+ speech.update(1/60);media[0].currentTime=.075;speech.update(1/30);assert.deepEqual(faces[0].times,[.04,.075]);
+ speech.setMode('off');assert.equal(faces[0].released,true);speech.update(1/60);assert.equal(faces[0].disposed,true);assert.equal(await pending,false);
+ const secondReady=new Promise(r=>ready=r);speech.setMode('kokoro');const second=speech.speak({id:'local-1'},'Ah');await secondReady;window.dispatchEvent(new Event('blur'));
+ assert.equal(await second,false);assert.equal(faces[1].disposed,true);assert.equal(speech.speakingId,null);assert.ok(media.every(m=>m.paused));
+});

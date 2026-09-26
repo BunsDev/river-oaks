@@ -1,5 +1,7 @@
 import { buildPlanterPlanting } from './landscape-models.js';
 import * as THREE from 'three';
+import { groundSurfaceHeight } from './world-surface.js';
+import { RETRO } from './retro-palette.js';
 import { localToScene, routeSegments, sampleRoute, terrainHeight } from './geometry.js';
 import { physicalSurface } from './materials.js';
 
@@ -63,10 +65,10 @@ export function laneFixtures(world, isFree = () => true) {
       const px = x - direction[1] * offset * side, pz = z + direction[0] * offset * side;
       if (!isFree(px, pz) || crossesAnotherLane(world, road, px, pz, 0.7) || distanceToRoad(road, px, pz) < road.width_m / 2 + 0.7) continue;
       const yaw = Math.atan2(direction[0], direction[1]);
-      lamps.push([px, terrainHeight(world.terrain, px, -pz), pz, yaw, side]);
+      lamps.push([px, groundSurfaceHeight(world, px, pz), pz, yaw, side]);
       const mid = sampleRoute(route, Math.min(route.length - 2, distance + LAMP_SPACING / 2));
       const qx = mid.position[0] + mid.direction[1] * offset * side, qz = mid.position[2] - mid.direction[0] * offset * side;
-      if (isFree(qx, qz) && !crossesAnotherLane(world, road, qx, qz, 0.7) && distanceToRoad(road, qx, qz) >= road.width_m / 2 + 0.7) (count % 3 === 2 ? bins : planters).push([qx, terrainHeight(world.terrain, qx, -qz), qz, Math.atan2(mid.direction[0], mid.direction[1])]);
+      if (isFree(qx, qz) && !crossesAnotherLane(world, road, qx, qz, 0.7) && distanceToRoad(road, qx, qz) >= road.width_m / 2 + 0.7) (count % 3 === 2 ? bins : planters).push([qx, groundSurfaceHeight(world, qx, qz), qz, Math.atan2(mid.direction[0], mid.direction[1])]);
     }
   });
   return { lamps, planters, bins };
@@ -74,8 +76,8 @@ export function laneFixtures(world, isFree = () => true) {
 
 export function treePits(world) {
   const pits = [];
-  for (const tree of world.trees ?? []) pits.push([tree.position[0], terrainHeight(world.terrain, tree.position[0], tree.position[1]), -tree.position[1], Math.min(1.4, Math.max(0.7, tree.crown_radius_m * 0.28))]);
-  for (const support of world.vegetation?.branch_supports ?? []) pits.push([support.position[0], terrainHeight(world.terrain, ...support.position), -support.position[1], Math.min(1.3, Math.max(0.65, support.radius_m * 0.32))]);
+  for (const tree of world.trees ?? []) pits.push([tree.position[0], groundSurfaceHeight(world,tree.position[0],-tree.position[1]), -tree.position[1], Math.min(1.4, Math.max(0.7, tree.crown_radius_m * 0.28))]);
+  for (const support of world.vegetation?.branch_supports ?? []) pits.push([support.position[0], groundSurfaceHeight(world,support.position[0],-support.position[1]), -support.position[1], Math.min(1.3, Math.max(0.65, support.radius_m * 0.32))]);
   return pits;
 }
 
@@ -95,12 +97,14 @@ export function hedgeClusters(width, depth, height, seed = 7) {
 export function buildStreetFurniture(world, isFree) {
   const group = new THREE.Group(); group.name = 'Street furniture';
   const box = new THREE.BoxGeometry(1, 1, 1), disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 20), post = new THREE.CylinderGeometry(0.5, 0.5, 1, 10);
-  const granite = new THREE.MeshStandardMaterial({ color: '#a19e98', roughness: 0.62 });
-  const bronze = new THREE.MeshStandardMaterial({ color: '#3b3f3d', roughness: 0.5, metalness: 0.65 });
-  const lampGlow = new THREE.MeshStandardMaterial({ color: '#fff4dc', emissive: '#ffe2b4', emissiveIntensity: 2.2, roughness: 0.4 });
-  const stoneCast = new THREE.MeshStandardMaterial({ color: '#c3bdb0', roughness: 0.85 });
+  const granite = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.62 });
+  const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.5, metalness: 0.65 });
+  const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
+  const stoneCast = new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: 0.85 });
   const mulch = new THREE.MeshStandardMaterial({ color: '#3a2d22', roughness: 1 });
   const grate = new THREE.MeshStandardMaterial({ color: '#4a4b48', roughness: 0.6, metalness: 0.55 });
+  const orbital = new THREE.TorusGeometry(.52,.023,6,40);orbital.rotateX(Math.PI/2);
+  const canopy = new THREE.SphereGeometry(1,20,10),brass=new THREE.MeshStandardMaterial({color:RETRO.brass,metalness:.8,roughness:.28});
   const batches = new Map(), dummy = new THREE.Object3D();
   const add = (geometry, material, position, scale, yaw = 0, color = null) => {
     const key = `${geometry.uuid}:${material.uuid}`;
@@ -112,27 +116,37 @@ export function buildStreetFurniture(world, isFree) {
   for (const [x, y, z, yaw, side] of lamps) {
     add(post, bronze, [x, y + 0.12, z], [0.34, 0.24, 0.34], yaw);
     add(post, bronze, [x, y + 2.6, z], [0.11, 4.9, 0.11], yaw);
-    // The luminaire cantilevers back over the lane it lights.
-    const ax = x + Math.cos(yaw) * side * 0.55, az = z - Math.sin(yaw) * side * 0.55;
-    add(box, bronze, [ax, y + 4.95, az], [1.1, 0.05, 0.05], yaw);
-    add(box, bronze, [ax * 2 - x, y + 4.82, az * 2 - z], [0.34, 0.16, 0.5], yaw);
-    add(box, lampGlow, [ax * 2 - x, y + 4.73, az * 2 - z], [0.28, 0.02, 0.42], yaw);
+    // An opal globe and a shallow ceramic disc recall mid-century orbital lamps.
+    add(canopy,stoneCast,[x,y+5.08,z],[.61,.11,.61],yaw);
+    add(canopy,lampGlow,[x,y+4.93,z],[.28,.19,.28],yaw);
+    add(orbital,brass,[x,y+5.02,z],[1.12,1,1.12],yaw);
+    add(post,brass,[x,y+4.7,z],[.15,.065,.15],yaw);
   }
   for (const [x, y, z, yaw] of planters) {
+    add(box,bronze,[x,y+.06,z],[1.38,.12,.5],yaw);
     add(box, stoneCast, [x, y + 0.36, z], [1.5, 0.5, 0.62], yaw);
+    add(box,bronze,[x,y+.18,z],[1.52,.055,.64],yaw);
+    add(box,brass,[x,y+.59,z],[1.52,.025,.64],yaw);
   }
   group.add(buildPlanterPlanting(planters));
-  for (const [x, y, z, yaw] of bins) {
-    add(post, bronze, [x, y + 0.48, z], [0.5, 0.95, 0.5], yaw);
-    add(post, grate, [x, y + 0.98, z], [0.54, 0.05, 0.54], yaw);
+  group.userData.forceObjects=[];
+  group.userData.forceObstacles=[...planters.map(([x,y,z])=>({x,z,radius:.86})),...lamps.map(([x,y,z])=>({x,z,radius:.2}))];
+  for (const [index,[x, y, z, yaw]] of bins.entries()) {
+    const bin=new THREE.Group();bin.name='Street bin';bin.position.set(x,y,z);bin.rotation.y=yaw;
+    for(const [material,height,width,depth]of [[bronze,.48,.5,.95],[grate,.98,.54,.05]]) {
+      const mesh=new THREE.Mesh(post,material);mesh.position.y=height;mesh.scale.set(width,depth,width);mesh.castShadow=mesh.receiveShadow=true;bin.add(mesh);
+    }
+    bin.userData.forceBody={id:`street-bin-${index}`,name:'Street bin',mass:18,radius:.28,height:1.01};
+    group.add(bin);group.userData.forceObjects.push(bin);
   }
   for (const [x, y, z, radius] of treePits(world)) {
-    add(disc, grate, [x, y + 0.16, z], [radius * 2 + 0.3, 0.02, radius * 2 + 0.3]);
-    add(disc, mulch, [x, y + 0.165, z], [radius * 2, 0.03, radius * 2]);
+    add(disc, grate, [x, y + 0.006, z], [radius * 2 + 0.3, 0.02, radius * 2 + 0.3]);
+    add(disc, mulch, [x, y + 0.012, z], [radius * 2, 0.03, radius * 2]);
   }
   for (const { geometry, material, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     parts.forEach((p, i) => { dummy.position.fromArray(p.position); dummy.scale.fromArray(p.scale); dummy.rotation.set(0, p.yaw, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix); if (p.color) mesh.setColorAt(i, p.color); });
+    mesh.userData.supportSurface=material===granite;
     mesh.castShadow = material !== mulch && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
   }
   group.userData.counts = { kerbs: kerbStrips(world).length, lamps: lamps.length, planters: planters.length, bins: bins.length, pits: treePits(world).length };

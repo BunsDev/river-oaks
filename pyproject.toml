@@ -23,7 +23,7 @@ river-oaks = "river_oaks.cli:main"
 
 [project.optional-dependencies]
 voice = [
-    "kokoro-onnx==0.4.9",
+    "kokoro-onnx==0.6.1",
 ]
 assets = [
     "pillow==11.3.0",
@@ -47,4 +47,3 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-

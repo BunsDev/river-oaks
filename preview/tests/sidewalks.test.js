@@ -18,7 +18,8 @@ test('district residents start on legal pedestrian surfaces without changing map
   const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),before=JSON.stringify(data);
   data.vegetation=JSON.parse(readFileSync(new URL('../public/data/district-vegetation.json',import.meta.url)));
   const community=createCommunity(data),life=createResidentLife(data,community);
-  for(const resident of community.locals)assert.notEqual(life.navigation.pedestrian.classify(resident.position),'road',resident.id);
+  const pedestrians=community.locals.filter(local=>!local.stationary);assert.equal(pedestrians.length,24);
+  for(const resident of pedestrians)assert.notEqual(life.navigation.pedestrian.classify(resident.position),'road',resident.id);
   delete data.vegetation;assert.equal(JSON.stringify(data),before);
 });
 

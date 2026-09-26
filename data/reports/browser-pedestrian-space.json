@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-25",
+  "scope": "Room and height aware pedestrian avoidance",
+  "before": "Three movement/context regressions failed: overhead visitors deflected walkers, indoor/elevated residents obstructed the street, and resident packets included phantom ground obstacles.",
+  "behavior": [
+    "Use room and foot-height overlap in passing, collision clearance, occupied arrivals and nearby pedestrian context.",
+    "Low hovering retains personal-space clearance.",
+    "Rendering and avoidance share the wish flight lift calculation.",
+    "Narrative wish disruptions and explicit conversation holds are preserved."
+  ],
+  "focusedTests": 40,
+  "unitTests": 316,
+  "unitFailures": 0,
+  "build": "passed; existing large Three.js chunk advisory",
+  "browser": {
+    "checks": [
+      "Ground-level Jevica remains a nearby pedestrian",
+      "Jevica overhead is excluded from ground avoidance context",
+      "Flight uses Jevica\u2019s bubble",
+      "Landing restores Jevica to pedestrian avoidance context",
+      "Jevica inside a shop is excluded from street avoidance context",
+      "Indoor conversations still select a person in this room",
+      "No uncaught browser errors: "
+    ],
+    "counts": {
+      "ground": 2,
+      "flight": 0,
+      "landed": 2,
+      "indoor": 0
+    },
+    "errors": [],
+    "scope": "Actual controls and outgoing resident packets. Simulation state and network replies are not replaced."
+  },
+  "screenshots": [
+    "output/playwright/pedestrian-space-flight.png"
+  ],
+  "remaining": [
+    "Talking reach still treats an elevated wish recipient as grounded; airborne conversations need a separate interaction pass."
+  ],
+  "sha256": {
+    "preview/src/resident-life.js": "fe21fe1059d94e38364a1b28acf5ea4686003aea217376468a47790ed77228e8",
+    "preview/src/community-ui.js": "03159f4b55bac03307e527ec11f70204c02287a3685a2d5621a9a7aa5e2a4a32",
+    "preview/src/main.js": "0baf98f64741fabace0f1437ddc1b338ec27c44f20281227456a24318bf6cb21",
+    "preview/src/wishes.js": "ee4c9ef666735cecc78bc106eb6a2a4ac0a854bd9d225f3c83fae0917103dd2d",
+    "preview/src/wish-effects.js": "d5ba9a10855a5290d1bff47769da6069e299d95fa7650dab71ffdc34bee04e5a",
+    "preview/tests/resident-life.test.js": "441d2ccce07ceef17c38b96233493a7f87d26fff71a7e86e65b3438c2ee4a779",
+    "preview/e2e/pedestrian-space.js": "1d6d9c140f906603af9726830d1d722a15c48334e4b7e8dcebecbb9708bcd398"
+  }
+}

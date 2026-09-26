@@ -1,0 +1,931 @@
+{
+  "createdAt": "2026-09-26T03:36:00.960285+00:00",
+  "scope": "Browser conversational head motion for outdoor residents and indoor workers and guests, driven by conversation attention and audio playback.",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/conversation-motion.js": "c5f19d1c48cf0a1bb8a744e101e9cdaa9f6f6f20cda56f460caba1f5b0154cbc",
+    "preview/src/avatars.js": "cd815838bc81596432a86879eccb5c4253954836bfdfe2f6e08036ebf93ad92a",
+    "preview/src/store-people.js": "607840d8818ff552958719d8767a130e066fa9d8f2c7784736772d26934a29de",
+    "preview/src/main.js": "263e320c9728dd03a59d7f9644f56fddbc19dae96163a1f214ddcfb55a6596a5",
+    "preview/tests/conversation-motion.test.js": "2c60f2ebaf90309cd7c02765e4e4d70179c402de8011acc7b6179e51978d546d",
+    "preview/e2e/conversation-motion.js": "b47049449577b444ca6767392396fbbe1da0a33cbb1c353b56a6c1524575e6e7",
+    "preview/e2e/conversation-speech.js": "abfea4b1b3c8f47f181bfd7824e083c3a9f2892959083c5b03d4454c21fd5e9f",
+    "preview/e2e/conversation-portraits.js": "d8eaa58fb91cd1ceeba9ccf1b75d36300ee6e9349f157e0f12eca667b118e25c"
+  },
+  "implementation": [
+    "Replace continuous head oscillation with short identity-seeded nods, slight lateral tilt and quiet intervals.",
+    "Subtler, less frequent listening responses; damped speech, listening and neutral transitions.",
+    "Pass actual community speaking identity into the indoor people renderer.",
+    "Retain support solvers and worker task ownership. Freeze optional nods for reduced motion and suspend their clock while culled."
+  ],
+  "unitTests": {
+    "command": "npm test",
+    "passed": 360,
+    "failed": 0,
+    "summary": "\u2139 tests 360\n\u2139 suites 0\n\u2139 pass 360\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 43188.4315\n"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js chunk exceeds the 500 kB warning threshold."
+  },
+  "rigAcceptance": {
+    "checks": [
+      "woman-casual: speech has nods and quiet intervals",
+      "woman-casual: continuous head motion with planted feet",
+      "man-casual: speech has nods and quiet intervals",
+      "man-casual: continuous head motion with planted feet",
+      "woman-tailored: speech has nods and quiet intervals",
+      "woman-tailored: continuous head motion with planted feet",
+      "man-tailored: speech has nods and quiet intervals",
+      "man-tailored: continuous head motion with planted feet",
+      "woman-daywear: speech has nods and quiet intervals",
+      "woman-daywear: continuous head motion with planted feet",
+      "man-workwear: speech has nods and quiet intervals",
+      "man-workwear: continuous head motion with planted feet",
+      "jevica: speech has nods and quiet intervals",
+      "jevica: continuous head motion with planted feet",
+      "fabric: staff receive speaking motion",
+      "fabric: speech preserves support and paused work",
+      "jewelry: staff receive speaking motion",
+      "jewelry: speech preserves support and paused work",
+      "seated: staff receive speaking motion",
+      "seated: speech preserves support and paused work",
+      "tray: staff receive speaking motion",
+      "tray: speech preserves support and paused work",
+      "blotter: staff receive speaking motion",
+      "blotter: speech preserves support and paused work",
+      "tablet: staff receive speaking motion",
+      "tablet: speech preserves support and paused work",
+      "eyewear: staff receive speaking motion",
+      "eyewear: speech preserves support and paused work",
+      "samples: staff receive speaking motion",
+      "samples: speech preserves support and paused work",
+      "No uncaught conversation motion errors"
+    ],
+    "outdoor": [
+      {
+        "profile": "woman-casual",
+        "maxStep": 0.00381592394647327,
+        "maxFootDrift": 0,
+        "peak": 0.04965159124196244,
+        "quietFraction": 0.6472222222222223
+      },
+      {
+        "profile": "man-casual",
+        "maxStep": 0.003748858009866043,
+        "maxFootDrift": 0,
+        "peak": 0.051540201769723286,
+        "quietFraction": 0.6569444444444444
+      },
+      {
+        "profile": "woman-tailored",
+        "maxStep": 0.0029895892059788624,
+        "maxFootDrift": 0,
+        "peak": 0.041599710547904234,
+        "quietFraction": 0.6430555555555556
+      },
+      {
+        "profile": "man-tailored",
+        "maxStep": 0.0035276858018949086,
+        "maxFootDrift": 0,
+        "peak": 0.05192078795339237,
+        "quietFraction": 0.6555555555555556
+      },
+      {
+        "profile": "woman-daywear",
+        "maxStep": 0.0033769602171203287,
+        "maxFootDrift": 0,
+        "peak": 0.041773336595559755,
+        "quietFraction": 0.6291666666666667
+      },
+      {
+        "profile": "man-workwear",
+        "maxStep": 0.0032416545939826825,
+        "maxFootDrift": 0,
+        "peak": 0.05287689467039777,
+        "quietFraction": 0.6458333333333334
+      },
+      {
+        "profile": "jevica",
+        "maxStep": 0.0034655592172882182,
+        "maxFootDrift": 0,
+        "peak": 0.04849327083920641,
+        "quietFraction": 0.6208333333333333
+      }
+    ],
+    "stations": [
+      {
+        "id": "store-osm-node-8172494989-person-2",
+        "kind": "fabric",
+        "maxFootDrift": 0,
+        "maxStep": 0.006768747674916669,
+        "maxContactError": 6.832344486161304e-08,
+        "peak": 0.047209895138536274,
+        "quietFraction": 0.5875,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172495000-person-0",
+        "kind": "jewelry",
+        "maxFootDrift": 0,
+        "maxStep": 0.006235588828179424,
+        "maxContactError": 6.475422390633668e-08,
+        "peak": 0.0463280128710941,
+        "quietFraction": 0.6,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172494957-person-4",
+        "kind": "seated",
+        "maxFootDrift": 0,
+        "maxStep": 0.006951483965409392,
+        "maxContactError": 0,
+        "peak": 0.04771426966761763,
+        "quietFraction": 0.6583333333333333,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172494955-person-7",
+        "kind": "tray",
+        "maxFootDrift": 0,
+        "maxStep": 0.007189723638759185,
+        "maxContactError": 6.748135774652e-08,
+        "peak": 0.048384680410998,
+        "quietFraction": 0.6458333333333334,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172494963-person-0",
+        "kind": "blotter",
+        "maxFootDrift": 0,
+        "maxStep": 0.00716397151695068,
+        "maxContactError": 3.9555737527599246e-08,
+        "peak": 0.05021152414515669,
+        "quietFraction": 0.6666666666666666,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172494977-person-0",
+        "kind": "tablet",
+        "maxFootDrift": 0,
+        "maxStep": 0.004961006226017166,
+        "maxContactError": 2.802936915636353e-08,
+        "peak": 0.039566647708178006,
+        "quietFraction": 0.65,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172494979-person-0",
+        "kind": "eyewear",
+        "maxFootDrift": 0,
+        "maxStep": 0.0077490297782773915,
+        "maxContactError": 5.6461161554055196e-08,
+        "peak": 0.048991377758622556,
+        "quietFraction": 0.6666666666666666,
+        "workClockDrift": 0
+      },
+      {
+        "id": "store-osm-node-8172495006-person-0",
+        "kind": "samples",
+        "maxFootDrift": 0,
+        "maxStep": 0.007226364538643474,
+        "maxContactError": 1.599127151601956e-07,
+        "peak": 0.04921766661768606,
+        "quietFraction": 0.6583333333333333,
+        "workClockDrift": 0
+      }
+    ],
+    "errors": [],
+    "scope": "Actual production rigs and station tasks, including seated people. Authored procedural head motion; no facial animation or phoneme alignment."
+  },
+  "browser": {
+    "conversation-speech": {
+      "seconds": 44.04,
+      "result": {
+        "checks": [
+          "local-00: audio playback drives varied speech nods",
+          "local-00: mute returns to restrained listening motion",
+          "local-00: closing clears active speech",
+          "store-osm-node-8172494955-person-7: audio playback drives varied speech nods",
+          "store-osm-node-8172494955-person-7: mute returns to restrained listening motion",
+          "store-osm-node-8172494955-person-7: closing clears active speech",
+          "Reduced motion keeps optional nods still during playback",
+          "Close cancels active playback",
+          "Actual UI requested each controlled audio response",
+          "No uncaught speech interaction errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "speaking": {
+              "peak": 0.03393834668598427,
+              "minimum": 3.1876959352785105e-15,
+              "speaking": true,
+              "frames": 308
+            },
+            "listening": {
+              "peak": 0.019573702189427788,
+              "minimum": 1.9203965627344195e-24,
+              "speaking": false,
+              "frames": 210
+            }
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "speaking": {
+              "peak": 0.048439016335583535,
+              "minimum": 1.546101541227735e-10,
+              "speaking": true,
+              "frames": 310
+            },
+            "listening": {
+              "peak": 0.01871091268589567,
+              "minimum": 2.4159122551839347e-23,
+              "speaking": false,
+              "frames": 216
+            }
+          }
+        ],
+        "reduced": {
+          "peak": 0,
+          "minimum": 0,
+          "speaking": true,
+          "frames": 125
+        },
+        "voiceRequests": 3,
+        "errors": [],
+        "scope": "District UI and real HTMLAudio playback using a deterministic silent WAV response. This verifies speaking-state wiring, not synthesis quality or lip synchronization."
+      }
+    },
+    "conversation-portraits": {
+      "seconds": 2.04,
+      "result": {
+        "images": [
+          {
+            "rig": 0,
+            "poses": [
+              {
+                "label": "Rest",
+                "pitch": 0,
+                "roll": 0
+              },
+              {
+                "label": "Speaking nod",
+                "pitch": 0.03514207772849119,
+                "roll": -0.010202782006519018
+              },
+              {
+                "label": "Pause",
+                "pitch": 0.000975980122870835,
+                "roll": -0.00028335582526680325
+              }
+            ],
+            "path": "output/playwright/conversation-portraits-0.png"
+          },
+          {
+            "rig": 5,
+            "poses": [
+              {
+                "label": "Rest",
+                "pitch": 0,
+                "roll": 0
+              },
+              {
+                "label": "Speaking nod",
+                "pitch": 0.035002238180390624,
+                "roll": -0.00012526489151293768
+              },
+              {
+                "label": "Pause",
+                "pitch": 0.0008983168332474802,
+                "roll": -3.2148675773548966e-06
+              }
+            ],
+            "path": "output/playwright/conversation-portraits-5.png"
+          }
+        ]
+      }
+    },
+    "conversation-gaze": {
+      "seconds": 4.15,
+      "result": {
+        "stations": [
+          {
+            "id": "store-osm-node-8172494989-person-3",
+            "task": "fabric",
+            "seated": false,
+            "samples": [
+              -0.29387423469416785,
+              0.4793162739379226
+            ],
+            "maxStep": 0.03821287618855995,
+            "maxFootDrift": 0,
+            "maxContactError": 6.224140600237157e-08
+          },
+          {
+            "id": "store-osm-node-8172494989-person-2",
+            "task": "fabric",
+            "seated": false,
+            "samples": [
+              -0.2937501351295534,
+              0.4788973168066213
+            ],
+            "maxStep": 0.03821632890700915,
+            "maxFootDrift": 0,
+            "maxContactError": 8.817237249734157e-08
+          },
+          {
+            "id": "store-osm-node-8172494989-person-4",
+            "task": null,
+            "seated": false,
+            "samples": [
+              -0.2917947084491634,
+              0.46700665226246724
+            ],
+            "maxStep": 0.03750409902763613,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          },
+          {
+            "id": "store-osm-node-8172494989-person-6",
+            "task": null,
+            "seated": false,
+            "samples": [
+              -0.29186308968077673,
+              0.46672241421366223
+            ],
+            "maxStep": 0.03748532831851647,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          },
+          {
+            "id": "store-osm-node-8172494989-person-5",
+            "task": null,
+            "seated": false,
+            "samples": [
+              -0.2900525867232522,
+              0.4692860919318237
+            ],
+            "maxStep": 0.03754565264760681,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          },
+          {
+            "id": "store-osm-node-8172495006-person-4",
+            "task": null,
+            "seated": false,
+            "samples": [
+              -0.2899283239724182,
+              0.46879988506445996
+            ],
+            "maxStep": 0.037533309221163096,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          },
+          {
+            "id": "store-osm-node-8172495000-person-1",
+            "task": "jewelry",
+            "seated": false,
+            "samples": [
+              -0.29387424679686974,
+              0.47931627563166584
+            ],
+            "maxStep": 0.0382129764002864,
+            "maxFootDrift": 0,
+            "maxContactError": 9.460420498809481e-08
+          },
+          {
+            "id": "store-osm-node-8172494963-person-1",
+            "task": "blotter",
+            "seated": false,
+            "samples": [
+              -0.2938742346674069,
+              0.4793162739759043
+            ],
+            "maxStep": 0.03821287841945709,
+            "maxFootDrift": 0,
+            "maxContactError": 4.7985461205261534e-08
+          },
+          {
+            "id": "store-osm-node-8172494979-person-1",
+            "task": "eyewear",
+            "seated": false,
+            "samples": [
+              -0.29388593845245675,
+              0.47945569395313953
+            ],
+            "maxStep": 0.038210188222002436,
+            "maxFootDrift": 0,
+            "maxContactError": 8.017562795668525e-08
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "task": "tray",
+            "seated": false,
+            "samples": [
+              -0.29374297568298524,
+              0.47882808888717904
+            ],
+            "maxStep": 0.03821771682869577,
+            "maxFootDrift": 0,
+            "maxContactError": 7.551539761769447e-08
+          },
+          {
+            "id": "store-osm-node-8172494977-person-0",
+            "task": "tablet",
+            "seated": false,
+            "samples": [
+              -0.2937644240231803,
+              0.4790359018649676
+            ],
+            "maxStep": 0.03821376628197063,
+            "maxFootDrift": 0,
+            "maxContactError": 7.379157534498299e-08
+          },
+          {
+            "id": "store-osm-node-8172495006-person-0",
+            "task": "samples",
+            "seated": false,
+            "samples": [
+              -0.29368770405320443,
+              0.47893433950355613
+            ],
+            "maxStep": 0.03821194414343661,
+            "maxFootDrift": 0,
+            "maxContactError": 1.3638341437028456e-07
+          },
+          {
+            "id": "store-osm-node-8172494957-person-2",
+            "task": null,
+            "seated": true,
+            "samples": [
+              -0.29270076646890747,
+              0.4736224593979046
+            ],
+            "maxStep": 0.037854503016670905,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          },
+          {
+            "id": "store-osm-node-8172494955-person-4",
+            "task": null,
+            "seated": true,
+            "samples": [
+              -0.292700766551874,
+              0.47362245928012797
+            ],
+            "maxStep": 0.03785449589223542,
+            "maxFootDrift": 0,
+            "maxContactError": 0
+          }
+        ],
+        "outdoor": [
+          {
+            "profile": "woman-casual",
+            "samples": [
+              -0.3153484283926747,
+              0.4677574918475133
+            ],
+            "maxStep": 0.03799301409249073,
+            "maxFootDrift": 0
+          },
+          {
+            "profile": "man-casual",
+            "samples": [
+              -0.30870034786576056,
+              0.46084610839798956
+            ],
+            "maxStep": 0.03796339679300824,
+            "maxFootDrift": 0
+          },
+          {
+            "profile": "woman-tailored",
+            "samples": [
+              -0.30959042246215357,
+              0.4561866985645657
+            ],
+            "maxStep": 0.03816268797596887,
+            "maxFootDrift": 0
+          },
+          {
+            "profile": "man-tailored",
+            "samples": [
+              -0.31690896688363757,
+              0.4622852990337925
+            ],
+            "maxStep": 0.03830898242889418,
+            "maxFootDrift": 0
+          },
+          {
+            "profile": "woman-daywear",
+            "samples": [
+              -0.32065827018652343,
+              0.46823193028048066
+            ],
+            "maxStep": 0.03820497565207253,
+            "maxFootDrift": 0
+          },
+          {
+            "profile": "man-workwear",
+            "samples": [
+              -0.3154168069589219,
+              0.4677953290122749
+            ],
+            "maxStep": 0.03799451843443518,
+            "maxFootDrift": 0
+          }
+        ],
+        "errors": [],
+        "scope": "Rendered production rigs with measured head orientation, per-frame continuity and support stability; controlled fixture targets."
+      }
+    },
+    "npc-presence": {
+      "seconds": 33.1,
+      "result": {
+        "checks": [
+          "local-00: pedestrian resumes while Jevica stays still",
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: pedestrian resumes while Jevica stays still",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: pedestrian resumes while Jevica stays still",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: pedestrian resumes while Jevica stays still",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: pedestrian resumes while Jevica stays still",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: pedestrian resumes while Jevica stays still",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "At least one route resumes inside the former visitor freeze radius",
+          "No floating NPC reaction captions",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 1.0499121377560614,
+            "screen": [
+              900.1132219080534,
+              401.6668354615165
+            ],
+            "position": [
+              -2813.2939598048456,
+              -1273.8080972542066,
+              18.369492685447558
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 1.0890893044826049,
+            "screen": [
+              741.5765869884852,
+              422.41195735790103
+            ],
+            "position": [
+              -2808.356021254116,
+              -1229.7191755696103,
+              18.446307207516607
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.8931021584294394,
+            "screen": [
+              755.1437271935829,
+              392.58218426490856
+            ],
+            "position": [
+              -2805.3064485143186,
+              -1200.6273278400483,
+              18.405569063182703
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 1.0456452398065887,
+            "screen": [
+              816.0871086270154,
+              409.6497731792288
+            ],
+            "position": [
+              -2773.8665220772727,
+              -1293.7246340298614,
+              18.471816470663917
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.9561581263904834,
+            "screen": [
+              795.0315815853338,
+              420.7011547699065
+            ],
+            "position": [
+              -2769.687081721229,
+              -1239.9112456710156,
+              18.384057468379066
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.29212760750439043,
+            "screen": [
+              715.5067189950176,
+              470.05273246436826
+            ],
+            "position": [
+              -2770.369790832617,
+              -1241.5915510223329,
+              18.395470326479646
+            ]
+          }
+        ],
+        "releaseDistances": [
+          3.2000000000001387,
+          2.5000000000000644,
+          2.4999999999999982,
+          2.5000000000000338,
+          2.499999999999952,
+          1.1167445488148995
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+      }
+    },
+    "force": {
+      "seconds": 28.6,
+      "result": {
+        "checks": [
+          "T enables Force mode",
+          "A real pointer click targets the person in Force mode",
+          "Force picking does not open a conversation",
+          "G acquires the selected person",
+          "The rendered person rises, not just the state",
+          "Force hold suspends pedestrian navigation",
+          "Wand and person both emit lift sparkles",
+          "X gently lands and releases the person",
+          "Sparkles finish fading after landing",
+          "Released person resumes walking",
+          "A Force push displaces a person and lands them",
+          "An existing street bin can be targeted through normal travel",
+          "The complete bin rises with its lid",
+          "Pointer spell controls return focus to walking",
+          "Walking preserves the active lift",
+          "Jevica walks while holding a target",
+          "The lifted bin follows her movement",
+          "Both sparkle emitters remain active within the pool budget while carrying",
+          "Jevica keeps facing the carried object after backpedalling",
+          "R pushes a real object and it settles at its new position",
+          "Indoor stations lift in place without crossing work surfaces",
+          "A levitated worker pauses their task",
+          "Escape lowers the worker and their task resumes",
+          "Force mode can be disabled",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "initial": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.266562843013,
+              18.37008702356612,
+              1273.7416425583722
+            ],
+            "renderedPosition": [
+              -2813.266562843013,
+              18.37008702356612,
+              1273.7416425583722
+            ],
+            "eligible": true
+          },
+          "held": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.2379442130446,
+              19.401743198915742,
+              1273.62553472082
+            ],
+            "renderedPosition": [
+              -2813.2379442130446,
+              19.401743198915742,
+              1273.62553472082
+            ],
+            "eligible": true
+          }
+        },
+        "bin": {
+          "initial": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "raised": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              19.50130210187093,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              19.50130210187093,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "landed": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2772.2477027737577,
+              18.485184594567873,
+              1311.595988080829
+            ],
+            "renderedPosition": [
+              -2772.2477027737577,
+              18.485184594567873,
+              1311.595988080829
+            ],
+            "eligible": false
+          }
+        },
+        "carry": {
+          "start": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2771.0986938402543,
+                19.562200695830736,
+                1310.0327574445103
+              ],
+              "velocity": [
+                0,
+                1.2838233390580431,
+                0
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2773.7326433752496,
+                20.164991097569406,
+                1303.4062393905585
+              ],
+              "riding": null,
+              "ground": 18.484991097569406,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9816233590523875,
+              "speed": 0,
+              "velocity": [
+                0,
+                0
+              ],
+              "distance": 0,
+              "roomId": null,
+              "showBody": true
+            }
+          },
+          "end": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2773.237655114951,
+                19.721560138435706,
+                1309.1009942125975
+              ],
+              "velocity": [
+                -0.013791413697923686,
+                -0.017999285353681498,
+                -0.0060077442043071725
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2775.874227638333,
+                20.0637735581537,
+                1302.4733335460307
+              ],
+              "riding": null,
+              "ground": 18.3837735581537,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9816233590523875,
+              "speed": 8.16663881774756e-07,
+              "velocity": [
+                -7.487200629573437e-07,
+                -3.2615355589192153e-07
+              ],
+              "distance": 2.3359572921270177,
+              "roomId": null,
+              "showBody": true
+            },
+            "yaw": 0.3788993528262051,
+            "fx": {
+              "count": 100,
+              "wand": 59,
+              "target": 41,
+              "capacity": 256,
+              "reducedMotion": false,
+              "wandTip": [
+                -2776.1231680532815,
+                19.872166322459805,
+                1302.6436090975158
+              ],
+              "targetCenter": [
+                -2773.237655114951,
+                20.277060138435704,
+                1309.1009942125975
+              ]
+            }
+          }
+        },
+        "personFX": {
+          "count": 71,
+          "wand": 41,
+          "target": 30,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2810.3949292928314,
+            19.917986779711146,
+            1275.1286436192877
+          ],
+          "targetCenter": [
+            -2813.2379442130446,
+            20.41298980005212,
+            1273.62553472082
+          ]
+        },
+        "staff": "store-osm-node-8172495006-person-1",
+        "errors": []
+      }
+    }
+  },
+  "browserAssertions": 105,
+  "supportSummary": {
+    "maximumFootDriftMetres": 0,
+    "maximumWorkerContactErrorMetres": 1.599127151601956e-07,
+    "maximumOutdoorHeadStepRadiansAt60Hz": 0.00381592394647327,
+    "maximumStationHeadStepRadiansAt30Hz": 0.0077490297782773915
+  },
+  "limitations": [
+    "Authored procedural body language, not motion capture or a hyperrealism acceptance claim.",
+    "Character assets contain neither facial morph targets nor facial joints. Lip sync, blinks, expressive eye motion and facial animation remain open.",
+    "Speech integration uses real HTMLAudio playback of a generated silent PCM WAV. It proves UI and speaking-state wiring, not voice synthesis quality, audio intelligibility or phoneme timing.",
+    "Portrait strips show rendered rest, nod and pause poses. No human performance study or subjective hyperrealism approval was performed.",
+    "Overall visual realism and stable full-scene frame pacing remain open. Unreal work remains stopped."
+  ]
+}

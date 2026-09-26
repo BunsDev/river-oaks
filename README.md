@@ -1,7 +1,7 @@
 # River Oaks District
 
 
-An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Start as **Jevica**, explore in third person, or transform into a witch with a flying broom or an alien with a small UFO. Jevica flies in her bubble. See [the creative direction and controls](docs/world-direction.md).
+An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
 ## Run the live showcase
 
 Start the browser development server with `npm ci` and `npm run dev`. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
@@ -16,7 +16,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. The default is a walkable River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
+Open **http://127.0.0.1:5173/**. The default is a walkable retrofuturistic River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
 
 Residents have consistent local identities, remember encounters, walk between public stops and pause to chat. Four labeled fictional encounters feature Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé. Resident route searches run in a Web Worker; immediate reactions are batched for Jev or local fallback. [Resident life and controls](docs/resident-life.md)
 
@@ -24,7 +24,7 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
-The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Alien, Witch and Jevica are the only playable forms. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+The experience starts as Jevica in third person. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. Jevica is the only playable character. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
@@ -44,7 +44,9 @@ uv run --extra voice python scripts/fetch_voice_model.py
 uv run --extra voice river-oaks serve
 ```
 
-In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 121 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. One job at a time and a bounded cache keep speech out of the render loop. See [showcase controls and limitations](docs/showcase.md).
+On macOS, install eSpeak NG once with `brew install espeak-ng`. After upgrading from an older voice setup, rerun the model fetch command above to install the duration-capable model.
+
+In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
@@ -131,3 +133,9 @@ uv run river-oaks benchmark --agents 500 --iterations 1000
 The demo is a labeled synthetic fixture and never counts as River Oaks accuracy evidence. To explore it in Unreal, copy its `world.json` into `unreal/Content/Data/`.
 
 Raw GIS, generated neighborhood manifests, voice weights, review queues, and Unreal binary assets remain ignored. The bundled district derivative is attributed under [ODbL](preview/public/data/README.md); surface maps and HDR lighting have [CC0 source receipts](preview/public/assets/materials/sources.json). [Data contracts and source catalog](docs/data.md) explain observed canopy inputs and attribution. [Execution ledger](docs/superpowers/plans/2026-09-17-river-oaks.md) records what still needs delivery.
+
+Jevica can also **Call carriage** and **Ride carriage** from her character
+controls. W/S rides or reverses, A/D or arrow keys steer, and **Leave carriage**
+steps onto clear ground. The ornate rose-and-gold coach, ceramic-and-teal district
+palette and human residents are intentional; see [world direction](docs/world-direction.md)
+and [character controls](docs/character-forms.md).

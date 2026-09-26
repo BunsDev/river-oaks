@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { RETRO } from './retro-palette.js';
 import { createRetailInteriors } from './retail-interiors.js';
 import { buildRetailDisplays } from './retail-displays.js';
-import { terrainHeight } from './geometry.js';
+import { groundSurfaceHeight } from './world-surface.js';
 import { physicalSurface } from './materials.js';
 import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.js';
 import { hedgeClusters } from './street-furniture.js';
@@ -14,12 +15,13 @@ import { buildStoreInteriors } from './store-interiors.js';
 function sign(name, illuminated = false) {
   const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 128;
   const context = canvas.getContext('2d');
-  const plaque = name === 'Le Colonial' ? '#192d42' : name === 'Steak 48' ? '#222b29' : illuminated ? '#f7f6f2' : null;
+  const plaque = RETRO.deepTeal;
   context.clearRect(0, 0, 1024, 128);
   if (plaque) { context.fillStyle = plaque; context.fillRect(0, 0, 1024, 128); }
-  const ink = name === 'Harry Winston' ? '#987c4a' : name === 'Le Colonial' ? '#f5f1e5' : name === 'Steak 48' ? '#f5e3bd' : illuminated ? '#252a29' : '#2b2c2a';
+  const ink = RETRO.ivory;
   context.textAlign = 'center'; context.textBaseline = 'middle';
-  context.font = name === 'Cartier' || name === 'Le Colonial' ? 'italic 65px Georgia' : name === 'Steak 48' ? '600 70px Arial' : `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Georgia`;
+  context.font = `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Futura, Avenir, sans-serif`;
+  context.strokeStyle=RETRO.brass;context.lineWidth=3;context.strokeRect(8,8,1008,112);
   const text = name === 'Cartier' || name === 'Le Colonial' || name === 'Steak 48' ? name : name.toUpperCase();
   if (!plaque) {
     context.save(); context.shadowColor = 'rgba(0,0,0,0.55)'; context.shadowBlur = 7; context.shadowOffsetX = 3; context.shadowOffsetY = 6;
@@ -35,22 +37,22 @@ function sign(name, illuminated = false) {
 }
 
 function cutStone() {
-  const material=physicalSurface('stone',{instanced:true,tileSize:3,normalScale:new THREE.Vector2(0.035,0.035),roughness:0.74});
+  const material=physicalSurface('stone',{instanced:true,tileSize:3,normalScale:new THREE.Vector2(0.035,0.035),roughness:0.36});
   const compile=material.onBeforeCompile, key=material.customProgramCacheKey;
-  const color=new THREE.Color('#e5dece').toArray().map(x=>x.toFixed(4)).join(',');
+  const color=new THREE.Color(RETRO.ivory).toArray().map(x=>x.toFixed(4)).join(',');
   material.onBeforeCompile=shader=>{
     compile(shader);
     shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
       diffuseColor.rgb = mix(vec3(${color}), diffuseColor.rgb, 0.045);
-      vec2 roJointGrid = fract(vMapUv * vec2(3.0 / 0.95, 3.0 / 0.48));
+      vec2 roJointGrid = fract(vMapUv * vec2(3.0 / 1.9, 3.0 / 1.2));
       vec2 roJointEdge = min(roJointGrid, 1.0 - roJointGrid);
       float roJoint = min(smoothstep(0.002, 0.009, roJointEdge.x), smoothstep(0.003, 0.012, roJointEdge.y));
-      // Individual ashlar blocks vary a little in tone, the way quarried stone does.
-      vec2 roBlock = floor(vMapUv * vec2(3.0 / 0.95, 3.0 / 0.48));
+      // Large ceramic panels have a fine joint and restrained surface variation.
+      vec2 roBlock = floor(vMapUv * vec2(3.0 / 1.9, 3.0 / 1.2));
       float roTone = fract(sin(dot(roBlock, vec2(12.9898, 78.233))) * 43758.5453);
-      diffuseColor.rgb *= mix(0.78, 1.0, roJoint) * (0.955 + 0.09 * roTone);`);
+      diffuseColor.rgb *= mix(0.78, 1.0, roJoint) * (0.98 + 0.03 * roTone);`);
   };
-  material.customProgramCacheKey=()=>key()+'-cut-limestone-v2';
+  material.customProgramCacheKey=()=>key()+'-retro-ceramic-v1';
   return material;
 }
 
@@ -68,11 +70,11 @@ export function buildDistrictBuildings(world) {
   const disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 14); geometries.add(disc);
   const lobe = new THREE.IcosahedronGeometry(0.5, 1); geometries.add(lobe);
   const stone = cutStone();
-  const dark = new THREE.MeshStandardMaterial({ color: '#303634', metalness: 0.58, roughness: 0.35 });
-  const bronzeFrame = new THREE.MeshStandardMaterial({ color: '#4a4640', metalness: 0.7, roughness: 0.3 });
+  const dark = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, metalness: 0.58, roughness: 0.35 });
+  const bronzeFrame = new THREE.MeshStandardMaterial({ color: RETRO.brass, metalness: 0.7, roughness: 0.3 });
   const glass = thinStorefrontGlass();
-  const upperGlass = new THREE.MeshPhysicalMaterial({ color:'#3d4a4d',metalness:0.35,roughness:0.08,envMapIntensity:1.6,clearcoat:0.6,clearcoatRoughness:0.08 });
-  const bulkhead = new THREE.MeshPhysicalMaterial({ color:'#5e5b57',metalness:0.05,roughness:0.28,clearcoat:0.35,clearcoatRoughness:0.2 });
+  const upperGlass = new THREE.MeshPhysicalMaterial({ color:RETRO.teal,metalness:0.35,roughness:0.08,envMapIntensity:1.6,clearcoat:0.6,clearcoatRoughness:0.08 });
+  const bulkhead = new THREE.MeshPhysicalMaterial({ color:RETRO.deepTeal,metalness:0.05,roughness:0.28,clearcoat:0.35,clearcoatRoughness:0.2 });
   const reveal = new THREE.MeshStandardMaterial({ color: '#1e2120', roughness: 0.85 });
   const interior = displayRoomSurface();
   const floor = displayRoomSurface({ floor: true });
@@ -83,13 +85,13 @@ export function buildDistrictBuildings(world) {
   const roof = physicalSurface('asphalt', { tileSize: 5, normalScale: new THREE.Vector2(0.15, 0.15), color: '#c9c7bf', roughness: 0.95 });
   const plant = new THREE.MeshStandardMaterial({ color: '#b9bab6', roughness: 0.55, metalness: 0.3 });
   const gold = new THREE.MeshStandardMaterial({ color: '#a68d62', roughness: 0.35, metalness: 0.75 });
-  const navy = new THREE.MeshStandardMaterial({ color:'#192d42',roughness:0.62 });
-  const canvas = new THREE.MeshStandardMaterial({ color:'#2f3234',roughness:0.92 });
+  const navy = new THREE.MeshStandardMaterial({ color:RETRO.deepTeal,roughness:0.62 });
+  const canvas = new THREE.MeshStandardMaterial({ color:RETRO.teal,roughness:0.92 });
   const wood = new THREE.MeshStandardMaterial({ color:'#71543a',roughness:0.72 });
   const hedge = new THREE.MeshStandardMaterial({ color:'#31543d',roughness:0.93 });
-  const velvet = new THREE.MeshStandardMaterial({color:'#45413b',roughness:0.96});
+  const velvet = new THREE.MeshStandardMaterial({color:RETRO.rose,roughness:0.96});
   const furniture = new THREE.MeshStandardMaterial({color:'#775c40',roughness:0.65});
-  const planter = new THREE.MeshStandardMaterial({color:'#b9b3a6',roughness:0.8});
+  const planter = new THREE.MeshStandardMaterial({color:RETRO.porcelain,roughness:0.8});
   for (const [name, material] of Object.entries({ stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter })) { material.name = `facade-${name}`; materials.add(material); }
   const interiors = createRetailInteriors();
   interiors.materials.forEach(material => materials.add(material));
@@ -136,10 +138,14 @@ export function buildDistrictBuildings(world) {
       const material = stone;
       // Fascia above the shopfronts, with a shadow reveal beneath it and a
       // stepped cornice at the parapet: the horizontals that read as masonry.
-      part(material, edgeAt(-0.06, 4.72), [length, 0.86, 0.28], yaw, index);
+      part(bulkhead, edgeAt(-0.06, 4.72), [length, 0.86, 0.28], yaw, index);
+      // Continuous enamel fascia and brass speed lines tie every block into
+      // the space-age palette, including facades without a named storefront.
+      for(const height of [4.38,4.51,5.02])part(bronzeFrame,edgeAt(-.22,height),[length,.035,.035],yaw,index);
+      part(stone,edgeAt(-.28,5.12),[length+.12,.11,.64],yaw,index);
       part(reveal, edgeAt(0.02, 4.2), [length, 0.18, 0.12], yaw, index);
       part(stone, edgeAt(-0.02, 0.18), [length, 0.36, 0.30], yaw, index);
-      part(stone, edgeAt(-0.1, building.size[2] - 0.15), [length + 0.2, 0.3, 0.36], yaw, index);
+      part(bulkhead, edgeAt(-0.1, building.size[2] - 0.15), [length + 0.2, 0.3, 0.36], yaw, index);
       part(stone, edgeAt(-0.05, building.size[2] - 0.5), [length + 0.1, 0.12, 0.26], yaw, index);
       for (const level of levels) part(stone, edgeAt(-0.02, level - 1.25), [length, 0.14, 0.2], yaw, index);
       const bays = Math.floor(length / 3.2), span = length / Math.max(1, bays);
@@ -275,7 +281,7 @@ export function buildDistrictBuildings(world) {
       // walk-in room stays reachable while the closed door reflects the street.
       const pivot = new THREE.Group();
       pivot.position.set(x+ny*0.85+nx*0.2, base, -north+nx*0.85-ny*0.2); pivot.rotation.y = yaw;
-      const leaf = new THREE.Mesh(pane, glass); leaf.position.set(0.85, 1.8, 0); leaf.scale.set(1.7, 3.0, 1); leaf.userData.storeId = store.id;
+      const leaf = new THREE.Mesh(pane, glass); leaf.position.set(0.85, 1.8, 0); leaf.scale.set(1.7, 3.0, 1); leaf.userData.storeId = store.id; leaf.userData.breakableGlass = true; leaf.userData.breakableGlassDynamic = true;
       const pull = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); pull.position.set(1.52, 1.45, 0.06); pull.scale.set(0.03, 0.9, 0.03); pull.userData.storeId = store.id;
       const rail = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); rail.position.set(0.85, 0.32, 0); rail.scale.set(1.68, 0.06, 0.05); rail.userData.storeId = store.id;
       pivot.add(leaf, pull, rail); pivot.userData.storeId = store.id; group.add(pivot);
@@ -356,6 +362,7 @@ export function buildDistrictBuildings(world) {
   for (const { material, geometry, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;
+    mesh.userData.breakableGlass = material === glass || material === upperGlass;
     mesh.userData.buildingIndices = parts.map(part => part.buildingIndex);
     parts.forEach((part, index) => { dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix); });
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
@@ -395,17 +402,17 @@ export function buildDistrictBuildings(world) {
 export function buildDistrictDetail(world) {
   const group = new THREE.Group(), objects = [];
   const dummy = new THREE.Object3D();
-  const bronze = new THREE.MeshStandardMaterial({ color: '#454c46', roughness: 0.55, metalness: 0.6 });
-  const timber = new THREE.MeshStandardMaterial({ color: '#80705a', roughness: 0.85 });
+  const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.6 });
+  const timber = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.85 });
   const box = new THREE.BoxGeometry(1, 1, 1);
   const benches = world.stores.filter((_, i) => i % 3 === 0);
   for (const store of benches) {
     const [nx, ny] = store.outward, x = store.visit[0] + nx*2.8 + ny*4, north = store.visit[1] + ny*2.8 - nx*4;
-    const ground = terrainHeight(world.terrain, x, north), yaw = Math.atan2(nx, -ny);
-    for (let i = 0; i < 5; i++) objects.push({ material: timber, p: [x+nx*(i-2)*0.11, ground+0.65, -north-ny*(i-2)*0.11], s: [1.8, 0.06, 0.09], yaw });
-    for (const side of [-1, 1]) objects.push({ material: bronze, p: [x+ny*side*0.65, ground+0.4, -north+nx*side*0.65], s: [0.1, 0.5, 0.5], yaw });
-    objects.push({ material: bronze, p: [x+nx*1.2, ground+2.8, -north-ny*1.2], s: [0.1, 5.2, 0.1], yaw });
-    objects.push({ material: bronze, p: [x+nx*1.2, ground+5.45, -north-ny*1.2], s: [0.55, 0.12, 0.65], yaw });
+    const ground = groundSurfaceHeight(world,x,-north), yaw = Math.atan2(nx, -ny);
+    for (let i = 0; i < 5; i++) objects.push({ material: timber, p: [x+nx*(i-2)*0.11, ground+0.5, -north-ny*(i-2)*0.11], s: [1.8, 0.06, 0.09], yaw });
+    for (const side of [-1, 1]) objects.push({ material: bronze, p: [x+ny*side*0.65, ground+0.25, -north+nx*side*0.65], s: [0.1, 0.5, 0.5], yaw });
+    objects.push({ material: bronze, p: [x+nx*1.2, ground+2.6, -north-ny*1.2], s: [0.1, 5.2, 0.1], yaw });
+    objects.push({ material: bronze, p: [x+nx*1.2, ground+5.25, -north-ny*1.2], s: [0.55, 0.12, 0.65], yaw });
   }
   for (const material of [bronze, timber]) {
     const parts = objects.filter(p => p.material === material), mesh = new THREE.InstancedMesh(box, material, parts.length);

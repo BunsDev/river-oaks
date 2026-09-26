@@ -1,23 +1,43 @@
 """Build Jevica's dedicated CC0 mesh with the locally cached MPFB system assets.
 
-Run with Blender's Python (or bpy 4.5.3). Uses the resident proportions and rig,
+Run with Blender's Python (or bpy 4.5.3). Fits hero proportions to the resident rig,
 adds subdivision, high detail eyes, lashes and long hair; never rewrites residents.
 """
 
 import hashlib
 import json
+import math
 import os
 import sys
 from pathlib import Path
 
-import bmesh
 import bpy
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_characters import ASSETS, OUTPUT, SOURCE, fields, material
 
+# Hero-only art direction. Apply before fitting the rig, eyes, hair, and bodice.
+DETAILS = {
+    "head/head-oval": 0.40,
+    "chin/chin-width-decr": 0.36,
+    "chin/chin-bones-decr": 0.35,
+    "chin/chin-prominent-decr": 0.12,
+    "cheek/l-cheek-volume-incr": 0.10,
+    "cheek/r-cheek-volume-incr": 0.10,
+    "mouth/mouth-angles-up": 0.18,
+    "mouth/mouth-upperlip-volume-incr": 0.10,
+    "mouth/mouth-lowerlip-volume-incr": 0.05,
+    "eyebrows/eyebrows-angle-up": 0.10,
+    "eyebrows/eyebrows-trans-up": 0.08,
+    "neck/measure-neck-circ-decr": 0.18,
+    "torso/measure-shoulder-dist-decr": 0.44,
+}
 
-def main():
+
+def main(*, output_dir=OUTPUT, prepare_export=None):
+    # The standalone bpy wheel registers bmesh when bpy is imported.
+    import bmesh
+
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
     bpy.context.preferences.extensions.repos.new(
@@ -30,9 +50,12 @@ def main():
     from bl_ext.river_oaks.mpfb.services.targetservice import TargetService
 
     macro = TargetService.get_default_macro_info_dict()
-    macro.update(gender=0, age=0.45, muscle=0.4, weight=0.46, height=0.5)
+    macro.update(gender=0, age=0.45, muscle=0.24, weight=0.46, height=0.5, cupsize=0.56)
     base = HumanService.create_human(macro_detail_dict=macro)
     base.name = "Jevica"
+    targets = SOURCE / "mpfb-src/mpfb2-2.0.17/src/mpfb/data/targets"
+    for target, weight in DETAILS.items():
+        TargetService.load_target(base, str(targets / f"{target}.target.gz"), weight=weight)
     skin = material(ASSETS / "skins/young_asian_female/young_asian_female.mhmat", "skin")
     base.data.materials.clear()
     base.data.materials.append(skin)
@@ -56,7 +79,7 @@ def main():
     for face in bm.faces:
         center = face.calc_center_median()
         neckline = 1.235 - 0.055 * max(0, 1 - abs(center.x) / 0.13)
-        if center.z < 0.78 or center.z > neckline or abs(center.x) > 0.195:
+        if center.z < 0.86 or center.z > neckline or abs(center.x) > 0.195:
             remove.append(face)
     bmesh.ops.delete(bm, geom=remove, context="FACES")
     boundary = [vertex for vertex in bm.verts if vertex.is_boundary]
@@ -67,6 +90,28 @@ def main():
     for _ in range(3):
         bmesh.ops.smooth_vert(
             bm, verts=list(bm.verts), factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True
+        )
+    # A sewn bodice bridges the bust and underbust rather than copying every
+    # skin concavity. Keep the silhouette and original deformation weights.
+    for vertex in bm.verts:
+        x, y, z = vertex.co
+        if vertex.is_boundary and z < 0.89:
+            vertex.co.z = 0.87
+        if y < 0 and abs(x) < 0.185 and 0.96 < z < 1.205:
+            fullness = 0.10 + 0.067 * min(1.0, max(0.0, (z - 0.98) / 0.13))
+            envelope = fullness * math.sqrt(max(0.0, 1.0 - (x / 0.25) ** 2))
+            blend = min(1.0, max(0.0, (1.205 - z) / 0.055))
+            blend *= min(1.0, max(0.0, (0.185 - abs(x)) / 0.04))
+            if not vertex.is_boundary:
+                vertex.co.y = y + (min(y, -envelope) - y) * blend
+    for _ in range(4):
+        bmesh.ops.smooth_vert(
+            bm,
+            verts=[v for v in bm.verts if not v.is_boundary],
+            factor=0.5,
+            use_axis_x=True,
+            use_axis_y=True,
+            use_axis_z=True,
         )
     bm.normal_update()
     for vertex in bm.verts:
@@ -96,6 +141,16 @@ def main():
         obj.data.materials.clear()
         surface = material(path.parent / fields(path)["material"], kind)
         obj.data.materials.append(surface)
+        if category == "hair":
+            # Keep the fitted roots and weights; soften the hanging lengths into waves.
+            bpy.context.view_layer.objects.active = obj
+            if obj.data.shape_keys:
+                bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+            for vertex in obj.data.vertices:
+                t = min(1.0, max(0.0, (1.46 - vertex.co.z) / 0.48))
+                side = 1.0 if vertex.co.x >= 0 else -1.0
+                vertex.co.x += side * 0.024 * math.sin(t * math.pi * 2) * t
+                vertex.co.y += 0.016 * math.sin(t * math.pi * 3) * t
         if category == "eyebrows":
             surface.name = "jevica_brows"
         if category == "eyes":
@@ -109,14 +164,16 @@ def main():
         if obj.type == "MESH":
             for polygon in obj.data.polygons:
                 polygon.use_smooth = True
-    path = OUTPUT / "jevica.glb"
+    if prepare_export:
+        prepare_export(base)
+    path = output_dir / "jevica.glb"
     bpy.ops.export_scene.gltf(
         filepath=str(path),
         export_format="GLB",
-        export_apply=True,
+        export_apply=prepare_export is None,
         export_animations=False,
         export_skins=True,
-        export_morph=False,
+        export_morph=prepare_export is not None,
         export_image_format="WEBP",
         export_image_quality=92,
     )
@@ -137,9 +194,12 @@ def main():
         "eyelashes": "eyelashes01",
         "eyebrows": "eyebrow001",
         "body_subdivision": 1,
+        "macro": macro,
+        "detail_targets": DETAILS,
+        "hair_finish": "Soft waves below fitted roots; original skin weights retained",
         "costume": "Original fitted shell; runtime draped skirt, tiara and wand",
     }
-    (OUTPUT / "jevica.sources.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (output_dir / "jevica.sources.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print("JEVICA_BUILD", json.dumps(manifest))
 
 

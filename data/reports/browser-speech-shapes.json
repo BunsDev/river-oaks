@@ -1,0 +1,1541 @@
+{
+  "createdAt": "2026-09-26T05:48:27.582851+00:00",
+  "scope": "Isolated browser speech-shape assets and cost investigation. Not installed in the live avatar loader.",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "scripts/build_facial_candidates.py": "52ebeac2590b2ccc899fdbfcd6074f0348e3dc436b632012e8960219b912a02f",
+    "scripts/fetch_character_assets.py": "90f0da7d411c93eee6260df361ea5e1980dca72ef864940f4fdc554e3a2a9bbd",
+    "scripts/add-facial-targets.mjs": "7995376c217f2a5a1a5bc02c3ebc14aeda659b6d35146a4b2e51bdff2786db09",
+    "scripts/add-speech-targets.mjs": "a42170ed3a7f24113651da2da9468652627d3fb686c3ec667e652ccad84ebc48",
+    "preview/tests/facial-assets.test.js": "75aa07cb7355246834487901dba0698397f3d6808fdcf3d19b8f16bcceade5c9",
+    "preview/tests/speech-assets.test.js": "18d17de40d1b2353b30e780a3d2e3e96eb9b42b26410ed91e5f58c89067e6226",
+    "preview/e2e/speech-shapes.js": "7f54df065b72037c22818323175ae9215413f36ecb651c6c902d2e2862021cf6",
+    "preview/e2e/speech-shapes-cost.js": "1a7a7a159d772f94e68c879b4e94d49afdcaed6ba41a5dcf55226acac61113a3"
+  },
+  "sources": {
+    "visemes": {
+      "url": "https://static.makehumancommunity.org/assets/assetpacks/visemes02.html",
+      "archiveSha256": "a69ab6fb95ddd5f56f70acc7e859f5f9c6ae613c527d577ea1571eff2183d29e",
+      "author": "Mika Suominen",
+      "license": "CC0",
+      "shapes": 15
+    },
+    "oralMeshes": {
+      "source": "MakeHuman system assets",
+      "license": "CC0",
+      "teeth": "teeth_base",
+      "tongue": "tongue01"
+    }
+  },
+  "assets": [
+    {
+      "profile": "woman-casual",
+      "shippedSha256": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe",
+      "candidateSha256": "7b6e37435b459bd7902ae8c7e852989db232a62f7500f4de6e7ee7fbb009775e",
+      "mergedSha256": "306970d50a71cd207ce267842e20a87c35b8d0cf64821681c331fa22e1608c03",
+      "shippedBytes": 1670532,
+      "mergedBytes": 3703172,
+      "addedBytes": 2032640,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/woman-casual.glb",
+        "shapes": [
+          {
+            "material": "young_african_female",
+            "vertices": 9247,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2032640
+      }
+    },
+    {
+      "profile": "man-casual",
+      "shippedSha256": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25",
+      "candidateSha256": "57d62717ec98d75003df0fb5879c4e84a42a43e37af4dc2a2187debeb5b0b9de",
+      "mergedSha256": "533bbd47b84de5e1753e0fce88ed4893e0b7acd6d9aa1a431b6d5eed73a610f5",
+      "shippedBytes": 1809968,
+      "mergedBytes": 3964288,
+      "addedBytes": 2154320,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/man-casual.glb",
+        "shapes": [
+          {
+            "material": "young_caucasian_male",
+            "vertices": 8660,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "short01",
+            "vertices": 3050,
+            "targets": [
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2154320
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "shippedSha256": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4",
+      "candidateSha256": "8101e5c3e0f88ca6f2d6554818a59b69c338a0ea53ecbeda37e71c47fa03c684",
+      "mergedSha256": "33337860af141287a59f206a1db71beb6cd5ed2fc73deceb2390bf16ceec1a4a",
+      "shippedBytes": 1549580,
+      "mergedBytes": 3785244,
+      "addedBytes": 2235664,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/woman-tailored.glb",
+        "shapes": [
+          {
+            "material": "middleage_caucasian_female",
+            "vertices": 9407,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "bob02",
+            "vertices": 1688,
+            "targets": [
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2235664
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "shippedSha256": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7",
+      "candidateSha256": "291a55c5d93642a8a60c620c6094c7689dd6e0502ddfa1d32da1ac5b8d6e215a",
+      "mergedSha256": "04419e356a19bfd0415cc9c121039d9aca6ae5c80478f8cb9487ae849fd1a0d4",
+      "shippedBytes": 1687016,
+      "mergedBytes": 3769536,
+      "addedBytes": 2082520,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/man-tailored.glb",
+        "shapes": [
+          {
+            "material": "middleage_african_male",
+            "vertices": 8488,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "short04",
+            "vertices": 983,
+            "targets": [
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2082520
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "shippedSha256": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639",
+      "candidateSha256": "7eb02b90777ab7acaf3f057e39ac529e8316ea4d549089715490517539df75ee",
+      "mergedSha256": "428b6d909933b682dfc81f5c9ae3f0f41c55a14a03862f8884f2eff4c1cdd853",
+      "shippedBytes": 2007824,
+      "mergedBytes": 4258308,
+      "addedBytes": 2250484,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/woman-daywear.glb",
+        "shapes": [
+          {
+            "material": "young_asian_female",
+            "vertices": 10256,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "ponytail01",
+            "vertices": 3902,
+            "targets": [
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2250484
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "shippedSha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
+      "candidateSha256": "ee9f1e3f6aa883cf5047f5da620f557d9c3aba4b29f17a2773c550840a61754f",
+      "mergedSha256": "334db3b20f385e485b83ea0a3adf05d472861dc3ed79f8005389ba74a7f9a123",
+      "shippedBytes": 1710928,
+      "mergedBytes": 3847792,
+      "addedBytes": 2136864,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/man-workwear.glb",
+        "shapes": [
+          {
+            "material": "middleage_asian_male",
+            "vertices": 9120,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "short02",
+            "vertices": 1794,
+            "targets": [
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 2136864
+      }
+    },
+    {
+      "profile": "jevica",
+      "shippedSha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
+      "candidateSha256": "44ae2e6c32e8243b9f9c518675fc58d219f205756bc846eb9d7134f556aa5341",
+      "mergedSha256": "9752d509b67c318930c542bbb94412f6ab5c676ea00ba7e413b9f3bb59fcf729",
+      "shippedBytes": 5779116,
+      "mergedBytes": 12403512,
+      "addedBytes": 6624396,
+      "originalBinaryPreserved": true,
+      "merge": {
+        "output": "data/raw/characters/speech-merged/jevica.glb",
+        "shapes": [
+          {
+            "material": "young_asian_female",
+            "vertices": 57542,
+            "targets": [
+              "viseme_sil",
+              "viseme_PP",
+              "viseme_FF",
+              "viseme_TH",
+              "viseme_DD",
+              "viseme_kk",
+              "viseme_CH",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "jevica_brows",
+            "vertices": 124,
+            "targets": [
+              "viseme_FF",
+              "viseme_kk",
+              "viseme_SS",
+              "viseme_nn",
+              "viseme_RR",
+              "viseme_aa",
+              "viseme_E",
+              "viseme_I",
+              "viseme_O",
+              "viseme_U"
+            ]
+          },
+          {
+            "material": "eyelashes01",
+            "vertices": 250,
+            "targets": [
+              "viseme_SS",
+              "viseme_E"
+            ]
+          }
+        ],
+        "mouths": [
+          {
+            "material": "teeth",
+            "vertices": 4494
+          },
+          {
+            "material": "tongue01",
+            "vertices": 253
+          }
+        ],
+        "addedBytes": 6624396
+      }
+    }
+  ],
+  "unitTests": {
+    "command": "npm test",
+    "passed": 385,
+    "failed": 0,
+    "rawLog": "/tmp/speech-assets-tests-final.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js chunk size warning",
+    "rawLog": "/tmp/speech-assets-build-final.log"
+  },
+  "pythonChecks": {
+    "ruff": "passed",
+    "syntax": "passed"
+  },
+  "browser": {
+    "checks": [
+      "woman-casual: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "woman-casual: face and existing accessories remain pixel-identical",
+      "woman-casual: all fifteen speech shapes bind",
+      "man-casual: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "man-casual: face and existing accessories remain pixel-identical",
+      "man-casual: all fifteen speech shapes bind",
+      "woman-tailored: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "woman-tailored: face and existing accessories remain pixel-identical",
+      "woman-tailored: all fifteen speech shapes bind",
+      "man-tailored: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "man-tailored: face and existing accessories remain pixel-identical",
+      "man-tailored: all fifteen speech shapes bind",
+      "woman-daywear: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "woman-daywear: face and existing accessories remain pixel-identical",
+      "woman-daywear: all fifteen speech shapes bind",
+      "man-workwear: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "man-workwear: face and existing accessories remain pixel-identical",
+      "man-workwear: all fifteen speech shapes bind",
+      "jevica: added oral anatomy affects less than 0.1% of the neutral portrait",
+      "jevica: face and existing accessories remain pixel-identical",
+      "jevica: all fifteen speech shapes bind",
+      "No speech shape application or shader errors"
+    ],
+    "runs": [
+      {
+        "profile": "woman-casual",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 30,
+          "max": 79
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "young_african_female"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "young_african_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "young_african_female"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "man-casual",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 19,
+          "max": 51
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "young_caucasian_male"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "young_caucasian_male",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "young_caucasian_male",
+              "short01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "young_caucasian_male",
+              "short01"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "woman-tailored",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 26,
+          "max": 58
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "middleage_caucasian_female"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "middleage_caucasian_female",
+              "bob02"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "man-tailored",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 15,
+          "max": 85
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "middleage_african_male"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "middleage_african_male",
+              "short04",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "middleage_african_male",
+              "short04"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "woman-daywear",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 31,
+          "max": 61
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "young_asian_female"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "young_asian_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "young_asian_female",
+              "ponytail01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "young_asian_female",
+              "ponytail01"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "man-workwear",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 18,
+          "max": 52
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "middleage_asian_male"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "middleage_asian_male",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "middleage_asian_male",
+              "short02",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "middleage_asian_male",
+              "short02"
+            ]
+          }
+        ]
+      },
+      {
+        "profile": "jevica",
+        "neutral": {
+          "pixels": 252000,
+          "changed": 39,
+          "max": 95
+        },
+        "shapes": [
+          {
+            "name": "neutral",
+            "bound": []
+          },
+          {
+            "name": "viseme_sil",
+            "bound": [
+              "young_asian_female"
+            ]
+          },
+          {
+            "name": "viseme_PP",
+            "bound": [
+              "young_asian_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_FF",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows"
+            ]
+          },
+          {
+            "name": "viseme_TH",
+            "bound": [
+              "young_asian_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_DD",
+            "bound": [
+              "young_asian_female",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_kk",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_CH",
+            "bound": [
+              "young_asian_female"
+            ]
+          },
+          {
+            "name": "viseme_SS",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "eyelashes01"
+            ]
+          },
+          {
+            "name": "viseme_nn",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_RR",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows"
+            ]
+          },
+          {
+            "name": "viseme_aa",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_E",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "eyelashes01",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_I",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows"
+            ]
+          },
+          {
+            "name": "viseme_O",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows",
+              "teeth",
+              "tongue01"
+            ]
+          },
+          {
+            "name": "viseme_U",
+            "bound": [
+              "young_asian_female",
+              "jevica_brows"
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "browserCost": {
+    "runs": [
+      {
+        "mode": "baseline",
+        "mouthMeshes": 0,
+        "medianMs": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "mainCpuMs": 6.436363637939958,
+        "calls": 1063,
+        "triangles": 15215457
+      },
+      {
+        "mode": "candidate-hidden",
+        "mouthMeshes": 438,
+        "medianMs": 16.69999999999891,
+        "p95Ms": 33.30000000000109,
+        "mainCpuMs": 6.204958680247472,
+        "calls": 1063,
+        "triangles": 15215457
+      },
+      {
+        "mode": "candidate-visible",
+        "mouthMeshes": 438,
+        "medianMs": 16.69999999999891,
+        "p95Ms": 33.399999999999636,
+        "mainCpuMs": 6.60165290103471,
+        "calls": 1157,
+        "triangles": 15571153
+      },
+      {
+        "mode": "candidate-hidden",
+        "mouthMeshes": 438,
+        "medianMs": 16.700000000000728,
+        "p95Ms": 33.30000000000109,
+        "mainCpuMs": 6.242148756980896,
+        "calls": 1063,
+        "triangles": 15215457
+      }
+    ],
+    "errors": []
+  },
+  "visualReview": {
+    "portraits": [
+      "output/playwright/speech-shapes-woman-casual.png",
+      "output/playwright/speech-shapes-man-casual.png",
+      "output/playwright/speech-shapes-woman-tailored.png",
+      "output/playwright/speech-shapes-man-tailored.png",
+      "output/playwright/speech-shapes-woman-daywear.png",
+      "output/playwright/speech-shapes-man-workwear.png",
+      "output/playwright/speech-shapes-jevica.png"
+    ],
+    "reviewedProfiles": 7,
+    "notes": "All fifteen shapes were inspected on seven contact sheets. Neutral face and accessories render pixel-identically when the new oral meshes are hidden; visible teeth affect 15 to 39 of 252000 portrait pixels. This is geometry and appearance evidence, not lip-sync acceptance."
+  },
+  "remaining": [
+    "Load speech geometry only where needed; keep inactive oral meshes culled.",
+    "Integrate model phoneme timestamps with playback, cancellation, replay and avatar blending.",
+    "Verify articulation at playback speed, all worker contexts, reduced motion and target hardware frame pacing."
+  ],
+  "devUrl": "http://127.0.0.1:5181/",
+  "timedVoicePrototype": {
+    "library": "kokoro-onnx 0.6.1",
+    "modelSha256": "ae315a79b623f244700e4afb9246c46a26066782e049ba174bf3ba433970ee9c",
+    "modelUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.int8.onnx",
+    "outputs": [
+      [
+        "waveform",
+        "tensor(float)"
+      ],
+      [
+        "duration",
+        "tensor(int64)"
+      ]
+    ],
+    "runs": [
+      {
+        "voice": "af_heart",
+        "speed": 0.96,
+        "durationSeconds": 4.028666666666667,
+        "synthesisSeconds": 2.5830486670602113,
+        "phonemeCount": 63
+      },
+      {
+        "voice": "bm_fable",
+        "speed": 1.035,
+        "durationSeconds": 4.732666666666667,
+        "synthesisSeconds": 2.5821411251090467,
+        "phonemeCount": 63
+      }
+    ],
+    "timingsWithinAudio": true,
+    "rawReceipt": "data/raw/speech-voice-checks/timings.json",
+    "environment": "Isolated data/raw/speech-voice-env; explicit Homebrew eSpeak library and data paths needed on this Mac. Production voice dependencies and service are unchanged."
+  }
+}

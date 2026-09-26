@@ -6,6 +6,16 @@ async page => {
     motion:JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(person=>person.id===id),
     visitor:JSON.parse(document.querySelector('#walking-hud').dataset.position),
   }),id);
+  const leaveCourtesyRadius=async id=>{
+    await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');
+    try {
+      await page.waitForFunction(id=>{
+        const resident=JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(p=>p.id===id);
+        const visitor=JSON.parse(document.querySelector('#walking-hud').dataset.position);
+        return Math.hypot(visitor[0]-resident.position[0],visitor[2]+resident.position[1])>=3.15;
+      },id,{timeout:10000});
+    } finally {await page.keyboard.up('KeyS');}
+  };
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1440,height:1000});
   await page.emulateMedia({reducedMotion:'no-preference'});
@@ -23,8 +33,7 @@ async page => {
     await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
     await page.locator('#community-dialogue').waitFor({state:'visible'});await page.locator('#community-close').click();
     await page.locator('#panel-toggle').click();await page.waitForTimeout(500);
-    await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');
-    try {await page.waitForTimeout(450);} finally {await page.keyboard.up('KeyS');}
+    await leaveCourtesyRadius(id);
     await page.waitForFunction(id=>{
       const p=JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(p=>p.id===id);
       return p.speed>0.2&&p.status==='walking';
@@ -42,7 +51,7 @@ async page => {
     const still=await read(id);
     check(still.motion.status==='chatting'&&Math.hypot(...still.motion.position.map((value,index)=>value-held.motion.position[index]))<0.001,`${id}: clicked walker holds position during conversation`);
     await page.screenshot({path:`output/playwright/moving-people-${id}.png`});
-    await page.locator('#community-close').click();
+    await page.locator('#community-close').click();await leaveCourtesyRadius(id);
     await page.waitForFunction(({id,distance})=>JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(p=>p.id===id).distance>distance+0.1,{id,distance:held.motion.distance},{timeout:20000});
     clicks.push({id,speed:before.motion.speed,screen:before.person.screen,position:before.motion.position});
   }

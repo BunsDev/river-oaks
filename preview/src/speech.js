@@ -1,4 +1,5 @@
 // Neural generation uses the loopback bridge; device fallback permits localService voices only.
+import {readSpeechTimings} from './speech-timings.js';
 export const VOICE_PRESETS = ['af_heart','bm_fable','bf_emma','am_fenrir','af_kore','am_eric','af_sarah','am_liam','af_sky','am_onyx','af_jessica','am_echo','af_nova','am_puck','af_river','am_adam','af_alloy','bm_george','af_aoede','bm_daniel','bf_isabella','af_nicole','am_michael','af_bella'];
 export function voiceFor(local) {
   const index = Number(String(local.id).match(/\d+$/)?.[0] ?? 0);
@@ -65,8 +66,9 @@ export function createSpeechQueue({ generate, play, stop, onStatus = () => {} })
   };
 }
 
-export function createLocalSpeech(onStatus = () => {}) {
+export function createLocalSpeech(onStatus = () => {}, {prepare = async()=>null} = {}) {
   let mode = 'off', speakingId = null, playback = null;
+  const fading = new Set();
   const stop = () => { playback?.cancel(); speakingId = null; };
   const queue = createSpeechQueue({
     stop, onStatus,
@@ -77,29 +79,36 @@ export function createLocalSpeech(onStatus = () => {}) {
         const index = Number(local.id.match(/\d+$/)?.[0] ?? 0);
         return { text, deviceVoice: voices[index % voices.length], speed: voiceFor(local).speed };
       }
-      return requestLocalVoice(local, text, signal, { onWaiting: () => onStatus('Waiting for local voice…') });
+      const blob=await requestLocalVoice(local, text, signal, { onWaiting: () => onStatus('Waiting for local voice…') });
+      const cues=await readSpeechTimings(blob);signal.throwIfAborted();
+      let face=null;
+      // Audio remains available if optional facial assets cannot be loaded.
+      if(cues.length){try{face=await prepare(local,signal);}catch(error){signal.throwIfAborted();}}
+      signal.throwIfAborted();return {blob,cues,face};
     },
     play(payload, local) {
       speakingId = local.id;
       return new Promise((resolve, reject) => {
-        let audio = null, url = null, utterance = null, settled = false;
+        let audio = null, url = null, utterance = null, settled = false, face = null;
         const done = (error) => {
           if (settled) return;
           settled = true;
           if (audio) { audio.onended = audio.onerror = null; audio.pause(); audio.src = ''; }
           if (url) URL.revokeObjectURL(url);
           if (utterance) { utterance.onend = utterance.onerror = null; window.speechSynthesis.cancel(); }
+          if(face){face.release();fading.add(face);face=null;}
           if (playback === current) { playback = null; speakingId = null; }
           if (error) reject(error); else resolve();
         };
-        const current = { cancel: () => done() }; playback = current;
+        const current = { cancel: () => done(), update:delta=>face?.update(audio&&!audio.paused&&!audio.ended?audio.currentTime:NaN,delta) }; playback = current;
         try {
           if (payload.deviceVoice) {
             utterance = new SpeechSynthesisUtterance(payload.text); utterance.voice = payload.deviceVoice; utterance.rate = payload.speed;
             utterance.onend = () => done(); utterance.onerror = event => done(new Error(event.error));
             window.speechSynthesis.speak(utterance);
           } else {
-            url = URL.createObjectURL(payload); audio = new Audio(url);
+            if(payload.face){try{face=payload.face(payload.cues);}catch{face=null;}}
+            url = URL.createObjectURL(payload.blob); audio = new Audio(url);
             audio.onended = () => done(); audio.onerror = () => done(new Error('Audio playback failed'));
             audio.play().catch(done);
           }
@@ -107,11 +116,13 @@ export function createLocalSpeech(onStatus = () => {}) {
       });
     },
   });
-  window.addEventListener('blur', () => queue.cancel());
-  document.addEventListener('visibilitychange', () => { if (document.hidden) queue.cancel(); });
+  const suspend=()=>{queue.cancel();for(const face of fading)face.dispose();fading.clear();};
+  window.addEventListener('blur', suspend);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) suspend(); });
   return {
     get mode() { return mode; },
     get speakingId() { return speakingId; },
+    update(delta) { playback?.update(delta);for(const face of fading)if(!face.update(null,delta))fading.delete(face); },
     setMode(value) { mode = ['kokoro','device'].includes(value) ? value : 'off'; queue.setEnabled(mode !== 'off'); },
     speak: queue.speak,
     cancel: queue.cancel,

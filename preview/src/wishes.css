@@ -1,0 +1,11 @@
+.wish-card { border-color: var(--accent); }
+.wish-card > p, .wish-journal > p { font-size: 13px; line-height: 1.55; }
+.wish-card label { display: block; margin: 12px 0 6px; font-size: 12px; font-weight: 650; }
+.wish-status { white-space: pre-line; padding: 12px; border-radius: 10px; background: var(--accent-soft); }
+.wish-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.wish-actions button, .wish-incidents button { min-height: 44px; padding: 10px 14px; }
+.wish-journal { margin: 18px 0; padding: 14px; border: 1px solid var(--edge-light); border-radius: 12px; background: var(--glass); }
+.wish-journal h3 { margin: 0; font-size: 15px; }
+.wish-incidents { display: grid; gap: 8px; max-height: 220px; overflow: auto; }
+.wish-incidents button { text-align: left; white-space: normal; font-size: 12px; line-height: 1.5; }
+.wish-card button:focus-visible, .wish-incidents button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }

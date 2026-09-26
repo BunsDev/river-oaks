@@ -1,4 +1,5 @@
 import { createPersona } from './personas.js';
+import { WORKER_ROLES } from './worker-roles.js';
 
 const OCCUPATIONS = {
   fashion: ['Style adviser', 'Tailor'], leather: ['Leather goods specialist', 'Client adviser'],
@@ -21,11 +22,13 @@ export function createStoreEncounters(rooms) {
     const staffIndex = room.people.slice(0,index).filter(person=>person.role==='staff').length;
     const occupations=OCCUPATIONS[room.theme] ?? ['Client adviser'];
     const role = spot.role === 'staff' ? occupations[staffIndex % occupations.length] : GUEST_ROLES[room.theme] ?? 'Visiting shopper';
+    const work = spot.role === 'staff' ? WORKER_ROLES[role] : undefined;
     const persona = createPersona(24 + room.index * 10 + index, name, room.name);
     Object.assign(persona, {
       role, homeContext: `Fictional ${role.toLowerCase()} at ${room.name}`,
-      about: `I’m ${name}, ${spot.role === 'staff' ? 'a ' + role.toLowerCase() + ' here at' : 'visiting'} ${room.name}. ${spot.role === 'staff' ? 'I can tell you about my work and help you explore the space.' : 'I’m taking some time to enjoy the district.'}`,
-      routine: spot.role === 'staff' ? `welcoming visitors and working as a ${role.toLowerCase()}` : 'visiting the shops and meeting friends',
+      about: work ? `I’m ${name}, the ${role.toLowerCase()} at ${room.name}. ${work.about}` : `I’m ${name}, visiting ${room.name}. I’m taking some time to enjoy the district.`,
+      routine: work?.routine ?? 'visiting the shops and meeting friends',
+      ...(work ? {work,story:work.story,returnGreeting:`Welcome back to ${room.name}. I’m ${name}, the ${role.toLowerCase()}. Would you like to hear a little more about my work?`} : {}),
       interest: room.summary?.label ?? room.theme,
     });
     return [{ id: storePersonId(room, index), name, role, persona, fictional: true,

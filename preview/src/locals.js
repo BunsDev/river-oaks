@@ -1,6 +1,7 @@
-import { turnToward } from './gait.js';
+import { wishLift } from './wishes.js';
+import { createWishVisual } from './wish-effects.js';
 import * as THREE from 'three';
-import { terrainHeight } from './geometry.js';
+import { groundSurfaceHeight } from './world-surface.js';
 import { loadResidentAvatar } from './avatars.js';
 
 // Generic appearances; named cultural guests are labeled fictional portrayals.
@@ -9,7 +10,7 @@ export function buildLocals(world, locals) {
   const skins = ['#b98162', '#d1a085', '#8c5e48', '#dda88d'];
   const shirts = ['#e6dfcd', '#677d72', '#536777', '#a8866b', '#b9bbac', '#394a4b'];
   const models = [];
-  let disposed = false, ready = 0, previousTime = null;
+  let disposed = false, ready = 0;
   const disposePlaceholder = person => {
     const materials=new Set();
     person.traverse(item=>{item.geometry?.dispose(); if(item.material) materials.add(item.material);});
@@ -39,7 +40,7 @@ export function buildLocals(world, locals) {
       if (side === 1) person.userData.greetingArm = arm;
       mesh(new THREE.SphereGeometry(0.009,6,5),dark,[side*0.043,1.73,0.1]);
     }
-    person.position.set(local.position[0],terrainHeight(world.terrain,local.position[0],local.position[1])+(world.walkSurfaceOffset ?? 0.15),-local.position[1]);
+    person.position.set(local.position[0],groundSurfaceHeight(world,local.position[0],-local.position[1]),-local.position[1]);
     person.rotation.y = index*2.4; person.scale.setScalar(0.94+(index%4)*0.035); group.add(person); models.push(person);
     loads.push(loadResidentAvatar(index,local.id).then(avatar=>{
       if (disposed) { avatar.dispose(); return; }
@@ -56,31 +57,35 @@ export function buildLocals(world, locals) {
   group.userData.dispose=()=>{
     disposed=true;
     for(const person of models) {
+      person.userData.wishVisual?.dispose();
       if(person.userData.avatar) person.userData.avatar.dispose(); else disposePlaceholder(person);
     }
     group.clear();
   };
   group.userData.update = (state, camera, now, speakingId, visitor) => {
-    const delta = previousTime === null ? 0 : (now-previousTime)/1000; previousTime = now;
     let visibleKits=0;
     models.forEach((person,index) => {
       const local = state.locals.find(local => local.id === person.userData.localId);
       if (!local) return;
-      person.position.set(local.position[0],terrainHeight(world.terrain,local.position[0],local.position[1])+(world.walkSurfaceOffset ?? 0.15),-local.position[1]);
+      person.position.set(local.position[0],groundSurfaceHeight(world,local.position[0],-local.position[1]),-local.position[1]);
       const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
       const partner=visit?state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)):null;
       person.visible = !local.abducted && (person.position.distanceTo(camera.position)<120 || state.selectedId===local.id);
-      if (local.visitorReaction && visitor && !local.life?.visitId) {
-        person.rotation.y=turnToward(person.rotation.y,Math.atan2(visitor[0]-person.position.x,-visitor[1]-person.position.z),delta);
-      } else if(local.life?.speed>0.01 || local.life?.status==='turning') {
-        person.rotation.y = local.life.heading;
-      } else if(partner && state.selectedId!==local.id) person.rotation.y=turnToward(person.rotation.y, Math.atan2(partner.position[0]-person.position.x,-partner.position[1]-person.position.z), delta);
-      // Only the person in conversation or one held to greet the visitor turns to the camera; passers-by keep their heading.
-      else if (state.selectedId === local.id || local.life?.status === 'greeting visitor') person.rotation.y = turnToward(person.rotation.y, Math.atan2(camera.position.x-person.position.x,camera.position.z-person.position.z), delta);
-      const action=local.visitorReaction?.action ?? (state.selectedId===local.id?local.action:partner?'greet':local.life?.action ?? local.action);
+      // Simulation owns facing through conversations, assistance and route release.
+      if(local.life) person.rotation.y=local.life.heading;
+      const action=local.force?'startled':local.wishDisruption ? 'pause' : state.selectedId===local.id ? local.action : local.visitorReaction?.action ?? (partner?'greet':local.life?.action ?? local.action);
+      // The wish offset is applied after posing the grounded rig. Translate
+      // the partner into that same pre-offset frame for matching eye direction.
+      const lookTarget=visitor && state.selectedId===local.id ? [visitor[0],visitor[2]-wishLift(local.wish)-(local.force?.height??0),-visitor[1]] : null;
       if(person.userData.avatar) {
-        if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>terrainHeight(world.terrain,x,-z)+(world.walkSurfaceOffset ?? 0.15));if(person.userData.avatar.carrying) visibleKits++;}
+        if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>groundSurfaceHeight(world,x,z),lookTarget);if(person.userData.avatar.carrying) visibleKits++;}
         else person.userData.avatar.suspend();
+        if (local.wish && !person.userData.wishVisual) person.userData.wishVisual = createWishVisual(person, person.userData.avatar.object);
+        if (person.userData.wishVisual) {
+          person.userData.wishVisual.update(local.wish, { baseY: person.position.y, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+          if (!local.wish) { person.userData.wishVisual.dispose(); delete person.userData.wishVisual; }
+        }
+        person.position.y+=local.force?.height??0;
         return;
       }
       const arm = person.userData.greetingArm;

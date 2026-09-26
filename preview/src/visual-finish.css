@@ -108,8 +108,6 @@ body { -webkit-font-smoothing: antialiased; }
 .player-controls .player-controls-title { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
 .player-controls :is(label, p), .player-controls #player-status { color: var(--muted); }
 :root[data-theme] .player-controls :is(button, select) { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 12px; }
-.player-controls select { color-scheme: light; }
-[data-theme=dark] .player-controls select { color-scheme: dark; }
 :root[data-theme] .player-controls button[aria-pressed=true] { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--accent); }
 :root[data-theme] .auto-controls { position: static; width: 100%; max-width: none; transform: none; padding: 12px; border-radius: 20px; }
 .auto-controls button { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); font-weight: 600; }
@@ -181,8 +179,6 @@ button:disabled { cursor: not-allowed; }
 .player-settings summary::-webkit-details-marker { display: none; }
 .player-settings summary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(-90deg); }
 .player-settings[open] summary svg { transform: none; }
-.player-controls label { margin: 12px 0 6px; font-size: 10px; }
-:root[data-theme] .player-controls select { padding: 9px 10px; background-color: var(--panel); }
 .player-controls #player-description { display: block; font-size: 11px; line-height: 1.6; margin: 9px 0 14px; }
 .player-actions { display: grid; gap: 8px; }
 :root[data-theme] .player-controls .player-actions button { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px #231c2108; }

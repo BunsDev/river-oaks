@@ -1,0 +1,184 @@
+{
+  "date": "2026-09-22",
+  "status": "verified locally; uncommitted",
+  "changes": [
+    "Softer oval face and jaw with subtle cheek and lip shaping",
+    "Refined neck and shoulders; reduced muscle macro",
+    "Gentle waves in the fitted blonde hair",
+    "Warmer brow shading on cloned hero materials",
+    "Updated portrait from actual renderer",
+    "Pose-driven skirt clearance preserves lower-body skin and gait while preventing the sampled knee protrusion"
+  ],
+  "asset": {
+    "path": "preview/public/assets/characters/jevica.glb",
+    "before_sha256": "f5cf412f0ff67a79471c3546ccfe594440ba9b7ac8de7fc3da958d1fd0d0e761",
+    "after_sha256": "6f7fc6cb6091b34c063d98f9aa515841b0d719049ece9dd49e969b7a85e306d8",
+    "bytes": 5290604
+  },
+  "resident_assets_unchanged": {
+    "woman-casual.glb": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+    "woman-tailored.glb": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+    "man-workwear.glb": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+    "woman-daywear.glb": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+    "man-tailored.glb": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+    "man-casual.glb": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad"
+  },
+  "verification": {
+    "unit_tests": 224,
+    "unit_log": "/tmp/jevica-gown-final-tests.log",
+    "production_build": "/tmp/jevica-gown-final-build.log",
+    "asset_build": "/tmp/jevica-feminine-build.log",
+    "ruff": "passed: scripts/build_jevica.py",
+    "browser_checks": {
+      "checks": [
+        "Jevica is the default",
+        "Only the three authorized forms are offered",
+        "jevica: real model portrait loads",
+        "jevica: description updates",
+        "jevica: third-person camera",
+        "jevica: matching flight vehicle",
+        "jevica: completes ascent to cruising altitude",
+        "jevica: ascent changes real altitude",
+        "jevica: HUD reflects flight",
+        "jevica: landed at ground level",
+        "witch: real model portrait loads",
+        "witch: description updates",
+        "witch: third-person camera",
+        "witch: matching flight vehicle",
+        "witch: completes ascent to cruising altitude",
+        "witch: ascent changes real altitude",
+        "witch: HUD reflects flight",
+        "witch: landed at ground level",
+        "alien: real model portrait loads",
+        "alien: description updates",
+        "alien: third-person camera",
+        "alien: matching flight vehicle",
+        "alien: completes ascent to cruising altitude",
+        "alien: ascent changes real altitude",
+        "alien: HUD reflects flight",
+        "alien: landed at ground level",
+        "jevica: real model portrait loads",
+        "jevica: description updates",
+        "jevica: third-person camera",
+        "jevica: matching flight vehicle",
+        "jevica: completes ascent to cruising altitude",
+        "jevica: ascent changes real altitude",
+        "jevica: HUD reflects flight",
+        "jevica: landed at ground level",
+        "First-person toggle",
+        "V restores third person",
+        "Mobile character controls start collapsed",
+        "No mobile horizontal overflow",
+        "Keyboard expands character controls",
+        "44px flight target",
+        "Mobile portrait matches the current form",
+        "No uncaught browser errors: "
+      ],
+      "errors": []
+    },
+    "browser_log": "/tmp/jevica-gown-player-forms.log",
+    "walking_fixture": {
+      "frames": 180,
+      "speed_mps": 1.4,
+      "finite_transforms": true,
+      "limitation": "Historical pre-fix capture reproduced the original knee intersection; see gown_clearance for the subsequent correction and bounded verification."
+    },
+    "review": "Read-only source review found no actionable correctness findings.",
+    "gown_clearance": {
+      "measurement": "Actual skinned vertices weighted to pelvis/thigh/calf against rendered cloth triangle radial envelope in waist-local y band [-0.82,-0.12] metres",
+      "sampled_poses": 54,
+      "worst_skin_minus_outer_cloth_m": -0.0917580731092344,
+      "max_cloth_radius_m": 0.6757049984685919,
+      "runs": [
+        {
+          "hz": 30,
+          "costume_cpu_ms": {
+            "median": 6.700000047683716,
+            "p95": 8.199999928474426
+          }
+        },
+        {
+          "hz": 60,
+          "costume_cpu_ms": {
+            "median": 6.800000071525574,
+            "p95": 8.5
+          }
+        },
+        {
+          "hz": 120,
+          "costume_cpu_ms": {
+            "median": 6.600000023841858,
+            "p95": 8.100000023841858
+          }
+        }
+      ],
+      "raw_result": "output/playwright/jevica-gown-clearance.json",
+      "green_log": "/tmp/jevica-gown-moving-green.log",
+      "baseline_red_log": "/tmp/jevica-gown-red.log",
+      "baseline_protrusion_m": 0.03305761027801385,
+      "parent_transform_red_log": "/tmp/jevica-gown-moving-red.log",
+      "parent_transform_red_max_radius_m": 128.31318034933577,
+      "review": "Read-only review identified stale attached bind inverse during translation. Fixed via SkinnedMesh.updateMatrixWorld; subsequent review found no remaining actionable findings.",
+      "performance_limit": "Local CPU fixture timings only; district frame rate and target-device performance not established."
+    }
+  },
+  "visual_artifacts": [
+    "output/playwright/jevica-before-face.png",
+    "output/playwright/jevica-before-full.png",
+    "output/playwright/jevica-final-portrait.png",
+    "output/playwright/jevica-final-full.png",
+    "output/playwright/jevica-final-profile.png",
+    "output/playwright/jevica-final-back.png",
+    "output/playwright/jevica-final-walking.png",
+    "output/playwright/jevica-flight.png",
+    "output/playwright/jevica-district.png",
+    "output/playwright/jevica-before-walking.png",
+    "output/playwright/jevica-gown-30hz.png",
+    "output/playwright/jevica-gown-60hz.png",
+    "output/playwright/jevica-gown-120hz.png"
+  ],
+  "source_sha256": {
+    "scripts/build_jevica.py": "a34d8025bd46b2933aec53c09be6b95f1409180531f84550b1ea1cb1042ac205",
+    "preview/src/jevica-costume.js": "c65d7986f2df039f8cdaaf2a9f2b7195169920bedea4f6cc42fc4e4dafefc36c",
+    "preview/public/assets/characters/jevica.sources.json": "fd2e9d9eb8cc2efdf9c637dd64a5f95a638a4892fada59a4321d3f2d06edd851",
+    "preview/public/assets/characters/jevica-portrait.png": "127ea3384fb8f152cc20869bb4e320b4531bcd076c579c9a3e48cf4519ad27e9",
+    "preview/src/jevica-drape.js": "dada533fe2899dbc9ed307532d7f7b31c83d809aa1649e4c6d726cdf3264abf4",
+    "preview/src/costume-batching.js": "10da4df4e0bb681011353b05aafcead13d6fce73a53072ce5cf7c3294ecb553a",
+    "preview/src/player-avatar.js": "75a28c9a58096efd3421a01fc27af8d5a51906c9a6454b15defda6a5d31a2865",
+    "preview/e2e/jevica-gown.js": "4cea1c82254f765fa8a91afdff3ef88db9cde618831ab1775feab3c6efd117e2",
+    "preview/e2e/fixtures/jevica-clearance.js": "fe3c406b0e5f6505d2ad8b8ffccf436eb27828350d8b7dbb232a5d2ee85364f7",
+    "preview/e2e/fixtures/jevica.js": "9914b337bffc9ee8152f99fb66327998fae1eb22a4729eba5d0d46afd93571d5"
+  },
+  "limits": [
+    "Style refinement of the existing real-time model; not photoreal facial animation or cloth simulation.",
+    "Native Unreal avatar parity is not established by these browser checks.",
+    "Gown clearance is checked at sampled lower-body vertices within a bounded vertical band, not continuous skin triangle collision or all terrain and animation states."
+  ],
+  "revalidation": {
+    "date_utc": "2026-09-23",
+    "unit_tests": 228,
+    "unit_log": "/tmp/jevica-appearance-current-tests.log",
+    "production_build": "passed; existing Three.js chunk size advisory",
+    "build_log": "/tmp/jevica-appearance-current-build.log",
+    "gown_poses": 54,
+    "gown_worst_skin_minus_cloth_m": -0.09175807255174373,
+    "gown_errors": [],
+    "gown_log": "/tmp/jevica-appearance-current-gown.log",
+    "render_log": "/tmp/jevica-appearance-current-capture.log",
+    "dev_url": "http://127.0.0.1:5181/",
+    "selected_form": "jevica",
+    "hero_and_resident_asset_hashes": "match recorded hashes",
+    "source_sha256": {
+      "scripts/build_jevica.py": "a34d8025bd46b2933aec53c09be6b95f1409180531f84550b1ea1cb1042ac205",
+      "preview/src/jevica-costume.js": "c65d7986f2df039f8cdaaf2a9f2b7195169920bedea4f6cc42fc4e4dafefc36c",
+      "preview/public/assets/characters/jevica.sources.json": "fd2e9d9eb8cc2efdf9c637dd64a5f95a638a4892fada59a4321d3f2d06edd851",
+      "preview/public/assets/characters/jevica-portrait.png": "127ea3384fb8f152cc20869bb4e320b4531bcd076c579c9a3e48cf4519ad27e9",
+      "preview/src/jevica-drape.js": "dada533fe2899dbc9ed307532d7f7b31c83d809aa1649e4c6d726cdf3264abf4",
+      "preview/src/costume-batching.js": "10da4df4e0bb681011353b05aafcead13d6fce73a53072ce5cf7c3294ecb553a",
+      "preview/src/player-avatar.js": "75a28c9a58096efd3421a01fc27af8d5a51906c9a6454b15defda6a5d31a2865",
+      "preview/e2e/jevica-gown.js": "0c06d42e92d152b7170fb3c97581d059828e0f58a96aed785f6f5553467701c9",
+      "preview/e2e/fixtures/jevica-clearance.js": "fe3c406b0e5f6505d2ad8b8ffccf436eb27828350d8b7dbb232a5d2ee85364f7",
+      "preview/e2e/fixtures/jevica.js": "9914b337bffc9ee8152f99fb66327998fae1eb22a4729eba5d0d46afd93571d5"
+    }
+  }
+}

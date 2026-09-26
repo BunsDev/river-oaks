@@ -30,16 +30,23 @@ export function createRenderPipeline(renderer, scene, camera) {
   }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 4, rings: 2, samples: 8 });
   occlusion.output = GTAOPass.OUTPUT.Default;
   occlusion.blendIntensity = 1.0;
-  const hidden = [];
-  const overrideVisibility = occlusion._overrideVisibility.bind(occlusion);
-  const restoreVisibility = occlusion._restoreVisibility.bind(occlusion);
+  const hidden = [], pending = [];
   occlusion._overrideVisibility = () => {
-    scene.traverse(object => { if (object.visible && isOcclusionExcluded(object)) { object.visible = false; hidden.push(object); } });
-    overrideVisibility();
+    // Fold GTAO's line/point exclusion into the foliage/glass pass. Hidden
+    // rooms and excluded groups already hide their descendants; do not scan
+    // those skeletons or change their own visibility flags.
+    pending.push(scene);
+    while(pending.length) {
+      const object=pending.pop();
+      if(!object.visible)continue;
+      if(isOcclusionExcluded(object)||object.isPoints||object.isLine||object.isLine2) {
+        object.visible=false;hidden.push(object);continue;
+      }
+      for(const child of object.children)pending.push(child);
+    }
   };
   occlusion._restoreVisibility = () => {
-    restoreVisibility();
-    hidden.forEach(object => { object.visible = true; });
+    for(const object of hidden)object.visible=true;
     hidden.length = 0;
   };
   const renderGeometry = occlusion._renderOverride.bind(occlusion);
