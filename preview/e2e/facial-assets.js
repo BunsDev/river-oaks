@@ -1,8 +1,9 @@
 async page=>{
+ // Start Playwright CLI from the repository root; fixture paths are cwd-relative.
  const checks=[],results=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
  const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
  const profiles=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear','jevica'];
- const root='/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery';
+ const root='.';
  await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1260,height:640});
  const load=async index=>{
   await page.goto(`http://127.0.0.1:5181/e2e/fixtures/jevica.html${index===6?'':`?resident=facial-check-${index}&rig=${index}`}`);

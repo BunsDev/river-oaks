@@ -1,6 +1,7 @@
 async page=>{
+ // Start Playwright CLI from the repository root; fixture paths are cwd-relative.
  const checks=[],profiles=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear','jevica'],runs=[],errors=[];
- const root='/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery';
+ const root='.';
  const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&/Shader Error|VALIDATE_STATUS|WebGLProgram/.test(m.text()))errors.push(m.text());});

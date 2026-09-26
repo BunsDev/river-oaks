@@ -99,5 +99,68 @@
     "build": "passed",
     "ruff": "passed",
     "offline_demo": "passed; verification exits 2 for synthetic fixture as expected"
+  },
+  "acceptance_followup": {
+    "directory": {
+      "visits": 194,
+      "driver": {
+        "id": "carriage-driver",
+        "name": "Jules",
+        "role": "Unicorn coachman \u00b7 Jevica\u2019s carriage",
+        "task": null
+      },
+      "errors": []
+    },
+    "nearby": {
+      "visits": 194,
+      "driver": {
+        "location": "carriage-driver",
+        "selected": "carriage-driver",
+        "room": ""
+      },
+      "errors": []
+    },
+    "speech_cost": {
+      "runs": [
+        {
+          "mode": "baseline",
+          "mouthMeshes": 0,
+          "medianMs": 16.699999999999818,
+          "p95Ms": 33.400000000000546,
+          "mainCpuMs": 6.928925627519276,
+          "calls": 1182,
+          "triangles": 11819721
+        },
+        {
+          "mode": "candidate-hidden",
+          "mouthMeshes": 440,
+          "medianMs": 33.30000000000109,
+          "p95Ms": 50,
+          "mainCpuMs": 7.174380171397501,
+          "calls": 1182,
+          "triangles": 11819721
+        },
+        {
+          "mode": "candidate-visible",
+          "mouthMeshes": 440,
+          "medianMs": 33.30000000000109,
+          "p95Ms": 50,
+          "mainCpuMs": 7.528925608997502,
+          "calls": 1280,
+          "triangles": 12190553
+        },
+        {
+          "mode": "candidate-hidden",
+          "mouthMeshes": 440,
+          "medianMs": 33.29999999999927,
+          "p95Ms": 49.89999999999782,
+          "mainCpuMs": 6.919008260916088,
+          "calls": 1186.793388429752,
+          "triangles": 11851537.595041322
+        }
+      ],
+      "errors": []
+    },
+    "scope": "All 194 solo encounters include Jules; speech diagnostic runs with repository-relative generated fixture paths. Performance samples are observational, not a target-GPU guarantee."
   }
 }

@@ -6,13 +6,14 @@ async page => {
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>{
     const d=document.querySelector('#canvas-host').dataset;
-    return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';
+    return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';
   },null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();
   if(!await page.locator('#community-more').evaluate(element=>element.open))await page.locator('#community-more > summary').click();
   const ids=await page.locator('#community-local option').evaluateAll(options=>options.map(option=>option.value));
-  if(ids.length!==193)throw new Error(`Expected 193 encounter locations, got ${ids.length}`);
+  if(ids.length!==194)throw new Error(`Expected 194 encounter locations, got ${ids.length}`);
+  if(!ids.includes('carriage-driver'))throw new Error('Missing carriage driver encounter');
   const firstIndoor=ids.findIndex(id=>id.startsWith('store-'));
   ids.unshift(...ids.splice(firstIndoor,1));
   for(const id of ids) {
