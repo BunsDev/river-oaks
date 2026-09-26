@@ -7,7 +7,8 @@ import { createResidentLife, stepResidentLife, residentPacket, applyResidentDeci
 const angle = (a,b) => Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
 function walking(points,routes,extra={}) {
   const world={scene:'district',bounds_m:[-20,-20,20,20],collisionPolygons:[],communityLocations:points.map((position,i)=>({id:`stop-${i}`,name:`Stop ${i}`,position})),...extra};
-  const state=createCommunity(world),life=createResidentLife(world,state);
+  const state=createCommunity(world);state.locals=state.locals.filter(local=>!local.stationary);
+  const life=createResidentLife(world,state);
   state.locals.forEach((local,i)=>Object.assign(local.life,{heading:Math.atan2(routes[i][0][0]-local.position[0],-(routes[i][0][1]-local.position[1])),route:routes[i].map(p=>[...p]),destination:{id:`end-${i}`,name:'Destination'}}));
   return {state,life};
 }
@@ -104,16 +105,17 @@ test('a resident displaced toward a tree replans from the actual position',()=>{
 test('district crowds keep moving for three minutes without road incursions or sustained deadlocks',()=>{
   const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
   world.vegetation=JSON.parse(readFileSync(new URL('../public/data/district-vegetation.json',import.meta.url)));
-  const state=createCommunity(world),life=createResidentLife(world,state),blocked=state.locals.map(()=>0);
+  const state=createCommunity(world),life=createResidentLife(world,state),pedestrians=state.locals.filter(local=>!local.stationary),blocked=pedestrians.map(()=>0);
+  assert.equal(pedestrians.length,24,'All 24 street pedestrians remain covered');
   for(let frame=0;frame<5400;frame++) {
     stepResidentLife(life,1/30);
-    for(const [i,local] of state.locals.entries()) {
+    for(const [i,local] of pedestrians.entries()) {
       assert.notEqual(life.navigation.pedestrian.classify(local.position),'road',`${local.id} left pedestrian space`);
       blocked[i]=local.life.blocked?blocked[i]+1:0;
       assert.ok(blocked[i]<90,`${local.id} has waited for space for three seconds`);
     }
   }
-  assert.ok(state.locals.every(local=>local.life.distance>50),'Every resident must sustain progress');
+  assert.ok(pedestrians.every(local=>local.life.distance>50),'Every pedestrian must sustain progress');
 });
 
 test('an in-flight recovery is bounded and cannot overwrite a newer redirect',async()=>{
@@ -127,7 +129,6 @@ test('an in-flight recovery is bounded and cannot overwrite a newer redirect',as
   pending[0].resolve([[6,0]]);await Promise.resolve();
   assert.deepEqual(local.life.route,route,'The old route must not replace the redirect');
 });
-<<<<<<< Updated upstream
 
 test('an abducted resident does not alter passing, clearance or arrival',()=>{
   for(const hiddenPosition of [[-3.5,0,0],[-4.5,0,0],[5,0,0]]){
@@ -143,5 +144,3 @@ test('an abducted resident does not alter passing, clearance or arrival',()=>{
     }
   }
 });
-=======
->>>>>>> Stashed changes

@@ -1,6 +1,7 @@
+import { createCarriageEncounter } from './carriage-encounter.js';
+import { createWishState } from './wishes.js';
 // All people, needs, resource costs and outcomes are fictional simulation rules.
 // Source district locations anchor encounters; they do not identify real people.
-import { createWishState } from './wishes.js';
 import { createStoreEncounters } from './store-encounters.js';
 import { createPersona, residentContext } from './personas.js';
 export const COMMUNITY_SCENARIOS = Object.freeze({
@@ -60,15 +61,15 @@ function makeLocals(world) {
   });
 }
 
-export function createCommunity(world, rooms = []) {
-  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms)], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
+export function createCommunity(world, rooms = [], { carriage = true } = {}) {
+  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms), ...(carriage ? createCarriageEncounter(world) : [])], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }
 
 export function chooseCommunityScenario(state, key) {
   if (!Object.hasOwn(COMMUNITY_SCENARIOS, key)) return false;
-  const scenario = COMMUNITY_SCENARIOS[key], eligible = state.locals.filter(local => !local.indoor), count = Math.min(8, eligible.length);
+  const scenario = COMMUNITY_SCENARIOS[key], eligible = state.locals.filter(local => !local.indoor && !local.stationary), count = Math.min(8, eligible.length);
   const targets = new Set(Array.from({ length: count }, (_, i) => eligible[(Math.floor(i * eligible.length / count) + scenario.offset) % eligible.length].id));
   Object.assign(state, {
     scenarioKey: key, scenario, status: 'ready', running: false, elapsed: 0,
@@ -157,14 +158,10 @@ export function stepCommunity(state, realDelta, economy) {
     }
     for (const job of state.jobs) {
       const local = state.locals.find((item) => item.id === job.localId);
-      if (local.abducted || local.status !== 'aid_en_route') continue;
+      if (local.abducted || local.wish || local.wishDisruption || local.status !== 'aid_en_route') continue;
       if(state.physicalVisits) {
         const helper=state.locals.find(item=>item.id===job.helperId);
-<<<<<<< Updated upstream
         if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.abducted || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
-=======
-        if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
->>>>>>> Stashed changes
         if(helper.wish || helper.wishDisruption || local.wish || local.wishDisruption) continue;
         if(helper.id===state.selectedId || ['pause','stop','redirect','seek_shelter'].includes(helper.life?.action)) continue;
       }

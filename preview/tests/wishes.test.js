@@ -7,23 +7,21 @@ const setup = () => ({ wishes: createWishState(), locals: [
   { id: 'theo', name: 'Theo', position: [3, 0, 0] },
   { id: 'far', name: 'June', position: [80, 0, 0] },
 ] });
-<<<<<<< Updated upstream
-test('only Jevica grants and undoes wishes, whichever forms are playable', () => {
-  assert.ok(VISITOR_FORMS.some(form => form.id === 'jevica'));
-  assert.equal(formFor('unknown'), null);
-  for (const caster of ['alien', 'witch', 'visitor', undefined]) {
-    const state = setup();
-    assert.equal(grantWish(state, 'maya', WISHES[0].id, caster).ok, false, String(caster));
-    assert.equal(state.locals[0].wish, undefined);
-  }
-  const state = setup();
-  assert.equal(grantWish(state, 'maya', WISHES[0].id, 'jevica').ok, true);
-  assert.equal(undoWish(state, 'maya', 'witch').ok, false, 'another form cannot undo Jevica’s wish');
-=======
-test('Jevica is the only playable identity', () => {
+test('a Force-held recipient cannot receive a conflicting wish',()=>{
+  const state=setup();state.locals[0].force={height:1,mode:'lift'};
+  assert.equal(grantWish(state,'maya','flight','jevica').ok,false);
+  assert.equal(state.locals[0].wish,undefined);assert.equal(state.wishes.granted,0);
+  delete state.locals[0].force;assert.equal(grantWish(state,'maya','flight','jevica').ok,true);
+});
+test('Jevica is the only playable identity and wish caster', () => {
   assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['jevica']);
   for (const id of ['alien', 'witch', 'unknown']) assert.equal(formFor(id), null);
->>>>>>> Stashed changes
+  for (const caster of ['alien', 'witch', 'visitor', undefined]) {
+    const state = setup();
+    assert.equal(grantWish(state, 'maya', WISHES[0].id, caster).ok, false);
+    assert.equal(state.locals[0].wish, undefined);
+  }
+
 });
 for (const definition of WISHES) test(`${definition.id}: gift becomes trouble, resident requests removal, undo releases the town`, () => {
   const state = setup();
@@ -90,4 +88,37 @@ test('wish trouble pauses physical volunteer work until the incident is undone',
   assert.equal(state.jobs[0].progress,0,'A sneezing dog cannot continue volunteer work');
   undoWish(state,helper.id,'jevica');stepCommunity(state,0.1);
   assert.ok(state.jobs[0].progress>0,'Work resumes once the wish is undone');
+});
+
+test('wishes hold an outdoor route while support is paused and undo resumes it', async () => {
+  const { createCommunity } = await import('../src/community.js');
+  const { createResidentLife, stepResidentLife } = await import('../src/resident-life.js');
+  const world = {scene:'district', bounds_m:[-20,-20,20,20], collisionPolygons:[], communityLocations:[
+    {id:'west',name:'West',position:[-6,0,0]}, {id:'east',name:'East',position:[6,0,0]},
+  ]};
+  const state=createCommunity(world), life=createResidentLife(world,state), local=state.locals[0];
+  for(let i=0;i<180;i++) stepResidentLife(life,1/60);
+  assert.ok(local.life.distance>0);
+  grantWish(state,local.id,'flight','jevica');
+  const position=[...local.position];
+  for(let i=0;i<1800;i++) { stepWishes(state,1/60); stepResidentLife(life,1/60); }
+  assert.equal(state.running,false);
+  assert.equal(state.elapsed,0);
+  assert.equal(local.wish.phase,'pleading');
+  assert.deepEqual(local.position,position);
+  assert.equal(local.life.speed,0);
+  undoWish(state,local.id,'jevica');
+  for(let i=0;i<120;i++) stepResidentLife(life,1/60);
+  assert.notDeepEqual(local.position,position);
+});
+
+test('changing a support scenario preserves active wishes; replacing the world clears them',async()=>{
+  const {createCommunity,chooseCommunityScenario}=await import('../src/community.js');
+  const world={scene:'district',communityLocations:[{id:'a',name:'Garden',position:[0,0,0]}]};
+  const state=createCommunity(world),local=state.locals[0];
+  grantWish(state,local.id,'dragon','jevica');stepWishes(state,14);
+  chooseCommunityScenario(state,'storm');
+  assert.equal(local.wish.phase,'trouble');assert.equal(state.wishes.trouble,1);
+  const fresh=createCommunity(world);
+  assert.equal(fresh.wishes.granted,0);assert.ok(fresh.locals.every(person=>!person.wish));
 });

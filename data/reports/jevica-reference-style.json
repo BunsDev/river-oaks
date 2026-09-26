@@ -1,0 +1,381 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted",
+  "reference": "User-supplied pink ballgown, gold filigree crown and luminous star wand image; visual direction only, image not shipped",
+  "changes": [
+    "Single flowing pink skirt replaces three flounces",
+    "Original gold floral embroidery uses separate metalness and roughness values",
+    "Gold crown and luminous pink-white star wand",
+    "Subtle bust adjustment, narrower shoulders, closer resting arms and smaller Jevica arm swing",
+    "Fitted bodice bridges skin concavities; refreshed rendered portrait",
+    "Arm opposition follows actual foot placement for Jevica and residents"
+  ],
+  "asset": {
+    "id": "jevica",
+    "path": "/assets/characters/jevica.glb",
+    "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS",
+    "source": "MakeHuman system assets; see sources.json and LICENSE-CC0.md",
+    "license": "CC0-1.0",
+    "fictional_generic_appearance": true,
+    "bytes": 5246596,
+    "sha256": "582d811c60a1f34315caaf14959d80d93cef442a1420528b691f04ff4efa5f12",
+    "skin": "young_asian_female",
+    "hair": "long01",
+    "eyes": "high-poly",
+    "eyelashes": "eyelashes01",
+    "eyebrows": "eyebrow001",
+    "body_subdivision": 1,
+    "macro": {
+      "gender": 0,
+      "age": 0.45,
+      "muscle": 0.24,
+      "weight": 0.46,
+      "proportions": 0.5,
+      "height": 0.5,
+      "cupsize": 0.56,
+      "firmness": 0.5,
+      "race": {
+        "asian": 0.33,
+        "caucasian": 0.33,
+        "african": 0.33
+      }
+    },
+    "detail_targets": {
+      "head/head-oval": 0.4,
+      "chin/chin-width-decr": 0.36,
+      "chin/chin-bones-decr": 0.35,
+      "chin/chin-prominent-decr": 0.12,
+      "cheek/l-cheek-volume-incr": 0.1,
+      "cheek/r-cheek-volume-incr": 0.1,
+      "mouth/mouth-angles-up": 0.18,
+      "mouth/mouth-upperlip-volume-incr": 0.1,
+      "mouth/mouth-lowerlip-volume-incr": 0.05,
+      "eyebrows/eyebrows-angle-up": 0.1,
+      "eyebrows/eyebrows-trans-up": 0.08,
+      "neck/measure-neck-circ-decr": 0.18,
+      "torso/measure-shoulder-dist-decr": 0.44
+    },
+    "hair_finish": "Soft waves below fitted roots; original skin weights retained",
+    "costume": "Original fitted shell; runtime draped skirt, tiara and wand"
+  },
+  "resident_assets_unchanged": {
+    "woman-casual.glb": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+    "woman-tailored.glb": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+    "man-workwear.glb": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+    "woman-daywear.glb": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+    "man-tailored.glb": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+    "man-casual.glb": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad"
+  },
+  "verification": {
+    "unit_tests": 237,
+    "build": "passed; existing Three.js chunk-size advisory",
+    "ruff": "scripts/build_jevica.py passed",
+    "gown_poses": 54,
+    "frame_rates": [
+      30,
+      60,
+      120
+    ],
+    "minimum_sampled_leg_clearance_m": 0.017815597753422785,
+    "minimum_sampled_arm_clearance_m": 0.016227326492176397,
+    "body_motion_rig_terrain_rate_runs": 63,
+    "upper_body_rig_terrain_rate_runs": 63,
+    "worst_arm_leg_correlation": -0.9016020866403188,
+    "maximum_world_wrist_speed_m_s": 2.0962979892398237,
+    "raw_browser_report": "output/playwright/jevica-reference-regressions.json",
+    "renders": [
+      "output/playwright/jevica-reference-full.png",
+      "output/playwright/jevica-reference-profile.png",
+      "output/playwright/jevica-reference-portrait.png",
+      "output/playwright/jevica-reference-walking.png"
+    ],
+    "live_checks": {
+      "moving-people": {
+        "checks": [
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 0.38485965186551124,
+            "screen": [
+              842.6965920908456,
+              382.3830927518349
+            ],
+            "position": [
+              -2813.4542300428184,
+              -1274.23409011175,
+              18.3080628566226
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 0.27047999989986415,
+            "screen": [
+              779.9160105089394,
+              397.0050711455365
+            ],
+            "position": [
+              -2813.069451216263,
+              -1229.6473145513019,
+              18.309971662585514
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.35791000005006784,
+            "screen": [
+              780.0343845256656,
+              397.3412827746232
+            ],
+            "position": [
+              -2808.3418224580587,
+              -1208.7072159738248,
+              18.43110359879882
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 0.27005999996662144,
+            "screen": [
+              798.6823904740282,
+              403.0663798073643
+            ],
+            "position": [
+              -2770.7746065535753,
+              -1310.9560958475454,
+              18.411275200139638
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.21160999996662136,
+            "screen": [
+              802.205453729046,
+              404.86550002916766
+            ],
+            "position": [
+              -2762.6297265623734,
+              -1228.7068953340306,
+              18.30570071393842
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.308166839111879,
+            "screen": [
+              799.389847191205,
+              393.9289040721548
+            ],
+            "position": [
+              -2769.8682393419817,
+              -1259.317796723343,
+              18.366830292734377
+            ]
+          }
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
+      },
+      "foot-support-cost": {
+        "rooms": 30,
+        "results": [
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0.7999999523162842,
+            "p95Ms": 0.9000000953674316,
+            "queriesPerFrame": 240
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 1.100000023841858,
+            "p95Ms": 1.3000000715255737,
+            "queriesPerFrame": 8952
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0.7999999523162842,
+            "p95Ms": 0.8999999761581421,
+            "queriesPerFrame": 595.5
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 1.4000000953674316,
+            "p95Ms": 1.7999999523162842,
+            "queriesPerFrame": 16741.075
+          },
+          {
+            "scenario": "player outside",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 10
+          },
+          {
+            "scenario": "player outside",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 0.10000002384185791,
+            "p95Ms": 0.20000004768371582,
+            "queriesPerFrame": 380
+          },
+          {
+            "scenario": "player outside",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 24.8125
+          },
+          {
+            "scenario": "player outside",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 0.19999992847442627,
+            "p95Ms": 0.30000007152557373,
+            "queriesPerFrame": 710.6041666666666
+          },
+          {
+            "scenario": "player inside",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 10
+          },
+          {
+            "scenario": "player inside",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 380
+          },
+          {
+            "scenario": "player inside",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 13.8
+          },
+          {
+            "scenario": "player inside",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 0.09999990463256836,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 464.7375
+          }
+        ],
+        "scope": "CPU avatar updates using actual district terrain and production room lookup, six resident profiles and the Jevica player rig. Indoor positions remain in the room. Footprint-disabled path also disables the foot rocker to compare total contact-solving cost, not a district FPS baseline; costume and rendering excluded."
+      },
+      "player-forms": {
+        "checks": [
+          "Jevica is the default",
+          "Only the three authorized forms are offered",
+          "jevica: real model portrait loads",
+          "jevica: description updates",
+          "jevica: third-person camera",
+          "jevica: matching flight vehicle",
+          "jevica: completes ascent to cruising altitude",
+          "jevica: ascent changes real altitude",
+          "jevica: HUD reflects flight",
+          "jevica: landed at ground level",
+          "witch: real model portrait loads",
+          "witch: description updates",
+          "witch: third-person camera",
+          "witch: matching flight vehicle",
+          "witch: completes ascent to cruising altitude",
+          "witch: ascent changes real altitude",
+          "witch: HUD reflects flight",
+          "witch: landed at ground level",
+          "alien: real model portrait loads",
+          "alien: description updates",
+          "alien: third-person camera",
+          "alien: matching flight vehicle",
+          "alien: completes ascent to cruising altitude",
+          "alien: ascent changes real altitude",
+          "alien: HUD reflects flight",
+          "alien: landed at ground level",
+          "jevica: real model portrait loads",
+          "jevica: description updates",
+          "jevica: third-person camera",
+          "jevica: matching flight vehicle",
+          "jevica: completes ascent to cruising altitude",
+          "jevica: ascent changes real altitude",
+          "jevica: HUD reflects flight",
+          "jevica: landed at ground level",
+          "First-person toggle",
+          "V restores third person",
+          "Mobile character controls start collapsed",
+          "No mobile horizontal overflow",
+          "Keyboard expands character controls",
+          "44px flight target",
+          "Mobile portrait matches the current form",
+          "No uncaught browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    "live_check_scope": "Before removal of Witch and Alien requested later in the same turn"
+  },
+  "limits": [
+    "Procedural animation and pose-driven cloth clearance, not motion capture or cloth dynamics",
+    "Sampled radial arm and leg clearance does not establish complete clothing collision",
+    "Independent review attempt hit a usage limit; local review and automated verification completed",
+    "Witch flight pose transitions, stairs, moving supports and native parity remain separate work"
+  ],
+  "sha256": {
+    "scripts/build_jevica.py": "424dbc70ac22d6fd5e0c92184e0de29ea931ce506cfe3cd318694c5af3cbca78",
+    "preview/src/avatars.js": "48890e0db2c4a11f8d21adf07c243222605eefb219eef55b0fcfda092c913ea4",
+    "preview/src/upper-body-gait.js": "a51b819f197648bf7395c07b7f039ec9888db12d1455e07f83053301b1cf0af7",
+    "preview/src/jevica-costume.js": "8b513b061316e4218fe1265cc47ff98f41e396afed8460e5aba6c294e84fd3d4",
+    "preview/src/jevica-embroidery.js": "c805a4df5fa340e749cd9d3734c8e59b670b5b8d78b06edb9f0d8390cb86b85e",
+    "preview/src/jevica-drape.js": "dada533fe2899dbc9ed307532d7f7b31c83d809aa1649e4c6d726cdf3264abf4",
+    "preview/e2e/jevica-gown.js": "5500fd78c5fba22c58dafcbf78532b0769c1b42cbe73901124b412cabafc862d",
+    "preview/e2e/fixtures/jevica-clearance.js": "7c9a8b0a1b4dd617f5dc868d0deb40f01289f5cc2d779c0cd02cfbc6015db5bf",
+    "preview/public/assets/characters/jevica.glb": "582d811c60a1f34315caaf14959d80d93cef442a1420528b691f04ff4efa5f12",
+    "preview/public/assets/characters/jevica-portrait.png": "5a47f00ca5217be8b962a654add530c4b8f8406829b0021b5f6e396db1fdbd66"
+  },
+  "superseded_runtime_by": "data/reports/jevica-only.json"
+}

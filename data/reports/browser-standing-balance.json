@@ -1,0 +1,2055 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser standing-step torso counterbalance",
+  "before": "Actual-rig regression measured zero chest displacement toward the supporting leg during standing turns.",
+  "change": "Small critically damped waist lean follows the active turn step and support foot. Preserve neck world orientation across differing rig axes. Suppress the added motion for reduced motion, flight and carriage riding.",
+  "turns": {
+    "runs": [
+      {
+        "hz": 30,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.042766151638369e-08,
+            "float": 3.493529621839686e-08,
+            "slide": 2.425967370793528e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.14722129024022387,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.008746625429186583,
+            "supportShift": 0.1933356248078075,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937658722972427,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071416335387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 2.0721970342765794e-08,
+            "float": 1.8751866386230998e-07,
+            "slide": 1.3604614289311912e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.17884167286645652,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007638629212144976,
+            "supportShift": 0.16960890496102798,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937662794994443,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922072818533596,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.3302306079397697e-07,
+            "slide": 1.6001823317713307e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15179179479649427,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009269559699628643,
+            "supportShift": 0.2051412186892901,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656714342016,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071206228223,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 1.9591010730173053e-07,
+            "float": 2.8751201376457647e-07,
+            "slide": 1.4377762376407164e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.1833145364240662,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00737439118649752,
+            "supportShift": 0.16371803753769293,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937665402473228,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.992207366028868,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.1706267262658914e-08,
+            "float": 7.108297926661233e-08,
+            "slide": 5.807998577694198e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.14900018359906717,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009096264784878016,
+            "supportShift": 0.20115206176353473,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937660159580996,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071501771117,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.131260808610317e-08,
+            "slide": 2.2726299153724186e-09,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18550447189060765,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007668084806671027,
+            "supportShift": 0.17023010259533972,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656897792995,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071128819032,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.2506347233862125e-07,
+            "slide": 3.8980435636686766e-08,
+            "ankleError": 1.5265566588595902e-16,
+            "minSeparation": 0.15647374584992263,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009074148923029046,
+            "supportShift": 0.20107372540864835,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937659201094952,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071450242925,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 60,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.3775333710525084e-08,
+            "float": 3.582760743203045e-08,
+            "slide": 2.475583494378719e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15068381207677858,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.00890724945598298,
+            "supportShift": 0.2987740513625632,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937658533853031,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071416335393,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.2105877118340787e-08,
+            "float": 1.9100703769169003e-07,
+            "slide": 1.4468782724303894e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.1823075429080973,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007778905870062358,
+            "supportShift": 0.26119740879625103,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937662368683199,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922072818533596,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.359052053551829e-07,
+            "slide": 1.5114932240169666e-08,
+            "ankleError": 1.668583973270389e-16,
+            "minSeparation": 0.15569381456168355,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00943978695100059,
+            "supportShift": 0.317064892334543,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656761183662,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071206228223,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 2.1500578048939262e-07,
+            "float": 1.676940438845656e-07,
+            "slide": 1.5051943026760592e-07,
+            "ankleError": 1.6654248846680028e-16,
+            "minSeparation": 0.18657517770295706,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007509815347179927,
+            "supportShift": 0.25206289108211843,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937664597686568,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.992207366028868,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.813725549765446e-08,
+            "float": 7.234440100103989e-08,
+            "slide": 5.8935470110888546e-08,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.15282630058725288,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00926330962867361,
+            "supportShift": 0.31093023533256453,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937659823710488,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071501771117,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.136726744647436e-08,
+            "slide": 1.7774506166812707e-09,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18895459922685387,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007808902390485262,
+            "supportShift": 0.26208290814382684,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656897471232,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071128819032,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.2613648700879332e-07,
+            "slide": 3.877862817564321e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.1604052399357133,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009240787628615799,
+            "supportShift": 0.3105126361805811,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937658953911292,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071450242925,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 120,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.3775333710525084e-08,
+            "float": 3.582760743203045e-08,
+            "slide": 2.8296519897146362e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15067546132680137,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.008941100505727828,
+            "supportShift": 0.6127288592369968,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948603356569939,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170123198514613,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.2105877118340787e-08,
+            "float": 1.9289165708105682e-07,
+            "slide": 1.4743714534628093e-07,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.18230063632471558,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007808468770580945,
+            "supportShift": 0.5354594542823106,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948607084238811,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170124611188913,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.359052053551829e-07,
+            "slide": 1.4711373976306593e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15568573348479375,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00947566185258858,
+            "supportShift": 0.6502343654514545,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.794860175430826,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170122980246274,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 2.1500578048939262e-07,
+            "float": 1.676940438845656e-07,
+            "slide": 2.37959238373085e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18656842591146225,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007538355597921098,
+            "supportShift": 0.516741615426233,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948609233771321,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170125462038406,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.813725549765446e-08,
+            "float": 7.234440100103989e-08,
+            "slide": 5.90043213477116e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15281806551500446,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009298513847056045,
+            "supportShift": 0.6377358508128053,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948604527322328,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.017012328937746,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.136726744647436e-08,
+            "slide": 1.613004248284302e-09,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.18894794057694272,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007838579289574321,
+            "supportShift": 0.5372525956878191,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948601857804259,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170122905789751,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.2613648700879332e-07,
+            "slide": 3.8559785207024365e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.1603973937362307,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009275906254543553,
+            "supportShift": 0.6368153780828674,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948603714094754,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170123236162714,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 30,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 6.282963906090178e-09,
+            "float": 3.278239816412176e-08,
+            "slide": 2.0984288914807624e-08,
+            "ankleError": 1.5265566588595902e-16,
+            "minSeparation": 0.14756335684444186,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.008746625429186583,
+            "supportShift": 0.19333562442544208,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.8394323310155393,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0518581996969876,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 9.335982766381368e-09,
+            "float": 2.0882816302407459e-07,
+            "slide": 1.3359753168639801e-07,
+            "ankleError": 1.666147490140628e-16,
+            "minSeparation": 0.1810320625144521,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007638629212144976,
+            "supportShift": 0.16960890483581592,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.828669709602061,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0530749817591387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.448584299804101e-07,
+            "slide": 1.3738552645584164e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15273392844044056,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009269559699628643,
+            "supportShift": 0.20514121877215305,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.8367822134122825,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0447003018185306,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 4.069750385925393e-05,
+            "float": 2.474743676997293e-07,
+            "slide": 1.3812829900740958e-07,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.1844062726844103,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00737439118649752,
+            "supportShift": 0.1637180373852241,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.8276805940191201,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0512996071796272,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 3.803735666545183e-08,
+            "float": 6.349503700597836e-08,
+            "slide": 5.739568571971256e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15091074204192434,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009096264784878016,
+            "supportShift": 0.20115206193001187,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.8377941319951,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.047439484221179,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 7.113815508451998e-08,
+            "slide": 2.6703309267600126e-09,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18588899119773503,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007668084806671027,
+            "supportShift": 0.17023010259605392,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.834592852373507,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0555009194130494,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.19493919807645e-07,
+            "slide": 3.73146194650582e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15926827417170533,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009074148923029046,
+            "supportShift": 0.20107372587789565,
+            "supportSamples": 30,
+            "feet": {
+              "l": {
+                "maxLag": 0.838595114125189,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0549816023927276,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 60,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 5.359479334290929e-09,
+            "float": 3.309212294466679e-08,
+            "slide": 2.0478119474564282e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15081717535001574,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.00890724945598298,
+            "supportShift": 0.29877405079240815,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8416810360277073,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0518581996969876,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.1815250572941878e-09,
+            "float": 2.088314995339624e-07,
+            "slide": 1.3619722413043662e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18386539496605533,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007778905870062358,
+            "supportShift": 0.2611974084264586,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8306992927669752,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0530749817591387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.4682959435102783e-07,
+            "slide": 1.3286789883780974e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15622849778778208,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00943978695100059,
+            "supportShift": 0.31706489243257746,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8388873086895356,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0447003018185317,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 9.682207114412866e-06,
+            "float": 1.8105585968680726e-07,
+            "slide": 1.3911513427401878e-07,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18723983883113443,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007509815347179927,
+            "supportShift": 0.25206289114136077,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8295790026522653,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0512996071796272,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.4370622113987235e-08,
+            "float": 6.349607542532887e-08,
+            "slide": 5.56321968699319e-08,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.15412993048759308,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00926330962867361,
+            "supportShift": 0.31093023556742505,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8399837696016149,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.047439484221179,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 1.3576839867247316e-05,
+            "float": 7.098930406750428e-08,
+            "slide": 2.044997148500921e-09,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.189120380664282,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007808902390485262,
+            "supportShift": 0.2620829081409823,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8366900035451075,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0555009194130494,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.1949474692379836e-07,
+            "slide": 4.1241992151170497e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.16245937733671814,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009240787628615799,
+            "supportShift": 0.31051263633616444,
+            "supportSamples": 50,
+            "feet": {
+              "l": {
+                "maxLag": 0.8409395811994276,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.054981602392728,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 120,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 5.359479334290929e-09,
+            "float": 3.322548109210843e-08,
+            "slide": 2.0227274346263123e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15076863100171248,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 2.220446049250313e-16,
+            "maxChestShift": 0.008941100505727828,
+            "supportShift": 0.6127288578189695,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.8416810360277073,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0749251250177654,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.1815250572941878e-09,
+            "float": 2.084415925591998e-07,
+            "slide": 1.369386978210067e-07,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.1837089547492108,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007808468770580945,
+            "supportShift": 0.5354594538155606,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.830833899670345,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0762318629259782,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.4682959435102783e-07,
+            "slide": 1.3064233705567394e-08,
+            "ankleError": 1.665340183814476e-16,
+            "minSeparation": 0.15613034841160814,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.00947566185258858,
+            "supportShift": 0.6502343656404477,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.8388873086895356,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0679208754068614,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 9.682207114412866e-06,
+            "float": 1.8105585968680726e-07,
+            "slide": 2.2948108648477925e-07,
+            "ankleError": 1.6743451780617611e-16,
+            "minSeparation": 0.1871396244350275,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007538355597921098,
+            "supportShift": 0.516741615338345,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.8297708193049343,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0745187114222035,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.4370622113987235e-08,
+            "float": 6.319717064245944e-08,
+            "slide": 5.47502588579289e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15397412246406525,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009298513847056045,
+            "supportShift": 0.6377358511662807,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.8399837696016149,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0705975578151077,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 7.556919540998609e-06,
+            "float": 7.092486007873045e-08,
+            "slide": 1.7724147590879058e-09,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.18907174848773486,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.007838579289574321,
+            "supportShift": 0.5372525956840195,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.836742111924013,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.078572421859393,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "jevica",
+            "penetration": 0,
+            "float": 1.1923423238677233e-07,
+            "slide": 4.027607681046358e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.162268271113075,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "baselineX": 0,
+            "maxChestShift": 0.009275906254543553,
+            "supportShift": 0.6368153784562832,
+            "supportSamples": 110,
+            "feet": {
+              "l": {
+                "maxLag": 0.8409395811994276,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0779857057532667,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Seven production rigs including Jevica on rendered flat and uneven surfaces at 30/60/120 Hz; half-turns and reversals, actual skinned shoe contact patches and torso displacement toward the supporting leg."
+  },
+  "bodyRegression": {
+    "runs": [
+      {
+        "terrain": "plane",
+        "hz": 30,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8263442049218752,
+            "previousWorld": 0.8263442049218752,
+            "minExtension": 0.9420624498908496,
+            "maxKnee": 0.6841387822522833,
+            "maxSwingKnee": 1.171698561184047,
+            "maxDrop": 0.04759967927625286,
+            "maxSpeed": 0.4206789484532991,
+            "maxWorldSpeed": 0.4206789484532991,
+            "midStanceSamples": 20,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8263442049218752
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9255117993511217,
+            "previousWorld": 0.9255117993511217,
+            "minExtension": 0.9555139552738396,
+            "maxKnee": 0.5990004904116719,
+            "maxSwingKnee": 1.0657698350368747,
+            "maxDrop": 0.026862017263730054,
+            "maxSpeed": 0.2817732312346499,
+            "maxWorldSpeed": 0.2817732312346499,
+            "midStanceSamples": 18,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.9255117993511217
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8613514656423691,
+            "previousWorld": 0.8613514656423691,
+            "minExtension": 0.9440696892999219,
+            "maxKnee": 0.6721053545332758,
+            "maxSwingKnee": 1.1551526034782456,
+            "maxDrop": 0.049764807551680335,
+            "maxSpeed": 0.4280447917479535,
+            "maxWorldSpeed": 0.4280447917479535,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.8613514656423691
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9352991889095456,
+            "previousWorld": 0.9352991889095456,
+            "minExtension": 0.9545348528865075,
+            "maxKnee": 0.6057870102020657,
+            "maxSwingKnee": 1.0775791855401606,
+            "maxDrop": 0.03290858254157747,
+            "maxSpeed": 0.2998372941324845,
+            "maxWorldSpeed": 0.2998372941324845,
+            "midStanceSamples": 19,
+            "maxFootError": 1.8875832159447664e-16,
+            "finalHeight": 0.9352991889095456
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8396107580694557,
+            "previousWorld": 0.8396107580694557,
+            "minExtension": 0.9446636400775847,
+            "maxKnee": 0.6684728948103364,
+            "maxSwingKnee": 1.1548973290296607,
+            "maxDrop": 0.04920401896259108,
+            "maxSpeed": 0.4218527314509779,
+            "maxWorldSpeed": 0.4218527314509779,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8396107580694557
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.945294167031822,
+            "previousWorld": 0.945294167031822,
+            "minExtension": 0.957517583756962,
+            "maxKnee": 0.5852910909652849,
+            "maxSwingKnee": 1.0509928665274133,
+            "maxDrop": 0.02726370708217385,
+            "maxSpeed": 0.28128676408446074,
+            "maxWorldSpeed": 0.28128676408446074,
+            "midStanceSamples": 18,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.945294167031822
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8349417966014591,
+            "previousWorld": 0.8349417966014591,
+            "minExtension": 0.9446925696850317,
+            "maxKnee": 0.6683035704802909,
+            "maxSwingKnee": 1.1567812718775912,
+            "maxDrop": 0.04980336224902182,
+            "maxSpeed": 0.42616178961884854,
+            "maxWorldSpeed": 0.42616178961884854,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8349417966014591
+          }
+        }
+      },
+      {
+        "terrain": "plane",
+        "hz": 60,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8262861295327465,
+            "previousWorld": 0.8262861295327465,
+            "minExtension": 0.9418298829402663,
+            "maxKnee": 0.6855240831735299,
+            "maxSwingKnee": 1.1658167314043155,
+            "maxDrop": 0.048090291941466745,
+            "maxSpeed": 0.42729764253946145,
+            "maxWorldSpeed": 0.42729764253946145,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8262861295327465
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9254108216990087,
+            "previousWorld": 0.9254108216990087,
+            "minExtension": 0.9537765652230551,
+            "maxKnee": 0.6106755658332172,
+            "maxSwingKnee": 1.0675200739813384,
+            "maxDrop": 0.028102919112297897,
+            "maxSpeed": 0.46769021260539834,
+            "maxWorldSpeed": 0.46769021260539834,
+            "midStanceSamples": 44,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.9254108216990087
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8612200128358027,
+            "previousWorld": 0.8612200128358027,
+            "minExtension": 0.9436961995027955,
+            "maxKnee": 0.6743670541335218,
+            "maxSwingKnee": 1.1512363861940487,
+            "maxDrop": 0.0499193359638177,
+            "maxSpeed": 0.43489761283775685,
+            "maxWorldSpeed": 0.43489761283775685,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.8612200128358027
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9351906683094474,
+            "previousWorld": 0.9351906683094474,
+            "minExtension": 0.9532665120396145,
+            "maxKnee": 0.614245117650881,
+            "maxSwingKnee": 1.0786317226146696,
+            "maxDrop": 0.03395048786103305,
+            "maxSpeed": 0.4577187287701556,
+            "maxWorldSpeed": 0.4577187287701556,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.9351906683094474
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8395553707461141,
+            "previousWorld": 0.8395553707461141,
+            "minExtension": 0.9443364254115527,
+            "maxKnee": 0.6704650559414649,
+            "maxSwingKnee": 1.1502784043699825,
+            "maxDrop": 0.049481816010242374,
+            "maxSpeed": 0.4285087344512051,
+            "maxWorldSpeed": 0.4285087344512051,
+            "midStanceSamples": 45,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8395553707461141
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9451948844617144,
+            "previousWorld": 0.9451948844617144,
+            "minExtension": 0.9558927737568454,
+            "maxKnee": 0.5964611289213719,
+            "maxSwingKnee": 1.05284104202096,
+            "maxDrop": 0.028493008364364525,
+            "maxSpeed": 0.4667120265370195,
+            "maxWorldSpeed": 0.4667120265370195,
+            "midStanceSamples": 44,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.9451948844617144
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8348034839099663,
+            "previousWorld": 0.8348034839099663,
+            "minExtension": 0.9443619683180436,
+            "maxKnee": 0.6703168556223611,
+            "maxSwingKnee": 1.152701549656078,
+            "maxDrop": 0.05008962672262951,
+            "maxSpeed": 0.4329547583719284,
+            "maxWorldSpeed": 0.4329547583719284,
+            "midStanceSamples": 45,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.8348034839099663
+          }
+        }
+      },
+      {
+        "terrain": "plane",
+        "hz": 120,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8262773999470416,
+            "previousWorld": 0.8262773999470416,
+            "minExtension": 0.9418261310797842,
+            "maxKnee": 0.6855464085936216,
+            "maxSwingKnee": 1.1644343142435587,
+            "maxDrop": 0.04799360084873172,
+            "maxSpeed": 0.4276183995550964,
+            "maxWorldSpeed": 0.4276183995550964,
+            "midStanceSamples": 93,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.8262773999470416
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9254185640334094,
+            "previousWorld": 0.9254185640334094,
+            "minExtension": 0.9544982268308422,
+            "maxKnee": 0.6058525545919458,
+            "maxSwingKnee": 1.071199915036106,
+            "maxDrop": 0.029019552372464452,
+            "maxSpeed": 0.587498311415966,
+            "maxWorldSpeed": 0.587498311415966,
+            "midStanceSamples": 87,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.9254185640334094
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8612126011156053,
+            "previousWorld": 0.8612126011156053,
+            "minExtension": 0.9436725194493232,
+            "maxKnee": 0.6745102098832607,
+            "maxSwingKnee": 1.1509747602470337,
+            "maxDrop": 0.04997565751373623,
+            "maxSpeed": 0.4351603748399402,
+            "maxWorldSpeed": 0.4351603748399402,
+            "midStanceSamples": 92,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8612126011156053
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9351990648606266,
+            "previousWorld": 0.9351990648606266,
+            "minExtension": 0.9538721316675638,
+            "maxKnee": 0.610220624388166,
+            "maxSwingKnee": 1.0817312934935872,
+            "maxDrop": 0.03469940532475435,
+            "maxSpeed": 0.5517855718521414,
+            "maxWorldSpeed": 0.5517855718521414,
+            "midStanceSamples": 90,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.9351990648606266
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8395481592356709,
+            "previousWorld": 0.8395481592356709,
+            "minExtension": 0.9442969358924046,
+            "maxKnee": 0.6707050899729632,
+            "maxSwingKnee": 1.149990523309314,
+            "maxDrop": 0.04949846660731494,
+            "maxSpeed": 0.42882024967212384,
+            "maxWorldSpeed": 0.42882024967212384,
+            "midStanceSamples": 92,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.8395481592356709
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9452023129725704,
+            "previousWorld": 0.9452023129725704,
+            "minExtension": 0.9565910206406826,
+            "maxKnee": 0.5916859915805985,
+            "maxSwingKnee": 1.0565164677776737,
+            "maxDrop": 0.02940097882962489,
+            "maxSpeed": 0.5875107064630747,
+            "maxWorldSpeed": 0.5875107064630747,
+            "midStanceSamples": 87,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.9452023129725704
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8347963956511976,
+            "previousWorld": 0.8347963956511976,
+            "minExtension": 0.9443217061626801,
+            "maxKnee": 0.6705616466349484,
+            "maxSwingKnee": 1.1523536929799514,
+            "maxDrop": 0.05010674283457395,
+            "maxSpeed": 0.4332323462072596,
+            "maxWorldSpeed": 0.4332323462072596,
+            "midStanceSamples": 92,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8347963956511976
+          }
+        }
+      },
+      {
+        "terrain": "wave",
+        "hz": 30,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8263751940478656,
+            "previousWorld": 0.787537583303135,
+            "minExtension": 0.926397669434857,
+            "maxKnee": 0.7721309475758549,
+            "maxSwingKnee": 1.3055513118345214,
+            "maxDrop": 0.09139153826888169,
+            "maxSpeed": 0.5930850625453454,
+            "maxWorldSpeed": 0.752557315718938,
+            "midStanceSamples": 20,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.8263751940478656
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9253421742680457,
+            "previousWorld": 0.8576471865625037,
+            "minExtension": 0.9402511385015955,
+            "maxKnee": 0.6950964914359647,
+            "maxSwingKnee": 1.1748297200244788,
+            "maxDrop": 0.07882305315136351,
+            "maxSpeed": 0.5657856038151154,
+            "maxWorldSpeed": 0.7245848534184718,
+            "midStanceSamples": 18,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.9253421742680457
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8613762160458415,
+            "previousWorld": 0.7976070147091638,
+            "minExtension": 0.9357315548345113,
+            "maxKnee": 0.7209770240294717,
+            "maxSwingKnee": 1.2549152420486072,
+            "maxDrop": 0.09779059609719143,
+            "maxSpeed": 0.6378100167565259,
+            "maxWorldSpeed": 0.7972822763329634,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8613762160458415
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9351042446498847,
+            "previousWorld": 0.8928922069928681,
+            "minExtension": 0.9409834604068338,
+            "maxKnee": 0.6909878685308648,
+            "maxSwingKnee": 1.178967390078747,
+            "maxDrop": 0.07799002766718355,
+            "maxSpeed": 0.5679148373231702,
+            "maxWorldSpeed": 0.7277964494816058,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.9351042446498847
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.83967865400261,
+            "previousWorld": 0.7534541451178547,
+            "minExtension": 0.93392287003834,
+            "maxKnee": 0.7311421538049792,
+            "maxSwingKnee": 1.2868134827178994,
+            "maxDrop": 0.10298413613110091,
+            "maxSpeed": 0.6791402885298947,
+            "maxWorldSpeed": 0.8386125519480359,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.83967865400261
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9451656980396058,
+            "previousWorld": 0.9192275598829498,
+            "minExtension": 0.9362019517994032,
+            "maxKnee": 0.7185559438517473,
+            "maxSwingKnee": 1.1843780920460478,
+            "maxDrop": 0.06846587227440004,
+            "maxSpeed": 0.4908312271009263,
+            "maxWorldSpeed": 0.6515601165605911,
+            "midStanceSamples": 18,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.9451656980396058
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8349131112188484,
+            "previousWorld": 0.7408817456602738,
+            "minExtension": 0.9304488426983851,
+            "maxKnee": 0.7503469153159283,
+            "maxSwingKnee": 1.314622001212146,
+            "maxDrop": 0.10718508810304805,
+            "maxSpeed": 0.7155567470227586,
+            "maxWorldSpeed": 0.8750290206854483,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8349131112188484
+          }
+        }
+      },
+      {
+        "terrain": "wave",
+        "hz": 60,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8263187187166112,
+            "previousWorld": 0.7875114403973205,
+            "minExtension": 0.9223562608103811,
+            "maxKnee": 0.7933208282231283,
+            "maxSwingKnee": 1.2842198277352888,
+            "maxDrop": 0.09143075738372608,
+            "maxSpeed": 0.6311961691270995,
+            "maxWorldSpeed": 0.7917348288825488,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8263187187166112
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9251880410449818,
+            "previousWorld": 0.8574861976924357,
+            "minExtension": 0.9312333317442065,
+            "maxKnee": 0.7462848216874702,
+            "maxSwingKnee": 1.1866962429495527,
+            "maxDrop": 0.08006808778610297,
+            "maxSpeed": 0.7395790991673112,
+            "maxWorldSpeed": 0.9230884739018963,
+            "midStanceSamples": 44,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.9251880410449818
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8613210375494378,
+            "previousWorld": 0.7975873657339969,
+            "minExtension": 0.9261252037497126,
+            "maxKnee": 0.7736198984883806,
+            "maxSwingKnee": 1.2717415407303037,
+            "maxDrop": 0.09747460584718792,
+            "maxSpeed": 0.6669009667823533,
+            "maxWorldSpeed": 0.8264646376751239,
+            "midStanceSamples": 46,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8613210375494378
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9349363677377118,
+            "previousWorld": 0.8927182302505721,
+            "minExtension": 0.9388995313644977,
+            "maxKnee": 0.703207294966921,
+            "maxSwingKnee": 1.1664420482525635,
+            "maxDrop": 0.07964944668101481,
+            "maxSpeed": 0.7535369078257559,
+            "maxWorldSpeed": 0.9402920472442577,
+            "midStanceSamples": 46,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.9349363677377118
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8396391361386707,
+            "previousWorld": 0.7534435542538721,
+            "minExtension": 0.9168827680662339,
+            "maxKnee": 0.8212134938445339,
+            "maxSwingKnee": 1.3053287096885624,
+            "maxDrop": 0.10344564437169468,
+            "maxSpeed": 0.7084049756137256,
+            "maxWorldSpeed": 0.8678772390318601,
+            "midStanceSamples": 45,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8396391361386707
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.945010067941549,
+            "previousWorld": 0.9190773518376627,
+            "minExtension": 0.9338024616958307,
+            "maxKnee": 0.7320944113915036,
+            "maxSwingKnee": 1.1745564342752792,
+            "maxDrop": 0.07049529120676834,
+            "maxSpeed": 0.6847525512059494,
+            "maxWorldSpeed": 0.874048617406491,
+            "midStanceSamples": 44,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.945010067941549
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8347818468304354,
+            "previousWorld": 0.7407645851296365,
+            "minExtension": 0.9108831471878323,
+            "maxKnee": 0.850784518637278,
+            "maxSwingKnee": 1.3226079866597649,
+            "maxDrop": 0.10722547189904563,
+            "maxSpeed": 0.74599108984158,
+            "maxWorldSpeed": 0.905463363504253,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8347818468304354
+          }
+        }
+      },
+      {
+        "terrain": "wave",
+        "hz": 120,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8263098476677601,
+            "previousWorld": 0.7875036259418987,
+            "minExtension": 0.9217717050211646,
+            "maxKnee": 0.796341501414978,
+            "maxSwingKnee": 1.2924859665468507,
+            "maxDrop": 0.090979453058185,
+            "maxSpeed": 0.63542869268983,
+            "maxWorldSpeed": 0.7954402419038376,
+            "midStanceSamples": 93,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.8263098476677601
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.925196793030622,
+            "previousWorld": 0.8574986277487863,
+            "minExtension": 0.9318766213399121,
+            "maxKnee": 0.7427450174708454,
+            "maxSwingKnee": 1.1835281339221566,
+            "maxDrop": 0.08157299945839402,
+            "maxSpeed": 0.8071577144411712,
+            "maxWorldSpeed": 0.991068863175526,
+            "midStanceSamples": 87,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.925196793030622
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8613116064764236,
+            "previousWorld": 0.7975786248986936,
+            "minExtension": 0.9267565315664317,
+            "maxKnee": 0.7702654827196573,
+            "maxSwingKnee": 1.269877188341972,
+            "maxDrop": 0.09700285543746157,
+            "maxSpeed": 0.6727835371833812,
+            "maxWorldSpeed": 0.8323075766046006,
+            "midStanceSamples": 92,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8613116064764236
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.934946664991593,
+            "previousWorld": 0.8927321522958231,
+            "minExtension": 0.939823937175667,
+            "maxKnee": 0.6978122143797831,
+            "maxSwingKnee": 1.1718481564608436,
+            "maxDrop": 0.0812710407004047,
+            "maxSpeed": 0.7939499827959473,
+            "maxWorldSpeed": 0.9807051222144425,
+            "midStanceSamples": 90,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.934946664991593
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8396289552360787,
+            "previousWorld": 0.7534345290186547,
+            "minExtension": 0.9174575172489059,
+            "maxKnee": 0.8183288142166321,
+            "maxSwingKnee": 1.303132853150383,
+            "maxDrop": 0.10310432113919821,
+            "maxSpeed": 0.7058638993533695,
+            "maxWorldSpeed": 0.8653361627715039,
+            "midStanceSamples": 92,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8396289552360787
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9450221349000484,
+            "previousWorld": 0.9190922313813672,
+            "minExtension": 0.9328719467854788,
+            "maxKnee": 0.7372806622241876,
+            "maxSwingKnee": 1.1813026796474781,
+            "maxDrop": 0.07204534148149255,
+            "maxSpeed": 0.8115151019686628,
+            "maxWorldSpeed": 0.9902595586181029,
+            "midStanceSamples": 87,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.9450221349000484
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8347725127098685,
+            "previousWorld": 0.7407574515952055,
+            "minExtension": 0.911453706574575,
+            "maxKnee": 0.848014920279482,
+            "maxSwingKnee": 1.319990367289192,
+            "maxDrop": 0.10698076617578067,
+            "maxSpeed": 0.7431506311290415,
+            "maxWorldSpeed": 0.9026229047917278,
+            "midStanceSamples": 92,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8347725127098685
+          }
+        }
+      },
+      {
+        "terrain": "ramp",
+        "hz": 30,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8083538155931663,
+            "previousWorld": 1.2678241126790568,
+            "minExtension": 0.834614195961064,
+            "maxKnee": 1.1667282253405806,
+            "maxSwingKnee": 1.400072741135655,
+            "maxDrop": 0.09651240229742086,
+            "maxSpeed": 0.5844311305061711,
+            "maxWorldSpeed": 0.8345524656362602,
+            "midStanceSamples": 20,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8083538155931663
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9040679105378647,
+            "previousWorld": 1.3635382076237552,
+            "minExtension": 0.8713217647078875,
+            "maxKnee": 1.0261852911852443,
+            "maxSwingKnee": 1.3069049527257597,
+            "maxDrop": 0.07552453637427858,
+            "maxSpeed": 0.4653613661110667,
+            "maxWorldSpeed": 0.7204188261246092,
+            "midStanceSamples": 18,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.9040679105378647
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8417259431363934,
+            "previousWorld": 1.3011962402222839,
+            "minExtension": 0.8477841790286158,
+            "maxKnee": 1.1180722913998182,
+            "maxSwingKnee": 1.3882330734336548,
+            "maxDrop": 0.08462057825993963,
+            "maxSpeed": 0.633031768173935,
+            "maxWorldSpeed": 0.7698838060021584,
+            "midStanceSamples": 19,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.8417259431363934
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9135409535055689,
+            "previousWorld": 1.3730112505914593,
+            "minExtension": 0.868777011778464,
+            "maxKnee": 1.036843094604889,
+            "maxSwingKnee": 1.323277604465833,
+            "maxDrop": 0.07957009057134667,
+            "maxSpeed": 0.49676286591114005,
+            "maxWorldSpeed": 0.742418863005152,
+            "midStanceSamples": 19,
+            "maxFootError": 1.8875832159447664e-16,
+            "finalHeight": 0.9135409535055689
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8191107741928564,
+            "previousWorld": 1.2785810712787469,
+            "minExtension": 0.8458376950084301,
+            "maxKnee": 1.1253547437492855,
+            "maxSwingKnee": 1.3919725283187936,
+            "maxDrop": 0.08793912909558643,
+            "maxSpeed": 0.6020510082815456,
+            "maxWorldSpeed": 0.7879303423276596,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8191107741928564
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9218037101764752,
+            "previousWorld": 1.3812740072623657,
+            "minExtension": 0.8753591901401337,
+            "maxKnee": 1.009663493187889,
+            "maxSwingKnee": 1.2956147335443924,
+            "maxDrop": 0.07583276795353688,
+            "maxSpeed": 0.47098276539093487,
+            "maxWorldSpeed": 0.7220950133120985,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.9218037101764752
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8124038982889371,
+            "previousWorld": 1.2718741953748276,
+            "minExtension": 0.8446771300692905,
+            "maxKnee": 1.1297119582381896,
+            "maxSwingKnee": 1.39862955914405,
+            "maxDrop": 0.0887244780108446,
+            "maxSpeed": 0.6455570221100793,
+            "maxWorldSpeed": 0.7922011305208576,
+            "midStanceSamples": 19,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.8124038982889371
+          }
+        }
+      },
+      {
+        "terrain": "ramp",
+        "hz": 60,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8083538225934209,
+            "previousWorld": 1.2678674172334874,
+            "minExtension": 0.8330059029600764,
+            "maxKnee": 1.1725548470397669,
+            "maxSwingKnee": 1.3911879845112718,
+            "maxDrop": 0.08853047861985486,
+            "maxSpeed": 0.5999961546186539,
+            "maxWorldSpeed": 0.8067236562601798,
+            "midStanceSamples": 46,
+            "maxFootError": 1.7772239894833365e-16,
+            "finalHeight": 0.8083538225934209
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9040678960671592,
+            "previousWorld": 1.3635814907072257,
+            "minExtension": 0.8670377603701684,
+            "maxKnee": 1.0435202015927412,
+            "maxSwingKnee": 1.3020862917361167,
+            "maxDrop": 0.06950756750764231,
+            "maxSpeed": 0.45692980086602386,
+            "maxWorldSpeed": 0.6982012435006268,
+            "midStanceSamples": 44,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.9040678960671592
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8417259528041271,
+            "previousWorld": 1.3012395474441936,
+            "minExtension": 0.8468930552638859,
+            "maxKnee": 1.1214286067064458,
+            "maxSwingKnee": 1.3858407557725811,
+            "maxDrop": 0.08193961945271522,
+            "maxSpeed": 0.6212787330619829,
+            "maxWorldSpeed": 0.7445333283814493,
+            "midStanceSamples": 45,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.8417259528041271
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.913540954268646,
+            "previousWorld": 1.3730545489087125,
+            "minExtension": 0.8674893166631028,
+            "maxKnee": 1.042036229886508,
+            "maxSwingKnee": 1.3192153509636293,
+            "maxDrop": 0.07354626530671793,
+            "maxSpeed": 0.48398916205158127,
+            "maxWorldSpeed": 0.7211724245101836,
+            "midStanceSamples": 46,
+            "maxFootError": 1.6653345369377348e-16,
+            "finalHeight": 0.913540954268646
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8191107782028532,
+            "previousWorld": 1.2786243728429196,
+            "minExtension": 0.844143695524886,
+            "maxKnee": 1.1316902782208809,
+            "maxSwingKnee": 1.3813291491620583,
+            "maxDrop": 0.08300943505183789,
+            "maxSpeed": 0.618187033383939,
+            "maxWorldSpeed": 0.7664703761918323,
+            "midStanceSamples": 45,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8191107782028532
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9218036960314641,
+            "previousWorld": 1.3813172906715305,
+            "minExtension": 0.8714281537087343,
+            "maxKnee": 1.0258155508850644,
+            "maxSwingKnee": 1.2916054695339612,
+            "maxDrop": 0.06968493323005642,
+            "maxSpeed": 0.46859322660392166,
+            "maxWorldSpeed": 0.699169561541324,
+            "midStanceSamples": 44,
+            "maxFootError": 1.6883057536160649e-16,
+            "finalHeight": 0.9218036960314641
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8124039038700767,
+            "previousWorld": 1.2719174985101431,
+            "minExtension": 0.8428962156137813,
+            "maxKnee": 1.1363491004607198,
+            "maxSwingKnee": 1.3952785356183572,
+            "maxDrop": 0.08510081995355057,
+            "maxSpeed": 0.6342098883606351,
+            "maxWorldSpeed": 0.7704360887145945,
+            "midStanceSamples": 45,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.8124039038700767
+          }
+        }
+      },
+      {
+        "terrain": "ramp",
+        "hz": 120,
+        "profiles": {
+          "woman-casual": {
+            "base": 0.8265679915497921,
+            "previous": 0.8083536133976246,
+            "previousWorld": 1.267874207572957,
+            "minExtension": 0.8337647301828797,
+            "maxKnee": 1.1698089150097373,
+            "maxSwingKnee": 1.3887174747819617,
+            "maxDrop": 0.0855815555139996,
+            "maxSpeed": 0.5977348392380932,
+            "maxWorldSpeed": 0.7974315288362366,
+            "midStanceSamples": 94,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.8083536133976246
+          },
+          "man-casual": {
+            "base": 0.9255485446063746,
+            "previous": 0.9040704372387209,
+            "previousWorld": 1.3635910314140534,
+            "minExtension": 0.8670473195458108,
+            "maxKnee": 1.0434818119971396,
+            "maxSwingKnee": 1.301691893527957,
+            "maxDrop": 0.06696224572879317,
+            "maxSpeed": 0.6342196988644311,
+            "maxWorldSpeed": 0.7186318915664192,
+            "midStanceSamples": 88,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.9040704372387209
+          },
+          "woman-tailored": {
+            "base": 0.8614405230232054,
+            "previous": 0.8417272147543389,
+            "previousWorld": 1.3012478089296713,
+            "minExtension": 0.8483567499138185,
+            "maxKnee": 1.115911010144822,
+            "maxSwingKnee": 1.3825723151352902,
+            "maxDrop": 0.08133398515459844,
+            "maxSpeed": 0.6265388187153231,
+            "maxWorldSpeed": 0.7620326479979544,
+            "midStanceSamples": 92,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.8417272147543389
+          },
+          "man-tailored": {
+            "base": 0.9353596616793914,
+            "previous": 0.9135431271700591,
+            "previousWorld": 1.3730637213453916,
+            "minExtension": 0.8681213744635031,
+            "maxKnee": 1.0394901474275953,
+            "maxSwingKnee": 1.317409358843394,
+            "maxDrop": 0.07088628757512783,
+            "maxSpeed": 0.5702337208754571,
+            "maxWorldSpeed": 0.741648062602227,
+            "midStanceSamples": 90,
+            "maxFootError": 1.6711069443220838e-16,
+            "finalHeight": 0.9135431271700591
+          },
+          "woman-daywear": {
+            "base": 0.8397935916503851,
+            "previous": 0.8191118620016964,
+            "previousWorld": 1.2786324561770288,
+            "minExtension": 0.8454599337216127,
+            "maxKnee": 1.1267703145153938,
+            "maxSwingKnee": 1.3772979127549456,
+            "maxDrop": 0.08297984413233306,
+            "maxSpeed": 0.6234715992696138,
+            "maxWorldSpeed": 0.7860654998492977,
+            "midStanceSamples": 92,
+            "maxFootError": 1.716587549445839e-16,
+            "finalHeight": 0.8191118620016964
+          },
+          "man-workwear": {
+            "base": 0.945339058814225,
+            "previous": 0.9218061131903446,
+            "previousWorld": 1.381326707365677,
+            "minExtension": 0.8713801124650438,
+            "maxKnee": 1.0260115113257244,
+            "maxSwingKnee": 1.2905496978587265,
+            "maxDrop": 0.06723868370671937,
+            "maxSpeed": 0.6446843030530847,
+            "maxWorldSpeed": 0.7200758781382266,
+            "midStanceSamples": 89,
+            "maxFootError": 2.0014830212433605e-16,
+            "finalHeight": 0.9218061131903446
+          },
+          "jevica": {
+            "base": 0.8350494791596245,
+            "previous": 0.8124049883473534,
+            "previousWorld": 1.2719255825226858,
+            "minExtension": 0.8441336832487681,
+            "maxKnee": 1.1317409552263085,
+            "maxSwingKnee": 1.390326862530841,
+            "maxDrop": 0.0850719046979379,
+            "maxSpeed": 0.6393675844810964,
+            "maxWorldSpeed": 0.7900747859454293,
+            "midStanceSamples": 92,
+            "maxFootError": 1.7554167342883506e-16,
+            "finalHeight": 0.8124049883473534
+          }
+        }
+      }
+    ],
+    "errors": []
+  },
+  "verification": {
+    "unitTests": 330,
+    "failures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "regression": "New actual-rig support-transfer assertion failed before implementation and passes afterward, with fixed feet and gaze, transformed/scaled parent, reduced-motion and flying cases."
+  },
+  "limitations": [
+    "This is a subtle torso counterbalance, not a whole-body physical center-of-mass simulation.",
+    "Fixture coverage does not establish full-scene performance or complete end-to-end motion realism."
+  ],
+  "sha256": {
+    "preview/src/upper-body-gait.js": "759d63e090fd0bd64da2db0b2f03c087cf1e1c8ef25dbfc983387e9d59e0867e",
+    "preview/src/avatars.js": "2e7e09b731e1c7e7313d14c27ea578ebe81963c36499c292f61e83a42a8b48d0",
+    "preview/tests/upper-body-gait.test.js": "37feaad87e8ff0be5d3df3ebdf3ed3132a08df53d9f9daca2c0ac16899aac1af",
+    "preview/e2e/standing-balance.js": "f5f52881232192678b6cdf562c11a7b52194898d40703440e9a878740d8c8aa9"
+  }
+}

@@ -42,17 +42,9 @@ export function composeFrame(render) {
   try { return render(); } finally { composing = false; }
 }
 
-// Objects the AO normal pass hides: excluded foliage and glazing plus the
-// points and lines GTAO hides itself. Walking the whole scene twice per frame
-// cost more CPU than the AO shading, so candidates refresh about once a second.
-export const OCCLUSION_CANDIDATE_REFRESH_MS = 1000;
-function occlusionCandidates(scene) {
-  const found = [];
-  scene.traverse(object => { if (isOcclusionExcluded(object) || object.isPoints || object.isLine || object.isLine2) found.push(object); });
-  return found;
-}
-
-export function createRenderPipeline(renderer, scene, camera, { now = () => performance.now() } = {}) {
+// Visit only visible branches so new props and room visibility changes apply
+// immediately; excluded groups and hidden rooms prune their entire subtree.
+export function createRenderPipeline(renderer, scene, camera) {
   const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(4, renderer.capabilities.maxSamples) });
   const composer = new EffectComposer(renderer, target);
   const render = new RenderPass(scene, camera);
@@ -61,15 +53,23 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
   }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 4, rings: 2, samples: 8 });
   occlusion.output = GTAOPass.OUTPUT.Default;
   occlusion.blendIntensity = 1.0;
-  const hidden = [];
-  let candidates = [], candidatesAt = -Infinity;
+  const hidden = [], pending = [];
   occlusion._overrideVisibility = () => {
-    const time = now();
-    if (time - candidatesAt >= OCCLUSION_CANDIDATE_REFRESH_MS) { candidates = occlusionCandidates(scene); candidatesAt = time; }
-    for (const object of candidates) if (object.visible) { object.visible = false; hidden.push(object); }
+    // Fold GTAO's line/point exclusion into the foliage/glass pass. Hidden
+    // rooms and excluded groups already hide their descendants; do not scan
+    // those skeletons or change their own visibility flags.
+    pending.push(scene);
+    while(pending.length) {
+      const object=pending.pop();
+      if(!object.visible)continue;
+      if(isOcclusionExcluded(object)||object.isPoints||object.isLine||object.isLine2) {
+        object.visible=false;hidden.push(object);continue;
+      }
+      for(const child of object.children)pending.push(child);
+    }
   };
   occlusion._restoreVisibility = () => {
-    hidden.forEach(object => { object.visible = true; });
+    for(const object of hidden)object.visible=true;
     hidden.length = 0;
   };
   const renderGeometry = occlusion._renderOverride.bind(occlusion);
@@ -107,7 +107,6 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
   };
   return {
     occlusion,
-<<<<<<< Updated upstream
     resize(width, height, pixelRatio) { size = { width, height, pixelRatio }; applySize(); },
     // Graphics quality: 1 is native resolution. Changing it reallocates buffers.
     setRenderScale(scale) {
@@ -118,22 +117,6 @@ export function createRenderPipeline(renderer, scene, camera, { now = () => perf
     setOcclusion(enabled) { occlusion.enabled = enabled; },
     get stats() { return { ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { composeFrame(() => composer.render(delta)); },
-    // Newly added foliage or glazing joins the AO exclusions on the next pass.
-    refreshOcclusionCandidates() { candidatesAt = -Infinity; },
-=======
-    resize(width, height, pixelRatio) {
-      size = { width, height, pixelRatio };
-      composer.setPixelRatio(pixelRatio); composer.setSize(width, height);
-      const scale = aoResolutionScale(width * pixelRatio, height * pixelRatio);
-      // Crystal and glass refraction samples a separate opaque-scene texture.
-      // Bound that texture at UHD, without reducing the main image or geometry.
-      renderer.transmissionResolutionScale=scale;
-      occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
-    },
-    setOcclusion(enabled) { occlusion.enabled = enabled; },
-    get stats() { return { ao: occlusion.enabled, aoScale: aoResolutionScale(size.width * size.pixelRatio, size.height * size.pixelRatio), transmissionScale:renderer.transmissionResolutionScale }; },
-    render(delta) { composer.render(delta); },
->>>>>>> Stashed changes
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }

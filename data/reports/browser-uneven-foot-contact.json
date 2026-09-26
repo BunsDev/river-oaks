@@ -1,0 +1,910 @@
+{
+  "date": "2026-09-23",
+  "status": "Verified locally; uncommitted. Broader goal remains active.",
+  "changes": [
+    "Cache actual lower-shoe vertices in bounded footprint cells, expressed in foot-local coordinates",
+    "Fit landing orientation at the destination rather than beneath the body",
+    "Fit ankle support height and interpolated swing clearance to terrain under the shoe footprint",
+    "Keep planted targets fixed while retaining existing support/swing coordination"
+  ],
+  "baseline": {
+    "log": "/tmp/river-shoe-uneven-red.log",
+    "worst_penetration_m": 0.054785629906955235,
+    "max_planted_float_m": 0.017988315752901808
+  },
+  "verification": {
+    "uneven_ground": {
+      "minHeight": -0.0007244902384367924,
+      "maxPlantedHeight": 7.413440292203255e-07,
+      "planted": 14796,
+      "errors": [],
+      "runs": [
+        {
+          "terrain": "wave",
+          "slope": 0,
+          "hz": 30,
+          "frames": 151
+        },
+        {
+          "terrain": "wave",
+          "slope": 0,
+          "hz": 60,
+          "frames": 301
+        },
+        {
+          "terrain": "wave",
+          "slope": 0,
+          "hz": 120,
+          "frames": 601
+        },
+        {
+          "terrain": "ramp",
+          "slope": 0,
+          "hz": 30,
+          "frames": 151
+        },
+        {
+          "terrain": "ramp",
+          "slope": 0,
+          "hz": 60,
+          "frames": 301
+        },
+        {
+          "terrain": "ramp",
+          "slope": 0,
+          "hz": 120,
+          "frames": 601
+        }
+      ]
+    },
+    "uneven_ground_log": "/tmp/river-shoe-uneven-green.log",
+    "terrain_fidelity": "Height queries interpolate the same cell diagonal as the rendered subdivided PlaneGeometry.",
+    "cpu_cost": {
+      "rooms": 30,
+      "results": [
+        {
+          "scenario": "24 outdoor residents",
+          "speed": 0,
+          "footprints": false,
+          "medianMs": 0.7999999523162842,
+          "p95Ms": 1.399999976158142,
+          "queriesPerFrame": 240
+        },
+        {
+          "scenario": "24 outdoor residents",
+          "speed": 0,
+          "footprints": true,
+          "medianMs": 0.8999999761581421,
+          "p95Ms": 1.5,
+          "queriesPerFrame": 4476
+        },
+        {
+          "scenario": "24 outdoor residents",
+          "speed": 1.1,
+          "footprints": false,
+          "medianMs": 0.8000000715255737,
+          "p95Ms": 2,
+          "queriesPerFrame": 456
+        },
+        {
+          "scenario": "24 outdoor residents",
+          "speed": 1.1,
+          "footprints": true,
+          "medianMs": 1.100000023841858,
+          "p95Ms": 1.7999999523162842,
+          "queriesPerFrame": 8504.4
+        },
+        {
+          "scenario": "player outside",
+          "speed": 0,
+          "footprints": false,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 10
+        },
+        {
+          "scenario": "player outside",
+          "speed": 0,
+          "footprints": true,
+          "medianMs": 0.10000002384185791,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 190
+        },
+        {
+          "scenario": "player outside",
+          "speed": 1.1,
+          "footprints": false,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 19
+        },
+        {
+          "scenario": "player outside",
+          "speed": 1.1,
+          "footprints": true,
+          "medianMs": 0.10000002384185791,
+          "p95Ms": 0.20000004768371582,
+          "queriesPerFrame": 361
+        },
+        {
+          "scenario": "player inside",
+          "speed": 0,
+          "footprints": false,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 10
+        },
+        {
+          "scenario": "player inside",
+          "speed": 0,
+          "footprints": true,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 190
+        },
+        {
+          "scenario": "player inside",
+          "speed": 1.1,
+          "footprints": false,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 12.729166666666666
+        },
+        {
+          "scenario": "player inside",
+          "speed": 1.1,
+          "footprints": true,
+          "medianMs": 0,
+          "p95Ms": 0.10000002384185791,
+          "queriesPerFrame": 241.85416666666666
+        }
+      ],
+      "scope": "CPU avatar updates using actual district terrain and production room lookup, six resident profiles and the Jevica player rig. Indoor positions remain in the room. Footprint-disabled path isolates query cost, not a district FPS baseline; costume and rendering excluded."
+    },
+    "cpu_cost_log": "/tmp/river-sole-support-cost-final.log",
+    "unit_tests": 228,
+    "unit_log": "/tmp/river-sole-uneven-final-tests.log",
+    "production_build": "/tmp/river-sole-uneven-final-build.log",
+    "build_warning": "Existing large Three.js chunk advisory",
+    "review": "Read-only source review found no actionable correctness issue. Its requested production-callback cost measurement is recorded above.",
+    "visual_inspection": [
+      "Inspected actual woman-casual shoe contact on wavy terrain and man-workwear contact at the ramp transition, frame75.",
+      "The woman-casual close-up also shows cuff/sock intersection artifacts; this pass does not establish clothing clearance.",
+      "Cuff/sock artifacts also appear with original shoe weights in the same pose. Paired routed captures confirm this is not introduced by sole stabilization; diagnostic weights verify the A/B state."
+    ],
+    "visual_log": "/tmp/river-uneven-captures.log",
+    "runner_hardening": "Fixture scripts now use the repo default localhost URL explicitly, consistent with other E2E scripts; acceptance copies substitute dev port5181. This avoids location.origin=null when the CLI starts on a blank tab. No runtime behavior changed.",
+    "integration": {
+      "planar-shoes": {
+        "log": "/tmp/river-uneven-planar-shoes-final.log",
+        "result": {
+          "minHeight": -2.0098258013412362e-07,
+          "maxPlantedHeight": 9.321232241621402e-07,
+          "planted": 26454,
+          "errors": [],
+          "runs": [
+            {
+              "slope": 0,
+              "hz": 30,
+              "frames": 151
+            },
+            {
+              "slope": 0.5,
+              "hz": 30,
+              "frames": 151
+            },
+            {
+              "slope": -0.5,
+              "hz": 30,
+              "frames": 151
+            },
+            {
+              "slope": 0,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "slope": 0.2,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "slope": -0.2,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "slope": 0.5,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "slope": -0.5,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "slope": 0,
+              "hz": 120,
+              "frames": 601
+            },
+            {
+              "slope": 0.5,
+              "hz": 120,
+              "frames": 601
+            },
+            {
+              "slope": -0.5,
+              "hz": 120,
+              "frames": 601
+            }
+          ]
+        }
+      },
+      "grounded-motion": {
+        "log": "/tmp/river-uneven-grounded-motion-final.log",
+        "result": {
+          "rigs": 6,
+          "frames": 301,
+          "plantedSamples": 2052,
+          "maxFootErrorMeters": 9.760738904586758e-07,
+          "errors": [],
+          "scope": "Actual shipped skinned rigs and renderer on an inclined fixture; district paths checked separately"
+        }
+      },
+      "crowd-motion": {
+        "log": "/tmp/river-uneven-crowd-motion-final.log",
+        "result": {
+          "results": [
+            {
+              "scenario": "passing",
+              "rigs": 6,
+              "frames": 1441,
+              "plantedSamples": 12854,
+              "maxFootErrorMeters": 9.747647121082579e-07,
+              "walkingMeshClicks": 4,
+              "opaqueForegroundRejections": 4,
+              "arrived": 6
+            },
+            {
+              "scenario": "turns",
+              "rigs": 6,
+              "frames": 1441,
+              "plantedSamples": 12825,
+              "maxFootErrorMeters": 9.865312215937689e-07,
+              "walkingMeshClicks": 0,
+              "opaqueForegroundRejections": 0,
+              "arrived": 6
+            }
+          ],
+          "errors": [],
+          "scope": "Actual resident simulation, avatar animation and pointer picker on fixtures; deterministic walking frames"
+        }
+      },
+      "gown": {
+        "log": "/tmp/river-uneven-gown-final.log",
+        "result": {
+          "worst": -0.09175807255174373,
+          "runs": [
+            {
+              "hz": 30,
+              "measurements": [
+                {
+                  "stage": "walk",
+                  "frame": 1,
+                  "worst": -0.09879489461660867,
+                  "checked": 4879,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 15,
+                  "worst": -0.11354446378574529,
+                  "checked": 4866,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 30,
+                  "worst": -0.11746617561146783,
+                  "checked": 4859,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 1,
+                  "worst": -0.11210403231624438,
+                  "checked": 4896,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 15,
+                  "worst": -0.12206990514273558,
+                  "checked": 4837,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685778
+                },
+                {
+                  "stage": "turn",
+                  "frame": 30,
+                  "worst": -0.11963902789063624,
+                  "checked": 4818,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 1,
+                  "worst": -0.11193296267758784,
+                  "checked": 4712,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 15,
+                  "worst": -0.09176447053019937,
+                  "checked": 4787,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 30,
+                  "worst": -0.09191359693610668,
+                  "checked": 4774,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 1,
+                  "worst": -0.0917678725311738,
+                  "checked": 4763,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 15,
+                  "worst": -0.128672614997006,
+                  "checked": 5113,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 30,
+                  "worst": -0.1277463627971333,
+                  "checked": 5113,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 1,
+                  "worst": -0.13155541227204035,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 15,
+                  "worst": -0.13153682155644345,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 30,
+                  "worst": -0.13153682155644345,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 1,
+                  "worst": -0.10727971882888793,
+                  "checked": 4961,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 15,
+                  "worst": -0.1072399739699803,
+                  "checked": 4884,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 30,
+                  "worst": -0.10066450771280089,
+                  "checked": 4856,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                }
+              ],
+              "costumeUpdateMs": {
+                "median": 6.100000023841858,
+                "p95": 6.699999928474426
+              }
+            },
+            {
+              "hz": 60,
+              "measurements": [
+                {
+                  "stage": "walk",
+                  "frame": 1,
+                  "worst": -0.1097622444738462,
+                  "checked": 4983,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 30,
+                  "worst": -0.11354446378574529,
+                  "checked": 4866,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 60,
+                  "worst": -0.11749256948535203,
+                  "checked": 4859,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 1,
+                  "worst": -0.11229733762754651,
+                  "checked": 4881,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 30,
+                  "worst": -0.12302623824618991,
+                  "checked": 4796,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685778
+                },
+                {
+                  "stage": "turn",
+                  "frame": 60,
+                  "worst": -0.11229034980704755,
+                  "checked": 4891,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 1,
+                  "worst": -0.11368251390450734,
+                  "checked": 4612,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 30,
+                  "worst": -0.09209210767543985,
+                  "checked": 4781,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 60,
+                  "worst": -0.12078683702473941,
+                  "checked": 4917,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 1,
+                  "worst": -0.11536875852767198,
+                  "checked": 4916,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 30,
+                  "worst": -0.12786788876385843,
+                  "checked": 5126,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 60,
+                  "worst": -0.12772706324559047,
+                  "checked": 5126,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 1,
+                  "worst": -0.131541120516414,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 30,
+                  "worst": -0.13154112051641367,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 60,
+                  "worst": -0.1315411205164135,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 1,
+                  "worst": -0.11247710180545362,
+                  "checked": 5012,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 30,
+                  "worst": -0.10472267168870197,
+                  "checked": 4867,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 60,
+                  "worst": -0.10474134059138285,
+                  "checked": 4831,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                }
+              ],
+              "costumeUpdateMs": {
+                "median": 6,
+                "p95": 6.699999928474426
+              }
+            },
+            {
+              "hz": 120,
+              "measurements": [
+                {
+                  "stage": "walk",
+                  "frame": 1,
+                  "worst": -0.11494920602587444,
+                  "checked": 5038,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 60,
+                  "worst": -0.11354446378574529,
+                  "checked": 4866,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "walk",
+                  "frame": 120,
+                  "worst": -0.11818246402138377,
+                  "checked": 4859,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 1,
+                  "worst": -0.11597414761109226,
+                  "checked": 4869,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "turn",
+                  "frame": 60,
+                  "worst": -0.12495380246825882,
+                  "checked": 4788,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685778
+                },
+                {
+                  "stage": "turn",
+                  "frame": 120,
+                  "worst": -0.10812443409444372,
+                  "checked": 4928,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 1,
+                  "worst": -0.11093950471319625,
+                  "checked": 4602,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 60,
+                  "worst": -0.09175807255174373,
+                  "checked": 4820,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "fast-walk",
+                  "frame": 120,
+                  "worst": -0.1052245646388294,
+                  "checked": 4909,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 1,
+                  "worst": -0.10480832078231805,
+                  "checked": 4906,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 60,
+                  "worst": -0.1280688389041268,
+                  "checked": 5122,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "stop",
+                  "frame": 120,
+                  "worst": -0.1277357538787575,
+                  "checked": 5122,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 1,
+                  "worst": -0.13154979250200138,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 60,
+                  "worst": -0.13154943370038563,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "bubble-pose",
+                  "frame": 120,
+                  "worst": -0.13154943370038558,
+                  "checked": 5156,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 1,
+                  "worst": -0.11858563955636836,
+                  "checked": 5048,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 60,
+                  "worst": -0.11012212673988114,
+                  "checked": 4906,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                },
+                {
+                  "stage": "landing-resume",
+                  "frame": 120,
+                  "worst": -0.10934310074346898,
+                  "checked": 4855,
+                  "uncovered": 0,
+                  "clothRadius": 0.6757049984685919
+                }
+              ],
+              "costumeUpdateMs": {
+                "median": 6.100000023841858,
+                "p95": 6.700000047683716
+              }
+            }
+          ],
+          "errors": []
+        }
+      },
+      "moving-people": {
+        "log": "/tmp/river-uneven-moving-people-final.log",
+        "result": {
+          "checks": [
+            "local-00: walking mesh is visible and in reach",
+            "local-00: walking mesh projects inside the viewport",
+            "local-00: real pointer selects the walking person",
+            "local-00: pointer conversation does not relocate the visitor",
+            "local-00: clicked walker holds position during conversation",
+            "local-01: walking mesh is visible and in reach",
+            "local-01: walking mesh projects inside the viewport",
+            "local-01: real pointer selects the walking person",
+            "local-01: pointer conversation does not relocate the visitor",
+            "local-01: clicked walker holds position during conversation",
+            "local-02: walking mesh is visible and in reach",
+            "local-02: walking mesh projects inside the viewport",
+            "local-02: real pointer selects the walking person",
+            "local-02: pointer conversation does not relocate the visitor",
+            "local-02: clicked walker holds position during conversation",
+            "local-03: walking mesh is visible and in reach",
+            "local-03: walking mesh projects inside the viewport",
+            "local-03: real pointer selects the walking person",
+            "local-03: pointer conversation does not relocate the visitor",
+            "local-03: clicked walker holds position during conversation",
+            "local-04: walking mesh is visible and in reach",
+            "local-04: walking mesh projects inside the viewport",
+            "local-04: real pointer selects the walking person",
+            "local-04: pointer conversation does not relocate the visitor",
+            "local-04: clicked walker holds position during conversation",
+            "local-05: walking mesh is visible and in reach",
+            "local-05: walking mesh projects inside the viewport",
+            "local-05: real pointer selects the walking person",
+            "local-05: pointer conversation does not relocate the visitor",
+            "local-05: clicked walker holds position during conversation",
+            "No uncaught browser errors: "
+          ],
+          "clicks": [
+            {
+              "id": "local-00",
+              "speed": 0.3987490173490147,
+              "screen": [
+                838.5908017578889,
+                394.65494720125406
+              ],
+              "position": [
+                -2813.596803814374,
+                -1274.635215898149,
+                18.305074806530502
+              ]
+            },
+            {
+              "id": "local-01",
+              "speed": 0.35014000003337853,
+              "screen": [
+                777.9526877268594,
+                400.34594356918217
+              ],
+              "position": [
+                -2811.220633882679,
+                -1229.6560557409628,
+                18.356093889477417
+              ]
+            },
+            {
+              "id": "local-02",
+              "speed": 0.4131399999499321,
+              "screen": [
+                797.8125243066497,
+                413.3558816625697
+              ],
+              "position": [
+                -2808.3549351091106,
+                -1205.529630857083,
+                18.428669739886697
+              ]
+            },
+            {
+              "id": "local-03",
+              "speed": 0.2095099999666214,
+              "screen": [
+                799.2593253026607,
+                402.30150562574545
+              ],
+              "position": [
+                -2771.4144397767304,
+                -1307.3316559264342,
+                18.443495718671134
+              ]
+            },
+            {
+              "id": "local-04",
+              "speed": 0.44099997677444047,
+              "screen": [
+                787.9941938429067,
+                409.7223517902841
+              ],
+              "position": [
+                -2765.512300211902,
+                -1227.7757750077837,
+                18.26465009799318
+              ]
+            },
+            {
+              "id": "local-05",
+              "speed": 0.2843567402294498,
+              "screen": [
+                780.5670405876773,
+                393.55170179210677
+              ],
+              "position": [
+                -2769.8649989731,
+                -1259.3121837382964,
+                18.366734831546022
+              ]
+            }
+          ],
+          "errors": [],
+          "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
+        }
+      }
+    },
+    "cuff_comparison_log": "/tmp/river-cuff-comparison.log"
+  },
+  "source_sha256": {
+    "preview/src/sole-support.js": "1f9a204048413a3789deb593016bd3f2d9d887bb8da0b1d91f7140143d30972b",
+    "preview/src/foot-placement.js": "02f077c5675363501765ad38bbbbca92135f5e6f2f4bc70a7764fdbf0a7ecf9f",
+    "preview/tests/shoe-skinning.test.js": "f40551d70abf7fc84535416ad4196ba6a6fdf4dc278feb3edaf6cc27fce02ef2",
+    "preview/e2e/fixtures/motion.js": "fde86069a086858e0c0580b37cd066b5146bec694f14faeef8d286f90bf80195",
+    "preview/e2e/shoe-uneven-ground.js": "abcf8618642726c621748b101fed28ce49b63f840806ffe0d5d0c83a1e953a18",
+    "preview/e2e/foot-support-cost.js": "b56aac8db7ade92c8f3e996c08e3bcafcb88fecd92a0d71d46f3e0e3be4feed8",
+    "preview/e2e/shoe-contact.js": "a2d75edc5021cc7564fdd4851b056897bce9c6d5afdc6175d4c15949282b717b",
+    "preview/e2e/jevica-gown.js": "0c06d42e92d152b7170fb3c97581d059828e0f58a96aed785f6f5553467701c9"
+  },
+  "visual_artifacts": [
+    "output/playwright/uneven-wave-wide.png",
+    "output/playwright/uneven-wave-rig0.png",
+    "output/playwright/uneven-wave-rig5.png",
+    "output/playwright/uneven-ramp-wide.png",
+    "output/playwright/uneven-ramp-rig0.png",
+    "output/playwright/uneven-ramp-rig5.png",
+    "output/playwright/cuff-original-weights.png",
+    "output/playwright/cuff-stable-soles.png"
+  ],
+  "limits": [
+    "Coverage is sampled shoe vertices on the rendered wave and ramp fixtures at 30/60/120Hz, not every terrain shape or continuous temporal collision.",
+    "Dense sharp steps, moving support, heel-to-toe roll and complete weight transfer remain open.",
+    "Cuff/sock clothing intersections remain visible in the close-up.",
+    "CPU component timings exclude costume and rendering and do not establish target-device frame rate.",
+    "Native Unreal integration remains separate."
+  ],
+  "source_assets_unchanged": {
+    "woman-casual.glb": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+    "woman-tailored.glb": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+    "man-workwear.glb": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+    "woman-daywear.glb": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+    "man-tailored.glb": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+    "man-casual.glb": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad"
+  }
+}

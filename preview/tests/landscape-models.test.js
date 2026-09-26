@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import * as THREE from 'three';
 import { castShadowsFromProxies, matureTreePlacements, treeDetailLevel, TREE_LEAF_LAYERS, TREE_LOD_DISTANCES } from '../src/landscape-models.js';
-import { terrainHeight } from '../src/geometry.js';
+import { groundSurfaceHeight } from '../src/world-surface.js';
 
 const read = path => readFileSync(new URL(path, import.meta.url));
 const world = JSON.parse(read('../public/data/district.json'));
@@ -16,7 +16,7 @@ test('mature crowns retain every existing stem and leave source layout untouched
   assert.equal(placements.length, 230);
   placements.forEach((tree, index) => {
     const [east, north] = world.vegetation.branch_supports[index].position;
-    assert.deepEqual(tree.position, [east, terrainHeight(world.terrain, east, north), -north]);
+    assert.deepEqual(tree.position, [east, groundSurfaceHeight(world, east, -north), -north]);
     assert.ok(tree.height >= 7.5 && tree.height <= 16);
     assert.ok(tree.radius >= 3.1 && tree.radius <= 5.2);
   });

@@ -7,6 +7,7 @@ import './community.css';
 import './community-dialogue.css';
 import { supportAvailability } from './community-presentation.js';
 import { createLocalSpeech } from './speech.js';
+import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
 import { createResidentLife,stepResidentLife,residentPacket,applyResidentDecisions } from './resident-life.js';
 import { createNavigationService } from './navigation-service.js';
@@ -30,7 +31,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -51,7 +52,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const speech = createLocalSpeech(status => {
     text(voiceStatus, status);
     if (dialogueVoiceStatus) text(dialogueVoiceStatus, status);
-  });
+  }, {prepare:prepareSpeechAvatar});
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
@@ -59,7 +60,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
   const meetNearby = async () => {
-    for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6)) {
+    for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, Infinity)) {
       if (await selectLocal(item.local.id)) return true;
     }
     return false;
@@ -245,7 +246,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const lifeMayRun=()=>!getMultiplayer() && life && (lifeEnabled || state.running && state.physicalVisits && state.jobs.some(job=>job.helperId));
   lifeToggle.addEventListener('click',()=>{if(getMultiplayer())return;lifeEnabled=!lifeEnabled;invalidateLife();paint();});
   const dispatchLife=async(now,weather)=>{
-    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor()});
+    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose()});
     if(!packet) return;
     const currentLife=life,epoch=lifeEpoch,controller=new AbortController();lifeRequest=controller;nextLifeRequest=now+2000;
     const current=()=>life===currentLife && epoch===lifeEpoch && lifeMayRun() && !document.hidden;
@@ -365,6 +366,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
     text(avatar, local.name.split(/\s+/).map(part => part[0]).slice(0, 2).join(''));
+    text(about, local.persona?.work ? 'About your work' : 'What brings you here?');
+    text(story, local.persona?.work ? 'A detail from your work' : 'A local perspective');
     for (const [topic, control] of [['about', about], ['district', district], ['story', story]]) {
       control.setAttribute('aria-disabled', String(Boolean(request)));
       control.setAttribute('aria-pressed', String(currentTopic === topic));
@@ -419,7 +422,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     } catch(error) {
       const message = error.message || 'The town could not confirm this action.';
       notify(message); return {ok:false,message};
-<<<<<<< Updated upstream
     }
   };
   const handleWish = async kind => {
@@ -453,30 +455,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     return openConversation(local, id);
   };
   const selectShared = async (local, id) => {
-=======
-    }
-  };
-  const handleWish = async kind => {
-    if (!state || dialogue.hidden) return { ok: false };
-    const local = state.locals.find(person => person.id === state.selectedId);
-    if (!local) return { ok: false };
-    invalidate();
-    const currentState = state;
-    const result = getMultiplayer()
-      ? await sharedCommand(kind ? {type:'wish',localId:local.id,kind} : {type:'undoWish',localId:local.id})
-      : kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
-    if (state !== currentState || state.selectedId !== local.id || dialogue.hidden) return result;
-    if (result.ok) {
-      message = result.message; attribution = 'Jevica’s magic'; currentTopic = null;
-      onWish(); paint(); speech.speak(local, message);
-    }
-    return result;
-  };
-
-  const selectLocal = async (id) => {
-    const local = state?.locals.find((item) => item.id === id);
-    if (!local || selecting) return false;
->>>>>>> Stashed changes
     const currentState = state, epoch = selectionEpoch;
     selecting = true;
     try {
@@ -485,7 +463,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
         return false;
       }
       if (state !== currentState || epoch !== selectionEpoch) return false;
-<<<<<<< Updated upstream
       if (!(await sharedCommand({type:'focus',localId:id})).ok) return false;
       if (state !== currentState || epoch !== selectionEpoch) return false;
     } catch(error) {notify(error.message || 'This neighbor could not be reached.');return false;}
@@ -493,12 +470,6 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     return openConversation(local, id);
   };
   const openConversation = (local, id) => {
-=======
-      if (getMultiplayer() && !(await sharedCommand({type:'focus',localId:id})).ok) return false;
-      if (state !== currentState || epoch !== selectionEpoch) return false;
-    } catch(error) {notify(error.message || 'This neighbor could not be reached.');return false;}
-    finally {selecting = false;}
->>>>>>> Stashed changes
     notify('');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
@@ -526,11 +497,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const epoch = requestEpoch, currentState = state;
     const context = { generation: state.generation, tick: packet.tick };
     const fallback = { schema_version: 1, tick: packet.tick, latency_ms: 0, decisions: [{ id, action: state.storm ? 'seek_shelter' : 'greet', source: 'local_rules' }] };
-<<<<<<< Updated upstream
     const current = () => !getMultiplayer() && epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id && !state.locals.find(local=>local.id===id)?.abducted;
-=======
-    const current = () => !getMultiplayer() && epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id;
->>>>>>> Stashed changes
     attribution = 'Authored dialogue · checking immediate reaction…';
     paint();
     let deadline;
@@ -559,11 +526,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   };
 
   const interact = async (action) => {
-<<<<<<< Updated upstream
     if (!state?.selectedId || actionPending || state.locals.find(local=>local.id===state.selectedId)?.abducted) return;
-=======
-    if (!state?.selectedId || actionPending) return;
->>>>>>> Stashed changes
     const activeControl = document.activeElement;
     const moveFocus = action === 'ask' && activeControl === ask;
     const localId = state.selectedId, currentState = state, shared = Boolean(getMultiplayer());
@@ -676,6 +639,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   return {
     get state() { return state; },
     get speakingId() { return speech.speakingId; },
+    updateSpeech: speech.update,
     selectLocal,
     meetNearby,
     autoInteract(id, action) {
@@ -694,7 +658,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       selectionEpoch++;
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
-      state = createCommunity(world, rooms);
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer()});
       life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();
@@ -712,6 +676,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       Object.assign(state, snapshot.community, {selectedId});
       state.scenario = COMMUNITY_SCENARIOS[state.scenarioKey] ?? state.scenario;
       if (snapshot.wishes) state.wishes = structuredClone(snapshot.wishes);
+      const remoteIds=new Set(snapshot.locals.map(local=>local.id));
+      if(state.locals.some(local=>!remoteIds.has(local.id))){
+        state.locals=state.locals.filter(local=>remoteIds.has(local.id));
+        if(state.selectedId&&!remoteIds.has(state.selectedId))closeDialogue();
+        rebuildChooser();
+      }
       const byId = new Map(state.locals.map(local => [local.id,local]));
       for (const remote of snapshot.locals) {
         const local = byId.get(remote.id);
@@ -733,10 +703,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     },
     update(delta, now) {
       if (!state || document.hidden) return;
-<<<<<<< Updated upstream
       if(state.locals.find(local=>local.id===state.selectedId)?.abducted) closeDialogue();
-=======
->>>>>>> Stashed changes
       if (getMultiplayer()) {
         if (now - lastPaint >= 150) {paint();lastPaint = now;}
         return;
@@ -757,7 +724,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
         }
       }
       const revision=life?.revision;
-      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),paused:!lifeEnabled});
+      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose(),obstacles:getObstacles(),paused:!lifeEnabled});
       if(life && revision!==life.revision) invalidateLife();
       if(lifeMayRun() && !lifeRequest && now>=nextLifeRequest) dispatchLife(now,weather);
       if (state.status !== previousStatus && terminal(state)) invalidate();

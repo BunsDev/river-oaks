@@ -1,0 +1,99 @@
+{
+  "scope": "Browser wish dragon realism",
+  "date": "2026-09-25",
+  "devUrl": "http://127.0.0.1:5181/",
+  "model": {
+    "meshes": 28,
+    "triangles": 54232,
+    "ownedTextures": 5
+  },
+  "verification": {
+    "unitTests": 332,
+    "unitFailures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "browser": {
+      "checks": [
+        "Jevica has no alternate character selector",
+        "Jevica is loaded",
+        "All five wishes are offered",
+        "dragon: cannot stack a second wish",
+        "dragon: keyboard focus moves to undo",
+        "dragon: town incident recorded",
+        "dragon: resident asks for removal",
+        "dragon: resident uses the loaded rig",
+        "Egg visibly hatches into dragon",
+        "dragon: undo restores rendered residents",
+        "dragon: undo clears incident",
+        "dragon: keyboard focus returns to choice",
+        "flight: cannot stack a second wish",
+        "flight: keyboard focus moves to undo",
+        "flight: town incident recorded",
+        "flight: resident asks for removal",
+        "flight: resident uses the loaded rig",
+        "Flight lifts the actual resident",
+        "flight: undo restores rendered residents",
+        "flight: undo clears incident",
+        "flight: keyboard focus returns to choice",
+        "invisibility: cannot stack a second wish",
+        "invisibility: keyboard focus moves to undo",
+        "invisibility: town incident recorded",
+        "invisibility: resident asks for removal",
+        "invisibility: resident uses the loaded rig",
+        "Invisible body keeps visible clothing",
+        "invisibility: undo restores rendered residents",
+        "invisibility: undo clears incident",
+        "invisibility: keyboard focus returns to choice",
+        "mind-reading: cannot stack a second wish",
+        "mind-reading: keyboard focus moves to undo",
+        "mind-reading: town incident recorded",
+        "mind-reading: resident asks for removal",
+        "mind-reading: resident uses the loaded rig",
+        "Mind reader shows sadness",
+        "mind-reading: undo restores rendered residents",
+        "mind-reading: undo clears incident",
+        "mind-reading: keyboard focus returns to choice",
+        "dog: cannot stack a second wish",
+        "dog: keyboard focus moves to undo",
+        "dog: town incident recorded",
+        "dog: resident asks for removal",
+        "dog: resident uses the loaded rig",
+        "Dog replaces the human body",
+        "dog: undo restores rendered residents",
+        "dog: undo clears incident",
+        "dog: keyboard focus returns to choice",
+        "All five wishes removed",
+        "No mobile horizontal overflow",
+        "Mobile undo is a 44px target",
+        "No uncaught errors: "
+      ],
+      "errors": [],
+      "scope": "Browser preview wish lifecycle through real controls; no native Unreal acceptance."
+    },
+    "finalGeometryFocusedTests": 18,
+    "sequence": "Full suite and 52 browser wish checks passed; final eye seating adjustment then passed all 18 wish tests, build, and rendered visual review."
+  },
+  "screenshots": [
+    "output/playwright/dragon-review-after.png",
+    "output/playwright/wish-dragon.png"
+  ],
+  "limitations": [
+    "Procedural game creature; improved realism, but not a production sculpt or photorealistic asset.",
+    "The browser session reports 503 responses from the separate /v1/decisions service; local wish checks pass without it."
+  ],
+  "sha256": {
+    "preview/src/wish-dragon.js": "52054a815a1988faa84b736044d51dfcc2a57c9952d20f3174da091473f1b04f",
+    "preview/src/wish-effects.js": "d5ba9a10855a5290d1bff47769da6069e299d95fa7650dab71ffdc34bee04e5a",
+    "preview/e2e/wishes.js": "44b3c59edfa22ab64c51a4040d0f7d1c6efbd26c813c0a585eadf3f796c19eb0",
+    "preview/tests/wish-effects.test.js": "4b1eb7658ecff04b6ef415e3a2d35501e3088c874312a5698e44423b06b9fd8e"
+  },
+  "refinements": [
+    "Physical texture scale across the torso, head and limbs",
+    "Smaller recessed eyes and a narrower reptilian muzzle",
+    "Swept horns with growth bands and shallow geometric irregularity",
+    "Darker, flatter belly scutes and mottled leather wing membranes",
+    "Irregular periodic scale cells with tangent-space normal relief and coordinated roughness",
+    "Continuous flattened reptilian skull and jaw with stable cross-section orientation",
+    "Narrower cheeks, smaller joints, inset eyes and nostrils, flatter throat plates",
+    "Weathered horn pigmentation"
+  ]
+}

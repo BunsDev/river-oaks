@@ -128,7 +128,8 @@ test('join capacity and duplicate identity preserve original player',()=>{
 
 test('district indoor resident identities match browser; server travel enables same-room wishes',async()=>{
   const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
-  const world=createSharedWorld(district), expected=createCommunity(district,storeRoomsFor(district));
+  const world=createSharedWorld(district), expected=createCommunity(district,storeRoomsFor(district),{carriage:false});
+  assert.ok(!expected.locals.some(local=>local.vehicleRole),'shared towns exclude solo vehicle encounters');
   assert.deepEqual(world.snapshot().locals.map(local=>local.id),expected.locals.map(local=>local.id));
   const indoor=expected.locals.find(local=>local.indoor);
   assert.ok(indoor);
@@ -363,7 +364,6 @@ test('checkpoint JSON preserves infinite resident waits and full district routes
   assert.deepEqual(restored.checkpoint(),original.checkpoint());
   assert.equal('ledgers' in restored.snapshot(),false,'private cooldown ledger is never in client snapshots');
 });
-<<<<<<< Updated upstream
 
 test('players arriving together each get their own spot near the spawn', async () => {
   const { readFile } = await import('node:fs/promises');
@@ -376,5 +376,3 @@ test('players arriving together each get their own spot near the spawn', async (
   }
   assert.ok(spots.every(spot => Math.hypot(spot[0] - spots[0][0], spot[1] - spots[0][1]) < 7), 'everyone still arrives together');
 });
-=======
->>>>>>> Stashed changes

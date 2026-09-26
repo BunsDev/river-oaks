@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { composeFrame, createRenderPipeline, OCCLUSION_CANDIDATE_REFRESH_MS } from '../src/render-pipeline.js';
+import { composeFrame, createRenderPipeline } from '../src/render-pipeline.js';
 import { shareSkeletons } from '../src/avatars.js';
 
 function skinned(bones, inverses) {
@@ -41,24 +41,19 @@ test('body, clothing and hair clones share one skeleton when bound to the same b
   assert.equal(body.bindMatrix.equals(new THREE.Matrix4()), true, 'bind matrices are untouched');
 });
 
-test('the AO pass hides excluded objects from a cached list that refreshes', () => {
+test('late-loading AO exclusions apply immediately and restore after every pass', () => {
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
-  let time = 0;
   const renderer = { capabilities: { maxSamples: 4 }, getPixelRatio: () => 1, shadowMap: { autoUpdate: true, needsUpdate: false }, autoClear: true,
     getClearColor: target => target, getClearAlpha: () => 1, setClearAlpha: () => {}, setClearColor: () => {}, setRenderTarget: () => {}, clear: () => {}, render: () => {} };
-  const pipeline = createRenderPipeline(renderer, scene, camera, { now: () => time });
+  const pipeline = createRenderPipeline(renderer, scene, camera);
   const leaf = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial()); leaf.userData.aoExclude = true; scene.add(leaf);
   const hiddenDuringPass = () => { const seen = []; renderer.render = () => scene.traverse(object => { if (object.isMesh && !object.visible) seen.push(object); }); pipeline.occlusion.render(renderer, { texture: {} }, { texture: {} }); return seen; };
   try {
     assert.deepEqual(hiddenDuringPass(), [leaf]);
     const late = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial()); late.userData.aoExclude = true; scene.add(late);
-    time += OCCLUSION_CANDIDATE_REFRESH_MS / 2;
-    assert.deepEqual(hiddenDuringPass(), [leaf], 'no per-frame scene walk');
-    time += OCCLUSION_CANDIDATE_REFRESH_MS;
-    assert.deepEqual(hiddenDuringPass(), [leaf, late], 'late-loading foliage joins on refresh');
+    assert.deepEqual(new Set(hiddenDuringPass()), new Set([leaf,late]), 'new exclusions never spend a frame in the AO depth buffer');
     const saucer = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial()); saucer.userData.aoExclude = true; scene.add(saucer);
-    pipeline.refreshOcclusionCandidates();
-    assert.equal(hiddenDuringPass().length, 3, 'an explicit refresh applies immediately');
+    assert.equal(hiddenDuringPass().length, 3, 'every new prop applies on its first pass');
     assert.ok(leaf.visible && late.visible && saucer.visible, 'visibility is restored after the pass');
   } finally { pipeline.dispose(); }
 });

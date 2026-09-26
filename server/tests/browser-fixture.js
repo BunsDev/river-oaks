@@ -1,10 +1,7 @@
 // Loopback-only browser acceptance fixture. Production uses server/start.js and WorkOS.
 import { readFile } from 'node:fs/promises';
-<<<<<<< Updated upstream
 // The fixture supplies its own town and identities, and tests the sign-in gate.
 process.env.VITE_MULTIPLAYER='required';process.env.RIVER_OAKS_DEV_TOWN='off';
-=======
->>>>>>> Stashed changes
 import { createServer as createViteServer } from 'vite';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';

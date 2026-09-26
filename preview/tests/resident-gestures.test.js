@@ -2,7 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createResidentGestures } from '../src/resident-gestures.js';
 
+test('Force casting reaches with the free arm and eases back without disturbing the wand arm',()=>{
+  const motion=createResidentGestures();let pose;
+  for(let i=0;i<90;i++)pose=motion.update('force',1/60);
+  assert.ok(pose.upperarm_l[0]<-1);assert.ok(pose.hand_l[0]>.2);
+  assert.deepEqual(pose.upperarm_r,[0,0,0]);assert.deepEqual(pose.lowerarm_r,[0,0,0]);
+  const raised=pose.upperarm_l[0];motion.update('continue',1/60);
+  assert.ok(Math.abs(pose.upperarm_l[0]-raised)<.04);
+  for(let i=0;i<120;i++)pose=motion.update('continue',1/60);
+  assert.ok(Object.values(pose).flat().every(value=>Math.abs(value)<1e-6));
+});
+
 const copy=pose=>structuredClone(pose);
+test('passive acknowledgement is a small head nod that leaves walking arms free',()=>{
+  const motion=createResidentGestures();let pose;
+  for(let frame=0;frame<40;frame++)pose=motion.update('acknowledge',1/60);
+  assert.ok(pose.head[0]>0.04 && pose.head[0]<0.1,'a restrained nod is visible');
+  for(const [joint,angles] of Object.entries(pose))if(joint!=='head')assert.deepEqual(angles,[0,0,0]);
+  for(let frame=0;frame<120;frame++)pose=motion.update('continue',1/60);
+  assert.ok(Object.values(pose).flat().every(angle=>Math.abs(angle)<1e-6));
+});
+
 test('reactions settle into their gesture and return to rest at every refresh rate',()=>{
   const snapshots=[];
   for(const hz of [30,60,144]){

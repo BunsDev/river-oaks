@@ -2,11 +2,7 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
-<<<<<<< Updated upstream
 Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. `npm run dev` joins the local shared town, which locks the character to Jevica and hides the invasion and auto visit. Run the solo browser scripts below (character forms, invasion, auto visit, render budget) against `VITE_MULTIPLAYER=off npm run dev`. `preview/e2e/multiplayer-dev.js` covers the town itself: two browsers join as development identities with no WorkOS, see each other, and arrive on separate spots. Production builds stay single player unless built with `VITE_MULTIPLAYER=required`.
-=======
-Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. Existing standalone browser scripts below require `VITE_SINGLE_PLAYER=true npm run dev`; default and production play use authenticated multiplayer.
->>>>>>> Stashed changes
 
 For two-player browser acceptance, run `node server/tests/browser-fixture.js`, then:
 
@@ -75,7 +71,6 @@ screen coordinates; no simulation state is injected. Both scripts save images
 under `output/playwright/` and work with the optional bridge offline. They don't
 verify live Jev responses or native Unreal behavior.
 
-<<<<<<< Updated upstream
 `preview/e2e/reaction-transitions.js` runs all six shipped rigs through resting,
 reaction, greeting and interrupted gestures. It measures actual bone rotations and
 wrist displacement each frame, rejecting one-frame pose changes above 0.15 radians
@@ -87,7 +82,7 @@ continuous collision, target-GPU performance or native Unreal parity.
 
 `preview/tests/frame-budget.test.js` checks that each skeleton uploads once per
 composed frame, that every shipped rig renders from one shared skeleton, and
-that the AO pass hides excluded objects from a cached list.
+that the AO pass hides excluded objects immediately while preserving hidden subtrees.
 `render-quality.test.js` covers the Auto resolution controller: it steps down
 when a 60 Hz display misses refreshes, recovers gradually, settles on a
 borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
@@ -117,10 +112,6 @@ failure, and a save that succeeds on the bridge but loses its response.
 Successful settings acceptance does not establish that a supplied key is valid
 with the provider. Jev validates it on the next inference request.
 
-=======
-The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
-
->>>>>>> Stashed changes
 ## Jevica wishes
 
 Run `npm test` to check the five wish lifecycles, room boundaries, overlapping
@@ -140,3 +131,10 @@ inject simulation state. Results are recorded in
 [the wish receipt](../data/reports/jevica-wishes-e2e.json); screenshots go to
 `output/playwright/wish-*.png`. This covers the browser preview, not native Unreal
 or human accessibility acceptance.
+
+Run Playwright CLI from the repository root: speech and facial comparison scripts
+load generated candidates from `data/raw/` relative to that directory. Generate
+those optional candidates before running the comparison scripts. Solo directory
+and nearby encounter sweeps cover 194 people: 24 outdoor residents, 169 indoor
+residents, and Jules, the carriage driver. Both wait for his model to load.
+Older dated reports with 193 people predate the carriage encounter.

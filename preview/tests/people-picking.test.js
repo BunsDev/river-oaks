@@ -6,7 +6,7 @@ import { pickPerson, withinTalkingReach } from '../src/people-picking.js';
 test('talking reach follows player position, room and altitude, independent of the camera', () => {
   const local={position:[0,0,0],storeId:'cafe'},pose={position:[0,1.68,4],ground:0,altitude:0,roomId:'cafe'};
   assert.equal(withinTalkingReach(local,pose,()=>true),true);
-  for(const change of [{roomId:null},{altitude:3},{position:[0,1.68,5]}])assert.equal(withinTalkingReach(local,{...pose,...change},()=>true),false);
+  for(const change of [{roomId:null},{altitude:3,position:[0,4.68,4]},{position:[0,1.68,5]}])assert.equal(withinTalkingReach(local,{...pose,...change},()=>true),false);
   assert.equal(withinTalkingReach(local,pose,()=>false),false);
 });
 test('pointer respects opaque fixtures, hidden parents and the first person hit', () => {
@@ -51,7 +51,6 @@ test('storefront glass uses its rendered Fresnel opacity for person picking',asy
   assert.equal(pickPerson(ray,[person],[],()=>false),null,'glass does not bypass actual talking reach');
   for(const mesh of [person,glass]){mesh.geometry.dispose();mesh.material.dispose();}
 });
-<<<<<<< Updated upstream
 
 test('a visible mannequin blocks picking a person behind it',()=>{
   const person=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial());person.userData.localId='shopper';
@@ -62,5 +61,31 @@ test('a visible mannequin blocks picking a person behind it',()=>{
   assert.equal(pickPerson(ray,[person,mannequin],[],()=>true),'shopper');
   person.geometry.dispose();person.material.dispose();
 });
-=======
->>>>>>> Stashed changes
+
+
+test('airborne conversations use the rendered recipient height and eye line',()=>{
+  const local={position:[0,0,10],wish:{kind:'flight',age:4},storeId:null};
+  const pose={position:[0,15.18,2.5],ground:10,altitude:3.5,roomId:null};
+  let seen;
+  assert.equal(withinTalkingReach(local,pose,(point,eyeHeight)=>{seen={point,eyeHeight};return true;}),true);
+  assert.deepEqual(seen,{point:[0,0,13],eyeHeight:1.5});
+  assert.equal(withinTalkingReach(local,{...pose,roomId:'shop'},()=>true),false);
+  assert.equal(withinTalkingReach(local,pose,()=>false),false,'Flight cannot bypass a blocked eye line');
+  assert.equal(withinTalkingReach(local,{...pose,position:[0,19.68,2.5],altitude:8},()=>true),false,'Vertical separation consumes talking range');
+});
+
+test('a flying recipient can be addressed from below within actual voice range',()=>{
+  const local={position:[0,0,0],wish:{kind:'flight',age:4}};
+  const pose={position:[0,1.68,2.5],ground:0,altitude:0,roomId:null};
+  assert.equal(withinTalkingReach(local,pose,()=>true),true);
+  assert.equal(withinTalkingReach(local,{...pose,position:[0,1.68,4]},()=>true),false,'Combined height and horizontal distance cannot exceed reach');
+});
+
+test('dog wishes and seated residents aim conversation visibility at their actual eye height',()=>{
+  for(const [local,eyeHeight] of [[{position:[0,0,0],wish:{kind:'dog',age:4}},.76],[{position:[0,0,0],eyeHeight:1.15},1.15]]) {
+    let aim;
+    const pose={position:[0,1.68,2],ground:0,altitude:0,roomId:null};
+    assert.equal(withinTalkingReach(local,pose,(point,height)=>{aim=height;return true;}),true);
+    assert.equal(aim,eyeHeight);
+  }
+});

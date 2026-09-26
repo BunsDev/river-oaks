@@ -15,7 +15,3 @@ export async function loadCharacterRig(profile) {
   scene.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(scene);
   return {scene,height:bounds.max.y-bounds.min.y,floor:bounds.min.y};
 }
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes

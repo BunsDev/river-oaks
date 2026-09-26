@@ -1,3 +1,5 @@
+import { personPosition, personEyeHeight, personDistance } from './person-position.js';
+
 /** Coordinates here are local east/north/up; collision queries use scene x/z. */
 export function clearEncounterLine(environment, from, to) {
   const distance = Math.hypot(to[0] - from[0], to[1] - from[1]);
@@ -21,19 +23,13 @@ export const ENCOUNTER_NEAR = 1.0, ENCOUNTER_FAR = 4.5;
 // Indoor directory visits approach the chosen person, including staff behind a
 // counter, without stepping into fixtures or another room.
 export function indoorEncounterPosition(environment,local,visitor,locals=[]) {
-<<<<<<< Updated upstream
   if(local.abducted)return null;
-=======
->>>>>>> Stashed changes
-  const target=local.position;
+  const target=personPosition(local);
   const valid=position=>{
-    if(!environment.isFree(position[0],-position[1])||environment.roomAt(position[0],-position[1])?.storeId!==local.storeId)return false;
-    if(!clearConversationLine(environment,[position[0],position[1],environment.groundAt(position[0],-position[1])+1.68],target,local.eyeHeight))return false;
-<<<<<<< Updated upstream
+    if(!environment.isFree(position[0],-position[1])||(environment.roomAt(position[0],-position[1])?.storeId??null)!==(local.storeId??null))return false;
+    const eye=position===visitor?visitor:[position[0],position[1],environment.groundAt(position[0],-position[1])+1.68];
+    if(personDistance(local,eye)>ENCOUNTER_FAR || !clearConversationLine(environment,eye,target,personEyeHeight(local)))return false;
     return locals.every(person=>person.abducted||person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
-=======
-    return locals.every(person=>person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
->>>>>>> Stashed changes
   };
   const distance=visitor?Math.hypot(visitor[0]-target[0],visitor[1]-target[1]):Infinity;
   if(distance>=ENCOUNTER_NEAR&&distance<=ENCOUNTER_FAR&&valid(visitor))return visitor;
@@ -54,7 +50,7 @@ const insideStore = (environment, position) => {
 
 export function encounterPosition(environment, local, visitor, locals = []) {
   if (local.abducted) return null;
-  const target = local.position;
+  const target = personPosition(local);
   if (!target?.slice(0, 3).every(Number.isFinite)) return null;
   const others = locals.filter(person => !person.abducted && person.id !== local.id && person.position?.slice(0, 3).every(Number.isFinite));
   const validVisitor = visitor?.slice(0, 3).every(Number.isFinite);
@@ -62,6 +58,8 @@ export function encounterPosition(environment, local, visitor, locals = []) {
   const comfortable = position => {
     if (insideStore(environment, position) !== side) return false;
     if (!clearEncounterLine(environment, position, target)) return false;
+    const eye=position===visitor?visitor:[position[0],position[1],(environment.groundAt?.(position[0],-position[1])??local.position[2])+1.68];
+    if(personDistance(local,eye)>ENCOUNTER_FAR || !clearConversationLine(environment,eye,target,personEyeHeight(local)))return false;
     const dx = target[0] - position[0], dy = target[1] - position[1], length2 = dx * dx + dy * dy;
     return others.every(person => {
       if (Math.abs(person.position[2] - target[2]) > 3) return true;

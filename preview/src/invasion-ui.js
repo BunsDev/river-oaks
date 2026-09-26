@@ -37,7 +37,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
   const refreshGate = () => {
     if (state?.phase === 'active') return;
     toggle.disabled = !magical();
-    if (!magical()) say(`Jevica is getting ready to cast.`);
+    if (!magical()) say(`Jevica must be ready before starting the scenario.`);
     else if (!state) say(`${formLabel()} is ready. Begin, then get within ${SPELL_RANGE} m of an alien and cast.`);
   };
   const begin = () => {
@@ -70,7 +70,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
     const player = { form: getForm(), position: [pose.position[0], -pose.position[2], pose.ground + (pose.altitude ?? 0)] };
     const hit = castSpell(state, player, { canSee: point => walking.canSee(point) });
     if (hit) { onCast(); lastCast = performance.now(); say(`${formLabel()} casts at ${hit.replace('alien-', 'the crew member #')}.`); }
-    else if (!magical()) say(`Jevica is getting ready to cast.`);
+    else if (!magical()) say(`Jevica must be ready before casting.`);
     else if (state.cooldown <= 0) say(`No alien within ${SPELL_RANGE} m and in sight. Move closer.`);
     publish();
   };

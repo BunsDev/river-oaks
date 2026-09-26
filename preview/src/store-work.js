@@ -25,9 +25,10 @@ export function staffWorkPose(theme, seconds) {
   return pose;
 }
 
-export function blendStationPose(base, work, attention, yaw = 0) {
+export function blendStationPose(base, work, attention, yaw = 0, pitch = 0) {
   const result={...base,...work};
-  const greeting={head:[-0.02,Math.max(-0.85,Math.min(0.85,yaw)),0],spine_03:[0,Math.max(-0.15,Math.min(0.15,yaw*0.2)),0],upperarm_r:[-0.3,0,0],lowerarm_r:[0,0,0.85]};
+  const tilt=Math.max(-.5,Math.min(.4,pitch));
+  const greeting={neck_01:[tilt*.3,0,0],head:[-0.02+tilt*.7,Math.max(-0.85,Math.min(0.85,yaw)),0],spine_03:[0,Math.max(-0.15,Math.min(0.15,yaw*0.2)),0],upperarm_r:[-0.3,0,0],lowerarm_r:[0,0,0.85]};
   // Return the other working arm to rest while looking at the visitor.
   for(const name of Object.keys(work)) if(!greeting[name])greeting[name]=base[name] ?? [0,0,0];
   const weight=Math.max(0,Math.min(1,attention));

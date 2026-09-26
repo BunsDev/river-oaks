@@ -1,0 +1,187 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "changes": [
+    "Perfumery-specific scent-strip demonstration with measured thumb/index pinch",
+    "One-hand tray support and relaxed wrist-led paper orientation",
+    "Existing counter stations, task pauses, reduced-motion attention and encounter identities retained"
+  ],
+  "baseline": {
+    "task": "samples",
+    "expected": "blotter",
+    "failing_test_log": "/tmp/river-fragrance-red.log"
+  },
+  "verification": {
+    "unit_tests": 245,
+    "unit_log": "/tmp/river-fragrance-final-tests.log",
+    "production_build": "passed; existing Three.js chunk-size advisory",
+    "build_log": "/tmp/river-fragrance-final-build.log",
+    "worker_contacts": {
+      "pinchSamples": 22,
+      "pinchVertices": 39842,
+      "maxPinchGap": 0.0003697232254467052,
+      "touchSamples": 165,
+      "maxTouchGap": 6.979165334541904e-08,
+      "maxSidewaysBend": 0.306095399707972,
+      "bodySamples": 372,
+      "bodyVertices": 6502698,
+      "maxWristBend": 1.2031626617512752,
+      "skinSamples": 1364,
+      "maxSkinHeight": -0.00043043528878428106,
+      "minSkinHeight": -0.0005767183675402521,
+      "workers": 62,
+      "kinds": [
+        "fabric",
+        "jewelry",
+        "tray",
+        "blotter",
+        "tablet",
+        "eyewear",
+        "samples"
+      ],
+      "docked": 17,
+      "contacts": 52204,
+      "maxError": 1.629456009203091e-07,
+      "errors": []
+    },
+    "fragrance_motion": {
+      "results": [
+        {
+          "id": "store-osm-node-8172494963-person-1",
+          "hz": 30,
+          "maxWristSpeed": 0.12997206577397566,
+          "maxTipSpeed": 0.1717453703464954,
+          "maxAngularSpeed": 0.5505741506473496,
+          "lift": 0.17999999999999972,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 8.999999999999932
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "hz": 30,
+          "maxWristSpeed": 0.2972068043701962,
+          "maxTipSpeed": 0.31989846162229735,
+          "maxAngularSpeed": 1.1459406616105603,
+          "lift": 0.27315466895275975,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 8.999999999999783
+        },
+        {
+          "id": "store-osm-node-8172494963-person-1",
+          "hz": 60,
+          "maxWristSpeed": 0.1299997694442137,
+          "maxTipSpeed": 0.17174832961542116,
+          "maxAngularSpeed": 0.5506324251509336,
+          "lift": 0.17999999999999972,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 8.99999999999853
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "hz": 60,
+          "maxWristSpeed": 0.2978015819248995,
+          "maxTipSpeed": 0.32299226270903036,
+          "maxAngularSpeed": 1.1473369223225518,
+          "lift": 0.27315466895275975,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 9.00000000000005
+        },
+        {
+          "id": "store-osm-node-8172494963-person-1",
+          "hz": 120,
+          "maxWristSpeed": 0.13000340995457532,
+          "maxTipSpeed": 0.17177204999373905,
+          "maxAngularSpeed": 0.5506817974158086,
+          "lift": 0.17999999999999972,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 8.999999999995438
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "hz": 120,
+          "maxWristSpeed": 0.2983328815582098,
+          "maxTipSpeed": 0.32677632089881625,
+          "maxAngularSpeed": 1.147669734716522,
+          "lift": 0.27315466895275975,
+          "pausePositionDrift": 0,
+          "pauseDrift": 0,
+          "resumedWork": 8.999999999995438
+        }
+      ],
+      "errors": []
+    },
+    "triangle_intersections": {
+      "cases": 84,
+      "triangles": 269976,
+      "intersections": 0
+    },
+    "picking": {
+      "checks": [
+        "Third-person body remains visible indoors",
+        "store-osm-node-8172494967-person-6: in reach and rendered",
+        "store-osm-node-8172494967-person-6: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-6: conversation does not teleport the visitor",
+        "store-osm-node-8172494967-person-9: in reach and rendered",
+        "store-osm-node-8172494967-person-9: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-9: conversation does not teleport the visitor",
+        "Worker resumes their task after recognition and conversation",
+        "Worker holds the task and attends during conversation",
+        "Actual seated rigs keep feet within 1 mm of planted targets",
+        "Loaded workers support their props within 1 mm of each palm",
+        "No uncaught browser errors: "
+      ],
+      "seatedFeet": 94,
+      "maxFootError": 1.29043200702043e-06,
+      "palmContacts": 124,
+      "maxPalmError": 1.4024368611261702e-07,
+      "errors": []
+    },
+    "directory_encounters": 193,
+    "fragrance_roles": [
+      {
+        "id": "store-osm-node-8172494963-person-0",
+        "name": "Robin",
+        "role": "Fragrance consultant \u00b7 Jo Malone London",
+        "task": "blotter"
+      },
+      {
+        "id": "store-osm-node-8172494963-person-1",
+        "name": "Avery",
+        "role": "Perfumer \u00b7 Jo Malone London",
+        "task": "blotter"
+      }
+    ],
+    "reduced_motion_people": 169,
+    "reduced_motion_idle_task_updates": 0,
+    "independent_review": "No actionable findings; actual skinned triangle/paper intersections checked in 84 cases; preserved in unit regression"
+  },
+  "source_sha256": {
+    "preview/src/pinch-grip.js": "2cc6967400024e533808492327a11811e94293e3b052acfacce0be63a61e6f55",
+    "preview/src/work-props.js": "83d3d883ecfbd9763beb013fe3ee87fb0669bc49595d333322ad00e7045d6627",
+    "preview/tests/fragrance-work.test.js": "96cf69b2dbacfc375d0f16e7540939a23167f3a4d7cb3e0d06c5bbd756585429",
+    "preview/e2e/fragrance-motion.js": "5b72f42cb7ea1b6f4ae68c1f3177325f491d26d2d7caa49f7a744b131381a937",
+    "preview/e2e/fixtures/workers.js": "61d4a770b0f72b6c13757b241251af52e20cbc1e0e3aab132183b0336af3c77f",
+    "preview/e2e/worker-contact.js": "7fcba675115a1f1146bbd5f8b7d79622c6fa08bc51c35878a7c0363c71df8476"
+  },
+  "artifacts": [
+    "output/playwright/worker-blotter.png",
+    "output/playwright/worker-hand-blotter.png",
+    "output/playwright/fragrance-pinch-detail.png",
+    "output/playwright/fragrance-motion.json",
+    "output/playwright/fragrance-triangles.json",
+    "output/playwright/fragrance-regressions.json"
+  ],
+  "limits": [
+    "Pinch remains held through the task; release and handovers are unfinished",
+    "Paper/hand triangle checks cover sampled rigs, scales and phases with a 50-micrometer interior inset",
+    "Furniture collision checks cover sampled body vertices against box furniture, not continuous cloth or rounded fixtures",
+    "Not biomechanical, target-hardware performance, or native-parity acceptance",
+    "Broader interaction and hyper-realistic-movement goal remains active"
+  ]
+}

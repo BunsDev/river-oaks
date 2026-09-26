@@ -7,6 +7,8 @@ export const WISHES = Object.freeze([
   { id: 'mind-reading', title: 'Read minds', gift: 'I can hear what everyone is thinking. No more guessing!', twist: 'Every thought I hear is unkind. Nobody seems to like me. I cannot face the neighbors.', plea: 'Jevica, please take this away. I am so sad. I would rather talk to people than hear their thoughts.', issue: 'Hurt feelings · neighbors stop to comfort them', twistAfter: 10, pleaAfter: 20, radius: 5 },
   { id: 'dog', title: 'Turn into a dog', gift: 'Four paws! A wagging tail! This is the best day of my life!', twist: 'Achoo! I forgot I am allergic to dogs. Now I am allergic to myself! My sneezing has stopped the whole sidewalk.', plea: 'Jevica, please turn me back. I cannot stop sneezing!', issue: 'Sneezing dog · foot traffic interrupted', twistAfter: 8, pleaAfter: 21, radius: 5 },
 ].map(Object.freeze));
+// Shared by the rendered body and pedestrian-space checks.
+export const wishLift = wish => wish?.kind === 'flight' ? Math.min(3, Math.max(0, wish.age * 0.9)) : 0;
 export const wishFor = id => WISHES.find(wish => wish.id === id);
 export const createWishState = () => ({ granted: 0, resolved: 0, trouble: 0, affected: 0, events: [] });
 function record(state, local, message) {
@@ -28,7 +30,7 @@ function refreshTrouble(state) {
 }
 export function grantWish(state, localId, kind, caster) {
   const local = state?.locals.find(person => person.id === localId), definition = wishFor(kind);
-  if (!state?.wishes || caster !== 'jevica' || !local || local.abducted || !definition || local.wish) return { ok: false, message: 'Choose a resident without an active wish.' };
+  if (!state?.wishes || caster !== 'jevica' || !local || local.abducted || !definition || local.wish || local.force) return { ok: false, message: 'Choose a resident without an active wish or Force hold.' };
   local.wish = { kind, age: 0, phase: 'gift', message: definition.gift };
   state.wishes.granted++;
   record(state, local, definition.gift);

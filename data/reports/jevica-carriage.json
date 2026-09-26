@@ -1,0 +1,1532 @@
+{
+  "recorded_at": "2026-09-24T14:48:07.879885+00:00",
+  "scope": "Three.js browser carriage, rendered surface grounding, retrofuturistic garden district and interaction regressions",
+  "implementation": "uncommitted work in people-motion-delivery; preserve active worktree",
+  "validation": {
+    "node_tests": {
+      "passed": 265,
+      "failed": 0,
+      "command": "npm test"
+    },
+    "browser": {
+      "checks": [
+        "riding: both soles contact the actual transformed footboard",
+        "riding-slope: both soles contact the actual transformed footboard",
+        "Calling places a visible carriage near Jevica",
+        "All four parked tyres meet rendered paving",
+        "Flight cannot start while seated",
+        "A ridden carriage cannot be summoned elsewhere",
+        "Riding moves the real carriage and rider through the district",
+        "All four moving tyres follow the rendered road",
+        "Dismount preserves a clear third-person camera",
+        "Dismounted Jevica stands on the rendered pavement",
+        "Walking resumes after leaving the carriage",
+        "Takeoff is rejected while the bubble overlaps the parked coach",
+        "Boarding is unavailable in flight",
+        "No uncaught browser errors: "
+      ],
+      "contacts": [
+        {
+          "view": "riding",
+          "feet": [
+            {
+              "side": "l",
+              "minY": 1.1275003743152485,
+              "minX": -2.719301644971826,
+              "maxX": -2.478345608200862
+            },
+            {
+              "side": "r",
+              "minY": 1.1275003867481168,
+              "minX": -2.7193016378760855,
+              "maxX": -2.478345607143537
+            }
+          ]
+        },
+        {
+          "view": "riding-slope",
+          "feet": [
+            {
+              "side": "l",
+              "minY": 1.1275003810210338,
+              "minX": -2.7193016440595033,
+              "maxX": -2.4783456117813074
+            },
+            {
+              "side": "r",
+              "minY": 1.1275003888902873,
+              "minX": -2.7193016358350195,
+              "maxX": -2.478345605483292
+            }
+          ]
+        }
+      ],
+      "before": {
+        "placement": {
+          "position": [
+            -2766.541185989181,
+            18.42157351781855,
+            1291.5552254559523
+          ],
+          "yaw": 3.1263243411048998,
+          "pitch": 0.0007859033689301711,
+          "roll": 0.005794460639896358,
+          "distance": 0,
+          "terrainError": 0.009860024135232237,
+          "speed": 0,
+          "wheelOffsets": [
+            0.002556529702344788,
+            -1.8255044183505928e-05,
+            1.702436704690054e-05,
+            1.7024367050453313e-05
+          ]
+        },
+        "visible": true,
+        "riding": false,
+        "tyreClearances": [
+          3.706143495563197e-05,
+          1.192113430192876e-08,
+          7.152682002242727e-09,
+          7.1526784495290485e-09
+        ],
+        "pose": {
+          "position": [
+            -2765.321977373157,
+            20.105314686426908,
+            1295.064162750871
+          ],
+          "riding": null,
+          "ground": 18.42531468642691,
+          "altitude": 0,
+          "flying": false,
+          "landing": false,
+          "yaw": 0.33440851050249343,
+          "speed": 0,
+          "velocity": [
+            0,
+            0
+          ],
+          "distance": 0,
+          "roomId": null,
+          "showBody": true
+        },
+        "rider": [
+          -2765.321977373157,
+          18.42531468642691,
+          1295.064162750871
+        ]
+      },
+      "driven": {
+        "placement": {
+          "position": [
+            -2758.7347618114914,
+            18.43055576656998,
+            1291.6744256425322
+          ],
+          "yaw": 3.1263243411048998,
+          "pitch": -0.007808442420305544,
+          "roll": 0.010511810551790684,
+          "distance": 7.807334188215927,
+          "terrainError": 0.009860024135232237,
+          "speed": 0.018790712644581126,
+          "wheelOffsets": [
+            -0.01763870152491228,
+            -0.019748160106513233,
+            -0.014544992409424088,
+            -0.02234291894815418
+          ]
+        },
+        "visible": true,
+        "riding": true,
+        "tyreClearances": [
+          6.682997691243031e-05,
+          6.682997691243031e-05,
+          0.00015048873045842015,
+          0.00015048873045131472
+        ],
+        "pose": {
+          "position": [
+            -2756.618130377744,
+            20.66334187106832,
+            1291.719340615651
+          ],
+          "riding": {
+            "seat": [
+              -2756.618130377744,
+              20.043341871068318,
+              1291.719340615651
+            ],
+            "yaw": 1.5555280143100032,
+            "quaternion": [
+              0.006484204769866709,
+              0.7016876453907281,
+              -0.0009063101362719642,
+              0.7124546174995675
+            ],
+            "speed": 0.018790712644581126,
+            "distance": 7.807334188215927
+          },
+          "ground": 18.390880882261577,
+          "altitude": 0,
+          "flying": false,
+          "landing": false,
+          "yaw": -0.08606463927978991,
+          "speed": 0,
+          "velocity": [
+            0,
+            0
+          ],
+          "distance": 0,
+          "roomId": null,
+          "showBody": true
+        },
+        "rider": [
+          -2756.626734790949,
+          19.215363382759303,
+          1291.7127431231393
+        ]
+      },
+      "after": {
+        "placement": {
+          "position": [
+            -2758.7311231073036,
+            18.430544660399097,
+            1291.674481203722
+          ],
+          "yaw": 3.1263243411048998,
+          "pitch": -0.007808442420307075,
+          "roll": 0.01051543851481279,
+          "distance": 7.810973316573574,
+          "terrainError": 0.009860024135232237,
+          "speed": 0,
+          "wheelOffsets": [
+            -0.01764451995983323,
+            -0.01975397857272454,
+            -0.014550810033733125,
+            -0.022348736785160667
+          ]
+        },
+        "visible": true,
+        "riding": false,
+        "tyreClearances": [
+          3.0093388652119302e-05,
+          3.0093388648566588e-05,
+          0.00021905078628847718,
+          0.0002190507862920299
+        ],
+        "pose": {
+          "position": [
+            -2756.785541410509,
+            20.093037008131212,
+            1288.7038395455788
+          ],
+          "riding": null,
+          "ground": 18.413037008131212,
+          "altitude": 0,
+          "flying": false,
+          "landing": false,
+          "yaw": -3.084928994070856,
+          "speed": 0,
+          "velocity": [
+            0,
+            0
+          ],
+          "distance": 0,
+          "roomId": null,
+          "showBody": true
+        },
+        "rider": [
+          -2756.785541410509,
+          18.413037008131212,
+          1288.7038395455788
+        ]
+      },
+      "errors": []
+    },
+    "mobile": {
+      "checks": [
+        "Boarding has a 44px phone touch target",
+        "Holding the touch movement pad drives the mounted carriage",
+        "Releasing the touch pad brakes the carriage",
+        "Phone dismount retains a visible third-person body",
+        "Carriage controls do not overflow the phone viewport",
+        "No uncaught phone browser errors"
+      ],
+      "errors": []
+    },
+    "mounted_conversation": {
+      "checks": [
+        "Nearby conversation is available from the carriage",
+        "Talking retains the same mounted position",
+        "Dialogue opens for a real outdoor resident"
+      ],
+      "name": "Maya",
+      "errors": []
+    },
+    "encounters": {
+      "count": 193,
+      "visits": [
+        {
+          "id": "local-00",
+          "name": "Maya",
+          "role": "Weekend shopper \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "local-03",
+          "name": "Elias",
+          "role": "Gallery visitor \u00b7 Dior",
+          "task": null
+        },
+        {
+          "id": "local-06",
+          "name": "Iris",
+          "role": "Weekend shopper \u00b7 Cartier",
+          "task": null
+        },
+        {
+          "id": "local-09",
+          "name": "Luca",
+          "role": "Gallery visitor \u00b7 Harry Winston",
+          "task": null
+        },
+        {
+          "id": "local-12",
+          "name": "Cleo",
+          "role": "Weekend shopper \u00b7 Laura Rathe Fine Art",
+          "task": null
+        },
+        {
+          "id": "local-15",
+          "name": "Noel",
+          "role": "Gallery visitor \u00b7 Brunello Cucinelli",
+          "task": null
+        },
+        {
+          "id": "local-18",
+          "name": "Ada",
+          "role": "Weekend shopper \u00b7 Zadig & Voltaire",
+          "task": null
+        },
+        {
+          "id": "local-21",
+          "name": "Barbara Jordan",
+          "role": "Houston public servant \u00b7 heritage encounter \u00b7 Baccarat",
+          "task": null
+        },
+        {
+          "id": "local-01",
+          "name": "Theo",
+          "role": "Caf\u00e9 regular \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "local-02",
+          "name": "June",
+          "role": "Neighborhood resident \u00b7 Bella Rinova",
+          "task": null
+        },
+        {
+          "id": "local-04",
+          "name": "Nora",
+          "role": "Concierge \u00b7 Jo Malone London",
+          "task": null
+        },
+        {
+          "id": "local-05",
+          "name": "Mateo",
+          "role": "Dog walker \u00b7 IPIC Theaters",
+          "task": null
+        },
+        {
+          "id": "local-07",
+          "name": "Samir",
+          "role": "Caf\u00e9 regular \u00b7 Van Cleef & Arpels",
+          "task": null
+        },
+        {
+          "id": "local-08",
+          "name": "Hazel",
+          "role": "Neighborhood resident \u00b7 Herm\u00e8s",
+          "task": null
+        },
+        {
+          "id": "local-10",
+          "name": "Amara",
+          "role": "Concierge \u00b7 Saint Bernard",
+          "task": null
+        },
+        {
+          "id": "local-11",
+          "name": "Owen",
+          "role": "Dog walker \u00b7 Equinox",
+          "task": null
+        },
+        {
+          "id": "local-13",
+          "name": "Ravi",
+          "role": "Caf\u00e9 regular \u00b7 Oliver Peoples",
+          "task": null
+        },
+        {
+          "id": "local-14",
+          "name": "Wren",
+          "role": "Neighborhood resident \u00b7 Moreau",
+          "task": null
+        },
+        {
+          "id": "local-16",
+          "name": "Esme",
+          "role": "Concierge \u00b7 Vince",
+          "task": null
+        },
+        {
+          "id": "local-17",
+          "name": "Finn",
+          "role": "Dog walker \u00b7 Alice + Olivia",
+          "task": null
+        },
+        {
+          "id": "local-19",
+          "name": "Hugo",
+          "role": "Caf\u00e9 regular \u00b7 de Boulle",
+          "task": null
+        },
+        {
+          "id": "local-20",
+          "name": "Ima Hogg",
+          "role": "Houston arts patron \u00b7 heritage encounter \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "local-22",
+          "name": "Hakeem Olajuwon",
+          "role": "Houston basketball figure \u00b7 fictional guest \u00b7 Dolce & Gabbana",
+          "task": null
+        },
+        {
+          "id": "local-23",
+          "name": "Beyonc\u00e9",
+          "role": "Houston-born artist \u00b7 fictional guest \u00b7 Veronica Beard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-0",
+          "name": "Sasha",
+          "role": "Host \u00b7 Toulouse",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-6374756992-person-1",
+          "name": "Jamie",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-10",
+          "name": "Avery",
+          "role": "Bartender \u00b7 Toulouse",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-6374756992-person-11",
+          "name": "Quinn",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-2",
+          "name": "Reese",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-3",
+          "name": "Alex",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-4",
+          "name": "Jordan",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-5",
+          "name": "Morgan",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-6",
+          "name": "Casey",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-7",
+          "name": "Taylor",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-8",
+          "name": "Drew",
+          "role": "Dining guest \u00b7 Toulouse",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-6374756992-person-9",
+          "name": "Robin",
+          "role": "Server \u00b7 Toulouse",
+          "task": "tray"
+        },
+        {
+          "id": "store-osm-node-8172494955-person-0",
+          "name": "Alex",
+          "role": "Host \u00b7 Hopdoddy Burger Bar",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494955-person-1",
+          "name": "Jordan",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-2",
+          "name": "Morgan",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-3",
+          "name": "Casey",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-4",
+          "name": "Taylor",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-5",
+          "name": "Drew",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-6",
+          "name": "Robin",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494955-person-7",
+          "name": "Avery",
+          "role": "Server \u00b7 Hopdoddy Burger Bar",
+          "task": "tray"
+        },
+        {
+          "id": "store-osm-node-8172494955-person-8",
+          "name": "Quinn",
+          "role": "Bartender \u00b7 Hopdoddy Burger Bar",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494955-person-9",
+          "name": "Sasha",
+          "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494957-person-0",
+          "name": "Sasha",
+          "role": "Salon client \u00b7 Bella Rinova",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494957-person-1",
+          "name": "Jamie",
+          "role": "Hair stylist \u00b7 Bella Rinova",
+          "task": "samples"
+        },
+        {
+          "id": "store-osm-node-8172494957-person-2",
+          "name": "Reese",
+          "role": "Salon client \u00b7 Bella Rinova",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494957-person-3",
+          "name": "Alex",
+          "role": "Colorist \u00b7 Bella Rinova",
+          "task": "samples"
+        },
+        {
+          "id": "store-osm-node-8172494957-person-4",
+          "name": "Jordan",
+          "role": "Salon client \u00b7 Bella Rinova",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494957-person-5",
+          "name": "Morgan",
+          "role": "Salon host \u00b7 Bella Rinova",
+          "task": "samples"
+        },
+        {
+          "id": "store-osm-node-8172494958-person-2",
+          "name": "Quinn",
+          "role": "Style adviser \u00b7 Dior",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494958-person-3",
+          "name": "Sasha",
+          "role": "Tailor \u00b7 Dior",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494958-person-4",
+          "name": "Jamie",
+          "role": "Visiting shopper \u00b7 Dior",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494958-person-5",
+          "name": "Reese",
+          "role": "Visiting shopper \u00b7 Dior",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494958-person-6",
+          "name": "Alex",
+          "role": "Visiting shopper \u00b7 Dior",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494960-person-2",
+          "name": "Quinn",
+          "role": "Style adviser \u00b7 Vilebrequin",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494960-person-3",
+          "name": "Sasha",
+          "role": "Tailor \u00b7 Vilebrequin",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494960-person-4",
+          "name": "Jamie",
+          "role": "Visiting shopper \u00b7 Vilebrequin",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494960-person-5",
+          "name": "Reese",
+          "role": "Visiting shopper \u00b7 Vilebrequin",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494960-person-6",
+          "name": "Alex",
+          "role": "Visiting shopper \u00b7 Vilebrequin",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "name": "Robin",
+          "role": "Fragrance consultant \u00b7 Jo Malone London",
+          "task": "blotter"
+        },
+        {
+          "id": "store-osm-node-8172494963-person-1",
+          "name": "Avery",
+          "role": "Perfumer \u00b7 Jo Malone London",
+          "task": "blotter"
+        },
+        {
+          "id": "store-osm-node-8172494963-person-2",
+          "name": "Quinn",
+          "role": "Visiting shopper \u00b7 Jo Malone London",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494963-person-3",
+          "name": "Sasha",
+          "role": "Visiting shopper \u00b7 Jo Malone London",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494964-person-0",
+          "name": "Casey",
+          "role": "Cinema host \u00b7 IPIC Theaters",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494964-person-1",
+          "name": "Taylor",
+          "role": "Projection technician \u00b7 IPIC Theaters",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494964-person-2",
+          "name": "Drew",
+          "role": "Cinema guest \u00b7 IPIC Theaters",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494964-person-3",
+          "name": "Robin",
+          "role": "Cinema guest \u00b7 IPIC Theaters",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494964-person-4",
+          "name": "Avery",
+          "role": "Cinema guest \u00b7 IPIC Theaters",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494965-person-0",
+          "name": "Casey",
+          "role": "Jewelry adviser \u00b7 Cartier",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494965-person-1",
+          "name": "Taylor",
+          "role": "Watch specialist \u00b7 Cartier",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494965-person-2",
+          "name": "Drew",
+          "role": "Visiting shopper \u00b7 Cartier",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494965-person-3",
+          "name": "Robin",
+          "role": "Visiting shopper \u00b7 Cartier",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494966-person-1",
+          "name": "Jordan",
+          "role": "Leather goods specialist \u00b7 Van Cleef & Arpels",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494966-person-2",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Van Cleef & Arpels",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494966-person-3",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Van Cleef & Arpels",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-0",
+          "name": "Robin",
+          "role": "Host \u00b7 MAD Houston",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494967-person-1",
+          "name": "Avery",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-10",
+          "name": "Taylor",
+          "role": "Bartender \u00b7 MAD Houston",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494967-person-11",
+          "name": "Drew",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-2",
+          "name": "Quinn",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-3",
+          "name": "Sasha",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-4",
+          "name": "Jamie",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-5",
+          "name": "Reese",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-6",
+          "name": "Alex",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-7",
+          "name": "Jordan",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-8",
+          "name": "Morgan",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494967-person-9",
+          "name": "Casey",
+          "role": "Server \u00b7 MAD Houston",
+          "task": "tray"
+        },
+        {
+          "id": "store-osm-node-8172494969-person-2",
+          "name": "Reese",
+          "role": "Style adviser \u00b7 Herm\u00e8s",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494969-person-3",
+          "name": "Alex",
+          "role": "Tailor \u00b7 Herm\u00e8s",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494969-person-4",
+          "name": "Jordan",
+          "role": "Visiting shopper \u00b7 Herm\u00e8s",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494969-person-5",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Herm\u00e8s",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494969-person-6",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Herm\u00e8s",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494972-person-0",
+          "name": "Robin",
+          "role": "Jewelry adviser \u00b7 Harry Winston",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494972-person-1",
+          "name": "Avery",
+          "role": "Watch specialist \u00b7 Harry Winston",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494972-person-2",
+          "name": "Quinn",
+          "role": "Visiting shopper \u00b7 Harry Winston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494972-person-3",
+          "name": "Sasha",
+          "role": "Visiting shopper \u00b7 Harry Winston",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494973-person-2",
+          "name": "Drew",
+          "role": "Style adviser \u00b7 Saint Bernard",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494973-person-3",
+          "name": "Robin",
+          "role": "Tailor \u00b7 Saint Bernard",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494973-person-4",
+          "name": "Avery",
+          "role": "Visiting shopper \u00b7 Saint Bernard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494973-person-5",
+          "name": "Quinn",
+          "role": "Visiting shopper \u00b7 Saint Bernard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494973-person-6",
+          "name": "Sasha",
+          "role": "Visiting shopper \u00b7 Saint Bernard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494974-person-0",
+          "name": "Casey",
+          "role": "Fitness trainer \u00b7 Equinox",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494974-person-1",
+          "name": "Taylor",
+          "role": "Studio member \u00b7 Equinox",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494974-person-2",
+          "name": "Drew",
+          "role": "Studio member \u00b7 Equinox",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494974-person-3",
+          "name": "Robin",
+          "role": "Studio host \u00b7 Equinox",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494976-person-0",
+          "name": "Casey",
+          "role": "Host \u00b7 Le Colonial",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494976-person-1",
+          "name": "Taylor",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-10",
+          "name": "Jordan",
+          "role": "Bartender \u00b7 Le Colonial",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494976-person-11",
+          "name": "Morgan",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-2",
+          "name": "Drew",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-3",
+          "name": "Robin",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-4",
+          "name": "Avery",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-5",
+          "name": "Quinn",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-6",
+          "name": "Sasha",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-7",
+          "name": "Jamie",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-8",
+          "name": "Reese",
+          "role": "Dining guest \u00b7 Le Colonial",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494976-person-9",
+          "name": "Alex",
+          "role": "Server \u00b7 Le Colonial",
+          "task": "tray"
+        },
+        {
+          "id": "store-osm-node-8172494977-person-0",
+          "name": "Alex",
+          "role": "Gallery guide \u00b7 Laura Rathe Fine Art",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494977-person-1",
+          "name": "Jordan",
+          "role": "Gallery visitor \u00b7 Laura Rathe Fine Art",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494977-person-2",
+          "name": "Morgan",
+          "role": "Gallery visitor \u00b7 Laura Rathe Fine Art",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494979-person-0",
+          "name": "Alex",
+          "role": "Eyewear stylist \u00b7 Oliver Peoples",
+          "task": "eyewear"
+        },
+        {
+          "id": "store-osm-node-8172494979-person-1",
+          "name": "Jordan",
+          "role": "Optical associate \u00b7 Oliver Peoples",
+          "task": "eyewear"
+        },
+        {
+          "id": "store-osm-node-8172494979-person-2",
+          "name": "Morgan",
+          "role": "Eyewear client \u00b7 Oliver Peoples",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494979-person-3",
+          "name": "Casey",
+          "role": "Eyewear client \u00b7 Oliver Peoples",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494980-person-1",
+          "name": "Jamie",
+          "role": "Leather goods specialist \u00b7 Moreau",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494980-person-2",
+          "name": "Reese",
+          "role": "Visiting shopper \u00b7 Moreau",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494980-person-3",
+          "name": "Alex",
+          "role": "Visiting shopper \u00b7 Moreau",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494981-person-2",
+          "name": "Morgan",
+          "role": "Style adviser \u00b7 Brunello Cucinelli",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494981-person-3",
+          "name": "Casey",
+          "role": "Tailor \u00b7 Brunello Cucinelli",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494981-person-4",
+          "name": "Taylor",
+          "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494981-person-5",
+          "name": "Drew",
+          "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494981-person-6",
+          "name": "Robin",
+          "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494985-person-2",
+          "name": "Reese",
+          "role": "Style adviser \u00b7 Diptyque",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494985-person-3",
+          "name": "Alex",
+          "role": "Tailor \u00b7 Diptyque",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494985-person-4",
+          "name": "Jordan",
+          "role": "Visiting shopper \u00b7 Diptyque",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494985-person-5",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Diptyque",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494985-person-6",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Diptyque",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494987-person-2",
+          "name": "Reese",
+          "role": "Style adviser \u00b7 Vince",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494987-person-3",
+          "name": "Alex",
+          "role": "Tailor \u00b7 Vince",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494987-person-4",
+          "name": "Jordan",
+          "role": "Visiting shopper \u00b7 Vince",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494987-person-5",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Vince",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494987-person-6",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Vince",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494989-person-2",
+          "name": "Morgan",
+          "role": "Style adviser \u00b7 Alice + Olivia",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494989-person-3",
+          "name": "Casey",
+          "role": "Tailor \u00b7 Alice + Olivia",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494989-person-4",
+          "name": "Taylor",
+          "role": "Visiting shopper \u00b7 Alice + Olivia",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494989-person-5",
+          "name": "Drew",
+          "role": "Visiting shopper \u00b7 Alice + Olivia",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494989-person-6",
+          "name": "Robin",
+          "role": "Visiting shopper \u00b7 Alice + Olivia",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494990-person-1",
+          "name": "Jordan",
+          "role": "Style adviser \u00b7 Zadig & Voltaire",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494990-person-2",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Zadig & Voltaire",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494990-person-3",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Zadig & Voltaire",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494991-person-2",
+          "name": "Reese",
+          "role": "Style adviser \u00b7 Kiton",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494991-person-3",
+          "name": "Alex",
+          "role": "Tailor \u00b7 Kiton",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172494991-person-4",
+          "name": "Jordan",
+          "role": "Visiting shopper \u00b7 Kiton",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494991-person-5",
+          "name": "Morgan",
+          "role": "Visiting shopper \u00b7 Kiton",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494991-person-6",
+          "name": "Casey",
+          "role": "Visiting shopper \u00b7 Kiton",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494993-person-0",
+          "name": "Casey",
+          "role": "Jewelry adviser \u00b7 de Boulle",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494993-person-1",
+          "name": "Taylor",
+          "role": "Watch specialist \u00b7 de Boulle",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172494993-person-2",
+          "name": "Drew",
+          "role": "Visiting shopper \u00b7 de Boulle",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494993-person-3",
+          "name": "Robin",
+          "role": "Visiting shopper \u00b7 de Boulle",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-0",
+          "name": "Robin",
+          "role": "Host \u00b7 Steak 48",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494999-person-1",
+          "name": "Avery",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-10",
+          "name": "Taylor",
+          "role": "Bartender \u00b7 Steak 48",
+          "task": "tablet"
+        },
+        {
+          "id": "store-osm-node-8172494999-person-11",
+          "name": "Drew",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-2",
+          "name": "Quinn",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-3",
+          "name": "Sasha",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-4",
+          "name": "Jamie",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-5",
+          "name": "Reese",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-6",
+          "name": "Alex",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-7",
+          "name": "Jordan",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-8",
+          "name": "Morgan",
+          "role": "Dining guest \u00b7 Steak 48",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172494999-person-9",
+          "name": "Casey",
+          "role": "Server \u00b7 Steak 48",
+          "task": "tray"
+        },
+        {
+          "id": "store-osm-node-8172495000-person-0",
+          "name": "Robin",
+          "role": "Jewelry adviser \u00b7 Baccarat",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172495000-person-1",
+          "name": "Avery",
+          "role": "Watch specialist \u00b7 Baccarat",
+          "task": "jewelry"
+        },
+        {
+          "id": "store-osm-node-8172495000-person-2",
+          "name": "Quinn",
+          "role": "Visiting shopper \u00b7 Baccarat",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495000-person-3",
+          "name": "Sasha",
+          "role": "Visiting shopper \u00b7 Baccarat",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495003-person-2",
+          "name": "Morgan",
+          "role": "Style adviser \u00b7 Dolce & Gabbana",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172495003-person-3",
+          "name": "Casey",
+          "role": "Tailor \u00b7 Dolce & Gabbana",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172495003-person-4",
+          "name": "Taylor",
+          "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495003-person-5",
+          "name": "Drew",
+          "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495003-person-6",
+          "name": "Robin",
+          "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495005-person-2",
+          "name": "Drew",
+          "role": "Style adviser \u00b7 Veronica Beard",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172495005-person-3",
+          "name": "Robin",
+          "role": "Tailor \u00b7 Veronica Beard",
+          "task": "fabric"
+        },
+        {
+          "id": "store-osm-node-8172495005-person-4",
+          "name": "Avery",
+          "role": "Visiting shopper \u00b7 Veronica Beard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495005-person-5",
+          "name": "Quinn",
+          "role": "Visiting shopper \u00b7 Veronica Beard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495005-person-6",
+          "name": "Sasha",
+          "role": "Visiting shopper \u00b7 Veronica Beard",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495006-person-0",
+          "name": "Casey",
+          "role": "Gelato maker \u00b7 Amorino",
+          "task": "samples"
+        },
+        {
+          "id": "store-osm-node-8172495006-person-1",
+          "name": "Taylor",
+          "role": "Counter attendant \u00b7 Amorino",
+          "task": "samples"
+        },
+        {
+          "id": "store-osm-node-8172495006-person-2",
+          "name": "Drew",
+          "role": "Caf\u00e9 guest \u00b7 Amorino",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495006-person-3",
+          "name": "Robin",
+          "role": "Caf\u00e9 guest \u00b7 Amorino",
+          "task": null
+        },
+        {
+          "id": "store-osm-node-8172495006-person-4",
+          "name": "Avery",
+          "role": "Caf\u00e9 guest \u00b7 Amorino",
+          "task": null
+        }
+      ],
+      "errors": []
+    },
+    "touch": {
+      "checks": 37,
+      "visits": [
+        {
+          "viewport": {
+            "width": 1024,
+            "height": 900
+          },
+          "id": "store-osm-node-8172494967-person-6",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "seated": true
+        },
+        {
+          "viewport": {
+            "width": 1024,
+            "height": 900
+          },
+          "id": "store-osm-node-8172494967-person-9",
+          "role": "Server \u00b7 MAD Houston",
+          "seated": false
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "id": "store-osm-node-8172494967-person-6",
+          "role": "Dining guest \u00b7 MAD Houston",
+          "seated": true
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "id": "store-osm-node-8172494967-person-9",
+          "role": "Server \u00b7 MAD Houston",
+          "seated": false
+        }
+      ],
+      "errors": []
+    },
+    "production_build": {
+      "command": "npm run build",
+      "exit_code": 0,
+      "warning": "Existing minified chunk exceeds 500 kB advisory"
+    }
+  },
+  "geometry": {
+    "triangles": 440440,
+    "meshes": 57,
+    "length_m": 5.575507879257202,
+    "height_m": 3.6600000786781313,
+    "width_m": 2.641474723815918
+  },
+  "source_sha256": {
+    "preview/src/jevica-carriage.js": "4e7d46e3ffb3304f08248f139a7423fcfacd98dc239dc268d2389e18423d5424",
+    "preview/src/tufted-upholstery.js": "20908bf146446059f5ac6435dbc18c77b37df872a80a382dac34ad39eaf16269",
+    "preview/src/carriage-parking.js": "7708787f9f524c1e05b962a28646c86eda48e2af7982a0d49c8b46d2306baa3a",
+    "preview/src/carriage-motion.js": "8f1ca6979ec4547c190a8a299a7d054e7af613c315d4c6fe78f84e383ffc87d1",
+    "preview/src/parked-carriage.js": "5980e88f1dcf28b8cd4e4fb4c600d1531b76bb152a20e7db49716572295bc484",
+    "preview/src/world-surface.js": "45eb22f640fb013d7e6799eaea4213492dea74996ae7a31b8bb54a135cd01e9b",
+    "preview/src/walking.js": "891f3fbd97dd8739adb8ce2abb58bfc7260f04a4ac96cb74817727c212ff9954",
+    "preview/src/walking-ui.js": "bb0e7bd6b7f4107fec74e665c278aa62b458b9a383949c9f0000727a957f9626",
+    "preview/src/player-avatar.js": "2670b171a9133e51c7f5881b5222dbad07e1d9f364369a7d59795b3518ef0740",
+    "preview/src/avatars.js": "9bdb01e3462278c27ff7c32482aa957ba52c9b8d43626e63bafbd11a3e630eb2",
+    "preview/src/jevica-drape.js": "88f96f3c8b51d24f6c6e9a6570e7823535be8fdb663e1dd0e18489d288862e86",
+    "preview/src/jevica-costume.js": "899abcedb88aa7852c3c344469f776b0272a2751dbcbb49cd0d3f6ae78a9c434",
+    "preview/src/flight.js": "e2d57b098f446221db35f0cb26e886d666724bac2e80321fd7f5e60f89ed5a43",
+    "preview/src/locals.js": "06adc8425317a45dd578d4a18468940f3b3d67152750c17b39f809adc0024db0",
+    "preview/src/landscape-models.js": "f17ddf32cb5d8e4dc93800758a4adf93a54764789b0843b45510f4f9afbb82d4",
+    "preview/src/street-furniture.js": "3e4b35be8e233b93b7ce702d5df9b050f45c70f6acc2dc6d6847e074a933d16d",
+    "preview/src/district.js": "3ae472549e1dc627a1bc968bf402ab4037ef6289de8bb55dd6b842a7adf85245",
+    "preview/src/district-fantasy.js": "e3a6df2c1c8e84e58e27c0085fac5580a3b7bd239f6058e4562089f7bd5b8c67",
+    "preview/src/store-interiors.js": "b2fff10b55da81bc2eb59d8708ab7e75cac2011c5290334ae26afac0b724ce3f",
+    "preview/src/sidewalks.js": "dc1e1e21e49069c17ec732bdeeb47d927e2f3f2f459cc60caa9a58546869f7bf",
+    "preview/src/main.js": "7526b259a92416baaef6964b10bcf86579d3622b6c6c08ad752732bcb89dbf94",
+    "preview/src/pointer-gesture.js": "4445b60c67be88e4c2a34d67c5d0f6c72e26d93b26ac63bce3676b29d80e326c",
+    "preview/e2e/carriage.js": "9bbbd0d47d36014f8dec73ad239cf650a377748d8de8448a4cf15fd847e4d0e2",
+    "preview/e2e/carriage-mobile.js": "76555d46a17f62f70975cc610518d7672194f943085c4bee5b6934d0399ef20d",
+    "preview/e2e/carriage-conversation.js": "ad9543498267e7a62087e14802a98e05a219121714098697902c45883da99147",
+    "preview/e2e/touch-people.js": "474ab562bb902ce7a5b0be806df15d119f37a29d70bee86f633888bb417352f6",
+    "preview/e2e/all-people.js": "c5725140fa61ab77de0ebc30250423fca284b908bd7903233f61fa13659f1f64"
+  },
+  "artifacts": [
+    "output/playwright/carriage-three-quarter.png",
+    "output/playwright/carriage-side.png",
+    "output/playwright/carriage-detail.png",
+    "output/playwright/carriage-reference.png",
+    "output/playwright/carriage-seated-detail.png",
+    "output/playwright/carriage-riding.png",
+    "output/playwright/carriage-driven.png",
+    "output/playwright/carriage-conversation.png",
+    "output/playwright/carriage-mobile.png"
+  ],
+  "limitations": [
+    "Locally authored procedural carriage inspired by the reference, not an identical licensed scan.",
+    "Seated gown deformation is procedural, not a cloth simulation.",
+    "Contact checks cover actual tyre vertices at sampled parked/driven positions and both soles on a flat and tilted coach; they are not an exhaustive audit of every object at every location.",
+    "No native Unreal parity or target-hardware frame-rate acceptance is claimed.",
+    "Full movement realism, clothing collision, object release/handover and native acceptance remain open in the active people goal."
+  ]
+}

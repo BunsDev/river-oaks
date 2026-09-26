@@ -59,3 +59,10 @@ test('a resident on a doorway threshold never draws the visitor through the faca
   const insideVisitor = encounterPosition(withStore, threshold, [0, 2, 1.68]);
   assert.ok(insideVisitor && insideVisitor[1] > 0, 'a visitor already inside meets them from inside');
 });
+
+test('approaching a flying recipient respects three-dimensional conversation range',()=>{
+  const local={...person,wish:{kind:'flight',age:4}},visitor=[0,-4,1.68];
+  const result=encounterPosition({...open,groundAt:()=>0},local,visitor);
+  assert.notEqual(result,visitor,'The old horizontal radius cannot preserve an out-of-range position');
+  assert.ok(Math.hypot(result[0],result[1],4.5-1.68)<=4.5);
+});

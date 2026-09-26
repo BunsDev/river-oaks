@@ -9,8 +9,9 @@ const run = (state, seconds, context) => { for (let t = 0; t < seconds; t += 0.0
 
 test('only the magical forms can cast', () => {
   assert.deepEqual(MAGIC_FORMS, ['jevica']);
+  for(const retired of ['witch','alien']) assert.equal(canCast(retired),false);
   for (const form of ['jevica']) assert.ok(canCast(form));
-  for (const form of ['alien', 'witch', 'dorothy', 'scarecrow', 'tinman', 'lion', 'visitor', undefined]) assert.ok(!canCast(form), String(form));
+  for (const form of ['dorothy', 'scarecrow', 'tinman', 'lion', 'visitor', undefined]) assert.ok(!canCast(form), String(form));
 });
 
 test('saucers land on free ground around the edge of the district', () => {

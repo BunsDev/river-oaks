@@ -1,9 +1,7 @@
-<<<<<<< Updated upstream
-# Intentional creative direction: a fantastic district with human residents
+# Intentional creative direction: a retrofuturistic garden district
 
-River Oaks is now an inhabited science-fantasy district. This is an intentional
-product direction, requested on September 21, 2026. The latest direction keeps residents human, with varied fashion inspired by
-the three playable characters. The mapped Houston setting remains the spatial foundation;
+River Oaks is now an inhabited retrofuturistic garden district. This is an intentional
+product direction, requested on September 21, 2026. The latest direction keeps residents human, with varied romantic, gothic and futuristic fashion. The mapped Houston setting remains the spatial foundation;
 its inhabitants, magic, species and character reactions are authored fiction.
 
 ## Realism is the rendering and movement standard
@@ -11,7 +9,7 @@ its inhabitants, magic, species and character reactions are authored fiction.
 The fantastic setting should feel physically present: coherent anatomy, detailed
 skin and eyes, believable cloth and metal, grounded feet, acceleration, weight,
 attention and collision. Resident variation comes from the human rigs, clothing silhouettes and fashion
-palettes. The playable forms have distinct silhouettes and accessories. Photorealism and hyper-realistic motion remain
+palettes. Jevica has a dedicated silhouette and accessories. Photorealism and hyper-realistic motion remain
 quality targets that require visual evidence; passing unit tests is insufficient.
 
 The browser population uses six clothed human rigs with their original faces,
@@ -20,57 +18,22 @@ rose, midnight velvet, stellar tailoring, botanical linen, gallery colors and
 pearl classics. Boutique staff retain their uniforms with restrained accents;
 guests wear the fuller palettes. Residents have no alien head replacements or
 Oz hats. Indoor staff retain occupations, shop identity, seated/work poses and
-duties. Mannequins are displays, not conversation targets. The Grey anatomy is
-exclusive to the playable Alien form.
-=======
-# Creative direction: human residents, magical visitors
-
-River Oaks is an inhabited district with human pedestrians, shoppers and workers.
-This supersedes the earlier alien-population direction at the user's request.
-The mapped Houston setting remains the spatial foundation; its character
-identities, magic and reactions are authored fiction. Alien anatomy remains available for the optional invasion scenario.
-
-## Realism is the rendering and movement standard
-
-People should feel physically present: detailed skin and eyes, believable cloth,
-grounded feet, acceleration, weight, attention and collision. Photorealism and
-hyper-realistic motion remain quality targets that require visual evidence;
-passing unit tests is insufficient.
-
-The browser population uses six clothed CC0 human rigs with their original skin,
-hair, eyes and head geometry. Indoor staff retain their occupations, shop,
-conversation identity, seated/work poses and duties. Mannequins remain human-shaped
-displays, not conversation targets. Population changes preserve the existing
-layout, sidewalk routing and encounter access.
->>>>>>> Stashed changes
+duties. Mannequins are displays, not conversation targets. Alien anatomy is used only by enemies in the separate invasion scenario.
 
 ## Player and flight
 
-The player begins as **Jevica**, a fictional celebrated magical visitor with a
-Glinda-inspired pink gown, blonde hair, filigree crown and crystal starburst wand. The character name is
-<<<<<<< Updated upstream
-Jevica throughout the experience. There is no ordinary-human player option.
-The other transformations are a scary witch and a Grey alien.
-=======
-Jevica throughout the experience. Jevica is the only playable character. The witch and alien transformations are no longer offered.
->>>>>>> Stashed changes
-See [character forms](character-forms.md) for the latest statue references,
+The player is **Jevica**, a fictional celebrated magical visitor with a
+Glinda-inspired pink gown, blonde hair, gold filigree crown and luminous star wand. The character name is
+Jevica throughout the experience. She is the sole playable identity. The Witch and Alien player forms, their
+portraits, the broom, and the personal UFO were retired on September 23, 2026.
+See [character forms](character-forms.md) for the latest visual reference,
 rendering decisions and verification entry points.
 
 - Jevica flies in an iridescent bubble.
-<<<<<<< Updated upstream
-- The witch carries a bristled broom and rides it in flight.
-- The alien travels in a small illuminated UFO.
-- Third person is the default; **V** switches the camera.
-- **B** takes off or lands, **Space** rises and **C** lowers altitude.
-- WASD moves, arrows turn, dragging orbits the camera, and Shift moves faster.
-- The character panel provides camera, transformation and flight buttons.
-=======
 - Third person is the default; **V** switches the camera.
 - **B** takes off or lands, **Space** rises and **C** lowers altitude.
 - WASD moves, arrows turn, dragging orbits the camera, and Shift moves faster.
 - The character panel provides camera and flight buttons.
->>>>>>> Stashed changes
 - Flight starts outdoors, stays within district bounds and observes conservative
   building clearance. Landing requires clear ground. Changing storefronts returns
   the character to ground level.
@@ -80,24 +43,21 @@ Jevica receives starstruck greetings. Reactions observe room boundaries and
 line-of-sight checks, expire, and have a cooldown. They do not rewrite identities,
 needs or jobs. Storm response and active volunteer visits retain priority.
 
-<<<<<<< Updated upstream
-=======
-## Wishes and consequences
+## Retrofuturistic environment, September 23, 2026
 
-Jevica grants one active wish per resident through their conversation card.
-The five gifts are a dragon egg, flight without landing, invisibility that leaves
-clothes visible, unwanted mind reading, and a dog transformation with an allergy.
-The gift turns troublesome after 8–12 seconds of visible game time. The resident
-asks for its removal after 20–28 seconds. Wishes continue while the support
-scenario is paused; changing or resetting that scenario doesn't remove them.
-Reloading the world starts a fresh set of wishes.
+The space-age direction is intentional: ivory ceramic surfaces, teal glass and
+enamel, champagne brass, rose and mint accents, terrazzo interiors, rounded
+cantilever canopies, orbital streetlamps and rooftop antenna domes. Continuous
+fascia bands carry the palette across facades without named storefronts. The
+interface uses the same colors and rounded forms. These are authored visual
+interpretations, not evidence of historical or surveyed Houston architecture.
 
-Incidents interrupt nearby residents in the same room or outdoor space. Workers
-pause their tasks, walkers stop, and the People panel tracks active incidents.
-Undoing a wish restores the resident and clears its disruption. Other active
-incidents remain. Jevica can undo a wish before its catch appears, too.
+The mapped roads, buildings, store entrances and mature tree locations stay in
+place. Human residents and existing worker roles remain the population standard.
+Jevica's ornate rose carriage complements this setting with gilded scrollwork,
+jeweled wheels and fitted tufted upholstery. She can board its cabin seat, ride
+along the roads and step out onto clear ground; see [character controls](character-forms.md).
 
->>>>>>> Stashed changes
 ## Streets and planting
 
 Retain the existing street, building, tree-stem and planter layout. The vegetation
@@ -113,6 +73,12 @@ road travel. People and public stops initially positioned in carriageways move
 to nearby clear sidewalks. Short connectors still allow a visitor already in a
 road to leave it; this is not permission to route through the road as a shortcut.
 Indoor work positions and architecture retain their existing locations.
+
+Browser outdoor ground queries use the rendered terrain, road, sidewalk and kerb
+triangles. Jevica, resident foot placement, carriage tyres, tree stems and street
+fixtures use those support heights. Room floors retain their own authoritative
+height. The terrain sampler is a rendering contact correction, not a relocation
+of the district or a replacement for native collision acceptance.
 
 ## Scope and evidence
 

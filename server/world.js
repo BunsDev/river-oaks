@@ -45,7 +45,7 @@ function decodeCheckpoint(json) {
 export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 } = {}) {
   const environment = createWalkingEnvironment(worldData);
   const players = new Map(), ledgers = new Map(), focus = new Map();
-  const state = createCommunity(worldData, environment.rooms);
+  const state = createCommunity(worldData, environment.rooms, {carriage:false});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
@@ -54,7 +54,6 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   const clearExpiredLedgers = time => {
     for (const [id,ledger] of ledgers) if (!players.has(id) && time-ledger.seen >= LEDGER_TTL_MS) ledgers.delete(id);
   };
-<<<<<<< Updated upstream
   // Everyone arrives at the same walk spawn; without spreading, two players
   // stood inside each other. Each takes the first free spot on rings around
   // the spawn at least 1.2 m from anyone already in town.
@@ -68,8 +67,6 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     }
     return [x0, north0];
   }
-=======
->>>>>>> Stashed changes
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -80,13 +77,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if (ledgers.size >= MAX_LEDGERS) return reject('world_busy');
       ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,tokens:12,tokenAt:time,seen:time});
     }
-<<<<<<< Updated upstream
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
     const player = {id:identity.userId,name:identity.name.slice(0,80),position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
-=======
-    const spawn = createWalkingState(environment).position;
-    const player = {id:identity.userId,name:identity.name.slice(0,80),position:[spawn[0],-spawn[2],spawn[1]-1.68],yaw:0,altitude:0,
->>>>>>> Stashed changes
       poseAt:time,moveBudget:0.1,liftBudget:0.1};
     players.set(player.id,player);
     revision++;
@@ -350,7 +342,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         || typeof clock.paused!=='boolean' || clock.packet!==null || !record(clock.stats))) throw new Error('Invalid resident clock');
       // Navigation caches/functions derive from the same fingerprinted district.
       // Build them before committing; only serialized simulation state is restored.
-      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms));
+      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false}));
       if (nextLife) {Object.assign(nextLife,clock);nextLife.state=state;}
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state,nextState);
@@ -364,7 +356,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   }
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
-    const fresh=createCommunity(worldData,environment.rooms);
+    const fresh=createCommunity(worldData,environment.rooms,{carriage:false});
     fresh.generation=state.generation+1;
     Object.assign(state,fresh);localById.clear();
     for (const local of state.locals) localById.set(local.id,local);

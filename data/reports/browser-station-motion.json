@@ -1,0 +1,116 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted",
+  "changes": [
+    "Station pose, idle clock and work clock suspend together at distance and room visibility boundaries",
+    "First resumed frame retains the displayed pose, followed by normal task and conversation updates",
+    "Mannequins cannot match an empty encounter selection",
+    "Reduced-motion idle stations skip repeated pose and hand solving"
+  ],
+  "baseline": {
+    "workers": 62,
+    "largest_joint_jump_degrees": 66.75017170455068,
+    "mannequins": 25,
+    "largest_mannequin_turn_degrees": 97.4028183370321,
+    "logs": [
+      "/tmp/river-worker-motion-baseline.log",
+      "/tmp/river-worker-motion-red.log",
+      "/tmp/river-mannequin-motion-baseline.log",
+      "/tmp/river-station-reduced-red.log"
+    ]
+  },
+  "verification": {
+    "unit_tests": 238,
+    "production_build": "passed; existing Three.js chunk-size advisory",
+    "unit_log": "/tmp/river-station-final-tests.log",
+    "build_log": "/tmp/river-station-final-build.log",
+    "people_per_rate": 169,
+    "rates_hz": [
+      30,
+      60,
+      120
+    ],
+    "person_rate_runs": 507,
+    "maximum_resume_joint_difference_rad": 6.664001874625056e-08,
+    "maximum_resume_wrist_displacement_m": 0,
+    "maximum_paused_work_clock_drift_s": 0,
+    "minimum_resumed_work_in_one_second_s": 0.966666666664139,
+    "minimum_conversation_attention": 0.9932620530006008,
+    "maximum_joint_speed_rad_s": 5.738867052878944,
+    "maximum_wrist_speed_m_s": 1.356755655253518,
+    "mannequins_per_rate": 25,
+    "maximum_mannequin_joint_difference_rad": 4.2146848510894035e-08,
+    "reduced_motion_people": 169,
+    "reduced_motion_idle_task_solves": 0,
+    "worker_contact": {
+      "touchSamples": 165,
+      "maxTouchGap": 6.979160360742753e-08,
+      "maxSidewaysBend": 0.3061035132354567,
+      "bodySamples": 372,
+      "bodyVertices": 6502698,
+      "maxWristBend": 1.2031626617508124,
+      "skinSamples": 1364,
+      "maxSkinHeight": -0.00043034203621061806,
+      "minSkinHeight": -0.0005767183675473575,
+      "workers": 62,
+      "kinds": [
+        "fabric",
+        "jewelry",
+        "samples",
+        "eyewear",
+        "tray",
+        "tablet"
+      ],
+      "docked": 17,
+      "contacts": 52204,
+      "maxError": 1.629456202308135e-07,
+      "errors": []
+    },
+    "people_picking": {
+      "checks": [
+        "Third-person body remains visible indoors",
+        "store-osm-node-8172494967-person-6: in reach and rendered",
+        "store-osm-node-8172494967-person-6: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-6: conversation does not teleport the visitor",
+        "store-osm-node-8172494967-person-9: in reach and rendered",
+        "store-osm-node-8172494967-person-9: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-9: conversation does not teleport the visitor",
+        "Worker resumes their task after recognition and conversation",
+        "Worker holds the task and attends during conversation",
+        "Actual seated rigs keep feet within 1 mm of planted targets",
+        "Loaded workers support their props within 1 mm of each palm",
+        "No uncaught browser errors: "
+      ],
+      "seatedFeet": 94,
+      "maxFootError": 1.29043200702043e-06,
+      "palmContacts": 124,
+      "maxPalmError": 1.4024368611261702e-07,
+      "errors": []
+    },
+    "directory_encounters": 193,
+    "browser_errors": [],
+    "raw_reports": [
+      "output/playwright/station-motion.json",
+      "output/playwright/station-regressions.json",
+      "output/playwright/station-reduced-motion.json"
+    ],
+    "renders": [
+      "output/playwright/station-before-working.png",
+      "output/playwright/station-before-resumed.png",
+      "output/playwright/station-after-working.png",
+      "output/playwright/station-after-resumed.png"
+    ]
+  },
+  "limits": [
+    "Local browser rig/geometry and interaction evidence; not biomechanical or motion-capture validation",
+    "Motion still uses an existing distance budget; distant stations preserve a static pose until active",
+    "Detailed grips, handovers, rounded furniture and full clothing collision remain incomplete",
+    "Native parity and target-hardware performance remain unproven by this pass"
+  ],
+  "sha256": {
+    "preview/src/store-people.js": "08084a1af897915f52403ff6fd8c3d00de7ce8a331d47596994da7195f1f6718",
+    "preview/e2e/fixtures/workers.js": "5053df85a1dd4622eb1fd2add9aa12550cc607f054c05009b0b0920b38bd2cc0",
+    "preview/e2e/station-motion.js": "ac5dad3931956edb49eb18bcf630fedccbf092c1fa2caf58799f38a2662744a9",
+    "preview/e2e/station-reduced-motion.js": "4883ef428a8b2d18795d52ccddb2b50e68631771f84d1780230f368cb418a377"
+  }
+}

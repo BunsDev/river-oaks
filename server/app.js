@@ -4,10 +4,7 @@ import { resolve, sep, extname } from 'node:path';
 import { stat, realpath } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
-<<<<<<< Updated upstream
 import { sendFrame } from './backpressure.js';
-=======
->>>>>>> Stashed changes
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 
@@ -21,15 +18,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
   const access = createRateLimiter(120,60000,4096), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
-<<<<<<< Updated upstream
   const send = (ws,value,options) => sendFrame(ws,value,options);
-=======
-  const send = (ws,value) => {
-    if (ws.readyState!==WebSocket.OPEN) return;
-    if (ws.bufferedAmount > 512*1024) {ws.close(1013,'Connection too slow');return;}
-    ws.send(typeof value==='string'?value:JSON.stringify(value));
-  };
->>>>>>> Stashed changes
   const authorized = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -91,12 +80,8 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     }
   });
   server.requestTimeout=15000;server.headersTimeout=10000;
-<<<<<<< Updated upstream
   // Snapshots are repetitive JSON; the shared Redis server compresses them the same way.
   const wss=new WebSocketServer({noServer:true,maxPayload:2048,perMessageDeflate:{threshold:1024,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:1}}});
-=======
-  const wss=new WebSocketServer({noServer:true,maxPayload:2048,perMessageDeflate:false});
->>>>>>> Stashed changes
   server.on('upgrade',async(req,socket,head)=>{
     const reject=status=>{socket.end(`HTTP/1.1 ${status} Rejected\r\nConnection: close\r\n\r\n`);};
     socket.on('error',()=>{});
@@ -151,11 +136,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     if(time-broadcastAt<200)return;broadcastAt=time;
     const snapshot=JSON.stringify(world.snapshot());
     for(const {ws,identity} of connections.values()) {
-<<<<<<< Updated upstream
       if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,snapshot,{snapshot:true});
-=======
-      if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,snapshot);
->>>>>>> Stashed changes
     }
   },50);loop.unref();
   const heartbeat=setInterval(()=>{

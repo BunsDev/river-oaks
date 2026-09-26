@@ -40,3 +40,28 @@ test('indoor encounters stay at their stations and do not alter the outdoor supp
     assert.equal(residentPacket(life, 1).agents.length, 24);
   }
 });
+
+test('workers explain their occupation and remember returning visitors at their workplace',()=>{
+  const locals=createStoreEncounters(rooms),stories=new Map();
+  for(const room of rooms)for(const [index,spot] of room.people.entries()) {
+    if(spot.role!=='staff')continue;
+    const local=locals.find(person=>person.id===storePersonId(room,index));
+    assert.ok(local.persona.work,`${local.role} has a work profile`);
+    const about=conversationLine(local,'about'),story=conversationLine(local,'story');
+    assert.ok(about.includes(room.name));
+    assert.ok(about.includes(local.role.toLowerCase()));
+    assert.notEqual(story,about);
+    stories.set(local.role,story);
+    conversationLine(local,'greeting');
+    const returning=conversationLine(local,'greeting');
+    assert.match(returning,/Welcome back/);
+    assert.ok(returning.includes(room.name)&&returning.includes(local.role.toLowerCase()));
+    assert.doesNotMatch(returning,/enjoying the afternoon|How is your walk/);
+  }
+  assert.equal(new Set(stories.values()).size,stories.size,'occupations have distinct work details');
+  assert.match(stories.get('Tailor'),/seam|fit|fabric/i);
+  assert.match(stories.get('Projection technician'),/sound|screen|projection/i);
+  assert.match(stories.get('Perfumer'),/scent|note|fragrance/i);
+  const guest=locals.find(local=>local.role==='Dining guest');
+  assert.equal(guest.persona.work,undefined,'a dining guest is not presented as staff');
+});

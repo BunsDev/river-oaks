@@ -106,3 +106,74 @@ async def test_http_busy_voice_can_be_retried_but_missing_model_cannot(tmp_path)
         reply = await client.post("/v1/voice", json={"text": "Hello"})
         assert reply.status_code == 503
         assert "retry-after" not in reply.headers
+
+
+async def test_timed_speech_keeps_wave_audio_and_embeds_bounded_phoneme_cues():
+    import json
+    import struct
+    from types import SimpleNamespace
+
+    cues = [SimpleNamespace(phoneme="ɑ", start=0.02, end=0.08)]
+    engine = LocalVoice(synthesizer=lambda request: (np.ones(2400) * 0.1, 24000, cues))
+    result = await engine.speak(VoiceRequest(text="Ah"))
+    assert struct.unpack_from("<I", result, 4)[0] == len(result) - 8
+    with wave.open(io.BytesIO(result)) as wav:
+        assert wav.getnframes() == 2400
+        assert len(wav.readframes(2400)) == 4800
+    offset = 12
+    while result[offset : offset + 4] != b"JEVS":
+        size = struct.unpack_from("<I", result, offset + 4)[0]
+        offset += 8 + size + size % 2
+    size = struct.unpack_from("<I", result, offset + 4)[0]
+    metadata = json.loads(result[offset + 8 : offset + 8 + size])
+    assert metadata == {
+        "version": 1,
+        "duration": 0.1,
+        "phonemes": [
+            {"phoneme": "ɑ", "start": 0.02, "end": 0.08},
+        ],
+    }
+    assert await engine.speak(VoiceRequest(text="Ah")) == result
+
+
+@pytest.mark.parametrize(
+    "cues",
+    [
+        [{"phoneme": "a", "start": -0.1, "end": 0.1}],
+        [{"phoneme": "a", "start": 0, "end": 0.2}],
+        [{"phoneme": "a", "start": float("nan"), "end": 0.1}],
+        [{"phoneme": "a", "start": 0.05, "end": 0.02}],
+        [
+            {"phoneme": "a", "start": 0.02, "end": 0.08},
+            {"phoneme": "b", "start": 0.04, "end": 0.09},
+        ],
+        [{"phoneme": "too-long", "start": 0, "end": 0.1}],
+        [{"phoneme": "a", "start": 0, "end": 0}] * 4097,
+    ],
+)
+async def test_invalid_phoneme_timings_cannot_enter_the_voice_cache(cues):
+    from types import SimpleNamespace
+
+    timings = [SimpleNamespace(**cue) for cue in cues]
+    engine = LocalVoice(synthesizer=lambda request: (np.zeros(2400), 24000, timings))
+    with pytest.raises(VoiceUnavailable):
+        await engine.speak(VoiceRequest(text="Hello"))
+    assert not engine.cache
+
+
+def test_macos_espeak_uses_an_installed_library_and_fails_before_native_initialization(monkeypatch):
+    from river_oaks import voice
+
+    monkeypatch.delenv("PHONEMIZER_ESPEAK_LIBRARY", raising=False)
+    monkeypatch.setattr(voice.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(voice.ctypes.util, "find_library", lambda name: None)
+    monkeypatch.setattr(voice.Path, "is_file", lambda path: False)
+    with pytest.raises(VoiceUnavailable, match="Install espeak-ng"):
+        voice.espeak_library()
+    monkeypatch.setattr(voice.Path, "is_file", lambda path: str(path).startswith("/opt/homebrew/"))
+    assert voice.espeak_library() == "/opt/homebrew/lib/libespeak-ng.dylib"
+    monkeypatch.setenv("PHONEMIZER_ESPEAK_LIBRARY", "/custom/espeak.dylib")
+    assert voice.espeak_library() == "/custom/espeak.dylib"
+    monkeypatch.delenv("PHONEMIZER_ESPEAK_LIBRARY")
+    monkeypatch.setattr(voice.platform, "system", lambda: "Linux")
+    assert voice.espeak_library() is None

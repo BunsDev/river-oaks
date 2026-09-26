@@ -1,0 +1,782 @@
+{
+  "createdAt": "2026-09-26T02:58:49.468227+00:00",
+  "scope": "Browser telekinetic carrying, wand and target sparkles, directional casting gait, camera recovery and shared UI motion polish",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/lift-sparkles.js": "83aa4df2c1dcfd6304f18cdc45c5099e6b58b939c723920fc218c6256bf399b4",
+    "preview/src/force-motion.js": "92d7be5f83b4b2299c74f31c8aca7d71c8d0cc8575a2f22f7e1dba49f5177490",
+    "preview/src/force-controls.js": "98ceda4fefbb5ca6b4c8890c297e24cb5e1eb656c918571daa3a52205beaa56a",
+    "preview/src/force.css": "f653e444ad21bcd02fbd11bce4f19033cbfdd91f1bc592adb7cc45947862b57e",
+    "preview/src/player-avatar.js": "fd09140f864e134a22c4d96ec10a0e5b8080eee0238e49cea4c1d58b64b2fead",
+    "preview/src/jevica-costume.js": "f82dd3130de83741794646b088144301792d62f3aea460c970bd66c262da6706",
+    "preview/src/avatars.js": "3f2e303ddc4b5291b536ee35b27fe765fb42d71eb906ca82f2d2ca6e17094e0d",
+    "preview/src/upper-body-gait.js": "1c53cbfc5f0c61e0bde9d73fed0d0711274d61f34001c5c47e6b630ddc121504",
+    "preview/src/foot-placement.js": "a0c8433f9facb1d436a49249e737dc59dc6a5b3300ef4abd43a72c5a89fde864",
+    "preview/src/walking-ui.js": "c899348b240221a54b1069a39b7f557ed24db6573971854e15c98d0a25205027",
+    "preview/src/third-person.js": "202639f2a7f8782074a55e7ea643ba5d85cd618af74e1ffad2fed7c2342f0c3b",
+    "preview/src/ui-motion.js": "7b704d2eb3abecb9b34795bb14ad7eb392caffa3e120d6e227009581626e03b9",
+    "preview/src/ui-motion.css": "1b9b06fc4e9a62de93c86eea33d156fce533bc802b88e1776b5d9d64b6322eb0",
+    "preview/src/theme.js": "6bd6869d60eb8266a50d3bf5520550c0bbe560f63e0d8ccb5d42a5d046f8a711",
+    "preview/src/auto-ui.js": "fc2b6d092dd2b5dc628a5f5a27df8642f3e9e3127e18dc42d8e5411f50d30814",
+    "preview/src/main.js": "35661e19a86bc1f1d13d0e36dae9879ed9a5304166f75545fc62adfbd43d095d"
+  },
+  "unitTests": {
+    "command": "npm test",
+    "passed": 356,
+    "failed": 0,
+    "summary": "\u2139 tests 356\n\u2139 suites 0\n\u2139 pass 356\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 42359.312333\n"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js bundle exceeds the 500 kB chunk warning threshold."
+  },
+  "browser": {
+    "force": {
+      "seconds": 27.13,
+      "result": {
+        "checks": [
+          "T enables Force mode",
+          "A real pointer click targets the person in Force mode",
+          "Force picking does not open a conversation",
+          "G acquires the selected person",
+          "The rendered person rises, not just the state",
+          "Force hold suspends pedestrian navigation",
+          "Wand and person both emit lift sparkles",
+          "X gently lands and releases the person",
+          "Sparkles finish fading after landing",
+          "Released person resumes walking",
+          "A Force push displaces a person and lands them",
+          "An existing street bin can be targeted through normal travel",
+          "The complete bin rises with its lid",
+          "Pointer spell controls return focus to walking",
+          "Walking preserves the active lift",
+          "Jevica walks while holding a target",
+          "The lifted bin follows her movement",
+          "Both sparkle emitters remain active within the pool budget while carrying",
+          "Jevica keeps facing the carried object after backpedalling",
+          "R pushes a real object and it settles at its new position",
+          "Indoor stations lift in place without crossing work surfaces",
+          "A levitated worker pauses their task",
+          "Escape lowers the worker and their task resumes",
+          "Force mode can be disabled",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "initial": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.497798256731,
+              18.36529211700329,
+              1274.5168337090834
+            ],
+            "renderedPosition": [
+              -2813.497798256731,
+              18.36529211700329,
+              1274.5168337090834
+            ],
+            "eligible": true
+          },
+          "held": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.4917329237064,
+              19.401392712513715,
+              1274.4999187803444
+            ],
+            "renderedPosition": [
+              -2813.4917329237064,
+              19.401392712513715,
+              1274.4999187803444
+            ],
+            "eligible": true
+          }
+        },
+        "bin": {
+          "initial": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "raised": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              19.549911004779396,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              19.549911004779396,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "landed": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.443630072635,
+              18.477310990730466,
+              1311.2545998205578
+            ],
+            "renderedPosition": [
+              -2771.443630072635,
+              18.477310990730466,
+              1311.2545998205578
+            ],
+            "eligible": false
+          }
+        },
+        "carry": {
+          "start": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2771.0986938402543,
+                19.60407752295767,
+                1310.0327574445103
+              ],
+              "velocity": [
+                0,
+                1.0062652604450741,
+                0
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2774.6499415108956,
+                20.17162014636863,
+                1305.2079243503927
+              ],
+              "riding": null,
+              "ground": 18.491620146368632,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -2.010431378384042,
+              "speed": 0,
+              "velocity": [
+                0,
+                0
+              ],
+              "distance": 0,
+              "roomId": null,
+              "showBody": true
+            }
+          },
+          "end": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2773.054834305108,
+                19.75960154033967,
+                1309.064070898602
+              ],
+              "velocity": [
+                -0.010753458640172377,
+                0.0004641904719288363,
+                -0.005339291679190448
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2776.608132812415,
+                20.079655238701548,
+                1304.238219914117
+              ],
+              "riding": null,
+              "ground": 18.39965523870155,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -2.010431378384042,
+              "speed": 5.005299168515462e-07,
+              "velocity": [
+                -4.5292113402182517e-07,
+                -2.1302455755473087e-07
+              ],
+              "distance": 2.2126685325323168,
+              "roomId": null,
+              "showBody": true
+            },
+            "yaw": 0.6348295942628307,
+            "fx": {
+              "count": 105,
+              "wand": 60,
+              "target": 45,
+              "capacity": 256,
+              "reducedMotion": false,
+              "wandTip": [
+                -2776.803384622676,
+                19.88736160380798,
+                1304.4693586637925
+              ],
+              "targetCenter": [
+                -2773.054834305108,
+                20.31510154033967,
+                1309.064070898602
+              ]
+            }
+          }
+        },
+        "personFX": {
+          "count": 72,
+          "wand": 41,
+          "target": 31,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2811.1967534554124,
+            19.874759148461436,
+            1275.2872834346088
+          ],
+          "targetCenter": [
+            -2813.4917329237064,
+            20.41328252349555,
+            1274.4999187803444
+          ]
+        },
+        "staff": "store-osm-node-8172495006-person-1",
+        "errors": []
+      }
+    },
+    "ui-polish": {
+      "seconds": 17.01,
+      "result": {
+        "checks": [
+          "Arrow keys select Places and preserve tab focus",
+          "Places panel remains accessible",
+          "Keyboard selects Settings",
+          "Keyboard navigation does not wait on panel animation",
+          "Dark theme switches cleanly",
+          "Theme transition suppression clears",
+          "Conversation opens with a reachable close control",
+          "Conversation topics still produce dialogue",
+          "Wishes remain reachable in conversation",
+          "Conversation exit finishes without an invisible input blocker",
+          "Collapsed controls are inert",
+          "Closing the rail returns pointer play to the canvas",
+          "Rapid interrupted toggles settle in the requested state",
+          "Rail finishes its exit",
+          "Opening 1: focus works in the first animation frame",
+          "Opening 1: immediate keyboard navigation works",
+          "Opening 2: focus works in the first animation frame",
+          "Opening 2: immediate keyboard navigation works",
+          "Opening 3: focus works in the first animation frame",
+          "Opening 3: immediate keyboard navigation works",
+          "Opening 4: focus works in the first animation frame",
+          "Opening 4: immediate keyboard navigation works",
+          "Opening 5: focus works in the first animation frame",
+          "Opening 5: immediate keyboard navigation works",
+          "Pointer camera controls return focus to movement",
+          "Pointer press feedback reaches the shared restrained scale",
+          "Press feedback releases cleanly",
+          "Reduced motion removes UI transitions across the rail, spell controls and dialogue",
+          "Desktop UI has no horizontal overflow",
+          "No uncaught UI errors"
+        ],
+        "keyboardMotion": "0s",
+        "staticUI": [
+          "0s",
+          "0s",
+          "0s"
+        ],
+        "errors": []
+      }
+    },
+    "force-mobile": {
+      "seconds": 26.79,
+      "result": {
+        "checks": [
+          "force-lift has a 44px touch target",
+          "force-push has a 44px touch target",
+          "force-lower has a 44px touch target",
+          "Touch controls lift a real nearby person",
+          "Both sparkle emitters render on touch devices",
+          "Holding the real touch pad walks while preserving the lift",
+          "Spell tools do not overlap the open movement pad",
+          "Touch controls land and release the target",
+          "Force controls fit the phone viewport",
+          "A reduced-motion spawn with no nearby target cannot cast accidentally",
+          "The empty target list explains why lifting is unavailable",
+          "Reduced motion uses a small stationary glimmer field",
+          "Reduced-motion effects clear after release",
+          "No uncaught phone errors"
+        ],
+        "id": "local-06",
+        "errors": []
+      }
+    },
+    "npc-presence": {
+      "seconds": 28.58,
+      "result": {
+        "checks": [
+          "local-00: pedestrian resumes while Jevica stays still",
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: pedestrian resumes while Jevica stays still",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: pedestrian resumes while Jevica stays still",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: pedestrian resumes while Jevica stays still",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: pedestrian resumes while Jevica stays still",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: pedestrian resumes while Jevica stays still",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "At least one route resumes inside the former visitor freeze radius",
+          "No floating NPC reaction captions",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 0.7285461779014129,
+            "screen": [
+              837.981210800077,
+              431.20256290960623
+            ],
+            "position": [
+              -2813.4758784429796,
+              -1274.4595820441602,
+              18.365730970259936
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 0.6422097030884023,
+            "screen": [
+              769.2744883932826,
+              415.7602635707871
+            ],
+            "position": [
+              -2806.573394026701,
+              -1229.7269685181616,
+              18.44957823827194
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.732737529938601,
+            "screen": [
+              773.3856303801595,
+              408.96681652736635
+            ],
+            "position": [
+              -2802.763790046662,
+              -1199.7503374803862,
+              18.386014721397
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 0.668362864913565,
+            "screen": [
+              821.5233251906214,
+              333.98638880797824
+            ],
+            "position": [
+              -2775.477477434395,
+              -1291.2632110371703,
+              18.476166087295535
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.7014682711610407,
+            "screen": [
+              783.0226080564993,
+              426.00578930269154
+            ],
+            "position": [
+              -2770.1219193316538,
+              -1244.2803499424738,
+              18.39427638666555
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.6157026661263559,
+            "screen": [
+              790.5883687297131,
+              428.57970960697213
+            ],
+            "position": [
+              -2770.192016011106,
+              -1240.479009155128,
+              18.391612688455382
+            ]
+          }
+        ],
+        "releaseDistances": [
+          2.4999999999998592,
+          2.5000000000000795,
+          2.500000000000047,
+          2.4999999999999414,
+          2.5000000000000444,
+          2.5000000000001
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+      }
+    },
+    "carriage": {
+      "seconds": 18.35,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed footboard",
+          "riding-slope: both soles contact the actual transformed footboard",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003743152485,
+                "minX": -2.719301644971826,
+                "maxX": -2.478345608200862
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003867481168,
+                "minX": -2.7193016378760855,
+                "maxX": -2.478345607143537
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003810210338,
+                "minX": -2.7193016440595033,
+                "maxX": -2.4783456117813074
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003888902873,
+                "minX": -2.7193016358350195,
+                "maxX": -2.478345605483292
+              }
+            ]
+          }
+        ],
+        "before": {
+          "placement": {
+            "position": [
+              -2766.541185989181,
+              18.42157351781855,
+              1291.5552254559523
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": 0.0007859033689301711,
+            "roll": 0.005794460639896358,
+            "distance": 0,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.0025194879020453698,
+              -1.8267278509398466e-05,
+              1.7017506444005903e-05,
+              1.7017506447558617e-05
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            0,
+            3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.105314686426908,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.42531468642691,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.33440851050249343,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.42531468642691,
+            1295.064162750871
+          ],
+          "riderYaw": 0
+        },
+        "driven": {
+          "placement": {
+            "position": [
+              -2758.624935650258,
+              18.403864869519804,
+              1291.6761026329993
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010621312392582412,
+            "distance": 7.917173152104855,
+            "terrainError": 0.009860024135232237,
+            "speed": 0.029355486788526595,
+            "wheelOffsets": [
+              0.007156626770264296,
+              0.007156626770264296,
+              0.008896267539839187,
+              0.003207989023930935
+            ]
+          },
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            0,
+            0,
+            0,
+            3.552713678800501e-15
+          ],
+          "pose": {
+            "position": [
+              -2756.508105227629,
+              20.636429930926127,
+              1291.7195524265994
+            ],
+            "riding": {
+              "seat": [
+                -2756.508105227629,
+                20.016429930926126,
+                1291.7195524265994
+              ],
+              "yaw": 1.5555280143100032,
+              "quaternion": [
+                0.006204216734094744,
+                0.7016870474717593,
+                -0.0012686444914266153,
+                0.7124571465332044
+              ],
+              "speed": 0.029355486788526595,
+              "distance": 7.917173152104855
+            },
+            "ground": 18.39018412581232,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -0.08606463927978991,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.516811792558,
+            19.188446864256303,
+            1291.7137063192024
+          ],
+          "riderYaw": 1.5522575236869651
+        },
+        "after": {
+          "placement": {
+            "position": [
+              -2758.6202096015563,
+              18.403834499615137,
+              1291.6761747973953
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010626024479400939,
+            "distance": 7.921899751730909,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.007291865238993722,
+              0.0072918652389901695,
+              0.008591337104274288,
+              0.0029030585883624838
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            -7.105427357601002e-15,
+            0,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2756.6746279047616,
+              20.092324270533968,
+              1288.705533139252
+            ],
+            "riding": null,
+            "ground": 18.41232427053397,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -3.084835123424301,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.6746279047616,
+            18.41232427053397,
+            1288.705533139252
+          ],
+          "riderYaw": 1.5522548506004994
+        },
+        "errors": []
+      }
+    },
+    "casting-motion": {
+      "seconds": 5.96,
+      "result": {
+        "checks": [
+          "backpedal: actual Jevica rig reaches its foot targets",
+          "backpedal: support targets remain planted",
+          "backpedal: walking continues throughout the cast",
+          "strafe-left: actual Jevica rig reaches its foot targets",
+          "strafe-left: support targets remain planted",
+          "strafe-left: walking continues throughout the cast",
+          "strafe-right: actual Jevica rig reaches its foot targets",
+          "strafe-right: support targets remain planted",
+          "strafe-right: walking continues throughout the cast",
+          "No uncaught casting fixture errors"
+        ],
+        "runs": [
+          {
+            "name": "backpedal",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-left",
+            "error": 1.6883057536160649e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-right",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "browserAssertions": 132,
+  "carryDistanceMetres": 2.1828511498639505,
+  "visualReview": [
+    "force-person-held.png",
+    "force-bin-held.png",
+    "force-mobile.png",
+    "force-mobile-reduced.png",
+    "ui-polish-dark.png",
+    "ui-polish-conversation.png",
+    "casting-backpedal.png",
+    "casting-strafe-left.png",
+    "casting-strafe-right.png"
+  ],
+  "artifactDirectory": "output/playwright",
+  "resolvedFindings": [
+    "Opening visibility delayed keyboard focus by one frame. Opening now changes visibility immediately; the close delay retains the exit fade. Five repeated immediate focus and arrow navigation cases pass.",
+    "Resetting an empty target list skipped its placeholder. Reset now invalidates the options cache, exposing No target in reach.",
+    "Reduced-motion residents remain at initial positions. Browser acceptance approaches a target through normal directory controls rather than waiting for a resident to walk into range.",
+    "Casting while walking initially inherited unrestricted arm swing and body-facing travel. Casting weights now blend down swing, facing stays on the target, and steps follow actual travel direction."
+  ],
+  "limitations": [
+    "Upright targets, existing people and 15 bins; no ragdolls, destructive physics or arbitrary scene mesh manipulation.",
+    "No full-district frame-pacing improvement or AAA photorealistic asset fidelity is claimed by this pass.",
+    "Physical cloth, facial animation and overall realism remain open goals; native Unreal work remains stopped.",
+    "Browser keyboard and touch emulation were tested; human screen-reader acceptance and manual Animations-panel playback at 10 percent speed were not performed.",
+    "The development decision service intermittently returns 503/500; authored local fallback remains active. No uncaught application or shader errors occurred in the accepted checks."
+  ]
+}

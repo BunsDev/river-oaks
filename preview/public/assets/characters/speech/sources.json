@@ -1,0 +1,60 @@
+{
+  "license": "CC0-1.0",
+  "source": "MakeHuman system assets and Visemes 02",
+  "visemeAuthor": "Mika Suominen",
+  "visemeSource": "https://static.makehumancommunity.org/assets/assetpacks/visemes02.html",
+  "visemeArchiveSha256": "a69ab6fb95ddd5f56f70acc7e859f5f9c6ae613c527d577ea1571eff2183d29e",
+  "generator": "MPFB 2.0.17 / bpy 4.5.3 LTS, sparse merge preserving original assets",
+  "runtime": "On-demand geometry for the active speaker only",
+  "files": [
+    {
+      "profile": "jevica",
+      "path": "/assets/characters/speech/jevica.glb",
+      "bytes": 12403512,
+      "sha256": "9752d509b67c318930c542bbb94412f6ab5c676ea00ba7e413b9f3bb59fcf729",
+      "baseSha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a"
+    },
+    {
+      "profile": "man-casual",
+      "path": "/assets/characters/speech/man-casual.glb",
+      "bytes": 3964288,
+      "sha256": "533bbd47b84de5e1753e0fce88ed4893e0b7acd6d9aa1a431b6d5eed73a610f5",
+      "baseSha256": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25"
+    },
+    {
+      "profile": "man-tailored",
+      "path": "/assets/characters/speech/man-tailored.glb",
+      "bytes": 3769536,
+      "sha256": "04419e356a19bfd0415cc9c121039d9aca6ae5c80478f8cb9487ae849fd1a0d4",
+      "baseSha256": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7"
+    },
+    {
+      "profile": "man-workwear",
+      "path": "/assets/characters/speech/man-workwear.glb",
+      "bytes": 3847792,
+      "sha256": "334db3b20f385e485b83ea0a3adf05d472861dc3ed79f8005389ba74a7f9a123",
+      "baseSha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09"
+    },
+    {
+      "profile": "woman-casual",
+      "path": "/assets/characters/speech/woman-casual.glb",
+      "bytes": 3703172,
+      "sha256": "306970d50a71cd207ce267842e20a87c35b8d0cf64821681c331fa22e1608c03",
+      "baseSha256": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe"
+    },
+    {
+      "profile": "woman-daywear",
+      "path": "/assets/characters/speech/woman-daywear.glb",
+      "bytes": 4258308,
+      "sha256": "428b6d909933b682dfc81f5c9ae3f0f41c55a14a03862f8884f2eff4c1cdd853",
+      "baseSha256": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639"
+    },
+    {
+      "profile": "woman-tailored",
+      "path": "/assets/characters/speech/woman-tailored.glb",
+      "bytes": 3785244,
+      "sha256": "33337860af141287a59f206a1db71beb6cd5ed2fc73deceb2390bf16ceec1a4a",
+      "baseSha256": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4"
+    }
+  ]
+}

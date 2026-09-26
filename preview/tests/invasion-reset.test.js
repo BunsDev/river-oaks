@@ -23,7 +23,7 @@ test('invasion reset releases old residents and disposes the old world before an
     const {createInvasionControls}=await import('../src/invasion-ui.js');
     const scene={events:[]},world={bounds_m:[-40,-40,40,40],walkSpawn:[0,0,0],collisionPolygons:[]};
     let locals=[{id:'old-resident',position:[0,0,0]}];
-    const controls=createInvasionControls({scene,host:new Element(),walking:{getPose:()=>null},getWorld:()=>world,getLocals:()=>locals,getForm:()=> 'witch'});
+    const controls=createInvasionControls({scene,host:new Element(),walking:{getPose:()=>null},getWorld:()=>world,getLocals:()=>locals,getForm:()=> 'jevica'});
     assert.equal(typeof controls.reset,'function','World replacement needs an explicit reset contract');
     controls.reset();
     const toggle=controls.panel.querySelector('#invasion-toggle');toggle.click();

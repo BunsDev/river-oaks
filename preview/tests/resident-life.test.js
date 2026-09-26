@@ -10,6 +10,35 @@ const create=()=>{const state=createCommunity(world);const life=createResidentLi
 const step=(life,count,options={})=>{for(let i=0;i<count;i++) stepResidentLife(life,1/60,options);};
 const reply=(packet,action='continue')=>({schema_version:1,tick:packet.tick,latency_ms:12,decisions:packet.agents.map(a=>({id:a.id,action,source:'jev'}))});
 
+test('pedestrians pass a moved street object without walking through it',()=>{
+  const {state,life}=create(),local=state.locals[0];
+  state.locals.slice(1).forEach(person=>{person.abducted=true;});
+  local.position=[-12,0,0];Object.assign(local.life,{heading:Math.PI,route:[[-12,12,0]],destination:{name:'Test walk'},waitUntil:Infinity});
+  const obstacle=[-12,3,0];let closest=Infinity,lateral=0;
+  for(let i=0;i<600;i++) {
+    stepResidentLife(life,1/60,{obstacles:[obstacle]});
+    closest=Math.min(closest,Math.hypot(local.position[0]-obstacle[0],local.position[1]-obstacle[1]));
+    lateral=Math.max(lateral,Math.abs(local.position[0]+12));
+  }
+  assert.ok(closest>=.69,`Object clearance: ${closest}`);
+  assert.ok(lateral>.4&&local.life.distance>4,'Finds a way around the bin');
+});
+
+test('Force holds pause a walking route and release resumes without teleporting',()=>{
+  const {state,life}=create();step(life,180);
+  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local);
+  const before=[...local.position];local.force={height:1.2,mode:'lift'};
+  step(life,120);assert.deepEqual(local.position,before);assert.equal(local.life.speed,0);
+  assert.equal(local.life.status,'held by the Force');
+  delete local.force;let travel=0;
+  for(let i=0;i<240;i++) {
+    const p=[...local.position];step(life,1);
+    const distance=Math.hypot(local.position[0]-p[0],local.position[1]-p[1]);
+    assert.ok(distance<.025);travel+=distance;
+  }
+  assert.ok(travel>.2,'The route resumes after the hold');
+});
+
 test('residents walk between public stops without entering buildings or teleporting',()=>{
   const {state,life}=create();
   for(let i=0;i<1800;i++) {
@@ -25,11 +54,11 @@ test('residents walk between public stops without entering buildings or teleport
   assert.equal(state.supplies,12);
 });
 
-test('selection, nearby visitors and motion pause freeze movement with no catch-up',()=>{
+test('selection and motion pause freeze movement with no catch-up',()=>{
   const {state,life}=create();step(life,180);
   const local=state.locals[0],position=[...local.position];state.selectedId=local.id;
   step(life,180);assert.deepEqual(local.position,position);
-  state.selectedId=null;step(life,180,{visitor:position});assert.deepEqual(local.position,position);
+  state.selectedId=null;
   const all=state.locals.map(l=>[...l.position]);step(life,180,{paused:true});
   assert.deepEqual(state.locals.map(l=>l.position),all);
   stepResidentLife(life,Infinity);assert.deepEqual(state.locals.map(l=>l.position),all);
@@ -133,6 +162,103 @@ test('ordinary walking accelerates gradually and slows before reaching a destina
   assert.ok(approaching.length>5,'Arrival must brake over multiple frames');
   assert.equal(local.life.speed,0);
   assert.ok(Math.abs(local.position[0]-5)<0.025);
+});
+
+function passingVisitor() {
+  const street={scene:'district',bounds_m:[-20,-20,20,20],collisionPolygons:[],communityLocations:[{id:'a',name:'West',position:[-5,0,0]}]};
+  const state=createCommunity(street),life=createResidentLife(street,state),local=state.locals[0];
+  local.life.route=[[5,0]];local.life.destination={id:'b',name:'East'};local.life.heading=Math.PI/2;
+  return {state,life,local};
+}
+
+test('a passing nod keeps the route moving beside Jevica without owning body heading',()=>{
+  const {life,local}=passingVisitor();step(life,120);
+  const before=local.life.distance,heading=local.life.heading;
+  local.visitorReaction={action:'acknowledge',passive:true};
+  for(let i=0;i<60;i++)step(life,1,{visitor:[local.position[0],local.position[1]+2,0]});
+  assert.ok(local.life.distance>before+.9,'A visitor two metres alongside cannot freeze a walking route');
+  assert.ok(Math.abs(local.life.heading-heading)<.01,'A head-only greeting cannot steer the body');
+  assert.equal(local.life.status,'walking');
+});
+
+test('a stationary visitor is passed with clearance instead of freezing the sidewalk',()=>{
+  const {life,local}=passingVisitor(),visitor=[0,0,0];let nearest=Infinity;
+  for(let i=0;i<900;i++) {
+    step(life,1,{visitor});
+    nearest=Math.min(nearest,Math.hypot(local.position[0]-visitor[0],local.position[1]-visitor[1]));
+  }
+  assert.ok(nearest>=.69,`Personal space remains clear: ${nearest}`);
+  assert.ok(local.position[0]>4.9,'The pedestrian passes Jevica and finishes the route');
+});
+
+test('Jevica overhead or indoors does not deflect a street route, while low hovering keeps clearance',()=>{
+  for(const context of [{roomId:null,altitude:3.5},{roomId:'shop',altitude:0},{roomId:null,altitude:1}]) {
+    const {life,local}=passingVisitor();let lateral=0,nearest=Infinity;
+    const visitor=[0,0,1.68+context.altitude],visitorPose={...context,ground:0,position:[0,visitor[2],0]};
+    for(let i=0;i<900;i++) {
+      step(life,1,{visitor,visitorPose});
+      lateral=Math.max(lateral,Math.abs(local.position[1]));
+      nearest=Math.min(nearest,Math.hypot(local.position[0],local.position[1]));
+    }
+    assert.ok(local.position[0]>4.9);
+    if(context.altitude===1)assert.ok(nearest>=.69,'Low hovering still overlaps pedestrian height');
+    else assert.ok(lateral<1e-6,`${JSON.stringify(context)} must not create a phantom ground obstacle: ${lateral}`);
+  }
+});
+
+test('indoor and elevated residents do not block a sidewalk in another physical space',()=>{
+  for(const mode of ['indoor','flying']) {
+    const {state,life,local}=passingVisitor();
+    const other={...local,id:'other',position:[0,0,0],life:{...local.life,route:[]}};
+    if(mode==='indoor'){other.indoor=true;other.storeId='shop';}
+    else other.wish={kind:'flight',age:4,phase:'gift'};
+    state.locals.push(other);let lateral=0;
+    for(let i=0;i<900;i++){step(life,1);lateral=Math.max(lateral,Math.abs(local.position[1]));}
+    assert.ok(local.position[0]>4.9,`Pass the ${mode} resident's projected location`);
+    assert.ok(lateral<1e-6,`${mode} resident cannot steer a ground walker`);
+  }
+});
+
+test('resident context excludes people in another room or above the walking plane',()=>{
+  const {state,life,local}=passingVisitor();
+  state.locals.push({...local,id:'shopper',indoor:true,storeId:'shop',position:[0,0,0]});
+  state.locals.push({...local,id:'flying',position:[0,0,0],wish:{kind:'flight',age:4,phase:'gift'}});
+  const visitor=[0,0,5.18],visitorPose={roomId:null,ground:0,altitude:3.5,position:[0,5.18,0]};
+  const packet=residentPacket(life,1,{visitor,visitorPose});
+  assert.deepEqual(packet.agents.find(agent=>agent.id===local.id).nearby,[]);
+});
+
+test('conversation turns update the walking heading and release with a planted bounded turn',()=>{
+  const street={scene:'district',bounds_m:[-20,-20,20,20],collisionPolygons:[],communityLocations:[{id:'a',name:'Start',position:[0,0,0]}]};
+  for(const fps of [30,60,144]) {
+    const state=createCommunity(street),life=createResidentLife(street,state),local=state.locals[0],dt=1/fps;
+    Object.assign(local.life,{heading:Math.PI/2,route:[[8,0]],destination:{id:'b',name:'East'}});
+    const visitor=[0,2,1.6];state.selectedId=local.id;
+    let previous=local.life.heading;
+    for(let i=0;i<fps*2;i++) {
+      stepResidentLife(life,dt,{visitor});
+      assert.ok(Math.abs(local.life.heading-previous)<=3.2*dt+1e-9,'conversation has bounded angular speed');
+      previous=local.life.heading;
+    }
+    assert.ok(Math.abs(Math.atan2(Math.sin(local.life.heading-Math.PI),Math.cos(local.life.heading-Math.PI)))<.01,'route controller retains actual conversation facing');
+    assert.deepEqual(local.position,[0,0,0],'turning to talk never translates the resident');
+    state.selectedId=null;
+    for(let i=0;i<fps*2;i++) {
+      stepResidentLife(life,dt,{visitor});
+      assert.ok(Math.abs(local.life.heading-previous)<=3.2*dt+1e-9,'release never snaps back to the saved route heading');
+      previous=local.life.heading;
+    }
+    assert.ok(local.position[0]>.5,'resident resumes the original eastbound route');
+  }
+});
+
+test('pausing routes still allows an explicit conversation to turn without catch-up travel',()=>{
+  const {state,life}=create(),local=state.locals[0];state.selectedId=local.id;
+  const position=[...local.position],visitor=[position[0]+2,position[1],1.6];
+  step(life,120,{paused:true,visitor});
+  assert.ok(Math.abs(local.life.heading-Math.PI/2)<.01,'paused conversation faces visitor');
+  assert.deepEqual(local.position,position);
+  assert.equal(life.elapsed,0);
 });
 
 test('wish incidents stop nearby walkers and undo lets them continue',async()=>{

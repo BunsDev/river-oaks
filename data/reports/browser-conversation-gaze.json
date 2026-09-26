@@ -1,0 +1,339 @@
+{
+  "date": "2026-09-25",
+  "scope": "Conversation gaze and physical support",
+  "before": {
+    "id": "store-osm-node-8172494955-person-7",
+    "samples": [
+      {
+        "height": -0.65,
+        "headPitch": 0.019999994572345282,
+        "head": [
+          -2799.0222833612606,
+          20.02669905934685,
+          1218.0893660089391
+        ]
+      },
+      {
+        "height": 1,
+        "headPitch": 0.020000001222073096,
+        "head": [
+          -2799.0222833612606,
+          20.02669905934685,
+          1218.0893660089391
+        ]
+      }
+    ]
+  },
+  "after": {
+    "id": "store-osm-node-8172494955-person-7",
+    "samples": [
+      {
+        "height": -0.65,
+        "headPitch": -0.29374297568298524,
+        "head": [
+          -2799.022446035049,
+          20.022405996818186,
+          1218.099265071873
+        ]
+      },
+      {
+        "height": 1,
+        "headPitch": 0.47882808888717904,
+        "head": [
+          -2799.022035233791,
+          20.03125923082292,
+          1218.074266898875
+        ]
+      }
+    ]
+  },
+  "rigs": {
+    "stations": [
+      {
+        "id": "store-osm-node-8172494989-person-3",
+        "task": "fabric",
+        "seated": false,
+        "samples": [
+          -0.29387423469416785,
+          0.4793162739379226
+        ],
+        "maxStep": 0.03821287618855995,
+        "maxFootDrift": 0,
+        "maxContactError": 6.224140600237157e-08
+      },
+      {
+        "id": "store-osm-node-8172494989-person-2",
+        "task": "fabric",
+        "seated": false,
+        "samples": [
+          -0.2937501351295534,
+          0.4788973168066213
+        ],
+        "maxStep": 0.03821632890700915,
+        "maxFootDrift": 0,
+        "maxContactError": 8.817237249734157e-08
+      },
+      {
+        "id": "store-osm-node-8172494989-person-4",
+        "task": null,
+        "seated": false,
+        "samples": [
+          -0.2917947084491634,
+          0.46700665226246724
+        ],
+        "maxStep": 0.03750409902763613,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      },
+      {
+        "id": "store-osm-node-8172494989-person-5",
+        "task": null,
+        "seated": false,
+        "samples": [
+          -0.2900525867232522,
+          0.4692860919318237
+        ],
+        "maxStep": 0.03754565264760681,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      },
+      {
+        "id": "store-osm-node-8172494989-person-6",
+        "task": null,
+        "seated": false,
+        "samples": [
+          -0.29186308968077673,
+          0.46672241421366223
+        ],
+        "maxStep": 0.03748532831851647,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      },
+      {
+        "id": "store-osm-node-8172495006-person-4",
+        "task": null,
+        "seated": false,
+        "samples": [
+          -0.2899283239724182,
+          0.46879988506445996
+        ],
+        "maxStep": 0.037533309221163096,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      },
+      {
+        "id": "store-osm-node-8172495000-person-1",
+        "task": "jewelry",
+        "seated": false,
+        "samples": [
+          -0.29387424679686974,
+          0.47931627563166584
+        ],
+        "maxStep": 0.0382129764002864,
+        "maxFootDrift": 0,
+        "maxContactError": 9.460420498809481e-08
+      },
+      {
+        "id": "store-osm-node-8172494963-person-1",
+        "task": "blotter",
+        "seated": false,
+        "samples": [
+          -0.2938742346674069,
+          0.4793162739759043
+        ],
+        "maxStep": 0.03821287841945709,
+        "maxFootDrift": 0,
+        "maxContactError": 4.7985461205261534e-08
+      },
+      {
+        "id": "store-osm-node-8172494979-person-1",
+        "task": "eyewear",
+        "seated": false,
+        "samples": [
+          -0.29388593845245675,
+          0.47945569395313953
+        ],
+        "maxStep": 0.038210188222002436,
+        "maxFootDrift": 0,
+        "maxContactError": 8.017562795668525e-08
+      },
+      {
+        "id": "store-osm-node-8172494955-person-7",
+        "task": "tray",
+        "seated": false,
+        "samples": [
+          -0.29374297568298524,
+          0.47882808888717904
+        ],
+        "maxStep": 0.03821771682869577,
+        "maxFootDrift": 0,
+        "maxContactError": 7.551539761769447e-08
+      },
+      {
+        "id": "store-osm-node-8172494977-person-0",
+        "task": "tablet",
+        "seated": false,
+        "samples": [
+          -0.2937644240231803,
+          0.4790359018649676
+        ],
+        "maxStep": 0.03821376628197063,
+        "maxFootDrift": 0,
+        "maxContactError": 7.379157534498299e-08
+      },
+      {
+        "id": "store-osm-node-8172495006-person-0",
+        "task": "samples",
+        "seated": false,
+        "samples": [
+          -0.29368770405320443,
+          0.47893433950355613
+        ],
+        "maxStep": 0.03821194414343661,
+        "maxFootDrift": 0,
+        "maxContactError": 1.3638341437028456e-07
+      },
+      {
+        "id": "store-osm-node-8172494957-person-2",
+        "task": null,
+        "seated": true,
+        "samples": [
+          -0.29270076646890747,
+          0.4736224593979046
+        ],
+        "maxStep": 0.037854503016670905,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      },
+      {
+        "id": "store-osm-node-8172494955-person-4",
+        "task": null,
+        "seated": true,
+        "samples": [
+          -0.292700766551874,
+          0.47362245928012797
+        ],
+        "maxStep": 0.03785449589223542,
+        "maxFootDrift": 0,
+        "maxContactError": 0
+      }
+    ],
+    "outdoor": [
+      {
+        "profile": "woman-casual",
+        "samples": [
+          -0.31254216261151196,
+          0.47304737993466284
+        ],
+        "maxStep": 0.03807722078801521,
+        "maxFootDrift": 0
+      },
+      {
+        "profile": "man-casual",
+        "samples": [
+          -0.30738457713004297,
+          0.46781438152834537
+        ],
+        "maxStep": 0.038053764913292064,
+        "maxFootDrift": 0
+      },
+      {
+        "profile": "woman-tailored",
+        "samples": [
+          -0.3098140994673028,
+          0.46517353536816913
+        ],
+        "maxStep": 0.03825585541968396,
+        "maxFootDrift": 0
+      },
+      {
+        "profile": "man-tailored",
+        "samples": [
+          -0.31866376979247774,
+          0.4699087013704462
+        ],
+        "maxStep": 0.03840148291743583,
+        "maxFootDrift": 0
+      },
+      {
+        "profile": "woman-daywear",
+        "samples": [
+          -0.3238789125117207,
+          0.47617920929895224
+        ],
+        "maxStep": 0.03829336775626901,
+        "maxFootDrift": 0
+      },
+      {
+        "profile": "man-workwear",
+        "samples": [
+          -0.319983465824898,
+          0.47577080925175713
+        ],
+        "maxStep": 0.03807551355165195,
+        "maxFootDrift": 0
+      }
+    ],
+    "errors": [],
+    "scope": "Rendered production rigs with measured head orientation, per-frame continuity and support stability; controlled fixture targets."
+  },
+  "liveAirborne": {
+    "checks": [
+      "The elevated recipient is rendered and within talking reach",
+      "The recipient projects outside UI overlays",
+      "The actual flying mesh selects its own identity",
+      "Pointer conversation preserves Jevica\u2019s flight altitude",
+      "Pointer conversation does not move Jevica",
+      "Keyboard E addresses the same airborne recipient",
+      "Keyboard conversation preserves flight",
+      "A distant vertical separation is outside talking range",
+      "Keyboard E cannot open a distant airborne conversation",
+      "The elevated recipient is rendered and within talking reach",
+      "The recipient projects outside UI overlays",
+      "The actual flying mesh selects its own identity",
+      "Talking to the recipient from below leaves Jevica grounded",
+      "Undo restores ordinary grounded talking reach",
+      "No uncaught browser errors: "
+    ],
+    "id": "local-08",
+    "before": {
+      "position": [
+        -2763.5664903447564,
+        23.655761488080024,
+        1310.5492660966715
+      ],
+      "altitude": 3.5,
+      "flying": "true"
+    },
+    "after": {
+      "position": [
+        -2763.5664903447564,
+        23.655761488080024,
+        1310.5492660966715
+      ],
+      "altitude": 3.5,
+      "flying": "true"
+    },
+    "errors": [],
+    "scope": "Real wish, flight, pointer and keyboard controls; no actor state injection."
+  },
+  "unitTests": 326,
+  "unitFailures": 0,
+  "build": "passed; existing large Three.js chunk advisory",
+  "metrics": {
+    "samples": 7200,
+    "maxHeadStepRadians": 0.03840148291743583,
+    "maxFootDriftMeters": 0,
+    "maxContactErrorMeters": 1.3638341437028456e-07
+  },
+  "sha256": {
+    "preview/src/conversation-gaze.js": "2b87a0df8a9035ecb5327d558b7cdd1be3f887da0ff6c260d1c9f25b27a16811",
+    "preview/src/avatars.js": "9c82c4cf9173d79dc4625447a6d18805a7bc6af75d67d07bc4eaec7ea6d8b064",
+    "preview/src/locals.js": "24f31f8f5655a4ff50277ab27b1b115dd4f0ad2f48c8cd6fb614dc5e67fd25b5",
+    "preview/src/store-people.js": "eb99c64891154cad418194f4703015a4f5990e5fe5c524e82719d9230071916c",
+    "preview/src/store-work.js": "b9529a04662863cae911b9d8b0e37dde23cfe3160a85f83920b4b4ba0a93a609",
+    "preview/tests/conversation-gaze.test.js": "d1ad24239d1b09eade7b498a3b571a9d575123e46bfa6c2cba2329603b4dbef7",
+    "preview/tests/store-work.test.js": "3aa0a541776244009742171db08ea62b6283e07c6fa7c8b597703d9a8671d98b",
+    "preview/e2e/conversation-gaze.js": "2eaa1b9e992c05e70ebf8cebbfb5ad9f4f08a3c87ae4962c074e8657a47f6d78"
+  }
+}

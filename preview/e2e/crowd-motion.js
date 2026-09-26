@@ -1,10 +1,11 @@
 async page => {
   const check=(condition,message)=>{if(!condition)throw new Error(message);},errors=[];
+  const current=await page.evaluate(()=>location.origin),origin=current.startsWith('http')?current:'http://127.0.0.1:5173';
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1600,height:900});await page.emulateMedia({reducedMotion:'no-preference'});
   const results=[];
   for(const scenario of ['passing','turns']) {
-  await page.goto(`http://127.0.0.1:5173/e2e/fixtures/crowd.html?scenario=${scenario}`);await page.waitForFunction(()=>document.body.dataset.ready==='true');
+  await page.goto(`${origin}/e2e/fixtures/crowd.html?scenario=${scenario}`);await page.waitForFunction(()=>document.body.dataset.ready==='true');
   const samples=[];let arrived=0,picks=0;
   for(const frame of [0,180,270,330,450,600,960,1440]) {
     const result=await page.evaluate(frame=>window.crowdFixture.advance(frame),frame);samples.push(...result.samples);arrived=result.arrived;
@@ -26,8 +27,9 @@ async page => {
       check(error<0.005,`${sample.id} ${foot.side} misses by ${error} m at ${sample.frame}`);
       const key=`${sample.id}-${foot.side}`,before=previous.get(key);
       if(before?.contact && foot.contact) {
-        check(Math.hypot(...foot.actual.map((v,i)=>v-before.actual[i]))<0.005,`${key} slides during stance`);
-        check(Math.hypot(...foot.orientation.map((v,i)=>v-before.orientation[i]))<1e-6,`${key} twists during stance`);planted++;
+        check(foot.support&&Math.abs(foot.support[1])<.003,`${key} has no ground support during stance`);
+        if(foot.pivot===before.pivot)check(Math.hypot(foot.support[0]-before.support[0],foot.support[2]-before.support[2])<0.005,`${key} slides at its ground support`);
+        check(Math.hypot(...foot.plantOrientation.map((v,i)=>v-before.plantOrientation[i]))<1e-6,`${key} twists during stance`);planted++;
       }
       previous.set(key,foot);
     }

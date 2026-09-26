@@ -4,11 +4,7 @@ import * as THREE from 'three';
 import { ALIEN_SPECIES, alienSpeciesFor, applyAlienSpecies, GREY_SPECIES } from '../src/alien-species.js';
 import { VISITOR_FORMS, formFor, visitorGreeting, createVisitorReactions } from '../src/visitor-persona.js';
 
-<<<<<<< Updated upstream
 test('alien anatomy templates remain deterministic', () => {
-=======
-test('invasion species have deterministic, varied anatomy', () => {
->>>>>>> Stashed changes
   const species=new Set(Array.from({length:24},(_,i)=>alienSpeciesFor(`local-${i}`).name));
   assert.equal(species.size,ALIEN_SPECIES.length);
   assert.equal(alienSpeciesFor('local-03'),alienSpeciesFor('local-03'));
@@ -23,44 +19,27 @@ test('alien anatomy follows the head without modifying source skin or sharing id
   const original=new THREE.MeshStandardMaterial({color:'#c08060',name:'young_caucasian_male'}),skin=original.clone();
   const body=new THREE.SkinnedMesh(geometry,skin);body.bind(new THREE.Skeleton([head,neck]));model.add(body);model.updateMatrixWorld(true);
   const avatar={model,materials:new Map([[original,skin]])};
-<<<<<<< Updated upstream
   applyAlienSpecies(avatar,'player-alien',GREY_SPECIES);
-=======
-  applyAlienSpecies(avatar,'alien-0',GREY_SPECIES);
->>>>>>> Stashed changes
   assert.equal(geometry.index.count,6,'source geometry retains the human head');
   assert.notEqual(body.geometry,geometry);assert.equal(body.geometry.index.count,3,'instance replaces the original face rather than overlapping it');
   assert.equal(original.color.getHexString(),'c08060');
   const anatomy=head.children.find(child=>child.name==='Grey anatomy');assert.ok(anatomy);
   const before=anatomy.getWorldPosition(new THREE.Vector3());head.position.x+=2;model.updateMatrixWorld(true);
   assert.ok(Math.abs(anatomy.getWorldPosition(new THREE.Vector3()).x-before.x-2)<1e-6);
-<<<<<<< Updated upstream
   for(const part of anatomy.children){assert.ok(part.geometry.attributes.position.array.every(Number.isFinite));assert.equal(part.userData.localId,'player-alien');}
 });
 
-test('playable forms are exactly Alien, Witch and Jevica with a rig and a reaction', () => {
-  assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['alien','witch','jevica']);
-=======
-  for(const part of anatomy.children){assert.ok(part.geometry.attributes.position.array.every(Number.isFinite));assert.equal(part.userData.localId,'alien-0');}
-});
-
-test('Jevica is the only playable form with a rig and a reaction', () => {
+test('Jevica is the sole playable character with a rig and a reaction', () => {
   assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['jevica']);
->>>>>>> Stashed changes
   for (const form of VISITOR_FORMS) {
     assert.ok(Number.isInteger(form.avatar) && form.avatar >= 0 && form.avatar < 6, form.id);
-    assert.ok(['amazed', 'startled', 'enchanted'].includes(form.reaction), form.id);
+    assert.equal(form.reaction, 'acknowledge', form.id);
     assert.match(visitorGreeting({ id: 'local-01', indoor: false }, form.id), /Welcome to the neighborhood\.$/);
   }
-  assert.equal(formFor('dorothy'), null);
+  for(const retired of ['alien','witch','dorothy']) assert.equal(formFor(retired), null);
   assert.equal(visitorGreeting({ id: 'local-01' }, 'visitor'), null);
   const reactions = createVisitorReactions();
   const locals = [{ id: 'local-01', position: [0, 3, 0] }];
-<<<<<<< Updated upstream
-  const [reacting] = reactions.update(locals, { position: [0, 0, 0], ground: 0, roomId: null }, 'alien', 1000);
-  assert.equal(reacting?.visitorReaction.action, 'startled');
-=======
   const [reacting] = reactions.update(locals, { position: [0, 0, 0], ground: 0, roomId: null }, 'jevica', 1000);
-  assert.equal(reacting?.visitorReaction.action, 'amazed');
->>>>>>> Stashed changes
+  assert.equal(reacting?.visitorReaction.action, 'acknowledge');
 });
