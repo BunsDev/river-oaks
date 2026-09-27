@@ -36,6 +36,11 @@ export function measureTorso(avatar, root) {
   }
   const axis = centres.map(c => Number.isFinite(c[0]) ? [(c[0] + c[1]) / 2, (c[2] + c[3]) / 2] : null);
   for (let i = 0; i < bands; i++) axis[i] ??= axis.slice(0, i).reverse().find(Boolean) ?? axis.find(Boolean);
+  const raw = axis.map(c => [...c]);
+  for (let i = 0; i < bands; i++) {
+    const near = raw.slice(Math.max(0, i - 4), i + 5);
+    axis[i] = [near.reduce((sum, c) => sum + c[0], 0) / near.length, near.reduce((sum, c) => sum + c[1], 0) / near.length];
+  }
   const radii = Array.from({ length: bands }, () => new Float32Array(ANGLES));
   for (const [x, y, z] of points) {
     const b = Math.floor((y - bottom) / BAND), [cx, cz] = axis[b];
@@ -49,7 +54,7 @@ export function measureTorso(avatar, root) {
   }
   // Lapels and pockets make raw maxima jagged; a light blur gives the smooth
   // outer envelope a sewn sash or belt actually follows.
-  for (let pass = 0; pass < 4; pass++) {
+  for (let pass = 0; pass < 10; pass++) {
     const next = radii.map(row => new Float32Array(row));
     for (let b = 0; b < bands; b++) for (let a = 0; a < ANGLES; a++) {
       let sum = 0, weight = 0;
@@ -61,10 +66,13 @@ export function measureTorso(avatar, root) {
     }
     radii.splice(0, bands, ...next);
   }
+  // Bilinear lookup keeps sewn edges straight between angular samples.
   const surface = (angle, height, offset = 0.012) => {
-    const b = THREE.MathUtils.clamp(Math.floor((height - bottom) / BAND), 0, bands - 1);
-    const a = ((Math.round((angle / (Math.PI * 2)) * ANGLES) % ANGLES) + ANGLES) % ANGLES;
-    const r = (radii[b][a] || 0.14) + offset, [cx, cz] = axis[b];
+    const fb = THREE.MathUtils.clamp((height - bottom) / BAND - 0.5, 0, bands - 1), b0 = Math.floor(fb), b1 = Math.min(bands - 1, b0 + 1), tb = fb - b0;
+    const fa = ((angle / (Math.PI * 2)) * ANGLES % ANGLES + ANGLES) % ANGLES, a0 = Math.floor(fa) % ANGLES, a1 = (a0 + 1) % ANGLES, ta = fa - Math.floor(fa);
+    const at = b => (radii[b][a0] || 0.14) * (1 - ta) + (radii[b][a1] || 0.14) * ta;
+    const r = at(b0) * (1 - tb) + at(b1) * tb + offset;
+    const cx = axis[b0][0] * (1 - tb) + axis[b1][0] * tb, cz = axis[b0][1] * (1 - tb) + axis[b1][1] * tb;
     return new THREE.Vector3(cx + Math.sin(angle) * r, height, cz + Math.cos(angle) * r);
   };
   const project = (point, offset = 0.012) => {

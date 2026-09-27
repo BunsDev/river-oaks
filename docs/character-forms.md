@@ -140,9 +140,11 @@ a midnight-velvet dress tunic with an ivory collar, a gold coronet set with a
 sapphire and rubies, fringed gold epaulettes, a crimson sash, a gold belt,
 double-breasted buttons and a star of order (`preview/src/prince-costume.js`).
 The sash, belt and buttons are fitted to the rig's measured torso rather than
-placed by hand. He is the shipped `man-tailored` CC0 rig restyled at runtime, not
-a scan or a new hero mesh; a dedicated high-detail build like Jevica's needs the
-MakeHuman source packs, which were unreachable from the September 27 build host.
+placed by hand. His body is a dedicated hero mesh, `prince-jev.glb`, built by
+`scripts/build_prince.py`: a young, tall, athletic MPFB body with a defined jaw,
+cheekbones and brow, wearing the CC0 tailored suit, shoes and hair and Jevica's
+high-detail eyes, brows and lashes, surface-deformed onto his proportions. It is
+a fictional generic appearance, not a scan or likeness.
 
 **Companion mode.** Choose **Walk with Prince Jev** (or press **J**) and he
 steps down from the bench to walk with Jevica. Jev, through the loopback bridge's

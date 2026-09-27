@@ -201,3 +201,23 @@ This writes the timed WAV and its source receipt to the ignored
 `data/raw/speech-voice-checks/` directory. It runs local synthesis once and does not
 call an inference service. Playback and live-district results are recorded in
 `data/reports/browser-live-speech.json`.
+
+## Prince Jev
+
+`prince-jev.glb` is Prince Jev's hero mesh, built by `scripts/build_prince.py`
+with only the MPFB 2.0.17 source (for the base mesh, targets and rig) and the
+already-shipped CC0 GLBs. A fresh MPFB body gets young, tall, athletic macros and
+jaw, cheekbone, nose and brow detail targets. Because every MPFB body shares one
+base-mesh topology, the tailored resident's suit, shoes and short hair, and
+Jevica's high-poly eyes, eyebrows and eyelashes, are moved onto him with a
+surface-deform driver (donor body as basis, prince body as shape key). The
+garments keep their original MakeHuman skin weights. The donor's skin mask hides
+skin under the suit, and its blink morphs carry over by base-mesh index.
+`prince-jev.sources.json` records the macros, targets, bytes and SHA-256.
+Runtime dress-uniform details live in `preview/src/prince-costume.js`.
+
+```sh
+git clone --depth 1 --branch v2.0.17 https://github.com/makehumancommunity/mpfb2 \
+  data/raw/characters/mpfb-src/mpfb2-2.0.17
+data/raw/characters/jevica-build/bin/python scripts/build_prince.py
+```

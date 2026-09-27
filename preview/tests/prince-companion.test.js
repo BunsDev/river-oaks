@@ -95,3 +95,15 @@ test('in the real district he keeps pace beside a walking Jevica without enterin
   assert.ok(total/samples<1.6,`mean gap ${(total/samples).toFixed(2)} m`);
   assert.ok(closest>=.55,'personal space respected');
 });
+
+test('Prince Jev ships as a dedicated rigged hero mesh with blinks, detailed eyes and his suit',async()=>{
+  const fs=await import('node:fs'),file=fs.readFileSync('preview/public/assets/characters/prince-jev.glb');
+  const gltf=JSON.parse(file.subarray(20,20+file.readUInt32LE(12)));
+  const names=gltf.meshes.map(m=>m.name),materials=gltf.materials.map(m=>m.name);
+  for(const part of ['male_elegantsuit01','shoes03','short04','high-poly','eyebrow001','eyelashes01'])assert.ok(names.some(n=>n.startsWith(part)),part);
+  assert.ok(materials.includes('middleage_african_male'),'skin material keeps the name head fitting and styling expect');
+  assert.ok(gltf.meshes.some(m=>m.extras?.targetNames?.includes('eyeBlinkLeft')&&m.extras.targetNames.includes('eyeBlinkRight')));
+  assert.equal(gltf.skins.length,1);assert.ok(gltf.skins[0].joints.length>=53);
+  const manifest=JSON.parse(fs.readFileSync('preview/public/assets/characters/prince-jev.sources.json'));
+  assert.equal(manifest.bytes,file.length);assert.ok(file.length<12*1024*1024);
+});

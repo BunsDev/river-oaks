@@ -19,7 +19,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     if(Object.entries(changes).every(([key,value])=>status[key]===value))return;
     Object.assign(status,changes);listeners.forEach(listener=>listener({...status}));
   };
-  const ready=loadResidentAvatar(1,'carriage-driver','man-tailored',{folk:false}).then(next=>{
+  const ready=loadResidentAvatar(1,'carriage-driver','prince-jev',{folk:false}).then(next=>{
     if(disposed){next.dispose();return;}
     avatar=next;object.add(next.object);object.userData.avatar=next;
     costume=createPrinceCostume(next);
