@@ -21,10 +21,14 @@ export function distanceToRoad(road, x, z) {
   return nearest;
 }
 
-// Every mapped road is drawn as asphalt, including 3 m service lanes and
-// drives, so no fixture may stand on any of them, whatever the lane width.
-export function clearOfRoads(world, x, z, clearance = 0.7) {
-  return !world.roads.some(road => distanceToRoad(road, x, z) < road.width_m / 2 + clearance);
+// Walkways are paved paths for people; every other mapped road carries cars.
+export const WALKWAY_KINDS = new Set(['footway', 'pedestrian', 'path', 'steps']);
+export const isWalkway = road => WALKWAY_KINDS.has(road.kind);
+
+// No fixture may stand on any mapped road or walkway, whatever its width.
+// With `vehiclesOnly`, walkways count as pavement (for where people arrive).
+export function clearOfRoads(world, x, z, clearance = 0.7, { vehiclesOnly = false } = {}) {
+  return !world.roads.some(road => !(vehiclesOnly && isWalkway(road)) && distanceToRoad(road, x, z) < road.width_m / 2 + clearance);
 }
 
 // Kerbs stop short of junctions instead of crossing the joining lane, and

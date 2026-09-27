@@ -3,6 +3,7 @@ import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity 
 import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
+import { storefrontSpot } from '../preview/src/arrival.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
@@ -153,9 +154,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       }
     } else {
       const interior = mode==='enter' && room;
-      const origin = interior ? room.toWorld(0,2.4) : mode==='leave'
-        ? store.facade.map((value,index)=>value+(store.outward[index]??0)*2.6)
-        : (store.visit??store.facade).map((value,index)=>value+(store.outward[index]??0)*4);
+      const origin = interior ? room.toWorld(0,2.4)
+        : storefrontSpot(worldData, store, mode==='leave' ? 'leave' : 'arrive', { isFree: (x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z) });
       const accept = (x,north) => {
         if (!environment.isFree(x,-north)) return false;
         const atRoom=environment.roomAt(x,-north);
