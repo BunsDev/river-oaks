@@ -43,6 +43,39 @@ test('a failed AO geometry render restores hidden foliage and renderer state',()
   } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
 });
 
+test('complete GTAO renders preserve exclusions and initially hidden objects across frames and failure recovery',()=>{
+  const {scene,leaf,renderer,pipeline}=fixture();
+  const hiddenLeaf=leaf.clone();hiddenLeaf.visible=false;scene.add(hiddenLeaf);
+  const points=new THREE.Points(new THREE.BufferGeometry(),new THREE.PointsMaterial());scene.add(points);
+  const hiddenPoints=points.clone();hiddenPoints.visible=false;scene.add(hiddenPoints);
+  let failGeometry=false,geometryPasses=0;
+  renderer.render=subject=>{
+    if(subject===scene){
+      geometryPasses++;
+      assert.equal(leaf.visible,false);
+      assert.equal(points.visible,false,'Three excludes points from the normal buffer');
+      if(failGeometry)throw new Error('geometry failure');
+    } else {
+      assert.equal(leaf.visible,true,'Full-screen AO and denoise passes leave foliage restored');
+      assert.equal(points.visible,true);
+    }
+    assert.equal(hiddenLeaf.visible,false);
+    assert.equal(hiddenPoints.visible,false);
+  };
+  try {
+    for(const fail of [false,false,true,false]){
+      failGeometry=fail;
+      const render=()=>pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+      if(fail)assert.throws(render,/geometry failure/);else render();
+      assert.equal(leaf.visible,true);
+      assert.equal(points.visible,true);
+      assert.equal(hiddenLeaf.visible,false);
+      assert.equal(hiddenPoints.visible,false);
+    }
+    assert.equal(geometryPasses,4);
+  } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();points.geometry.dispose();points.material.dispose();}
+});
+
 test('UHD refraction uses a bounded offscreen buffer while the output keeps native resolution',()=>{
   const {renderer,pipeline}=fixture();
   try {
