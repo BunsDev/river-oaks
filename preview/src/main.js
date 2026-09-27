@@ -7,6 +7,7 @@ import { createPointerGesture } from './pointer-gesture.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
+import { bindRenderVisibility } from './render-lifecycle.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
@@ -205,7 +206,8 @@ function initializeRenderer() {
     camera.updateProjectionMatrix();
   }).observe(host);
   updateAtmosphere();
-  renderer.setAnimationLoop(render);
+  bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
+    resetTime: () => { clock.reset(); lastFrame = null; } });
 }
 
 // Join the shared town. Local simulations (auto visits, the invasion) would

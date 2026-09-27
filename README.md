@@ -2,6 +2,10 @@
 
 
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
+## Play in the desktop app
+
+Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build a standalone app with the game assets bundled. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
+
 ## Run the live showcase
 
 The default game uses WorkOS sign-in and one shared town server. Players see each other as Jevica and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production requires authenticated, verified accounts.

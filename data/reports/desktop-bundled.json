@@ -1,0 +1,63 @@
+{
+  "mode": "bundled",
+  "checks": [
+    "all bundled assets and playable character loaded",
+    "sandbox and renderer isolation",
+    "keyboard movement",
+    "shop arrival, enter and exit",
+    "resident conversation",
+    "graphics preference survives reload",
+    "native fullscreen round trip",
+    "native minimize and restore",
+    "external navigation blocked",
+    "renderer crash recovers to playable game"
+  ],
+  "readyMs": 6670,
+  "assets": {
+    "loaded": 114,
+    "total": 114,
+    "failed": 0,
+    "done": true
+  },
+  "sharedTown": false,
+  "performance": {
+    "samples": 407,
+    "medianMs": 17.5,
+    "p95Ms": 34,
+    "meanFps": 40.59526421831674,
+    "canvas": [
+      1920,
+      1138
+    ],
+    "quality": {
+      "mode": "auto",
+      "scale": 0.6,
+      "occlusion": false,
+      "fps": 45
+    },
+    "renderer": {
+      "calls": 1906,
+      "triangles": 17586536,
+      "geometries": 362,
+      "textures": 253
+    }
+  },
+  "gpu": {
+    "2d_canvas": "enabled",
+    "direct_rendering_display_compositor": "disabled_off_ok",
+    "gpu_compositing": "enabled",
+    "multiple_raster_threads": "enabled_on",
+    "opengl": "enabled_on",
+    "rasterization": "enabled",
+    "raw_draw": "disabled_off_ok",
+    "skia_graphite": "enabled_on",
+    "trees_in_viz": "disabled_off",
+    "video_decode": "enabled",
+    "video_encode": "enabled",
+    "webgl": "enabled",
+    "webgpu": "enabled",
+    "webnn": "disabled_off"
+  },
+  "errors": [],
+  "status": "passed"
+}
