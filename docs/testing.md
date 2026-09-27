@@ -54,6 +54,8 @@ Unreal Editor/Game builds and native automation have run on UE 5.8.2. See [nativ
 
 With both development servers running, the browser CLI scripts `preview/e2e/district.js`, `sidebar.js`, `personas-voice.js`, `resident-life.js`, `volunteer-visits.js`, and `visual-fidelity.js` operate real controls and record UHD/mobile screenshots. The voice script additionally needs the optional model and tests actual local synthesis/playback, alongside the hermetic unit tests. It does not run in dependency-only CI. None of these browser checks establishes target-GPU 60 fps or photographic accuracy.
 
+`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `VITE_MULTIPLAYER=off npm run dev`.
+
 For pointer regressions, start `npm run dev`, then run the Playwright CLI scripts:
 
 ```sh

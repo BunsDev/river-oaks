@@ -36,6 +36,21 @@ export function registerGroundSurfaces(world,objects) {
   surfaces.set(world,{buckets,lastX:NaN,lastZ:NaN,lastBucket:[]});
 }
 
+// Read-only view of the registered ground triangles within a square around
+// (x, z), for the debug overlay. Each triangle is returned once, as three
+// scene-space [x, y, z] corners.
+export function groundSurfaceTriangles(world,x,z,radius) {
+  const index=surfaces.get(world),seen=new Set(),result=[];
+  if(!index)return result;
+  for(let cx=Math.floor((x-radius)/CELL);cx<=Math.floor((x+radius)/CELL);cx++)
+    for(let cz=Math.floor((z-radius)/CELL);cz<=Math.floor((z+radius)/CELL);cz++)
+      for(const t of index.buckets.get(`${cx}:${cz}`)??[]) {
+        if(seen.has(t))continue;seen.add(t);
+        result.push([[t.x,t.y,t.z],[t.x+t.ux,t.y+t.uy,t.z+t.uz],[t.x+t.vx,t.y+t.vy,t.z+t.vz]]);
+      }
+  return result;
+}
+
 export function groundSurfaceHeight(world,x,z) {
   const index=surfaces.get(world),cellX=Math.floor(x/CELL),cellZ=Math.floor(z/CELL);
   // Heel/toe and surface-normal probes are spatially coherent. Cache only the

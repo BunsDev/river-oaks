@@ -56,3 +56,17 @@ test('a group registers every mesh inside it as ground, as the roads layer does'
   assert.equal(surfaces.groundSurfaceHeight(world,0,0),.24);
   assert.equal(surfaces.groundSurfaceHeight(world,10,0),.26);
 });
+
+test('the debug view reads back each registered triangle once, in scene space',()=>{
+  const world={};
+  const geometry=new THREE.PlaneGeometry(4,4,2,2);geometry.rotateX(-Math.PI/2);
+  const mesh=new THREE.Mesh(geometry);mesh.position.set(10,1.5,-6);
+  surfaces.registerGroundSurfaces(world,[mesh]);
+  const triangles=surfaces.groundSurfaceTriangles(world,10,-6,3);
+  assert.equal(triangles.length,8,'a 2×2 plane is eight triangles, even where it spans several buckets');
+  for(const corners of triangles)for(const [x,y,z] of corners){
+    assert.ok(Math.abs(y-1.5)<1e-9);assert.ok(x>=8-1e-9&&x<=12+1e-9);assert.ok(z>=-8-1e-9&&z<=-4+1e-9);
+  }
+  assert.deepEqual(surfaces.groundSurfaceTriangles(world,200,200,2),[]);
+  assert.deepEqual(surfaces.groundSurfaceTriangles({},0,0,5),[],'unregistered worlds have no triangles');
+});

@@ -174,6 +174,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
       return true;
     },
+    // The live walking model, including placed objects, for the debug overlays.
+    get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
     getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, ground: environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {

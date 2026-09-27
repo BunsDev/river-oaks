@@ -58,6 +58,7 @@ let districtUI, environmentAssets = null, storefrontReflections = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers;
+let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
@@ -574,6 +575,7 @@ function render(now) {
     }
     storefrontReflections.update(now, reflectionPosition);
   }
+  debugTools?.update(now);
   renderer.info.reset();
   pipeline.render(delta);
   if (now-lastRenderStats>1000) {
@@ -626,6 +628,30 @@ host.addEventListener('pointerup', (event) => {
   if (id) community.selectLocal(id);
 
 });
+
+// Debug tools (colliders, walkable grid, ground triangles, source map, polygon
+// inspector) load on demand: F3, ?debug=1, the desktop View menu, or reopening
+// with the panel left open. They ship in every build so the desktop app has them.
+function openDebugTools(force) {
+  if (debugTools) return debugTools.toggle(force);
+  debugLoading ??= import('./debug-tools.js').then(({ createDebugTools }) => {
+    debugTools = createDebugTools({ scene, camera, host, renderer, getWorld: () => world, getEnvironment: () => walking?.environment ?? null,
+      getFocus: () => { const pose = walking?.getPose(); return pose ? [pose.position[0], pose.position[2]] : null; } });
+    return debugTools;
+  });
+  // The first request opens the panel; later ones toggle it.
+  return debugLoading.then(tools => tools.toggle(force ?? true));
+}
+document.addEventListener('keydown', event => {
+  if (event.code !== 'F3' || event.repeat || event.target.closest?.('input:not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable]')) return;
+  event.preventDefault(); void openDebugTools();
+});
+window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
+window.__riverDebug = () => debugTools;
+try {
+  if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
+  else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
+} catch { /* storage unavailable */ }
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {

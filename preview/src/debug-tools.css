@@ -1,0 +1,32 @@
+/* Debug tools: a compact, always-dark panel so readings stay legible over any scene. */
+.debug-panel {
+  position: fixed; z-index: 1000; left: 16px; bottom: 16px; width: 300px; max-height: min(72vh, 640px); overflow: auto;
+  padding: 10px 12px 12px; border-radius: 14px; box-sizing: border-box;
+  background: #0e1417e8; color: #e6edf0; border: 1px solid #ffffff24; box-shadow: 0 12px 32px #0008;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  font: 12px/1.45 system-ui, sans-serif;
+}
+.debug-panel[hidden] { display: none; }
+.debug-panel header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.debug-panel header strong { font-size: 13px; letter-spacing: .02em; }
+.debug-panel header span { font: 500 10px/1 ui-monospace, monospace; padding: 3px 5px; border: 1px solid #ffffff38; border-radius: 4px; color: #aab6bb; }
+.debug-panel header button { margin-left: auto; width: 26px; height: 26px; border: 0; border-radius: 7px; background: transparent; color: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.debug-panel header button:hover { background: #ffffff18; }
+.debug-panel fieldset { border: 0; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+.debug-panel label { display: flex; align-items: center; gap: 6px; min-height: 24px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.debug-panel input { accent-color: #39d0ff; margin: 0; }
+.debug-readout { display: grid; grid-template-columns: 64px 1fr; gap: 1px 8px; margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #ffffff1c; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.debug-readout[hidden] { display: none; }
+.debug-readout dt { color: #8d9aa0; }
+.debug-readout dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.debug-readout .is-free { color: #6ff09a; }
+.debug-readout .is-blocked { color: #ff7a6e; }
+.debug-panel details { margin-top: 8px; padding-top: 8px; border-top: 1px solid #ffffff1c; }
+.debug-panel summary { cursor: pointer; color: #c9d4d8; }
+.debug-panel ol { margin: 6px 0 0; padding-left: 20px; font: 11px/1.5 ui-monospace, monospace; }
+.debug-panel ol li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.debug-stats { margin: 8px 0 0; color: #8d9aa0; font: 11px/1.5 ui-monospace, monospace; }
+.debug-inspecting canvas { cursor: crosshair; }
+@media (max-width: 700px) { .debug-panel { left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 50vh; } }
+.debug-panel ol button { all: unset; display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; border-radius: 4px; }
+.debug-panel ol button:hover, .debug-panel ol button:focus-visible { background: #ffffff14; color: #fff; outline: none; }
