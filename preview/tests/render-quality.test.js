@@ -46,3 +46,19 @@ test('unknown stored preferences fall back to Auto', () => {
   for (const key of Object.keys(QUALITY_MODES)) assert.equal(normalizeQuality(key), key);
   for (const value of [null, '', 'ultra', '__proto__', 'toString']) assert.equal(normalizeQuality(value), 'auto');
 });
+
+test('persistent overload at minimum resolution drops ambient occlusion, with gradual recovery', () => {
+  const governor = createRenderScaleGovernor();
+  assert.equal(governor.occlusion, true);
+  feed(governor, 33.3, 6);
+  assert.equal(governor.scale, 0.6);
+  assert.equal(governor.occlusion, false, 'extra geometry pass is removed when resolution cannot help');
+  feed(governor, 16.7, 3);
+  assert.equal(governor.occlusion, false, 'a brief recovery must not reintroduce the expensive pass');
+  feed(governor, 16.7, 100);
+  assert.equal(governor.scale, 1);
+  assert.equal(governor.occlusion, true, 'sustained native-resolution recovery restores detail');
+  feed(governor, 33.3, 6);
+  governor.reset();
+  assert.equal(governor.occlusion, true, 'selecting Auto again retries full detail');
+});

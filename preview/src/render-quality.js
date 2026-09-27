@@ -2,7 +2,7 @@
 // internal buffers scale, so text, HUD and the page stay sharp while the scene
 // renders fewer pixels on a busy GPU.
 export const QUALITY_MODES = {
-  auto: { label: 'Auto', note: 'Lowers scene resolution while the district is busy and restores it when frames recover.' },
+  auto: { label: 'Auto', note: 'Adapts scene resolution and ambient occlusion to keep the district responsive.' },
   sharp: { label: 'Sharpest', note: 'Full resolution and ambient occlusion at all times, even when frames slow down.' },
   smooth: { label: 'Smoothest', note: 'Three-quarter resolution without ambient occlusion, for older laptops and long visits.' },
 };
@@ -22,10 +22,12 @@ export function normalizeQuality(value) {
 // oscillating between two resolutions.
 export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fastMs = 18, windowSize = 45, calmWindows = 3, ceilingWindows = 8 } = {}) {
   let scale = max, samples = [], calm = 0, ceiling = Infinity, ceilingWait = 0, ceilingPatience = ceilingWindows;
+  let occlusion = true, floorWindows = 0, detailRecovery = 0;
   const round = value => Math.round(value * 100) / 100;
   return {
     get scale() { return scale; },
-    reset(next = max) { scale = next; samples = []; calm = 0; ceiling = Infinity; ceilingWait = 0; ceilingPatience = ceilingWindows; },
+    get occlusion() { return occlusion; },
+    reset(next = max) { scale = next; samples = []; calm = 0; ceiling = Infinity; ceilingWait = 0; ceilingPatience = ceilingWindows; occlusion = true; floorWindows = 0; detailRecovery = 0; },
     // Feed one frame interval in milliseconds; returns the scale to render at.
     sample(ms) {
       // Tab switches, asset decoding and GC pauses are not a steady workload.
@@ -35,6 +37,14 @@ export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fas
       samples.sort((a, b) => a - b);
       const median = samples[samples.length >> 1];
       samples = [];
+      // If pixel scaling cannot meet the budget, remove the second geometry
+      // pass. Restore it only after sustained headroom at native resolution.
+      if (median >= slowMs && scale === min) {
+        if (++floorWindows >= 2) occlusion = false;
+      } else floorWindows = 0;
+      if (!occlusion && scale === max && median <= fastMs) {
+        if (++detailRecovery >= calmWindows * 4) { occlusion = true; detailRecovery = 0; }
+      } else detailRecovery = 0;
       if (ceilingWait > 0 && --ceilingWait === 0) ceiling = Infinity;
       if (median >= slowMs) {
         calm = 0;
@@ -80,7 +90,7 @@ export function createQualityControl({ apply, storage = globalThis.localStorage 
   function effective() {
     if (mode === 'sharp') return { scale: 1, occlusion: true };
     if (mode === 'smooth') return { scale: SMOOTH_RENDER_SCALE, occlusion: false };
-    return { scale: governor.scale, occlusion: true };
+    return { scale: governor.scale, occlusion: governor.occlusion };
   }
   function publish() {
     const { scale, occlusion } = effective();
@@ -105,7 +115,7 @@ export function createQualityControl({ apply, storage = globalThis.localStorage 
       if (mode === 'auto') governor.sample(ms);
       frames++; frameTime += ms;
       if (frameTime >= 1000) { fps = Math.round(frames * 1000 / frameTime); frames = 0; frameTime = 0; publish(); }
-      else if (mode === 'auto' && governor.scale !== lastScale) publish();
+      else if (mode === 'auto' && (governor.scale !== lastScale || governor.occlusion !== lastOcclusion)) publish();
     },
   };
 }

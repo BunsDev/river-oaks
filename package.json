@@ -13,7 +13,12 @@
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
     "start": "node --env-file-if-exists=.env server/start.js",
-    "server:redis": "node --env-file-if-exists=.env server/redis-start.js"
+    "server:redis": "node --env-file-if-exists=.env server/redis-start.js",
+    "desktop:dev": "node --env-file-if-exists=.env desktop/dev.js",
+    "desktop:start": "electron .",
+    "desktop:package": "npm run build && node desktop/package.js",
+    "test:desktop": "node --test desktop/tests/*.test.js",
+    "test:desktop:e2e": "node desktop/e2e.js"
   },
   "dependencies": {
     "@workos-inc/node": "^10.14.0",
@@ -22,6 +27,10 @@
     "ws": "^8.21.3"
   },
   "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.4.5",
+    "playwright": "1.63.0",
     "vite": "8.3.0"
-  }
+  },
+  "main": "desktop/main.js"
 }
