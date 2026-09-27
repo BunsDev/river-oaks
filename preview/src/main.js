@@ -33,6 +33,8 @@ import { createInvasionControls } from './invasion-ui.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
+import { storefrontSpot } from './arrival.js';
+import { isWalkway } from './street-furniture.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
 import { createRemotePlayers } from './remote-players.js';
@@ -283,9 +285,12 @@ function buildGround(data) {
   return group;
 }
 
-function buildRoads(data) {
+// Mapped walkways (footway, pedestrian) were drawn with the vehicle-lane
+// asphalt, so the district's pedestrian walks read as streets. They are now
+// paved like the plazas, lifted 2 cm so they sit over any lane they cross.
+function roadSurface(data, roads, lift, material) {
   const vertices = [];
-  for (const road of data.roads) {
+  for (const road of roads) {
     for (let i = 1; i < road.points.length; i += 1) {
       const a = localToScene(road.points[i - 1]), b = localToScene(road.points[i]);
       const dx = b[0] - a[0], dz = b[2] - a[2], length = Math.hypot(dx, dz);
@@ -297,7 +302,7 @@ function buildRoads(data) {
         const x = a[0] + dx * fraction + ox * side;
         const z = a[2] + dz * fraction + oz * side;
         const y = data.terrain ? terrainHeight(data.terrain, x, -z) : a[1] + (b[1] - a[1]) * fraction;
-        return [x, y + 0.24, z];
+        return [x, y + lift, z];
       };
       for (let step = 0; step < steps; step += 1) {
         const p = at(step / steps, 1), q = at(step / steps, -1), r = at((step + 1) / steps, 1), s = at((step + 1) / steps, -1);
@@ -309,9 +314,18 @@ function buildRoads(data) {
   const uvs = [];
   for (let index = 0; index < vertices.length; index += 3) uvs.push(vertices[index], vertices[index + 2]);
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  const mesh = new THREE.Mesh(geometry, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#849a9c', roughness: 0.63, side: THREE.DoubleSide, variation: 0.3 }));
+  const mesh = new THREE.Mesh(geometry, material);
   mesh.receiveShadow = true;
   return mesh;
+}
+
+function buildRoads(data) {
+  const group = new THREE.Group(); group.name = 'Roads and walkways';
+  const lanes = data.roads.filter(road => !isWalkway(road)), walks = data.roads.filter(isWalkway);
+  const asphalt = roadSurface(data, lanes, 0.24, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#849a9c', roughness: 0.63, side: THREE.DoubleSide, variation: 0.3 }));
+  group.add(asphalt); group.userData.asphalt = asphalt;
+  if (walks.length) group.add(roadSurface(data, walks, 0.26, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), color: '#efe9df', side: THREE.DoubleSide, variation: 0.18 })));
+  return group;
 }
 
 function populateWorld(data) {
@@ -387,6 +401,13 @@ function populateWorld(data) {
   limitations.replaceChildren(...(data.limitations ?? []).map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
 }
 
+// One walkable-area model per loaded district, shared by arrival checks.
+let arrivalEnvironment = null;
+function walkingEnvironment() {
+  if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world) };
+  return arrivalEnvironment.environment;
+}
+
 function enterWalk(position, lookAt, pitch = 0) {
   if (!world || !walking) return;
   walking.enter(world, position, lookAt, pitch);
@@ -404,8 +425,8 @@ function enterStore(store) {
 function leaveStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'leave'});
   // Step out onto the threshold, facing the door you just came through.
-  const [x, north, base] = store.facade, [nx, ny] = store.outward;
-  enterWalk([x + nx * 2.6, north + ny * 2.6, base], [x, north], 0.05);
+  const [x, north] = store.facade;
+  enterWalk(storefrontSpot(world, store, 'leave', { isFree: walkingEnvironment().isFree }), [x, north], 0.05);
 }
 
 function describeInterior(store) {
@@ -418,10 +439,7 @@ function describeInterior(store) {
 
 function arriveAtStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
-  const position = [...store.visit];
-  position[0] += store.outward[0] * 4;
-  position[1] += store.outward[1] * 4;
-  enterWalk(position, store.facade, 0.22);
+  enterWalk(storefrontSpot(world, store, 'arrive', { isFree: walkingEnvironment().isFree }), store.facade, 0.22);
 }
 
 function updateAtmosphere() {
@@ -439,8 +457,8 @@ function updateAtmosphere() {
   // FogExp2 squares density × depth: 0.00055 leaves the street clear and fades the horizon.
   scene.fog = new THREE.FogExp2(atmosphere.horizon, atmosphere.fogDensity);
   if (renderer) renderer.toneMappingExposure = atmosphere.exposure;
-  if (layers.roads?.material) {
-    layers.roads.material.roughness = weather === 'overcast' ? 0.38 : 1;
+  if (layers.roads?.userData.asphalt) {
+    layers.roads.userData.asphalt.material.roughness = weather === 'overcast' ? 0.38 : 1;
   }
   storefrontReflections?.invalidate();
   districtUI?.syncAtmosphere();

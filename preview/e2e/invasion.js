@@ -52,6 +52,8 @@ async page => {
   check(banished >= 1, `A spell banished an alien within 120 s (banished ${banished}, phase ${phase})`);
   await page.screenshot({ path: 'output/playwright/invasion-cast.png' });
   check((await page.locator('#invasion-status').textContent()).length > 0, 'Status narrates the fight');
+  const effects = (await read()).effects;
+  check(effects.bursts >= 1 && effects.impacts >= 1, `Cast and impact effects fired (bursts ${effects.bursts}, impacts ${effects.impacts})`);
   if ((await read()).phase === 'active') await page.locator('#invasion-toggle').click();
   const after = await read();
   check(after.phase !== 'active' && after.abducted === 0, `The scenario ends and everyone returns (phase ${after.phase}, abducted ${after.abducted})`);

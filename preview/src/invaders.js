@@ -50,21 +50,29 @@ export function createInvaders({ scene, world, groundAt }) {
         entry.object.position.set(alien.position[0], ground, -alien.position[1]);
         entry.object.rotation.y = alien.heading;
         entry.object.visible = alien.status !== 'gone';
-        entry.saucer.position.set(0, 2.9 + hover, 0); entry.saucer.rotation.y += delta * 0.9;
+        const reeling = alien.status === 'banished' ? Math.sin(alien.progress * Math.PI) : 0;
+        entry.saucer.position.set(reeling * 0.6, 2.9 + hover, 0); entry.saucer.rotation.y += delta * (0.9 + reeling * 12); entry.saucer.rotation.z = reeling * 0.55;
         entry.saucer.userData.beam.visible = alien.status === 'abducting';
         if (alien.status === 'abducting') { const beam = entry.saucer.userData.beam; beam.scale.y = 1.6 + alien.progress * 0.2; beam.material.opacity = 0.2 + 0.25 * Math.abs(Math.sin(now / 160)); }
         if (entry.avatar) {
           entry.avatar.object.visible = alien.status !== 'landing' || alien.progress > 0.55;
-          entry.avatar.object.position.y = alien.status === 'landing' ? Math.max(0, (0.85 - alien.progress) / 0.3) * 2.9 : alien.status === 'banished' ? alien.progress * 2.9 : 0;
-          entry.avatar.update(now, alien.status === 'abducting' ? 'greet' : alien.status === 'menacing' ? 'startled' : 'continue', false, { speed: alien.speed, distance: alien.distance }, () => ground);
+          entry.avatar.object.position.y = alien.status === 'landing' ? Math.max(0, (0.85 - alien.progress) / 0.3) * 2.9 : alien.status === 'banished' ? alien.progress * alien.progress * 2.9 : 0;
+          // The spell spins the crew member and pitches them over before the saucer swallows them.
+          entry.avatar.object.rotation.set(alien.status === 'banished' ? alien.progress * 1.2 : 0, alien.status === 'banished' ? entry.avatar.object.rotation.y + delta * (6 + alien.progress * 30) : 0, alien.status === 'banished' ? Math.sin(alien.progress * Math.PI * 3) * 0.35 : 0);
+          entry.avatar.update(now, alien.status === 'abducting' ? 'greet' : alien.status === 'menacing' ? 'startled' : alien.status === 'banished' ? 'amazed' : 'continue', false, { speed: alien.speed, distance: alien.distance }, () => ground);
         }
       }
       for (const [id, bolt] of bolts) if (!state.spells.some(spell => spell.id === id)) { bolt.removeFromParent(); bolts.delete(id); }
       for (const spell of state.spells) {
         let bolt = bolts.get(spell.id);
-        if (!bolt) { bolt = new THREE.Mesh(boltGeometry, boltMaterials[spell.form] ?? boltMaterials.jevica); bolt.castShadow = false; const halo = new THREE.Mesh(haloGeometry, haloMaterials[spell.form] ?? haloMaterials.jevica); halo.castShadow = false; bolt.add(halo); holder.add(bolt); bolts.set(spell.id, bolt); }
+        if (!bolt) {
+          bolt = new THREE.Mesh(boltGeometry, boltMaterials[spell.form] ?? boltMaterials.jevica); bolt.castShadow = false;
+          const halo = new THREE.Mesh(haloGeometry, haloMaterials[spell.form] ?? haloMaterials.jevica); halo.castShadow = false; bolt.add(halo);
+          const light = new THREE.PointLight(spell.form === 'witch' ? '#9dff5a' : '#ff86d0', 18, 14, 1.8); bolt.add(light);
+          holder.add(bolt); bolts.set(spell.id, bolt);
+        }
         bolt.position.set(spell.position[0], spell.position[2], -spell.position[1]);
-        bolt.scale.setScalar(1 + 0.25 * Math.sin(now / 40));
+        bolt.scale.setScalar(1 + 0.3 * Math.sin(now / 30)); bolt.rotation.y += delta * 14; bolt.rotation.x += delta * 9;
       }
     },
     clear() { for (const entry of crew.values()) { entry.avatar?.dispose(); entry.object.removeFromParent(); } crew.clear(); for (const bolt of bolts.values()) bolt.removeFromParent(); bolts.clear(); },

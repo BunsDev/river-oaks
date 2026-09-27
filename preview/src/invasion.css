@@ -14,3 +14,8 @@
 .invasion-controls kbd { font: 500 10px/1 system-ui, sans-serif; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 5px; }
 .invasion-controls #invasion-status { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line, #ffffff38); }
 @media (max-width: 700px) { .invasion-controls { padding: 12px; border-radius: 18px; } .invasion-title strong { font-size: 18px; } }
+.spell-flash { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; --spell: #ff86d0; background: radial-gradient(ellipse 70% 60% at 50% 100%, color-mix(in srgb, var(--spell) 55%, transparent), transparent 70%); }
+.spell-flash[data-form=witch] { --spell: #9dff5a; }
+.spell-flash.is-live { animation: spell-flash 420ms ease-out; }
+@keyframes spell-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .spell-flash.is-live { animation-duration: 160ms; } }

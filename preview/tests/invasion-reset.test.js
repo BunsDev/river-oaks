@@ -7,6 +7,7 @@ test('invasion reset releases old residents and disposes the old world before an
   function load(url,context,nextLoad){
     if(url.endsWith('.css'))return {format:'module',source:'',shortCircuit:true};
     if(url.endsWith('/invaders.js'))return {format:'module',shortCircuit:true,source:`export function createInvaders({scene}) { return {crew:[],begin(){scene.events.push('begin')},clear(){},sync(){},dispose(){scene.events.push('dispose')}}; }`};
+    if(url.endsWith('/spell-effects.js'))return {format:'module',shortCircuit:true,source:`export function createSpellEffects() { return {stats:{},cast(){},trail(){},impact(){},update(){},clear(){},dispose(){}}; }`};
     return nextLoad(url,context);
   }
   register(new URL(`data:text/javascript,${encodeURIComponent(`export ${load.toString()}`)}`));
@@ -14,6 +15,8 @@ test('invasion reset releases old residents and disposes the old world before an
   class Element {
     dataset={};children=new Map();listeners=new Map();
     setAttribute(){}
+    append(){}
+    remove(){}
     addEventListener(type,listener){this.listeners.set(type,listener);}
     querySelector(selector){if(!this.children.has(selector))this.children.set(selector,new Element());return this.children.get(selector);}
     click(){this.listeners.get('click')?.();}
