@@ -5,10 +5,10 @@ import {createCommunity} from '../src/community.js';
 import {createResidentLife,stepResidentLife} from '../src/resident-life.js';
 import {carriageContains} from '../src/carriage-parking.js';
 
-test('the coachman is a stable encounter with a stationary job, outside support targets',()=>{
+test('Prince Jev is a stable encounter with a stationary job, outside support targets',()=>{
   const world=JSON.parse(fs.readFileSync('preview/public/data/district.json'));
   const state=createCommunity(world),driver=state.locals.find(p=>p.id==='carriage-driver');
-  assert.ok(driver);assert.equal(driver.role,'Unicorn coachman');assert.equal(driver.stationary,true);
+  assert.ok(driver);assert.equal(driver.name,'Prince Jev');assert.equal(driver.role,'Prince and companion');assert.equal(driver.stationary,true);
   assert.equal(driver.priority,false);assert.equal(driver.persona.portrayal,false);
   const life=createResidentLife(world,state),start=[...driver.position];
   for(let i=0;i<60;i++)stepResidentLife(life,1/60,{position:[0,0,0]});

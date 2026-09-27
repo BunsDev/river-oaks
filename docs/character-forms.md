@@ -135,9 +135,27 @@ road details without oscillating across their edges. The September 26 coach is
 wheel centers spin on independent bearings and coast after braking; reduced
 motion keeps the centers attached to normal wheel rotation. The requested
 unicorn team, reins, hydraulics and carriage autopilot are still in development.
-Jules, a fictional coachman in pink tailoring, sits on the front bench and travels
-with the coach. He has a directory entry and accepts pointer and seated
-conversations; his Force and wish visuals remain open work.
+Prince Jev, a fictional prince, drives the coach from the front bench. He wears
+a midnight-velvet dress tunic with an ivory collar, a gold coronet set with a
+sapphire and rubies, fringed gold epaulettes, a crimson sash, a gold belt,
+double-breasted buttons and a star of order (`preview/src/prince-costume.js`).
+The sash, belt and buttons are fitted to the rig's measured torso rather than
+placed by hand. He is the shipped `man-tailored` CC0 rig restyled at runtime, not
+a scan or a new hero mesh; a dedicated high-detail build like Jevica's needs the
+MakeHuman source packs, which were unreachable from the September 27 build host.
+
+**Companion mode.** Choose **Walk with Prince Jev** (or press **J**) and he
+steps down from the bench to walk with Jevica. Jev, through the loopback bridge's
+`/v1/companion` route, chooses how he accompanies her: beside her, a step ahead,
+a step behind, pausing attentively, a courtly bow, or returning to the carriage.
+Code keeps geometry: slots mirror or fall back to single file on narrow paths,
+and he never enters a footprint, the parked coach, a step over 40 cm or her
+personal space. When she flies far away he rejoins behind her; when she rides,
+he takes the bench again and steps back down when she leaves. While Jev is
+unconfigured or uncertain, a local stand-in keeps him walking and the panel says
+"Local follow" with the reason, so no local rule is presented as a Jev decision.
+He has a directory entry and accepts pointer and seated conversations; his
+Force and wish visuals remain open work.
 
 The model is locally authored geometry inspired by the supplied September 23
 reference: curved cabin, gold filigree, faceted wheel hubs, pearl details, glass

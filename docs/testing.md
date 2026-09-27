@@ -136,5 +136,5 @@ Run Playwright CLI from the repository root: speech and facial comparison script
 load generated candidates from `data/raw/` relative to that directory. Generate
 those optional candidates before running the comparison scripts. Solo directory
 and nearby encounter sweeps cover 194 people: 24 outdoor residents, 169 indoor
-residents, and Jules, the carriage driver. Both wait for his model to load.
+residents, and Prince Jev, the carriage driver. Both wait for his model to load.
 Older dated reports with 193 people predate the carriage encounter.

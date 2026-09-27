@@ -13,7 +13,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   const spinnerMotion=createWheelSpinners(CARRIAGE_WHEELS.map(w=>w[1]*scale),{reducedMotion});
   const driver=createCarriageDriver({scene,getLocals,getConversation});
   let previousTime=null;
-  let placement=null,loadedWorld=null,environment=null,network=null,mounted=false;
+  let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,network=null,mounted=false;
   let unicorns=null,disposed=false,enabled=true;
   loadUnicornAsset().then(asset=>{if(disposed)return;unicorns=createUnicornTeam({scene,coach:model.object,groundAt:(x,z)=>environment?.groundAt(x,z)??0,asset});unicorns.object.visible=enabled&&model.object.visible;document.querySelector('#canvas-host').dataset.unicornsReady='true';}).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
@@ -53,11 +53,12 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
       enabled=value;
       if(!enabled){
         if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}
-        placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;
+        placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;driver.setCompanion(false);
         if(unicorns)unicorns.object.visible=false;
       }
     },
     get driver(){return driver.object;},
+    get prince(){return driver;},
     get unicorns(){return unicorns?.inspect()??[];},
     get placement(){return placement;},
     get riding(){return mounted;},
@@ -95,9 +96,11 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     update(now=performance.now()){
       if(!enabled){previousTime=now;return;}
       const delta=previousTime===null?0:Math.max(0,(now-previousTime)/1000);previousTime=now;
-      if(placement){spinnerMotion.update(delta,placement.speed);apply();driver.update(model.object,now,walking.getPosition());unicorns?.update(now/1000,Math.min(delta,.08),placement.speed,placement.distance,driver.object);}
+      if(placement){spinnerMotion.update(delta,placement.speed);apply();driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});unicorns?.update(now/1000,Math.min(delta,.08),placement.speed,placement.distance,driver.companion.mode==='seat'?driver.object:null);}
       const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
       loadedWorld=world;environment=createWalkingEnvironment(world);network=createPedestrianNetwork(world);
+      // Prince Jev walks around the parked coach, never through it.
+      companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
       placement=null;mounted=false;model.object.visible=false;summon();
     },
     dispose(){disposed=true;removeObstacle();placement=null;unicorns?.dispose();driver.dispose();model.dispose();},
