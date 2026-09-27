@@ -3,12 +3,12 @@
 Run with bpy 4.5.3. Extract the source ZIP into data/raw/wish-dog first.
 External blend scripts are disabled. This builds a mesh, not a simulated fur groom.
 """
+
 import hashlib
 import json
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data/raw/wish-dog"
@@ -32,18 +32,22 @@ normal = nodes.new("ShaderNodeTexImage")
 normal.image = bpy.data.images.load(str(SOURCE / "dog2Normal.png"), check_existing=True)
 normal.image.colorspace_settings.name = "Non-Color"
 mapping = nodes.new("ShaderNodeNormalMap")
-mapping.inputs["Strength"].default_value = .4
+mapping.inputs["Strength"].default_value = 0.4
 links.new(normal.outputs["Color"], mapping.inputs["Color"])
 links.new(mapping.outputs["Normal"], bsdf.inputs["Normal"])
 eye = bpy.data.materials.new("Canine wet brown eyes")
 eye.use_nodes = True
 eye_bsdf = eye.node_tree.nodes.get("Principled BSDF")
-eye_bsdf.inputs["Base Color"].default_value = (.026, .014, .007, 1)
-eye_bsdf.inputs["Roughness"].default_value = .15
+eye_bsdf.inputs["Base Color"].default_value = (0.026, 0.014, 0.007, 1)
+eye_bsdf.inputs["Roughness"].default_value = 0.15
 eye_bsdf.inputs["Coat Weight"].default_value = 1
 body.data.materials.append(eye)
 eye_groups = {g.index for g in body.vertex_groups if "Eye" in g.name}
-eye_vertices = {v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in eye_groups) > .5}
+eye_vertices = {
+    v.index
+    for v in body.data.vertices
+    if sum(g.weight for g in v.groups if g.group in eye_groups) > 0.5
+}
 for poly in body.data.polygons:
     poly.use_smooth = True
     if all(v in eye_vertices for v in poly.vertices):
@@ -55,7 +59,7 @@ sub.levels = 1
 bpy.ops.object.modifier_move_up(modifier=sub.name)
 bpy.ops.object.modifier_apply(modifier=sub.name)
 budget = body.modifiers.new("Browser triangle budget", "DECIMATE")
-budget.ratio = .78
+budget.ratio = 0.78
 bpy.ops.object.modifier_move_up(modifier=budget.name)
 bpy.ops.object.modifier_apply(modifier=budget.name)
 bpy.ops.object.select_all(action="DESELECT")
@@ -65,7 +69,7 @@ bpy.context.view_layer.objects.active = arm
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 points = [body.matrix_world @ v.co for v in body.data.vertices]
 floor, top = min(p.z for p in points), max(p.z for p in points)
-scale = .96 / (top - floor)
+scale = 0.96 / (top - floor)
 root = bpy.data.objects.new("Canine metre scale", None)
 bpy.context.collection.objects.link(root)
 for obj in [arm, body]:
@@ -74,17 +78,33 @@ root.scale = (scale,) * 3
 root.location.z = -floor * scale
 root.select_set(True)
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-bpy.ops.export_scene.gltf(filepath=str(OUTPUT), export_format="GLB", use_selection=True,
-                          export_animations=False, export_yup=True, export_texcoords=True,
-                          export_normals=True, export_skins=True)
+bpy.ops.export_scene.gltf(
+    filepath=str(OUTPUT),
+    export_format="GLB",
+    use_selection=True,
+    export_animations=False,
+    export_yup=True,
+    export_texcoords=True,
+    export_normals=True,
+    export_skins=True,
+)
 metadata = {
-    "author": "NewDLC", "license": "CC0-1.0",
+    "author": "NewDLC",
+    "license": "CC0-1.0",
     "source": "https://opengameart.org/content/3d-wolf",
     "download": "https://opengameart.org/sites/default/files/3dwolf_blend.zip",
     "source_sha256": hashlib.sha256((SOURCE / "dog2.blend").read_bytes()).hexdigest(),
     "sha256": hashlib.sha256(OUTPUT.read_bytes()).hexdigest(),
-    "coat": {"path": "sable-coat.png", "source": "AI-generated UV-aligned adaptation of NewDLC's CC0 color atlas", "sha256": hashlib.sha256((OUTPUT.parent / "sable-coat.png").read_bytes()).hexdigest()},
-    "adaptation": "Sable canine: PBR color, normal and roughness maps; glossy brown eyes; silhouette subdivision with decimation below 30000 triangles; grounded metre scale; independent skeletal idle at runtime.",
+    "coat": {
+        "path": "sable-coat.png",
+        "source": "AI-generated UV-aligned adaptation of NewDLC's CC0 color atlas",
+        "sha256": hashlib.sha256((OUTPUT.parent / "sable-coat.png").read_bytes()).hexdigest(),
+    },
+    "adaptation": (
+        "Sable canine: PBR color, normal and roughness maps; glossy brown eyes; "
+        "silhouette subdivision with decimation below 30000 triangles; grounded metre scale; "
+        "independent skeletal idle at runtime."
+    ),
     "build": "bpy 4.5.3: python scripts/build_wish_dog.py",
 }
 (OUTPUT.parent / "sources.json").write_text(json.dumps(metadata, indent=2) + "\n")

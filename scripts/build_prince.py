@@ -228,8 +228,7 @@ def main(*, output_dir=OUTPUT):
     garments = [
         o
         for o in donor
-        if o.type == "MESH"
-        and o.data.name.split(".")[0] in {"male_elegantsuit01", "shoes03"}
+        if o.type == "MESH" and o.data.name.split(".")[0] in {"male_elegantsuit01", "shoes03"}
     ]
     transplant(garments, tailored_points, prince_points)
     reference = import_glb(CHARACTERS / "man-workwear.glb")
