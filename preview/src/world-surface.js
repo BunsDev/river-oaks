@@ -5,9 +5,12 @@ const surfaces=new WeakMap(),CELL=2;
 
 // Compile the same triangles the renderer uses. Spatial buckets avoid a scene
 // raycast for each heel, toe, pedestrian and wheel on every animation frame.
-export function registerGroundSurfaces(world,meshes) {
+// A group (the roads layer holds lanes and walkways) contributes every mesh in it.
+export function registerGroundSurfaces(world,objects) {
   const buckets=new Map(),a=new Vector3(),b=new Vector3(),c=new Vector3();
   const instance=new Matrix4(),transform=new Matrix4();
+  const meshes=[];
+  for(const object of objects)object.traverse(child=>{if(child.isMesh)meshes.push(child);});
   for(const mesh of meshes) {
     mesh.updateWorldMatrix(true,false);
     const position=mesh.geometry.attributes.position,index=mesh.geometry.index;

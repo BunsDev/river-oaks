@@ -46,3 +46,13 @@ test('coherent ground probes remain isolated across worlds, bucket boundaries an
   assert.equal(surfaces.groundSurfaceHeight(b,100,-48),.3,'Empty cells use the fallback surface');
   geometry.dispose();first.material.dispose();second.material.dispose();
 });
+
+test('a group registers every mesh inside it as ground, as the roads layer does',()=>{
+  const world={walkSurfaceOffset:.1};
+  const plane=y=>{const geometry=new THREE.PlaneGeometry(4,4);geometry.rotateX(-Math.PI/2);const mesh=new THREE.Mesh(geometry);mesh.position.y=y;return mesh;};
+  const lanes=plane(.24),walk=plane(.26);walk.position.x=10;
+  const roads=new THREE.Group();roads.add(lanes,walk);
+  surfaces.registerGroundSurfaces(world,[roads]);
+  assert.equal(surfaces.groundSurfaceHeight(world,0,0),.24);
+  assert.equal(surfaces.groundSurfaceHeight(world,10,0),.26);
+});
