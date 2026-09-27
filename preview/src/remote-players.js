@@ -32,7 +32,13 @@ export function createRemotePlayers(scene,host){
         const {holder,target,avatar,label}=entry;const next=new THREE.Vector3(target.position[0],target.position[2]+target.altitude,-target.position[1]);
         const before=holder.position.clone();if(holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
         const moved=holder.position.distanceTo(before);entry.distance+=moved;
-        const angle=target.yaw+Math.PI;holder.rotation.y+=Math.atan2(Math.sin(angle-holder.rotation.y),Math.cos(angle-holder.rotation.y))*(1-Math.exp(-12*delta));
+        // Face the way they walk, as the local avatar does; a player standing
+        // still keeps their last heading. Facing the camera yaw while moving
+        // made every remote Jevica moonwalk.
+        const dx=holder.position.x-before.x,dz=holder.position.z-before.z;
+        if(entry.heading===undefined)entry.heading=target.yaw+Math.PI;
+        if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
+        holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
         holder.visible=holder.position.distanceTo(camera.position)<120;
         if(avatar&&holder.visible){avatar.update(now,'continue',false,{speed:delta?Math.min(3.4,moved/delta):0,distance:entry.distance,flying:target.altitude>0.1,vehicle:'jevica'},()=>holder.position.y);entry.outfit.update(target.altitude>0.1);entry.vehicle.object.visible=target.altitude>0.1;}
         const point=holder.position.clone().add(new THREE.Vector3(0,2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
