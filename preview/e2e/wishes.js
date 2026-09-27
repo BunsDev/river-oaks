@@ -11,6 +11,17 @@ async page => {
   check(await page.locator('#canvas-host').getAttribute('data-player-form')==='jevica','Jevica is loaded');
   await page.getByRole('button',{name:'Meet someone nearby',exact:true}).click();
   await page.locator('#wish-grant').waitFor({state:'visible'});
+  // Prince Jev parks beside Jevica and travels with her; wishes go to district residents.
+  if(await page.locator('#community-local').inputValue()==='carriage-driver'){
+    check(await page.locator('#wish-grant').isDisabled()&&(await page.locator('#wish-status').textContent()).includes('Wishes are for district residents'),'Prince Jev cannot receive a wish and the card says why');
+    if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+    await page.locator('[data-section=community-section]').click();
+    if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
+    await page.locator('#community-local').selectOption('local-00');await page.locator('#community-meet').click();
+    await page.locator('#community-dialogue').waitFor({state:'visible'});
+    if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+    await page.waitForFunction(()=>!document.querySelector('#wish-grant').disabled);
+  }
   check(JSON.stringify(await page.locator('#wish-choice option').evaluateAll(options=>options.map(option=>option.value)))===JSON.stringify(['dragon','flight','invisibility','mind-reading','dog']),'All five wishes are offered');
   for(const kind of ['dragon','flight','invisibility','mind-reading','dog']) {
     await page.locator('#wish-choice').selectOption(kind);

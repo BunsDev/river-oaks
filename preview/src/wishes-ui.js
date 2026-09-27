@@ -1,4 +1,4 @@
-import { WISHES, wishFor } from './wishes.js';
+import { WISHES, crewWishMessage, wishFor } from './wishes.js';
 import './wishes.css';
 
 const node = (tag, text, className) => {
@@ -52,9 +52,9 @@ export function createWishPanel({ onGrant, onUndo, onSelect }) {
       const wish = local?.wish, definition = wish && wishFor(wish.kind);
       card.hidden = !local;
       card.setAttribute('aria-busy', String(busy));
-      choice.disabled = grant.disabled = busy || Boolean(wish) || caster !== 'jevica' || Boolean(local?.abducted) || Boolean(local?.force);
+      choice.disabled = grant.disabled = busy || Boolean(wish) || caster !== 'jevica' || Boolean(local?.abducted) || Boolean(local?.force) || Boolean(local?.vehicleRole);
       undo.hidden = !wish; undo.disabled = busy || caster !== 'jevica';
-      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (local?.force?'Lower this person before granting a wish.':wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : 'One wish at a time. You can undo it whenever you like.'));
+      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (local?.vehicleRole?crewWishMessage(local):local?.force?'Lower this person before granting a wish.':wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : 'One wish at a time. You can undo it whenever you like.'));
       card.dataset.phase = wish?.phase ?? 'ready'; card.dataset.kind = wish?.kind ?? '';
       const active = state.locals.filter(person => person.wish);
       journal.dataset.trouble = String(state.wishes.trouble);

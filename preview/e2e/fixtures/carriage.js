@@ -21,7 +21,7 @@ function render(view='three-quarter') {
   const riding=view.startsWith('riding');carriage.object.rotation.set(view==='riding-slope'?.04:0,0,view==='riding-slope'?-.04:0,'YXZ');carriage.object.updateMatrixWorld(true);
   avatar.object.position.set(riding?-2.10:-.3,riding?1.635-avatar.rig.hipHeight+.025:0,riding?0:1.9);avatar.object.rotation.set(0,0,0);
   if(riding){avatar.object.quaternion.copy(carriage.object.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-Math.PI/2));avatar.object.position.copy(carriage.object.localToWorld(new THREE.Vector3(.99,1.555,0))).addScaledVector(new THREE.Vector3(0,1,0).applyQuaternion(avatar.object.quaternion),-avatar.rig.hipHeight+.025);}
-  avatar.update(performance.now(),'continue',false,{speed:0,distance:0,riding,seatToFloor:(1.555-1.1725)*.9},()=>0);outfit.update(false,performance.now(),riding);
+  avatar.update(performance.now(),'continue',false,{speed:0,distance:0,riding,seatToFloor:(1.555-1.1725)*CARRIAGE_SCALE},()=>0);outfit.update(false,performance.now(),riding);
   const views={team:[[-9,3.3,9],[-2.7,1.1,0]],riding:[[2.2,2.3,5],[.65,1.8,0]],side:[[0,2.7,10],[0,1.7,0]],'three-quarter':[[-5.7,3.5,8.5],[-.2,1.65,0]],rear:[[5,3,7],[.3,1.7,0]],detail:[[-1.0,2.25,4],[-.2,2,0]],reference:[[-2.4,3.2,10],[-.1,1.5,.5]]};
   const [position,target]=views[view]??views['three-quarter'];camera.position.fromArray(position);camera.lookAt(...target);renderer.render(scene,camera);
   return {calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,bounds:new THREE.Box3().setFromObject(carriage.object).getSize(new THREE.Vector3()).toArray()};

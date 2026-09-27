@@ -13,6 +13,12 @@ test('a Force-held recipient cannot receive a conflicting wish',()=>{
   assert.equal(state.locals[0].wish,undefined);assert.equal(state.wishes.granted,0);
   delete state.locals[0].force;assert.equal(grantWish(state,'maya','flight','jevica').ok,true);
 });
+test('the carriage crew travel with Jevica and cannot receive wishes',()=>{
+  const state=setup();state.locals.push({id:'carriage-driver',name:'Prince Jev',position:[1,0,0],vehicleRole:'driver'});
+  const result=grantWish(state,'carriage-driver','dragon','jevica');
+  assert.equal(result.ok,false);assert.match(result.message,/Prince Jev/);
+  assert.equal(state.locals.at(-1).wish,undefined);assert.equal(state.wishes.granted,0);
+});
 test('Jevica is the only playable identity and wish caster', () => {
   assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['jevica']);
   for (const id of ['alien', 'witch', 'unknown']) assert.equal(formFor(id), null);
