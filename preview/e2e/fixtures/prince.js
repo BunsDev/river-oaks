@@ -3,7 +3,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { loadResidentAvatar } from '../../src/avatars.js';
 import { createPrinceCostume } from '../../src/prince-costume.js';
 
-// ?rig=man-casual compares Prince Jev's costume on another shipped rig.
+// ?rig=man-tailored compares Prince Jev's costume on another shipped rig.
 const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true;
@@ -18,7 +18,7 @@ const fill = new THREE.DirectionalLight('#dbe9ff',1.3); fill.position.set(-3,2,-
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshStandardMaterial({color:'#c8c1bc',roughness:0.85}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
-const rig = new URLSearchParams(location.search).get('rig') ?? 'man-tailored';
+const rig = new URLSearchParams(location.search).get('rig') ?? 'prince-jev';
 const avatar = await loadResidentAvatar(1,'carriage-driver',rig,{folk:false});
 const costume = createPrinceCostume(avatar); scene.add(avatar.object);
 function render(view='full',time=0,{speed=0,action='continue'}={}) {
