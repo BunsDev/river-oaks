@@ -1,4 +1,4 @@
-"""Loopback-only bridge. API keys never enter the Unreal project or agent packets."""
+"""Loopback bridge. Credentials stay out of Unreal assets and agent packets."""
 
 import asyncio
 import json
@@ -7,16 +7,25 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 
 from .agents import DecisionEngine, Snapshot
 from .auto import AutoEngine, AutoSnapshot
+from .companion import CompanionEngine, CompanionSnapshot
 from .geo import digest
 from .voice import LocalVoice, VoiceBusy, VoiceRequest, VoiceUnavailable
 
 
-def create_app(engine=None, *, world_path=None, report_path=None, voice=None, auto_engine=None):
+def create_app(
+    engine=None,
+    *,
+    world_path=None,
+    report_path=None,
+    voice=None,
+    auto_engine=None,
+    companion_engine=None,
+):
     world_path = Path(world_path or "unreal/Content/Data/world.json")
     report_path = Path(report_path or "data/reports/verification.json")
 
@@ -47,11 +56,81 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None, au
                     os.environ.get("TYPESAFE_API_KEY"),
                     model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
                 )
+            if companion_engine is None:
+                app.state.companion_engine = CompanionEngine(
+                    client,
+                    os.environ.get("TYPESAFE_API_KEY"),
+                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                )
             yield
 
     app = FastAPI(title="River Oaks decision bridge", lifespan=lifespan)
     app.state.engine = engine or DecisionEngine()
     app.state.auto_engine = auto_engine or AutoEngine()
+    app.state.companion_engine = companion_engine or CompanionEngine()
+    original_keys = None
+
+    def jev_settings():
+        configured = bool(
+            app.state.engine.api_key
+            or app.state.auto_engine.api_key
+            or app.state.companion_engine.api_key
+        )
+        source = "manual" if original_keys is not None else "server" if configured else "none"
+        return JSONResponse(
+            {"source": source, "configured": configured}, headers={"Cache-Control": "no-store"}
+        )
+
+    @app.get("/v1/settings/jev")
+    async def get_jev_settings():
+        return jev_settings()
+
+    @app.put("/v1/settings/jev")
+    async def override_jev_key(request: Request):
+        nonlocal original_keys
+        if request.headers.get("content-type", "").split(";", 1)[0] != "application/json":
+            raise HTTPException(415, "Use application/json")
+        # Validate without reflecting credential values in FastAPI validation errors.
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > 8192:
+                raise HTTPException(400, "Invalid API key")
+        try:
+            payload = json.loads(body)
+        except (ValueError, UnicodeError):
+            raise HTTPException(400, "Invalid API key") from None
+        if not isinstance(payload, dict) or set(payload) != {"api_key"}:
+            raise HTTPException(400, "Invalid API key")
+        key = payload["api_key"]
+        if not isinstance(key, str):
+            raise HTTPException(400, "Invalid API key")
+        key = key.strip()
+        if not 1 <= len(key) <= 4096 or not all(33 <= ord(char) <= 126 for char in key):
+            raise HTTPException(400, "Invalid API key")
+        if original_keys is None:
+            original_keys = (
+                app.state.engine.api_key,
+                app.state.auto_engine.api_key,
+                app.state.companion_engine.api_key,
+            )
+        app.state.engine.api_key = key
+        app.state.auto_engine.api_key = key
+        app.state.companion_engine.api_key = key
+        return jev_settings()
+
+    @app.delete("/v1/settings/jev")
+    async def clear_jev_override():
+        nonlocal original_keys
+        if original_keys is not None:
+            (
+                app.state.engine.api_key,
+                app.state.auto_engine.api_key,
+                app.state.companion_engine.api_key,
+            ) = original_keys
+            original_keys = None
+        return jev_settings()
+
     busy = asyncio.Lock()
     local_voice = voice or LocalVoice()
 
@@ -122,6 +201,18 @@ def create_app(engine=None, *, world_path=None, report_path=None, voice=None, au
     async def auto_decision(packet: AutoSnapshot):
         return JSONResponse(
             await app.state.auto_engine.decide(packet), headers={"Cache-Control": "no-store"}
+        )
+
+    @app.get("/v1/companion")
+    async def companion_status():
+        return JSONResponse(
+            dict(app.state.companion_engine.status), headers={"Cache-Control": "no-store"}
+        )
+
+    @app.post("/v1/companion")
+    async def companion_decision(packet: CompanionSnapshot):
+        return JSONResponse(
+            await app.state.companion_engine.decide(packet), headers={"Cache-Control": "no-store"}
         )
 
     @app.get("/v1/world")

@@ -49,6 +49,45 @@ test('a late route cannot revive a visit after a scenario reset',async()=>{
   assert.ok(!helper.life.visitId);assert.equal(helper.life.route.length,0);
 });
 
+function recoveringVisit() {
+  const context=create(),{life,helper}=context;advance(life,1);
+  // A turn has displaced the helper beside the wall, away from its planned segment.
+  helper.position=[2.351,0,0];
+  Object.assign(helper.life,{heading:-Math.PI/2,speed:0,velocity:0,route:[helper.life.route.at(-1)]});
+  const previous=helper.life.route,pending=[];
+  life.routeProvider=(start,end)=>new Promise(resolve=>pending.push({start,end,resolve}));
+  for(let frame=0;frame<60 && !pending.length;frame++)stepResidentLife(life,1/60,{paused:true});
+  assert.equal(pending.length,1,'The displaced helper must request recovery');
+  assert.deepEqual(helper.life.route,[],'Recovery waits for the worker');
+  return {...context,previous,pending};
+}
+
+test('toggling ambient pause during recovery cannot strand a traveling volunteer',async()=>{
+  const {state,life,helper,local,previous,pending}=recoveringVisit();
+  stepResidentLife(life,1/60,{paused:false});
+  pending[0].resolve([[15,15]]);await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(helper.life.route,previous,'Pause invalidates the result but preserves the visit route for retry');
+  assert.equal(state.jobs[0].phase,'traveling');
+  life.routeProvider=life.navigation.route;
+  advance(life,45);
+  assert.equal(local.status,'supported','The recovered helper must finish the original visit');
+});
+
+test('obsolete recovery cannot restore a route after weather, scenario or ownership changes',async()=>{
+  for(const change of ['weather','generation','redirect']) {
+    const {state,life,helper,pending}=recoveringVisit();
+    if(change==='weather')stepResidentLife(life,1/60,{paused:true,storm:true});
+    if(change==='generation'){chooseCommunityScenario(state,'delivery');stepResidentLife(life,1/60,{paused:true});}
+    if(change==='redirect') {
+      const packet=residentPacket(life,1);
+      applyResidentDecisions(life,{schema_version:1,tick:1,latency_ms:1,decisions:packet.agents.map(agent=>({id:agent.id,action:'redirect',source:'jev'}))});
+    }
+    const route=helper.life.route.map(point=>[...point]);
+    pending[0].resolve([pending[0].end]);await new Promise(resolve=>setImmediate(resolve));
+    assert.deepEqual(helper.life.route,route,`Recovery cannot overwrite ${change}`);
+  }
+});
+
 test('volunteers describe their actual task and include it in local reaction context',()=>{
   const {state,life,helper,local}=create();advance(life,1);
   const greeting=conversationLine(helper,'greeting');
@@ -62,4 +101,15 @@ test('volunteers describe their actual task and include it in local reaction con
   assert.equal(state.supported,0);
   chooseCommunityScenario(state,'storm');stepResidentLife(life,1/60,{paused:true});
   assert.doesNotMatch(conversationLine(helper,'greeting'),/cooling supplies/,'Canceled work must leave the conversation context');
+});
+
+test('a wished volunteer remains available after undo rather than being assigned or refunded early',async()=>{
+  const {grantWish,undoWish}=await import('../src/wishes.js');
+  const {state,life,helper}=create();
+  grantWish(state,helper.id,'flight','jevica');advance(life,1);
+  assert.equal(state.jobs.length,1);
+  assert.equal(state.jobs[0].helperId,null);
+  assert.equal(state.helpBudget,3);
+  undoWish(state,helper.id,'jevica');advance(life,1);
+  assert.equal(state.jobs[0].helperId,helper.id);
 });

@@ -19,8 +19,8 @@ async page => {
       maxError=Math.max(maxError,error);
       check(error<0.005,`${key} misses its target by ${error} m at frame ${sample.frame}`);
       if(before?.contact && foot.contact) {
-        check(Math.hypot(...foot.actual.map((value,index)=>value-before.actual[index]))<0.005,`${key} slides during stance`);
-        check(Math.hypot(...foot.orientation.map((value,index)=>value-before.orientation[index]))<1e-6,`${key} twists during stance`);
+        if(foot.pivot===before.pivot)check(Math.hypot(foot.supportActual[0]-before.supportActual[0],foot.supportActual[2]-before.supportActual[2])<0.005,`${key} slides at its support pivot`);
+        check(Math.hypot(...foot.plantOrientation.map((value,index)=>value-before.plantOrientation[index]))<1e-6,`${key} twists its planted heading`);
         planted++;
       }
       previous.set(key,foot);

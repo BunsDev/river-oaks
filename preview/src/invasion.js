@@ -1,7 +1,7 @@
 // Alien invasion scenario: pure simulation in local east/north/up metres.
 // Saucers land at the district edge, the crew hunt residents to beam aboard,
-// and only a magical visitor (the Wicked Witch or Jevica) can banish them.
-export const MAGIC_FORMS = ['witch', 'jevica'];
+// and Jevica can banish them.
+export const MAGIC_FORMS = ['jevica'];
 export const SPELL_RANGE = 14, SPELL_SPEED = 22, SPELL_COOLDOWN = 0.35, HIT_RADIUS = 1.1;
 export const ALIEN_SPEED = 1.25, ABDUCT_RANGE = 1.7, BEAM_SECONDS = 5, LANDING_SECONDS = 4, BANISH_SECONDS = 1.4, LANDING_ALTITUDE = 14;
 export const RESIDENTS_LOST_LIMIT = 5, MENACE_RANGE = 20, MENACE_STANDOFF = 4;

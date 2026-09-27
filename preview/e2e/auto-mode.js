@@ -12,7 +12,10 @@ async page => {
     const packet = route.request().postDataJSON(); packets.push(packet);
     if (mode === 'delayed') await new Promise(resolve => { release = resolve; delayed = true; });
     const candidate = mode === 'support'
-      ? packet.candidates.find(c => c.action === 'ask') ?? packet.candidates.find(c => c.action === 'supply') ?? packet.candidates.at(-1)
+      ? packet.candidates.find(c => c.action === 'ask' && c.target_id === 'local-00')
+        ?? packet.candidates.find(c => c.action === 'supply' && c.target_id === 'local-00')
+        ?? packet.candidates.find(c => c.action === 'visit' && c.target_id === 'local-00')
+        ?? packet.candidates.at(-1)
       : packet.candidates.filter(c => c.action === 'visit').sort((a,b) => a.distance_m-b.distance_m)[0] ?? packet.candidates.at(-1);
     await route.fulfill({json:{schema_version:1,tick:packet.tick,generation:packet.generation,
       source: mode === 'unavailable' ? 'unavailable' : 'jev', reason: mode === 'unavailable' ? 'not_configured' : 'accepted',
@@ -24,21 +27,21 @@ async page => {
   await page.locator('#loading').waitFor({state:'hidden'});
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-  for (const name of ['People','Places','Scene']) {
+  for (const name of ['People','Places','Settings']) {
     await page.getByRole('tab',{name,exact:true}).click();
     check(await page.getByRole('tabpanel').count() === 1, 'Exactly one rail section must be exposed');
     check(await page.getByRole('tab',{name,exact:true}).getAttribute('aria-selected') === 'true', 'Current tab must be explicit');
   }
-  await page.getByRole('tab',{name:'Scene',exact:true}).focus();
+  await page.getByRole('tab',{name:'Settings',exact:true}).focus();
   await page.keyboard.press('Home');
   check(await page.getByRole('tab',{name:'People',exact:true}).getAttribute('aria-selected') === 'true','Home selects first tab');
   await page.keyboard.press('ArrowRight');
   check(await page.getByRole('tab',{name:'Places',exact:true}).getAttribute('aria-selected') === 'true','Arrow navigation changes rail tab');
   await page.screenshot({path:'output/playwright/auto-rail-places.png'});
-  await page.getByRole('tab',{name:'Scene',exact:true}).click();
-  await page.locator('[data-theme-preference="dark"]').click();
+  await page.getByRole('tab',{name:'Settings',exact:true}).click();
+  await page.locator('button[data-theme-preference="dark"]').click();
   await page.screenshot({path:'output/playwright/auto-rail-dark.png'});
-  await page.locator('[data-theme-preference="light"]').click();
+  await page.locator('button[data-theme-preference="light"]').click();
 
   await page.locator('#auto-toggle').click();
   await page.waitForFunction(() => Number(document.querySelector('#walking-hud').dataset.distance) > 2, null, {timeout:15000});
@@ -98,7 +101,7 @@ async page => {
   await page.locator('#reload').click();await page.locator('#loading').waitFor({state:'hidden'});
   check(!(await read()).enabled,'World replacement must cancel auto');
 
-  await page.getByRole('tab',{name:'Scene',exact:true}).click();
+  await page.getByRole('tab',{name:'Settings',exact:true}).click();
   await page.setViewportSize({width:390,height:844});
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),'Mobile must not overflow');
   await page.screenshot({path:'output/playwright/auto-rail-mobile.png'});

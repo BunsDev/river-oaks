@@ -1,0 +1,1437 @@
+{
+  "createdAt": "2026-09-26T03:19:24.473723+00:00",
+  "scope": "Browser jewelry optics: preserve close-up refraction while avoiding a second opaque-scene render for tiny distant gems.",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/jevica-costume.js": "da517f980fdffaecaf5cacdadb0c68605c3c4482d387af2b1c03cc794906409d",
+    "preview/src/player-avatar.js": "adbe404e25c3b018968244d4a6696ca0b299178f122e56aadfa51c32fa447ba6",
+    "preview/src/main.js": "716bdc542b362a4cb917f83ebb34c420c1a601112c2e96a6fb6cb10cc37258fe",
+    "preview/tests/player-costume.test.js": "971a5fbfd18f36bbb99ffdbc66feb9706393dfda515004a2c8cb607659023b3c",
+    "preview/e2e/fixtures/jevica.js": "63e180df561c84fc55c6272365aa54f29e2fe4024e64d9704ee997caf3c2a8e3",
+    "preview/e2e/jewel-optics.js": "e88751c8ffbb8e34c4883065e5d625d1cf070266a6cc4b15980458cbbed361c9"
+  },
+  "implementation": {
+    "largestJewelDiameterMetres": 0.032,
+    "transitionCssPixels": [
+      8,
+      16
+    ],
+    "closeUpTransmission": 0.35,
+    "geometryChanged": false,
+    "foliageChanged": false
+  },
+  "unitTests": {
+    "command": "npm test",
+    "passed": 357,
+    "failed": 0,
+    "summary": "\u2139 tests 357\n\u2139 suites 0\n\u2139 pass 357\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 44908.6935\n"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js chunk exceeds 500 kB warning threshold."
+  },
+  "pairedSummary": [
+    {
+      "deviceScaleFactor": 1,
+      "meanMainPassCpuMs": {
+        "baseline": 9.212396690668154,
+        "adaptive": 7.170247935066539,
+        "saved": 2.042148755601615
+      },
+      "minimumTrianglesSaved": 7026502,
+      "minimumDrawCallsSaved": 619
+    },
+    {
+      "deviceScaleFactor": 2,
+      "meanMainPassCpuMs": {
+        "baseline": 10.588429755908397,
+        "adaptive": 8.201239676022333,
+        "saved": 2.3871900798860644
+      },
+      "minimumTrianglesSaved": 7026502,
+      "minimumDrawCallsSaved": 619
+    }
+  ],
+  "opticsAcceptance": {
+    "checks": [
+      "full: more than 99.9% of the fixed render is unchanged",
+      "portrait: more than 99.9% of the fixed render is unchanged",
+      "Portrait retains full crystal transmission",
+      "Portrait remains pixel-identical",
+      "1x: street-distance jewels omit the refraction pass",
+      "1x: at least 20% fewer scene triangle submissions",
+      "1x: fewer scene draw calls",
+      "2x: street-distance jewels omit the refraction pass",
+      "2x: at least 20% fewer scene triangle submissions",
+      "2x: fewer scene draw calls",
+      "No uncaught optics or profiling errors"
+    ],
+    "images": [
+      {
+        "view": "full",
+        "transmission": 0.022093110100237543,
+        "changedPixels": 84,
+        "pixels": 900000,
+        "maxDifference": 12,
+        "meanChannelDifference": 0.00039925925925925925,
+        "baseline": {
+          "calls": 41,
+          "triangles": 385142
+        },
+        "adaptive": {
+          "calls": 41,
+          "triangles": 385142
+        }
+      },
+      {
+        "view": "portrait",
+        "transmission": 0.35,
+        "changedPixels": 0,
+        "pixels": 900000,
+        "maxDifference": 0,
+        "meanChannelDifference": 0,
+        "baseline": {
+          "calls": 41,
+          "triangles": 385142
+        },
+        "adaptive": {
+          "calls": 41,
+          "triangles": 385142
+        }
+      }
+    ],
+    "performanceRuns": [
+      {
+        "deviceScaleFactor": 1,
+        "runs": [
+          {
+            "mode": "baseline",
+            "transmission": 0.35,
+            "medianMs": 33.19999999999982,
+            "p95Ms": 33.400000000000546,
+            "mainCpuMs": 9.336363633802115,
+            "calls": 1682,
+            "triangles": 22241959
+          },
+          {
+            "mode": "adaptive",
+            "transmission": 0,
+            "medianMs": 16.700000000000728,
+            "p95Ms": 33.30000000000109,
+            "mainCpuMs": 7.072727275288795,
+            "calls": 1063,
+            "triangles": 15215457
+          },
+          {
+            "mode": "adaptive",
+            "transmission": 0,
+            "medianMs": 16.700000000000728,
+            "p95Ms": 33.30000000000109,
+            "mainCpuMs": 7.2677685948442825,
+            "calls": 1063,
+            "triangles": 15215457
+          },
+          {
+            "mode": "baseline",
+            "transmission": 0.35,
+            "medianMs": 16.700000000000728,
+            "p95Ms": 33.400000000001455,
+            "mainCpuMs": 9.088429747534192,
+            "calls": 1682,
+            "triangles": 22241959
+          }
+        ]
+      },
+      {
+        "deviceScaleFactor": 2,
+        "runs": [
+          {
+            "mode": "baseline",
+            "transmission": 0.35,
+            "medianMs": 33.30000000000109,
+            "p95Ms": 50,
+            "mainCpuMs": 10.739669423458004,
+            "calls": 1682,
+            "triangles": 22241959
+          },
+          {
+            "mode": "adaptive",
+            "transmission": 0,
+            "medianMs": 33.29999999999927,
+            "p95Ms": 33.399999999999636,
+            "mainCpuMs": 8.368595046445359,
+            "calls": 1063,
+            "triangles": 15215457
+          },
+          {
+            "mode": "adaptive",
+            "transmission": 0,
+            "medianMs": 33.29999999999927,
+            "p95Ms": 33.400000000001455,
+            "mainCpuMs": 8.033884305599308,
+            "calls": 1063,
+            "triangles": 15215457
+          },
+          {
+            "mode": "baseline",
+            "transmission": 0.35,
+            "medianMs": 33.30000000000291,
+            "p95Ms": 50,
+            "mainCpuMs": 10.437190088358792,
+            "calls": 1693.404958677686,
+            "triangles": 22317660.553719006
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Fixed studio render comparison and same-scene ABBA timings in local Chromium, at normal and Retina density. Timings are observational, not a target-device FPS guarantee."
+  },
+  "gameplayRegressions": {
+    "force": {
+      "seconds": 27.87,
+      "result": {
+        "checks": [
+          "T enables Force mode",
+          "A real pointer click targets the person in Force mode",
+          "Force picking does not open a conversation",
+          "G acquires the selected person",
+          "The rendered person rises, not just the state",
+          "Force hold suspends pedestrian navigation",
+          "Wand and person both emit lift sparkles",
+          "X gently lands and releases the person",
+          "Sparkles finish fading after landing",
+          "Released person resumes walking",
+          "A Force push displaces a person and lands them",
+          "An existing street bin can be targeted through normal travel",
+          "The complete bin rises with its lid",
+          "Pointer spell controls return focus to walking",
+          "Walking preserves the active lift",
+          "Jevica walks while holding a target",
+          "The lifted bin follows her movement",
+          "Both sparkle emitters remain active within the pool budget while carrying",
+          "Jevica keeps facing the carried object after backpedalling",
+          "R pushes a real object and it settles at its new position",
+          "Indoor stations lift in place without crossing work surfaces",
+          "A levitated worker pauses their task",
+          "Escape lowers the worker and their task resumes",
+          "Force mode can be disabled",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "initial": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.5509571625144,
+              18.364032022613387,
+              1274.5851677611145
+            ],
+            "renderedPosition": [
+              -2813.5509571625144,
+              18.364032022613387,
+              1274.5851677611145
+            ],
+            "eligible": true
+          },
+          "held": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.5265859675183,
+              19.400506083861494,
+              1274.5171955857797
+            ],
+            "renderedPosition": [
+              -2813.5265859675183,
+              19.400506083861494,
+              1274.5171955857797
+            ],
+            "eligible": true
+          }
+        },
+        "bin": {
+          "initial": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "raised": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              19.48534949837108,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              19.48534949837108,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "landed": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.80719343177,
+              18.482014846566525,
+              1311.3692893112639
+            ],
+            "renderedPosition": [
+              -2771.80719343177,
+              18.482014846566525,
+              1311.3692893112639
+            ],
+            "eligible": false
+          }
+        },
+        "carry": {
+          "start": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2771.0986938402543,
+                19.55387019116112,
+                1310.0327574445103
+              ],
+              "velocity": [
+                0,
+                1.335948062663495,
+                0
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2774.388228970006,
+                20.169720828300843,
+                1304.6883408841725
+              ],
+              "riding": null,
+              "ground": 18.489720828300843,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9969081126661925,
+              "speed": 0,
+              "velocity": [
+                0,
+                0
+              ],
+              "distance": 0,
+              "roomId": null,
+              "showBody": true
+            }
+          },
+          "end": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2773.2211968661095,
+                19.729439440448573,
+                1309.0693037776525
+              ],
+              "velocity": [
+                -0.014208226439124548,
+                -0.07887740871134663,
+                -0.006449445631242355
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2776.513437125505,
+                20.074233658193716,
+                1303.7236592958254
+              ],
+              "riding": null,
+              "ground": 18.394233658193716,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9969081126661925,
+              "speed": 8.374850330472652e-07,
+              "velocity": [
+                -7.626256614827612e-07,
+                -3.461735889397736e-07
+              ],
+              "distance": 2.3339066543234135,
+              "roomId": null,
+              "showBody": true
+            },
+            "yaw": 0.5522679911304332,
+            "fx": {
+              "count": 98,
+              "wand": 58,
+              "target": 40,
+              "capacity": 256,
+              "reducedMotion": false,
+              "wandTip": [
+                -2776.72747766511,
+                19.882042991367197,
+                1303.9372720656677
+              ],
+              "targetCenter": [
+                -2773.2211968661095,
+                20.28493944044857,
+                1309.0693037776525
+              ]
+            }
+          }
+        },
+        "personFX": {
+          "count": 72,
+          "wand": 41,
+          "target": 31,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2811.252828503435,
+            19.808122601050027,
+            1275.3668124877636
+          ],
+          "targetCenter": [
+            -2813.5265859675183,
+            20.41101003447141,
+            1274.5171955857797
+          ]
+        },
+        "staff": "store-osm-node-8172495006-person-0",
+        "errors": []
+      }
+    },
+    "npc-presence": {
+      "seconds": 32.78,
+      "result": {
+        "checks": [
+          "local-00: pedestrian resumes while Jevica stays still",
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: pedestrian resumes while Jevica stays still",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: pedestrian resumes while Jevica stays still",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: pedestrian resumes while Jevica stays still",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: pedestrian resumes while Jevica stays still",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: pedestrian resumes while Jevica stays still",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "At least one route resumes inside the former visitor freeze radius",
+          "No floating NPC reaction captions",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 0.5520198718703022,
+            "screen": [
+              854.2735376324816,
+              395.112669066928
+            ],
+            "position": [
+              -2813.534966915106,
+              -1274.5908299292992,
+              18.364483865728097
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 1.083337398177685,
+            "screen": [
+              760.1943212480448,
+              392.5157715212772
+            ],
+            "position": [
+              -2807.0628294041107,
+              -1229.7245202390557,
+              18.447783350390697
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.7773284820149184,
+            "screen": [
+              797.834114822728,
+              359.2554727378313
+            ],
+            "position": [
+              -2803.9631629870505,
+              -1200.1636173686954,
+              18.39523032245059
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 0.9297408986446486,
+            "screen": [
+              819.9116661213181,
+              398.04639552053624
+            ],
+            "position": [
+              -2774.1504121505905,
+              -1292.1457538903144,
+              18.47102443706629
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.5976429074120584,
+            "screen": [
+              804.2074550322382,
+              402.7130401946321
+            ],
+            "position": [
+              -2770.1299841086957,
+              -1241.239204574008,
+              18.391519382087036
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.952820902186319,
+            "screen": [
+              750.121120412972,
+              439.1355213028481
+            ],
+            "position": [
+              -2770.5397731646385,
+              -1242.063939061265,
+              18.39885895507789
+            ]
+          }
+        ],
+        "releaseDistances": [
+          3.19999999999999,
+          3.1999999999999806,
+          3.1999999999999873,
+          2.500000000000102,
+          3.2000000000000415,
+          2.250486412776308
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+      }
+    },
+    "carriage": {
+      "seconds": 20.11,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed footboard",
+          "riding-slope: both soles contact the actual transformed footboard",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003743152485,
+                "minX": -2.719301644971826,
+                "maxX": -2.478345608200862
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003867481168,
+                "minX": -2.7193016378760855,
+                "maxX": -2.478345607143537
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003810210338,
+                "minX": -2.7193016440595033,
+                "maxX": -2.4783456117813074
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003888902873,
+                "minX": -2.7193016358350195,
+                "maxX": -2.478345605483292
+              }
+            ]
+          }
+        ],
+        "before": {
+          "placement": {
+            "position": [
+              -2766.541185989181,
+              18.42157351781855,
+              1291.5552254559523
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": 0.0007859033689301711,
+            "roll": 0.005794460639896358,
+            "distance": 0,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.0025194879020453698,
+              -1.8267278509398466e-05,
+              1.7017506444005903e-05,
+              1.7017506447558617e-05
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            0,
+            3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.105314686426908,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.42531468642691,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.33440851050249343,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.42531468642691,
+            1295.064162750871
+          ],
+          "riderYaw": 0
+        },
+        "driven": {
+          "placement": {
+            "position": [
+              -2758.7175710936867,
+              18.430503296503765,
+              1291.6746881361835
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.007808442420305544,
+            "roll": 0.010528950521522225,
+            "distance": 7.824526909982048,
+            "terrainError": 0.009860024135232237,
+            "speed": 0.026402627389980518,
+            "wheelOffsets": [
+              -0.017726772423863224,
+              -0.019836306264739534,
+              -0.015188869256508752,
+              -0.022986643577883825
+            ]
+          },
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            3.552713678800501e-15,
+            0,
+            0,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2756.600912015199,
+              20.663253115347622,
+              1291.7196032480504
+            ],
+            "riding": {
+              "seat": [
+                -2756.600912015199,
+                20.04325311534762,
+                1291.7196032480504
+              ],
+              "yaw": 1.5555280143100032,
+              "quaternion": [
+                0.006490310494918038,
+                0.7016876375978963,
+                -0.0009123235887401058,
+                0.7124545619038678
+              ],
+              "speed": 0.026402627389980518,
+              "distance": 7.824526909982048
+            },
+            "ground": 18.390770237896266,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -0.08606463927978991,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.6095306187253,
+            19.21527477634436,
+            1291.7130055400257
+          ],
+          "riderYaw": 1.5523176629642563
+        },
+        "after": {
+          "placement": {
+            "position": [
+              -2758.712650534258,
+              18.430488277812767,
+              1291.67476327066
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.007808442420305544,
+            "roll": 0.010533856554013937,
+            "distance": 7.8294480430101325,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              -0.017810513176328868,
+              -0.019920047017198073,
+              -0.015396604211371567,
+              -0.023194378532743087
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            3.552713678800501e-15,
+            -3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2756.7670688374633,
+              20.0929183021428,
+              1288.7041216125167
+            ],
+            "riding": null,
+            "ground": 18.4129183021428,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -3.0849191775667637,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.7670688374633,
+            18.4129183021428,
+            1288.7041216125167
+          ],
+          "riderYaw": 1.5523148989833793
+        },
+        "errors": []
+      }
+    }
+  },
+  "browserAssertions": 89,
+  "profileBefore": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 33.19999999999982,
+        "p95Ms": 33.400000000000546,
+        "maxMs": 66.59999999999945,
+        "render": {
+          "calls": 2271,
+          "triangles": 25117834,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 325.955
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 321.215
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 180.649
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 180.165
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 147.068
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 145.285
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 124.899
+          },
+          {
+            "fn": "hasSightLine http://127.0.0.1:5181/src/walking.js?t=1790321666920:56",
+            "ms": 116.73
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 114.336
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 102.565
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 98.522
+          },
+          {
+            "fn": "clearEncounterLine http://127.0.0.1:5181/src/encounter.js?t=1790327589935:4",
+            "ms": 83.693
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 63.078
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 59.86
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 59.511
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 53.051
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/foot-placement.js?t=1790389846844:68",
+            "ms": 50.713
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 46.052
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 44.582
+          },
+          {
+            "fn": "renderObjects http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52200",
+            "ms": 36.125
+          }
+        ]
+      },
+      {
+        "label": "walking",
+        "medianMs": 16.700000000000728,
+        "p95Ms": 33.399999999999636,
+        "maxMs": 33.5,
+        "render": {
+          "calls": 1563,
+          "triangles": 17779813,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(program) :0",
+            "ms": 196.23
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 149.377
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 144.67
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 140.027
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 135.224
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 108.665
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 100.462
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 99.824
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 99.55
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 89.22
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 71.005
+          },
+          {
+            "fn": "isFree http://127.0.0.1:5181/src/walking.js?t=1790321666920:44",
+            "ms": 70.702
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 67.593
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 63.884
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 43.398
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790389846844:86",
+            "ms": 36.395
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18279",
+            "ms": 35.81
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+            "ms": 35.107
+          },
+          {
+            "fn": "fromBufferAttribute http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:4916",
+            "ms": 33.165
+          },
+          {
+            "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+            "ms": 31.807
+          }
+        ]
+      },
+      {
+        "label": "worker-conversation",
+        "medianMs": 16.700000000000728,
+        "p95Ms": 33.399999999999636,
+        "maxMs": 33.400000000001455,
+        "render": {
+          "calls": 1765,
+          "triangles": 18586484,
+          "geometries": 324,
+          "textures": 367
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(program) :0",
+            "ms": 252.566
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 190.295
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 166.421
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 162.376
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 152.702
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 114.991
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 110.701
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 98.365
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 96.601
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 64.936
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 59.623
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 58.236
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18279",
+            "ms": 49.991
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 46.82
+          },
+          {
+            "fn": "refreshMaterialUniforms http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:50048",
+            "ms": 46.513
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+            "ms": 43.461
+          },
+          {
+            "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+            "ms": 36.87
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 34.715
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 33.107
+          },
+          {
+            "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+            "ms": 31.529
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "viewport": [
+      1440,
+      1000
+    ],
+    "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+  },
+  "profileAfter": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 16.699999999999818,
+        "p95Ms": 50,
+        "maxMs": 66.69999999999982,
+        "render": {
+          "calls": 1652,
+          "triangles": 18091332,
+          "geometries": 286,
+          "textures": 284
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 639.871
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 450.753
+          },
+          {
+            "fn": "(anonymous) http://127.0.0.1:5181/src/walking.js?t=1790321666920:44",
+            "ms": 157.817
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 135.449
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 132.07
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 130.08
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 111.88
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 107.776
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 104.693
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 83.859
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 75.777
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 57.496
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 52.378
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 49.471
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 47.495
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+            "ms": 38.899
+          },
+          {
+            "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+            "ms": 34.185
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+            "ms": 31.746
+          },
+          {
+            "fn": "fromBufferAttribute http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:7080",
+            "ms": 31.272
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 29.61
+          }
+        ]
+      },
+      {
+        "label": "walking",
+        "medianMs": 16.700000000000728,
+        "p95Ms": 33.399999999999636,
+        "maxMs": 50,
+        "render": {
+          "calls": 1563,
+          "triangles": 17779813,
+          "geometries": 286,
+          "textures": 284
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(program) :0",
+            "ms": 376.419
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 165.087
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 142.563
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 120.915
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 120.028
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 115.055
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 109.608
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 105.576
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 88.522
+          },
+          {
+            "fn": "(idle) :0",
+            "ms": 80.501
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 76.314
+          },
+          {
+            "fn": "isFree http://127.0.0.1:5181/src/walking.js?t=1790321666920:44",
+            "ms": 61.995
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 61.128
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 57.178
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 55.074
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+            "ms": 43.471
+          },
+          {
+            "fn": "(garbage collector) :0",
+            "ms": 40.876
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 32.645
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 31.62
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+            "ms": 31.511
+          }
+        ]
+      },
+      {
+        "label": "worker-conversation",
+        "medianMs": 16.700000000000728,
+        "p95Ms": 33.399999999999636,
+        "maxMs": 33.400000000001455,
+        "render": {
+          "calls": 1765,
+          "triangles": 18586484,
+          "geometries": 324,
+          "textures": 367
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(program) :0",
+            "ms": 411.723
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 189.746
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 143.306
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 140.108
+          },
+          {
+            "fn": "(idle) :0",
+            "ms": 137.924
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 123.139
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 108.554
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 92.177
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 90.731
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 83.904
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 70.472
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 69.283
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 56.706
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 51.068
+          },
+          {
+            "fn": "toArray http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8764",
+            "ms": 48.514
+          },
+          {
+            "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+            "ms": 36.442
+          },
+          {
+            "fn": "texSubImage2D :0",
+            "ms": 35.221
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+            "ms": 34.975
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+            "ms": 34.066
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 32.204
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "viewport": [
+      1440,
+      1000
+    ],
+    "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+  },
+  "visualReview": {
+    "directory": "output/playwright",
+    "images": [
+      "jewel-optics-full.png",
+      "jewel-optics-portrait.png"
+    ],
+    "finding": "Portrait is pixel-identical. Full-body comparison changes 84 of 900000 pixels, confined to the small crystal appearance; no geometry or silhouette changes."
+  },
+  "limitations": [
+    "Local Chromium measurements at 1440 by 1000 CSS pixels, using device scale factors 1 and 2. They are not a target-device FPS guarantee.",
+    "Only the main RenderPass is counted in the paired runs. Whole-pipeline profiles include other passes and use separate scene runs, so their numbers are not interchangeable.",
+    "The before/after whole-scene CPU profiles are observational and include moving residents and different walking endpoints. The same-scene ABBA runs provide the controlled comparison.",
+    "No locked 60 FPS claim. Shader first-use latency, sustained thermal behavior, photoreal assets, facial animation and physical cloth remain unverified quality targets.",
+    "No Unreal or native changes. Development server remains at http://127.0.0.1:5181/."
+  ]
+}

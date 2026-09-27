@@ -24,8 +24,8 @@ export function createInvaders({ scene, world, groundAt }) {
   const holder = new THREE.Group(); holder.name = 'Invasion'; scene.add(holder);
   const owned = new Set(), crew = new Map(), bolts = new Map();
   const boltGeometry = new THREE.SphereGeometry(0.22, 16, 12), haloGeometry = new THREE.SphereGeometry(0.55, 16, 12); owned.add(boltGeometry); owned.add(haloGeometry);
-  const boltMaterials = { witch: new THREE.MeshStandardMaterial({ color: '#c7ff9a', emissive: '#7cff3a', emissiveIntensity: 2.4 }), jevica: new THREE.MeshStandardMaterial({ color: '#ffd8ee', emissive: '#ff5fb8', emissiveIntensity: 2.4 }) };
-  const haloMaterials = { witch: new THREE.MeshBasicMaterial({ color: '#9dff6a', transparent: true, opacity: 0.35, depthWrite: false }), jevica: new THREE.MeshBasicMaterial({ color: '#ff8fd0', transparent: true, opacity: 0.35, depthWrite: false }) };
+  const boltMaterials = { jevica: new THREE.MeshStandardMaterial({ color: '#ffd8ee', emissive: '#ff5fb8', emissiveIntensity: 2.4 }) };
+  const haloMaterials = { jevica: new THREE.MeshBasicMaterial({ color: '#ff8fd0', transparent: true, opacity: 0.35, depthWrite: false }) };
   [...Object.values(boltMaterials), ...Object.values(haloMaterials)].forEach(material => owned.add(material));
   let disposed = false, generation = 0;
   const spawn = async (alien, index, thisGeneration) => {

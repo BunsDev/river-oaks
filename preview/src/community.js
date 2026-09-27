@@ -1,3 +1,5 @@
+import { createCarriageEncounter } from './carriage-encounter.js';
+import { createWishState } from './wishes.js';
 // All people, needs, resource costs and outcomes are fictional simulation rules.
 // Source district locations anchor encounters; they do not identify real people.
 import { createStoreEncounters } from './store-encounters.js';
@@ -59,15 +61,15 @@ function makeLocals(world) {
   });
 }
 
-export function createCommunity(world, rooms = []) {
-  const state = { locals: [...makeLocals(world), ...createStoreEncounters(rooms)], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
+export function createCommunity(world, rooms = [], { carriage = true } = {}) {
+  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms), ...(carriage ? createCarriageEncounter(world) : [])], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }
 
 export function chooseCommunityScenario(state, key) {
   if (!Object.hasOwn(COMMUNITY_SCENARIOS, key)) return false;
-  const scenario = COMMUNITY_SCENARIOS[key], eligible = state.locals.filter(local => !local.indoor), count = Math.min(8, eligible.length);
+  const scenario = COMMUNITY_SCENARIOS[key], eligible = state.locals.filter(local => !local.indoor && !local.stationary), count = Math.min(8, eligible.length);
   const targets = new Set(Array.from({ length: count }, (_, i) => eligible[(Math.floor(i * eligible.length / count) + scenario.offset) % eligible.length].id));
   Object.assign(state, {
     scenarioKey: key, scenario, status: 'ready', running: false, elapsed: 0,
@@ -156,10 +158,11 @@ export function stepCommunity(state, realDelta, economy) {
     }
     for (const job of state.jobs) {
       const local = state.locals.find((item) => item.id === job.localId);
-      if (local.status !== 'aid_en_route') continue;
+      if (local.abducted || local.wish || local.wishDisruption || local.status !== 'aid_en_route') continue;
       if(state.physicalVisits) {
         const helper=state.locals.find(item=>item.id===job.helperId);
-        if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
+        if(job.generation!==state.generation || job.phase!=='assisting' || !helper || helper.abducted || helper.id===local.id || Math.hypot(helper.position[0]-local.position[0],helper.position[1]-local.position[1])>1.5) continue;
+        if(helper.wish || helper.wishDisruption || local.wish || local.wishDisruption) continue;
         if(helper.id===state.selectedId || ['pause','stop','redirect','seek_shelter'].includes(helper.life?.action)) continue;
       }
       job.progress = Math.min(job.duration, job.progress + workRate);
@@ -178,6 +181,7 @@ export function stepCommunity(state, realDelta, economy) {
 export function interactWithLocal(state, id, action) {
   const local = state.locals.find((item) => item.id === id);
   if (!local || !['ask', 'supply', 'dispatch'].includes(action)) return { ok: false, reason: 'invalid_interaction' };
+  if (local.abducted) return { ok: false, reason: 'unavailable', message: 'This neighbor is aboard a saucer. Support can resume when they return.' };
   state.selectedId = id;
   const respond = (ok, reason, message) => {
     const result = { ok, reason, message, localId: id, action, generation: state.generation };
@@ -232,7 +236,7 @@ export function returnUnroutableVisit(state,id) {
 
 export function snapshotForLocal(state, id, interaction = 'ask', tick = 0) {
   const local = state.locals.find((item) => item.id === id);
-  if (!local || !Number.isInteger(tick) || tick < 0) return null;
+  if (!local || local.abducted || !Number.isInteger(tick) || tick < 0) return null;
   state._packet = { id, tick, generation: state.generation };
   return {
     schema_version: 1, tick,
@@ -246,7 +250,7 @@ export function applyLocalReaction(state, id, response, context) {
   if (!packet || !context || context.generation !== state.generation || packet.generation !== state.generation || packet.id !== id || packet.tick !== context.tick || state._appliedTick === context.tick) return false;
   if (!response || response.schema_version !== 1 || response.tick !== context.tick || !Number.isFinite(response.latency_ms) || response.latency_ms < 0 || !Array.isArray(response.decisions) || response.decisions.length !== 1) return false;
   const decision = response.decisions[0], local = state.locals.find((item) => item.id === id);
-  if (!local || !decision || decision.id !== id || !ACTIONS.has(decision.action) || !SOURCES.has(decision.source)) return false;
+  if (!local || local.abducted || !decision || decision.id !== id || !ACTIONS.has(decision.action) || !SOURCES.has(decision.source)) return false;
   // Reactive pose only: inference cannot spend resources, plan visits or change needs.
   local.action = state.storm ? 'seek_shelter' : decision.action;
   local.source = state.storm ? 'safety_override' : decision.source;

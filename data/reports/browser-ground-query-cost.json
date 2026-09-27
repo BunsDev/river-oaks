@@ -1,0 +1,647 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser ground-contact query cost and live contact preservation",
+  "change": "Two-meter spatial buckets and a per-world cache of the most recently queried bucket; all heights still come from exact triangle tests.",
+  "benchmarkBefore": {
+    "queries": 345600,
+    "medianMs": 72.71079199999997,
+    "minMs": 61.00324999999998,
+    "compileMs": 10.977125000000001,
+    "indexHeapBytes": 3523576,
+    "checksum": 6322819.617531665,
+    "scope": "Actual district terrain and generated sidewalks; coherent foot-sized query batches, no rendering or kerb meshes."
+  },
+  "benchmarkAfter": {
+    "queries": 345600,
+    "medianMs": 14.856208999999978,
+    "minMs": 13.822000000000003,
+    "compileMs": 20.74404100000001,
+    "indexHeapBytes": 7982992,
+    "checksum": 6322819.617531665,
+    "scope": "Actual district terrain and generated sidewalks; coherent foot-sized query batches, no rendering or kerb meshes."
+  },
+  "fullScene": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 33.399999999999636,
+        "p95Ms": 66.70000000000073,
+        "maxMs": 100,
+        "render": {
+          "calls": 2201,
+          "triangles": 27553034,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 1365.754
+          },
+          {
+            "fn": "uniformMatrix4fv :0",
+            "ms": 344.89
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 295.418
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 270.365
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 171.414
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 168.594
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 136.63
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 129.677
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 125.955
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 120.654
+          },
+          {
+            "fn": "activeTexture :0",
+            "ms": 93.54
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 87.117
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 67.305
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 62.35
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 61.476
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 58.102
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 51.138
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 49.486
+          },
+          {
+            "fn": "baseIsFree http://127.0.0.1:5181/src/walking.js?t=1790321666920:38",
+            "ms": 44.234
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 38.929
+          }
+        ]
+      },
+      {
+        "label": "walking",
+        "medianMs": 16.700000000000728,
+        "p95Ms": 50,
+        "maxMs": 66.70000000000073,
+        "render": {
+          "calls": 1521,
+          "triangles": 19468123,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 405.022
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 307.565
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 245.602
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 180.969
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 167.928
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 138.368
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 118.463
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 112.741
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 106.918
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 74.514
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 55.892
+          },
+          {
+            "fn": "baseIsFree http://127.0.0.1:5181/src/walking.js?t=1790321666920:38",
+            "ms": 53.415
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 52.354
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 46.166
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18016",
+            "ms": 45.202
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 43.227
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 42.057
+          },
+          {
+            "fn": "groundAt http://127.0.0.1:5181/src/walking.js?t=1790321666920:37",
+            "ms": 40.747
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 39.571
+          },
+          {
+            "fn": "fromBufferAttribute http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:4916",
+            "ms": 36.216
+          }
+        ]
+      },
+      {
+        "label": "worker-conversation",
+        "medianMs": 33.29999999999927,
+        "p95Ms": 50,
+        "maxMs": 83.29999999999927,
+        "render": {
+          "calls": 1723,
+          "triangles": 21243124,
+          "geometries": 324,
+          "textures": 367
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 658.67
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 331.813
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 244.705
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 202.046
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 184.246
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 138.218
+          },
+          {
+            "fn": "uniformMatrix4fv :0",
+            "ms": 134.898
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 125.665
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 108.882
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 74.384
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+            "ms": 72.873
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 71.267
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 70.376
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 65.25
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 51.292
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 46.483
+          },
+          {
+            "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+            "ms": 41.239
+          },
+          {
+            "fn": "upload http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45414",
+            "ms": 36.277
+          },
+          {
+            "fn": "refreshMaterialUniforms http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:50048",
+            "ms": 36.196
+          },
+          {
+            "fn": "texSubImage2D :0",
+            "ms": 35.233
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "viewport": [
+      1440,
+      1000
+    ],
+    "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+  },
+  "carriage": {
+    "checks": [
+      "riding: both soles contact the actual transformed footboard",
+      "riding-slope: both soles contact the actual transformed footboard",
+      "Calling places a visible carriage near Jevica",
+      "All four parked tyres meet rendered paving",
+      "Flight cannot start while seated",
+      "A ridden carriage cannot be summoned elsewhere",
+      "Riding moves the real carriage and rider through the district",
+      "All four moving tyres follow the rendered road",
+      "Dismount preserves a clear third-person camera",
+      "Dismounted Jevica stands on the rendered pavement",
+      "Walking resumes after leaving the carriage",
+      "Takeoff is rejected while the bubble overlaps the parked coach",
+      "Boarding is unavailable in flight",
+      "No uncaught browser errors: "
+    ],
+    "contacts": [
+      {
+        "view": "riding",
+        "feet": [
+          {
+            "side": "l",
+            "minY": 1.1275003743152485,
+            "minX": -2.719301644971826,
+            "maxX": -2.478345608200862
+          },
+          {
+            "side": "r",
+            "minY": 1.1275003867481168,
+            "minX": -2.7193016378760855,
+            "maxX": -2.478345607143537
+          }
+        ]
+      },
+      {
+        "view": "riding-slope",
+        "feet": [
+          {
+            "side": "l",
+            "minY": 1.1275003810210338,
+            "minX": -2.7193016440595033,
+            "maxX": -2.4783456117813074
+          },
+          {
+            "side": "r",
+            "minY": 1.1275003888902873,
+            "minX": -2.7193016358350195,
+            "maxX": -2.478345605483292
+          }
+        ]
+      }
+    ],
+    "before": {
+      "placement": {
+        "position": [
+          -2766.541185989181,
+          18.42157351781855,
+          1291.5552254559523
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": 0.0007859033689301711,
+        "roll": 0.005794460639896358,
+        "distance": 0,
+        "terrainError": 0.009860024135232237,
+        "speed": 0,
+        "wheelOffsets": [
+          0.0025194879020453698,
+          -1.8267278509398466e-05,
+          1.7017506444005903e-05,
+          1.7017506447558617e-05
+        ]
+      },
+      "visible": true,
+      "riding": false,
+      "tyreClearances": [
+        0,
+        0,
+        3.552713678800501e-15,
+        0
+      ],
+      "pose": {
+        "position": [
+          -2765.321977373157,
+          20.105314686426908,
+          1295.064162750871
+        ],
+        "riding": null,
+        "ground": 18.42531468642691,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 0.33440851050249343,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2765.321977373157,
+        18.42531468642691,
+        1295.064162750871
+      ]
+    },
+    "driven": {
+      "placement": {
+        "position": [
+          -2758.649796939748,
+          18.404024629826857,
+          1291.6757230135636
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": -0.006899182107290474,
+        "roll": 0.010596524541548073,
+        "distance": 7.892308964484488,
+        "terrainError": 0.009860024135232237,
+        "speed": 0.029528170083795817,
+        "wheelOffsets": [
+          0.0072693912467585164,
+          0.0072693912467585164,
+          0.010051679928878343,
+          0.0043634014129700915
+        ]
+      },
+      "visible": true,
+      "riding": true,
+      "tyreClearances": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pose": {
+        "position": [
+          -2756.533006491612,
+          20.636642171493644,
+          1291.719172558892
+        ],
+        "riding": {
+          "seat": [
+            -2756.533006491612,
+            20.016642171493643,
+            1291.719172558892
+          ],
+          "yaw": 1.5555280143100032,
+          "quaternion": [
+            0.006195386592809611,
+            0.7016870631413517,
+            -0.0012599478343272175,
+            0.7124572233730845
+          ],
+          "speed": 0.029528170083795817,
+          "distance": 7.892308964484488
+        },
+        "ground": 18.390344140464535,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": -0.08606463927978991,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2756.5416925344985,
+        19.18865888707902,
+        1291.713326763354
+      ]
+    },
+    "after": {
+      "placement": {
+        "position": [
+          -2758.6443849727243,
+          18.403989852165225,
+          1291.6758056515896
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": -0.006899182107290474,
+        "roll": 0.01060192052312171,
+        "distance": 7.8977215623932935,
+        "terrainError": 0.009860024135232237,
+        "speed": 0,
+        "wheelOffsets": [
+          0.00714147938522558,
+          0.00714147938522558,
+          0.009864397733508667,
+          0.0041761192176039685
+        ]
+      },
+      "visible": true,
+      "riding": false,
+      "tyreClearances": [
+        3.552713678800501e-15,
+        3.552713678800501e-15,
+        -7.105427357601002e-15,
+        0
+      ],
+      "pose": {
+        "position": [
+          -2756.6988032759295,
+          20.092479623084056,
+          1288.7051639934464
+        ],
+        "riding": null,
+        "ground": 18.412479623084057,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": -3.0848479739348504,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2756.6988032759295,
+        18.412479623084057,
+        1288.7051639934464
+      ]
+    },
+    "errors": []
+  },
+  "pedestrians": {
+    "frames": 180,
+    "maxError": 9.09610400066744e-07,
+    "maxContactDistance": 0.0001846051181148346,
+    "samples": 7920,
+    "contacts": 5501,
+    "worst": {
+      "id": "local-15",
+      "status": "resting",
+      "foot": {
+        "contact": true,
+        "target": [
+          -2771.1722299046446,
+          18.552284732008314,
+          1357.6510616877106
+        ],
+        "actual": [
+          -2771.1722304029804,
+          18.55228531299724,
+          1357.651061901231
+        ],
+        "support": [
+          -2771.1049053777037,
+          18.48660461183369,
+          1357.6163936746195
+        ],
+        "surface": [
+          -2771.1047395421924,
+          18.48660285770893,
+          1357.6163125909845
+        ]
+      }
+    },
+    "ids": [
+      "local-00",
+      "local-01",
+      "local-02",
+      "local-03",
+      "local-04",
+      "local-05",
+      "local-06",
+      "local-07",
+      "local-08",
+      "local-09",
+      "local-11",
+      "local-12",
+      "local-13",
+      "local-14",
+      "local-15",
+      "local-16",
+      "local-17",
+      "local-18",
+      "local-19",
+      "local-21",
+      "local-22",
+      "local-23"
+    ],
+    "errors": [],
+    "scope": "Live grounded outdoor residents at the district spawn; actual skinned sole support vertices versus registered rendered surfaces. No route or pose injection."
+  },
+  "verification": {
+    "unitTests": 332,
+    "failures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "correctness": "Rendered ray intersection comparison, overlapping surfaces, transformed and instanced meshes, world isolation, bucket boundaries, rebuild invalidation and empty cells."
+  },
+  "diagnosticCorrections": [
+    "Ankle targets now include heel-to-toe IK adjustment instead of comparing against the neutral ankle target.",
+    "Sole contact uses 3D distance to a valid registered surface point. A downward query beside a sharp curb can report the lower road after a submillimeter horizontal skinning offset. The contact tolerance remains 3 mm."
+  ],
+  "limitations": [
+    "Benchmark includes actual district terrain and generated sidewalks, not all furniture and kerbs. Its heap figures are not total app memory.",
+    "Query throughput does not imply a fivefold frame-rate gain. Full scene still has slow frames.",
+    "Moving-camera profile runs do not guarantee identical camera paths or a target-GPU result."
+  ],
+  "sha256": {
+    "preview/src/world-surface.js": "aa81142b86850c88a9a99d5274d6d87b7252a16bfdd84f36e15b841ed03bb33b",
+    "preview/src/main.js": "68aeaf7650c1685693b65785ae812fe76237a69576f3c76fb09d30e118f03172",
+    "preview/tests/world-surface.test.js": "d46a8741937e5dea0673c3aafa95a34ed601bdbf47cd585f00f8654c7b4de8e9",
+    "preview/e2e/ground-query-cost.mjs": "b7abc7d127bbf5b40e1f1a3dd9dc39d266d3df235cce8862bd33dc55a60e9d8b",
+    "preview/e2e/district-ground-contact.js": "d1075e6cf20f81ba75694ba59c1fd0cf79c9d963606b36e7ea580b05d0f70f44"
+  }
+}

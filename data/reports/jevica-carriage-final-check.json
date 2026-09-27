@@ -1,0 +1,134 @@
+{
+  "recorded_at": "2026-09-24T21:23:13.356916+00:00",
+  "scope": "Final verification of Jevica carriage riding in the browser dev preview",
+  "status": "Carriage riding complete and verified; broader people and native motion goal remains incomplete",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "base_head": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "delivery": "Existing changes remain uncommitted; this audit does not establish a commit, push, merge or native parity",
+  "unit_tests": {
+    "passed": 285,
+    "failed": 0,
+    "command": "npm test",
+    "log": "/tmp/river-tread-final-all-tests.log"
+  },
+  "build": {
+    "passed": true,
+    "command": "npm run build",
+    "log": "/tmp/river-tread-final-build.log",
+    "advisory": "Existing JavaScript chunk larger than 500 kB"
+  },
+  "browser": {
+    "carriage": {
+      "checks": [
+        "riding: both soles contact the actual transformed footboard",
+        "riding-slope: both soles contact the actual transformed footboard",
+        "Calling places a visible carriage near Jevica",
+        "All four parked tyres meet rendered paving",
+        "Flight cannot start while seated",
+        "A ridden carriage cannot be summoned elsewhere",
+        "Riding moves the real carriage and rider through the district",
+        "All four moving tyres follow the rendered road",
+        "Dismount preserves a clear third-person camera",
+        "Dismounted Jevica stands on the rendered pavement",
+        "Walking resumes after leaving the carriage",
+        "Takeoff is rejected while the bubble overlaps the parked coach",
+        "Boarding is unavailable in flight",
+        "No uncaught browser errors: "
+      ],
+      "errors": [],
+      "artifact": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/output/playwright/grounding-carriage.json",
+      "log": "/tmp/river-tread-final-browser.log"
+    },
+    "carriage-mobile": {
+      "checks": [
+        "Boarding has a 44px phone touch target",
+        "Holding the touch movement pad drives the mounted carriage",
+        "Releasing the touch pad brakes the carriage",
+        "Phone dismount retains a visible third-person body",
+        "Carriage controls do not overflow the phone viewport",
+        "No uncaught phone browser errors"
+      ],
+      "errors": [],
+      "artifact": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/output/playwright/grounding-carriage-mobile.json",
+      "log": "/tmp/river-tread-final-mobile-isolated.log"
+    },
+    "carriage-conversation": {
+      "checks": [
+        "Nearby conversation is available from the carriage",
+        "Talking retains the same mounted position",
+        "Dialogue opens for a real outdoor resident"
+      ],
+      "errors": [],
+      "artifact": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/output/playwright/grounding-carriage-conversation.json",
+      "log": "/tmp/river-tread-final-conversation.log"
+    }
+  },
+  "browser_checks_passed": 23,
+  "ready": {
+    "url": "http://127.0.0.1:5181/",
+    "playerReady": "true",
+    "carriageReady": "true",
+    "rideControl": "Ride carriage",
+    "errors": []
+  },
+  "visual_inspection": [
+    "output/playwright/carriage-riding.png",
+    "output/playwright/carriage-seated-detail.png"
+  ],
+  "source_sha256": {
+    "preview/src/jevica-carriage.js": "d4efd5b7021ba36d76cfb4e3506f0f5e43bf4a5c230ec1e248bb73ec2280f364",
+    "preview/src/carriage-motion.js": "64d83b3f3ee1ba4e673d7c09cc569998b70c4cdd197abb479ac7e7a927ae0e00",
+    "preview/src/carriage-parking.js": "7708787f9f524c1e05b962a28646c86eda48e2af7982a0d49c8b46d2306baa3a",
+    "preview/src/parked-carriage.js": "49becb6ee22d2fe543d528e6df45fbed809494a46e690dbaf45bd2b78e02033d",
+    "preview/src/player-avatar.js": "2670b171a9133e51c7f5881b5222dbad07e1d9f364369a7d59795b3518ef0740",
+    "preview/src/player-costume.js": "ceb1a35d8860d3098421a494547c85fbda05b95e2c2765560419bf9caa6b6f68",
+    "preview/src/walking-ui.js": "bb0e7bd6b7f4107fec74e665c278aa62b458b9a383949c9f0000727a957f9626",
+    "preview/src/world-surface.js": "45eb22f640fb013d7e6799eaea4213492dea74996ae7a31b8bb54a135cd01e9b",
+    "preview/src/tufted-upholstery.js": "20908bf146446059f5ac6435dbc18c77b37df872a80a382dac34ad39eaf16269",
+    "preview/e2e/carriage.js": "9bbbd0d47d36014f8dec73ad239cf650a377748d8de8448a4cf15fd847e4d0e2",
+    "preview/e2e/carriage-mobile.js": "76555d46a17f62f70975cc610518d7672194f943085c4bee5b6934d0399ef20d",
+    "preview/e2e/carriage-conversation.js": "ad9543498267e7a62087e14802a98e05a219121714098697902c45883da99147",
+    "preview/tests/carriage.test.js": "f40bcad171f35b7d56bcbe0cd131610ee63c71d71e0f0b7ce322e2147ee6575f"
+  },
+  "remaining": [
+    "Authored native locomotion activation and rendered all-profile acceptance",
+    "Native OS input and full interaction parity",
+    "Broader visual and biomechanical realism acceptance",
+    "Verified integration of the uncommitted delivery work"
+  ],
+  "retention": "Keep both people-motion-delivery and native-encounters worktrees",
+  "grounding_followup": {
+    "bug": "Fixed-angle analytic tyre contact missed a rotating tread on a narrow raised road detail; local-axis iterative correction also oscillated on slopes",
+    "fix": "Cache actual wheel-local tread vertices, evaluate their current rotation and use one world-vertical suspension correction per wheel",
+    "regression_failures_m": [
+      -0.003714293234039264,
+      -0.004008921855275946
+    ],
+    "red_logs": [
+      "/tmp/river-tread-red.log",
+      "/tmp/river-tread-incline-red.log"
+    ],
+    "green_log": "/tmp/river-tread-final-focused.log",
+    "rendered_drive_clearances_m": [
+      0,
+      -3.552713678800501e-15,
+      3.552713678800501e-15,
+      0
+    ],
+    "independent_review": "189 turned, reverse, sloped and mirrored geometry cases; no remaining bounded correctness or performance findings",
+    "phone_startup": "Two attempts timed out during scene startup while another district scene was open. Six phone checks passed with only one scene open and the same timeouts; concurrent-scene startup remains a performance limitation."
+  },
+  "completion_recheck": {
+    "recorded_at": "2026-09-25T00:16:27.621629+00:00",
+    "unit_passed": 285,
+    "unit_failed": 0,
+    "unit_log": "/tmp/river-done-unit.log",
+    "build_passed": true,
+    "build_log": "/tmp/river-done-build.log",
+    "all_13_recorded_source_hashes_match": true,
+    "dev_http_status": 200,
+    "browser_scope": "Existing 23-check evidence retained against identical source; browser cases were not repeated in this recheck.",
+    "full_goal_complete": false
+  }
+}

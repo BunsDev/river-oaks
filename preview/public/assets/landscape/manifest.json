@@ -191,7 +191,7 @@
       "asset_page": "https://polyhaven.com/a/grass_medium_02"
     }
   ],
-  "processing": "glTF Transform 4.3.0; mesh LODs; 2k PBR maps; WebP quality 88",
+  "processing": "glTF Transform 4.3.0; mesh LODs; 2k PBR maps, WebP quality 88, on the high LOD and ground cover; mid and low LODs are geometry only and share the high LOD materials at runtime",
   "derivatives": [
     {
       "path": "/assets/landscape/shade-tree-high.glb",
@@ -202,14 +202,14 @@
     {
       "path": "/assets/landscape/shade-tree-mid.glb",
       "source_asset": "tree_small_02",
-      "sha256": "c2a6fdf89d083b420206f65e3ee06197cc5252e9fe2256ee1c95147c077322ad",
-      "bytes": 6327556
+      "sha256": "b61d3e455ff475778103c18db5330a163fd22576e2c66b4b9409df6c983822f3",
+      "bytes": 1530060
     },
     {
       "path": "/assets/landscape/shade-tree-low.glb",
       "source_asset": "tree_small_02",
-      "sha256": "87291b49b4c5c9b2410001c42f4f0c955ff2bc1238a8f0c940508b91e766f498",
-      "bytes": 5294856
+      "sha256": "8f5d4b152833779d064694df0145e70a5ab3722cd04f7730d540576d9e9950e0",
+      "bytes": 497364
     },
     {
       "path": "/assets/landscape/boxwood-source.glb",

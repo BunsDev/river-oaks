@@ -1,0 +1,1075 @@
+{
+  "createdAt": "2026-09-26T07:27:04.588532+00:00",
+  "scope": "Correct Jevica bind-pose garment fit and the visible shoulder skin patch during browser movement. Broader posed underarm intersection remains open.",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/bodice-fitting.js": "568dc6969d0831fe2fc50f1742f764b7d92e5a7276d9c18ddbacc925af511a94",
+    "preview/src/jevica-costume.js": "6292a56acb89ab399b3488baa778e47eee40a9d9e11495e077b1ee2783d0a806",
+    "preview/tests/bodice-fit.test.js": "95f80ddd5bb7bfcc53ce698c36fd3f4f299fe690aed9f7998703abff7da879bc",
+    "preview/e2e/fixtures/bodice-clearance.js": "c637282538da06433b7e3117ee7258965f628ade7db9d059bc2ee82331d97274",
+    "preview/e2e/bodice-fit.js": "e51d6603fd7bf03f9b6daff597f0675a58bb16675ea36b9838436208109fb09e",
+    "preview/e2e/bodice-fit-reference.js": "d413158386422d9add0ca130606ff58f4a46e76482f59e641ee1374fbcdb749d"
+  },
+  "implementation": [
+    "Fit an owned bodice geometry once at costume creation against nearby body triangles in bind space.",
+    "Project points needing 6 mm of bind-space clearance and interpolate normalized skin weights from the supporting skin triangle.",
+    "Preserve cached assets, body geometry, garment topology and authored volume outside the clearance region. No per-frame collision projection is added."
+  ],
+  "referenceComparison": {
+    "exposedReferencePoints": 4,
+    "coveredFittedPoints": 5,
+    "runs": [
+      {
+        "reference": true,
+        "samples": [
+          {
+            "pixel": [
+              622,
+              280
+            ],
+            "hits": [
+              {
+                "name": "Jevica",
+                "distance": 1.244808162342226,
+                "face": [
+                  21504,
+                  25090,
+                  47749
+                ]
+              },
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.247571992728189,
+                "face": [
+                  3827,
+                  5080,
+                  2274
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              626,
+              280
+            ],
+            "hits": [
+              {
+                "name": "Jevica",
+                "distance": 1.2366379894729234,
+                "face": [
+                  21503,
+                  2753,
+                  21508
+                ]
+              },
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2388503658438115,
+                "face": [
+                  509,
+                  2274,
+                  5086
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              623,
+              288
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2435473460360824,
+                "face": [
+                  509,
+                  2274,
+                  5086
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.2452378335210577,
+                "face": [
+                  47749,
+                  25090,
+                  2769
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              628,
+              290
+            ],
+            "hits": [
+              {
+                "name": "Jevica",
+                "distance": 1.2328073197364438,
+                "face": [
+                  47748,
+                  21508,
+                  2768
+                ]
+              },
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2342161077905307,
+                "face": [
+                  4237,
+                  2632,
+                  511
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              621,
+              276
+            ],
+            "hits": [
+              {
+                "name": "Jevica",
+                "distance": 1.2484600644961663,
+                "face": [
+                  47740,
+                  2755,
+                  21504
+                ]
+              },
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2500414942834503,
+                "face": [
+                  5074,
+                  174,
+                  4638
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "reference": false,
+        "samples": [
+          {
+            "pixel": [
+              622,
+              280
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2311339375288917,
+                "face": [
+                  4702,
+                  510,
+                  4238
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.244808162342226,
+                "face": [
+                  21504,
+                  25090,
+                  47749
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              626,
+              280
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.228514069917637,
+                "face": [
+                  4702,
+                  4238,
+                  5289
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.2366379894729234,
+                "face": [
+                  21503,
+                  2753,
+                  21508
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              623,
+              288
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2284860137026141,
+                "face": [
+                  4237,
+                  2632,
+                  511
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.2452378335210577,
+                "face": [
+                  47749,
+                  25090,
+                  2769
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              628,
+              290
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.224895342667459,
+                "face": [
+                  1968,
+                  512,
+                  4647
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.2328073197364438,
+                "face": [
+                  47748,
+                  21508,
+                  2768
+                ]
+              }
+            ]
+          },
+          {
+            "pixel": [
+              621,
+              276
+            ],
+            "hits": [
+              {
+                "name": "Jevica_fitted_bodice",
+                "distance": 1.2330163838924086,
+                "face": [
+                  5288,
+                  3828,
+                  510
+                ]
+              },
+              {
+                "name": "Jevica",
+                "distance": 1.2484600644961663,
+                "face": [
+                  47740,
+                  2755,
+                  21504
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shoulderMotion": {
+    "checks": [
+      "30 Hz rest/15: both visible shoulder patches stay covered",
+      "30 Hz rest/29: both visible shoulder patches stay covered",
+      "30 Hz walk/15: both visible shoulder patches stay covered",
+      "30 Hz walk/29: both visible shoulder patches stay covered",
+      "30 Hz force/15: both visible shoulder patches stay covered",
+      "30 Hz force/29: both visible shoulder patches stay covered",
+      "30 Hz release/15: both visible shoulder patches stay covered",
+      "30 Hz release/29: both visible shoulder patches stay covered",
+      "30 Hz bubble/15: both visible shoulder patches stay covered",
+      "30 Hz bubble/29: both visible shoulder patches stay covered",
+      "30 Hz land/15: both visible shoulder patches stay covered",
+      "30 Hz land/29: both visible shoulder patches stay covered",
+      "60 Hz rest/30: both visible shoulder patches stay covered",
+      "60 Hz rest/59: both visible shoulder patches stay covered",
+      "60 Hz walk/30: both visible shoulder patches stay covered",
+      "60 Hz walk/59: both visible shoulder patches stay covered",
+      "60 Hz force/30: both visible shoulder patches stay covered",
+      "60 Hz force/59: both visible shoulder patches stay covered",
+      "60 Hz release/30: both visible shoulder patches stay covered",
+      "60 Hz release/59: both visible shoulder patches stay covered",
+      "60 Hz bubble/30: both visible shoulder patches stay covered",
+      "60 Hz bubble/59: both visible shoulder patches stay covered",
+      "60 Hz land/30: both visible shoulder patches stay covered",
+      "60 Hz land/59: both visible shoulder patches stay covered",
+      "120 Hz rest/60: both visible shoulder patches stay covered",
+      "120 Hz rest/119: both visible shoulder patches stay covered",
+      "120 Hz walk/60: both visible shoulder patches stay covered",
+      "120 Hz walk/119: both visible shoulder patches stay covered",
+      "120 Hz force/60: both visible shoulder patches stay covered",
+      "120 Hz force/119: both visible shoulder patches stay covered",
+      "120 Hz release/60: both visible shoulder patches stay covered",
+      "120 Hz release/119: both visible shoulder patches stay covered",
+      "120 Hz bubble/60: both visible shoulder patches stay covered",
+      "120 Hz bubble/119: both visible shoulder patches stay covered",
+      "120 Hz land/60: both visible shoulder patches stay covered",
+      "120 Hz land/119: both visible shoulder patches stay covered",
+      "No uncaught browser errors"
+    ],
+    "runs": [
+      {
+        "hz": 30,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 15,
+            "gaps": [
+              0.01428367929708152,
+              0.008046211036371043,
+              0.015997799506918486,
+              0.007990290184051396,
+              0.015069487686829586,
+              0.014283760114224497,
+              0.008046415512879657,
+              0.015997980177711035,
+              0.007990422412936349,
+              0.015069376102956777
+            ]
+          },
+          {
+            "stage": "rest",
+            "frame": 29,
+            "gaps": [
+              0.014282726055605988,
+              0.00804547291446256,
+              0.015998134560372135,
+              0.007989446823942759,
+              0.015067415631087266,
+              0.014282807050076451,
+              0.008045677448272226,
+              0.015998315253044293,
+              0.007989579073707231,
+              0.015067304858260133
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 15,
+            "gaps": [
+              0.014063004308535909,
+              0.008082404771834417,
+              0.015566957788247349,
+              0.007959638712457862,
+              0.014644876489784187,
+              0.0146079628175666,
+              0.008008687653838331,
+              0.015484665292767374,
+              0.008014384676541031,
+              0.015515637524648351
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 29,
+            "gaps": [
+              0.01407266774593019,
+              0.008173459544012607,
+              0.015515037759626482,
+              0.00802682832265078,
+              0.014641161372010547,
+              0.014701132865248212,
+              0.008104085026604979,
+              0.015244578035545242,
+              0.008143514510046135,
+              0.01559263520163956
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 15,
+            "gaps": [
+              0.01434444561082171,
+              0.00814986612164148,
+              0.015954755502901596,
+              0.008053443327914689,
+              0.015051175763908908,
+              0.03559405867811383,
+              0.048148703019329275,
+              0.02706126027482192,
+              0.06159256012374503,
+              0.06062729235157427
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 29,
+            "gaps": [
+              0.014324506892050337,
+              0.008126929849104458,
+              0.015940447284131576,
+              0.008034302118644643,
+              0.015027116857310174,
+              0.03643350803387224,
+              0.04959564069787392,
+              0.027937273528282125,
+              0.06312060778348139,
+              0.06324880596665894
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 15,
+            "gaps": [
+              0.014318468347105817,
+              0.008073082109967933,
+              0.01598653165761621,
+              0.008021078516585511,
+              0.015144716123592028,
+              0.014161329442657689,
+              0.008039393846430487,
+              0.015786339137462413,
+              0.007962820876263654,
+              0.01484718501509863
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 29,
+            "gaps": [
+              0.01431510434271499,
+              0.008070466487458017,
+              0.015987480191115955,
+              0.00801810653558821,
+              0.015137504266687918,
+              0.014312455367656796,
+              0.008070049225297193,
+              0.01598766390216433,
+              0.008017128054945033,
+              0.015132093651557765
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 15,
+            "gaps": [
+              0.014301096486508236,
+              0.008059687202708998,
+              0.01599195101066142,
+              0.008005773531022609,
+              0.015107353326195838,
+              0.01430125077354294,
+              0.008059942220061123,
+              0.015992121693641392,
+              0.008005897593105438,
+              0.015107256661641033
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 29,
+            "gaps": [
+              0.014289385896941065,
+              0.008050646399913042,
+              0.015995870086604524,
+              0.007995451183749891,
+              0.015082028742477993,
+              0.014289562196232453,
+              0.00805090690712773,
+              0.015996041741112244,
+              0.007995583545794771,
+              0.015081979925291034
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 15,
+            "gaps": [
+              0.014056853626456478,
+              0.008078778181571877,
+              0.015558589504166553,
+              0.007955306212848345,
+              0.01463438822899632,
+              0.014591070116610316,
+              0.008000381477855978,
+              0.01548661554066344,
+              0.008005118620455498,
+              0.015500409165339457
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 29,
+            "gaps": [
+              0.014062675963325999,
+              0.008167460485355216,
+              0.015500403826803177,
+              0.008019124245431719,
+              0.014623039841790586,
+              0.014697652129357142,
+              0.008081600407647382,
+              0.015245318456085455,
+              0.008121433792849686,
+              0.015587205076333044
+            ]
+          }
+        ],
+        "diagnostic": {
+          "checked": 1643,
+          "uncovered": 0,
+          "minimumClearance": -0.0028204468719539868,
+          "backChecked": 1372,
+          "minimumBackClearance": 0.0013976630080410888,
+          "worstPoint": [
+            -0.1209006611398665,
+            1.1588057427049987,
+            0.001644740172272563
+          ],
+          "worstSample": 174
+        }
+      },
+      {
+        "hz": 60,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 30,
+            "gaps": [
+              0.014283853107751598,
+              0.00804634560436579,
+              0.015997738552824048,
+              0.007990443932671676,
+              0.015069865407300043,
+              0.014283933892577538,
+              0.00804655007043209,
+              0.01599791921963134,
+              0.007990576157752116,
+              0.015069753675599706
+            ]
+          },
+          {
+            "stage": "rest",
+            "frame": 59,
+            "gaps": [
+              0.014282726055605988,
+              0.00804547291446256,
+              0.015998134560372135,
+              0.007989446823942759,
+              0.015067415631087266,
+              0.014282807050076451,
+              0.008045677448272226,
+              0.015998315253044293,
+              0.007989579073707231,
+              0.015067304858260133
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 30,
+            "gaps": [
+              0.014043601317383025,
+              0.008109883571228327,
+              0.01551033591774309,
+              0.00797303951062922,
+              0.01460246153106115,
+              0.01471415490141914,
+              0.008011317365398618,
+              0.015375801090855123,
+              0.008032734455648338,
+              0.01562540283493541
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 59,
+            "gaps": [
+              0.014068976784359144,
+              0.008191275653069097,
+              0.015491899557413813,
+              0.00803697402601955,
+              0.014626651175448702,
+              0.014653170298374318,
+              0.008106993339387802,
+              0.01519348716623603,
+              0.008153276117751851,
+              0.015537307892538044
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 30,
+            "gaps": [
+              0.014343347241674742,
+              0.008155130482104811,
+              0.015939989429888834,
+              0.00805400658092581,
+              0.015036651311802984,
+              0.03553558175777316,
+              0.04811494730624588,
+              0.02681317786059534,
+              0.06148244912493972,
+              0.06088236054041718
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 59,
+            "gaps": [
+              0.014313474513343083,
+              0.008122481114229085,
+              0.015919875698606534,
+              0.008026909824023987,
+              0.0150028212609572,
+              0.03672979661571962,
+              0.0495824983956632,
+              0.028022011647842238,
+              0.0630635546101681,
+              0.06382419749133739
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 30,
+            "gaps": [
+              0.014314423751679684,
+              0.008070010245083692,
+              0.015987874410498204,
+              0.008017562694942582,
+              0.015136040371515058,
+              0.01413074733899844,
+              0.008033315802823626,
+              0.01574231601136744,
+              0.007952848790707678,
+              0.014801244520056045
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 59,
+            "gaps": [
+              0.014314904903257153,
+              0.008070313211099966,
+              0.015987541683207596,
+              0.008017931722104965,
+              0.01513707635665984,
+              0.014312256682361024,
+              0.008069896381598163,
+              0.01598772590191544,
+              0.008016953705568097,
+              0.015131667187056053
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 30,
+            "gaps": [
+              0.01430156095611479,
+              0.00806004527418458,
+              0.01599179937094508,
+              0.00800618220897098,
+              0.015108355272063223,
+              0.014301711753600843,
+              0.008060299444268448,
+              0.015991970047419368,
+              0.008006304925625152,
+              0.015108251733793931
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 59,
+            "gaps": [
+              0.014289385896941509,
+              0.008050646399913264,
+              0.01599587008660386,
+              0.007995451183749891,
+              0.015082028742477327,
+              0.014289562196232897,
+              0.00805090690712773,
+              0.015996041741112244,
+              0.007995583545794771,
+              0.0150819799252917
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 30,
+            "gaps": [
+              0.014038740219646462,
+              0.008106994276245283,
+              0.01550351298355257,
+              0.007969489547152708,
+              0.01459386576130095,
+              0.014697128763166756,
+              0.008002962316409956,
+              0.015377154933196246,
+              0.008023438384721082,
+              0.015609291786540025
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 59,
+            "gaps": [
+              0.014060267773823298,
+              0.008186015150671189,
+              0.015478710890502123,
+              0.008030007474330914,
+              0.014610228482621057,
+              0.014649128734530725,
+              0.008083872148097138,
+              0.015193713392321895,
+              0.008130524013245877,
+              0.01553130324703833
+            ]
+          }
+        ],
+        "diagnostic": {
+          "checked": 1643,
+          "uncovered": 0,
+          "minimumClearance": -0.00287181624707295,
+          "backChecked": 1372,
+          "minimumBackClearance": 0.001372245171717952,
+          "worstPoint": [
+            -0.12095809040377413,
+            1.1586791094809878,
+            0.0018972822437577364
+          ],
+          "worstSample": 174
+        }
+      },
+      {
+        "hz": 120,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 60,
+            "gaps": [
+              0.014283943453415437,
+              0.008046415549684882,
+              0.015997706886111906,
+              0.007990523846965969,
+              0.01507006173291292,
+              0.014284024221445923,
+              0.008046620010324634,
+              0.015997887550847967,
+              0.007990656070070434,
+              0.015069949924378934
+            ]
+          },
+          {
+            "stage": "rest",
+            "frame": 119,
+            "gaps": [
+              0.014282726055605544,
+              0.008045472914462337,
+              0.015998134560372135,
+              0.007989446823942536,
+              0.015067415631087266,
+              0.014282807050076007,
+              0.008045677448272226,
+              0.01599831525304385,
+              0.007989579073707453,
+              0.015067304858260133
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 60,
+            "gaps": [
+              0.014040132907722436,
+              0.008128345688347638,
+              0.01548859756041443,
+              0.007984382439111926,
+              0.014590110612227258,
+              0.014755109112793763,
+              0.00801783177351223,
+              0.015318952546503173,
+              0.00804832245645093,
+              0.015648470457212627
+            ]
+          },
+          {
+            "stage": "walk",
+            "frame": 119,
+            "gaps": [
+              0.014068806238900944,
+              0.00819034013424158,
+              0.015492402455605125,
+              0.008036308374320456,
+              0.014626689764372314,
+              0.014655050062286623,
+              0.008106214949441748,
+              0.015195614494157628,
+              0.008152216651514443,
+              0.015539440151811412
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 60,
+            "gaps": [
+              0.014335342908955884,
+              0.008149078020924128,
+              0.015931340791384807,
+              0.008048021900761926,
+              0.015025033303954105,
+              0.03585222537984256,
+              0.04773386328329443,
+              0.027020932986099755,
+              0.06109248462753447,
+              0.06069635980646626
+            ]
+          },
+          {
+            "stage": "force",
+            "frame": 119,
+            "gaps": [
+              0.01431075339806398,
+              0.00811926930713125,
+              0.015918452917429438,
+              0.008024389545393529,
+              0.015000130361583208,
+              0.036850346854155225,
+              0.049460719234263095,
+              0.028122597751152112,
+              0.06292934347132095,
+              0.06374381903665305
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 60,
+            "gaps": [
+              0.01431374652167361,
+              0.008069515293260388,
+              0.015988153234024693,
+              0.00801698925931249,
+              0.015134585764561281,
+              0.014115974959054256,
+              0.008031141686699161,
+              0.01572073965947629,
+              0.007948701643190947,
+              0.014779276683412945
+            ]
+          },
+          {
+            "stage": "release",
+            "frame": 119,
+            "gaps": [
+              0.014314891776195271,
+              0.008070303122237332,
+              0.01598754573285266,
+              0.008017920215555252,
+              0.01513704819047934,
+              0.014312243604953645,
+              0.008069886321215192,
+              0.015987729984951793,
+              0.008016942229570612,
+              0.015131639116051199
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 60,
+            "gaps": [
+              0.01430179362507733,
+              0.008060224630268786,
+              0.01599172351677769,
+              0.008006386909310548,
+              0.015108857111311602,
+              0.0143019424676738,
+              0.008060478325938814,
+              0.015991894192066924,
+              0.008006508871502227,
+              0.015108749736417737
+            ]
+          },
+          {
+            "stage": "bubble",
+            "frame": 119,
+            "gaps": [
+              0.014289385896941065,
+              0.008050646399912598,
+              0.015995870086603636,
+              0.007995451183749447,
+              0.015082028742478437,
+              0.014289562196231564,
+              0.008050906907128175,
+              0.01599604174111313,
+              0.007995583545795437,
+              0.01508197992529059
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 60,
+            "gaps": [
+              0.014035879273552654,
+              0.00812580556374587,
+              0.01548250173422705,
+              0.007981202631624829,
+              0.014582407248209472,
+              0.014754414431568552,
+              0.008009431890564356,
+              0.015319996811229863,
+              0.00803898797262903,
+              0.015647012162306018
+            ]
+          },
+          {
+            "stage": "land",
+            "frame": 119,
+            "gaps": [
+              0.014060053456353527,
+              0.00818505447972262,
+              0.01547916456834253,
+              0.008029316796720032,
+              0.014610207026392041,
+              0.01465103944298174,
+              0.008083129111967846,
+              0.015195870164181446,
+              0.00812950149148639,
+              0.01553346691168711
+            ]
+          }
+        ],
+        "diagnostic": {
+          "checked": 1643,
+          "uncovered": 0,
+          "minimumClearance": -0.002869664765909118,
+          "backChecked": 1372,
+          "minimumBackClearance": 0.0013732705528742416,
+          "worstPoint": [
+            -0.12095565753032331,
+            1.1586843063664691,
+            0.001886694162803515
+          ],
+          "worstSample": 174
+        }
+      }
+    ],
+    "errors": [],
+    "scope": "Visible bilateral shoulder patch coverage; the broader posed underarm contact diagnostic is reported separately and remains open"
+  },
+  "minimumViewRayClearanceMeters": 0.007948701643190947,
+  "regressions": {
+    "bodice-fit-reference": {
+      "checks": [],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-bodice-fit-reference.log"
+    },
+    "jevica-waist": {
+      "checks": [],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-jevica-waist.log"
+    },
+    "jevica-gown": {
+      "checks": [],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-jevica-gown.log"
+    },
+    "casting-motion": {
+      "checks": [
+        "backpedal: actual Jevica rig reaches its foot targets",
+        "backpedal: support targets remain planted",
+        "backpedal: walking continues throughout the cast",
+        "strafe-left: actual Jevica rig reaches its foot targets",
+        "strafe-left: support targets remain planted",
+        "strafe-left: walking continues throughout the cast",
+        "strafe-right: actual Jevica rig reaches its foot targets",
+        "strafe-right: support targets remain planted",
+        "strafe-right: walking continues throughout the cast",
+        "No uncaught casting fixture errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-casting-motion.log"
+    },
+    "force": {
+      "checks": [
+        "T enables Force mode",
+        "A real pointer click targets the person in Force mode",
+        "Force picking does not open a conversation",
+        "G acquires the selected person",
+        "The rendered person rises, not just the state",
+        "Force hold suspends pedestrian navigation",
+        "Wand and person both emit lift sparkles",
+        "X gently lands and releases the person",
+        "Sparkles finish fading after landing",
+        "Released person resumes walking",
+        "A Force push displaces a person and lands them",
+        "An existing street bin can be targeted through normal travel",
+        "The complete bin rises with its lid",
+        "Pointer spell controls return focus to walking",
+        "Walking preserves the active lift",
+        "Jevica walks while holding a target",
+        "The lifted bin follows her movement",
+        "Both sparkle emitters remain active within the pool budget while carrying",
+        "Jevica keeps facing the carried object after backpedalling",
+        "R pushes a real object and it settles at its new position",
+        "Indoor stations lift in place without crossing work surfaces",
+        "A levitated worker pauses their task",
+        "Escape lowers the worker and their task resumes",
+        "Force mode can be disabled",
+        "No uncaught browser errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-force.log"
+    },
+    "carriage": {
+      "checks": [
+        "riding: both soles contact the actual transformed footboard",
+        "riding-slope: both soles contact the actual transformed footboard",
+        "Calling places a visible carriage near Jevica",
+        "All four parked tyres meet rendered paving",
+        "Flight cannot start while seated",
+        "A ridden carriage cannot be summoned elsewhere",
+        "Riding moves the real carriage and rider through the district",
+        "All four moving tyres follow the rendered road",
+        "Dismount preserves a clear third-person camera",
+        "Dismounted Jevica stands on the rendered pavement",
+        "Walking resumes after leaving the carriage",
+        "Takeoff is rejected while the bubble overlaps the parked coach",
+        "Boarding is unavailable in flight",
+        "No uncaught browser errors: "
+      ],
+      "errors": [],
+      "rawLog": "/tmp/bodice-regression-carriage.log"
+    }
+  },
+  "validation": {
+    "javascriptTests": 396,
+    "browserAssertions": 86,
+    "referenceComparison": "pass",
+    "waistPoses": 73,
+    "legArmPoses": 54,
+    "unitLog": "/tmp/bodice-unit-final.log",
+    "productionBuild": "pass",
+    "buildLog": "/tmp/bodice-build-final.log",
+    "buildWarning": "Existing Three.js chunk exceeds 500 kB"
+  },
+  "visuals": [
+    "output/playwright/bodice-visible-reference.png",
+    "output/playwright/bodice-visible-fitted.png"
+  ],
+  "limitations": [
+    "Visible shoulder patches are covered; the full posed garment is not collision-free.",
+    "The wider underarm probe still reports negative clearance; retain its measurements rather than treating the source-pose or visible-patch checks as complete clothing acceptance.",
+    "Broader material realism, coherent full-scene motion review and sustained frame pacing remain open."
+  ],
+  "devUrl": "http://127.0.0.1:5181/"
+}

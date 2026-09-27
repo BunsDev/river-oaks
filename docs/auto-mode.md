@@ -27,7 +27,7 @@ The bridge offers wait only when no other eligible action exists. Uncertainty st
 
 The visitor route worker includes boutique interiors. A bounded visibility graph around furniture corners complements the exterior grid. The controller turns in place before moving at corners; tests physically walk from all 30 boutique spawn points to their exits. Unreachable destinations are excluded for 60 seconds and stalled walking is interrupted after four seconds.
 
-The left rail has three labeled, keyboard-accessible tabs: teal **People**, pink **Places**, amber **Scene**. Only one panel is exposed at a time. Voice, layer and source details stay collapsed; the rail remains readable in dark mode and on mobile. Reading it does not cancel auto. Unsupported floating promenade ornaments were removed; facade-mounted details remain.
+The left rail has three labeled, keyboard-accessible tabs: teal **People**, pink **Places**, amber **Settings**. Only one panel is exposed at a time. Voice, layer and source details stay collapsed; the rail remains readable in dark mode and on mobile. Reading it does not cancel auto. Unsupported floating promenade ornaments were removed; facade-mounted details remain.
 
 ## Running and evaluating
 
@@ -38,7 +38,11 @@ TYPESAFE_API_KEY='op://Development/Jev API Key/password' op run -- uv run river-
 npm run dev
 ```
 
-Choose **Start Jev auto visit** in the viewport. For neighborhood support, first begin a scenario under **People → Help neighbors**. WASD, dragging, Escape, or **Stop auto visit** returns control. Offline or uncertain inference is visibly waiting; no local rule is presented as a Jev decision. API keys are never sent to the browser.
+Choose **Start Jev auto visit** in the viewport. For neighborhood support, first begin a scenario under **People → Help neighbors**. WASD, dragging, Escape, or **Stop auto visit** returns control. Offline or uncertain inference is visibly waiting; no local rule is presented as a Jev decision. Server-provided API keys are never returned to the browser. To supply your own key, open **Settings → Jev API key** and select **Use key**. The bridge keeps this override in memory for both auto visits and resident reactions. **Use server key** restores the original configuration; restarting the bridge also clears the override.
+
+### Prince Jev companion
+
+With the carriage parked, choose **Walk with Prince Jev** (or press **J**). Every 2.5 seconds the browser sends `POST /v1/companion` a bounded snapshot (Jevica's speed, their gap, conversation, flight, riding, indoor, crowded and narrow flags) with six fixed stances: `beside`, `lead`, `trail`, `pause`, `greet` and `return`. The bridge filters ineligible stances (only `return` while riding; `lead` needs steady walking; a greeting needs a recent stop and no greeting in the last 45 seconds) and asks Jev under the `prince-companion-v1` policy with its own thresholds. Jev picks the stance; the browser keeps every coordinate, collision check and step height. The same **Settings → Jev API key** override reaches this engine. Without a confident Jev answer the prince keeps walking with a local stand-in stance and the panel reads "Local follow" with the reason. This is policy conditioning, not trained weights, and live companion quality has not yet been evaluated.
 
 ```sh
 uv run python -m river_oaks.auto_eval --output data/reports/jev-auto-curriculum.json

@@ -1,0 +1,364 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser pedestrian proximity, passing, acknowledgement and conversation ownership",
+  "change": "Remove unconditional 2.8m visitor route hold; retain passing/collision avoidance and explicit conversation holds.",
+  "regression": "Both new movement tests failed on the prior proximity rule, then passed after its removal.",
+  "focusedTests": 42,
+  "browser": {
+    "checks": [
+      "local-00: pedestrian resumes while Jevica stays still",
+      "local-00: walking mesh is visible and in reach",
+      "local-00: walking mesh projects inside the viewport",
+      "local-00: real pointer selects the walking person",
+      "local-00: pointer conversation does not relocate the visitor",
+      "local-00: clicked walker holds position during conversation",
+      "local-01: pedestrian resumes while Jevica stays still",
+      "local-01: walking mesh is visible and in reach",
+      "local-01: walking mesh projects inside the viewport",
+      "local-01: real pointer selects the walking person",
+      "local-01: pointer conversation does not relocate the visitor",
+      "local-01: clicked walker holds position during conversation",
+      "local-02: pedestrian resumes while Jevica stays still",
+      "local-02: walking mesh is visible and in reach",
+      "local-02: walking mesh projects inside the viewport",
+      "local-02: real pointer selects the walking person",
+      "local-02: pointer conversation does not relocate the visitor",
+      "local-02: clicked walker holds position during conversation",
+      "local-03: pedestrian resumes while Jevica stays still",
+      "local-03: walking mesh is visible and in reach",
+      "local-03: walking mesh projects inside the viewport",
+      "local-03: real pointer selects the walking person",
+      "local-03: pointer conversation does not relocate the visitor",
+      "local-03: clicked walker holds position during conversation",
+      "local-04: pedestrian resumes while Jevica stays still",
+      "local-04: walking mesh is visible and in reach",
+      "local-04: walking mesh projects inside the viewport",
+      "local-04: real pointer selects the walking person",
+      "local-04: pointer conversation does not relocate the visitor",
+      "local-04: clicked walker holds position during conversation",
+      "local-05: pedestrian resumes while Jevica stays still",
+      "local-05: walking mesh is visible and in reach",
+      "local-05: walking mesh projects inside the viewport",
+      "local-05: real pointer selects the walking person",
+      "local-05: pointer conversation does not relocate the visitor",
+      "local-05: clicked walker holds position during conversation",
+      "At least one route resumes inside the former visitor freeze radius",
+      "No floating NPC reaction captions",
+      "No uncaught browser errors: "
+    ],
+    "clicks": [
+      {
+        "id": "local-00",
+        "speed": 1.0499999999995202,
+        "screen": [
+          992.550735747385,
+          406.2377754360108
+        ],
+        "position": [
+          -2813.210242283253,
+          -1273.2702982298679,
+          18.370384360952098
+        ]
+      },
+      {
+        "id": "local-01",
+        "speed": 1.12,
+        "screen": [
+          723.2937885705727,
+          419.68754508026166
+        ],
+        "position": [
+          -2810.802882249998,
+          -1229.6634762503802,
+          18.402736898985637
+        ]
+      },
+      {
+        "id": "local-02",
+        "speed": 0.285694316765687,
+        "screen": [
+          740.4063967439043,
+          395.7928973263664
+        ],
+        "position": [
+          -2808.295747935938,
+          -1201.6220002879197,
+          18.427807689270125
+        ]
+      },
+      {
+        "id": "local-03",
+        "speed": 1.26,
+        "screen": [
+          819.6960235861806,
+          388.85344297185736
+        ],
+        "position": [
+          -2772.8113240840858,
+          -1299.4132699339511,
+          18.47518591498495
+        ]
+      },
+      {
+        "id": "local-04",
+        "speed": 1.05,
+        "screen": [
+          800.7893434456442,
+          395.6988999826445
+        ],
+        "position": [
+          -2769.964645327776,
+          -1235.1720187249725,
+          18.397277117532195
+        ]
+      },
+      {
+        "id": "local-05",
+        "speed": 1.098510000050068,
+        "screen": [
+          806.5982047953465,
+          387.63454300686266
+        ],
+        "position": [
+          -2770.1051551431287,
+          -1247.4809482166559,
+          18.397511021013223
+        ]
+      }
+    ],
+    "releaseDistances": [
+      2.5000000000002314,
+      2.5000000000000906,
+      2.5000000000000613,
+      3.200000000000126,
+      3.2000000000000175,
+      3.2000000000000584
+    ],
+    "errors": [],
+    "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+  },
+  "sha256": {
+    "preview/src/resident-life.js": "5cc7a570e2749b2b3f4ca1ba310be8365e084ff77ddf4af3c2da49bd7f7e7ead",
+    "preview/src/visitor-persona.js": "79f97462904fa0149db2d39c6f92fa0cf9797fba9eb1e4fb0274ccb0703768db",
+    "preview/src/resident-gestures.js": "da6fa35eec3b9e5c011d8e41a69257e5edc8effb9ab77a7ce6eb80f64b93ce76",
+    "preview/tests/resident-life.test.js": "5cf40c360fc706e051d66ae584f72e80e4abbc44d4ac484229c21520def2abe9",
+    "preview/e2e/npc-presence.js": "fabb3f633d9fef80c4d5422e2d4a4b07cb1ca9929a570633cc968c61ae5aee99",
+    "preview/e2e/touch-people.js": "56584eac679fa0b25e3faada496169e7d671058648ace3382c59efedb2876f6b"
+  },
+  "unitTests": 311,
+  "unitFailures": 0,
+  "build": "passed; existing large Three.js chunk warning",
+  "touch": {
+    "checks": [
+      "1024: touch movement pad starts available",
+      "Four-pixel touch jitter leaves the camera still",
+      "A second finger cannot steer the primary drag",
+      "Primary drag continues after the second finger lifts",
+      "Cancelled touch leaves no camera drag behind",
+      "Cancelled touch does not select a person",
+      "A fresh primary gesture works after touch cancellation",
+      "Losing pointer capture stops camera movement",
+      "A released capture cannot complete a selection",
+      "Touch and capture lifecycle events came from the browser",
+      "The browser delivered a real secondary contact",
+      "1024: store-osm-node-8172494967-person-6 is rendered and in talking reach",
+      "1024: person's mesh point is outside UI overlays: {\"id\":\"store-osm-node-8172494967-person-6\",\"screen\":[125.65862018463645,423.85159243078],\"hit\":{\"canvas\":true,\"tag\":\"CANVAS\",\"class\":\"\"}}",
+      "Cancelling an unmoved touch on a real person does not select them",
+      "An unmoved person tap cancelled by capture does not open dialogue",
+      "An unmoved person tap cancelled by focus does not open dialogue",
+      "The browser delivered lost pointer capture",
+      "1024: touch selects the exact seated guest or worker",
+      "1024: touch conversation does not teleport the visitor",
+      "1024: store-osm-node-8172494967-person-9 is rendered and in talking reach",
+      "1024: person's mesh point is outside UI overlays: {\"id\":\"store-osm-node-8172494967-person-9\",\"screen\":[506.54053828394154,316.03158143116104],\"hit\":{\"canvas\":true,\"tag\":\"CANVAS\",\"class\":\"\"}}",
+      "1024: touch selects the exact seated guest or worker",
+      "1024: touch conversation does not teleport the visitor",
+      "1024: held touch movement control turns the camera",
+      "1024: releasing touch movement control stops turning",
+      "390: touch movement pad starts available",
+      "390: store-osm-node-8172494967-person-6 is rendered and in talking reach",
+      "390: person's mesh point is outside UI overlays: {\"id\":\"store-osm-node-8172494967-person-6\",\"screen\":[193.29024807498337,350.876325213155],\"hit\":{\"canvas\":true,\"tag\":\"CANVAS\",\"class\":\"\"}}",
+      "390: touch selects the exact seated guest or worker",
+      "390: touch conversation does not teleport the visitor",
+      "390: store-osm-node-8172494967-person-9 is rendered and in talking reach",
+      "390: person's mesh point is outside UI overlays: {\"id\":\"store-osm-node-8172494967-person-9\",\"screen\":[190.0537275637258,296.3132404023856],\"hit\":{\"canvas\":true,\"tag\":\"CANVAS\",\"class\":\"\"}}",
+      "390: touch selects the exact seated guest or worker",
+      "390: touch conversation does not teleport the visitor",
+      "390: held touch movement control turns the camera",
+      "390: releasing touch movement control stops turning",
+      "No uncaught browser errors: "
+    ],
+    "metrics": {
+      "jitterYawChange": 0,
+      "secondaryYawChange": 0,
+      "primaryAfterSecondaryEnd": -0.09,
+      "lostCaptureYawChange": 0,
+      "pointerEvents": [
+        {
+          "type": "pointerdown",
+          "id": 2,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 2,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointercancel",
+          "id": 2,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "lostpointercapture",
+          "id": 2,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointerdown",
+          "id": 3,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 3,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointerdown",
+          "id": 4,
+          "primary": false,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 4,
+          "primary": false,
+          "trusted": true
+        },
+        {
+          "type": "pointerup",
+          "id": 4,
+          "primary": false,
+          "trusted": true
+        },
+        {
+          "type": "lostpointercapture",
+          "id": 4,
+          "primary": false,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 3,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointercancel",
+          "id": 3,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "lostpointercapture",
+          "id": 3,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "lostpointercapture",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointermove",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "primary": true,
+          "trusted": true
+        }
+      ]
+    },
+    "visits": [
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "id": "store-osm-node-8172494967-person-6",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "seated": true
+      },
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "id": "store-osm-node-8172494967-person-9",
+        "role": "Server \u00b7 MAD Houston",
+        "seated": false
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "id": "store-osm-node-8172494967-person-6",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "seated": true
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "id": "store-osm-node-8172494967-person-9",
+        "role": "Server \u00b7 MAD Houston",
+        "seated": false
+      }
+    ],
+    "errors": []
+  },
+  "touchHarness": "Executed through the CLI with origin 5181, a 90-second initial asset readiness limit, and failure-only diagnostic capture. Gesture assertion deadlines unchanged.",
+  "limitations": [
+    "Earlier unmoved capture cancellation failure remains timing-sensitive; this run passes but no pointer implementation change was made.",
+    "Full hyper-realistic motion remains unproven; see the remaining browser scope in people-interaction-progress.md."
+  ]
+}

@@ -23,13 +23,13 @@ export function createAutoControls({ walking, community, getWorld, getStorm }) {
       panel.dataset.state = JSON.stringify(value);
     },
   });
-  button.addEventListener('click', () => {
+  button.addEventListener('click', event => {
     if (controller.status.enabled) controller.stop();
     else {
       if (world !== getWorld()) { navigation?.dispose(); world = getWorld(); navigation = createNavigationService(world, { interiors: true }); }
       controller.start();
-      document.querySelector('#canvas-host').focus({ preventScroll: true });
     }
+    if(event.detail>0)document.querySelector('#canvas-host').focus({preventScroll:true});
   });
   const stop = () => { if (controller.status.enabled) controller.stop('You took over · auto off'); };
   window.addEventListener('blur', stop);

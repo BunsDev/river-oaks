@@ -8,7 +8,7 @@ class AActor;
 class USkeletalMesh;
 class USkeletalMeshComponent;
 
-// One imported, fully dressed catalogue preset. Assets must be upright (Z up, X forward).
+// One imported, fully dressed catalogue preset. Assets must be upright (Z up, Y forward).
 // ARiverOaksWorld owns these references through a UPROPERTY map keyed by CatalogueId.
 USTRUCT()
 struct RIVEROAKS_API FRiverSkeletalAppearance

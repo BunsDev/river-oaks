@@ -1,0 +1,1686 @@
+{
+  "createdAt": "2026-09-26T05:10:08.310930+00:00",
+  "scope": "Browser reciprocal player conversation attention, body turns and control handoff. No native editor work.",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/player-attention.js": "0587041918dd8b0a28c321c771e7527234b016d9132888689c531b1e4d637dca",
+    "preview/src/player-avatar.js": "b1c66f7fad87f4ebfbc1b0f361adbf7da94edc3f8d55a7dcd47bfcd5376c237d",
+    "preview/src/avatars.js": "ab8a8a0bdee5cf75ea503adc8b4eabb040e3bd0abe419c523541332432c056e6",
+    "preview/src/main.js": "e9ba892d6fdd9dff25f0a5a40a799eee90cb2744291d8b8add3c7b500ba38d56",
+    "preview/tests/player-attention.test.js": "479f38de38d70c43f04502355ba788209d6af3d56698c5e52f7999583213959a",
+    "preview/e2e/player-attention.js": "5443e14d2a43a1712b51cf6ce5ffc7fa051842a975c2a2c1337b97cd4b55b292",
+    "preview/e2e/player-attention-motion.js": "3292cf0b393d6f8928deecd548628270750214c372dbc26b7f9f89d7a7377c15",
+    "preview/e2e/carriage-conversation.js": "25b5a21a088eb7c78d570494a74b79efd2a78deb2a654508b801ec4c5cd3e47d"
+  },
+  "implementation": [
+    "Connect the active conversation partner through the existing encounter position and eye-height functions, including seated and magically elevated targets.",
+    "Pass a conversation context to the hero rig to enable listening nods and independent eye tracking.",
+    "Standing body turns accelerate smoothly, take the shortest arc and stay below 1.4 rad/s. Existing standing-step and foot-support solvers handle the turn.",
+    "Closing mid-turn releases the target and decelerates remaining body rotation.",
+    "Spell targets take priority. Walking, flying and riding retain body-orientation control. Open dialogue retains its existing movement pause; closing returns manual movement.",
+    "Only the rendered character turns; no attention-driven camera or navigation-position change."
+  ],
+  "unitTests": {
+    "command": "npm test",
+    "passed": 376,
+    "failed": 0,
+    "summary": "\u2714 coherent ground probes remain isolated across worlds, bucket boundaries and surface rebuilds (1.623791ms)\n\u2139 tests 376\n\u2139 suites 0\n\u2139 pass 376\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 39790.947291",
+    "rawLog": "/tmp/player-tests-final.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js chunk exceeds 500 kB warning threshold.",
+    "rawLog": "/tmp/player-build-final.log"
+  },
+  "browserAssertionCount": 124,
+  "browserRuns": {
+    "player-attention-motion": {
+      "seconds": 3.53,
+      "result": {
+        "checks": [
+          "Jevica steps through a conversation turn without foot target slip",
+          "The real rig reaches its planted support targets",
+          "Standing body settles toward the speaker",
+          "No uncaught motion fixture errors"
+        ],
+        "maxError": 1.6653345369377348e-16,
+        "slip": 0,
+        "steps": 98,
+        "samples": [
+          {
+            "seconds": 0,
+            "heading": 3.1,
+            "eyes": [
+              {
+                "name": "gaze_eye_r",
+                "yaw": 0,
+                "pitch": 0
+              },
+              {
+                "name": "gaze_eye_l",
+                "yaw": 0,
+                "pitch": 0
+              }
+            ],
+            "nod": {
+              "pitch": 0,
+              "roll": 0
+            }
+          },
+          {
+            "seconds": 1,
+            "heading": 1.8635376366322751,
+            "eyes": [
+              {
+                "name": "gaze_eye_r",
+                "yaw": -0.2875503112309953,
+                "pitch": -0.01779839507951773
+              },
+              {
+                "name": "gaze_eye_l",
+                "yaw": -0.29235458881133247,
+                "pitch": -0.017709123729125007
+              }
+            ],
+            "nod": {
+              "pitch": 0.016055750401403484,
+              "roll": 0.004136731846443439
+            }
+          },
+          {
+            "seconds": 6,
+            "heading": 0.7853981633974483,
+            "eyes": [
+              {
+                "name": "gaze_eye_r",
+                "yaw": 0.007382083433243067,
+                "pitch": 0.0035261541601697595
+              },
+              {
+                "name": "gaze_eye_l",
+                "yaw": -0.007382083483026861,
+                "pitch": 0.0035261384056474343
+              }
+            ],
+            "nod": {
+              "pitch": 2.5543387332138513e-07,
+              "roll": 3.630655119945733e-08
+            }
+          }
+        ],
+        "errors": []
+      }
+    },
+    "facial-motion": {
+      "seconds": 39.53,
+      "result": {
+        "checks": [
+          "Outdoor residents blink and reopen while conversing",
+          "Outdoor conversation drives bounded eye contact",
+          "Indoor workers blink and reopen while conversing",
+          "Worker conversation drives bounded eye contact",
+          "A telekinetically held worker keeps blinking while work is paused",
+          "Held worker retains bounded eye tracking",
+          "Reduced motion keeps the eyes open without repeated blinking",
+          "Reduced motion retains purposeful eye contact",
+          "No uncaught application or shader errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 309,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9644012944983819
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 316,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9335443037974683
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "held": true,
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 312,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9262820512820513
+          }
+        ],
+        "reduced": {
+          "eyeBounded": true,
+          "eyeMoved": true,
+          "frames": 92,
+          "maximum": 0,
+          "minimum": 0,
+          "quietFraction": 1
+        },
+        "errors": []
+      }
+    },
+    "conversation-speech": {
+      "seconds": 40.81,
+      "result": {
+        "checks": [
+          "local-00: audio playback drives varied speech nods",
+          "local-00: mute returns to restrained listening motion",
+          "local-00: closing clears active speech",
+          "store-osm-node-8172494955-person-7: audio playback drives varied speech nods",
+          "store-osm-node-8172494955-person-7: mute returns to restrained listening motion",
+          "store-osm-node-8172494955-person-7: closing clears active speech",
+          "Reduced motion keeps optional nods still during playback",
+          "Close cancels active playback",
+          "Actual UI requested each controlled audio response",
+          "No uncaught speech interaction errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "speaking": {
+              "peak": 0.03403183616767182,
+              "minimum": 3.0858144133219792e-15,
+              "speaking": true,
+              "frames": 254
+            },
+            "listening": {
+              "peak": 0.01949101469582161,
+              "minimum": 1.8715647892577017e-24,
+              "speaking": false,
+              "frames": 194
+            }
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "speaking": {
+              "peak": 0.03794446334322435,
+              "minimum": 0,
+              "speaking": true,
+              "frames": 188
+            },
+            "listening": {
+              "peak": 0.018647048916233134,
+              "minimum": 3.320083029147048e-23,
+              "speaking": false,
+              "frames": 132
+            }
+          }
+        ],
+        "reduced": {
+          "peak": 0,
+          "minimum": 0,
+          "speaking": true,
+          "frames": 84
+        },
+        "voiceRequests": 3,
+        "errors": [],
+        "scope": "District UI and real HTMLAudio playback using a deterministic silent WAV response. This verifies speaking-state wiring, not synthesis quality or lip synchronization."
+      }
+    },
+    "npc-presence": {
+      "seconds": 28.13,
+      "result": {
+        "checks": [
+          "local-00: pedestrian resumes while Jevica stays still",
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: pedestrian resumes while Jevica stays still",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: pedestrian resumes while Jevica stays still",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: pedestrian resumes while Jevica stays still",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: pedestrian resumes while Jevica stays still",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: pedestrian resumes while Jevica stays still",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "At least one route resumes inside the former visitor freeze radius",
+          "No floating NPC reaction captions",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 0.9073973101151411,
+            "screen": [
+              867.1065708496925,
+              396.25074406149633
+            ],
+            "position": [
+              -2813.510649724952,
+              -1274.4408153532625,
+              18.36473050030281
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 0.7608665106225416,
+            "screen": [
+              765.3617206255647,
+              413.8939320496546
+            ],
+            "position": [
+              -2806.184994206232,
+              -1229.716839513368,
+              18.451062551541987
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.6137806277092305,
+            "screen": [
+              771.3518007171581,
+              411.7581221110985
+            ],
+            "position": [
+              -2802.019155503591,
+              -1199.491170380506,
+              18.380239918374585
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 0.9557521159530419,
+            "screen": [
+              799.4346538942303,
+              286.199824721019
+            ],
+            "position": [
+              -2776.3990920327765,
+              -1291.0077499263214,
+              18.478065839838532
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.9348283005893676,
+            "screen": [
+              782.9694511482379,
+              419.77454080586597
+            ],
+            "position": [
+              -2770.118168491675,
+              -1244.4086776839133,
+              18.39428174556171
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.7355556648869264,
+            "screen": [
+              780.0490955677157,
+              427.43877985451536
+            ],
+            "position": [
+              -2770.1815052373013,
+              -1240.4642269614758,
+              18.391449252940568
+            ]
+          }
+        ],
+        "releaseDistances": [
+          3.2000000000001796,
+          2.50000000000005,
+          2.50000000000012,
+          2.4999999999999676,
+          2.5000000000000804,
+          2.500000000000093
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+      }
+    },
+    "force": {
+      "seconds": 27.22,
+      "result": {
+        "checks": [
+          "T enables Force mode",
+          "A real pointer click targets the person in Force mode",
+          "Force picking does not open a conversation",
+          "G acquires the selected person",
+          "The rendered person rises, not just the state",
+          "Force hold suspends pedestrian navigation",
+          "Wand and person both emit lift sparkles",
+          "X gently lands and releases the person",
+          "Sparkles finish fading after landing",
+          "Released person resumes walking",
+          "A Force push displaces a person and lands them",
+          "An existing street bin can be targeted through normal travel",
+          "The complete bin rises with its lid",
+          "Pointer spell controls return focus to walking",
+          "Walking preserves the active lift",
+          "Jevica walks while holding a target",
+          "The lifted bin follows her movement",
+          "Both sparkle emitters remain active within the pool budget while carrying",
+          "Jevica keeps facing the carried object after backpedalling",
+          "R pushes a real object and it settles at its new position",
+          "Indoor stations lift in place without crossing work surfaces",
+          "A levitated worker pauses their task",
+          "Escape lowers the worker and their task resumes",
+          "Force mode can be disabled",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "initial": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.294624005231,
+              18.369601446674015,
+              1273.8543063844618
+            ],
+            "renderedPosition": [
+              -2813.294624005231,
+              18.369601446674015,
+              1273.8543063844618
+            ],
+            "eligible": true
+          },
+          "held": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.268611366757,
+              19.39513264759605,
+              1273.7503276124069
+            ],
+            "renderedPosition": [
+              -2813.268611366757,
+              19.39513264759605,
+              1273.7503276124069
+            ],
+            "eligible": true
+          }
+        },
+        "bin": {
+          "initial": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "raised": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              19.535020577683014,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              19.535020577683014,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "landed": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2772.1255477376044,
+              18.483582203562747,
+              1311.5909740649558
+            ],
+            "renderedPosition": [
+              -2772.1255477376044,
+              18.483582203562747,
+              1311.5909740649558
+            ],
+            "eligible": false
+          }
+        },
+        "carry": {
+          "start": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2771.0986938402543,
+                19.583220593511047,
+                1310.0327574445103
+              ],
+              "velocity": [
+                0,
+                1.1465080657319549,
+                0
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2773.8691919239045,
+                20.16598217689703,
+                1303.6774083745856
+              ],
+              "riding": null,
+              "ground": 18.485982176897032,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.986768449052281,
+              "speed": 0,
+              "velocity": [
+                0,
+                0
+              ],
+              "distance": 0,
+              "roomId": null,
+              "showBody": true
+            }
+          },
+          "end": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2773.2096282236434,
+                19.765078999749896,
+                1309.1002520769052
+              ],
+              "velocity": [
+                -0.013579301610882461,
+                0.0012284236799795386,
+                -0.00599865715114837
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2775.9827014492207,
+                20.06539673615078,
+                1302.7437654379082
+              ],
+              "riding": null,
+              "ground": 18.38539673615078,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.986768449052281,
+              "speed": 8.069326127129169e-07,
+              "velocity": [
+                -7.381212517142835e-07,
+                -3.2606509922110426e-07
+              ],
+              "distance": 2.3105435825385254,
+              "roomId": null,
+              "showBody": true
+            },
+            "yaw": -5.871532181973978,
+            "fx": {
+              "count": 106,
+              "wand": 63,
+              "target": 43,
+              "capacity": 256,
+              "reducedMotion": false,
+              "wandTip": [
+                -2776.225277128265,
+                19.87357649151894,
+                1302.9236466494378
+              ],
+              "targetCenter": [
+                -2773.2096282236434,
+                20.320578999749895,
+                1309.1002520769052
+              ]
+            }
+          }
+        },
+        "personFX": {
+          "count": 70,
+          "wand": 40,
+          "target": 30,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2810.4105184368964,
+            19.91577393321527,
+            1275.1868642149086
+          ],
+          "targetCenter": [
+            -2813.268611366757,
+            20.405380909832378,
+            1273.7503276124069
+          ]
+        },
+        "staff": "store-osm-node-8172495006-person-1",
+        "errors": []
+      }
+    },
+    "carriage": {
+      "seconds": 17.6,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed footboard",
+          "riding-slope: both soles contact the actual transformed footboard",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003743152485,
+                "minX": -2.719301644971826,
+                "maxX": -2.478345608200862
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003867481168,
+                "minX": -2.7193016378760855,
+                "maxX": -2.478345607143537
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003810210338,
+                "minX": -2.7193016440595033,
+                "maxX": -2.4783456117813074
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003888902873,
+                "minX": -2.7193016358350195,
+                "maxX": -2.478345605483292
+              }
+            ]
+          }
+        ],
+        "before": {
+          "placement": {
+            "position": [
+              -2766.541185989181,
+              18.42157351781855,
+              1291.5552254559523
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": 0.0007859033689301711,
+            "roll": 0.005794460639896358,
+            "distance": 0,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.0025194879020453698,
+              -1.8267278509398466e-05,
+              1.7017506444005903e-05,
+              1.7017506447558617e-05
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            0,
+            3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.105314686426908,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.42531468642691,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.33440851050249343,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.42531468642691,
+            1295.064162750871
+          ],
+          "riderYaw": 0
+        },
+        "driven": {
+          "placement": {
+            "position": [
+              -2758.664023502328,
+              18.404116050668357,
+              1291.6755057810808
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010582339997348417,
+            "distance": 7.878080743482621,
+            "terrainError": 0.009860024135232237,
+            "speed": 0.027011556283950265,
+            "wheelOffsets": [
+              0.007405772191120263,
+              0.007405772191116711,
+              0.01037338998832027,
+              0.0046851114724049125
+            ]
+          },
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            0,
+            -7.105427357601002e-15,
+            0,
+            -3.552713678800501e-15
+          ],
+          "pose": {
+            "position": [
+              -2756.5472559296913,
+              20.636763623075783,
+              1291.718955184327
+            ],
+            "riding": {
+              "seat": [
+                -2756.5472559296913,
+                20.016763623075782,
+                1291.718955184327
+              ],
+              "yaw": 1.5555280143100032,
+              "quaternion": [
+                0.006190333652166727,
+                0.701687072059597,
+                -0.0012549712787142996,
+                0.7124572672945335
+              ],
+              "speed": 0.027011556283950265,
+              "distance": 7.878080743482621
+            },
+            "ground": 18.390435706855726,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -0.08606463927978991,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.5559302290876,
+            19.18878021428822,
+            1291.7131095672478
+          ],
+          "riderYaw": 1.5522796008878486
+        },
+        "after": {
+          "placement": {
+            "position": [
+              -2758.659371946953,
+              18.404086159462786,
+              1291.6755768080009
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010586977814750192,
+            "distance": 7.882732841097908,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.007393045357549255,
+              0.0073930453575421495,
+              0.010295403970943084,
+              0.004607125455027727
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            -7.105427357601002e-15,
+            3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2756.713790250158,
+              20.092575930381617,
+              1288.7049351498576
+            ],
+            "riding": null,
+            "ground": 18.412575930381617,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -3.084855940535664,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.713790250158,
+            18.412575930381617,
+            1288.7049351498576
+          ],
+          "riderYaw": 1.5522769765622197
+        },
+        "errors": []
+      }
+    },
+    "casting-motion": {
+      "seconds": 5.27,
+      "result": {
+        "checks": [
+          "backpedal: actual Jevica rig reaches its foot targets",
+          "backpedal: support targets remain planted",
+          "backpedal: walking continues throughout the cast",
+          "strafe-left: actual Jevica rig reaches its foot targets",
+          "strafe-left: support targets remain planted",
+          "strafe-left: walking continues throughout the cast",
+          "strafe-right: actual Jevica rig reaches its foot targets",
+          "strafe-right: support targets remain planted",
+          "strafe-right: walking continues throughout the cast",
+          "No uncaught casting fixture errors"
+        ],
+        "runs": [
+          {
+            "name": "backpedal",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-left",
+            "error": 1.6883057536160649e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-right",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          }
+        ],
+        "errors": []
+      }
+    },
+    "district-frame-profile": {
+      "seconds": 19.99,
+      "result": {
+        "runs": [
+          {
+            "label": "street",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 66.69999999999982,
+            "maxMs": 66.80000000000018,
+            "render": {
+              "calls": 1652,
+              "triangles": 18091332,
+              "geometries": 303,
+              "textures": 294
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(idle) :0",
+                "ms": 898.842
+              },
+              {
+                "fn": "(program) :0",
+                "ms": 829.388
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 152.021
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 141.702
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 137.52
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 124.723
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 111.798
+              },
+              {
+                "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+                "ms": 99.146
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 88.571
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 79.642
+              },
+              {
+                "fn": "toLocal http://127.0.0.1:5181/src/store-rooms.js:48",
+                "ms": 71.186
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 67.817
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 66.501
+              },
+              {
+                "fn": "(garbage collector) :0",
+                "ms": 55.74
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 49.765
+              },
+              {
+                "fn": "groundAt http://127.0.0.1:5181/src/walking.js?t=1790321666920:37",
+                "ms": 43.702
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 41.863
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+                "ms": 38.508
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 38.047
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+                "ms": 29.933
+              }
+            ]
+          },
+          {
+            "label": "walking",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 50,
+            "maxMs": 66.60000000000036,
+            "render": {
+              "calls": 1563,
+              "triangles": 17779813,
+              "geometries": 303,
+              "textures": 294
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(idle) :0",
+                "ms": 545.501
+              },
+              {
+                "fn": "(program) :0",
+                "ms": 340.639
+              },
+              {
+                "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+                "ms": 158.606
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 145.572
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 142.598
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 121.819
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 114.687
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 106.562
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 105.577
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 77.994
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 75.502
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 54.682
+              },
+              {
+                "fn": "(garbage collector) :0",
+                "ms": 45.009
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 42.877
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 40.861
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 37.781
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+                "ms": 36.662
+              },
+              {
+                "fn": "toLocal http://127.0.0.1:5181/src/store-rooms.js:48",
+                "ms": 30.914
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/src/jevica-drape.js:62",
+                "ms": 30.806
+              },
+              {
+                "fn": "bindVertexArray :0",
+                "ms": 29.251
+              }
+            ]
+          },
+          {
+            "label": "worker-conversation",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 50,
+            "maxMs": 66.70000000000073,
+            "render": {
+              "calls": 1765,
+              "triangles": 18586484,
+              "geometries": 357,
+              "textures": 377
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(idle) :0",
+                "ms": 390.557
+              },
+              {
+                "fn": "(program) :0",
+                "ms": 334.39
+              },
+              {
+                "fn": "uniformMatrix4fv :0",
+                "ms": 324.473
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 159.677
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 146.82
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 137.774
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 131.692
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 98.313
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 95.018
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 80.339
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 74.203
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 61.903
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 53.309
+              },
+              {
+                "fn": "bindVertexArray :0",
+                "ms": 51.06
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 45.514
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+                "ms": 42.362
+              },
+              {
+                "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+                "ms": 40.84
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+                "ms": 40.174
+              },
+              {
+                "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+                "ms": 37.55
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 36.878
+              }
+            ]
+          }
+        ],
+        "errors": [],
+        "viewport": [
+          1440,
+          1000
+        ],
+        "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+      }
+    },
+    "player-attention": {
+      "result": {
+        "checks": [
+          "local-00: Jevica turns and looks toward her conversation partner",
+          "local-00: turn speed, planted support and foot reach stay bounded",
+          "Dialogue retains its existing movement pause",
+          "Walking after conversation retains manual body facing",
+          "store-osm-node-8172494955-person-7: Jevica turns and looks toward her conversation partner",
+          "store-osm-node-8172494955-person-7: turn speed, planted support and foot reach stay bounded",
+          "Closing the conversation releases Jevica eye contact",
+          "Reduced motion retains reciprocal conversation attention",
+          "No uncaught player attention errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "last": {
+              "mode": "conversation",
+              "target": [
+                -2813.635889786578,
+                19.862000539441233,
+                1274.6877866532718
+              ],
+              "facing": -1.9699106883412845,
+              "position": [
+                -2811.3323759950863,
+                18.318447760576476,
+                1275.659292809921
+              ],
+              "bodyYaw": -1.9699106883412845,
+              "head": [
+                -0.02022775287540713,
+                -0.8326895856155342,
+                -0.030484222312837213,
+                0.5525301853718351
+              ],
+              "feet": [
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2811.3898546258615,
+                    18.490263016725635,
+                    1275.753872052369
+                  ],
+                  "actual": [
+                    -2811.3898547861386,
+                    18.490263193297036,
+                    1275.7538720682276
+                  ]
+                },
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2811.3197219621807,
+                    18.464173016968303,
+                    1275.5493432689987
+                  ],
+                  "actual": [
+                    -2811.3197220980965,
+                    18.464173159279373,
+                    1275.5493431658128
+                  ]
+                }
+              ],
+              "eyes": [
+                {
+                  "name": "gaze_eye_r",
+                  "yaw": 0.01276793037373097,
+                  "pitch": 0.017606417689038797,
+                  "position": [
+                    -2811.4253792854543,
+                    19.860099134484592,
+                    1275.5870098208136
+                  ],
+                  "forward": [
+                    -0.9262903011062633,
+                    0.0013831278871799587,
+                    -0.37680812767560545
+                  ]
+                },
+                {
+                  "name": "gaze_eye_l",
+                  "yaw": -0.012767928882190886,
+                  "pitch": 0.017606391046091362,
+                  "position": [
+                    -2811.4490534420206,
+                    19.86009906977196,
+                    1275.6431430195187
+                  ],
+                  "forward": [
+                    -0.9163688108655657,
+                    0.0013831550371614667,
+                    -0.4003327233656342
+                  ]
+                }
+              ]
+            },
+            "eyeErrors": [
+              0.0005863253921349698,
+              0.0005863307998344122
+            ],
+            "maxSpeed": 1.3999025652625339,
+            "maxFootError": 0,
+            "slip": 0,
+            "steps": 67,
+            "frames": 286
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "last": {
+              "mode": "conversation",
+              "target": [
+                -2799.0213933670534,
+                20.02388110203801,
+                1218.035207875956
+              ],
+              "facing": -4.2011049719939155,
+              "position": [
+                -2802.169035235954,
+                18.47388110203801,
+                1219.8011787484118
+              ],
+              "bodyYaw": -4.2011049719939155,
+              "head": [
+                -0.01675453744262493,
+                0.8624558633417914,
+                0.02861143322271992,
+                0.5050451038095576
+              ],
+              "feet": [
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2802.181193800279,
+                    18.543848520389233,
+                    1219.691173314858
+                  ],
+                  "actual": [
+                    -2802.1811937308235,
+                    18.543848621275487,
+                    1219.691173254499
+                  ]
+                },
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2802.0938854124565,
+                    18.54384852896613,
+                    1219.8824285491874
+                  ],
+                  "actual": [
+                    -2802.0938853292364,
+                    18.543848636863178,
+                    1219.8824285558908
+                  ]
+                }
+              ],
+              "eyes": [
+                {
+                  "name": "gaze_eye_r",
+                  "yaw": 0.008718467691429466,
+                  "pitch": 0.010108463488906518,
+                  "position": [
+                    -2802.0533481138186,
+                    20.014890194746222,
+                    1219.7712002268402
+                  ],
+                  "forward": [
+                    0.867816390319643,
+                    0.002020581975307974,
+                    -0.49688090125801165
+                  ]
+                },
+                {
+                  "name": "gaze_eye_l",
+                  "yaw": -0.0087184687359603,
+                  "pitch": 0.010108444617109413,
+                  "position": [
+                    -2802.083156739488,
+                    20.014890130040552,
+                    1219.7180697504475
+                  ],
+                  "forward": [
+                    0.8763476949311044,
+                    0.002020600481032257,
+                    -0.48167482273467754
+                  ]
+                }
+              ]
+            },
+            "eyeErrors": [
+              0.0005527387476986692,
+              0.0005527388149862822
+            ],
+            "maxSpeed": 1.2333800529219827,
+            "maxFootError": 0,
+            "slip": 0,
+            "steps": 19,
+            "frames": 234
+          }
+        ],
+        "released": {
+          "mode": "none",
+          "target": null,
+          "facing": null,
+          "position": [
+            -2802.169035235954,
+            18.47388110203801,
+            1219.8011787484118
+          ],
+          "bodyYaw": -4.2011049719939155,
+          "head": [
+            -0.013280360351696446,
+            0.8626322557597009,
+            0.022678645208803277,
+            0.5051483976725506
+          ],
+          "feet": [
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2802.181193800279,
+                18.543848520389233,
+                1219.691173314858
+              ],
+              "actual": [
+                -2802.1811937308235,
+                18.543848621275487,
+                1219.691173254499
+              ]
+            },
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2802.0938854124565,
+                18.54384852896613,
+                1219.8824285491874
+              ],
+              "actual": [
+                -2802.0938853292364,
+                18.543848636863178,
+                1219.8824285558908
+              ]
+            }
+          ],
+          "eyes": [
+            {
+              "name": "gaze_eye_r",
+              "yaw": 1.5791412077694468e-17,
+              "pitch": 1.2192752717647323e-17,
+              "position": [
+                -2802.05246503329,
+                20.013699510663134,
+                1219.7707047783247
+              ],
+              "forward": [
+                0.8721158104907294,
+                -0.0016269229586737797,
+                -0.4892968078169456
+              ]
+            },
+            {
+              "name": "gaze_eye_l",
+              "yaw": -1.5790152129127538e-17,
+              "pitch": 1.2192718622631898e-17,
+              "position": [
+                -2802.082273659736,
+                20.01369944598067,
+                1219.7175743023677
+              ],
+              "forward": [
+                0.8721158104907294,
+                -0.0016269229586737797,
+                -0.4892968078169456
+              ]
+            }
+          ]
+        },
+        "reduced": {
+          "last": {
+            "mode": "conversation",
+            "target": [
+              -2813.6370057739227,
+              19.861970148829993,
+              1274.6878035440777
+            ],
+            "facing": -1.9699021209753824,
+            "position": [
+              -2810.688497467163,
+              18.425478454433616,
+              1275.931306163685
+            ],
+            "bodyYaw": -1.9699021209753824,
+            "head": [
+              -0.009329844911507944,
+              -0.8331263949486655,
+              -0.014060414542678732,
+              0.5528251706801066
+            ],
+            "feet": [
+              {
+                "contact": true,
+                "error": 0,
+                "target": [
+                  -2810.7471605049222,
+                  18.494095082927387,
+                  1276.025155373051
+                ],
+                "actual": [
+                  -2810.747160579324,
+                  18.494095184813567,
+                  1276.0251553801857
+                ]
+              },
+              {
+                "contact": true,
+                "error": 0,
+                "target": [
+                  -2810.6746522840776,
+                  18.49584915175715,
+                  1275.8215002576364
+                ],
+                "actual": [
+                  -2810.674652363876,
+                  18.495849250551846,
+                  1275.8215002045977
+                ]
+              }
+            ],
+            "eyes": [
+              {
+                "name": "gaze_eye_r",
+                "yaw": 0.009876176424644055,
+                "pitch": 0.012536902343040885,
+                "position": [
+                  -2810.7847246997057,
+                  19.963682043588435,
+                  1275.8576645685646
+                ],
+                "forward": [
+                  -0.924700283255773,
+                  -0.0329746667513898,
+                  -0.3792651536643584
+                ]
+              },
+              {
+                "name": "gaze_eye_l",
+                "yaw": -0.009876176722152723,
+                "pitch": 0.012536881619351266,
+                "position": [
+                  -2810.808398373007,
+                  19.963681978957364,
+                  1275.913797971084
+                ],
+                "forward": [
+                  -0.9170253547012478,
+                  -0.032974645789474746,
+                  -0.39746342071701946
+                ]
+              }
+            ]
+          },
+          "eyeErrors": [
+            2.674469112060516e-05,
+            2.7604975233569788e-05
+          ],
+          "maxSpeed": 1.399882600482839,
+          "maxFootError": 0,
+          "slip": 0,
+          "steps": 50,
+          "frames": 223
+        },
+        "errors": []
+      }
+    },
+    "carriage-conversation": {
+      "result": {
+        "checks": [
+          "Nearby conversation is available from the carriage",
+          "Talking retains the same mounted position",
+          "Dialogue opens for a real outdoor resident",
+          "Jevica attends to her partner without rotating the seated body"
+        ],
+        "name": "Maya",
+        "attention": {
+          "mode": "conversation",
+          "target": [
+            -2813.6370057739227,
+            19.861970148829993,
+            1274.6878035440777
+          ],
+          "facing": null,
+          "position": [
+            -2816.093075662175,
+            19.13960299376925,
+            1273.7551628873805
+          ],
+          "bodyYaw": 0.013756556662885748,
+          "head": [
+            -0.05089025170811509,
+            0.8998664870985781,
+            -0.13085199518600962,
+            0.4129506554229789
+          ],
+          "feet": [
+            {
+              "contact": false,
+              "error": 0,
+              "target": [
+                -2810.586754068503,
+                18.525213427597034,
+                1275.9729059427705
+              ],
+              "actual": [
+                -2816.1926917949504,
+                19.529589151236173,
+                1273.312994428557
+              ]
+            },
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2810.7967427322437,
+                18.493047133377456,
+                1275.9543710435978
+              ],
+              "actual": [
+                -2815.978966943623,
+                19.528941482115545,
+                1273.3159359928113
+              ]
+            }
+          ],
+          "eyes": [
+            {
+              "name": "gaze_eye_r",
+              "yaw": -0.29999999995858445,
+              "pitch": 0.17999999997515068,
+              "position": [
+                -2815.9988962603047,
+                20.677881441300364,
+                1273.653219156008
+              ],
+              "forward": [
+                0.8889666341020954,
+                -0.3422725749205525,
+                -0.3042825289746963
+              ]
+            },
+            {
+              "name": "gaze_eye_l",
+              "yaw": -0.29999999995858445,
+              "pitch": 0.17999999997515068,
+              "position": [
+                -2816.0387243942323,
+                20.66571785835076,
+                1273.6087537930687
+              ],
+              "forward": [
+                0.8889666341020954,
+                -0.3422725749205525,
+                -0.3042825289746963
+              ]
+            }
+          ]
+        },
+        "errors": []
+      }
+    }
+  },
+  "visualReview": {
+    "motion": "output/playwright/player-attention-motion.png",
+    "district": "output/playwright/player-attention-worker.png",
+    "carriage": "output/playwright/carriage-conversation.png",
+    "scope": "Full-body beginning/turn/listening strip reviewed. District screenshot confirms dialogue context; UI and the counter partly obscure Jevica, so rig evidence and the separate full-body fixture carry the motion proof."
+  },
+  "testFindings": [
+    "The initial live speed check used performance.now callback execution time. A delayed callback pair represented 166.6 ms of RAF time but only 25 ms between callback execution, inflating the measured speed. The check now uses requestAnimationFrame timestamps and retains its speed bound.",
+    "The attempted movement-during-dialogue check encountered the existing dialogueOpen input guard. That behavior is preserved; acceptance checks paused movement and successful manual movement after closing.",
+    "A mid-turn close initially stopped body rotation immediately. A failing unit regression led to damped angular-velocity release."
+  ],
+  "limits": [
+    "Head and eyes clamp to their supported range when a seated or airborne partner is behind the body; mounted body orientation is preserved.",
+    "Lip synchronization, expressive scanning and broader facial acting remain open.",
+    "Material and cloth realism and sustained frame pacing are not yet verified to a hyperrealistic standard.",
+    "Local Chromium profiling shows median 16.7 ms and p95 50-66.7 ms. This is not a controlled before/after comparison or sustained 60 FPS proof."
+  ],
+  "dev": "http://127.0.0.1:5181/",
+  "testBrowserSession": "browser-only-checks; parked at about:blank; user session preserved"
+}

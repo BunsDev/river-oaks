@@ -1,0 +1,307 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser Force telekinesis for people and 15 existing street bins",
+  "controls": {
+    "T": "Toggle Force",
+    "G": "Lift",
+    "R": "Push outdoors",
+    "X or Escape": "Lower",
+    "pointer": "Select a visible nearby person or bin while Force mode is enabled"
+  },
+  "implementation": [
+    "Damped lift and lowering, mass-dependent push impulse, gravity and drag, collision substeps up to 1/120 second.",
+    "Rendered paving support under a sampled footprint; collision checks against buildings, street furniture, trees, other bodies, visitor and carriage.",
+    "Walking routes pause during holds and replan from landing positions. Indoor people lift in place and their work clocks pause.",
+    "Moved bins participate in visitor collision and pedestrian passing. Force elevation participates in conversation reach.",
+    "Free-hand casting gesture layers over Three.js locomotion; conflicting wishes are blocked."
+  ],
+  "validation": {
+    "unitTests": 347,
+    "build": "pass; existing large Three.js chunk warning",
+    "desktop": {
+      "checks": [
+        "T enables Force mode",
+        "A real pointer click targets the person in Force mode",
+        "Force picking does not open a conversation",
+        "G acquires the selected person",
+        "The rendered person rises, not just the state",
+        "Force hold suspends pedestrian navigation",
+        "X gently lands and releases the person",
+        "Released person resumes walking",
+        "A Force push displaces a person and lands them",
+        "An existing street bin can be targeted through normal travel",
+        "The complete bin rises with its lid",
+        "R pushes a real object and it settles at its new position",
+        "Indoor stations lift in place without crossing work surfaces",
+        "A levitated worker pauses their task",
+        "Escape lowers the worker and their task resumes",
+        "Force mode can be disabled",
+        "No uncaught browser errors"
+      ],
+      "person": {
+        "initial": {
+          "id": "local-00",
+          "name": "Maya",
+          "kind": "person",
+          "position": [
+            -2813.3700121461543,
+            18.368011442561425,
+            1274.1038401146745
+          ],
+          "renderedPosition": [
+            -2813.3700121461543,
+            18.368011442561425,
+            1274.1038401146745
+          ],
+          "eligible": true
+        },
+        "held": {
+          "id": "local-00",
+          "name": "Maya",
+          "kind": "person",
+          "position": [
+            -2813.362142096685,
+            19.40198887708263,
+            1274.0800621221836
+          ],
+          "renderedPosition": [
+            -2813.362142096685,
+            19.40198887708263,
+            1274.0800621221836
+          ],
+          "eligible": true
+        }
+      },
+      "bin": {
+        "initial": {
+          "id": "street-bin-6",
+          "name": "Street bin",
+          "kind": "object",
+          "position": [
+            -2771.0986938402543,
+            18.481621820279667,
+            1310.0327574445103
+          ],
+          "renderedPosition": [
+            -2771.0986938402543,
+            18.481621820279667,
+            1310.0327574445103
+          ],
+          "eligible": true
+        },
+        "raised": {
+          "id": "street-bin-6",
+          "name": "Street bin",
+          "kind": "object",
+          "position": [
+            -2771.0986938402543,
+            19.5591818588436,
+            1310.0327574445103
+          ],
+          "renderedPosition": [
+            -2771.0986938402543,
+            19.5591818588436,
+            1310.0327574445103
+          ],
+          "eligible": true
+        },
+        "landed": {
+          "id": "street-bin-6",
+          "name": "Street bin",
+          "kind": "object",
+          "position": [
+            -2769.451723401605,
+            18.414215465249683,
+            1312.4879897878395
+          ],
+          "renderedPosition": [
+            -2769.451723401605,
+            18.414215465249683,
+            1312.4879897878395
+          ],
+          "eligible": false
+        }
+      },
+      "staff": "store-osm-node-8172495006-person-1",
+      "errors": []
+    },
+    "mobile": {
+      "checks": [
+        "force-lift has a 44px touch target",
+        "force-push has a 44px touch target",
+        "force-lower has a 44px touch target",
+        "Touch controls lift a real nearby person",
+        "Touch controls land and release the target",
+        "Force controls fit the phone viewport",
+        "No uncaught phone errors"
+      ],
+      "id": "local-06",
+      "errors": []
+    },
+    "snapshots": [
+      "output/playwright/force-person-held.png",
+      "output/playwright/force-bin-held.png",
+      "output/playwright/force-worker-held.png",
+      "output/playwright/force-mobile.png"
+    ],
+    "movingNpcRegression": {
+      "checks": [
+        "local-00: pedestrian resumes while Jevica stays still",
+        "local-00: walking mesh is visible and in reach",
+        "local-00: walking mesh projects inside the viewport",
+        "local-00: real pointer selects the walking person",
+        "local-00: pointer conversation does not relocate the visitor",
+        "local-00: clicked walker holds position during conversation",
+        "local-01: pedestrian resumes while Jevica stays still",
+        "local-01: walking mesh is visible and in reach",
+        "local-01: walking mesh projects inside the viewport",
+        "local-01: real pointer selects the walking person",
+        "local-01: pointer conversation does not relocate the visitor",
+        "local-01: clicked walker holds position during conversation",
+        "local-02: pedestrian resumes while Jevica stays still",
+        "local-02: walking mesh is visible and in reach",
+        "local-02: walking mesh projects inside the viewport",
+        "local-02: real pointer selects the walking person",
+        "local-02: pointer conversation does not relocate the visitor",
+        "local-02: clicked walker holds position during conversation",
+        "local-03: pedestrian resumes while Jevica stays still",
+        "local-03: walking mesh is visible and in reach",
+        "local-03: walking mesh projects inside the viewport",
+        "local-03: real pointer selects the walking person",
+        "local-03: pointer conversation does not relocate the visitor",
+        "local-03: clicked walker holds position during conversation",
+        "local-04: pedestrian resumes while Jevica stays still",
+        "local-04: walking mesh is visible and in reach",
+        "local-04: walking mesh projects inside the viewport",
+        "local-04: real pointer selects the walking person",
+        "local-04: pointer conversation does not relocate the visitor",
+        "local-04: clicked walker holds position during conversation",
+        "local-05: pedestrian resumes while Jevica stays still",
+        "local-05: walking mesh is visible and in reach",
+        "local-05: walking mesh projects inside the viewport",
+        "local-05: real pointer selects the walking person",
+        "local-05: pointer conversation does not relocate the visitor",
+        "local-05: clicked walker holds position during conversation",
+        "At least one route resumes inside the former visitor freeze radius",
+        "No floating NPC reaction captions",
+        "No uncaught browser errors: "
+      ],
+      "clicks": [
+        {
+          "id": "local-00",
+          "speed": 0.7666115525003301,
+          "screen": [
+            871.6770829646933,
+            393.2243300842959
+          ],
+          "position": [
+            -2813.471652374329,
+            -1274.352876119722,
+            18.36554990736686
+          ]
+        },
+        {
+          "id": "local-01",
+          "speed": 0.8601281770679324,
+          "screen": [
+            754.6129538072288,
+            414.0470055825987
+          ],
+          "position": [
+            -2806.642952895636,
+            -1229.7186909742618,
+            18.44936252622873
+          ]
+        },
+        {
+          "id": "local-02",
+          "speed": 0.6651814280826062,
+          "screen": [
+            796.150857901067,
+            367.4412330752189
+          ],
+          "position": [
+            -2802.779152879802,
+            -1199.7553156229742,
+            18.386126251333106
+          ]
+        },
+        {
+          "id": "local-03",
+          "speed": 0.8445263184750619,
+          "screen": [
+            825.5018422758737,
+            311.16252609924175
+          ],
+          "position": [
+            -2775.703289306407,
+            -1291.2139059636515,
+            18.474277147060185
+          ]
+        },
+        {
+          "id": "local-04",
+          "speed": 0.6423903896445368,
+          "screen": [
+            786.3938594225752,
+            425.93447439333016
+          ],
+          "position": [
+            -2770.0832281154408,
+            -1244.894971366099,
+            18.393913637833464
+          ]
+        },
+        {
+          "id": "local-05",
+          "speed": 0.9993899841854459,
+          "screen": [
+            796.2170156906408,
+            408.32057634497556
+          ],
+          "position": [
+            -2770.20740459891,
+            -1239.3504968804095,
+            18.392357895969987
+          ]
+        }
+      ],
+      "releaseDistances": [
+        3.2000000000001934,
+        2.5000000000001115,
+        3.2000000000000375,
+        2.499999999999969,
+        2.5000000000001106,
+        3.200000000000046
+      ],
+      "errors": [],
+      "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+    }
+  },
+  "testCorrection": "A first full rerun compared a walking NPC position sampled before G with the held position; the NPC could move before acquisition under load. The check now captures the acquired body and requires less than 1 mm of subsequent horizontal drift. Verified rerun passes.",
+  "limits": [
+    "Upright constrained bodies, not ragdolls or destruction.",
+    "Movable object support is currently the 15 street bins.",
+    "Indoor people lift/lower in place; pushing is disabled around their workstations.",
+    "No full-scene FPS or photorealism completion claim."
+  ],
+  "sha256": {
+    "preview/src/force-motion.js": "337db6ec51d8591a1ef76cce6bdc22b7daa1d29ec4b47c9c0264b65216319eb7",
+    "preview/src/force-controls.js": "b05efb2058014cb55cc3b4ae50a015adb610d75d11a93e8791824e9d7fb43835",
+    "preview/src/force.css": "20307ee0466bc7a1702fc3d1eb7671650da6989dc36cddd59632c14ec3bfef15",
+    "preview/src/main.js": "3b5ffa2ce83eac9e5bb337886f749199fd6fd002070f0e9da050e7ad565b46e6",
+    "preview/src/locals.js": "ca59a9b2cc19f6c5e05418fcf3a55108f48968bb9536c74b522c65027b4730d7",
+    "preview/src/store-people.js": "bb0a45faa34cf79a21b2b0d4d410e05b371256c4ad10fb99988aa61e67f1ceeb",
+    "preview/src/player-avatar.js": "0dc1d5b1fe77e3e3f0ca13692e7c67f67a379cad760857b83a34d0f34260665f",
+    "preview/src/resident-life.js": "d5b4db59ecea960e523fb2cb93967a90382d45aa70e505e775bb71d53fabd570",
+    "preview/src/resident-gestures.js": "51c5570467ace34bbd83eeee49124b194eaa93d33b3c3fea5338cea5f265e2c5",
+    "preview/src/person-position.js": "4b2e77cbfe84adce4a04909e965b1b2b548221c17d0d5b40f15d4bbc6a2b156b",
+    "preview/src/street-furniture.js": "b7caa6b0ce3057ae8a35a0a7dc57b0f3ad3de98e926ebeefc252ac9b64e07507",
+    "preview/src/wishes.js": "f52d146ef34f35e57687d527fcfb3ee5a5943d4e20ea126a887b2a229c30d372",
+    "preview/src/wishes-ui.js": "7ff53d01a644ec53c67b12d10cc5f588235c78f5f8bcfe851b57e55b03516767",
+    "preview/src/community-ui.js": "29e3f9aeb5d552ba2a07676ba130c0dd887fc71fc3bf234d6979079bf2d141ec",
+    "preview/e2e/force.js": "d4ea32ae47be4577a1f3f2bab8e36b562ac5cae20c4851d537f408919f53d76b",
+    "preview/e2e/force-mobile.js": "15e5526b29cf862714d3da9f2c55c1e11d1a7ca7115ac3ba49c7cf46beaf4855",
+    "preview/tests/force-motion.test.js": "5e764c99f4850e7b6898f22c9d92cede98702df288edf209a8ab5a10acaa9cc1"
+  }
+}

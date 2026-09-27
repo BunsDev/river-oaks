@@ -1,0 +1,1588 @@
+{
+  "createdAt": "2026-09-26T07:01:28.754973+00:00",
+  "scope": "Close the visible Jevica bodice-to-skirt waist seam in browser locomotion and carriage poses.",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/jevica-drape.js": "e4be837024163be26893ca6c68c8a8dddff44867e013867dd3ca6e4be2853024",
+    "preview/e2e/fixtures/jevica-clearance.js": "169e46ad2c40ba7c882e5fbe8374dbd38e015bfd007df376180140d834a8515e",
+    "preview/e2e/jevica-waist.js": "66675faa8e0e1aa5e3f16ccc7a07aa8c86ce507fb34d89151e3a25705af1bd41",
+    "preview/e2e/jevica-waist-portraits.js": "81ff7774f46f54b01943fde4e8cc1b26e2d2ef88ffd85c0c17c7eb82ad4bd690"
+  },
+  "reproduction": {
+    "standingSkinProtrusionMeters": 0.0019842158970581336,
+    "seatedSkinProtrusionMeters": 0.007321097577785304,
+    "standingLog": "/tmp/waist-red.log",
+    "seatedLog": "/tmp/waist-seated-before.log"
+  },
+  "implementation": [
+    "Extend the skin-driven skirt fitting through the waist and tuck it beneath the bodice with 6 mm target clearance.",
+    "Precompute the seated fold and its polar section profile; fit the actual seated waist using 5 mm vertical cells.",
+    "Keep lower standing-leg clearance at 18 mm, use private cached bone transforms, and reset fitting state on mount/dismount."
+  ],
+  "waistClearance": {
+    "worst": -0.004385375856767501,
+    "poses": 73,
+    "runs": [
+      {
+        "hz": 30,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 0,
+            "worst": -0.005447078743306993,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07981342349728893,
+                0.14184860130275556
+              ],
+              "outer": 0.1771567513405559,
+              "radius": 0.1717096725972489
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 15,
+            "worst": -0.005447023468353213,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07984833520425116,
+                0.14187493558414221
+              ],
+              "outer": 0.17717845134022178,
+              "radius": 0.17173142787186857
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 29,
+            "worst": -0.005447017297765838,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07985215590941142,
+                0.14187780934521205
+              ],
+              "outer": 0.17718081931851723,
+              "radius": 0.1717338020207514
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 0,
+            "worst": -0.005447018938176562,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676355701290257,
+                0.07985125193524523,
+                0.14187712809082792
+              ],
+              "outer": 0.17718025812352017,
+              "radius": 0.1717332391853436
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 15,
+            "worst": -0.005446997274657667,
+            "checked": 987,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409106,
+            "worstPoint": {
+              "position": [
+                0.09710314954138613,
+                0.07982097225631224,
+                0.14161860957117522
+              ],
+              "outer": 0.17715853511568266,
+              "radius": 0.171711537841025
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 29,
+            "worst": -0.0054469496921975835,
+            "checked": 988,
+            "uncovered": 0,
+            "clothRadius": 0.543901641140897,
+            "worstPoint": {
+              "position": [
+                0.09727450862963181,
+                0.07977360378939247,
+                0.14146065220880583
+              ],
+              "outer": 0.17712527142350132,
+              "radius": 0.17167832173130373
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 0,
+            "worst": -0.005446989814308134,
+            "checked": 983,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408963,
+            "worstPoint": {
+              "position": [
+                0.09723239927933568,
+                0.07976995684032895,
+                0.14148805800953917
+              ],
+              "outer": 0.17712404136438248,
+              "radius": 0.17167705155007434
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 15,
+            "worst": -0.005447496699479526,
+            "checked": 986,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409112,
+            "worstPoint": {
+              "position": [
+                0.09733366733394824,
+                0.0797190906243006,
+                0.14137141698572603
+              ],
+              "outer": 0.17708583838695835,
+              "radius": 0.17163834168747882
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 29,
+            "worst": -0.005447001590983908,
+            "checked": 980,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.097420224645121,
+                0.07969008457666393,
+                0.14129019751257246
+              ],
+              "outer": 0.17706757169564116,
+              "radius": 0.17162057010465726
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 0,
+            "worst": -0.0054472197326330685,
+            "checked": 973,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409106,
+            "worstPoint": {
+              "position": [
+                0.09704014248745536,
+                0.07968903877205369,
+                0.1415622557484393
+              ],
+              "outer": 0.17707665050303498,
+              "radius": 0.1716294307704019
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 15,
+            "worst": -0.005447071456134184,
+            "checked": 980,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409106,
+            "worstPoint": {
+              "position": [
+                0.09726774330152593,
+                0.07969194612491237,
+                0.14140296264771451
+              ],
+              "outer": 0.17707402660165464,
+              "radius": 0.17162695514552045
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 29,
+            "worst": -0.005447076933705275,
+            "checked": 984,
+            "uncovered": 0,
+            "clothRadius": 0.543901641140897,
+            "worstPoint": {
+              "position": [
+                0.09721269805889533,
+                0.07972356219646026,
+                0.14146662899270598
+              ],
+              "outer": 0.17709530961452805,
+              "radius": 0.17164823268082277
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 0,
+            "worst": -0.005447034883279439,
+            "checked": 982,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408963,
+            "worstPoint": {
+              "position": [
+                0.0972601411369311,
+                0.07972663861865403,
+                0.14143503920912787
+              ],
+              "outer": 0.17709611111168005,
+              "radius": 0.17164907622840062
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 15,
+            "worst": -0.005447144533742065,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676358098786593,
+                0.07977909102112468,
+                0.14182243337786082
+              ],
+              "outer": 0.17713521405172883,
+              "radius": 0.17168806951798676
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 29,
+            "worst": -0.0054470736263881325,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352576812723,
+                0.0798252528454001,
+                0.14185743954266694
+              ],
+              "outer": 0.1771640299023495,
+              "radius": 0.17171695627596137
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 0,
+            "worst": -0.0054470705547708664,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352576810004,
+                0.07982785788899571,
+                0.1418594845268206
+              ],
+              "outer": 0.17716571622054886,
+              "radius": 0.171718645665778
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 15,
+            "worst": -0.005447030153817201,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635257680502,
+                0.07985312198484773,
+                0.14187851416153985
+              ],
+              "outer": 0.1771813968360581,
+              "radius": 0.1717343666822409
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 29,
+            "worst": -0.005447041616728487,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635257680502,
+                0.07984601994331952,
+                0.14187317187784265
+              ],
+              "outer": 0.17717699479247476,
+              "radius": 0.17172995317574627
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 0,
+            "worst": -0.005447043241043864,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352807929788,
+                0.07984447828557772,
+                0.1418719298798049
+              ],
+              "outer": 0.1771759716549059,
+              "radius": 0.17172892841386203
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 15,
+            "worst": -0.005447034259866146,
+            "checked": 987,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409104,
+            "worstPoint": {
+              "position": [
+                0.09710311668036577,
+                0.0798053262794256,
+                0.1416066771995666
+              ],
+              "outer": 0.17714871245941952,
+              "radius": 0.17170167819955337
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 29,
+            "worst": -0.005446988609250497,
+            "checked": 988,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0972744749369286,
+                0.07975543300391841,
+                0.1414467114636998
+              ],
+              "outer": 0.1771138044419859,
+              "radius": 0.1716668158327354
+            }
+          }
+        ]
+      },
+      {
+        "hz": 60,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 0,
+            "worst": -0.005447081191839287,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07981184713477663,
+                0.1418474090262785
+              ],
+              "outer": 0.17715576885607673,
+              "radius": 0.17170868766423744
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 30,
+            "worst": -0.005447024590027744,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.0798476390941032,
+                0.14187441182694854
+              ],
+              "outer": 0.17717801976314404,
+              "radius": 0.1717309951731163
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 59,
+            "worst": -0.005447017297765838,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07985215590941142,
+                0.14187780934521205
+              ],
+              "outer": 0.17718081931851723,
+              "radius": 0.1717338020207514
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 0,
+            "worst": -0.005447018087662764,
+            "checked": 978,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676355704056007,
+                0.0798517230950958,
+                0.14187748317866497
+              ],
+              "outer": 0.1771805506439288,
+              "radius": 0.17173353255626603
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 30,
+            "worst": -0.005446948040881694,
+            "checked": 990,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09718067670197869,
+                0.07982241643349286,
+                0.14156475526449072
+              ],
+              "outer": 0.1771579373728102,
+              "radius": 0.1717109893319285
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 59,
+            "worst": -0.005446912173058593,
+            "checked": 984,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409104,
+            "worstPoint": {
+              "position": [
+                0.09731592325103712,
+                0.07977360391608801,
+                0.14143084213868345
+              ],
+              "outer": 0.17712414428686846,
+              "radius": 0.17167723211380986
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 0,
+            "worst": -0.005446937243823974,
+            "checked": 983,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409106,
+            "worstPoint": {
+              "position": [
+                0.09729163996996784,
+                0.07977178075011859,
+                0.14144694837934813
+              ],
+              "outer": 0.17712367537067628,
+              "radius": 0.1716767381268523
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 30,
+            "worst": -0.005447397944236904,
+            "checked": 982,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09742485976001243,
+                0.07972055089902197,
+                0.14130632029701773
+              ],
+              "outer": 0.17708387266666137,
+              "radius": 0.17163647472242446
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 59,
+            "worst": -0.005447173181216902,
+            "checked": 983,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409098,
+            "worstPoint": {
+              "position": [
+                0.09719813953942584,
+                0.07969008331642724,
+                0.141450532558904
+              ],
+              "outer": 0.17707389455968775,
+              "radius": 0.17162672137847085
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 0,
+            "worst": -0.005447113887284721,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408963,
+            "worstPoint": {
+              "position": [
+                0.09721595054566032,
+                0.07968954186414268,
+                0.14143821824202565
+              ],
+              "outer": 0.1770737744618445,
+              "radius": 0.17162666057455978
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 30,
+            "worst": -0.005446852712261835,
+            "checked": 974,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409104,
+            "worstPoint": {
+              "position": [
+                0.0961301502370275,
+                0.07969129315607071,
+                0.14217380314972966
+              ],
+              "outer": 0.17706968361378134,
+              "radius": 0.1716228309015195
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 59,
+            "worst": -0.005447227156973461,
+            "checked": 980,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09680865343236901,
+                0.07972356156823013,
+                0.14174923580266408
+              ],
+              "outer": 0.17710025285133107,
+              "radius": 0.1716530256943576
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 0,
+            "worst": -0.005447214166161118,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09670282589788634,
+                0.07972508924110444,
+                0.14182253883851897
+              ],
+              "outer": 0.17710113651936615,
+              "radius": 0.17165392235320504
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 30,
+            "worst": -0.0054471471530009585,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408963,
+            "worstPoint": {
+              "position": [
+                0.09676345808576395,
+                0.07977727511153587,
+                0.1418211375646311
+              ],
+              "outer": 0.17713407700161063,
+              "radius": 0.17168692984860967
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 59,
+            "worst": -0.005447073540023439,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574656186,
+                0.0798252528438802,
+                0.14185744036230086
+              ],
+              "outer": 0.177164030480942,
+              "radius": 0.17171695694091857
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 0,
+            "worst": -0.005447072584216561,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574657002,
+                0.07982651647953398,
+                0.141858472971221
+              ],
+              "outer": 0.17716488257675567,
+              "radius": 0.1717178099925391
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 30,
+            "worst": -0.005447030578360851,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574659774,
+                0.07985280650153936,
+                0.14187827778782963
+              ],
+              "outer": 0.17718120196819534,
+              "radius": 0.1717341713898345
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 59,
+            "worst": -0.005447041530336844,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574659774,
+                0.07984601994331952,
+                0.14187317269740046
+              ],
+              "outer": 0.1771769953710658,
+              "radius": 0.17172995384072895
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 0,
+            "worst": -0.005447041715540807,
+            "checked": 978,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574659104,
+                0.0798453189194076,
+                0.14187256584976182
+              ],
+              "outer": 0.17717649421483167,
+              "radius": 0.17172945249929086
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 30,
+            "worst": -0.0054469845087825874,
+            "checked": 990,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0971806434494082,
+                0.07980697669905112,
+                0.14155298249732284
+              ],
+              "outer": 0.1771482492540616,
+              "radius": 0.17170126474527903
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 59,
+            "worst": -0.005446950904365144,
+            "checked": 984,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409104,
+            "worstPoint": {
+              "position": [
+                0.09731588936155867,
+                0.07975543313061406,
+                0.14141690228049694
+              ],
+              "outer": 0.1771126800783699,
+              "radius": 0.17166572917400474
+            }
+          }
+        ]
+      },
+      {
+        "hz": 120,
+        "measurements": [
+          {
+            "stage": "rest",
+            "frame": 0,
+            "worst": -0.005447082426034838,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.0798110515769852,
+                0.1418468072033245
+              ],
+              "outer": 0.177155272928653,
+              "radius": 0.17170819050261815
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 60,
+            "worst": -0.005447025172643477,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07984727732669228,
+                0.14187413960984158
+              ],
+              "outer": 0.17717779545548798,
+              "radius": 0.1717307702828445
+            }
+          },
+          {
+            "stage": "rest",
+            "frame": 119,
+            "worst": -0.005447017297765838,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635570445108,
+                0.07985215590941142,
+                0.14187780934521205
+              ],
+              "outer": 0.17718081931851723,
+              "radius": 0.1717338020207514
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 0,
+            "worst": -0.005447017685050903,
+            "checked": 976,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676355704421842,
+                0.07985194431324916,
+                0.1418776498876325
+              ],
+              "outer": 0.17718068796984784,
+              "radius": 0.17173367028479694
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 60,
+            "worst": -0.005446917070039664,
+            "checked": 989,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409106,
+            "worstPoint": {
+              "position": [
+                0.09722218710620718,
+                0.07982312933326607,
+                0.1415356969206002
+              ],
+              "outer": 0.17715745014391476,
+              "radius": 0.1717105330738751
+            }
+          },
+          {
+            "stage": "walk",
+            "frame": 119,
+            "worst": -0.005446913807916176,
+            "checked": 984,
+            "uncovered": 0,
+            "clothRadius": 0.543901641140897,
+            "worstPoint": {
+              "position": [
+                0.09731419185050726,
+                0.07977360391611199,
+                0.1414320908944478
+              ],
+              "outer": 0.1771241932315274,
+              "radius": 0.17167727942361122
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 0,
+            "worst": -0.005446922955782724,
+            "checked": 982,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408969,
+            "worstPoint": {
+              "position": [
+                0.0973058304376511,
+                0.079772692466615,
+                0.14143742461111278
+              ],
+              "outer": 0.17712385710182668,
+              "radius": 0.17167693414604396
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 60,
+            "worst": -0.005447423850704569,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409112,
+            "worstPoint": {
+              "position": [
+                0.09740100743687233,
+                0.07972128966883718,
+                0.14132426511105844
+              ],
+              "outer": 0.17708513578750004,
+              "radius": 0.17163771193679547
+            }
+          },
+          {
+            "stage": "turn",
+            "frame": 119,
+            "worst": -0.005447208899790251,
+            "checked": 985,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09711623587930242,
+                0.07969008320955728,
+                0.14150879335123284
+              ],
+              "outer": 0.1770755919460866,
+              "radius": 0.17162838304629635
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 0,
+            "worst": -0.005447160272248647,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09714916241338484,
+                0.07968980800921821,
+                0.1414859538833833
+              ],
+              "outer": 0.17707534823656032,
+              "radius": 0.17162818796431167
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 60,
+            "worst": -0.005446915884500497,
+            "checked": 976,
+            "uncovered": 0,
+            "clothRadius": 0.543901641140897,
+            "worstPoint": {
+              "position": [
+                0.09618395414680458,
+                0.07969097925550894,
+                0.14213904944611205
+              ],
+              "outer": 0.17707110535894172,
+              "radius": 0.17162418947444122
+            }
+          },
+          {
+            "stage": "force",
+            "frame": 119,
+            "worst": -0.005447226872264621,
+            "checked": 980,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09682782590166901,
+                0.07972356156894622,
+                0.14173608540098687
+              ],
+              "outer": 0.17710020754443287,
+              "radius": 0.17165298067216825
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 0,
+            "worst": -0.005447224643364251,
+            "checked": 981,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09677232109053928,
+                0.07972432271327934,
+                0.1417746708318759
+              ],
+              "outer": 0.17710076937442185,
+              "radius": 0.1716535447310576
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 60,
+            "worst": -0.005447148465918705,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676343845579584,
+                0.07977636589665693,
+                0.14182046002710702
+              ],
+              "outer": 0.1771335075748731,
+              "radius": 0.17168635910895438
+            }
+          },
+          {
+            "stage": "stop",
+            "frame": 119,
+            "worst": -0.0054470734963683876,
+            "checked": 977,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574117782,
+                0.0798252528438802,
+                0.14185744077208978
+              ],
+              "outer": 0.1771640307727846,
+              "radius": 0.1717169572764162
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 0,
+            "worst": -0.005447073613112391,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574121923,
+                0.07982583578357727,
+                0.14185795957617148
+              ],
+              "outer": 0.17716445948008364,
+              "radius": 0.17171738586697124
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 60,
+            "worst": -0.005447030813849951,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574124619,
+                0.07985263411883303,
+                0.14187814858853193
+              ],
+              "outer": 0.17718109546261543,
+              "radius": 0.17173406464876548
+            }
+          },
+          {
+            "stage": "bubble",
+            "frame": 119,
+            "worst": -0.005447041486678572,
+            "checked": 979,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.09676352574124619,
+                0.07984601994331952,
+                0.14187317310718706
+              ],
+              "outer": 0.17717699566293368,
+              "radius": 0.1717299541762551
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 0,
+            "worst": -0.005447040972829359,
+            "checked": 976,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408965,
+            "worstPoint": {
+              "position": [
+                0.0967635257417891,
+                0.07984572602777218,
+                0.14187287304142288
+              ],
+              "outer": 0.17717674725281335,
+              "radius": 0.171729706279984
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 60,
+            "worst": -0.005446953270557553,
+            "checked": 989,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411409104,
+            "worstPoint": {
+              "position": [
+                0.09722215366189312,
+                0.07980779546379424,
+                0.14152400598788878
+              ],
+              "outer": 0.1771478310595681,
+              "radius": 0.17170087778901055
+            }
+          },
+          {
+            "stage": "land",
+            "frame": 119,
+            "worst": -0.005446952499211011,
+            "checked": 984,
+            "uncovered": 0,
+            "clothRadius": 0.5439016411408963,
+            "worstPoint": {
+              "position": [
+                0.09731415797457665,
+                0.07975543313063782,
+                0.14141815144323838
+              ],
+              "outer": 0.1771127292280732,
+              "radius": 0.17166577672886218
+            }
+          }
+        ]
+      }
+    ],
+    "seated": [
+      {
+        "view": "riding",
+        "reduced": false,
+        "worst": -0.004385376294437984,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349746809127,
+            -0.029248965410371364,
+            -0.04364195866566689
+          ],
+          "outer": 0.11173076027437204,
+          "radius": 0.10734538397993405
+        }
+      },
+      {
+        "view": "riding-slope",
+        "reduced": false,
+        "worst": -0.004385375856767501,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349748828982,
+            -0.029248965464855003,
+            -0.04364195854763683
+          ],
+          "outer": 0.1117307598071696,
+          "radius": 0.10734538395040209
+        }
+      },
+      {
+        "view": "reference",
+        "reduced": false,
+        "worst": -0.005447025151042478,
+        "checked": 977,
+        "uncovered": 0,
+        "clothRadius": 0.5439016411408965,
+        "worstPoint": {
+          "position": [
+            0.09676654621741562,
+            0.0798543086558765,
+            0.1418769870188945
+          ],
+          "outer": 0.17718183208431035,
+          "radius": 0.17173480693326787
+        }
+      },
+      {
+        "view": "riding",
+        "reduced": false,
+        "worst": -0.004385376294437984,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349746809127,
+            -0.029248965410371364,
+            -0.04364195866566689
+          ],
+          "outer": 0.11173076027437204,
+          "radius": 0.10734538397993405
+        }
+      },
+      {
+        "view": "reference",
+        "reduced": false,
+        "worst": -0.00544702532312738,
+        "checked": 977,
+        "uncovered": 0,
+        "clothRadius": 0.5439016411408965,
+        "worstPoint": {
+          "position": [
+            0.09676654621741562,
+            0.07985420286860223,
+            0.14187690749763443
+          ],
+          "outer": 0.17718176656071027,
+          "radius": 0.1717347412375829
+        }
+      },
+      {
+        "view": "riding",
+        "reduced": true,
+        "worst": -0.004385376294437984,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349746809127,
+            -0.029248965410371364,
+            -0.04364195866566689
+          ],
+          "outer": 0.11173076027437204,
+          "radius": 0.10734538397993405
+        }
+      },
+      {
+        "view": "riding-slope",
+        "reduced": true,
+        "worst": -0.004385375856767501,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349748828982,
+            -0.029248965464855003,
+            -0.04364195854763683
+          ],
+          "outer": 0.1117307598071696,
+          "radius": 0.10734538395040209
+        }
+      },
+      {
+        "view": "reference",
+        "reduced": true,
+        "worst": -0.005447156513262746,
+        "checked": 977,
+        "uncovered": 0,
+        "clothRadius": 0.5439016411408965,
+        "worstPoint": {
+          "position": [
+            0.09676654621741562,
+            0.07976996887782728,
+            0.14181319177860457
+          ],
+          "outer": 0.17712926341227106,
+          "radius": 0.1716821068990083
+        }
+      },
+      {
+        "view": "riding",
+        "reduced": true,
+        "worst": -0.004385376294437984,
+        "checked": 1126,
+        "uncovered": 0,
+        "clothRadius": 0.7172926512912009,
+        "worstPoint": {
+          "position": [
+            0.09807349746809127,
+            -0.029248965410371364,
+            -0.04364195866566689
+          ],
+          "outer": 0.11173076027437204,
+          "radius": 0.10734538397993405
+        }
+      },
+      {
+        "view": "reference",
+        "reduced": true,
+        "worst": -0.005447156513262746,
+        "checked": 977,
+        "uncovered": 0,
+        "clothRadius": 0.5439016411408965,
+        "worstPoint": {
+          "position": [
+            0.09676654621741562,
+            0.07976996887782728,
+            0.14181319177860457
+          ],
+          "outer": 0.17712926341227106,
+          "radius": 0.1716821068990083
+        }
+      }
+    ],
+    "errors": []
+  },
+  "regressions": {
+    "jevica-gown": {
+      "checks": [],
+      "errors": [],
+      "rawLog": "/tmp/waist-regression-jevica-gown.log"
+    },
+    "gown-sampling": {
+      "checks": [
+        "Run 1: all sampled gown vertices exactly match Three skinning",
+        "Run 1: eight rendered poses match the reference pixel hashes",
+        "Run 2: all sampled gown vertices exactly match Three skinning",
+        "Run 2: eight rendered poses match the reference pixel hashes",
+        "Run 3: all sampled gown vertices exactly match Three skinning",
+        "Run 3: eight rendered poses match the reference pixel hashes",
+        "Run 4: all sampled gown vertices exactly match Three skinning",
+        "Run 4: eight rendered poses match the reference pixel hashes",
+        "No uncaught browser errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/waist-regression-gown-sampling.log"
+    },
+    "casting-motion": {
+      "checks": [
+        "backpedal: actual Jevica rig reaches its foot targets",
+        "backpedal: support targets remain planted",
+        "backpedal: walking continues throughout the cast",
+        "strafe-left: actual Jevica rig reaches its foot targets",
+        "strafe-left: support targets remain planted",
+        "strafe-left: walking continues throughout the cast",
+        "strafe-right: actual Jevica rig reaches its foot targets",
+        "strafe-right: support targets remain planted",
+        "strafe-right: walking continues throughout the cast",
+        "No uncaught casting fixture errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/waist-regression-casting-motion.log"
+    },
+    "force": {
+      "checks": [
+        "T enables Force mode",
+        "A real pointer click targets the person in Force mode",
+        "Force picking does not open a conversation",
+        "G acquires the selected person",
+        "The rendered person rises, not just the state",
+        "Force hold suspends pedestrian navigation",
+        "Wand and person both emit lift sparkles",
+        "X gently lands and releases the person",
+        "Sparkles finish fading after landing",
+        "Released person resumes walking",
+        "A Force push displaces a person and lands them",
+        "An existing street bin can be targeted through normal travel",
+        "The complete bin rises with its lid",
+        "Pointer spell controls return focus to walking",
+        "Walking preserves the active lift",
+        "Jevica walks while holding a target",
+        "The lifted bin follows her movement",
+        "Both sparkle emitters remain active within the pool budget while carrying",
+        "Jevica keeps facing the carried object after backpedalling",
+        "R pushes a real object and it settles at its new position",
+        "Indoor stations lift in place without crossing work surfaces",
+        "A levitated worker pauses their task",
+        "Escape lowers the worker and their task resumes",
+        "Force mode can be disabled",
+        "No uncaught browser errors"
+      ],
+      "errors": [],
+      "rawLog": "/tmp/waist-regression-force.log"
+    },
+    "carriage": {
+      "checks": [
+        "riding: both soles contact the actual transformed footboard",
+        "riding-slope: both soles contact the actual transformed footboard",
+        "Calling places a visible carriage near Jevica",
+        "All four parked tyres meet rendered paving",
+        "Flight cannot start while seated",
+        "A ridden carriage cannot be summoned elsewhere",
+        "Riding moves the real carriage and rider through the district",
+        "All four moving tyres follow the rendered road",
+        "Dismount preserves a clear third-person camera",
+        "Dismounted Jevica stands on the rendered pavement",
+        "Walking resumes after leaving the carriage",
+        "Takeoff is rejected while the bubble overlaps the parked coach",
+        "Boarding is unavailable in flight",
+        "No uncaught browser errors: "
+      ],
+      "errors": [],
+      "rawLog": "/tmp/waist-regression-carriage.log"
+    }
+  },
+  "pairedSamplingPerformance": {
+    "checks": [
+      "Run 1: all sampled gown vertices exactly match Three skinning",
+      "Run 1: eight rendered poses match the reference pixel hashes",
+      "Run 2: all sampled gown vertices exactly match Three skinning",
+      "Run 2: eight rendered poses match the reference pixel hashes",
+      "Run 3: all sampled gown vertices exactly match Three skinning",
+      "Run 3: eight rendered poses match the reference pixel hashes",
+      "Run 4: all sampled gown vertices exactly match Three skinning",
+      "Run 4: eight rendered poses match the reference pixel hashes",
+      "No uncaught browser errors"
+    ],
+    "runs": [
+      {
+        "mode": "reference",
+        "costumeUpdateMs": {
+          "median": 4.300000071525574,
+          "p95": 4.700000047683716
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2671450307
+          },
+          {
+            "frame": 59,
+            "pixelHash": 2917019244
+          },
+          {
+            "frame": 89,
+            "pixelHash": 971596282
+          },
+          {
+            "frame": 119,
+            "pixelHash": 3912230397
+          },
+          {
+            "frame": 149,
+            "pixelHash": 1027270583
+          },
+          {
+            "frame": 179,
+            "pixelHash": 3117554648
+          },
+          {
+            "frame": 209,
+            "pixelHash": 2381597550
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1100088300
+          }
+        ]
+      },
+      {
+        "mode": "cached",
+        "costumeUpdateMs": {
+          "median": 2.6999999284744263,
+          "p95": 3
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2671450307
+          },
+          {
+            "frame": 59,
+            "pixelHash": 2917019244
+          },
+          {
+            "frame": 89,
+            "pixelHash": 971596282
+          },
+          {
+            "frame": 119,
+            "pixelHash": 3912230397
+          },
+          {
+            "frame": 149,
+            "pixelHash": 1027270583
+          },
+          {
+            "frame": 179,
+            "pixelHash": 3117554648
+          },
+          {
+            "frame": 209,
+            "pixelHash": 2381597550
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1100088300
+          }
+        ]
+      },
+      {
+        "mode": "cached",
+        "costumeUpdateMs": {
+          "median": 2.6999999284744263,
+          "p95": 3
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2671450307
+          },
+          {
+            "frame": 59,
+            "pixelHash": 2917019244
+          },
+          {
+            "frame": 89,
+            "pixelHash": 971596282
+          },
+          {
+            "frame": 119,
+            "pixelHash": 3912230397
+          },
+          {
+            "frame": 149,
+            "pixelHash": 1027270583
+          },
+          {
+            "frame": 179,
+            "pixelHash": 3117554648
+          },
+          {
+            "frame": 209,
+            "pixelHash": 2381597550
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1100088300
+          }
+        ]
+      },
+      {
+        "mode": "reference",
+        "costumeUpdateMs": {
+          "median": 4.199999928474426,
+          "p95": 4.5
+        },
+        "frames": [
+          {
+            "frame": 29,
+            "pixelHash": 2671450307
+          },
+          {
+            "frame": 59,
+            "pixelHash": 2917019244
+          },
+          {
+            "frame": 89,
+            "pixelHash": 971596282
+          },
+          {
+            "frame": 119,
+            "pixelHash": 3912230397
+          },
+          {
+            "frame": 149,
+            "pixelHash": 1027270583
+          },
+          {
+            "frame": 179,
+            "pixelHash": 3117554648
+          },
+          {
+            "frame": 209,
+            "pixelHash": 2381597550
+          },
+          {
+            "frame": 239,
+            "pixelHash": 1100088300
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Paired ABBA costume CPU timings and exact sampled geometry/pixel hashes; not district frame-rate acceptance"
+  },
+  "otherClearance": {
+    "poses": 54,
+    "minimumLegMeters": 0.017815597753422785,
+    "minimumArmMeters": 0.028784882981029686
+  },
+  "visuals": [
+    "output/playwright/jevica-waist-rest-front.png",
+    "output/playwright/jevica-waist-rest-back.png",
+    "output/playwright/jevica-waist-walk-front.png",
+    "output/playwright/jevica-waist-walk-back.png",
+    "output/playwright/jevica-waist-force-front.png",
+    "output/playwright/jevica-waist-force-back.png",
+    "output/playwright/jevica-waist-seated-false.png",
+    "output/playwright/jevica-waist-seated-true.png"
+  ],
+  "validation": {
+    "javascriptTests": 395,
+    "browserAssertions": 58,
+    "waistPoses": 73,
+    "legArmPoses": 54,
+    "unitLog": "/tmp/waist-unit-final.log",
+    "productionBuild": "pass",
+    "buildLog": "/tmp/waist-build-final.log",
+    "buildWarning": "Existing Three.js chunk exceeds 500 kB"
+  },
+  "remaining": [
+    "Close-up casting review shows a separate small skin intersection near the back of the right shoulder/bodice; the waist fit does not address that asset defect.",
+    "Physical cloth, broader facial acting/material realism and sustained full-scene frame pacing remain open.",
+    "Geometric coverage is sampled, not continuous collision proof."
+  ],
+  "devUrl": "http://127.0.0.1:5181/"
+}

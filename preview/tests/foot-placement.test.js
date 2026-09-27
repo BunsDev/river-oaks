@@ -62,3 +62,57 @@ test('stance targets remain planted as the body advances and both feet settle af
     assert.ok(leg.target.distanceTo(root.localToWorld(leg.rest.clone()))<=0.09, 'Resting feet should finish within the natural stance tolerance');
   }
 });
+
+test('backpedalling and strafing step along travel while the torso keeps facing the held target',()=>{
+  for(const heading of [Math.PI,Math.PI/2,-Math.PI/2]) {
+    const {root,model}=rig(),placement=createFootPlacement(model,root);let swings=0;
+    for(let frame=0;frame<240;frame++) {
+      const distance=frame/60;
+      root.position.set(Math.sin(heading)*distance,0,Math.cos(heading)*distance);
+      model.position.y=-.08;model.traverse(bone=>{if(bone.isBone)bone.quaternion.identity();});
+      placement.update(1/60,{speed:1,distance,heading},()=>0);
+      assert.ok(placement.legs.some(leg=>leg.contact),'One supporting foot remains planted');
+      for(const leg of placement.legs) {
+        if(!leg.contact)swings++;
+        assert.ok(leg.target.distanceTo(root.localToWorld(leg.rest.clone()))<.65,'A foot must not get stranded behind the moving body');
+      }
+    }
+    assert.ok(swings>100,'Directional motion keeps taking alternating steps');
+  }
+});
+
+test('planted ankle support preserves sole clearance normal to an inclined surface at avatar scale',()=>{
+  for(const slope of [-.5,.5])for(const scale of [1,1.3]) {
+    const {root,model}=rig();root.scale.setScalar(scale);
+    const placement=createFootPlacement(model,root);
+    const normal=new THREE.Vector3(0,1,-slope).normalize();
+    placement.update(1/60,{speed:0,distance:0},(_x,z)=>slope*z);
+    for(const leg of placement.legs) {
+      const ankle=leg.foot.getWorldPosition(new THREE.Vector3());
+      const normalHeight=ankle.dot(normal);
+      assert.ok(Math.abs(normalHeight-leg.rest.y*scale)<1e-6,'Slope rotation must preserve the ankle-to-sole distance along the ground normal');
+      assert.ok(leg.error<1e-6);
+    }
+  }
+});
+
+test('standing turn steps follow the current facing without excessive knee-to-shoe twist',()=>{
+  for(const hz of [30,60,120])for(const direction of [-1,1]) {
+    const {root,model}=rig(),placement=createFootPlacement(model,root);
+    const steps={l:0,r:0},lag={l:0,r:0};
+    for(let frame=0;frame<=3*hz;frame++) {
+      const before=placement.legs.map(leg=>leg.contact);
+      root.rotation.y=direction*Math.min(Math.PI,Math.max(0,frame-hz*.5)/hz*Math.PI);
+      model.position.y=-.08;
+      model.traverse(bone=>{if(bone.isBone)bone.quaternion.identity();});
+      placement.update(1/hz,{speed:0,distance:0},()=>0);
+      placement.legs.forEach((leg,i)=>{
+        if(before[i]&&!leg.contact)steps[leg.side]++;
+        lag[leg.side]=Math.max(lag[leg.side],leg.orientation.angleTo(root.quaternion));
+      });
+      assert.ok(placement.legs.some(leg=>leg.contact),'turn always has a supporting foot');
+    }
+    assert.ok(Math.abs(steps.l-steps.r)<=1,`both feet participate: ${JSON.stringify(steps)}`);
+    assert.ok(Math.max(...Object.values(lag))<1.1,`shoe facing stays within 63 degrees of the turning body: ${JSON.stringify(lag)}`);
+  }
+});

@@ -46,16 +46,33 @@ void ARiverStreetPawn::Tick(float DeltaSeconds)
     const FVector Direction = (Rotation.GetUnitAxis(EAxis::X) * Forward + Rotation.GetUnitAxis(EAxis::Y) * Side).GetClampedToMaxSize(1.);
     const FVector Next = District->ConstrainVisitor(GetActorLocation() + Direction * 165.f * FMath::Min(DeltaSeconds, .05f));
     SetActorLocation(Next, true);
-    if (PC->WasInputKeyJustPressed(EKeys::E))
+    const bool bStillConversing = District->UpdateConversation(GetActorLocation());
+    if (bConversationActive && !bStillConversing) Conversation.Empty();
+    bConversationActive = bStillConversing;
+    if (PC->WasInputKeyJustPressed(EKeys::E) && bConversationActive)
+    {
+        District->EndConversation();
+        Conversation.Empty();
+        bConversationActive = false;
+    }
+    else if (PC->WasInputKeyJustPressed(EKeys::E))
     {
         Conversation = District->GreetNearby(GetActorLocation());
+        bConversationActive = District->UpdateConversation(GetActorLocation());
         ConversationUntil = GetWorld()->GetTimeSeconds() + 10.;
     }
     if (GetWorld()->GetTimeSeconds() > ConversationUntil) Conversation.Empty();
 }
 
+void ARiverStreetPawn::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (IsValid(District)) District->EndConversation();
+    Super::EndPlay(Reason);
+}
+
 FString ARiverStreetPawn::InteractionPrompt() const
 {
+    if (bConversationActive) return TEXT("E - Finish conversation");
     const FString Person = District ? District->NearbyVisitor(GetActorLocation()) : FString();
     return Person.IsEmpty() ? TEXT("Walk the district. Approach a visitor to say hello.") : TEXT("E - Say hello to ") + Person;
 }

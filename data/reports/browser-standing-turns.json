@@ -1,0 +1,1506 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser standing-turn foot contact and landing alignment",
+  "cause": "Turning steps retained the landing orientation from lift-off while the body continued rotating.",
+  "change": "Start an alignment step at 0.25 radians and update its landing position/orientation while airborne; keep the support shoe planted.",
+  "before": [
+    {
+      "profile": "woman-casual",
+      "penetration": 2.2811503276598533e-09,
+      "float": 3.6457427484044846e-08,
+      "slide": 2.2164499425207614e-08,
+      "ankleError": 1.6711069443220838e-16,
+      "minSeparation": 0.16313844133013441,
+      "maxTwist": 2.4361063985292835,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.497485440816938,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.497485559176059,
+          "steps": 6
+        }
+      }
+    },
+    {
+      "profile": "man-casual",
+      "penetration": 0,
+      "float": 2.8635903737660173e-07,
+      "slide": 1.4605854734297843e-07,
+      "ankleError": 1.6711069443220838e-16,
+      "minSeparation": 0.19180999636146576,
+      "maxTwist": 2.3902802522421567,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.4974853634585223,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.497486035884825,
+          "steps": 6
+        }
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "penetration": 0,
+      "float": 1.356058324250911e-07,
+      "slide": 1.7895116639784353e-08,
+      "ankleError": 1.6711069443220838e-16,
+      "minSeparation": 0.17024358501223275,
+      "maxTwist": 2.392045982811964,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.4974853973487487,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.497485360668064,
+          "steps": 6
+        }
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "penetration": 1.533757401205732e-07,
+      "float": 3.3010576926811863e-07,
+      "slide": 1.5247293503598404e-07,
+      "ankleError": 1.6667795129466247e-16,
+      "minSeparation": 0.19376390859348083,
+      "maxTwist": 2.374803738616701,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.4974853556325678,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.4974863393760096,
+          "steps": 6
+        }
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "penetration": 2.5283207867599078e-08,
+      "float": 6.839516946202662e-08,
+      "slide": 5.517268868114183e-08,
+      "ankleError": 1.6653345369377348e-16,
+      "minSeparation": 0.16711847107641853,
+      "maxTwist": 2.4487169148648107,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.4974854671766142,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.4974856614698073,
+          "steps": 6
+        }
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "penetration": 0,
+      "float": 6.237478850437683e-08,
+      "slide": 3.0696308984772707e-09,
+      "ankleError": 1.6711069443220838e-16,
+      "minSeparation": 0.19743232760266244,
+      "maxTwist": 2.3794654994083375,
+      "crossed": 0,
+      "swingFrames": 168,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 1.4974853832958026,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 1.4974853747320072,
+          "steps": 6
+        }
+      }
+    }
+  ],
+  "afterFlat60Hz": [
+    {
+      "profile": "woman-casual",
+      "penetration": 1.3775333710525084e-08,
+      "float": 3.582760743203045e-08,
+      "slide": 2.475583494378719e-08,
+      "ankleError": 1.6667795129466247e-16,
+      "minSeparation": 0.15068381207677858,
+      "maxTwist": 2.2568339141563514,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937658533853031,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.9922071416335393,
+          "steps": 4
+        }
+      }
+    },
+    {
+      "profile": "man-casual",
+      "penetration": 3.2105877118340787e-08,
+      "float": 1.9100703769169003e-07,
+      "slide": 1.4468782724303894e-07,
+      "ankleError": 1.6653345369377348e-16,
+      "minSeparation": 0.1823075429080973,
+      "maxTwist": 2.2110916443682536,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937662368683199,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.9922072818533596,
+          "steps": 4
+        }
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "penetration": 0,
+      "float": 1.359052053551829e-07,
+      "slide": 1.5114932240169666e-08,
+      "ankleError": 1.668583973270389e-16,
+      "minSeparation": 0.15569381456168355,
+      "maxTwist": 2.2265622333511628,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937656761183662,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.9922071206228223,
+          "steps": 4
+        }
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "penetration": 2.1500578048939262e-07,
+      "float": 1.676940438845656e-07,
+      "slide": 1.5051943026760592e-07,
+      "ankleError": 1.6654248846680028e-16,
+      "minSeparation": 0.18657517770295706,
+      "maxTwist": 2.1965006359961556,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937664597686568,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.992207366028868,
+          "steps": 4
+        }
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "penetration": 4.813725549765446e-08,
+      "float": 7.234440100103989e-08,
+      "slide": 5.8935470110888546e-08,
+      "ankleError": 1.665695898455916e-16,
+      "minSeparation": 0.15282630058725288,
+      "maxTwist": 2.26298073470134,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937659823710488,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.9922071501771117,
+          "steps": 4
+        }
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "penetration": 0,
+      "float": 6.136726744647436e-08,
+      "slide": 1.7774506166812707e-09,
+      "ankleError": 1.665695898455916e-16,
+      "minSeparation": 0.18895459922685387,
+      "maxTwist": 2.2012357605317137,
+      "crossed": 0,
+      "swingFrames": 140,
+      "unsupported": 0,
+      "feet": {
+        "l": {
+          "maxLag": 0.7937656897471232,
+          "steps": 6
+        },
+        "r": {
+          "maxLag": 0.9922071128819032,
+          "steps": 4
+        }
+      }
+    }
+  ],
+  "turnMatrix": {
+    "runs": [
+      {
+        "hz": 30,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.042766151638369e-08,
+            "float": 3.493529621839686e-08,
+            "slide": 2.425967370793528e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.14722129024022387,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937658722972427,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071416335387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 2.0721970342765794e-08,
+            "float": 1.8751866386230998e-07,
+            "slide": 1.3604614289311912e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.17884167286645652,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937662794994443,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922072818533596,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.3302306079397697e-07,
+            "slide": 1.6001823317713307e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15179179479649427,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656714342016,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071206228223,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 1.9591010730173053e-07,
+            "float": 2.8751201376457647e-07,
+            "slide": 1.4377762376407164e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.1833145364240662,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937665402473228,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.992207366028868,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.1706267262658914e-08,
+            "float": 7.108297926661233e-08,
+            "slide": 5.807998577694198e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.14900018359906717,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937660159580996,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071501771117,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.131260808610317e-08,
+            "slide": 2.2726299153724186e-09,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18550447189060765,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656897792995,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071128819032,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 60,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.3775333710525084e-08,
+            "float": 3.582760743203045e-08,
+            "slide": 2.475583494378719e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15068381207677858,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937658533853031,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071416335393,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.2105877118340787e-08,
+            "float": 1.9100703769169003e-07,
+            "slide": 1.4468782724303894e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.1823075429080973,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937662368683199,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922072818533596,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.359052053551829e-07,
+            "slide": 1.5114932240169666e-08,
+            "ankleError": 1.668583973270389e-16,
+            "minSeparation": 0.15569381456168355,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656761183662,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071206228223,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 2.1500578048939262e-07,
+            "float": 1.676940438845656e-07,
+            "slide": 1.5051943026760592e-07,
+            "ankleError": 1.6654248846680028e-16,
+            "minSeparation": 0.18657517770295706,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937664597686568,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.992207366028868,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.813725549765446e-08,
+            "float": 7.234440100103989e-08,
+            "slide": 5.8935470110888546e-08,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.15282630058725288,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937659823710488,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071501771117,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.136726744647436e-08,
+            "slide": 1.7774506166812707e-09,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18895459922685387,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7937656897471232,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 0.9922071128819032,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 120,
+        "terrain": "plane",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 1.3775333710525084e-08,
+            "float": 3.582760743203045e-08,
+            "slide": 2.8296519897146362e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15067546132680137,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948603356569939,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170123198514613,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.2105877118340787e-08,
+            "float": 1.9289165708105682e-07,
+            "slide": 1.4743714534628093e-07,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.18230063632471558,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948607084238811,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170124611188913,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.359052053551829e-07,
+            "slide": 1.4711373976306593e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15568573348479375,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.794860175430826,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170122980246274,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 2.1500578048939262e-07,
+            "float": 1.676940438845656e-07,
+            "slide": 2.37959238373085e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18656842591146225,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948609233771321,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170125462038406,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.813725549765446e-08,
+            "float": 7.234440100103989e-08,
+            "slide": 5.90043213477116e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15281806551500446,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948604527322328,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.017012328937746,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 6.136726744647436e-08,
+            "slide": 1.613004248284302e-09,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.18894794057694272,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.7948601857804259,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0170122905789751,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 30,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 6.282963906090178e-09,
+            "float": 3.278239816412176e-08,
+            "slide": 2.0984288914807624e-08,
+            "ankleError": 1.5265566588595902e-16,
+            "minSeparation": 0.14756335684444186,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8394323310155393,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0518581996969876,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 9.335982766381368e-09,
+            "float": 2.0882816302407459e-07,
+            "slide": 1.3359753168639801e-07,
+            "ankleError": 1.666147490140628e-16,
+            "minSeparation": 0.1810320625144521,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.828669709602061,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0530749817591387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.448584299804101e-07,
+            "slide": 1.3738552645584164e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15273392844044056,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8367822134122825,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0447003018185306,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 4.069750385925393e-05,
+            "float": 2.474743676997293e-07,
+            "slide": 1.3812829900740958e-07,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.1844062726844103,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8276805940191201,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0512996071796272,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 3.803735666545183e-08,
+            "float": 6.349503700597836e-08,
+            "slide": 5.739568571971256e-08,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.15091074204192434,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8377941319951,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.047439484221179,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 0,
+            "float": 7.113815508451998e-08,
+            "slide": 2.6703309267600126e-09,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18588899119773503,
+            "crossed": 0,
+            "swingFrames": 70,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.834592852373507,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0555009194130494,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 60,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 5.359479334290929e-09,
+            "float": 3.309212294466679e-08,
+            "slide": 2.0478119474564282e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15081717535001574,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8416810360277073,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0518581996969876,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.1815250572941878e-09,
+            "float": 2.088314995339624e-07,
+            "slide": 1.3619722413043662e-07,
+            "ankleError": 1.6653345369377348e-16,
+            "minSeparation": 0.18386539496605533,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8306992927669752,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0530749817591387,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.4682959435102783e-07,
+            "slide": 1.3286789883780974e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15622849778778208,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8388873086895356,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0447003018185317,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 9.682207114412866e-06,
+            "float": 1.8105585968680726e-07,
+            "slide": 1.3911513427401878e-07,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.18723983883113443,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8295790026522653,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0512996071796272,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.4370622113987235e-08,
+            "float": 6.349607542532887e-08,
+            "slide": 5.56321968699319e-08,
+            "ankleError": 1.665695898455916e-16,
+            "minSeparation": 0.15412993048759308,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8399837696016149,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.047439484221179,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 1.3576839867247316e-05,
+            "float": 7.098930406750428e-08,
+            "slide": 2.044997148500921e-09,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.189120380664282,
+            "crossed": 0,
+            "swingFrames": 140,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8366900035451075,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0555009194130494,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "hz": 120,
+        "terrain": "wave",
+        "samples": [
+          {
+            "profile": "woman-casual",
+            "penetration": 5.359479334290929e-09,
+            "float": 3.322548109210843e-08,
+            "slide": 2.0227274346263123e-08,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.15076863100171248,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8416810360277073,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0749251250177654,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-casual",
+            "penetration": 3.1815250572941878e-09,
+            "float": 2.084415925591998e-07,
+            "slide": 1.369386978210067e-07,
+            "ankleError": 1.6711069443220838e-16,
+            "minSeparation": 0.1837089547492108,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.830833899670345,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0762318629259782,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-tailored",
+            "penetration": 0,
+            "float": 1.4682959435102783e-07,
+            "slide": 1.3064233705567394e-08,
+            "ankleError": 1.665340183814476e-16,
+            "minSeparation": 0.15613034841160814,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8388873086895356,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0679208754068614,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-tailored",
+            "penetration": 9.682207114412866e-06,
+            "float": 1.8105585968680726e-07,
+            "slide": 2.2948108648477925e-07,
+            "ankleError": 1.6743451780617611e-16,
+            "minSeparation": 0.1871396244350275,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8297708193049343,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0745187114222035,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "woman-daywear",
+            "penetration": 4.4370622113987235e-08,
+            "float": 6.319717064245944e-08,
+            "slide": 5.47502588579289e-08,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.15397412246406525,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.8399837696016149,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.0705975578151077,
+                "steps": 4
+              }
+            }
+          },
+          {
+            "profile": "man-workwear",
+            "penetration": 7.556919540998609e-06,
+            "float": 7.092486007873045e-08,
+            "slide": 1.7724147590879058e-09,
+            "ankleError": 1.6667795129466247e-16,
+            "minSeparation": 0.18907174848773486,
+            "crossed": 0,
+            "swingFrames": 280,
+            "unsupported": 0,
+            "feet": {
+              "l": {
+                "maxLag": 0.836742111924013,
+                "steps": 6
+              },
+              "r": {
+                "maxLag": 1.078572421859393,
+                "steps": 4
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Six production rigs on rendered flat and uneven surfaces at 30/60/120 Hz; half-turns and reversals, actual skinned shoe contact patches."
+  },
+  "walkingRegression": {
+    "runs": [
+      {
+        "hz": 30,
+        "terrain": "plane",
+        "pivotGap": 4.207138237927177e-07,
+        "patchSlide": 0.00018456011656486112,
+        "patchSamples": 8066,
+        "penetration": 0.00016787112040173718,
+        "float": 4.207138237927177e-07,
+        "slide": 1.0476338985281232e-07,
+        "pivotError": 8.977324723847077e-07,
+        "ankleError": 2.0014830212433605e-16,
+        "rollJump": 0.08740515661871504,
+        "contactSamples": 1150,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18521976771842416,
+            "push": 0.2894996766645727,
+            "toe": 0.2894996766645727
+          },
+          "man-casual": {
+            "heel": 0.17932635711301603,
+            "push": 0.29038696275371156,
+            "toe": 0.29038696275371156
+          },
+          "woman-tailored": {
+            "heel": 0.17915763650504843,
+            "push": 0.29005629805425237,
+            "toe": 0.29005629805425237
+          },
+          "man-tailored": {
+            "heel": 0.17932743414944427,
+            "push": 0.2903277951738562,
+            "toe": 0.2903277951738562
+          },
+          "woman-daywear": {
+            "heel": 0.18521976771842394,
+            "push": 0.2899088580320799,
+            "toe": 0.2899088580320799
+          },
+          "man-workwear": {
+            "heel": 0.1793863677723465,
+            "push": 0.2905397538227858,
+            "toe": 0.2905397538227858
+          }
+        }
+      },
+      {
+        "hz": 60,
+        "terrain": "plane",
+        "pivotGap": 4.0162036108598587e-07,
+        "patchSlide": 9.984686258530672e-05,
+        "patchSamples": 17449,
+        "penetration": 0.00016958746689829966,
+        "float": 4.0162036108598587e-07,
+        "slide": 5.77971615569533e-08,
+        "pivotError": 9.005419884766353e-07,
+        "ankleError": 1.7554167342883506e-16,
+        "rollJump": 0.04361893404522385,
+        "contactSamples": 2238,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.1849914280441557,
+            "push": 0.2870581362890941,
+            "toe": 0.2870581362890941
+          },
+          "man-casual": {
+            "heel": 0.18499142804415566,
+            "push": 0.28817937688217404,
+            "toe": 0.28817937688217404
+          },
+          "woman-tailored": {
+            "heel": 0.1849914280441557,
+            "push": 0.2877535225897157,
+            "toe": 0.2877535225897157
+          },
+          "man-tailored": {
+            "heel": 0.18499142804415566,
+            "push": 0.2881016213429691,
+            "toe": 0.2881016213429691
+          },
+          "woman-daywear": {
+            "heel": 0.1849914280441557,
+            "push": 0.28756661948838563,
+            "toe": 0.28756661948838563
+          },
+          "man-workwear": {
+            "heel": 0.18499142804415566,
+            "push": 0.28838079982149484,
+            "toe": 0.28838079982149484
+          }
+        }
+      },
+      {
+        "hz": 120,
+        "terrain": "plane",
+        "pivotGap": 4.146573915238261e-07,
+        "patchSlide": 5.573113266612671e-05,
+        "patchSamples": 37095,
+        "penetration": 0.00016762007726668063,
+        "float": 4.146573915238261e-07,
+        "slide": 5.7521664614266926e-08,
+        "pivotError": 9.05006513379614e-07,
+        "ankleError": 1.7554167342883506e-16,
+        "rollJump": 0.021785152008895026,
+        "contactSamples": 4459,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18156432403071984,
+            "push": 0.29051746820151675,
+            "toe": 0.29051746820151675
+          },
+          "man-casual": {
+            "heel": 0.17578889885166216,
+            "push": 0.29296409567947335,
+            "toe": 0.29296409567947335
+          },
+          "woman-tailored": {
+            "heel": 0.17914549460790355,
+            "push": 0.2910217301944557,
+            "toe": 0.2910217301944557
+          },
+          "man-tailored": {
+            "heel": 0.1757888988516621,
+            "push": 0.2929175089340467,
+            "toe": 0.2929175089340467
+          },
+          "woman-daywear": {
+            "heel": 0.1791454946079035,
+            "push": 0.2908854293672824,
+            "toe": 0.2908854293672824
+          },
+          "man-workwear": {
+            "heel": 0.17578889885166218,
+            "push": 0.293085116542183,
+            "toe": 0.293085116542183
+          }
+        }
+      },
+      {
+        "hz": 30,
+        "terrain": "wave",
+        "pivotGap": 4.5272916854299794e-07,
+        "patchSlide": 0.0008250751533602053,
+        "patchSamples": 8306,
+        "penetration": 0.0003203464862884045,
+        "float": 4.5272916854299794e-07,
+        "slide": 1.003638809398119e-07,
+        "pivotError": 9.23809321152428e-07,
+        "ankleError": 1.6883057536160649e-16,
+        "rollJump": 0.08740515661871504,
+        "contactSamples": 1150,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18521976771842416,
+            "push": 0.2894996766645727,
+            "toe": 0.2894996766645727
+          },
+          "man-casual": {
+            "heel": 0.17932635711301603,
+            "push": 0.29038696275371156,
+            "toe": 0.29038696275371156
+          },
+          "woman-tailored": {
+            "heel": 0.17915763650504843,
+            "push": 0.29005629805425237,
+            "toe": 0.29005629805425237
+          },
+          "man-tailored": {
+            "heel": 0.17932743414944427,
+            "push": 0.2903277951738562,
+            "toe": 0.2903277951738562
+          },
+          "woman-daywear": {
+            "heel": 0.18521976771842394,
+            "push": 0.2899088580320799,
+            "toe": 0.2899088580320799
+          },
+          "man-workwear": {
+            "heel": 0.1793863677723465,
+            "push": 0.2905397538227858,
+            "toe": 0.2905397538227858
+          }
+        }
+      },
+      {
+        "hz": 60,
+        "terrain": "wave",
+        "pivotGap": 4.477816628600806e-07,
+        "patchSlide": 0.0005039774479223144,
+        "patchSamples": 18040,
+        "penetration": 0.0003296430248845329,
+        "float": 4.477816628600806e-07,
+        "slide": 5.799219731729111e-08,
+        "pivotError": 9.341060035525751e-07,
+        "ankleError": 1.7554167342883506e-16,
+        "rollJump": 0.04361893404522385,
+        "contactSamples": 2238,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.1849914280441557,
+            "push": 0.2870581362890941,
+            "toe": 0.2870581362890941
+          },
+          "man-casual": {
+            "heel": 0.18499142804415566,
+            "push": 0.28817937688217404,
+            "toe": 0.28817937688217404
+          },
+          "woman-tailored": {
+            "heel": 0.1849914280441557,
+            "push": 0.2877535225897157,
+            "toe": 0.2877535225897157
+          },
+          "man-tailored": {
+            "heel": 0.18499142804415566,
+            "push": 0.2881016213429691,
+            "toe": 0.2881016213429691
+          },
+          "woman-daywear": {
+            "heel": 0.1849914280441557,
+            "push": 0.28756661948838563,
+            "toe": 0.28756661948838563
+          },
+          "man-workwear": {
+            "heel": 0.18499142804415566,
+            "push": 0.28838079982149484,
+            "toe": 0.28838079982149484
+          }
+        }
+      },
+      {
+        "hz": 120,
+        "terrain": "wave",
+        "pivotGap": 4.6207022576932877e-07,
+        "patchSlide": 0.00022789142979764092,
+        "patchSamples": 38207,
+        "penetration": 0.00034741599501316237,
+        "float": 4.6207022576932877e-07,
+        "slide": 5.7643415980385135e-08,
+        "pivotError": 9.543584234005953e-07,
+        "ankleError": 2.0014830212433605e-16,
+        "rollJump": 0.021785152008895026,
+        "contactSamples": 4459,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18156432403071984,
+            "push": 0.29051746820151675,
+            "toe": 0.29051746820151675
+          },
+          "man-casual": {
+            "heel": 0.17578889885166216,
+            "push": 0.29296409567947335,
+            "toe": 0.29296409567947335
+          },
+          "woman-tailored": {
+            "heel": 0.17914549460790355,
+            "push": 0.2910217301944557,
+            "toe": 0.2910217301944557
+          },
+          "man-tailored": {
+            "heel": 0.1757888988516621,
+            "push": 0.2929175089340467,
+            "toe": 0.2929175089340467
+          },
+          "woman-daywear": {
+            "heel": 0.1791454946079035,
+            "push": 0.2908854293672824,
+            "toe": 0.2908854293672824
+          },
+          "man-workwear": {
+            "heel": 0.17578889885166218,
+            "push": 0.293085116542183,
+            "toe": 0.293085116542183
+          }
+        }
+      },
+      {
+        "hz": 30,
+        "terrain": "ramp",
+        "pivotGap": 5.619018293434586e-07,
+        "patchSlide": 0.0017772721684762198,
+        "patchSamples": 7730,
+        "penetration": 0.00017764362892691565,
+        "float": 5.619018293434586e-07,
+        "slide": 1.2586146293171234e-07,
+        "pivotError": 1.0444722498458032e-06,
+        "ankleError": 2.0014830212433605e-16,
+        "rollJump": 0.08740515661871504,
+        "contactSamples": 1150,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18521976771842416,
+            "push": 0.2894996766645727,
+            "toe": 0.2894996766645727
+          },
+          "man-casual": {
+            "heel": 0.17932635711301603,
+            "push": 0.29038696275371156,
+            "toe": 0.29038696275371156
+          },
+          "woman-tailored": {
+            "heel": 0.17915763650504843,
+            "push": 0.29005629805425237,
+            "toe": 0.29005629805425237
+          },
+          "man-tailored": {
+            "heel": 0.17932743414944427,
+            "push": 0.2903277951738562,
+            "toe": 0.2903277951738562
+          },
+          "woman-daywear": {
+            "heel": 0.18521976771842394,
+            "push": 0.2899088580320799,
+            "toe": 0.2899088580320799
+          },
+          "man-workwear": {
+            "heel": 0.1793863677723465,
+            "push": 0.2905397538227858,
+            "toe": 0.2905397538227858
+          }
+        }
+      },
+      {
+        "hz": 60,
+        "terrain": "ramp",
+        "pivotGap": 5.896090897183903e-07,
+        "patchSlide": 0.0007617792322277355,
+        "patchSamples": 16776,
+        "penetration": 0.0001793874651090377,
+        "float": 5.896090897183903e-07,
+        "slide": 9.204105644408668e-08,
+        "pivotError": 1.0450120673162167e-06,
+        "ankleError": 1.7772239894833365e-16,
+        "rollJump": 0.04361893404522385,
+        "contactSamples": 2238,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.1849914280441557,
+            "push": 0.2870581362890941,
+            "toe": 0.2870581362890941
+          },
+          "man-casual": {
+            "heel": 0.18499142804415566,
+            "push": 0.28817937688217404,
+            "toe": 0.28817937688217404
+          },
+          "woman-tailored": {
+            "heel": 0.1849914280441557,
+            "push": 0.2877535225897157,
+            "toe": 0.2877535225897157
+          },
+          "man-tailored": {
+            "heel": 0.18499142804415566,
+            "push": 0.2881016213429691,
+            "toe": 0.2881016213429691
+          },
+          "woman-daywear": {
+            "heel": 0.1849914280441557,
+            "push": 0.28756661948838563,
+            "toe": 0.28756661948838563
+          },
+          "man-workwear": {
+            "heel": 0.18499142804415566,
+            "push": 0.28838079982149484,
+            "toe": 0.28838079982149484
+          }
+        }
+      },
+      {
+        "hz": 120,
+        "terrain": "ramp",
+        "pivotGap": 5.869187961748956e-07,
+        "patchSlide": 0.0004098262623873721,
+        "patchSamples": 35600,
+        "penetration": 0.00017760848329684276,
+        "float": 5.869187961748956e-07,
+        "slide": 5.937624590249381e-08,
+        "pivotError": 1.0453307445579687e-06,
+        "ankleError": 2.0014830212433605e-16,
+        "rollJump": 0.021785152008895026,
+        "contactSamples": 4459,
+        "phases": {
+          "woman-casual": {
+            "heel": 0.18156432403071984,
+            "push": 0.29051746820151675,
+            "toe": 0.29051746820151675
+          },
+          "man-casual": {
+            "heel": 0.17578889885166216,
+            "push": 0.29296409567947335,
+            "toe": 0.29296409567947335
+          },
+          "woman-tailored": {
+            "heel": 0.17914549460790355,
+            "push": 0.2910217301944557,
+            "toe": 0.2910217301944557
+          },
+          "man-tailored": {
+            "heel": 0.1757888988516621,
+            "push": 0.2929175089340467,
+            "toe": 0.2929175089340467
+          },
+          "woman-daywear": {
+            "heel": 0.1791454946079035,
+            "push": 0.2908854293672824,
+            "toe": 0.2908854293672824
+          },
+          "man-workwear": {
+            "heel": 0.17578889885166218,
+            "push": 0.293085116542183,
+            "toe": 0.293085116542183
+          }
+        }
+      }
+    ],
+    "errors": []
+  },
+  "verification": {
+    "unitTests": 329,
+    "failures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "regression": "Standing turn alignment test failed before implementation and passes after at 30/60/120 Hz in both directions."
+  },
+  "limitations": [
+    "Controlled rig motion verifies geometry and support behavior. It is not a complete acceptance of all character motion.",
+    "Body weight transfer during standing steps remains a separate visual review."
+  ],
+  "sha256": {
+    "preview/src/foot-placement.js": "3b8b80c092b8258392b83881f9a3721df1202f9043726a5a6ae85b2b80c706d4",
+    "preview/tests/foot-placement.test.js": "48e65b3d58a5f3da53ba6bad9ff11a94bb5fd378617e780258854ae905f7b47f",
+    "preview/e2e/standing-turns.js": "900ad8274b4174752107233e50b95493462bf62464f45113fdc15a44bca98602"
+  }
+}

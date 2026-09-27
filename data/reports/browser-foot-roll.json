@@ -1,0 +1,281 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted; broader goal active",
+  "changes": [
+    "Heel-first landing and heel lift with toe-joint flexion during push-off",
+    "Cached sole samples deform using their actual ball-joint skin influence",
+    "Preserve the previous actual ground-support vertex during stance; select next support from terrain footprint",
+    "Carry a decaying positional offset into swing for continuity",
+    "Reset foot roll and toe flex after relocation; recompute leg lengths for uniform parent-scale changes"
+  ],
+  "red_evidence": {
+    "no_heel_roll": "/tmp/river-foot-roll-red.log",
+    "selected_pivot_floated_3cm": "/tmp/river-foot-roll-pivot-red.log",
+    "scale_error_m": 0.13477167821341426,
+    "scale_error_log": "/tmp/river-foot-roll-transform-detail.log",
+    "stale_roll_after_relocation": "/tmp/river-foot-roll-reset-red.log"
+  },
+  "verification": {
+    "unit_tests": 233,
+    "unit_log": "/tmp/river-foot-roll-all-tests.log",
+    "build_log": "/tmp/river-foot-roll-build.log",
+    "production_build": "passed; existing Three.js chunk-size advisory",
+    "real_rigs": 6,
+    "terrains": [
+      "plane",
+      "wave",
+      "ramp"
+    ],
+    "hz": [
+      30,
+      60,
+      120
+    ],
+    "stance_samples": 22194,
+    "consecutive_near_ground_vertex_samples": 174772,
+    "worst": {
+      "penetration": 0.0007201483585125568,
+      "float": 8.810362215894152e-07,
+      "slide": 4.242732261391407e-07,
+      "pivotError": 1.622953086340854e-06,
+      "ankleError": 2.0014830212433605e-16,
+      "rollJump": 0.08740515653976078,
+      "pivotGap": 8.810362215894152e-07,
+      "patchSlide": 0.0020445888538487117
+    },
+    "browser_log": "/tmp/river-foot-roll-ground-pivot.log",
+    "raw_result": "output/playwright/foot-roll.json",
+    "review": "Initial review found a pivot/terrain contact proof gap; measured and corrected by tracking actual terrain support. Follow-up review found no actionable issue.",
+    "integration_regressions": {
+      "log": "/tmp/river-foot-roll-regressions.log",
+      "result": "output/playwright/foot-roll-regressions.json",
+      "checks": [
+        "grounded-motion",
+        "cuff-clearance",
+        "jevica-gown",
+        "moving-people",
+        "foot-support-cost"
+      ]
+    },
+    "integration_metrics": {
+      "grounded_motion": {
+        "rigs": 6,
+        "frames": 301,
+        "plantedSamples": 2052,
+        "maxFootErrorMeters": 9.7008124034716e-07,
+        "errors": [],
+        "scope": "Actual shipped skinned rigs and renderer on an inclined fixture; district paths checked separately"
+      },
+      "cuff_worst_m": -0.0010937002029592427,
+      "gown_worst_m": -0.0913505592079148,
+      "walking_interaction_checks": 31,
+      "walking_interaction_clicks": 6,
+      "cost": {
+        "rooms": 30,
+        "results": [
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0.7000000476837158,
+            "p95Ms": 0.8999999761581421,
+            "queriesPerFrame": 240
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 1.100000023841858,
+            "p95Ms": 1.2000000476837158,
+            "queriesPerFrame": 8952
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0.7000000476837158,
+            "p95Ms": 0.8000000715255737,
+            "queriesPerFrame": 456
+          },
+          {
+            "scenario": "24 outdoor residents",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 1.2000000476837158,
+            "p95Ms": 1.4000000953674316,
+            "queriesPerFrame": 12980.4
+          },
+          {
+            "scenario": "player outside",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 10
+          },
+          {
+            "scenario": "player outside",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 0.10000002384185791,
+            "p95Ms": 0.20000004768371582,
+            "queriesPerFrame": 380
+          },
+          {
+            "scenario": "player outside",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 19
+          },
+          {
+            "scenario": "player outside",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 0.10000002384185791,
+            "p95Ms": 0.20000004768371582,
+            "queriesPerFrame": 551
+          },
+          {
+            "scenario": "player inside",
+            "speed": 0,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 10
+          },
+          {
+            "scenario": "player inside",
+            "speed": 0,
+            "footprints": true,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 380
+          },
+          {
+            "scenario": "player inside",
+            "speed": 1.1,
+            "footprints": false,
+            "medianMs": 0,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 12.729166666666666
+          },
+          {
+            "scenario": "player inside",
+            "speed": 1.1,
+            "footprints": true,
+            "medianMs": 0.09999990463256836,
+            "p95Ms": 0.10000002384185791,
+            "queriesPerFrame": 431.8541666666667
+          }
+        ],
+        "scope": "CPU avatar updates using actual district terrain and production room lookup, six resident profiles and the Jevica player rig. Indoor positions remain in the room. Footprint-disabled path also disables the foot rocker to compare total contact-solving cost, not a district FPS baseline; costume and rendering excluded."
+      }
+    },
+    "player_forms": {
+      "checks": 42,
+      "errors": [],
+      "log": "/tmp/river-foot-roll-player-forms.log",
+      "result": "output/playwright/foot-roll-player-forms.json"
+    },
+    "planar_shoe_contact": {
+      "summary": {
+        "minHeight": -0.00018747564659982174,
+        "maxPlantedHeight": 9.994079005481993e-07,
+        "planted": 26454,
+        "errors": [],
+        "runs": [
+          {
+            "slope": 0,
+            "hz": 30,
+            "frames": 151
+          },
+          {
+            "slope": 0.5,
+            "hz": 30,
+            "frames": 151
+          },
+          {
+            "slope": -0.5,
+            "hz": 30,
+            "frames": 151
+          },
+          {
+            "slope": 0,
+            "hz": 60,
+            "frames": 301
+          },
+          {
+            "slope": 0.2,
+            "hz": 60,
+            "frames": 301
+          },
+          {
+            "slope": -0.2,
+            "hz": 60,
+            "frames": 301
+          },
+          {
+            "slope": 0.5,
+            "hz": 60,
+            "frames": 301
+          },
+          {
+            "slope": -0.5,
+            "hz": 60,
+            "frames": 301
+          },
+          {
+            "slope": 0,
+            "hz": 120,
+            "frames": 601
+          },
+          {
+            "slope": 0.5,
+            "hz": 120,
+            "frames": 601
+          },
+          {
+            "slope": -0.5,
+            "hz": 120,
+            "frames": 601
+          }
+        ]
+      },
+      "log": "/tmp/river-foot-roll-shoe-contact.log",
+      "result": "output/playwright/foot-roll-shoe-contact.json"
+    }
+  },
+  "visual_artifacts": [
+    "output/playwright/foot-roll-heel.png",
+    "output/playwright/foot-roll-toe.png"
+  ],
+  "unchanged_assets": {
+    "preview/public/assets/characters/woman-casual.glb": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+    "preview/public/assets/characters/woman-tailored.glb": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+    "preview/public/assets/characters/man-workwear.glb": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+    "preview/public/assets/characters/woman-daywear.glb": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+    "preview/public/assets/characters/man-tailored.glb": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+    "preview/public/assets/characters/man-casual.glb": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad",
+    "preview/public/assets/characters/jevica.glb": "6f7fc6cb6091b34c063d98f9aa515841b0d719049ece9dd49e969b7a85e306d8"
+  },
+  "source_sha256": {
+    "preview/src/foot-roll.js": "f4be5702555b59f7216b00edd6d16ff2d33f9b00f3d6aa73e7c78dc640f5c512",
+    "preview/src/foot-placement.js": "202df721f5809f071cc0a8a05efc080d2d34d0a0381bcb7eafaa48819516ef57",
+    "preview/src/sole-support.js": "1d77dad5449799032809f815298af1acb01fffdaa54371aa71a4601a3794d18f",
+    "preview/src/avatars.js": "17db5a7acc056b86764287c2a2d5599995709707193a2c9db9bcf05a2f6b1992",
+    "preview/tests/foot-roll.test.js": "bd0358b3749bc3660c7efcbda4ae34c2f904c3b98841337980bb6c0285b71a4b",
+    "preview/e2e/foot-roll.js": "06516880060a348401209a2229f6b0b4092553b21ab8ef5a5d3cee37954f97d0",
+    "preview/e2e/fixtures/motion.js": "e64b90dfc9363456b7f672f654e0a551b9759d23bf48e9e740c00eb9f097a3f1",
+    "preview/e2e/fixtures/shoe-clearance.js": "f07e6a9754a6586f97aeafff3874e850b0bb80af5267a67fe0276dc9a9f28b31",
+    "preview/e2e/grounded-motion.js": "02a0496c863ec858be99e45e44db4e9a47f4695f39e747706748557c6697db09",
+    "preview/e2e/foot-support-cost.js": "8ccad9a27e040881c493510c3e7ade406432991ac6933e72a165731bc8f7304b"
+  },
+  "limits": [
+    "Procedural gait refinement, not motion-capture or full biomechanical simulation",
+    "Near-ground patch vertices may move up to the recorded 2.05mm per frame even when the selected actual support point is stationary",
+    "Coverage includes sampled shoe vertices and three height-field terrains, not continuous mesh collision, stairs, moving supports or every real district route",
+    "Native Unreal gait parity remains separate"
+  ]
+}

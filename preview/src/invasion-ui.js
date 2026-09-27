@@ -37,7 +37,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
   const refreshGate = () => {
     if (state?.phase === 'active') return;
     toggle.disabled = !magical();
-    if (!magical()) say(`Change your character to the Wicked Witch or Jevica to fight with magic. ${formLabel()} cannot cast.`);
+    if (!magical()) say(`Jevica must be ready before starting the scenario.`);
     else if (!state) say(`${formLabel()} is ready. Begin, then get within ${SPELL_RANGE} m of an alien and cast.`);
   };
   const begin = () => {
@@ -56,13 +56,21 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
     $('#invasion-brief').textContent = 'Saucers land at the edge of the district and their crew beam neighbors aboard. Only magic sends them home.';
     if (message) say(message); publish();
   };
+  const reset = () => {
+    if (state) releaseResidents(state, getLocals() ?? []);
+    invaders?.dispose(); invaders = null;
+    state = null; environment = null; world = null; lastCast = 0;
+    counts.hidden = true;
+    $('#invasion-aliens').textContent = '0'; $('#invasion-safe').textContent = '0';
+    finish(); refreshGate();
+  };
   const tryCast = () => {
     if (!state || state.phase !== 'active') return;
     const pose = walking.getPose(); if (!pose) return;
     const player = { form: getForm(), position: [pose.position[0], -pose.position[2], pose.ground + (pose.altitude ?? 0)] };
     const hit = castSpell(state, player, { canSee: point => walking.canSee(point) });
     if (hit) { onCast(); lastCast = performance.now(); say(`${formLabel()} casts at ${hit.replace('alien-', 'the crew member #')}.`); }
-    else if (!magical()) say(`${formLabel()} cannot cast. Change to the Wicked Witch or Jevica.`);
+    else if (!magical()) say(`Jevica must be ready before casting.`);
     else if (state.cooldown <= 0) say(`No alien within ${SPELL_RANGE} m and in sight. Move closer.`);
     publish();
   };
@@ -95,6 +103,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
       if (state.phase === 'active') publish();
     },
     refreshGate,
-    dispose() { finish(); invaders?.dispose(); panel.remove(); },
+    reset,
+    dispose() { reset(); panel.remove(); },
   };
 }

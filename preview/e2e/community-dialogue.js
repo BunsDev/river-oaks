@@ -117,7 +117,7 @@ async (page) => {
 
   const layouts = [];
   for (const theme of ['dark', 'light']) {
-    await page.locator('[data-section=settings-section]').click(); // Appearance lives in the Scene rail section.
+    await page.locator('[data-section=settings-section]').click(); // Appearance lives in the Settings rail section.
     await page.locator(`button[data-theme-preference=${theme}]`).click();
     await page.locator('[data-section=community-section]').click();
     for (const [width, height] of [[1440, 1000], [1280, 720], [390, 844], [320, 568], [844, 390]]) {

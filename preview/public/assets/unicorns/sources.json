@@ -1,0 +1,10 @@
+{
+  "author": "Lyndon Daniels; rig by ChadM",
+  "license": "CC0-1.0",
+  "source": "https://opengameart.org/content/rigged-horse",
+  "download": "https://opengameart.org/sites/default/files/riggedHorse.blend",
+  "source_sha256": "9cca670b93a74d50e89263e50d55ab035a6c46aa7d2b21e354bdac6987037f4a",
+  "sha256": "066984dd8dbeb92fa7ab6f1876c21e17374b026739b82d91cebc60e8e6d5ecf5",
+  "adaptation": "PBR conversion, normalized anatomy, one silhouette subdivision, weighted mane, tail and eyes, hoof endpoints. Runtime pearl coat, gold horn, harness and contact gait.",
+  "build": "bpy 4.5.3: python scripts/build_unicorn.py"
+}

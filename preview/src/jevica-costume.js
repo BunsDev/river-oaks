@@ -1,4 +1,9 @@
+import { batchCostumeAttachments } from './costume-batching.js';
 import * as THREE from 'three';
+import { measureHead } from './head-fit.js';
+import { createJevicaDrape } from './jevica-drape.js';
+import { createJevicaEmbroidery } from './jevica-embroidery.js';
+import { fitJevicaBodice } from './bodice-fitting.js';
 
 // One hero costume. Shared resident geometry and textures are never mutated.
 export function createJevicaCostume(avatar) {
@@ -19,21 +24,15 @@ export function createJevicaCostume(avatar) {
   weave.wrapS = weave.wrapT = THREE.RepeatWrapping; weave.repeat.set(22, 16);
   weave.magFilter = THREE.LinearFilter; weave.minFilter = THREE.LinearMipmapLinearFilter;
   weave.generateMipmaps = true; weave.needsUpdate = true; owned.add(weave);
-  const silk = surface({color:'#c78699', roughness:0.42, sheen:0.8, sheenColor:new THREE.Color('#fbe1d9'), sheenRoughness:0.48, bumpMap:weave, bumpScale:0.0007, side:THREE.DoubleSide});
-  const organza = surface({color:'#e0b0b9', roughness:0.57, sheen:0.9, sheenColor:new THREE.Color('#fff0df'), sheenRoughness:0.65, side:THREE.DoubleSide});
-  const platinum = surface({color:'#e5e2eb', metalness:0.92, roughness:0.22});
+  const {map:embroidery,properties}=createJevicaEmbroidery();
+  owned.add(embroidery);owned.add(properties);
+  const silk = surface({color:'#ffffff', map:embroidery, metalness:0.85, metalnessMap:properties,
+    roughness:0.48, roughnessMap:properties, sheen:0.65, sheenColor:new THREE.Color('#ffe5ed'),
+    sheenRoughness:0.52, bumpMap:weave, bumpScale:0.0005, side:THREE.DoubleSide});
+  const gold = surface({color:'#c49b4b', metalness:0.85, roughness:0.28});
   const crystal = surface({color:'#fff5ee', roughness:0.08, metalness:0.08, clearcoat:1, ior:1.8, transmission:0.35, thickness:0.012});
-  const embroiderySize=512, embroideryData=new Uint8Array(embroiderySize*embroiderySize*4);
-  for(let y=0;y<embroiderySize;y++)for(let x=0;x<embroiderySize;x++) {
-    const u=x/embroiderySize,v=y/embroiderySize;
-    const curve=Math.abs(Math.sin((u+0.08*Math.sin(v*Math.PI*8))*Math.PI*24));
-    const stitch=curve<0.10;
-    embroideryData.set(stitch?[218,211,222,255]:[199,134,153,255],(y*embroiderySize+x)*4);
-  }
-  const embroidery=new THREE.DataTexture(embroideryData,embroiderySize,embroiderySize);
-  embroidery.colorSpace=THREE.SRGBColorSpace;embroidery.generateMipmaps=true;
-  embroidery.magFilter=THREE.LinearFilter;embroidery.minFilter=THREE.LinearMipmapLinearFilter;embroidery.needsUpdate=true;owned.add(embroidery);
-  const bodice=silk.clone();bodice.color.set('#ffffff');bodice.map=embroidery;bodice.metalness=0.12;owned.add(bodice);
+  crystal.name='Jevica crown crystals';
+  const bodice=silk.clone();owned.add(bodice);
   for (const [original, material] of materials) {
     if (/^young_/.test(original.name)) {
       material.color.set('#ffffff'); material.roughness = 0.58; material.envMapIntensity = 0.65;
@@ -45,13 +44,39 @@ export function createJevicaCostume(avatar) {
         shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
           #include <map_fragment>
           float strand = clamp(dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722)) * 3.5, 0.0, 1.0);
-          diffuseColor.rgb = mix(vec3(0.12, 0.055, 0.018), vec3(0.78, 0.59, 0.30), pow(strand, 0.65));
+          diffuseColor.rgb = mix(vec3(0.12, 0.055, 0.018), vec3(0.80, 0.55, 0.32), pow(strand, 0.65));
         `);
       };
-      material.customProgramCacheKey = () => 'jevica-champagne-hair-v1';
+      material.customProgramCacheKey = () => 'jevica-rose-gold-hair-v2';
+    }
+    if (original.name === 'jevica_brows') {
+      material.alphaTest = 0.4; material.transparent = false; material.depthWrite = true;
+      material.roughness = 0.8;
+      // Warm, softly defined brows retain the source strand coverage and alpha.
+      material.onBeforeCompile = shader => {
+        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+          #include <map_fragment>
+          float browStrand = clamp(dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722)), 0.0, 1.0);
+          diffuseColor.rgb = mix(vec3(0.09, 0.039, 0.015), vec3(0.21, 0.12, 0.05), browStrand);
+        `);
+      };
+      material.customProgramCacheKey = () => 'jevica-soft-brows-v1';
     }
     if (original.name === 'jevica_silk') {
-      model.traverse(item => {if (item.isMesh && item.material === material) item.material = bodice;});
+      model.traverse(item => {
+        if (!item.isMesh || item.material !== material) return;
+        item.material = bodice;
+        // Follow the fitted neckline in bind space; skinning then carries the
+        // embroidery with the torso instead of leaving a floating rigid collar.
+        item.geometry=item.geometry.clone();owned.add(item.geometry);
+        fitJevicaBodice(model,item);
+        const positions=item.geometry.attributes.position,uv=new Float32Array(positions.count*2);
+        for(let i=0;i<positions.count;i++) {
+          const x=positions.getX(i),neckline=1.235-.055*Math.max(0,1-Math.abs(x)/.13);
+          uv[i*2]=(x+.195)/.39;uv[i*2+1]=Math.max(0,(neckline-positions.getY(i))/.22);
+        }
+        item.geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+      });
     }
     material.needsUpdate = true;
   }
@@ -71,86 +96,89 @@ export function createJevicaCostume(avatar) {
   // Dense vertical samples make folds continuous instead of stacked rigid petals.
   const rings = Array.from({length:41}, (_, i) => {
     const t = 1 - i / 40;
-    return new THREE.Vector2(0.155 + 0.44 * Math.pow(t, 0.72), 0.085 - t * 0.985);
+    return new THREE.Vector2(0.215 + 0.38 * Math.pow(t, 1.15) - .05 * Math.exp(-t / .07), 0.085 - t * 0.985);
   });
   const skirt = new THREE.LatheGeometry(rings, 128);
   const vertices = skirt.attributes.position;
   for (let i = 0; i < vertices.count; i++) {
     const x = vertices.getX(i), y = vertices.getY(i), z = vertices.getZ(i);
     const angle = Math.atan2(z, x), t = THREE.MathUtils.clamp((0.085 - y) / 0.985, 0, 1);
-    const fold = 1 + (0.018 + t * 0.045) * Math.sin(angle * 18 + t * 0.8) + 0.012 * Math.sin(angle * 36 - t);
-    vertices.setXYZ(i, x * fold, y + Math.pow(t, 8) * 0.012 * Math.cos(angle * 18), z * fold * 0.93);
+    const fold = 1 + (0.008 + t * 0.027) * Math.sin(angle * 18 + t * 0.8) + 0.006 * Math.sin(angle * 36 - t);
+    const height=y+Math.pow(t,8)*.012*Math.cos(angle*18);
+    vertices.setXYZ(i, x * fold, height, z * fold * .93);
   }
   skirt.computeVertexNormals();
-  const gown = mesh(waist, skirt, silk, [0,0,0]); gown.name = 'Jevica draped silk gown';
-  // Two continuous organza swags sit over the silk, with thin scalloped hems.
-  for (let tier = 0; tier < 2; tier++) {
-    const geometry = skirt.clone(), positions = geometry.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-      const t = THREE.MathUtils.clamp((0.085 - vertices.getY(i)) / 0.985, 0, 1);
-      const angle = Math.atan2(vertices.getZ(i), vertices.getX(i));
-      const hem = 0.49 + tier * 0.29 + 0.055 * Math.cos(angle * 5);
-      const progress = t * hem;
-      const radius = 0.163 + tier * 0.004 + 0.445 * Math.pow(progress, 0.72);
-      const fold = 1 + progress * 0.048 * Math.sin(angle * 18 + progress * 0.8);
-      positions.setXYZ(i, Math.cos(angle) * radius * fold, 0.086 - progress * 0.985, Math.sin(angle) * radius * fold * 0.93);
-    }
-    geometry.computeVertexNormals(); mesh(waist, geometry, organza, [0,0,0]);
-  }
+  const gown = mesh(waist, skirt, silk, [0,0,0], [0.88,1,0.88]); gown.name = 'Jevica draped silk gown';
+  const skirts=[gown];
   const head = attach('head');
-  const tulle=surface({color:'#f7c9df',roughness:0.62,sheen:0.9,sheenColor:new THREE.Color('#fff2fc'),transparent:true,opacity:0.43,depthWrite:false,side:THREE.DoubleSide});
-  for(const side of [-1,1]) {
-    const shoulder=attach(side<0?'clavicle_r':'clavicle_l');
-    for(let petal=0;petal<3;petal++) {
-      const geometry=new THREE.PlaneGeometry(1,1,16,20),position=geometry.attributes.position;
-      for(let i=0;i<position.count;i++) {
-        const u=position.getX(i)*2,v=position.getY(i)+0.5;
-        const width=Math.sin(v*Math.PI)*0.11;
-        position.setXYZ(i,side*(0.065+v*(0.17-petal*0.025)+u*width*0.35),v*(0.15+petal*0.035),-0.018+u*width+Math.sin(v*Math.PI)*0.035-petal*0.028);
-      }
-      geometry.computeVertexNormals();
-      const bow=mesh(shoulder,geometry,tulle,[side*0.06,-0.075,0.025]);bow.castShadow=false;
-    }
-    const earring=mesh(head,new THREE.TorusGeometry(0.014,0.0016,6,24),platinum,[side*0.086,0.013,0.029]);earring.scale.y=1.3;
+  const fit=measureHead(avatar.rig), crownRadius=fit.hair.radius+0.003;
+  const [crownX,crownZ]=fit.hair.centre, crownY=fit.skull.top-0.016;
+  for(const y of [crownY,crownY+0.018]) {
+    const band=mesh(head,new THREE.TorusGeometry(crownRadius,0.002,8,64),gold,[crownX,y,crownZ]);band.rotation.x=Math.PI/2;
   }
-  const band = mesh(head, new THREE.TorusGeometry(0.098,0.002,8,64), platinum, [0,0.115,0.005]);
-  band.rotation.x = Math.PI / 2;
-  // A low, tapered tiara follows the forehead instead of extending the skull.
-  for (let i = 0; i < 9; i++) {
-    const angle = -Math.PI * 0.43 + i / 8 * Math.PI * 0.86;
-    const height = 0.018 + 0.038 * Math.pow(Math.cos(angle), 3);
-    const x = Math.sin(angle) * 0.098, z = Math.cos(angle) * 0.098;
-    const points = Array.from({length:17}, (_, j) => {
-      const a = j / 16 * Math.PI * 2;
-      return new THREE.Vector3(x + Math.sin(a) * 0.012, 0.115 + (1-Math.cos(a))*height/2, z);
+  // Open gold filigree surrounds the crown rather than a solid metal cylinder.
+  for(let i=0;i<15;i++) {
+    const angle=i/15*Math.PI*2, height=0.046+0.024*Math.max(0,Math.cos(angle));
+    const points=Array.from({length:25},(_,j)=>{
+      const a=j/24*Math.PI*2,theta=angle+Math.sin(a)*0.13,r=crownRadius+(1-Math.cos(a))*0.004;
+      return new THREE.Vector3(crownX+Math.sin(theta)*r,crownY+(1-Math.cos(a))*height/2,crownZ+Math.cos(theta)*r);
     });
-    mesh(head, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.0013,5,false), platinum, [0,0,0]);
-    mesh(head, new THREE.OctahedronGeometry(0.007), crystal, [x,0.115+height,z], [0.7,1.35,0.6]);
+    mesh(head,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points,true),32,0.0018,6,true),gold,[0,0,0]);
+    mesh(head,new THREE.OctahedronGeometry(0.005),crystal,[crownX+Math.sin(angle)*crownRadius,crownY+height,crownZ+Math.cos(angle)*crownRadius],[0.7,1.4,0.7]);
   }
   for (const side of [-1,1]) {
     mesh(head, new THREE.OctahedronGeometry(0.01), crystal, [side*0.083,0.018,0.025], [0.65,1.6,0.7]);
   }
-  const belt = mesh(waist, new THREE.TorusGeometry(0.16,0.004,8,80), platinum, [0,0.065,0]);
+  const belt = mesh(waist, new THREE.TorusGeometry(0.16,0.004,8,80), gold, [0,0.065,0]);
   belt.rotation.x = Math.PI / 2; belt.scale.y = 0.78;
   const hand = attach('hand_r');
-  mesh(hand, new THREE.CylinderGeometry(0.003,0.004,0.56,12), platinum, [0,0.2,0.03]);
-  const star = new THREE.Shape();
-  for (let i = 0; i < 10; i++) {
-    const angle = Math.PI/2 + i*Math.PI/5, r = i%2 ? 0.024 : 0.06;
-    if (i) star.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
-    else star.moveTo(Math.cos(angle)*r, Math.sin(angle)*r);
+  const starlight=surface({color:'#fff3fa',emissive:'#ffabd7',emissiveIntensity:3,roughness:.2});
+  mesh(hand,new THREE.CylinderGeometry(0.003,0.0025,0.69,12),gold,[0,0.24,0.03]);
+  mesh(hand,new THREE.IcosahedronGeometry(0.014,2),starlight,[0,0.60,0.03]);
+  for(let i=0;i<12;i++) {
+    const angle=i/12*Math.PI*2,length=i%3===0?.085:.042;
+    const spike=mesh(hand,new THREE.ConeGeometry(.003,length,4),starlight,[Math.sin(angle)*length/2,.60+Math.cos(angle)*length/2,.03]);spike.rotation.z=-angle;
   }
-  star.closePath();
-  mesh(hand, new THREE.ExtrudeGeometry(star,{depth:0.007,bevelEnabled:true,bevelThickness:0.002,bevelSize:0.002,bevelSegments:2,steps:1}), crystal, [0,0.51,0.026]);
+  const glowSize=64,glowPixels=new Uint8Array(glowSize*glowSize*4);
+  for(let y=0;y<glowSize;y++)for(let x=0;x<glowSize;x++) {
+    const r=Math.hypot((x+.5)/glowSize*2-1,(y+.5)/glowSize*2-1);
+    glowPixels.set([255,155,210,Math.round(150*Math.pow(Math.max(0,1-r),3))],(y*glowSize+x)*4);
+  }
+  const glowMap=new THREE.DataTexture(glowPixels,glowSize,glowSize);glowMap.needsUpdate=true;owned.add(glowMap);
+  const glowMaterial=new THREE.SpriteMaterial({map:glowMap,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});owned.add(glowMaterial);
+  const glow=new THREE.Sprite(glowMaterial);glow.position.set(0,.60,.03);glow.scale.setScalar(.38);
+  // Light has no solid surface for the district ambient-occlusion depth pass.
+  glow.userData.aoExclude=true;hand.add(glow);
+  for(const skirt of skirts)skirt.userData.deformableCostume=true;
+  const drape=createJevicaDrape(avatar,waist,skirts);
+  batchCostumeAttachments(attachments, owned);
   const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
+  const opticalPosition=new THREE.Vector3(),opticalScale=new THREE.Vector3();
   return {
-    update() {
+    getWandTip(target) {return glow.getWorldPosition(target);},
+    updateOptics(camera,viewportHeight) {
+      if(!camera||!Number.isFinite(viewportHeight)||viewportHeight<=0)return;
+      camera.updateWorldMatrix(true,false);
+      head.getWorldPosition(opticalPosition).applyMatrix4(camera.matrixWorldInverse);
+      head.getWorldScale(opticalScale);
+      // The largest individual jewel is a 32 mm earring. Keep its reflection,
+      // facets and clearcoat at every distance, and smoothly restore refraction
+      // when it spans 8–16 CSS pixels, consistently across display densities.
+      // A nonzero transmission otherwise
+      // asks Three to draw the entire opaque district again for these tiny gems.
+      const diameter=.032*Math.max(opticalScale.x,opticalScale.y,opticalScale.z);
+      const pixels=diameter*viewportHeight*.5*camera.projectionMatrix.elements[5]/Math.max(.01,-opticalPosition.z);
+      crystal.transmission=.35*THREE.MathUtils.smoothstep(pixels,8,16);
+    },
+    update(_flying, now, riding=false) {
       avatar.object.updateWorldMatrix(true, true);
       inverse.copy(avatar.object.getWorldQuaternion(orientation)).invert();
       for (const item of attachments) {
         item.bone.getWorldPosition(position); item.group.position.copy(avatar.object.worldToLocal(position));
         item.bone.getWorldQuaternion(orientation); item.group.quaternion.copy(inverse).multiply(orientation).multiply(item.rest);
       }
+      avatar.object.updateWorldMatrix(true,true);
+      drape.update(now,riding);
     },
     dispose() { attachments.forEach(({group}) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };

@@ -1,0 +1,850 @@
+{
+  "date": "2026-09-26",
+  "scope": "Browser only; intermediate delivery, broader goal remains open",
+  "glass": {
+    "checks": [
+      "The fixture changes only the first bin starting position",
+      "Actual district facade and door panes are registered",
+      "The normal R throw breaks exactly one pane",
+      "Rendered debris stays within 192 triangles",
+      "The bin hits the actual pane on its trajectory",
+      "The impact stops the bin outside the display backing",
+      "Fragments clear while the window remains broken",
+      "The same pane restores automatically without repeated hits",
+      "The thrown bin settles and releases",
+      "No runtime or WebGL shader errors"
+    ],
+    "before": {
+      "registered": 1324,
+      "broken": 0,
+      "shards": 0,
+      "triangles": 0,
+      "capacity": 192,
+      "totalBreaks": 0,
+      "lastCandidateCount": 0,
+      "restoreSeconds": 20
+    },
+    "impact": {
+      "glass": {
+        "registered": 1324,
+        "broken": 1,
+        "shards": 32,
+        "triangles": 32,
+        "capacity": 192,
+        "totalBreaks": 1,
+        "lastCandidateCount": 40,
+        "restoreSeconds": 20,
+        "panes": [
+          {
+            "id": 30,
+            "center": [
+              -2772.62939453125,
+              20.553829193115234,
+              1382.9603271484375
+            ],
+            "normal": [
+              0.009474402285423386,
+              0,
+              -0.9999551168434181
+            ],
+            "size": [
+              2.82180118560791,
+              3.549999952316284,
+              0.026736080646514893
+            ],
+            "broken": true,
+            "restoreIn": 19.943600000023842
+          }
+        ]
+      },
+      "force": {
+        "id": "street-bin-0",
+        "name": "Street bin",
+        "mode": "push",
+        "position": [
+          -2772.6267394789033,
+          19.344483865353993,
+          1382.6801054417028
+        ],
+        "velocity": [
+          0,
+          -2.584447035594357,
+          0
+        ],
+        "mass": 18,
+        "blocked": false
+      }
+    },
+    "restored": {
+      "glass": {
+        "registered": 1324,
+        "broken": 0,
+        "shards": 0,
+        "triangles": 0,
+        "capacity": 192,
+        "totalBreaks": 1,
+        "lastCandidateCount": 40,
+        "restoreSeconds": 20
+      },
+      "force": null
+    },
+    "errors": []
+  },
+  "forceRegression": {
+    "checks": [
+      "T enables Force mode",
+      "A real pointer click targets the person in Force mode",
+      "Force picking does not open a conversation",
+      "G acquires the selected person",
+      "The rendered person rises, not just the state",
+      "Force hold suspends pedestrian navigation",
+      "Wand and person both emit lift sparkles",
+      "X gently lands and releases the person",
+      "Sparkles finish fading after landing",
+      "Released person resumes walking",
+      "A Force push displaces a person and lands them",
+      "An existing street bin can be targeted through normal travel",
+      "The complete bin rises with its lid",
+      "Pointer spell controls return focus to walking",
+      "Walking preserves the active lift",
+      "Jevica walks while holding a target",
+      "The lifted bin follows her movement",
+      "Both sparkle emitters remain active within the pool budget while carrying",
+      "Jevica keeps facing the carried object after backpedalling",
+      "R pushes a real object and it settles at its new position",
+      "Indoor stations lift in place without crossing work surfaces",
+      "A levitated worker pauses their task",
+      "Escape lowers the worker and their task resumes",
+      "Force mode can be disabled",
+      "No uncaught browser errors"
+    ],
+    "person": {
+      "initial": {
+        "id": "local-00",
+        "name": "Maya",
+        "kind": "person",
+        "position": [
+          -2813.2462182188533,
+          18.375080622777162,
+          1275.7317786149836
+        ],
+        "renderedPosition": [
+          -2813.2462182188533,
+          18.375080622777162,
+          1275.7317786149836
+        ],
+        "eligible": true
+      },
+      "held": {
+        "id": "local-00",
+        "name": "Maya",
+        "kind": "person",
+        "position": [
+          -2813.1987453059246,
+          19.42353853197526,
+          1275.863892740707
+        ],
+        "renderedPosition": [
+          -2813.1987453059246,
+          19.42353853197526,
+          1275.863892740707
+        ],
+        "eligible": true
+      }
+    },
+    "bin": {
+      "initial": {
+        "id": "street-bin-6",
+        "name": "Street bin",
+        "kind": "object",
+        "position": [
+          -2771.0986938402543,
+          18.481621820279667,
+          1310.0327574445103
+        ],
+        "renderedPosition": [
+          -2771.0986938402543,
+          18.481621820279667,
+          1310.0327574445103
+        ],
+        "eligible": true
+      },
+      "raised": {
+        "id": "street-bin-6",
+        "name": "Street bin",
+        "kind": "object",
+        "position": [
+          -2771.0986938402543,
+          19.533255265362108,
+          1310.0327574445103
+        ],
+        "renderedPosition": [
+          -2771.0986938402543,
+          19.533255265362108,
+          1310.0327574445103
+        ],
+        "eligible": true
+      },
+      "landed": {
+        "id": "street-bin-6",
+        "name": "Street bin",
+        "kind": "object",
+        "position": [
+          -2772.5285609891607,
+          18.487303520965458,
+          1311.7639844009116
+        ],
+        "renderedPosition": [
+          -2772.5285609891607,
+          18.487303520965458,
+          1311.7639844009116
+        ],
+        "eligible": false
+      }
+    },
+    "carry": {
+      "start": {
+        "body": {
+          "id": "street-bin-6",
+          "name": "Street bin",
+          "mode": "lift",
+          "position": [
+            -2771.0986938402543,
+            19.602532403713596,
+            1310.0327574445103
+          ],
+          "velocity": [
+            0,
+            1.0166646867934004,
+            0
+          ],
+          "mass": 18,
+          "blocked": false
+        },
+        "pose": {
+          "position": [
+            -2773.31642518328,
+            20.161955607853624,
+            1302.569587196184
+          ],
+          "riding": null,
+          "ground": 18.481955607853624,
+          "altitude": 0,
+          "flying": false,
+          "landing": false,
+          "yaw": -1.9391126769294245,
+          "speed": 0,
+          "velocity": [
+            0,
+            0
+          ],
+          "distance": 0,
+          "roomId": null,
+          "showBody": true
+        }
+      },
+      "end": {
+        "body": {
+          "id": "street-bin-6",
+          "name": "Street bin",
+          "mode": "lift",
+          "position": [
+            -2773.292431237056,
+            19.720421190599538,
+            1309.1861338786287
+          ],
+          "velocity": [
+            -0.014409824767604221,
+            -0.0015318288516436276,
+            -0.005561147494909176
+          ],
+          "mass": 18,
+          "blocked": false
+        },
+        "pose": {
+          "position": [
+            -2775.5129211612766,
+            20.17057012899829,
+            1301.7218990179872
+          ],
+          "riding": null,
+          "ground": 18.49057012899829,
+          "altitude": 0,
+          "flying": false,
+          "landing": false,
+          "yaw": -1.9391126769294245,
+          "speed": 8.245287863682363e-07,
+          "velocity": [
+            -7.692539793588653e-07,
+            -2.968762569413459e-07
+          ],
+          "distance": 2.35439372850212,
+          "roomId": null,
+          "showBody": true
+        },
+        "yaw": 0.2894140507170907,
+        "fx": {
+          "count": 110,
+          "wand": 63,
+          "target": 47,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2775.7747318197385,
+            19.97786430460882,
+            1301.873844154125
+          ],
+          "targetCenter": [
+            -2773.292431237056,
+            20.275921190599536,
+            1309.1861338786287
+          ]
+        }
+      }
+    },
+    "personFX": {
+      "count": 73,
+      "wand": 42,
+      "target": 31,
+      "capacity": 256,
+      "reducedMotion": false,
+      "wandTip": [
+        -2811.1291785072294,
+        19.90501975705682,
+        1275.9472588174667
+      ],
+      "targetCenter": [
+        -2813.1987453059246,
+        20.436473523322693,
+        1275.863892740707
+      ]
+    },
+    "staff": "store-osm-node-8172495006-person-1",
+    "errors": []
+  },
+  "carriage": {
+    "checks": [
+      "riding: both soles contact the actual transformed cabin floor",
+      "riding-slope: both soles contact the actual transformed cabin floor",
+      "The coach is ten percent smaller",
+      "Calling places a visible carriage near Jevica",
+      "All four parked tyres meet rendered paving",
+      "Flight cannot start while seated",
+      "A ridden carriage cannot be summoned elsewhere",
+      "Riding moves the real carriage and rider through the district",
+      "All four moving tyres follow the rendered road",
+      "All four rendered wheel centers keep spinning after braking",
+      "Free-spinning centers leave tyre contact unchanged",
+      "Dismount preserves a clear third-person camera",
+      "Dismounted Jevica stands on the rendered pavement",
+      "Walking resumes after leaving the carriage",
+      "Takeoff is rejected while the bubble overlaps the parked coach",
+      "Boarding is unavailable in flight",
+      "No uncaught browser errors: "
+    ],
+    "contacts": [
+      {
+        "view": "riding",
+        "feet": [
+          {
+            "side": "l",
+            "minY": 1.172500575136255,
+            "minX": 0.30188695086122797,
+            "maxX": 0.5696158097928101
+          },
+          {
+            "side": "r",
+            "minY": 1.172500575136255,
+            "minX": 0.3018869508612281,
+            "maxX": 0.56961580979281
+          }
+        ]
+      },
+      {
+        "view": "riding-slope",
+        "feet": [
+          {
+            "side": "l",
+            "minY": 1.1725005664550099,
+            "minX": 0.30188695989195274,
+            "maxX": 0.5696158209622881
+          },
+          {
+            "side": "r",
+            "minY": 1.1725005572915597,
+            "minX": 0.30188696007106963,
+            "maxX": 0.56961582588608
+          }
+        ]
+      }
+    ],
+    "before": {
+      "placement": {
+        "position": [
+          -2766.543262399001,
+          18.42168040069873,
+          1291.6912096040073
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": 0.0007859033689272785,
+        "roll": 0.005804718075280935,
+        "distance": 0,
+        "scale": 0.9,
+        "terrainError": 0.007964307550146543,
+        "speed": 0,
+        "wheelOffsets": [
+          0.0022381257516670416,
+          -7.857252626308764e-09,
+          -9.115577626062077e-09,
+          -9.115581178775756e-09
+        ]
+      },
+      "spinners": [
+        {
+          "angle": 0,
+          "velocity": 0,
+          "rotation": 0,
+          "wheelRotation": 0
+        },
+        {
+          "angle": 0,
+          "velocity": 0,
+          "rotation": 0,
+          "wheelRotation": 0
+        },
+        {
+          "angle": 0,
+          "velocity": 0,
+          "rotation": 0,
+          "wheelRotation": 0
+        },
+        {
+          "angle": 0,
+          "velocity": 0,
+          "rotation": 0,
+          "wheelRotation": 0
+        }
+      ],
+      "visible": true,
+      "riding": false,
+      "tyreClearances": [
+        3.552713678800501e-15,
+        0,
+        0,
+        -3.552713678800501e-15
+      ],
+      "pose": {
+        "position": [
+          -2765.321977373157,
+          20.105314686426908,
+          1295.064162750871
+        ],
+        "riding": null,
+        "ground": 18.42531468642691,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 0.34739733057239125,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2765.321977373157,
+        18.42531468642691,
+        1295.064162750871
+      ],
+      "riderYaw": 0
+    },
+    "driven": {
+      "placement": {
+        "position": [
+          -2758.6193895547785,
+          18.402877583137567,
+          1291.8122031728908
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": -0.006899182107292685,
+        "roll": 0.002720588596870692,
+        "distance": 7.924796545974533,
+        "scale": 0.9,
+        "terrainError": 0.007964307550146543,
+        "speed": 0.024928700598824252,
+        "wheelOffsets": [
+          -0.0059558568285851266,
+          -0.005955856828588679,
+          4.1825881634594e-05,
+          -0.0034469961438041707
+        ]
+      },
+      "spinners": [
+        {
+          "angle": 12.345248051141564,
+          "velocity": 1.0078096380686434,
+          "rotation": -0.2337940853259486,
+          "wheelRotation": 12.579042136467512
+        },
+        {
+          "angle": 12.345248051141564,
+          "velocity": 1.0078096380686434,
+          "rotation": -0.2337940853259486,
+          "wheelRotation": 12.579042136467512
+        },
+        {
+          "angle": 10.538626385120843,
+          "velocity": 0.8603253007903056,
+          "rotation": -0.19958031674166854,
+          "wheelRotation": 10.738206701862511
+        },
+        {
+          "angle": 10.538626385120843,
+          "velocity": 0.8603253007903056,
+          "rotation": -0.19958031674166854,
+          "wheelRotation": 10.738206701862511
+        }
+      ],
+      "visible": true,
+      "riding": true,
+      "tyreClearances": [
+        3.552713678800501e-15,
+        0,
+        0,
+        0
+      ],
+      "pose": {
+        "position": [
+          -2759.5066230585844,
+          20.424763080684087,
+          1291.808328706032
+        ],
+        "riding": {
+          "seat": [
+            -2759.5066230585844,
+            19.804763080684086,
+            1291.808328706032
+          ],
+          "seatToFloor": 0.3442499999999999,
+          "yaw": 1.5555280143100032,
+          "quaternion": [
+            0.0033897120792363484,
+            0.7016865840315212,
+            0.0015032759744821765,
+            0.7124760963032651
+          ],
+          "speed": 0.024928700598824252,
+          "distance": 7.924796545974533
+        },
+        "ground": 18.428972079110604,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": -0.08606463927978991,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2759.5087883538044,
+        18.976736372863005,
+        1291.8025821794186
+      ],
+      "riderYaw": 1.5553060320782095
+    },
+    "after": {
+      "placement": {
+        "position": [
+          -2758.6145105403207,
+          18.402846230264725,
+          1291.812277672998
+        ],
+        "yaw": 3.1263243411048998,
+        "pitch": -0.006899182107292685,
+        "roll": 0.0027380429720437116,
+        "distance": 7.929676129188408,
+        "scale": 0.9,
+        "terrainError": 0.007964307550146543,
+        "speed": 0,
+        "wheelOffsets": [
+          -0.005990771762665048,
+          -0.0059907717626721535,
+          0.0012654652775161424,
+          -0.002223356747929728
+        ]
+      },
+      "spinners": [
+        {
+          "angle": 13.135336430331524,
+          "velocity": 0.3757389347166755,
+          "rotation": 0.5485489236832564,
+          "wheelRotation": 12.586787506648268
+        },
+        {
+          "angle": 13.135336430331524,
+          "velocity": 0.3757389347166755,
+          "rotation": 0.5485489236832564,
+          "wheelRotation": 12.586787506648268
+        },
+        {
+          "angle": 11.213092074673243,
+          "velocity": 0.32075274914838175,
+          "rotation": 0.4682734714369179,
+          "wheelRotation": 10.744818603236325
+        },
+        {
+          "angle": 11.213092074673243,
+          "velocity": 0.32075274914838175,
+          "rotation": 0.4682734714369179,
+          "wheelRotation": 10.744818603236325
+        }
+      ],
+      "visible": true,
+      "riding": false,
+      "tyreClearances": [
+        0,
+        -3.552713678800501e-15,
+        0,
+        0
+      ],
+      "pose": {
+        "position": [
+          -2756.668928843526,
+          20.09133600118356,
+          1288.8416360148549
+        ],
+        "riding": null,
+        "ground": 18.41133600118356,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 2.3792916126941672,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": null,
+        "showBody": true
+      },
+      "rider": [
+        -2756.668928843526,
+        18.41133600118356,
+        1288.8416360148549
+      ],
+      "riderYaw": 1.5553030759161857
+    },
+    "errors": []
+  },
+  "verification": {
+    "glassUnitTests": 6,
+    "targetedCarriageAndSpinnerTests": 12,
+    "fullSuite": {
+      "tests": 411,
+      "pass": 411,
+      "fail": 0,
+      "durationMs": 44731.964583,
+      "log": "/tmp/coach-delivery-final-tests.log"
+    },
+    "build": {
+      "passed": true,
+      "log": "/tmp/coach-delivery-final-build.log",
+      "warning": "Existing Three.js chunk exceeds 500 kB"
+    },
+    "driverAndPedestrianTests": 16,
+    "driverInteractionBrowserChecks": 5,
+    "devHttp": 200,
+    "bridgeHttp": 200
+  },
+  "remaining": [
+    "Unicorn team and harness with grounded animated locomotion",
+    "Manual and real Jev-controlled hydraulics",
+    "Stronger human push-away and library dance spell",
+    "Smoke grenade, masked workers, shopper evacuation, skippable Jevica exit scene",
+    "Comprehensive whole-scene performance optimization",
+    "Remaining character landing, clothing and material realism work",
+    "Carriage autopilot with immediate manual takeover",
+    "Coachman reins/hand contact and Force/wish visual integration"
+  ],
+  "driver": {
+    "checks": [
+      "The directory opens a real conversation with Jules",
+      "The rendered coachman is within speaking reach",
+      "A real pointer click on the coachman opens his conversation",
+      "The same coachman identity travels with the moving carriage",
+      "No uncaught browser errors"
+    ],
+    "person": {
+      "id": "carriage-driver",
+      "position": [
+        -2764.6504336310945,
+        -1291.7197043999788,
+        18.94045091549074
+      ],
+      "renderedPosition": [
+        -2764.6504336310945,
+        18.94045091549074,
+        1291.7197043999788
+      ],
+      "role": "Unicorn coachman",
+      "task": null,
+      "seated": false,
+      "reachable": true,
+      "visible": true,
+      "screen": [
+        727.4960108379579,
+        370.94707441721494
+      ],
+      "depth": 0.9840072014451636
+    },
+    "start": {
+      "id": "carriage-driver",
+      "position": [
+        -2764.6504336310945,
+        -1291.7197043999788,
+        18.94045091549074
+      ],
+      "renderedPosition": [
+        -2764.6504336310945,
+        18.94045091549074,
+        1291.7197043999788
+      ],
+      "role": "Unicorn coachman",
+      "task": null,
+      "seated": false,
+      "reachable": true,
+      "visible": true,
+      "screen": [
+        1010.4208287444451,
+        449.65836176509623
+      ],
+      "depth": 0.9843907234995
+    },
+    "end": {
+      "id": "carriage-driver",
+      "position": [
+        -2760.7909738116114,
+        -1291.778072723564,
+        18.95623257475718
+      ],
+      "renderedPosition": [
+        -2760.7909738116114,
+        18.95623257475718,
+        1291.778072723564
+      ],
+      "role": "Unicorn coachman",
+      "task": null,
+      "seated": false,
+      "reachable": true,
+      "visible": true,
+      "screen": [
+        1009.6399326759305,
+        447.04686058738145
+      ],
+      "depth": 0.9843859431849274
+    },
+    "errors": []
+  },
+  "seatedConversation": {
+    "checks": [
+      "Nearby conversation is available from the carriage",
+      "Talking retains the same mounted position",
+      "Dialogue opens for a real outdoor resident",
+      "Jevica attends to her partner without rotating the seated body"
+    ],
+    "name": "Jules",
+    "attention": {
+      "mode": "conversation",
+      "target": [
+        -2815.9579156706277,
+        20.442646551473707,
+        1273.756301999369
+      ],
+      "facing": null,
+      "position": [
+        -2815.9960464861165,
+        18.908969362062408,
+        1276.5369674113854
+      ],
+      "bodyYaw": 0.013757396295233523,
+      "head": [
+        0.0004758860234747393,
+        0.999916884397623,
+        0.01140522345776869,
+        0.005993221742950677
+      ],
+      "feet": [
+        {
+          "contact": true,
+          "error": 0,
+          "target": [
+            -2810.497295416224,
+            18.499795506707144,
+            1275.8005903428623
+          ],
+          "actual": [
+            -2816.0951655585654,
+            19.46232567273447,
+            1276.0946415812764
+          ]
+        },
+        {
+          "contact": true,
+          "error": 0,
+          "target": [
+            -2810.6785231132553,
+            18.495863085743952,
+            1275.6832100389784
+          ],
+          "actual": [
+            -2815.881440346371,
+            19.461678000195903,
+            1276.0975831529445
+          ]
+        }
+      ],
+      "eyes": [
+        {
+          "name": "gaze_eye_r",
+          "yaw": 0.01139635252030111,
+          "pitch": -0.027336878079206213,
+          "position": [
+            -2815.959263646684,
+            20.463369995923408,
+            1276.4035676026929
+          ],
+          "forward": [
+            0.0005782905149879428,
+            -0.004038733787731081,
+            -0.9999916770700944
+          ]
+        },
+        {
+          "name": "gaze_eye_l",
+          "yaw": -0.011626240149196429,
+          "pitch": -0.02733682590112242,
+          "position": [
+            -2816.020180517277,
+            20.46343623813275,
+            1276.4028380993263
+          ],
+          "forward": [
+            0.023590077597811093,
+            -0.004063750846539194,
+            -0.9997134560301744
+          ]
+        }
+      ]
+    },
+    "errors": []
+  }
+}

@@ -10,8 +10,8 @@ from river_oaks.voice import MODEL_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
 DESTINATION = ROOT / "data/models/kokoro"
-RELEASE = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
-LIMITS = {"kokoro-v1.0.int8.onnx": 93_000_000, "voices-v1.0.bin": 29_000_000}
+RELEASE = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1"
+LIMITS = {"kokoro-v1.0.int8.onnx": 115_000_000, "voices-v1.0.bin": 29_000_000}
 
 
 def fetch():

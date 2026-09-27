@@ -1,0 +1,1902 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser full-district CPU profiling and AO visibility pruning",
+  "before": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 49.899999999999636,
+        "p95Ms": 66.70000000000073,
+        "maxMs": 100,
+        "render": {
+          "calls": 2201,
+          "triangles": 27553034,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 1261.967
+          },
+          {
+            "fn": "traverse http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:9986",
+            "ms": 660.649
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 429.941
+          },
+          {
+            "fn": "(anonymous) http://127.0.0.1:5181/src/locals.js?t=1790320759889:81",
+            "ms": 312.126
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 307.546
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 212.108
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 181.21
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 145.239
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 128.594
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 121.403
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 111.986
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 94.143
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 81.122
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 66.242
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18279",
+            "ms": 52.198
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 51.938
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 50.711
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 46.874
+          },
+          {
+            "fn": "baseIsFree http://127.0.0.1:5181/src/walking.js:38",
+            "ms": 44.82
+          },
+          {
+            "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+            "ms": 40.219
+          }
+        ]
+      },
+      {
+        "label": "walking",
+        "medianMs": 33.29999999999927,
+        "p95Ms": 33.400000000001455,
+        "maxMs": 50,
+        "render": {
+          "calls": 1521,
+          "triangles": 19468123,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "traverse http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:9986",
+            "ms": 676.693
+          },
+          {
+            "fn": "(anonymous) http://127.0.0.1:5181/src/locals.js?t=1790320759889:81",
+            "ms": 343.678
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 285.518
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 220.328
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 206.965
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 194.019
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 130.62
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 109.435
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 104.874
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 104.682
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 99.126
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 69.975
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js:36",
+            "ms": 60.491
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 50.905
+          },
+          {
+            "fn": "baseIsFree http://127.0.0.1:5181/src/walking.js:38",
+            "ms": 40.346
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 39.48
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 39.1
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 34.596
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18016",
+            "ms": 32.915
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18279",
+            "ms": 32.514
+          }
+        ]
+      },
+      {
+        "label": "worker-conversation",
+        "medianMs": 33.29999999999927,
+        "p95Ms": 50,
+        "maxMs": 50.099999999998545,
+        "render": {
+          "calls": 1723,
+          "triangles": 21243124,
+          "geometries": 324,
+          "textures": 367
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "traverse http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:9986",
+            "ms": 688.558
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 293.863
+          },
+          {
+            "fn": "(idle) :0",
+            "ms": 253.384
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 245.297
+          },
+          {
+            "fn": "(anonymous) http://127.0.0.1:5181/src/locals.js?t=1790320759889:81",
+            "ms": 222.306
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 211.157
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 187.949
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 142.77
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 140.49
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 129.275
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 114.343
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 70.366
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18279",
+            "ms": 52.276
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 51.225
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 49.695
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18016",
+            "ms": 46.618
+          },
+          {
+            "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+            "ms": 44.582
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 42.976
+          },
+          {
+            "fn": "texSubImage2D :0",
+            "ms": 41.564
+          },
+          {
+            "fn": "refreshMaterialUniforms http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:50048",
+            "ms": 39.126
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "viewport": [
+      1440,
+      1000
+    ],
+    "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+  },
+  "traversalAttribution": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 49.900000000001455,
+        "p95Ms": 66.70000000000073,
+        "maxMs": 83.39999999999964,
+        "render": {
+          "calls": 2201,
+          "triangles": 27553034,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 1498.855
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js:36",
+            "ms": 401.749
+          },
+          {
+            "fn": "occlusion._overrideVisibility http://127.0.0.1:5181/src/render-pipeline.js:36 \u2192 traverse http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:9986",
+            "ms": 318.962
+          },
+          {
+            "fn": "_overrideVisibility http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1966 \u2192 traverse http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:9986",
+            "ms": 298.915
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 261.716
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 210.915
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 169.742
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 167.362
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 151.015
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 149.225
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 140.911
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 120.128
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 97.264
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 64.188
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 54.563
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 53.257
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 46.708
+          },
+          {
+            "fn": "updateMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10023",
+            "ms": 44.345
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+            "ms": 42.799
+          },
+          {
+            "fn": "setValueM4 http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45003",
+            "ms": 40.679
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "after": {
+    "runs": [
+      {
+        "label": "street",
+        "medianMs": 33.399999999999636,
+        "p95Ms": 66.80000000000018,
+        "maxMs": 83.40000000000055,
+        "render": {
+          "calls": 2201,
+          "triangles": 27553034,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 1309.667
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 382.52
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js:36",
+            "ms": 343.617
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 231.653
+          },
+          {
+            "fn": "uniformMatrix4fv :0",
+            "ms": 192.259
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 181.677
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 160.144
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 138.484
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 135.722
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 127.8
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 120.362
+          },
+          {
+            "fn": "bindTexture :0",
+            "ms": 95.257
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 80.074
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 78.278
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 67.493
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 63.351
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 51.399
+          },
+          {
+            "fn": "uniform1f :0",
+            "ms": 44.747
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 44.304
+          },
+          {
+            "fn": "setValueM4 http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45003",
+            "ms": 43.665
+          }
+        ]
+      },
+      {
+        "label": "walking",
+        "medianMs": 33.20000000000073,
+        "p95Ms": 49.899999999999636,
+        "maxMs": 50.100000000000364,
+        "render": {
+          "calls": 1521,
+          "triangles": 19468123,
+          "geometries": 286,
+          "textures": 285
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 425.787
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 354.248
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 279.467
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 244.767
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 182.77
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 159.139
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 135.8
+          },
+          {
+            "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+            "ms": 132.399
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 110.867
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 91.76
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 80.932
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 58.809
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 54.942
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js:36",
+            "ms": 53.697
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 37.138
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 36.438
+          },
+          {
+            "fn": "fromBufferAttribute http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:4916",
+            "ms": 31.601
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18016",
+            "ms": 30.174
+          },
+          {
+            "fn": "fromBufferAttribute http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:7080",
+            "ms": 27.28
+          },
+          {
+            "fn": "setValueM4 http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45003",
+            "ms": 26.752
+          }
+        ]
+      },
+      {
+        "label": "worker-conversation",
+        "medianMs": 33.29999999999927,
+        "p95Ms": 50,
+        "maxMs": 66.80000000000291,
+        "render": {
+          "calls": 1723,
+          "triangles": 21243124,
+          "geometries": 324,
+          "textures": 367
+        },
+        "pipeline": {
+          "ao": true,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "topSelfMs": [
+          {
+            "fn": "(idle) :0",
+            "ms": 589.783
+          },
+          {
+            "fn": "(program) :0",
+            "ms": 326.181
+          },
+          {
+            "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+            "ms": 286.227
+          },
+          {
+            "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js:36",
+            "ms": 246.73
+          },
+          {
+            "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+            "ms": 215.4
+          },
+          {
+            "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+            "ms": 160.57
+          },
+          {
+            "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+            "ms": 143.975
+          },
+          {
+            "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+            "ms": 128.418
+          },
+          {
+            "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+            "ms": 112.226
+          },
+          {
+            "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+            "ms": 78.891
+          },
+          {
+            "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+            "ms": 58.66
+          },
+          {
+            "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+            "ms": 55.97
+          },
+          {
+            "fn": "bindVertexArray :0",
+            "ms": 54.661
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+            "ms": 54.056
+          },
+          {
+            "fn": "supportHeight http://127.0.0.1:5181/src/foot-placement.js?t=1790320317007:86",
+            "ms": 47.593
+          },
+          {
+            "fn": "uniformMatrix4fv :0",
+            "ms": 41.452
+          },
+          {
+            "fn": "refreshMaterialUniforms http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:50048",
+            "ms": 40.712
+          },
+          {
+            "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+            "ms": 40.556
+          },
+          {
+            "fn": "toArray http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8764",
+            "ms": 36.767
+          },
+          {
+            "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52210",
+            "ms": 36.711
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "viewport": [
+      1440,
+      1000
+    ],
+    "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+  },
+  "directory": {
+    "visits": [
+      {
+        "id": "store-osm-node-6374756992-person-0",
+        "name": "Sasha",
+        "role": "Host \u00b7 Toulouse",
+        "task": "tablet"
+      },
+      {
+        "id": "local-00",
+        "name": "Maya",
+        "role": "Weekend shopper \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "local-03",
+        "name": "Elias",
+        "role": "Gallery visitor \u00b7 Dior",
+        "task": null
+      },
+      {
+        "id": "local-06",
+        "name": "Iris",
+        "role": "Weekend shopper \u00b7 Cartier",
+        "task": null
+      },
+      {
+        "id": "local-09",
+        "name": "Luca",
+        "role": "Gallery visitor \u00b7 Harry Winston",
+        "task": null
+      },
+      {
+        "id": "local-12",
+        "name": "Cleo",
+        "role": "Weekend shopper \u00b7 Laura Rathe Fine Art",
+        "task": null
+      },
+      {
+        "id": "local-15",
+        "name": "Noel",
+        "role": "Gallery visitor \u00b7 Brunello Cucinelli",
+        "task": null
+      },
+      {
+        "id": "local-18",
+        "name": "Ada",
+        "role": "Weekend shopper \u00b7 Zadig & Voltaire",
+        "task": null
+      },
+      {
+        "id": "local-21",
+        "name": "Barbara Jordan",
+        "role": "Houston public servant \u00b7 heritage encounter \u00b7 Baccarat",
+        "task": null
+      },
+      {
+        "id": "local-01",
+        "name": "Theo",
+        "role": "Caf\u00e9 regular \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "local-02",
+        "name": "June",
+        "role": "Neighborhood resident \u00b7 Bella Rinova",
+        "task": null
+      },
+      {
+        "id": "local-04",
+        "name": "Nora",
+        "role": "Concierge \u00b7 Jo Malone London",
+        "task": null
+      },
+      {
+        "id": "local-05",
+        "name": "Mateo",
+        "role": "Dog walker \u00b7 IPIC Theaters",
+        "task": null
+      },
+      {
+        "id": "local-07",
+        "name": "Samir",
+        "role": "Caf\u00e9 regular \u00b7 Van Cleef & Arpels",
+        "task": null
+      },
+      {
+        "id": "local-08",
+        "name": "Hazel",
+        "role": "Neighborhood resident \u00b7 Herm\u00e8s",
+        "task": null
+      },
+      {
+        "id": "local-10",
+        "name": "Amara",
+        "role": "Concierge \u00b7 Saint Bernard",
+        "task": null
+      },
+      {
+        "id": "local-11",
+        "name": "Owen",
+        "role": "Dog walker \u00b7 Equinox",
+        "task": null
+      },
+      {
+        "id": "local-13",
+        "name": "Ravi",
+        "role": "Caf\u00e9 regular \u00b7 Oliver Peoples",
+        "task": null
+      },
+      {
+        "id": "local-14",
+        "name": "Wren",
+        "role": "Neighborhood resident \u00b7 Moreau",
+        "task": null
+      },
+      {
+        "id": "local-16",
+        "name": "Esme",
+        "role": "Concierge \u00b7 Vince",
+        "task": null
+      },
+      {
+        "id": "local-17",
+        "name": "Finn",
+        "role": "Dog walker \u00b7 Alice + Olivia",
+        "task": null
+      },
+      {
+        "id": "local-19",
+        "name": "Hugo",
+        "role": "Caf\u00e9 regular \u00b7 Kiton",
+        "task": null
+      },
+      {
+        "id": "local-20",
+        "name": "Ima Hogg",
+        "role": "Houston arts patron \u00b7 heritage encounter \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "local-22",
+        "name": "Hakeem Olajuwon",
+        "role": "Houston basketball figure \u00b7 fictional guest \u00b7 Dolce & Gabbana",
+        "task": null
+      },
+      {
+        "id": "local-23",
+        "name": "Beyonc\u00e9",
+        "role": "Houston-born artist \u00b7 fictional guest \u00b7 Veronica Beard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-1",
+        "name": "Jamie",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-10",
+        "name": "Avery",
+        "role": "Bartender \u00b7 Toulouse",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-6374756992-person-11",
+        "name": "Quinn",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-2",
+        "name": "Reese",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-3",
+        "name": "Alex",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-4",
+        "name": "Jordan",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-5",
+        "name": "Morgan",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-6",
+        "name": "Casey",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-7",
+        "name": "Taylor",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-8",
+        "name": "Drew",
+        "role": "Dining guest \u00b7 Toulouse",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-6374756992-person-9",
+        "name": "Robin",
+        "role": "Server \u00b7 Toulouse",
+        "task": "tray"
+      },
+      {
+        "id": "store-osm-node-8172494955-person-0",
+        "name": "Alex",
+        "role": "Host \u00b7 Hopdoddy Burger Bar",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494955-person-1",
+        "name": "Jordan",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-2",
+        "name": "Morgan",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-3",
+        "name": "Casey",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-4",
+        "name": "Taylor",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-5",
+        "name": "Drew",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-6",
+        "name": "Robin",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494955-person-7",
+        "name": "Avery",
+        "role": "Server \u00b7 Hopdoddy Burger Bar",
+        "task": "tray"
+      },
+      {
+        "id": "store-osm-node-8172494955-person-8",
+        "name": "Quinn",
+        "role": "Bartender \u00b7 Hopdoddy Burger Bar",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494955-person-9",
+        "name": "Sasha",
+        "role": "Dining guest \u00b7 Hopdoddy Burger Bar",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494957-person-0",
+        "name": "Sasha",
+        "role": "Salon client \u00b7 Bella Rinova",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494957-person-1",
+        "name": "Jamie",
+        "role": "Hair stylist \u00b7 Bella Rinova",
+        "task": "samples"
+      },
+      {
+        "id": "store-osm-node-8172494957-person-2",
+        "name": "Reese",
+        "role": "Salon client \u00b7 Bella Rinova",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494957-person-3",
+        "name": "Alex",
+        "role": "Colorist \u00b7 Bella Rinova",
+        "task": "samples"
+      },
+      {
+        "id": "store-osm-node-8172494957-person-4",
+        "name": "Jordan",
+        "role": "Salon client \u00b7 Bella Rinova",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494957-person-5",
+        "name": "Morgan",
+        "role": "Salon host \u00b7 Bella Rinova",
+        "task": "samples"
+      },
+      {
+        "id": "store-osm-node-8172494958-person-2",
+        "name": "Quinn",
+        "role": "Style adviser \u00b7 Dior",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494958-person-3",
+        "name": "Sasha",
+        "role": "Tailor \u00b7 Dior",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494958-person-4",
+        "name": "Jamie",
+        "role": "Visiting shopper \u00b7 Dior",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494958-person-5",
+        "name": "Reese",
+        "role": "Visiting shopper \u00b7 Dior",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494958-person-6",
+        "name": "Alex",
+        "role": "Visiting shopper \u00b7 Dior",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494960-person-2",
+        "name": "Quinn",
+        "role": "Style adviser \u00b7 Vilebrequin",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494960-person-3",
+        "name": "Sasha",
+        "role": "Tailor \u00b7 Vilebrequin",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494960-person-4",
+        "name": "Jamie",
+        "role": "Visiting shopper \u00b7 Vilebrequin",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494960-person-5",
+        "name": "Reese",
+        "role": "Visiting shopper \u00b7 Vilebrequin",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494960-person-6",
+        "name": "Alex",
+        "role": "Visiting shopper \u00b7 Vilebrequin",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494963-person-0",
+        "name": "Robin",
+        "role": "Fragrance consultant \u00b7 Jo Malone London",
+        "task": "blotter"
+      },
+      {
+        "id": "store-osm-node-8172494963-person-1",
+        "name": "Avery",
+        "role": "Perfumer \u00b7 Jo Malone London",
+        "task": "blotter"
+      },
+      {
+        "id": "store-osm-node-8172494963-person-2",
+        "name": "Quinn",
+        "role": "Visiting shopper \u00b7 Jo Malone London",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494963-person-3",
+        "name": "Sasha",
+        "role": "Visiting shopper \u00b7 Jo Malone London",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494964-person-0",
+        "name": "Casey",
+        "role": "Cinema host \u00b7 IPIC Theaters",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494964-person-1",
+        "name": "Taylor",
+        "role": "Projection technician \u00b7 IPIC Theaters",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494964-person-2",
+        "name": "Drew",
+        "role": "Cinema guest \u00b7 IPIC Theaters",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494964-person-3",
+        "name": "Robin",
+        "role": "Cinema guest \u00b7 IPIC Theaters",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494964-person-4",
+        "name": "Avery",
+        "role": "Cinema guest \u00b7 IPIC Theaters",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494965-person-0",
+        "name": "Casey",
+        "role": "Jewelry adviser \u00b7 Cartier",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494965-person-1",
+        "name": "Taylor",
+        "role": "Watch specialist \u00b7 Cartier",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494965-person-2",
+        "name": "Drew",
+        "role": "Visiting shopper \u00b7 Cartier",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494965-person-3",
+        "name": "Robin",
+        "role": "Visiting shopper \u00b7 Cartier",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494966-person-1",
+        "name": "Jordan",
+        "role": "Leather goods specialist \u00b7 Van Cleef & Arpels",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494966-person-2",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Van Cleef & Arpels",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494966-person-3",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Van Cleef & Arpels",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-0",
+        "name": "Robin",
+        "role": "Host \u00b7 MAD Houston",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494967-person-1",
+        "name": "Avery",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-10",
+        "name": "Taylor",
+        "role": "Bartender \u00b7 MAD Houston",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494967-person-11",
+        "name": "Drew",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-2",
+        "name": "Quinn",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-3",
+        "name": "Sasha",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-4",
+        "name": "Jamie",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-5",
+        "name": "Reese",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-6",
+        "name": "Alex",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-7",
+        "name": "Jordan",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-8",
+        "name": "Morgan",
+        "role": "Dining guest \u00b7 MAD Houston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494967-person-9",
+        "name": "Casey",
+        "role": "Server \u00b7 MAD Houston",
+        "task": "tray"
+      },
+      {
+        "id": "store-osm-node-8172494969-person-2",
+        "name": "Reese",
+        "role": "Style adviser \u00b7 Herm\u00e8s",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494969-person-3",
+        "name": "Alex",
+        "role": "Tailor \u00b7 Herm\u00e8s",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494969-person-4",
+        "name": "Jordan",
+        "role": "Visiting shopper \u00b7 Herm\u00e8s",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494969-person-5",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Herm\u00e8s",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494969-person-6",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Herm\u00e8s",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494972-person-0",
+        "name": "Robin",
+        "role": "Jewelry adviser \u00b7 Harry Winston",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494972-person-1",
+        "name": "Avery",
+        "role": "Watch specialist \u00b7 Harry Winston",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494972-person-2",
+        "name": "Quinn",
+        "role": "Visiting shopper \u00b7 Harry Winston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494972-person-3",
+        "name": "Sasha",
+        "role": "Visiting shopper \u00b7 Harry Winston",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494973-person-2",
+        "name": "Drew",
+        "role": "Style adviser \u00b7 Saint Bernard",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494973-person-3",
+        "name": "Robin",
+        "role": "Tailor \u00b7 Saint Bernard",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494973-person-4",
+        "name": "Avery",
+        "role": "Visiting shopper \u00b7 Saint Bernard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494973-person-5",
+        "name": "Quinn",
+        "role": "Visiting shopper \u00b7 Saint Bernard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494973-person-6",
+        "name": "Sasha",
+        "role": "Visiting shopper \u00b7 Saint Bernard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494974-person-0",
+        "name": "Casey",
+        "role": "Fitness trainer \u00b7 Equinox",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494974-person-1",
+        "name": "Taylor",
+        "role": "Studio member \u00b7 Equinox",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494974-person-2",
+        "name": "Drew",
+        "role": "Studio member \u00b7 Equinox",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494974-person-3",
+        "name": "Robin",
+        "role": "Studio host \u00b7 Equinox",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494976-person-0",
+        "name": "Casey",
+        "role": "Host \u00b7 Le Colonial",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494976-person-1",
+        "name": "Taylor",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-10",
+        "name": "Jordan",
+        "role": "Bartender \u00b7 Le Colonial",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494976-person-11",
+        "name": "Morgan",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-2",
+        "name": "Drew",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-3",
+        "name": "Robin",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-4",
+        "name": "Avery",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-5",
+        "name": "Quinn",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-6",
+        "name": "Sasha",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-7",
+        "name": "Jamie",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-8",
+        "name": "Reese",
+        "role": "Dining guest \u00b7 Le Colonial",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494976-person-9",
+        "name": "Alex",
+        "role": "Server \u00b7 Le Colonial",
+        "task": "tray"
+      },
+      {
+        "id": "store-osm-node-8172494977-person-0",
+        "name": "Alex",
+        "role": "Gallery guide \u00b7 Laura Rathe Fine Art",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494977-person-1",
+        "name": "Jordan",
+        "role": "Gallery visitor \u00b7 Laura Rathe Fine Art",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494977-person-2",
+        "name": "Morgan",
+        "role": "Gallery visitor \u00b7 Laura Rathe Fine Art",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494979-person-0",
+        "name": "Alex",
+        "role": "Eyewear stylist \u00b7 Oliver Peoples",
+        "task": "eyewear"
+      },
+      {
+        "id": "store-osm-node-8172494979-person-1",
+        "name": "Jordan",
+        "role": "Optical associate \u00b7 Oliver Peoples",
+        "task": "eyewear"
+      },
+      {
+        "id": "store-osm-node-8172494979-person-2",
+        "name": "Morgan",
+        "role": "Eyewear client \u00b7 Oliver Peoples",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494979-person-3",
+        "name": "Casey",
+        "role": "Eyewear client \u00b7 Oliver Peoples",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494980-person-1",
+        "name": "Jamie",
+        "role": "Leather goods specialist \u00b7 Moreau",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494980-person-2",
+        "name": "Reese",
+        "role": "Visiting shopper \u00b7 Moreau",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494980-person-3",
+        "name": "Alex",
+        "role": "Visiting shopper \u00b7 Moreau",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494981-person-2",
+        "name": "Morgan",
+        "role": "Style adviser \u00b7 Brunello Cucinelli",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494981-person-3",
+        "name": "Casey",
+        "role": "Tailor \u00b7 Brunello Cucinelli",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494981-person-4",
+        "name": "Taylor",
+        "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494981-person-5",
+        "name": "Drew",
+        "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494981-person-6",
+        "name": "Robin",
+        "role": "Visiting shopper \u00b7 Brunello Cucinelli",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494985-person-2",
+        "name": "Reese",
+        "role": "Style adviser \u00b7 Diptyque",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494985-person-3",
+        "name": "Alex",
+        "role": "Tailor \u00b7 Diptyque",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494985-person-4",
+        "name": "Jordan",
+        "role": "Visiting shopper \u00b7 Diptyque",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494985-person-5",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Diptyque",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494985-person-6",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Diptyque",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494987-person-2",
+        "name": "Reese",
+        "role": "Style adviser \u00b7 Vince",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494987-person-3",
+        "name": "Alex",
+        "role": "Tailor \u00b7 Vince",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494987-person-4",
+        "name": "Jordan",
+        "role": "Visiting shopper \u00b7 Vince",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494987-person-5",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Vince",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494987-person-6",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Vince",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494989-person-2",
+        "name": "Morgan",
+        "role": "Style adviser \u00b7 Alice + Olivia",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494989-person-3",
+        "name": "Casey",
+        "role": "Tailor \u00b7 Alice + Olivia",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494989-person-4",
+        "name": "Taylor",
+        "role": "Visiting shopper \u00b7 Alice + Olivia",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494989-person-5",
+        "name": "Drew",
+        "role": "Visiting shopper \u00b7 Alice + Olivia",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494989-person-6",
+        "name": "Robin",
+        "role": "Visiting shopper \u00b7 Alice + Olivia",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494990-person-1",
+        "name": "Jordan",
+        "role": "Style adviser \u00b7 Zadig & Voltaire",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494990-person-2",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Zadig & Voltaire",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494990-person-3",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Zadig & Voltaire",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494991-person-2",
+        "name": "Reese",
+        "role": "Style adviser \u00b7 Kiton",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494991-person-3",
+        "name": "Alex",
+        "role": "Tailor \u00b7 Kiton",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172494991-person-4",
+        "name": "Jordan",
+        "role": "Visiting shopper \u00b7 Kiton",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494991-person-5",
+        "name": "Morgan",
+        "role": "Visiting shopper \u00b7 Kiton",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494991-person-6",
+        "name": "Casey",
+        "role": "Visiting shopper \u00b7 Kiton",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494993-person-0",
+        "name": "Casey",
+        "role": "Jewelry adviser \u00b7 de Boulle",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494993-person-1",
+        "name": "Taylor",
+        "role": "Watch specialist \u00b7 de Boulle",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172494993-person-2",
+        "name": "Drew",
+        "role": "Visiting shopper \u00b7 de Boulle",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494993-person-3",
+        "name": "Robin",
+        "role": "Visiting shopper \u00b7 de Boulle",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-0",
+        "name": "Robin",
+        "role": "Host \u00b7 Steak 48",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494999-person-1",
+        "name": "Avery",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-10",
+        "name": "Taylor",
+        "role": "Bartender \u00b7 Steak 48",
+        "task": "tablet"
+      },
+      {
+        "id": "store-osm-node-8172494999-person-11",
+        "name": "Drew",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-2",
+        "name": "Quinn",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-3",
+        "name": "Sasha",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-4",
+        "name": "Jamie",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-5",
+        "name": "Reese",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-6",
+        "name": "Alex",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-7",
+        "name": "Jordan",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-8",
+        "name": "Morgan",
+        "role": "Dining guest \u00b7 Steak 48",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172494999-person-9",
+        "name": "Casey",
+        "role": "Server \u00b7 Steak 48",
+        "task": "tray"
+      },
+      {
+        "id": "store-osm-node-8172495000-person-0",
+        "name": "Robin",
+        "role": "Jewelry adviser \u00b7 Baccarat",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172495000-person-1",
+        "name": "Avery",
+        "role": "Watch specialist \u00b7 Baccarat",
+        "task": "jewelry"
+      },
+      {
+        "id": "store-osm-node-8172495000-person-2",
+        "name": "Quinn",
+        "role": "Visiting shopper \u00b7 Baccarat",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495000-person-3",
+        "name": "Sasha",
+        "role": "Visiting shopper \u00b7 Baccarat",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495003-person-2",
+        "name": "Morgan",
+        "role": "Style adviser \u00b7 Dolce & Gabbana",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172495003-person-3",
+        "name": "Casey",
+        "role": "Tailor \u00b7 Dolce & Gabbana",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172495003-person-4",
+        "name": "Taylor",
+        "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495003-person-5",
+        "name": "Drew",
+        "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495003-person-6",
+        "name": "Robin",
+        "role": "Visiting shopper \u00b7 Dolce & Gabbana",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495005-person-2",
+        "name": "Drew",
+        "role": "Style adviser \u00b7 Veronica Beard",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172495005-person-3",
+        "name": "Robin",
+        "role": "Tailor \u00b7 Veronica Beard",
+        "task": "fabric"
+      },
+      {
+        "id": "store-osm-node-8172495005-person-4",
+        "name": "Avery",
+        "role": "Visiting shopper \u00b7 Veronica Beard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495005-person-5",
+        "name": "Quinn",
+        "role": "Visiting shopper \u00b7 Veronica Beard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495005-person-6",
+        "name": "Sasha",
+        "role": "Visiting shopper \u00b7 Veronica Beard",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495006-person-0",
+        "name": "Casey",
+        "role": "Gelato maker \u00b7 Amorino",
+        "task": "samples"
+      },
+      {
+        "id": "store-osm-node-8172495006-person-1",
+        "name": "Taylor",
+        "role": "Counter attendant \u00b7 Amorino",
+        "task": "samples"
+      },
+      {
+        "id": "store-osm-node-8172495006-person-2",
+        "name": "Drew",
+        "role": "Caf\u00e9 guest \u00b7 Amorino",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495006-person-3",
+        "name": "Robin",
+        "role": "Caf\u00e9 guest \u00b7 Amorino",
+        "task": null
+      },
+      {
+        "id": "store-osm-node-8172495006-person-4",
+        "name": "Avery",
+        "role": "Caf\u00e9 guest \u00b7 Amorino",
+        "task": null
+      }
+    ],
+    "errors": []
+  },
+  "verification": {
+    "unitTests": 331,
+    "failures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "regression": "Hidden-room AO visibility test failed before implementation and passes after; existing renderer-state recovery tests pass."
+  },
+  "limitations": [
+    "Local Chromium CPU-profiler measurements are observational, not a target-GPU benchmark.",
+    "Street median improves from about 50 to 33 ms, but p95 remains about 67 ms. Full-scene pacing remains unfinished.",
+    "Directory coverage establishes encounter identity, visibility and reach after an approach; it does not replace pointer/touch acceptance."
+  ],
+  "sha256": {
+    "preview/src/render-pipeline.js": "5f173fa73240ba2d2b2e67465068e03f1bb9d28f37689d64838e36365f4e5697",
+    "preview/tests/render-pipeline.test.js": "7af1490ec36f7ece7b4e6beba5009b1970c6a59c12b0347d805523d360b5fe07",
+    "preview/e2e/district-frame-profile.js": "521f8afdf27a0c0d0bde6b26a1ea566e5459588375d18ff9258fe16c4dbf7303",
+    "preview/e2e/all-people.js": "7e4eb293776a7be06a8d78639c3dab45f33e72900278f8102a2fd57a171243b6"
+  }
+}

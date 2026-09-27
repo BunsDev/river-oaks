@@ -87,7 +87,7 @@ def material(path, kind):
     return mat
 
 
-def build(profile, human_service, target_service):
+def build(profile, human_service, target_service, *, output_dir=OUTPUT, prepare_export=None):
     name, skin_name, outfit, hair, shoes, gender, age = profile
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
@@ -124,14 +124,16 @@ def build(profile, human_service, target_service):
         if obj.type == "MESH":
             for polygon in obj.data.polygons:
                 polygon.use_smooth = True
-    path = OUTPUT / f"{name}.glb"
+    if prepare_export:
+        prepare_export(base)
+    path = output_dir / f"{name}.glb"
     bpy.ops.export_scene.gltf(
         filepath=str(path),
         export_format="GLB",
-        export_apply=True,
+        export_apply=prepare_export is None,
         export_animations=False,
         export_skins=True,
-        export_morph=False,
+        export_morph=prepare_export is not None,
         export_current_frame=True,
         export_rest_position_armature=False,
         export_reset_pose_bones=False,

@@ -31,8 +31,8 @@ export function conversationLine(local, topic) {
     const helping=local.life?.helping;
     if(helping) return `${persona.portrayal?'In this imagined visit, ':''}I’m ${local.name}. ${helping.onSite?'I’m here helping':'I’m on my way to help'} ${helping.name} with ${helping.need}. I’ll carry on after our chat.`;
     if (persona.memory.supportReceived) return `Good to see you again. I remember the support you offered. Thank you for stopping by ${local.anchorName}.`;
-    if (persona.memory.encounters > 1) return `Welcome back. I’m still enjoying the afternoon near ${local.anchorName}. How is your walk going?`;
-    return persona.portrayal || local.indoor ? persona.about : `Hi, I’m ${local.name}. I live here in River Oaks. ${local.anchorName} is one of my stops today. Do you have a moment to chat?`;
+    if (persona.memory.encounters > 1) return persona.returnGreeting ?? `Welcome back. I’m still enjoying the afternoon near ${local.anchorName}. How is your walk going?`;
+    return persona.portrayal || local.indoor || local.stationary ? persona.about : `Hi, I’m ${local.name}. I live here in River Oaks. ${local.anchorName} is one of my stops today. Do you have a moment to chat?`;
   }
   if (topic === 'about') return persona.about ?? `I’m a River Oaks local. My usual rhythm is ${persona.routine}. I’m especially interested in ${persona.interest}. Today I’m taking a little time near ${local.anchorName}.`;
   if (topic === 'story') return persona.story ?? (seen ? `We were talking about ${persona.interest}. I’d enjoy hearing what you noticed as you walked between the storefronts.` : `What I love about a familiar place is noticing a new detail. Around here, ${persona.interest} always give me a reason to slow down. What caught your attention today?`);

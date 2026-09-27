@@ -15,6 +15,10 @@ export function setupThemeControls() {
   try { preference = normalizeThemePreference(localStorage.getItem(storageKey)); } catch { /* Storage may be disabled; System still works. */ }
   const apply = () => {
     const resolved = resolveTheme(preference, media.matches);
+    if(document.documentElement.dataset.theme&&document.documentElement.dataset.theme!==resolved) {
+      document.documentElement.dataset.themeChanging='true';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{delete document.documentElement.dataset.themeChanging;}));
+    }
     document.documentElement.dataset.theme = resolved;
     document.documentElement.dataset.themePreference = preference;
     document.documentElement.style.colorScheme = resolved;

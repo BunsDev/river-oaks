@@ -92,7 +92,8 @@ int32 FRiverSkeletalBackend::CreateHuman(const FString& AgentId, const FRiverApp
     while (Humans.Num() <= Handle) Humans.AddDefaulted();
     FHuman& Human = Humans[Handle];
     Human.Component = Component;
-    Human.MeshToRoot = FTransform(FQuat::Identity,
+    // Neutral Interchange imports face +Y. Rotate geometry and skeleton together.
+    Human.MeshToRoot = FTransform(FRotator(0, -90, 0).Quaternion(),
         FVector(0, 0, -RiverOaksRules::HumanRootHeightCm - Bounds.Min.Z * Scale), FVector(Scale));
     return Handle;
 }

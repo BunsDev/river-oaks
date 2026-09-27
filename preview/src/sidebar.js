@@ -1,3 +1,5 @@
+import { createJevSettings } from './jev-settings.js';
+
 export function setupSidebar() {
   const panel = document.querySelector('#control-panel');
   const trigger = document.querySelector('#panel-toggle');
@@ -34,7 +36,7 @@ export function setupSidebar() {
 
 // One task at a time. Secondary controls stay in labeled disclosures rather
 // than competing with the nearby people and destination actions.
-export function setupSidebarSections() {
+export function setupSidebarSections({ graphics = null } = {}) {
   const panel = document.querySelector('#control-panel');
   const people = panel.querySelector('#community-section');
   const places = panel.querySelector('#explore-section');
@@ -54,8 +56,8 @@ export function setupSidebarSections() {
   const appearance = panel.querySelector('.appearance-control');
   const voice = ['#community-voice', '#community-voice-status', '#community-life', '#community-life-status'];
   const voiceLabel = panel.querySelector('label[for="community-voice"]');
-  settings.append(heading, ...atmosphereChildren, appearance,
-    disclosure('Voices & resident walks', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
+  settings.append(heading, ...atmosphereChildren, appearance, ...(graphics ? [graphics] : []),
+    createJevSettings(), disclosure('Voices & resident walks', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
   atmosphere.remove(); about.remove();
   const more = panel.querySelector('#community-more');
   more.querySelector('summary').textContent = 'Help neighbors';
@@ -66,7 +68,7 @@ export function setupSidebarSections() {
   panel.querySelector('.identity .preview-label').textContent = 'Your neighborhood, at your pace.';
   const nav = panel.querySelector('.experience-nav'); nav.setAttribute('role','tablist'); nav.setAttribute('aria-label','District controls');
   const buttons = [...nav.querySelectorAll('[data-section]')];
-  const sections = [people, places, settings], labels = ['People', 'Places', 'Scene'];
+  const sections = [people, places, settings], labels = ['People', 'Places', 'Settings'];
   const select = (index, focus = false) => {
     buttons.forEach((button,i) => {
       button.setAttribute('aria-selected', String(i === index)); button.tabIndex = i === index ? 0 : -1;

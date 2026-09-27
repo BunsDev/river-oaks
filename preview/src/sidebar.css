@@ -38,3 +38,18 @@
 #control-panel .store-inside{font-size:11px;line-height:1.5}
 #control-panel .community-resources{font-size:12px;line-height:1.6}
 @media(prefers-reduced-motion:reduce){#control-panel *{scroll-behavior:auto;transition:none}}
+
+#control-panel .jev-settings label{display:block;font-size:12px;margin:8px 0;color:var(--ink)}
+#control-panel .jev-settings input{box-sizing:border-box;width:100%;min-height:44px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+#control-panel .jev-key-actions{display:flex;flex-wrap:wrap;gap:8px}
+#control-panel .jev-key-actions button{min-height:44px;flex:1;font-size:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+#control-panel .jev-key-actions button[type=submit]{background:var(--section-soft);border-color:var(--section-color);color:var(--section-color)}
+#control-panel .jev-key-actions button:disabled{opacity:.55;cursor:wait}
+#control-panel #jev-key-help,#control-panel #jev-key-status{color:var(--muted)}
+
+/* Graphics quality: the effective scene resolution and frame rate sit beside the title. */
+#control-panel .graphics-control{margin:18px 0 4px}
+#control-panel .graphics-control .section-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:0}
+#control-panel #quality-readout{font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+#control-panel .quality-modes{margin:10px 0 0}
+#control-panel .quality-note{margin-top:8px;min-height:3.3em}

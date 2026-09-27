@@ -1,0 +1,41 @@
+/* Shared feedback for People, Places, Settings, conversation, wishes and HUD. */
+:root { --ui-ease:cubic-bezier(.2,0,0,1); }
+.app-shell { transition:none; }
+.visit-tools { overscroll-behavior:contain; scrollbar-gutter:stable; }
+:is(.visit-tools,#control-panel,#community-dialogue) :is(button,select,summary) { touch-action:manipulation; }
+:is(.visit-tools,#control-panel,#community-dialogue) button { -webkit-tap-highlight-color:transparent; }
+:is(.visit-tools,#control-panel,#community-dialogue) button:not(:disabled) { cursor:pointer; }
+:root[data-theme] :is(button,select,input,summary,a):focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+@media (hover:hover) and (pointer:fine) {
+  :is(.force-controls,.walking-console,#community-dialogue) button:hover:not(:disabled) { box-shadow:inset 0 0 0 1px var(--accent); }
+}
+@media (prefers-reduced-motion:no-preference) {
+  :root[data-ui-ready=true][data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls) button {
+    transition:scale 120ms var(--ui-ease),box-shadow 120ms var(--ui-ease),opacity 120ms var(--ui-ease);
+  }
+  :root[data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls) button:active:not(:disabled) { transform:none; scale:.96; }
+  :root[data-ui-ready=true][data-ui-input=pointer] #control-panel { transition:opacity 180ms var(--ui-ease),translate 180ms var(--ui-ease),visibility 0s; }
+  :root[data-ui-ready=true][data-ui-input=pointer] .panel-collapsed #control-panel { transition-delay:0s,0s,180ms; }
+  .panel-collapsed #control-panel { opacity:0; translate:-12px 0; }
+  :root[data-ui-ready=true][data-ui-input=pointer] #community-dialogue {
+    transition:opacity 180ms var(--ui-ease),translate 180ms var(--ui-ease),display 180ms allow-discrete;
+  }
+  #community-dialogue[hidden] { opacity:0; translate:0 6px; pointer-events:none; }
+  @starting-style { #community-dialogue:not([hidden]) { opacity:0; translate:0 6px; } }
+  :root[data-ui-input=pointer] .player-settings summary svg { transition:transform 150ms var(--ui-ease); }
+}
+:root[data-ui-input=keyboard] :is(#control-panel,#community-dialogue,.visit-tools,.walking-console,.auto-controls),
+:root[data-ui-input=keyboard] :is(#control-panel,#community-dialogue,.visit-tools,.walking-console,.auto-controls) * { transition:none; }
+:root[data-theme-changing] *,:root[data-theme-changing] *::before,:root[data-theme-changing] *::after { transition:none !important; }
+@media (pointer:coarse) {
+  :is(.visit-tools,#control-panel,#community-dialogue) :is(button,summary) { min-height:44px; }
+  .visit-tools { scrollbar-gutter:auto; }
+}
+@media (max-width:700px) {
+  .visit-tools { display:flex; max-height:max(140px,calc(100dvh - 310px - env(safe-area-inset-bottom))); }
+  .walking:has(#walking-movement:not([hidden])) .visit-tools { max-height:max(140px,calc(100dvh - 445px - env(safe-area-inset-bottom))); }
+  :root[data-theme] .walking-console { bottom:max(28px,env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; }
+}

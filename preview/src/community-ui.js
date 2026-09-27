@@ -1,3 +1,5 @@
+import { grantWish, undoWish, stepWishes } from './wishes.js';
+import { createWishPanel } from './wishes-ui.js';
 import { visitorGreeting } from './visitor-persona.js';
 import { nearbyPeople } from './nearby-people.js';
 import { COMMUNITY_SCENARIOS, createCommunity, stepCommunity, interactWithLocal, chooseCommunityScenario, snapshotForLocal, applyLocalReaction } from './community.js';
@@ -5,6 +7,7 @@ import './community.css';
 import './community-dialogue.css';
 import { supportAvailability } from './community-presentation.js';
 import { createLocalSpeech } from './speech.js';
+import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
 import { createResidentLife,stepResidentLife,residentPacket,applyResidentDecisions } from './resident-life.js';
 import { createNavigationService } from './navigation-service.js';
@@ -28,11 +31,12 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
   let dialogueVoiceStatus = null;
+  let selecting = false, selectionEpoch = 0, actionPending = false;
   const section = node('section', 'panel-section community-section');
   section.id = 'community-section';
   section.tabIndex = -1; section.setAttribute('aria-label', 'People and community scenarios');
@@ -48,14 +52,19 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const speech = createLocalSpeech(status => {
     text(voiceStatus, status);
     if (dialogueVoiceStatus) text(dialogueVoiceStatus, status);
-  });
+  }, {prepare:prepareSpeechAvatar});
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
   // People in the visitor's own space: the street, or the boutique they are standing in (same rule as the HUD).
   const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
-  const meetNearby = () => nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6).some(item => selectLocal(item.local.id));
+  const meetNearby = async () => {
+    for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, Infinity)) {
+      if (await selectLocal(item.local.id)) return true;
+    }
+    return false;
+  };
   const chooserLabel = node('label', 'community-label', 'Meet a local');
   chooserLabel.htmlFor = 'community-local';
   const chooser = node('select', 'community-select');
@@ -82,7 +91,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   progress.id = 'community-progress';
   const objectiveMeter = node('progress', 'scenario-meter'); objectiveMeter.id = 'community-objective'; objectiveMeter.setAttribute('aria-label', 'Neighbors supported');
   const nextRequest = button('Find an open request', 'community-next-request');
-  nextRequest.addEventListener('click', () => { const local = state?.locals.find(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id)); if (local) selectLocal(local.id); });
+  nextRequest.addEventListener('click', () => { const local = state?.locals.find(local => !local.abducted && local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id)); if (local) selectLocal(local.id); });
   const resources = node('p', 'community-resources');
   resources.id = 'community-resources';
   const visits=node('div','community-visits');visits.id='community-visits';
@@ -205,7 +214,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const activities = node('details', 'community-activities');
   activities.id = 'community-activities';
   activities.append(node('summary', '', 'Community activities'), supportCard, mission);
-  body.append(conversation, activities, provenance);
+  const wishPanel = createWishPanel({
+    onGrant: kind => handleWish(kind), onUndo: () => handleWish(null), onSelect: id => selectLocal(id),
+  });
+  section.append(wishPanel.journal);
+  body.append(conversation, wishPanel.card, activities, provenance);
   const footer = node('footer', 'community-dialogue-footer');
   const next = button('Meet another neighbor →', 'community-next', 'community-next');
   footer.append(next);
@@ -230,10 +243,10 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     request = null;
   };
   const invalidateLife=()=>{lifeEpoch++;lifeRequest?.abort();lifeRequest=null;nextLifeRequest=0;if(life) life.packet=null;};
-  const lifeMayRun=()=>life && (lifeEnabled || state.running && state.physicalVisits && state.jobs.some(job=>job.helperId));
-  lifeToggle.addEventListener('click',()=>{lifeEnabled=!lifeEnabled;invalidateLife();paint();});
+  const lifeMayRun=()=>!getMultiplayer() && life && (lifeEnabled || state.running && state.physicalVisits && state.jobs.some(job=>job.helperId));
+  lifeToggle.addEventListener('click',()=>{if(getMultiplayer())return;lifeEnabled=!lifeEnabled;invalidateLife();paint();});
   const dispatchLife=async(now,weather)=>{
-    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor()});
+    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose()});
     if(!packet) return;
     const currentLife=life,epoch=lifeEpoch,controller=new AbortController();lifeRequest=controller;nextLifeRequest=now+2000;
     const current=()=>life===currentLife && epoch===lifeEpoch && lifeMayRun() && !document.hidden;
@@ -251,6 +264,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const visitRows=new Map();
   const visitDescription=job=>{
     if(!state.running) return 'Scenario paused';
+    if(state.locals.some(local=>local.abducted && (local.id===job.localId || local.id===job.helperId))) return 'Visit paused · waiting for neighbors to return';
     if(state.storm || job.phase==='storm_hold') return 'Storm hold · waiting for conditions to clear';
     if(job.phase==='assisting') return `Helping on site · ${Math.round(job.progress/job.duration*100)}%`;
     if(job.phase==='traveling') return `Walking to the neighbor · ${Math.ceil(remainingVisitDistance(state,job) ?? 0)} m left`;
@@ -263,11 +277,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       const helper=state.locals.find(local=>local.id===job.helperId),recipient=state.locals.find(local=>local.id===job.localId);
       if(!visitRows.has(job.id)) {
         const element=node('div','community-visit'),title=node('strong'),status=node('p'),find=button('Find volunteer →',`find-${job.id}`);
-        find.addEventListener('click',()=>{
+        find.addEventListener('click',async()=>{
           const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);
           if(!local) return;
           // Ask for the placement before closing anything, so a refusal keeps the open conversation.
-          if(onFocus(local)===false) {notify(`There isn't a clear place to reach ${local.name} right now.`);return;}
+          try { if(await onFocus(local)===false) {notify(`There isn't a clear place to reach ${local.name} right now.`);return;} }
+          catch(error) {notify(error.message || 'This neighbor could not be reached.');return;}
           if(!dialogue.hidden) closeDialogue();
           document.querySelector('#canvas-host')?.focus({preventScroll:true});
         });
@@ -293,6 +308,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
 
   const paint = () => {
     if (!state) return;
+    const shared = Boolean(getMultiplayer());
+    scenarioSelect.disabled = shared;
+    reset.disabled = shared || !state.locals.length;
+    reset.title = shared ? 'The shared town can only be reset by its host.' : '';
+    scenarioSelect.title = shared ? 'Everyone shares the same community scenario.' : '';
     const nearby = nearbyPeople(state.locals, getVisitor());
     const focusedNearby = nearbyList.contains(document.activeElement) ? document.activeElement : null;
     nearbyEmpty.hidden = nearby.length > 0;
@@ -314,36 +334,40 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     if (focusedNearby && document.activeElement !== focusedNearby) {
       (focusedNearby.isConnected ? focusedNearby : document.querySelector('#canvas-host'))?.focus({ preventScroll: true });
     }
-    lifeToggle.disabled=!life;lifeToggle.setAttribute('aria-pressed',String(Boolean(life && lifeEnabled)));
-    text(lifeToggle,lifeEnabled?'Pause resident walks':'Resume resident walks');
+    lifeToggle.disabled=shared || !life;lifeToggle.setAttribute('aria-pressed',String(Boolean(life && lifeEnabled)));
+    text(lifeToggle,shared?'Resident walks · shared with everyone':lifeEnabled?'Pause resident walks':'Resume resident walks');
     const residents=state.locals.map(local=>({id:local.id,position:local.position,speed:local.life?.speed ?? 0,distance:local.life?.distance ?? 0,status:local.life?.status ?? 'resting',action:local.life?.action ?? local.action,source:local.life?.source ?? local.source,visitId:local.life?.visitId ?? null}));
     for(const option of chooser.options) {
       const local=state.locals.find(local=>local.id===option.value);
-      if(local) text(option,`${local.name} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
+      option.disabled=Boolean(local?.abducted);
+      if(local) text(option,`${local.name}${local.abducted ? ' · aboard a saucer' : ''} · ${local.anchorName}${local.priority && local.status === 'needs_help' ? ' · request open' : ''}`);
     }
     lifeStatus.dataset.residents=JSON.stringify(residents);
     const walking=residents.filter(local=>local.speed>0).length,covered=residents.filter(local=>local.status==='sheltered').length;
-    text(lifeStatus,!life?'Neighborhood encounters stay at their public stop.':!lifeEnabled?'Resident strolls paused. Volunteer visits follow the scenario controls.':`${walking} walking · ${covered} under cover · ${life.stats.jev} Jev / ${life.stats.local_rules} local reactions`);
+    text(lifeStatus,shared?`${walking} walking · ${covered} under cover · shared town` : !life?'Neighborhood encounters stay at their public stop.':!lifeEnabled?'Resident strolls paused. Volunteer visits follow the scenario controls.':`${walking} walking · ${covered} under cover · ${life.stats.jev} Jev / ${life.stats.local_rules} local reactions`);
     const finished = terminal(state);
     const remaining = state.scenario.duration - state.elapsed;
     scenarioSelect.value = state.scenarioKey;
     text(description, state.scenario.description);
     text(run, finished ? 'Scenario ended' : state.running ? 'Pause scenario' : state.elapsed > 0 ? 'Resume scenario' : 'Begin scenario');
-    run.disabled = finished || !state.locals.length;
+    run.disabled = finished || !state.locals.length || actionPending;
     run.setAttribute('aria-pressed', String(state.running));
     text(progress, `${state.supported} / ${state.target} neighbors supported · ${time(remaining)} sim left`);
     objectiveMeter.max = state.target; objectiveMeter.value = state.supported;
-    nextRequest.disabled = finished || !state.locals.some(local => local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id));
+    nextRequest.disabled = finished || !state.locals.some(local => !local.abducted && local.priority && local.status === 'needs_help' && !state.jobs.some(job => job.localId === local.id));
     text(resources, `${state.supplies} kits · ${state.helpBudget} volunteer visits left · ${state.jobs.length} active visits`);
     paintVisits();
     const mode = state.storm && state.running ? 'Storm hold: volunteer visits pause; unmet needs still grow.' : state.running ? 'Check needs, then choose how to spend shared resources.' : state.elapsed > 0 ? 'Paused. Needs and volunteer progress are frozen.' : 'Ready when you are. Meet the neighbors before starting.';
     text(outcome, state.result ?? mode);
     outcome.dataset.state = state.status;
     const local = state.locals.find((item) => item.id === state.selectedId);
+    wishPanel.update(state, local, getPersona());
     if (!local || dialogue.hidden) return;
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
     text(avatar, local.name.split(/\s+/).map(part => part[0]).slice(0, 2).join(''));
+    text(about, local.persona?.work ? 'About your work' : 'What brings you here?');
+    text(story, local.persona?.work ? 'A detail from your work' : 'A local perspective');
     for (const [topic, control] of [['about', about], ['district', district], ['story', story]]) {
       control.setAttribute('aria-disabled', String(Boolean(request)));
       control.setAttribute('aria-pressed', String(currentTopic === topic));
@@ -357,7 +381,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     replay.disabled = speech.mode === 'off';
     if (speech.mode === 'off') text(dialogueVoiceStatus, 'Voice is off. Choose a local voice to listen.');
     const helping=state.jobs.find(job=>job.helperId===local.id);
-    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.anchorName}`);
+    text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.species ? `${local.species} · ` : ''}${local.anchorName}`);
     text(dialogueText, message);
     text(source, attribution);
     text(needLabel, local.status === 'supported' ? 'Supported · request resolved' : local.status === 'unmet' ? 'Support window missed' : local.needKnown ? local.priority ? `${state.scenario.need} · ${Math.round(local.need)} / 100 unmet need` : 'No support request' : 'Ask to learn what would help');
@@ -369,14 +393,15 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     supportStatus.dataset.state = local.needKnown ? local.status : 'unknown';
     const progressText = job ? state.physicalVisits ? `${visitDescription(job)}. Needs grow until support is complete.` : `Volunteer visit ${Math.round(job.progress / job.duration * 100)}% complete.` : local.status === 'supported' ? 'Your support resolved this fictional request.' : finished ? state.result : !local.needKnown ? 'Start by asking what would help. Checking needs does not spend any resources.' : !local.priority ? 'This neighbor has what they need. Meet another neighbor to find an open request.' : !state.running ? 'Start or resume the scenario to commit support. Resources are shared across neighbors.' : 'Supplies reduce need now. A volunteer resolves the request after arriving and helping.';
     text(support, progressText);
-    ask.disabled = local.needKnown || Boolean(request);
+    ask.disabled = local.needKnown || Boolean(request) || actionPending;
     ask.hidden = local.needKnown;
     startScenario.hidden = state.running || finished;
+    startScenario.disabled = actionPending;
     text(startScenario, state.elapsed > 0 ? 'Resume scenario' : 'Start scenario');
     startScenario.classList.toggle('community-primary', local.needKnown && local.priority && local.status === 'needs_help');
     const availability = supportAvailability(state, local);
-    supply.disabled = availability.supply !== null;
-    dispatch.disabled = availability.dispatch !== null;
+    supply.disabled = availability.supply !== null || actionPending;
+    dispatch.disabled = availability.dispatch !== null || actionPending;
     text(supplyCost, `${state.scenario.supplyCost} kits · reduces need by ${state.scenario.supplyRelief}`);
     text(dispatchTitle, job ? 'Visit assigned' : 'Send a volunteer');
     text(supplyReason, availability.supply ?? 'Available now');
@@ -389,13 +414,62 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     text(kits, String(state.supplies)); text(visitBudget, String(state.helpBudget)); text(missionTime, time(remaining));
   };
 
+  const sharedCommand = async command => {
+    try {
+      const result = await getMultiplayer().command(command);
+      if (!result.ok) notify(result.message || 'The town could not confirm this action.');
+      return result;
+    } catch(error) {
+      const message = error.message || 'The town could not confirm this action.';
+      notify(message); return {ok:false,message};
+    }
+  };
+  const handleWish = async kind => {
+    if (!state || dialogue.hidden) return { ok: false };
+    const local = state.locals.find(person => person.id === state.selectedId);
+    if (!local) return { ok: false };
+    invalidate();
+    const currentState = state;
+    const result = getMultiplayer()
+      ? await sharedCommand(kind ? {type:'wish',localId:local.id,kind} : {type:'undoWish',localId:local.id})
+      : kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
+    if (state !== currentState || state.selectedId !== local.id || dialogue.hidden) return result;
+    if (result.ok) {
+      message = result.message; attribution = 'Jevica’s magic'; currentTopic = null;
+      onWish(); paint(); speech.speak(local, message);
+    }
+    return result;
+  };
+
+  // Solo play opens a conversation in the same task, so arrival, close and E
+  // pressed together always agree. The shared town waits for the server to
+  // confirm travel and focus first.
   const selectLocal = (id) => {
     const local = state?.locals.find((item) => item.id === id);
-    if (!local) return false;
+    if (!local || local.abducted || selecting) return false;
+    if (getMultiplayer()) return selectShared(local, id);
     if (onFocus(local) === false) {
       notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
       return false;
     }
+    return openConversation(local, id);
+  };
+  const selectShared = async (local, id) => {
+    const currentState = state, epoch = selectionEpoch;
+    selecting = true;
+    try {
+      if (await onFocus(local) === false) {
+        notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
+        return false;
+      }
+      if (state !== currentState || epoch !== selectionEpoch) return false;
+      if (!(await sharedCommand({type:'focus',localId:id})).ok) return false;
+      if (state !== currentState || epoch !== selectionEpoch) return false;
+    } catch(error) {notify(error.message || 'This neighbor could not be reached.');return false;}
+    finally {selecting = false;}
+    return openConversation(local, id);
+  };
+  const openConversation = (local, id) => {
     notify('');
     invalidate();
     if (dialogue.hidden) previousFocus = document.activeElement;
@@ -403,7 +477,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     chooser.value = id;
     currentTopic = null;
     const reaction = visitorGreeting(local, getPersona()), greeting = conversationLine(local, 'greeting');
-    message = reaction ? `${reaction} ${greeting}` : greeting;
+    message = local.wish?.message ?? (reaction ? `${reaction} ${greeting}` : greeting);
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;
     body.scrollTop = 0;
@@ -414,6 +488,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   };
 
   const react = async (id, topic = 'ask') => {
+    if (getMultiplayer()) {attribution = 'Authored dialogue · shared town';paint();return;}
     if (request) return;
     const packet = snapshotForLocal(state, id, topic, ++tick);
     if (!packet) return;
@@ -422,7 +497,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const epoch = requestEpoch, currentState = state;
     const context = { generation: state.generation, tick: packet.tick };
     const fallback = { schema_version: 1, tick: packet.tick, latency_ms: 0, decisions: [{ id, action: state.storm ? 'seek_shelter' : 'greet', source: 'local_rules' }] };
-    const current = () => epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id;
+    const current = () => !getMultiplayer() && epoch === requestEpoch && state === currentState && context.generation === state.generation && state.selectedId === id && !state.locals.find(local=>local.id===id)?.abducted;
     attribution = 'Authored dialogue · checking immediate reaction…';
     paint();
     let deadline;
@@ -450,37 +525,42 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     }
   };
 
-  const interact = (action) => {
-    if (!state?.selectedId) return;
+  const interact = async (action) => {
+    if (!state?.selectedId || actionPending || state.locals.find(local=>local.id===state.selectedId)?.abducted) return;
     const activeControl = document.activeElement;
     const moveFocus = action === 'ask' && activeControl === ask;
-    const result = interactWithLocal(state, state.selectedId, action);
+    const localId = state.selectedId, currentState = state, shared = Boolean(getMultiplayer());
+    actionPending = true; paint();
+    const result = shared ? await sharedCommand({type:'support',localId,action}) : interactWithLocal(state, localId, action);
+    actionPending = false;
+    if (state !== currentState || state.selectedId !== localId) {paint();return;}
     currentTopic = null;
     message = result.message;
-    if (action !== 'ask') attribution = 'Authored dialogue · local support simulation';
+    if (shared) attribution = 'Authored dialogue · shared community support';
+    else if (action !== 'ask') attribution = 'Authored dialogue · local support simulation';
     paint();
     speech.speak(state.locals.find(local => local.id === state.selectedId), message);
-    if (action === 'ask' && result.ok) react(state.selectedId);
+    if (!shared && action === 'ask' && result.ok) react(state.selectedId);
     if (moveFocus && ask.hidden) (startScenario.hidden ? supply.disabled ? next : supply : startScenario).focus({ preventScroll: true });
     else if ([supply, dispatch].includes(activeControl) && activeControl.disabled) supportCard.focus({ preventScroll: true });
   };
   ask.addEventListener('click', () => interact('ask'));
   about.addEventListener('click', () => {
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (!local || request) return;
+    if (!local || local.abducted || request) return;
     currentTopic = 'about';
     message = conversationLine(local, 'about');
     attribution = 'Authored dialogue · checking immediate reaction…'; paint(); speech.speak(local,message); react(local.id, 'conversation');
   });
   district.addEventListener('click', () => {
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (!local || request) return;
+    if (!local || local.abducted || request) return;
     currentTopic = 'district';
     message = conversationLine(local, 'district');
     attribution = 'Authored dialogue · directory information'; paint(); speech.speak(local,message); react(local.id, 'directions');
   });
   story.addEventListener('click', () => {
-    const local=state?.locals.find(item=>item.id===state.selectedId); if(!local || request) return;
+    const local=state?.locals.find(item=>item.id===state.selectedId); if(!local || local.abducted || request) return;
     currentTopic = 'story';
     message=conversationLine(local,'story'); attribution='Authored dialogue · in-world perspective'; paint(); speech.speak(local,message); react(local.id,'conversation');
   });
@@ -488,32 +568,34 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     voiceMode.value = value; dialogueVoice.value = value;
     speech.setMode(value); paint();
     const local = state?.locals.find(item => item.id === state.selectedId);
-    if (local) speech.speak(local, message);
+    if (local && !local.abducted) speech.speak(local, message);
   };
   voiceMode.addEventListener('change', () => changeVoice(voiceMode.value));
   dialogueVoice.addEventListener('change', () => changeVoice(dialogueVoice.value));
-  replay.addEventListener('click', () => { const local=state?.locals.find(item=>item.id===state.selectedId); if(local) speech.speak(local,message); });
+  replay.addEventListener('click', () => { const local=state?.locals.find(item=>item.id===state.selectedId); if(local && !local.abducted) speech.speak(local,message); });
   supply.addEventListener('click', () => interact('supply'));
   dispatch.addEventListener('click', () => interact('dispatch'));
   meet.addEventListener('click', () => selectLocal(chooser.value));
   // People already met or refused this conversation are skipped, so "another neighbor"
   // walks the district instead of bouncing between the two nearest.
   const offered = new Set();
-  const nextNeighbor = () => {
+  const nextNeighbor = async () => {
     if (!state?.locals.length) return false;
     if (state.selectedId) offered.add(state.selectedId);
     const ordered = orderedLocals(), start = ordered.findIndex(local => local.id === state.selectedId);
     const rotated = [...ordered.slice(start + 1), ...ordered.slice(0, start + 1)];
     const candidates = () => [...nearbyPeople(state.locals.filter(sameSpace), getVisitor(), 40, Infinity).map(item => item.local), ...rotated.filter(sameSpace)]
-      .filter((local, index, list) => local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
+      .filter((local, index, list) => !local.abducted && local.id !== state.selectedId && !offered.has(local.id) && list.indexOf(local) === index);
     let pool = candidates();
     if (!pool.length) { offered.clear(); if (state.selectedId) offered.add(state.selectedId); pool = candidates(); }
-    for (const local of pool) { offered.add(local.id); if (selectLocal(local.id)) return true; }
+    for (const local of pool) { offered.add(local.id); if (await selectLocal(local.id)) return true; }
     notify('Nobody nearby has a clear place to meet right now. Walk a little further and try again.');
     return false;
   };
   next.addEventListener('click', nextNeighbor);
   const closeDialogue = () => {
+    selectionEpoch++;
+    if (getMultiplayer()) sharedCommand({type:'focus',localId:null});
     invalidate();
     dialogue.hidden = true;
     state.selectedId = null;
@@ -526,18 +608,22 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   dialogue.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialogue(); }
   });
-  const toggleScenario = () => {
-    if (!state || terminal(state)) return;
-    state.running = !state.running;
+  const toggleScenario = async () => {
+    if (!state || terminal(state) || actionPending) return;
+    if (getMultiplayer()) {
+      actionPending = true;paint();
+      await sharedCommand({type:'scenario',action:state.running?'pause':'start'});
+      actionPending = false;
+    } else state.running = !state.running;
     paint();
   };
   run.addEventListener('click', toggleScenario);
-  startScenario.addEventListener('click', () => {
-    toggleScenario();
+  startScenario.addEventListener('click', async () => {
+    await toggleScenario();
     (ask.hidden ? supply.disabled ? next : supply : ask).focus({ preventScroll: true });
   });
   const resetScenario = (key) => {
-    if (!state) return;
+    if (!state || getMultiplayer()) return;
     invalidate();
     chooseCommunityScenario(state, key);
     currentTopic = null;
@@ -553,11 +639,13 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   return {
     get state() { return state; },
     get speakingId() { return speech.speakingId; },
+    updateSpeech: speech.update,
     selectLocal,
     meetNearby,
     autoInteract(id, action) {
+      if (getMultiplayer()) return {ok:false};
       const local = state?.locals.find(item => item.id === id), visitor = getVisitor();
-      if (!local || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
+      if (!local || local.abducted || !visitor || local.indoor || !dialogue.hidden || getWeather().storm ||
           Math.hypot(visitor[0] - local.position[0], visitor[1] - local.position[1]) > 2.8) return { ok: false };
       const selected = state.selectedId;
       const result = interactWithLocal(state, id, action);
@@ -567,10 +655,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       return result;
     },
     setWorld(world, rooms = []) {
+      selectionEpoch++;
       invalidate();invalidateLife();
-      navigationService?.dispose();navigationService=createNavigationService(world);
-      state = createCommunity(world, rooms);
-      life=createResidentLife(world,state,navigationService?.route);
+      navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer()});
+      life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();
       notify('');
@@ -579,14 +668,63 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       rebuildChooser();
       paint();
     },
+    applyRemote(snapshot) {
+      if (!state || !getMultiplayer() || !snapshot?.community || !Array.isArray(snapshot.locals)) return;
+      invalidateLife();
+      const selectedId = state.selectedId;
+      const previousEvent = JSON.stringify(state.wishes.events.at(-1));
+      Object.assign(state, snapshot.community, {selectedId});
+      state.scenario = COMMUNITY_SCENARIOS[state.scenarioKey] ?? state.scenario;
+      if (snapshot.wishes) state.wishes = structuredClone(snapshot.wishes);
+      const remoteIds=new Set(snapshot.locals.map(local=>local.id));
+      if(state.locals.some(local=>!remoteIds.has(local.id))){
+        state.locals=state.locals.filter(local=>remoteIds.has(local.id));
+        if(state.selectedId&&!remoteIds.has(state.selectedId))closeDialogue();
+        rebuildChooser();
+      }
+      const byId = new Map(state.locals.map(local => [local.id,local]));
+      for (const remote of snapshot.locals) {
+        const local = byId.get(remote.id);
+        if (!local) continue;
+        const persona = local.persona;
+        Object.assign(local, structuredClone(remote), {persona});
+        if (remote.wish === null) delete local.wish;
+        if (remote.wishDisruption === null) delete local.wishDisruption;
+      }
+      const event = state.wishes.events.at(-1);
+      if (event && JSON.stringify(event) !== previousEvent) {
+        notify(event.message);
+        const selected = byId.get(selectedId);
+        if (selected?.wish && event.localId === selectedId) {
+          message = selected.wish.message; attribution = 'Jevica’s magic · shared town';
+        }
+      }
+      paint();
+    },
     update(delta, now) {
       if (!state || document.hidden) return;
+      if(state.locals.find(local=>local.id===state.selectedId)?.abducted) closeDialogue();
+      if (getMultiplayer()) {
+        if (now - lastPaint >= 150) {paint();lastPaint = now;}
+        return;
+      }
       const previousStatus = state.status;
       const weather=getWeather();
       const economy=getEconomy();
       stepCommunity(state, delta,{...economy,config:{...economy?.config,storm:weather.storm ?? economy?.config?.storm ?? false}});
+      const previousEvent = state.wishes.events.at(-1);
+      stepWishes(state, delta);
+      const wishEvent = state.wishes.events.at(-1);
+      if (wishEvent && wishEvent !== previousEvent) {
+        notify(wishEvent.message);
+        const selected = state.locals.find(person => person.id === state.selectedId);
+        if (selected?.wish && wishEvent.localId === selected.id) {
+          invalidate(); message = selected.wish.message; attribution = 'A wish gone sideways';
+          speech.speak(selected, message);
+        }
+      }
       const revision=life?.revision;
-      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),paused:!lifeEnabled});
+      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose(),obstacles:getObstacles(),paused:!lifeEnabled});
       if(life && revision!==life.revision) invalidateLife();
       if(lifeMayRun() && !lifeRequest && now>=nextLifeRequest) dispatchLife(now,weather);
       if (state.status !== previousStatus && terminal(state)) invalidate();
