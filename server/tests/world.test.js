@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createSharedWorld } from '../world.js';
 import { createCommunity } from '../../preview/src/community.js';
 import { storeRoomsFor } from '../../preview/src/store-rooms.js';
+import { createWalkingEnvironment } from '../../preview/src/walking.js';
 
 const data = { scene: 'district', bounds_m: [-30,-30,30,30], walkSpawn: [-12,0,0],
   collisionPolygons: [[[-3,-8],[3,-8],[3,8],[-3,8]]], stores: [], buildings: [],
@@ -24,6 +25,21 @@ function setup() {
 }
 const cast = (world,userId='a',localId='local-00') => world.command(userId,{type:'wish',localId,kind:'dragon'});
 const travel = (world,id,userId='a') => world.command(userId,{type:'travel',localId:id});
+
+test('shared flight and checkpoint restore honor the same tall-roof ceiling as the browser',()=>{
+  const tall={...data,buildings:[{center:[0,0,2],size:[6,16,48],ring:data.collisionPolygons[0]}]};
+  let time=1000;const world=createSharedWorld(tall,{now:()=>time}),env=createWalkingEnvironment(tall);
+  world.join({userId:'a',name:'Jevica'});const position=world.snapshot().players[0].position;
+  for(let altitude=1;altitude<=56;altitude++){
+    time+=400;const result=world.command('a',{type:'pose',position,yaw:0,altitude});
+    assert.equal(result.ok,true,`ascent ${altitude}: ${result.error}`);
+  }
+  assert.equal(env.canFly(0,56,0),true,'clears the tall roof');
+  const restored=createSharedWorld(tall,{now:()=>time});assert.equal(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))).ok,true);
+  assert.equal(restored.snapshot().players[0].altitude,56);
+  assert.equal(world.command('a',{type:'pose',position,yaw:0,altitude:env.flightCeiling+1}).error,'invalid_pose','server still enforces finite world ceiling');
+  assert.equal(world.command('a',{type:'pose',position,yaw:0,altitude:0}).error,'movement_too_fast','higher ceiling never weakens motion limits');
+});
 
 test('two accounts share one authoritative wish and NPC simulation', () => {
   const {world} = setup();
@@ -157,15 +173,15 @@ test('support resources and conversation holds are shared and expire',()=>{
 
 test('movement checks the whole segment and altitude rather than only its endpoint',()=>{
   let time=1000;
-  const world=createSharedWorld({...data,walkSpawn:[-1,0,0],collisionPolygons:[[[-0.2,-5],[0.2,-5],[0.2,5],[-0.2,5]]]}, {now:()=>time});
+  const world=createSharedWorld({...data,walkSpawn:[-1.6,0,0],collisionPolygons:[[[-0.2,-5],[0.2,-5],[0.2,5],[-0.2,5]]]}, {now:()=>time});
   world.join({userId:'a',name:'A'});time+=1000;
-  const crossing=world.command('a',{type:'pose',position:[1,0,0],yaw:0,altitude:0});
+  const crossing=world.command('a',{type:'pose',position:[1.6,0,0],yaw:0,altitude:0});
   assert.equal(crossing.error,'blocked','both endpoints are free but the wall is solid');
-  assert.equal(world.command('a',{type:'pose',position:[-1,0,0],yaw:0,altitude:32}).error,'movement_too_fast');
-  assert.equal(world.command('a',{type:'pose',position:[-1,0,0],yaw:0,altitude:3}).ok,true);
+  assert.equal(world.command('a',{type:'pose',position:[-1.6,0,0],yaw:0,altitude:32}).error,'movement_too_fast');
+  assert.equal(world.command('a',{type:'pose',position:[-1.6,0,0],yaw:0,altitude:3}).ok,true);
   time+=1000;
-  assert.equal(world.command('a',{type:'pose',position:[1,0,0],yaw:0,altitude:3}).error,'blocked');
-  assert.equal(world.command('a',{type:'pose',position:[-1,5,0],yaw:0,altitude:3}).ok,true);
+  assert.equal(world.command('a',{type:'pose',position:[1.6,0,0],yaw:0,altitude:3}).error,'blocked');
+  assert.equal(world.command('a',{type:'pose',position:[-1.6,5,0],yaw:0,altitude:3}).ok,true);
 });
 
 test('all district residents have a validated focus destination; malformed travel is rejected',async()=>{

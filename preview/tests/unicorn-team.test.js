@@ -102,3 +102,37 @@ test('production forward-to-reverse controls preserve walking support and smooth
  }
  assert.equal(unsupported,0,'walking reversal must retain ground support');assert.ok(maxGap<.02,`stance clearance ${maxGap}`);assert.ok(maxSlip<.004,`stance slip ${maxSlip} ${JSON.stringify(worst)}`);assert.ok(maxJump<.3,`foot discontinuity ${maxJump}`);team.dispose();
 });
+
+test('standing unicorns carry their weight upright with foreknees aligned down each leg',()=>{
+ const scene=new THREE.Scene(),coach=new THREE.Group();coach.scale.setScalar(.9);scene.add(coach);
+ const team=createUnicornTeam({scene,coach,groundAt:()=>0,asset});
+ for(let frame=0;frame<120;frame++)team.update(frame/60,1/60,0,0);
+ for(const h of team.horses)for(const l of h.gait.legs.filter(l=>l.upper.name.startsWith('Front'))){
+  const local=b=>h.rig.worldToLocal(b.getWorldPosition(new THREE.Vector3()));
+  const hip=local(l.upper),knee=local(l.lower),foot=local(l.foot),t=(hip.y-knee.y)/(hip.y-foot.y);
+  const sideways=Math.abs(knee.x-THREE.MathUtils.lerp(hip.x,foot.x,t));
+  assert.ok(sideways<.035,`${l.upper.name} splays sideways by ${sideways} m`);
+  assert.ok(hip.y>1.10,`standing body crouches at ${hip.y} m`);
+  assert.ok(Math.abs(l.clearance)<.015,`standing sole clearance ${l.clearance}`);
+ }
+ team.dispose();
+});
+
+test('the compact team fits its real street footprint and keeps planted feet grounded',()=>{
+ const scene=new THREE.Scene(),coach=new THREE.Group();coach.scale.setScalar(.78);scene.add(coach);
+ const team=createUnicornTeam({scene,coach,groundAt:()=>0,asset});
+ for(let frame=0;frame<120;frame++)team.update(frame/60,1/60,0,0);
+ for(const h of team.horses){
+  let front=Infinity;h.rig.traverse(mesh=>{if(!mesh.isMesh)return;if(mesh.isSkinnedMesh)mesh.skeleton.update();
+   for(let i=0;i<mesh.geometry.attributes.position.count;i++){
+    const p=(mesh.isSkinnedMesh?mesh.getVertexPosition(i,new THREE.Vector3()):new THREE.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i)).applyMatrix4(mesh.matrixWorld);
+    front=Math.min(front,p.x);
+   }
+  });
+  assert.ok(front>=-8*.78,`unicorn nose extends beyond compact collision envelope: ${front}`);
+  assert.ok(h.gait.legs.every(l=>Math.abs(l.clearance)<.015),'compact hooves contact the street');
+ }
+ const world={bounds_m:[-70,-30,70,30],buildings:[],roads:[{id:'narrow',width_m:5.2,points:[[-60,0,0],[60,0,0]]}]};
+ assert.ok(findCarriageParking(world,{position:[0,1.68,-5],roomId:null,altitude:0},[],.78,true),'compact coach fits a 5.2 m street');
+ team.dispose();
+});

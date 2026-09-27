@@ -1,0 +1,15 @@
+{
+  "author": "NewDLC",
+  "license": "CC0-1.0",
+  "source": "https://opengameart.org/content/3d-wolf",
+  "download": "https://opengameart.org/sites/default/files/3dwolf_blend.zip",
+  "source_sha256": "6f8b59c31c8dd39725b5c533c9d08b8f9216e592177b39218c486d914fe9af65",
+  "sha256": "1595f79bb3e6b9057621102b63b55142718a42ad5e89a09da4369c5bd9526bb2",
+  "coat": {
+    "path": "sable-coat.png",
+    "source": "AI-generated UV-aligned adaptation of NewDLC's CC0 color atlas",
+    "sha256": "1fe476d381dd8f0e5575d6151896a344e9830427c904a9840455d25f9177f144"
+  },
+  "adaptation": "Sable canine: PBR color, normal and roughness maps; glossy brown eyes; silhouette subdivision with decimation below 30000 triangles; grounded metre scale; independent skeletal idle at runtime.",
+  "build": "bpy 4.5.3: python scripts/build_wish_dog.py"
+}

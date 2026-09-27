@@ -207,14 +207,31 @@ call an inference service. Playback and live-district results are recorded in
 `prince-jev.glb` is Prince Jev's hero mesh, built by `scripts/build_prince.py`
 with only the MPFB 2.0.17 source (for the base mesh, targets and rig) and the
 already-shipped CC0 GLBs. A fresh MPFB body gets young, tall, athletic macros and
-jaw, cheekbone, nose and brow detail targets. Because every MPFB body shares one
-base-mesh topology, the tailored resident's suit, shoes and short hair, and
-Jevica's high-poly eyes, eyebrows and eyelashes, are moved onto him with a
+detail targets. Owen (`local-11`, `man-workwear.glb`) supplies the final head
+shape: shared MPFB vertex indices transfer his head around Jev's head joint,
+uniformly sized with a smooth neck blend. Jev keeps his athletic body below the
+neck. Because every MPFB body shares one base-mesh topology, the tailored
+resident's suit and shoes, Owen's `short02` hair, and Jevica's high-poly eyes,
+eyebrows and eyelashes are moved onto him with a
 surface-deform driver (donor body as basis, prince body as shape key). The
 garments keep their original MakeHuman skin weights. The donor's skin mask hides
 skin under the suit, and its blink morphs carry over by base-mesh index.
-`prince-jev.sources.json` records the macros, targets, bytes and SHA-256.
+`prince-jev.sources.json` records the initial macros and targets, final Owen
+head transfer, source asset hash, bytes and SHA-256.
 Runtime dress-uniform details live in `preview/src/prince-costume.js`.
+
+The runtime keeps that dedicated young athletic body and its facial rig. Prince
+Jev's skin material uses the `young_caucasian_male` atlas from the already-shipped
+CC0 `man-casual.glb`; `sources.json` records that donor. His costume also applies
+natural blonde hair and a rose pink tunic to private material clones, leaving
+other residents unchanged. The GLB source receipt describes its original baked
+materials, before these runtime overrides. His shopping bag attaches to the
+animated right hand through `preview/src/prince-shopping-bag.js`.
+
+For a comparison under the same studio lighting, open
+`/e2e/fixtures/prince.html` and `/e2e/fixtures/prince.html?reference=owen`.
+The reference view renders Owen's actual NPC profile and resident clothing
+without Jev's costume or skin overrides.
 
 ```sh
 git clone --depth 1 --branch v2.0.17 https://github.com/makehumancommunity/mpfb2 \

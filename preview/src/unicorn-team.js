@@ -32,7 +32,7 @@ diffuseColor.rgb=diffuse*mix(.10,1.0,pow(clamp(coatLuma,0.0,1.0),.68));
   for(const [i,side]of [-1,1].entries()) {
     const holder=new THREE.Group(),rig=clone(asset.scene);holder.name=i?'Blossom':'Pearl';holder.add(rig);object.add(holder);
     // 2.18 m to the ears, ~2.9 m nose to tail. Native +Z faces the coach's -X.
-    rig.rotation.y=-Math.PI/2;
+    rig.rotation.y=-Math.PI/2;rig.scale.setScalar(coach.scale.x/.9);
     const skins=[];
     rig.traverse(o=>{if(o.isSkinnedMesh){if(o.material.name==='Material')o.material=coat;else if(o.material.name==='Material.003')o.material=mane;else if(o.material.name==='Eye_brown')o.material=eyes;o.castShadow=o.receiveShadow=true;o.frustumCulled=false;skins.push(o);}});
     // Add ornaments in source coordinates before binding them to animated bones.

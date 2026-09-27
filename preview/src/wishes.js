@@ -28,8 +28,11 @@ function refreshTrouble(state) {
   state.wishes.trouble = incidents.length;
   state.wishes.affected = state.locals.filter(local => local.wishDisruption).length;
 }
+export const crewWishMessage = local => `${local.name} travels with Jevica. Wishes are for district residents.`;
 export function grantWish(state, localId, kind, caster) {
   const local = state?.locals.find(person => person.id === localId), definition = wishFor(kind);
+  // The carriage crew travel with Jevica and have no wish visuals; wishes are for district residents.
+  if (local?.vehicleRole) return { ok: false, message: crewWishMessage(local) };
   if (!state?.wishes || caster !== 'jevica' || !local || local.abducted || !definition || local.wish || local.force) return { ok: false, message: 'Choose a resident without an active wish or Force hold.' };
   local.wish = { kind, age: 0, phase: 'gift', message: definition.gift };
   state.wishes.granted++;

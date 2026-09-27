@@ -12,11 +12,11 @@ function distanceToSegment(x, z, a, b) {
   return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
 }
 
-function overlaps(x, z, ring) {
+function overlaps(x, z, ring, radius = RADIUS) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const a = ring[i], b = ring[j];
-    if (distanceToSegment(x, z, a, b) < RADIUS) return true;
+    if (distanceToSegment(x, z, a, b) < radius) return true;
     if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
   }
   return inside;
@@ -35,6 +35,19 @@ export function createWalkingEnvironment(world, placedObjects = []) {
   const rooms = storeRoomsFor(world);
   const roomFor = (x, z, shrink) => rooms.length ? roomAt(rooms, x, -z, shrink) : null;
   const groundAt = (x, z) => roomFor(x, z, 0)?.floor ?? groundSurfaceHeight(world,x,z);
+  // Match the rendered roof outline, including mapped nonrectangular buildings.
+  // The 3.1m margin clears the 2.6m roof bulkhead plus the bubble's lower arc.
+  const flightRadius=1.3, roofs=(world.buildings??[]).map(building=>{
+    const angle=(building.yaw_deg??0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+    const ring=building.ring?.map(([x,y])=>[x,-y])??[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[building.center[0]+x*building.size[0]/2*c-y*building.size[1]/2*s,-building.center[1]-x*building.size[0]/2*s-y*building.size[1]/2*c]);
+    return {ring,top:(building.center[2]??terrainHeight(world.terrain,building.center[0],building.center[1]))+building.size[2]+3.1};
+  });
+  // Imported collision-only worlds have no roof metadata; retain a finite safe cap.
+  if(!roofs.length)for(const ring of polygons)roofs.push({ring,top:Math.max(...ring.map(([x,z])=>terrainHeight(world.terrain,x,-z)))+23.1});
+  for(const roof of roofs)Object.assign(roof,{minX:Math.min(...roof.ring.map(p=>p[0]))-flightRadius,maxX:Math.max(...roof.ring.map(p=>p[0]))+flightRadius,minZ:Math.min(...roof.ring.map(p=>p[1]))-flightRadius,maxZ:Math.max(...roof.ring.map(p=>p[1]))+flightRadius});
+  // A stable district altitude ceiling prevents corrections as terrain changes
+  // beneath the bubble. Client motion and shared pose/checkpoint validation use it.
+  const flightCeiling=Math.max(32,...roofs.map(roof=>roof.top+5-Math.min(...roof.ring.map(([x,z])=>groundAt(x,z)))));
   const baseIsFree = (x, z) => {
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
@@ -50,15 +63,9 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     return !placedObjects.some(object=>object.contains(x,y,z,RADIUS));
   };
   const canFly = (x, altitude, z) => {
-    if(x<west+1 || x>east-1 || z<-north+1 || z>-south-1) return false;
-    if(placedObjects.some(object=>object.contains(x,altitude,z,1.3)))return false;
-    // A placed carriage has a finite height; it is not a building column.
-    if(baseIsFree(x,z) && !roomFor(x,z,0)) return true;
-    // Conservative building columns keep airborne bodies and vehicles outside
-    // walls until they clear the tallest nearby roof with two meters to spare.
-    const roofs=(world.buildings ?? []).filter(building=>Math.abs(x-building.center[0])<Math.hypot(building.size[0],building.size[1])/2+1.5 && Math.abs(z+building.center[1])<Math.hypot(building.size[0],building.size[1])/2+1.5);
-    const ceiling=Math.max(20,...roofs.map(building=>building.size[2]));
-    return altitude>terrainHeight(world.terrain,x,-z)+ceiling+2;
+    if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
+    if(placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
+    return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
   };
   const hasSightLine=(from,to)=>{
     const room=roomFor(from[0],-from[1],0),targetRoom=roomFor(to[0],-to[1],0);
@@ -71,7 +78,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     }
     return true;
   };
-  return { groundAt, isFree, canFly, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  return { groundAt, isFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

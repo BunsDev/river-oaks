@@ -10,7 +10,7 @@ export const COMPANION_STANCES = {
   greet: { label: 'Offer Jevica a courtly bow', hold: true },
   return: { label: 'Return to the carriage bench' },
 };
-const STEP = 0.4, PERSONAL = 0.62, REJOIN = 28;
+const STEP = 0.4, PERSONAL = 0.62;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -31,11 +31,10 @@ export function companionSlot(player, heading, stance, isFree, preferredSide = 1
     const point = at(forward, side);
     if (isFree(point[0], point[1])) return { point, side: Math.sign(side) || preferredSide };
   }
-  return { point: at(-1.2, 0), side: preferredSide };
+  return null;
 }
 
-// Nearest free spot around a centre, used to step down from the bench and to
-// rejoin Jevica after she flies or teleports far away.
+// Nearest free spot around a centre. A free destination is not itself a route.
 export function freeSpotNear(center, isFree, { start = 0.8, heading = 0 } = {}) {
   for (let radius = start; radius < 6; radius += 0.4) for (let i = 0; i < 16; i++) {
     const angle = heading + Math.PI + i / 16 * Math.PI * 2;
@@ -91,9 +90,21 @@ export function companionOptions() {
 // Deterministic stand-in used only while Jev is unavailable; provenance says so.
 export function localStance(context) {
   if (context.riding) return 'return';
-  if (context.conversing || context.indoor || context.player_speed < 0.15) return 'pause';
-  if (context.crowded || context.narrow || context.flying) return 'trail';
+  if (context.conversing || context.flying) return 'pause';
+  if (context.gap_m > 1.8) return 'trail';
+  if (context.player_speed < 0.15) return 'pause';
+  if (context.crowded || context.narrow || context.indoor) return 'trail';
   return 'beside';
+}
+
+export function companionStanceEligible(stance,context) {
+  if(context.riding)return stance==='return';
+  if(context.flying||context.conversing)return stance==='pause';
+  if(stance==='return')return false;
+  if(context.gap_m>1.8)return ['beside','trail'].includes(stance);
+  if(stance==='greet')return !context.greeted_recently&&context.player_speed<.2&&context.gap_m<3;
+  if(stance==='lead')return context.player_speed>=.4&&context.gap_m<4&&!context.indoor&&!context.crowded&&!context.narrow;
+  return Boolean(COMPANION_STANCES[stance]);
 }
 
 const THRESHOLDS = { beside: 0.3, lead: 0.4, trail: 0.35, pause: 0.3, greet: 0.5, return: 0.6 };
@@ -105,7 +116,7 @@ export function createCompanionBrain({
     return response.json();
   }, now = () => performance.now(), interval = 2500,
 } = {}) {
-  let tick = 0, generation = 0, next = 0, pending = null, greetedAt = -Infinity;
+  let tick = 0, generation = 0, next = 0, pending = null, greetedAt = -Infinity,disposed=false,latest={};
   const status = { stance: 'beside', source: 'local', label: 'Walking beside you', reason: 'starting', decisions: 0 };
   const apply = (stance, source, reason = null) => {
     if (stance === 'greet') greetedAt = now();
@@ -115,9 +126,20 @@ export function createCompanionBrain({
     get status() { return { ...status }; },
     get greetedRecently() { return now() - greetedAt < 45000; },
     reset() { generation++; pending?.abort(); pending = null; next = 0; apply('beside', 'local', 'starting'); },
+    dispose() {this.reset();disposed=true;},
     update(context) {
+      if(disposed)return status;
+      latest={...context,greeted_recently:this.greetedRecently};
+      if(context.flying||context.conversing) {
+        if(pending){generation++;pending.abort();pending=null;}
+        apply('pause','local',context.flying?'waiting_on_ground':'conversation');return status;
+      }
       if (context.riding) { if (status.stance !== 'return') apply('return', 'local', 'riding'); return status; }
       if (status.stance === 'greet' && now() - greetedAt > 2600) apply('pause', status.source);
+      // A reply can become unsafe before the next inference finishes. Only a
+      // bow already playing may ignore the repeat-greeting cooldown here.
+      const activeContext=status.stance==='greet'?{...latest,greeted_recently:false}:latest;
+      if(!companionStanceEligible(status.stance,activeContext))apply(localStance(latest),'local','context_changed');
       if (pending || now() < next) return status;
       next = now() + interval;
       const controller = new AbortController(), version = generation, packet = {
@@ -129,16 +151,15 @@ export function createCompanionBrain({
         .then(reply => {
           if (version !== generation) return;
           const stance = reply?.candidate_id;
-          if (reply?.schema_version === 1 && reply.tick === packet.tick && reply.source === 'jev' && COMPANION_STANCES[stance]
+          if (reply?.schema_version === 1 && reply.tick === packet.tick && reply.generation === packet.generation && reply.source === 'jev' && COMPANION_STANCES[stance]
+            && companionStanceEligible(stance,latest)
             && Number.isFinite(reply.confidence) && reply.confidence >= THRESHOLDS[stance] && reply.confidence <= 1) {
             status.decisions++; apply(stance, 'jev');
-          } else apply(localStance(context), 'local', reply?.reason ?? 'invalid_answer');
+          } else apply(localStance(latest), 'local', reply?.reason ?? 'invalid_answer');
         })
-        .catch(error => { if (version === generation) apply(localStance(context), 'local', error.name === 'AbortError' ? 'timeout' : 'offline'); })
+        .catch(error => { if (version === generation) apply(localStance(latest), 'local', error.name === 'AbortError' ? 'timeout' : 'offline'); })
         .finally(() => { clearTimeout(timer); if (pending === controller) pending = null; });
       return status;
     },
   };
 }
-
-export const companionRejoinDistance = REJOIN;

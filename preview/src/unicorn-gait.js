@@ -6,6 +6,7 @@ const smooth=n=>n*n*(3-2*n);
 // anchors and skeleton; geometry and textures can remain shared.
 export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
   rig.updateMatrixWorld(true);
+  const size=rig.getWorldScale(new THREE.Vector3()).y;
   const rest=new Map();rig.traverse(b=>{if(b.isBone)rest.set(b,{position:b.position.clone(),quaternion:b.quaternion.clone()});});
   const roots=[...rest.keys()].filter(b=>!b.parent.isBone);
   const body=rig.getObjectByName('Body'),head=rig.getObjectByName('Head'),neck=rig.getObjectByName('Neck'),tail=rig.getObjectByName('Tail');
@@ -15,6 +16,9 @@ export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
     const upper=rig.getObjectByName(`${prefix}Upper${side}`),lower=rig.getObjectByName(`${prefix}Lower${side}`),foot=rig.getObjectByName(`${prefix}Hoof${side}`);
     const hip=upper.getWorldPosition(new THREE.Vector3()),knee=lower.getWorldPosition(new THREE.Vector3()),end=foot.getWorldPosition(new THREE.Vector3());
     const axis=end.clone().sub(hip).normalize(),pole=knee.clone().sub(hip);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
+    // The almost-straight source foreleg contains a tiny lateral offset;
+    // deriving its bend pole from that offset magnifies it into splayed knees.
+    if(prefix==='Front')pole.set(0,0,1).transformDirection(rig.matrixWorld);
     const neutral=rig.worldToLocal(new THREE.Vector3(end.x,end.y,hip.z)),sourceSide=hip.x<0?-1:1;
     const phase=prefix==='Front'?(sourceSide<0?0:.5):(sourceSide<0?.75:.25);
     const samples=[];let min=Infinity;
@@ -23,7 +27,7 @@ export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
       for(let i=0;i<position.count;i++){
         let w=0;for(let j=0;j<4;j++)if(skinIndex.getComponent(i,j)===index)w+=skinWeight.getComponent(i,j);
         if(w<.5)continue;const p=skin.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(skin.matrixWorld);
-        if(p.y>end.y+.12)continue;samples.push({skin,index:i});min=Math.min(min,p.y);
+        if(p.y>end.y+.12*size)continue;samples.push({skin,index:i});min=Math.min(min,p.y);
       }
     }
     legs.push({upper,lower,foot,neutral,phase,trotPhase:prefix==='Front'?phase:(sourceSide<0?.5:0),a:hip.distanceTo(knee),b:knee.distanceTo(end),pole:pole.transformDirection(rig.matrixWorld.clone().invert()),soleOffset:end.y-min,samples,anchor:null,liftOff:null,landing:null,swing:false,clearance:0});
@@ -52,24 +56,24 @@ export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
       if(teleported)phase=phaseOffset;
       const sign=Math.abs(speed)>.01?Math.sign(speed):lastSign,reversing=lastSign!==0&&sign!==lastSign;lastSign=sign;recovery=reversing?.8:Math.max(0,recovery-delta);
       const target=THREE.MathUtils.smoothstep(Math.abs(speed),.02,.65);weight+=(target-weight)*(1-Math.exp(-7*delta));
-      const trot=THREE.MathUtils.smoothstep(Math.abs(speed),1.7,2.8),stride=1.2+1.2*trot,duty=.64-.32*trot,reach=stride*duty/2;
+      const trot=THREE.MathUtils.smoothstep(Math.abs(speed),1.7,2.8),stride=(1.2+1.2*trot)*size,duty=.64-.32*trot,reach=stride*duty/2;
       phase+=Math.abs(travelled)/stride;
       for(const [bone,pose]of rest){bone.position.copy(pose.position);bone.quaternion.copy(pose.quaternion);}
       const worldScale=body.parent.getWorldScale(new THREE.Vector3()).y;
-      const bob=(-.115+Math.sin(phase*Math.PI*4)*.008*weight+Math.sin(elapsed*1.6+phaseOffset)*.002)/worldScale;
+      const bob=(-.018+Math.sin(phase*Math.PI*4)*.008*weight+Math.sin(elapsed*1.6+phaseOffset)*.002)*size/worldScale;
       for(const root of roots)root.position.addScaledVector(Y.clone().transformDirection(root.parent.matrixWorld.clone().invert()),bob);
-      neck.rotateX(Math.sin(phase*Math.PI*2)*.018*weight+Math.sin(elapsed*.7+phaseOffset)*.006);
-      head.rotateX(-Math.sin(phase*Math.PI*2+.3)*.02*weight);
+      neck.rotateX(-.12+Math.sin(phase*Math.PI*2)*.018*weight+Math.sin(elapsed*.7+phaseOffset)*.006);
+      head.rotateX(.075-Math.sin(phase*Math.PI*2+.3)*.02*weight);
       tail.rotateZ(Math.sin(elapsed*1.5+phaseOffset)*.045+Math.sin(phase*Math.PI*2)*.025*weight);
       rig.updateMatrixWorld(true);
       // Let the body settle over supporting legs during braking/reversal rather
       // than stretching a planted leg past its anatomical reach.
       let required=0;
       for(const leg of legs)if(leg.anchor&&(!leg.swing||leg.swingProgress>.8||leg.settle?.time>.8)){
-        const contact=leg.swing?leg.landing:leg.anchor,hip=leg.upper.getWorldPosition(new THREE.Vector3()),horizontal=Math.hypot(hip.x-contact.x,hip.z-contact.z),length=leg.a+leg.b-.025;
+        const contact=leg.swing?leg.landing:leg.anchor,hip=leg.upper.getWorldPosition(new THREE.Vector3()),horizontal=Math.hypot(hip.x-contact.x,hip.z-contact.z),length=leg.a+leg.b-.025*size;
         required=Math.max(required,hip.y-contact.y-Math.sqrt(Math.max(0,length*length-horizontal*horizontal)));
       }
-      settlingHeight=Math.min(.12,Math.max(required,settlingHeight*Math.exp(-5*delta)));
+      settlingHeight=Math.min(.12*size,Math.max(required,settlingHeight*Math.exp(-5*delta)));
       if(settlingHeight>0){for(const root of roots)root.position.addScaledVector(Y.clone().transformDirection(root.parent.matrixWorld.clone().invert()),-settlingHeight/worldScale);rig.updateMatrixWorld(true);}
       const facing=new THREE.Vector3(0,0,1).transformDirection(rig.matrixWorld).multiplyScalar(Math.sign(speed)||1);
       for(const leg of legs){
@@ -82,7 +86,7 @@ export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
         // Start each flight at its planted contact. A reach limit also schedules
         // an early step on tight turns, before a planted leg can overextend.
         if(reversing&&leg.swing){leg.landing=leg.lastFoot.clone();leg.landing.y=groundAt(leg.landing.x,leg.landing.z)+leg.soleOffset;leg.settle={from:leg.lastFoot.clone(),time:0};}
-        const requested=weight>.06&&!leg.swing&&((window&&!leg.lastWindow)||offset.dot(forward)<-.34||(offset.length()>.44&&offset.dot(forward)<.1));
+        const requested=weight>.06&&!leg.swing&&((window&&!leg.lastWindow)||offset.dot(forward)<-.34*size||(offset.length()>.44*size&&offset.dot(forward)<.1));
         const supported=Math.abs(speed)>=1.7||legs.filter(other=>other.swing).length<2;
         const start=requested&&supported;leg.lastWindow=window&&(!requested||supported);
         if(start){leg.liftOff=leg.anchor.clone();leg.landing=neutral.clone().addScaledVector(forward,reach);leg.swingProgress=0;}
@@ -97,14 +101,14 @@ export function createUnicornGait(rig,{groundAt,phaseOffset=0}) {
           const t=leg.swingProgress,u=smooth(t);
           // Landing prediction follows a turn during flight; planted hooves stay put.
           leg.landing.copy(neutral).addScaledVector(forward,reach);leg.landing.y=groundAt(leg.landing.x,leg.landing.z)+leg.soleOffset;
-          target=leg.liftOff.clone().lerp(leg.landing,u);target.y+=Math.sin(t*Math.PI)**2*(.105+.025*Math.min(Math.abs(speed),3));
+          target=leg.liftOff.clone().lerp(leg.landing,u);target.y+=Math.sin(t*Math.PI)**2*(.105+.025*Math.min(Math.abs(speed),3))*size;
           if(t===1){leg.anchor.copy(leg.landing);swing=false;}
         }else{
           target=leg.anchor.clone();target.y=groundAt(target.x,target.z)+leg.soleOffset;
         }
         leg.swing=swing;solve(leg,target);
         // Fit the actual deformed sole, including toe rotation from the IK solve.
-        for(let correction=0;correction<8;correction++){
+        for(let correction=0;correction<12;correction++){
           for(const skin of skins)skin.skeleton.update();let gap=Infinity;
           for(const sample of leg.samples){sample.skin.getVertexPosition(sample.index,point).applyMatrix4(sample.skin.matrixWorld);gap=Math.min(gap,point.y-groundAt(point.x,point.z));}
           leg.clearance=gap;if(gap>=-.0005)break;target.y-=gap;solve(leg,target);

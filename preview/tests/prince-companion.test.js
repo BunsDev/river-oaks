@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {COMPANION_STANCES,companionSlot,createCompanionBody,createCompanionBrain,freeSpotNear,localStance,playerHeading,stepCompanion} from '../src/prince-companion.js';
+import {COMPANION_STANCES,companionSlot,companionStanceEligible,createCompanionBody,createCompanionBrain,freeSpotNear,localStance,playerHeading,stepCompanion} from '../src/prince-companion.js';
 
 const open={isFree:()=>true,groundAt:()=>0};
 const walk=(body,target,env,seconds,options)=>{for(let t=0;t<seconds;t+=1/60)stepCompanion(body,target,env,1/60,options);return body;};
@@ -20,6 +20,76 @@ test('a blocked side mirrors, then narrow paths fall back to single file',()=>{
   assert.ok(right.point[0]<0&&right.side===-1);
   const narrow=companionSlot([0,0],0,'beside',(x)=>Math.abs(x)<.3);
   assert.ok(narrow.point[1]<-1&&Math.abs(narrow.point[0])<.3);
+  assert.equal(companionSlot([0,0],0,'beside',()=>false),null,'No invented fallback inside a wall');
+});
+
+test('Jev rejects stale generations and actions that became unsafe during inference',async()=>{
+  for(const changed of [{generation:-1},{candidate_id:'return'},{}]) {
+    let resolve,packet;
+    const brain=createCompanionBrain({decide:p=>{packet=p;return new Promise(done=>{resolve=done;});}});
+    brain.update({player_speed:1.4,gap_m:1});
+    if(!Object.keys(changed).length)brain.update({player_speed:1.4,gap_m:1,flying:true});
+    resolve({schema_version:1,tick:packet.tick,generation:packet.generation,candidate_id:'lead',source:'jev',confidence:1,...changed});
+    await new Promise(done=>setImmediate(done));
+    assert.equal(brain.status.decisions,0);assert.notEqual(brain.status.source,'jev');
+    brain.reset();
+  }
+});
+
+test('cached Jev stances are revalidated during cooldown and while the next request is pending',async()=>{
+  const cases=[
+    {stance:'lead',before:{player_speed:1.4,gap_m:1},change:{indoor:true}},
+    {stance:'lead',before:{player_speed:1.4,gap_m:1},change:{crowded:true}},
+    {stance:'lead',before:{player_speed:1.4,gap_m:1},change:{narrow:true}},
+    {stance:'pause',before:{player_speed:0,gap_m:1},change:{gap_m:4}},
+  ];
+  for(const pending of [false,true])for(const {stance,before,change} of cases) {
+    let clock=0,calls=0,resolveNext;
+    const brain=createCompanionBrain({now:()=>clock,decide:packet=>{
+      const reply={schema_version:1,tick:packet.tick,generation:packet.generation,candidate_id:stance,source:'jev',confidence:1};
+      if(++calls===1)return Promise.resolve(reply);
+      return new Promise(resolve=>{resolveNext=()=>resolve(reply);});
+    }});
+    try {
+      brain.update(before);await new Promise(done=>setImmediate(done));
+      assert.equal(brain.status.stance,stance);assert.equal(brain.status.source,'jev');
+      if(pending){clock=2500;brain.update(before);}
+      clock+=200;const status=brain.update({...before,...change});
+      assert.equal(status.stance,'trail',`${stance} must stop after ${JSON.stringify(change)} (${pending?'pending':'cooldown'})`);
+      assert.equal(status.source,'local');assert.equal(status.reason,'context_changed');assert.equal(status.decisions,1);
+      assert.equal(calls,pending?2:1,'Safety revalidation does not bypass the inference cadence');
+    }finally{resolveNext?.();await new Promise(done=>setImmediate(done));brain.dispose();}
+  }
+});
+
+test('an active courtly bow completes its short hold but stops when Jevica resumes walking',async()=>{
+  let clock=0;
+  const brain=createCompanionBrain({now:()=>clock,decide:async packet=>({schema_version:1,tick:packet.tick,generation:packet.generation,candidate_id:'greet',source:'jev',confidence:1})});
+  try {
+    brain.update({player_speed:0,gap_m:1});await new Promise(done=>setImmediate(done));
+    clock=200;assert.equal(brain.update({player_speed:0,gap_m:1}).stance,'greet');
+    assert.equal(brain.status.source,'jev');assert.equal(brain.greetedRecently,true);
+    clock=400;const status=brain.update({player_speed:1.4,gap_m:1});
+    assert.equal(status.stance,'beside');assert.equal(status.source,'local');
+  }finally{brain.dispose();}
+});
+
+test('reset and dispose cancel inference even when a provider ignores abort',async()=>{
+  let resolve,packet,signal;
+  const brain=createCompanionBrain({decide:(p,s)=>{packet=p;signal=s;return new Promise(done=>{resolve=done;});}});
+  brain.update({player_speed:1,gap_m:1});brain.reset();assert.equal(signal.aborted,true);
+  resolve({schema_version:1,tick:packet.tick,generation:packet.generation,candidate_id:'lead',source:'jev',confidence:1});
+  await new Promise(done=>setImmediate(done));assert.equal(brain.status.decisions,0);
+  assert.equal(typeof brain.dispose,'function');brain.dispose();brain.update({player_speed:1,gap_m:1});
+  assert.equal(brain.status.decisions,0);
+});
+
+test('fallback catches up through shops and waits safely when Jevica flies',()=>{
+  assert.equal(localStance({indoor:true,player_speed:0,gap_m:6}),'trail');
+  assert.equal(localStance({indoor:true,player_speed:0,gap_m:2.2}),'trail','He closes the remaining doorway gap before waiting');
+  assert.equal(companionStanceEligible('pause',{player_speed:0,gap_m:2.2}),false);
+  assert.equal(localStance({indoor:true,player_speed:0,gap_m:1.5}),'pause');
+  assert.equal(localStance({flying:true,player_speed:4,gap_m:10}),'pause');
 });
 
 test('he keeps pace, settles at the slot and never enters walls or her personal space',()=>{
@@ -56,7 +126,7 @@ test('local stand-in stance is only a fallback and mirrors the policy',()=>{
 
 test('Jev controls the stance; offline or uncertain replies are labelled local',async()=>{
   let clock=0,reply={schema_version:1,tick:1,source:'jev',candidate_id:'lead',confidence:.9};const packets=[];
-  const brain=createCompanionBrain({now:()=>clock,decide:async packet=>{packets.push(packet);return {...reply,tick:packet.tick};}});
+  const brain=createCompanionBrain({now:()=>clock,decide:async packet=>{packets.push(packet);return {...reply,tick:packet.tick,generation:packet.generation};}});
   brain.update({player_speed:1.4,gap_m:1});await new Promise(r=>setTimeout(r,0));
   assert.equal(brain.status.stance,'lead');assert.equal(brain.status.source,'jev');assert.equal(brain.status.decisions,1);
   assert.equal(packets[0].candidates.length,6);assert.equal(packets[0].schema_version,1);
@@ -100,10 +170,14 @@ test('Prince Jev ships as a dedicated rigged hero mesh with blinks, detailed eye
   const fs=await import('node:fs'),file=fs.readFileSync('preview/public/assets/characters/prince-jev.glb');
   const gltf=JSON.parse(file.subarray(20,20+file.readUInt32LE(12)));
   const names=gltf.meshes.map(m=>m.name),materials=gltf.materials.map(m=>m.name);
-  for(const part of ['male_elegantsuit01','shoes03','short04','high-poly','eyebrow001','eyelashes01'])assert.ok(names.some(n=>n.startsWith(part)),part);
+  for(const part of ['male_elegantsuit01','shoes03','short02','high-poly','eyebrow001','eyelashes01'])assert.ok(names.some(n=>n.startsWith(part)),part);
   assert.ok(materials.includes('middleage_african_male'),'skin material keeps the name head fitting and styling expect');
   assert.ok(gltf.meshes.some(m=>m.extras?.targetNames?.includes('eyeBlinkLeft')&&m.extras.targetNames.includes('eyeBlinkRight')));
   assert.equal(gltf.skins.length,1);assert.ok(gltf.skins[0].joints.length>=53);
   const manifest=JSON.parse(fs.readFileSync('preview/public/assets/characters/prince-jev.sources.json'));
   assert.equal(manifest.bytes,file.length);assert.ok(file.length<12*1024*1024);
+  const {createHash}=await import('node:crypto'),sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+  assert.equal(manifest.sha256,sha(file));
+  assert.equal(manifest.appearance_reference.id,'local-11');
+  assert.equal(manifest.appearance_reference.sha256,sha(fs.readFileSync('preview/public/assets/characters/man-workwear.glb')));
 });

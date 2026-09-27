@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { loadResidentAvatar } from '../../src/avatars.js';
-import { createPrinceCostume } from '../../src/prince-costume.js';
+import { avatarProfile, loadResidentAvatar } from '../../src/avatars.js';
+import { createPrinceCostume, loadPrinceSkinTexture } from '../../src/prince-costume.js';
 
 // ?rig=man-tailored compares Prince Jev's costume on another shipped rig.
+// ?reference=owen renders the actual NPC without prince costume overrides.
 const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true;
@@ -18,15 +19,16 @@ const fill = new THREE.DirectionalLight('#dbe9ff',1.3); fill.position.set(-3,2,-
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshStandardMaterial({color:'#c8c1bc',roughness:0.85}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
-const rig = new URLSearchParams(location.search).get('rig') ?? 'prince-jev';
-const avatar = await loadResidentAvatar(1,'carriage-driver',rig,{folk:false});
-const costume = createPrinceCostume(avatar); scene.add(avatar.object);
+const params=new URLSearchParams(location.search),isOwen=params.get('reference')==='owen';
+const rig=isOwen?avatarProfile(11):params.get('rig')??'prince-jev';
+const avatar=await loadResidentAvatar(isOwen?11:1,isOwen?'local-11':'carriage-driver',rig,{folk:isOwen});
+const costume=isOwen?null:createPrinceCostume(avatar,{skinTexture:await loadPrinceSkinTexture()});scene.add(avatar.object);
 function render(view='full',time=0,{speed=0,action='continue'}={}) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : view === 'three-quarter' ? -0.6 : 0;
   if (view === 'portrait') {camera.position.set(0,1.68,1.2);camera.lookAt(0,1.58,0);}
   else if (view === 'bust') {camera.position.set(0,1.45,1.9);camera.lookAt(0,1.35,0);}
   else {camera.position.set(0.9,1.3,4.3);camera.lookAt(0,0.95,0);}
-  avatar.update(time,action,false,{speed,distance:time/1000*speed},()=>0);costume.update();
+  avatar.update(time,action,false,{speed,distance:time/1000*speed},()=>0);costume?.update();
   renderer.render(scene,camera);
   return {triangles:renderer.info.render.triangles,calls:renderer.info.render.calls};
 }

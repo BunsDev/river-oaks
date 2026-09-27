@@ -2,14 +2,14 @@
   "id": "prince-jev",
   "path": "/assets/characters/prince-jev.glb",
   "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS",
-  "source": "MakeHuman CC0 assets via man-tailored.glb and jevica.glb; see sources.json",
+  "source": "MakeHuman CC0 assets via man-tailored.glb, man-workwear.glb and jevica.glb; see sources.json",
   "license": "CC0-1.0",
   "fictional_generic_appearance": true,
-  "bytes": 1870732,
-  "sha256": "c24fbc49b7e768592ad164daef45632ecd9f207de5f427964bd5b4b3a4ba7791",
+  "bytes": 1878248,
+  "sha256": "8b9595b538e3e3ac9dfc28edcdf85ec8623e30e70d519cfea423d0e7cf07a60a",
   "skin": "middleage_african_male (texture), young hero proportions",
   "outfit": "male_elegantsuit01",
-  "hair": "short04",
+  "hair": "short02",
   "shoes": "shoes03",
   "eyes": "high-poly",
   "eyelashes": "eyelashes01",
@@ -41,6 +41,22 @@
     "torso/measure-shoulder-dist-incr": 0.35,
     "torso/torso-muscle-pectoral-incr": 0.2,
     "torso/torso-muscle-dorsi-incr": 0.25
+  },
+  "appearance_reference": {
+    "id": "local-11",
+    "name": "Owen",
+    "profile": "man-workwear",
+    "sha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
+    "macro": {
+      "gender": 1,
+      "age": 0.55,
+      "muscle": 0.4,
+      "weight": 0.46,
+      "height": 0.5
+    },
+    "head_scale": 1.0504223219945692,
+    "transfer": "Shared MPFB head vertices, uniform sizing about the head joint, head-weighted neck blend; athletic body retained",
+    "hair": "short02, surface-fitted from Owen's source body"
   },
   "transfer": "Surface deform from donor MPFB bodies; original skin weights kept",
   "costume": "Runtime dress uniform: tunic, coronet, epaulettes, sash, belt, buttons, star"
