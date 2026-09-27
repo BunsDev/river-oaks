@@ -22,6 +22,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button></div>
     <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
     <div class="player-actions"><button id="player-carriage" type="button">Call carriage</button><button id="player-ride" type="button">Ride carriage</button></div>
+    <div class="player-actions"><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Prince Jev</span><kbd>J</kbd></button></div>
+    <p id="player-companion-status" class="player-companion-status" aria-live="polite">Prince Jev is driving your carriage.</p>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   document.querySelector('#viewport').append(panel);
   panel.querySelector('.player-settings').open = !window.matchMedia('(max-width: 700px)').matches;
@@ -38,6 +40,23 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   rideButton.addEventListener('click',()=>{
     if(carriage.riding)status.textContent=carriage.leave()?'You stepped out of the carriage.':'There is no clear place to step out here.';
     else status.textContent=carriage.board()?'W/S to ride or reverse. A/D or arrows to steer.':'Walk closer to your carriage before boarding.';
+  });
+  // Companion mode: Prince Jev steps down and walks with Jevica. Jev chooses
+  // how he accompanies her; the status line names the actual decision source.
+  const companionButton=panel.querySelector('#player-companion'),companionStatus=panel.querySelector('#player-companion-status');
+  const toggleCompanion=()=>{
+    const next=!carriage.prince.companion.enabled;
+    if(next&&!carriage.placement){status.textContent='Call your carriage first; Prince Jev rides with it.';return;}
+    carriage.prince.setCompanion(next);
+  };
+  companionButton.addEventListener('click',toggleCompanion);
+  host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&!sharedMode){event.preventDefault();toggleCompanion();}});
+  carriage.prince.onCompanion(value=>{
+    companionButton.setAttribute('aria-pressed',String(value.enabled));
+    companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to the carriage':'Walk with Prince Jev';
+    const source=value.source==='jev'?'Jev · ':value.source==='local'&&value.enabled?`Local follow${value.reason&&value.reason!=='starting'?` (${value.reason.replaceAll('_',' ')})`:''} · `:'';
+    companionStatus.textContent=`${source}${value.label}`;
+    host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
   let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null, sharedMode = false;
@@ -107,6 +126,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       carriage.update(now);
       carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding;
+      companionButton.disabled=sharedMode||!pose;
       rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement;
       rideButton.textContent=carriage.riding?'Leave carriage':'Ride carriage';
       host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding;

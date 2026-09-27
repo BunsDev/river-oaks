@@ -2,12 +2,12 @@ import {createPersona} from './personas.js';
 
 export function createCarriageEncounter(world) {
   if(world?.scene!=='district'||!world.walkSpawn?.every(Number.isFinite))return [];
-  const persona=createPersona(31,'Jules','Jevica’s carriage');
-  Object.assign(persona,{role:'Unicorn coachman',homeContext:'Fictional carriage driver',interest:'unicorn care and scenic carriage rides',
-    routine:'checking the harness, caring for the team and driving the coach',
-    about:'I’m Jules, Jevica’s coachman. I look after the unicorn team and guide the carriage through the district.',
-    story:'A smooth ride starts before the wheels turn: a comfortable harness, a calm team, and time to notice the road.',
-    returnGreeting:'Welcome back. The cabin is yours; I’ll take care of the team.'});
-  return [{id:'carriage-driver',name:'Jules',role:persona.role,persona,fictional:true,stationary:true,vehicleRole:'driver',
+  const persona=createPersona(31,'Prince Jev','Jevica’s carriage');
+  Object.assign(persona,{role:'Prince and companion',homeContext:'Fictional prince who drives Jevica’s carriage',interest:'unicorn care, evening walks and scenic carriage rides',
+    routine:'driving the unicorn coach, then stepping down to walk at Jevica’s side',
+    about:'I’m Prince Jev. I drive your carriage, care for the unicorn team, and whenever you like I’ll step down and walk the district with you.',
+    story:'A good walk needs no destination: an open street, an unhurried pace, and someone worth keeping in step with.',
+    returnGreeting:'Welcome back, Jevica. Shall we ride, or walk together a while?'});
+  return [{id:'carriage-driver',name:'Prince Jev',role:persona.role,persona,fictional:true,stationary:true,vehicleRole:'driver',
     anchorId:'jevica-carriage',anchorName:'Jevica’s carriage',position:[...world.walkSpawn],eyeHeight:1.58}];
 }

@@ -1629,14 +1629,16 @@ samples. Jevica sits inside, with both shoes solved against the cabin floor on
 flat and tilted coaches. Decorative wheel centers have independent bearing
 inertia and coast after braking; reduced motion retains ordinary wheel rolling.
 
-Jules is an additional fictional worker: a male coachman in pink tailoring on
-the front bench. His stable encounter identity follows the carriage. Directory,
+Prince Jev (formerly the coachman Jules) is an additional fictional character:
+a prince in a navy dress uniform who drives from the front bench and, in
+companion mode, walks with Jevica under Jev's control. His stable encounter identity follows the carriage. Directory,
 mesh-click and seated conversations all pass in the real browser. Outdoor
 conversation rays now test the actual eye height against placed objects, so the
 front bench blocks walking without hiding the driver above it. He stays at his
 job and is excluded from pedestrian routing and volunteer assignment. The
 existing 24 pedestrians retain their full sidewalk and three-minute crowd tests.
-Jules's reins, Force handling and wish visuals still need integration.
+His reins rest on the bench while he walks. Force handling and wish visuals
+still need integration.
 
 The curb touchdown correction also preserves the swing endpoint when progress
 reaches one. Updating that endpoint on the landing frame had shifted it five

@@ -40,6 +40,10 @@ npm run dev
 
 Choose **Start Jev auto visit** in the viewport. For neighborhood support, first begin a scenario under **People → Help neighbors**. WASD, dragging, Escape, or **Stop auto visit** returns control. Offline or uncertain inference is visibly waiting; no local rule is presented as a Jev decision. Server-provided API keys are never returned to the browser. To supply your own key, open **Settings → Jev API key** and select **Use key**. The bridge keeps this override in memory for both auto visits and resident reactions. **Use server key** restores the original configuration; restarting the bridge also clears the override.
 
+### Prince Jev companion
+
+With the carriage parked, choose **Walk with Prince Jev** (or press **J**). Every 2.5 seconds the browser sends `POST /v1/companion` a bounded snapshot (Jevica's speed, their gap, conversation, flight, riding, indoor, crowded and narrow flags) with six fixed stances: `beside`, `lead`, `trail`, `pause`, `greet` and `return`. The bridge filters ineligible stances (only `return` while riding; `lead` needs steady walking; a greeting needs a recent stop and no greeting in the last 45 seconds) and asks Jev under the `prince-companion-v1` policy with its own thresholds. Jev picks the stance; the browser keeps every coordinate, collision check and step height. The same **Settings → Jev API key** override reaches this engine. Without a confident Jev answer the prince keeps walking with a local stand-in stance and the panel reads "Local follow" with the reason. This is policy conditioning, not trained weights, and live companion quality has not yet been evaluated.
+
 ```sh
 uv run python -m river_oaks.auto_eval --output data/reports/jev-auto-curriculum.json
 uv run python -m river_oaks.auto_eval --live --split development --output data/reports/jev-auto-development.json
