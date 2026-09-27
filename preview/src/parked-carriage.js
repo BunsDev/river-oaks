@@ -2,14 +2,14 @@ import { createCarriageDriver } from './carriage-driver.js';
 import { createUnicornTeam, loadUnicornAsset } from './unicorn-team.js';
 import { createWheelSpinners } from './wheel-spinners.js';
 import { createJevicaCarriage } from './jevica-carriage.js';
-import { carriageContains, carriageFootprint, findCarriageParking } from './carriage-parking.js';
+import { CARRIAGE_SCALE, carriageContains, carriageFootprint, findCarriageParking } from './carriage-parking.js';
 import { CARRIAGE_WHEELS, fitCarriageToGround, stepCarriage, findCarriageExit } from './carriage-motion.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { Vector3, Quaternion } from 'three';
 
 export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,reducedMotion=false}) {
-  const scale=.9,model=createJevicaCarriage();model.object.scale.setScalar(scale);model.object.visible=false;scene.add(model.object);
+  const scale=CARRIAGE_SCALE,model=createJevicaCarriage();model.object.scale.setScalar(scale);model.object.visible=false;scene.add(model.object);
   const spinnerMotion=createWheelSpinners(CARRIAGE_WHEELS.map(w=>w[1]*scale),{reducedMotion});
   const driver=createCarriageDriver({scene,getLocals,getConversation});
   let previousTime=null;
@@ -35,16 +35,16 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   };
   const ride={
     get pose(){const seat=model.object.localToWorld(new Vector3(.99,1.555,0));return {seat:seat.toArray(),cameraTarget:model.object.localToWorld(new Vector3(-2,2,0)).toArray(),seatToFloor:(1.555-1.1725)*scale,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
-    step(input,delta){stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},input,delta);apply();},
+    step(input,delta){if(!driver.canDrive){placement.speed=0;return;}stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},input,delta);apply();},
     brake(){if(placement)placement.speed=0;},
     stop(){mounted=false;if(placement)placement.speed=0;},
   };
   const summon=()=>{
-    if(!enabled||mounted)return false;
+    if(!enabled||mounted||driver.companion.mode!=='seat')return false;
     const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],scale,true);
     if(!next)return false;
     spinnerMotion.reset();unicorns?.reset();placement={...next,speed:0,distance:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
-    apply();model.object.visible=true;
+    apply();model.object.visible=true;driver.configure(getWorld(),placement);
     return true;
   };
   return {
@@ -53,7 +53,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
       enabled=value;
       if(!enabled){
         if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}
-        placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;driver.setCompanion(false);
+        driver.reset();placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;
         if(unicorns)unicorns.object.visible=false;
       }
     },
@@ -83,7 +83,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     },
     board(){
       const pose=walking.getPose();
-      if(!enabled||!placement||!pose||pose.flying||pose.roomId||(Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8&&!carriageContains(placement,pose.position[0],placement.position[1]+1,pose.position[2],3)))return false;
+      if(!enabled||!driver.canDrive||!placement||!pose||pose.flying||pose.roomId||(Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8&&!carriageContains(placement,pose.position[0],placement.position[1]+1,pose.position[2],3)))return false;
       mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;
     },
     leave(){
@@ -101,7 +101,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
       loadedWorld=world;environment=createWalkingEnvironment(world);network=createPedestrianNetwork(world);
       // Prince Jev walks around the parked coach, never through it.
       companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
-      placement=null;mounted=false;model.object.visible=false;summon();
+      driver.reset();placement=null;mounted=false;model.object.visible=false;summon();
     },
     dispose(){disposed=true;removeObstacle();placement=null;unicorns?.dispose();driver.dispose();model.dispose();},
   };

@@ -1,6 +1,14 @@
 import * as THREE from 'three';
 import { batchCostumeAttachments } from './costume-batching.js';
 import { measureHead } from './head-fit.js';
+import { loadAvatarTemplate } from './avatars.js';
+import { createPrinceShoppingBag } from './prince-shopping-bag.js';
+
+export async function loadPrinceSkinTexture() {
+  const source=await loadAvatarTemplate('man-casual');let texture=null;
+  source.scene.traverse(mesh=>{if(/^young_/.test(mesh.material?.name??''))texture=mesh.material.map;});
+  return texture;
+}
 
 const TORSO = /^(spine_0[123]|pelvis)$/;
 const ANGLES = 48, BAND = 0.01;
@@ -93,7 +101,7 @@ function starShape(outer, inner, points) {
 
 // Prince Jev's dress uniform. Shared resident templates are never mutated: the
 // avatar already owns cloned materials, and every added resource is disposed.
-export function createPrinceCostume(avatar) {
+export function createPrinceCostume(avatar,{skinTexture=null}={}) {
   const { model, materials } = avatar.rig, root = avatar.object;
   const owned = new Set(), attachments = [];
   const surface = parameters => { const material = new THREE.MeshPhysicalMaterial(parameters); owned.add(material); return material; };
@@ -108,33 +116,43 @@ export function createPrinceCostume(avatar) {
   for (const [original, material] of materials) {
     const name = original.name ?? '';
     if (/suit/i.test(name)) {
-      // Midnight velvet dress tunic; the shirt and collar become ivory silk.
-      const velvet = surface({ map: material.map, normalMap: material.normalMap, color: '#ffffff', roughness: 0.82, metalness: 0,
+      // Rose velvet dress tunic; the shirt and collar retain ivory silk.
+      const velvet = surface({ map: material.map, normalMap: material.normalMap, color: '#efa1c3', roughness: 0.82, metalness: 0,
         sheen: 0.35, sheenColor: new THREE.Color('#34467e'), sheenRoughness: 0.6 });
-      velvet.name = 'Prince Jev velvet tunic';
+      velvet.name = 'Prince Jev rose tunic';
       velvet.onBeforeCompile = shader => {
         shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
 #ifdef USE_MAP
 float clothLuma=dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722));
 float silk=smoothstep(.42,.62,clothLuma);
-vec3 navy=vec3(.018,.034,.098)*mix(.7,1.25,pow(clamp(clothLuma*2.4,0.,1.),.6));
-diffuseColor.rgb=mix(navy,vec3(.93,.9,.84)*mix(.85,1.,clothLuma),silk);
+vec3 rose=diffuse*mix(.55,1.0,pow(clamp(clothLuma,0.,1.),.35));
+diffuseColor.rgb=mix(rose,vec3(.93,.9,.84)*mix(.85,1.,clothLuma),silk);
 #endif`);
       };
-      velvet.customProgramCacheKey = () => 'river-oaks-prince-velvet-v1';
+      velvet.customProgramCacheKey = () => 'river-oaks-prince-rose-v2';
       model.traverse(item => { if (item.isMesh && item.material === material) item.material = velvet; });
     } else if (/shoes/i.test(name)) {
       material.color.set('#0b0b0f'); material.roughness = 0.16; material.metalness = 0.05;
     } else if (/^(young|middleage|old)_/.test(name)) {
+      if(skinTexture)material.map=skinTexture;
+      material.color.set(skinTexture?'#fff3ec':'#efc9b0');
       material.roughness = 0.6; material.envMapIntensity = 0.5;
+    } else if (/^eyelashes|^eyebrow/.test(name)) {
+      // These fine alpha cards need soft edges at portrait distance. The
+      // resident cutout threshold makes lashes look like solid triangles.
+      material.transparent=true;material.depthWrite=false;material.alphaTest=.02;
+      model.traverse(item=>{if(item.isMesh&&item.material===material)item.castShadow=false;});
     } else if (/^short/.test(name)) {
+      material.color.set('#d8b56a');
       material.roughness = 0.42; material.alphaTest = 0.35;
       material.onBeforeCompile = shader => {
         shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-float strand=clamp(dot(diffuseColor.rgb,vec3(.2126,.7152,.0722))*3.2,0.,1.);
-diffuseColor.rgb=mix(vec3(.028,.018,.012),vec3(.26,.17,.1),pow(strand,.7));`);
+#ifdef USE_MAP
+float strand=clamp(dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722))*3.2,0.,1.);
+diffuseColor.rgb=diffuse*mix(.45,1.05,pow(strand,.5));
+#endif`);
       };
-      material.customProgramCacheKey = () => 'river-oaks-prince-hair-v1';
+      material.customProgramCacheKey = () => 'river-oaks-prince-blonde-v2';
     }
     material.needsUpdate = true;
   }
@@ -156,9 +174,10 @@ diffuseColor.rgb=mix(vec3(.028,.018,.012),vec3(.26,.17,.1),pow(strand,.7));`);
 
   // Coronet: a gold band with alternating fleur points and a front sapphire.
   const head = attach('head'), fit = measureHead(avatar.rig);
-  // The coronet rests on the skull: an oval band sized from the measured head.
-  const headOrigin = head.origin, radius = fit.skull.radius * 0.93 + 0.006, oval = 0.86;
-  const [hx, hz] = fit.skull.centre, band = fit.skull.top - 0.064;
+  // Fit around the actual hairstyle; Owen's taller fringe extends beyond the
+  // skull and must not slice through the gold band.
+  const headOrigin = head.origin, radius = Math.max(fit.skull.radius,fit.hair.radius) + 0.01, oval = 1;
+  const [hx, hz] = fit.hair.centre, band = fit.hair.top - 0.064;
   const at = (angle, r, y) => [headOrigin.x + hx + Math.sin(angle) * r * oval, headOrigin.y + y, headOrigin.z + hz + Math.cos(angle) * r];
   for (const [y, tube] of [[band, 0.0032], [band + 0.02, 0.0024]]) mesh(head, new THREE.TorusGeometry(radius, tube, 8, 72), gold, at(0, 0, y), [Math.PI / 2, 0, 0], [oval, 1, 1]);
   mesh(head, new THREE.CylinderGeometry(radius, radius, 0.02, 72, 1, true), gold, at(0, 0, band + 0.01), [0, 0, 0], [oval, 1, 1]);
@@ -220,17 +239,20 @@ diffuseColor.rgb=mix(vec3(.028,.018,.012),vec3(.26,.17,.1),pow(strand,.7));`);
   }
 
   batchCostumeAttachments(attachments, owned);
+  const shoppingBag=createPrinceShoppingBag(avatar);
   const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
   return {
     get materials() { return [...owned].filter(item => item.isMaterial); },
-    update() {
+    get bag() { return shoppingBag.object; },
+    update({carrying=false}={}) {
       root.updateWorldMatrix(true, true);
       inverse.copy(root.getWorldQuaternion(orientation)).invert();
       for (const item of attachments) {
         item.bone.getWorldPosition(position); item.group.position.copy(root.worldToLocal(position));
         item.bone.getWorldQuaternion(orientation); item.group.quaternion.copy(inverse).multiply(orientation).multiply(item.rest);
       }
+      shoppingBag.update(carrying);
     },
-    dispose() { attachments.forEach(({ group }) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
+    dispose() { shoppingBag.dispose();attachments.forEach(({ group }) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };
 }

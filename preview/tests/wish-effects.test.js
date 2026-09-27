@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { createWishVisual } from '../src/wish-effects.js';
-function setup() {
+function setup(options) {
   const holder=new THREE.Group(),model=new THREE.Group();holder.add(model);holder.position.y=2;
   const skin=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());skin.material.name='young_skin';
   const clothes=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());clothes.material.name='shirt';model.add(skin,clothes);
-  const effects=createWishVisual(holder,model);
+  const effects=createWishVisual(holder,model,options);
   return {holder,model,skin,clothes,effects};
 }
 test('invisibility hides skin but keeps clothing and restores original visibility',()=>{
@@ -20,8 +20,10 @@ test('flight rises without accumulating offsets and lands when revoked',()=>{
   assert.ok(holder.position.y>4&&holder.position.y<6);
   effects.update(null);assert.equal(holder.position.y,2);effects.dispose();
 });
-test('dog replaces the body, egg hatches into a dragon, and disposal restores resident',()=>{
-  const {holder,model,effects}=setup();effects.update({kind:'dog',age:12,phase:'trouble'});assert.equal(model.visible,false);
+test('dog replaces the body after loading, egg hatches into a dragon, and disposal restores resident',async()=>{
+  const {holder,model,effects}=setup({loadDogAsset:async()=>({scene:new THREE.Group()})});
+  effects.update({kind:'dog',age:12,phase:'trouble'});assert.equal(model.visible,true,'keeps resident visible during load');
+  await Promise.resolve();effects.update({kind:'dog',age:12.1,phase:'trouble'});assert.equal(model.visible,false);
   effects.update({kind:'dragon',age:2,phase:'gift'});assert.equal(model.visible,true);
   assert.equal(holder.getObjectByName('Wish egg').visible,true);assert.equal(holder.getObjectByName('Wish dragon').visible,false);
   effects.update({kind:'dragon',age:15,phase:'trouble'});

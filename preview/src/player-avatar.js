@@ -23,7 +23,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
     <div class="player-actions"><button id="player-carriage" type="button">Call carriage</button><button id="player-ride" type="button">Ride carriage</button></div>
     <div class="player-actions"><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Prince Jev</span><kbd>J</kbd></button></div>
-    <p id="player-companion-status" class="player-companion-status" aria-live="polite">Prince Jev is driving your carriage.</p>
+    <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite">Prince Jev is driving your carriage.</p>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   document.querySelector('#viewport').append(panel);
   panel.querySelector('.player-settings').open = !window.matchMedia('(max-width: 700px)').matches;
@@ -47,7 +47,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   const toggleCompanion=()=>{
     const next=!carriage.prince.companion.enabled;
     if(next&&!carriage.placement){status.textContent='Call your carriage first; Prince Jev rides with it.';return;}
-    carriage.prince.setCompanion(next);
+    if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Prince Jev, with a clear space beside the bench.';
   };
   companionButton.addEventListener('click',toggleCompanion);
   host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&!sharedMode){event.preventDefault();toggleCompanion();}});
@@ -55,7 +55,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     companionButton.setAttribute('aria-pressed',String(value.enabled));
     companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to the carriage':'Walk with Prince Jev';
     const source=value.source==='jev'?'Jev · ':value.source==='local'&&value.enabled?`Local follow${value.reason&&value.reason!=='starting'?` (${value.reason.replaceAll('_',' ')})`:''} · `:'';
-    companionStatus.textContent=`${source}${value.label}`;
+    companionStatus.textContent=`${source}${value.label}${value.carrying?' · Carrying your shopping bag':''}`;
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
@@ -109,7 +109,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     get carriage(){return carriage;},
     get object(){return holder;},
     get form() {return form;},
-    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);carriageButton.parentElement.hidden=value;},
+    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);carriageButton.parentElement.hidden=value;companionButton.parentElement.hidden=value;companionStatus.hidden=value;},
     get rig() {return avatar?.rig;},
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},
@@ -125,9 +125,10 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     update(now,camera,viewportHeight) {
       const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       carriage.update(now);
-      carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding;
-      companionButton.disabled=sharedMode||!pose;
-      rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement;
+      const prince=carriage.prince.companion,away=prince.mode!=='seat';
+      carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
+      companionButton.disabled=sharedMode||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
+      rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement||away;
       rideButton.textContent=carriage.riding?'Leave carriage':'Ride carriage';
       host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding;
       carriageButton.title=pose?.roomId?'Step outside to call your carriage':pose?.flying?'Land to call your carriage':'';

@@ -532,7 +532,8 @@ function render(now) {
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
     if (visitor) walkerPosition.set(visitor[0], visitor[2], -visitor[1]);
-    buildingMesh.userData.updateDoors([visitor ? walkerPosition : null, ...(community?.state?.locals ?? []).slice(0, 0)], delta);
+    const prince=playerAvatar?.carriage.prince;
+    buildingMesh.userData.updateDoors([visitor?walkerPosition:null,prince?.object.visible&&prince.companion.mode!=='seat'?prince.object.position:null],delta);
   }
   updateStoreLights();
   if (!multiplayer) autoControls?.update(delta);
@@ -629,7 +630,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
-  window.__riverCarriage = () => ({placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({companion:playerAvatar?.carriage.prince.companion,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

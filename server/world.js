@@ -105,7 +105,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
     const {position,yaw,altitude} = message;
     if (!fields(message,['type','position','yaw','altitude']) || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
-      || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > 32) return correction('invalid_pose');
+      || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > environment.flightCeiling) return correction('invalid_pose');
     const ground = environment.groundAt(position[0],-position[1]);
     if (Math.abs(position[2]-ground) > 0.2) return correction('invalid_ground');
     const dt = Math.max(0,Math.min(1,(time-player.poseAt)/1000));
@@ -304,7 +304,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if (!Array.isArray(recovered.players)) throw new Error('Invalid players');
       const nextPlayers=restoreMap(recovered.players.map(player=>[player?.id,player]),maxPlayers,player=>record(player)
         && typeof player.name==='string' && player.name.length<=80 && point(player.position,3) && Number.isFinite(player.yaw)
-        && nonnegative(player.altitude) && player.altitude<=32 && Number.isFinite(player.poseAt)
+        && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       for (const player of nextPlayers.values()) {
         const [east,north,ground]=player.position;

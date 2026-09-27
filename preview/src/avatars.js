@@ -156,7 +156,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         if(bone.name==='head') {adjustment.setFromAxisAngle(avatar.axes.get(bone).z,conversationPose.roll);bone.quaternion.multiply(adjustment);}
       }
       if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,locomotion,groundAt);
-      upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId),casting:action==='force'});
+      upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId||locomotion?.carrying),casting:action==='force'});
       for(const bone of bones) {
         const pose=gesture[bone.name];if(!pose)continue;
         for(const [i,axis] of ['x','y','z'].entries())if(pose[i]){adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}

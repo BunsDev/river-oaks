@@ -1,6 +1,8 @@
 import { createWalkingEnvironment } from './walking.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 
+export const CARRIAGE_SCALE=.78;
+
 const HALF_LENGTH=3.12,HALF_WIDTH=1.36,HEIGHT=3.7,TEAM_HALF_WIDTH=2.9;
 const halfWidth=(team,x)=>team&&x< -3.12?TEAM_HALF_WIDTH:HALF_WIDTH;
 function localPoint(placement,x,z) {
@@ -11,7 +13,7 @@ export function carriageContains(placement,x,y,z,radius=0) {
   if(!placement)return false;
   const [a,b]=localPoint(placement,x,z),scale=placement.scale??1;
   return a>-(placement.team?8:HALF_LENGTH)*scale-radius && a<HALF_LENGTH*scale+radius && Math.abs(b)<halfWidth(placement.team,a/scale)*scale+radius
-    && y+radius>placement.position[1]-.15 && y-radius<placement.position[1]+(a< -3.12*scale?3:Math.abs(a)>1.65*scale?2:HEIGHT)*scale;
+    && y+radius>placement.position[1]-.15 && y-radius<placement.position[1]+(a< -3.12*scale?3.2:Math.abs(a)>1.65*scale?2:HEIGHT)*scale;
 }
 export function carriageFootprint(placement) {
   const points=[],c=Math.cos(placement.yaw),s=Math.sin(placement.yaw),scale=placement.scale??1;

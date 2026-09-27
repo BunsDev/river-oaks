@@ -10,11 +10,12 @@ export function beginFlight(state,environment,flight) {
 export function stepFlight(state, environment, flight, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0 || !flight.active) return;
   const dt=Math.min(delta,0.08);
-  if(!flight.landing) flight.target=clamp(flight.target+(input.lift ?? 0)*4*dt,1,32);
+  const limit=environment.flightCeiling??32;
+  if(!flight.landing) flight.target=clamp(flight.target+(input.lift ?? 0)*4*dt,1,limit);
   const difference=flight.target-flight.altitude, desired=Math.sign(difference)*Math.min(3,Math.sqrt(6*Math.abs(difference)));
   flight.verticalSpeed+=clamp(desired-flight.verticalSpeed,-3*dt,3*dt);
   const oldAltitude=flight.altitude;
-  flight.altitude=clamp(flight.altitude+flight.verticalSpeed*dt,0,32);
+  flight.altitude=clamp(flight.altitude+flight.verticalSpeed*dt,0,Math.max(limit,oldAltitude));
   if(Math.sign(flight.target-oldAltitude)!==Math.sign(flight.target-flight.altitude)) {flight.altitude=flight.target;flight.verticalSpeed=0;}
   state.yaw+=clamp(input.turn ?? 0,-1,1)*1.35*dt;
   const forward=clamp(input.forward ?? 0,-1,1),strafe=clamp(input.strafe ?? 0,-1,1),norm=Math.max(1,Math.hypot(forward,strafe)),speed=input.fast?7:4.5;

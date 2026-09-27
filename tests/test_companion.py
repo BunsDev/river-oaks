@@ -53,11 +53,21 @@ def test_eligibility_keeps_the_prince_sensible():
     assert eligible(packet().candidates[3], packet())
 
 
+def test_ground_wait_conversation_and_indoor_catchup_match_the_physical_controller():
+    assert ids(packet(flying=True, player_speed=4, gap_m=30)) == {"pause"}
+    assert ids(packet(conversing=True, player_speed=0, gap_m=1)) == {"pause"}
+    assert ids(packet(indoor=True, player_speed=0, gap_m=8)) == {"beside", "trail"}
+    assert ids(packet(indoor=True, player_speed=0, gap_m=2.2)) == {"beside", "trail"}
+    assert "lead" not in ids(packet(indoor=True, player_speed=1, gap_m=1))
+
+
 def test_snapshot_rejects_unknown_actions_and_duplicates():
     with pytest.raises(ValidationError):
         packet(candidates=[{"id": "fly", "action": "teleport", "label": "x"}])
     with pytest.raises(ValidationError):
         packet(candidates=[CANDIDATES[0], CANDIDATES[0]])
+    with pytest.raises(ValidationError):
+        packet(candidates=[{"id": "return", "action": "beside", "label": "Conflicting action"}])
 
 
 async def test_jev_controls_the_companion_stance_with_its_own_policy():
@@ -71,7 +81,7 @@ async def test_jev_controls_the_companion_stance_with_its_own_policy():
         engine = CompanionEngine(client, "fixture")
         result = await engine.decide(packet(player_speed=1.2, crowded=True))
     assert result["source"] == "jev" and result["candidate_id"] == "trail"
-    assert engine.status["policy_version"] == "prince-companion-v1"
+    assert engine.status["policy_version"] == "prince-companion-v2"
     assert engine.status["policy_sha256"] != AutoEngine().status["policy_sha256"]
 
 

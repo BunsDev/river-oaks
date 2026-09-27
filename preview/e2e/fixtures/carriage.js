@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createUnicornTeam,loadUnicornAsset } from '../../src/unicorn-team.js';
+import { CARRIAGE_SCALE } from '../../src/carriage-parking.js';
 import { createJevicaCarriage } from '../../src/jevica-carriage.js';
 import { loadResidentAvatar } from '../../src/avatars.js';
 import { createPlayerCostume } from '../../src/player-costume.js';
@@ -11,7 +12,7 @@ const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment(),env=pm
 scene.add(new THREE.HemisphereLight('#f5f0e7','#b1a197',1));
 const sun=new THREE.DirectionalLight('#fff2df',3);sun.position.set(-3,7,5);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6});sun.shadow.normalBias=.008;scene.add(sun);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:'#c9c5c0',roughness:.83}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
-const carriage=createJevicaCarriage();carriage.object.scale.setScalar(.9);scene.add(carriage.object);
+const carriage=createJevicaCarriage();carriage.object.scale.setScalar(CARRIAGE_SCALE);scene.add(carriage.object);
 const unicorns=createUnicornTeam({scene,coach:carriage.object,groundAt:()=>0,asset:await loadUnicornAsset()});unicorns.update(0,0,0,0);
 const avatar=await loadResidentAvatar(4,'player','jevica'),outfit=createPlayerCostume(avatar,'jevica');avatar.object.position.set(-.3,0,1.9);scene.add(avatar.object);avatar.update(0,'continue',false,{speed:0,distance:0},()=>0);outfit.update(false,0);
 const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.02,150);
