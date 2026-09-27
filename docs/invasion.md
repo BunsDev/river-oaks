@@ -1,9 +1,8 @@
 # Alien invasion scenario
 
 An optional scenario in the preview: saucers land at the edge of the district and
-their crew walk toward the nearest neighbors to beam them aboard. Only a magical
-visitor can fight back, so the card in the visit tools is enabled for the Wicked
-Witch and Jevica; every other form is told to change character first.
+their crew walk toward the nearest neighbors to beam them aboard. Jevica fights back with magic. She is the only playable character; the retired
+Witch and Alien player forms are not required for this scenario.
 
 - **Begin invasion** spawns five saucers on free ground around the district edge
   (`invasion.js` `landingSites`). Each lands over about four seconds, then its

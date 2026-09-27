@@ -43,7 +43,7 @@ async page => {
   check(feet.length>30&&error<0.001,'Actual seated rigs keep feet within 1 mm of planted targets');
   const contacts=await page.evaluate(()=>window.__riverPeople().flatMap(p=>p.task?.contacts??[]));
   const maxPalmError=Math.max(...contacts.map(contact=>contact.error));
-  check(contacts.length>100&&maxPalmError<0.001,'Loaded workers support their props within 1 mm of each palm');
+  check(contacts.length>100&&maxPalmError<0.001,'Worker hands follow their support or withdrawal targets within 1 mm');
   await page.screenshot({path:'output/playwright/people-picking.png'});
   check(errors.length===0,`No uncaught browser errors: ${errors.join('; ')}`);
   return {checks,seatedFeet:feet.length,maxFootError:error,palmContacts:contacts.length,maxPalmError,errors};

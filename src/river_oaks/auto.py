@@ -173,6 +173,13 @@ def parse_choice(payload, options, threshold):
 
 
 class AutoEngine:
+    policy_version = POLICY_VERSION
+    policy_sha256 = POLICY_SHA256
+    thresholds = THRESHOLDS
+
+    def request_body(self, packet):
+        return request_body(packet, self.model)
+
     def __init__(self, client=None, api_key=None, model="jev-1.13.0", deadline_s=1.2):
         self.client, self.api_key, self.model = client, api_key, model
         self.deadline_s = deadline_s
@@ -184,11 +191,11 @@ class AutoEngine:
         return {
             "available": bool(self.api_key and self.client),
             "model": self.model,
-            "policy_version": POLICY_VERSION,
-            "policy_sha256": POLICY_SHA256,
+            "policy_version": self.policy_version,
+            "policy_sha256": self.policy_sha256,
             "custom_weights": False,
             "quality": "live_evaluation_required",
-            "confidence_thresholds": THRESHOLDS,
+            "confidence_thresholds": self.thresholds,
         }
 
     async def decide(self, packet):
@@ -201,12 +208,12 @@ class AutoEngine:
             "source": "unavailable",
             "reason": "not_configured",
             "model": self.model,
-            "policy_sha256": POLICY_SHA256,
+            "policy_sha256": self.policy_sha256,
             "confidence": None,
             "probabilities": None,
             "latency_ms": 0,
         }
-        body = request_body(packet, self.model)
+        body = self.request_body(packet)
         if not body["questions"]["next_action"]["criteria"]:
             result.update(source="safety_override", reason="no_eligible_actions")
         elif not self.status["available"]:
@@ -232,7 +239,7 @@ class AutoEngine:
                             payload, body["questions"]["next_action"]["criteria"], 0
                         )
                         action = body["state"]["candidates"][choice]["action"]
-                        accepted = confidence >= THRESHOLDS[action]
+                        accepted = confidence >= self.thresholds[action]
                         result.update(
                             candidate_id=choice if accepted else None,
                             source="jev" if accepted else "uncertain",

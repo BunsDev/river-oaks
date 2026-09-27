@@ -29,17 +29,17 @@ test('alien anatomy follows the head without modifying source skin or sharing id
   for(const part of anatomy.children){assert.ok(part.geometry.attributes.position.array.every(Number.isFinite));assert.equal(part.userData.localId,'player-alien');}
 });
 
-test('playable forms are exactly Alien, Witch and Jevica with a rig and a reaction', () => {
-  assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['alien','witch','jevica']);
+test('Jevica is the sole playable character with a rig and a reaction', () => {
+  assert.deepEqual(VISITOR_FORMS.map(form => form.id), ['jevica']);
   for (const form of VISITOR_FORMS) {
     assert.ok(Number.isInteger(form.avatar) && form.avatar >= 0 && form.avatar < 6, form.id);
-    assert.ok(['amazed', 'startled', 'enchanted'].includes(form.reaction), form.id);
+    assert.equal(form.reaction, 'acknowledge', form.id);
     assert.match(visitorGreeting({ id: 'local-01', indoor: false }, form.id), /Welcome to the neighborhood\.$/);
   }
-  assert.equal(formFor('dorothy'), null);
+  for(const retired of ['alien','witch','dorothy']) assert.equal(formFor(retired), null);
   assert.equal(visitorGreeting({ id: 'local-01' }, 'visitor'), null);
   const reactions = createVisitorReactions();
   const locals = [{ id: 'local-01', position: [0, 3, 0] }];
-  const [reacting] = reactions.update(locals, { position: [0, 0, 0], ground: 0, roomId: null }, 'alien', 1000);
-  assert.equal(reacting?.visitorReaction.action, 'startled');
+  const [reacting] = reactions.update(locals, { position: [0, 0, 0], ground: 0, roomId: null }, 'jevica', 1000);
+  assert.equal(reacting?.visitorReaction.action, 'acknowledge');
 });

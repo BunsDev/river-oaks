@@ -1,0 +1,275 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted; broader goal active",
+  "scope": "Woman-casual shoes02 socks under female_casualsuit01 trousers",
+  "root_causes": [
+    "Source sock geometry protrudes through trouser surface at bind pose",
+    "Independently assigned sock and trouser ankle weights separate the fitted layers during walking"
+  ],
+  "changes": [
+    "Fit only disconnected knitted sock islands against real covering garment triangles with 3mm scaled clearance",
+    "Match covered sock influences to barycentric garment influences; preserve uncovered cuffs",
+    "Preserve all non-sock positions and normals; reuse independently owned shoe geometry"
+  ],
+  "baseline": {
+    "rest_source_protrusion_m": 0.004800880150137021,
+    "rest_166cm_avatar_protrusion_m": 0.005437885802624706,
+    "walking_protrusion_m": 0.006151225599492181,
+    "geometry_only_fit_protrusion_m": 0.0017546831295927809,
+    "logs": [
+      "/tmp/river-cuff-unit-red.log",
+      "/tmp/river-cuff-red.log",
+      "/tmp/river-cuff-green.log"
+    ]
+  },
+  "verification": {
+    "unit_tests": 230,
+    "unit_log": "/tmp/river-cuff-final-tests.log",
+    "production_build": "passed with existing Three.js chunk advisory",
+    "build_log": "/tmp/river-cuff-final-build.log",
+    "terrains": [
+      "plane",
+      "wave",
+      "ramp"
+    ],
+    "hz": [
+      30,
+      60,
+      120
+    ],
+    "sampled_poses": 519,
+    "vertex_and_triangle_centroid_checks": 190992,
+    "worst_sock_minus_garment_m": -0.0010001644576642446,
+    "uncovered": 0,
+    "errors": [],
+    "raw_result": "output/playwright/cuff-clearance.json",
+    "browser_log": "/tmp/river-cuff-multirate-green.log",
+    "review": "Two findings resolved: preserve non-sock normals and use active browser origin. Follow-up read-only review found no further actionable issues.",
+    "integration_regressions": {
+      "log": "/tmp/river-cuff-regressions.log",
+      "result": "output/playwright/cuff-integration-regressions.json",
+      "checks": {
+        "shoe-uneven-ground": {
+          "minHeight": -0.0007244902384367924,
+          "maxPlantedHeight": 7.413440292203255e-07,
+          "planted": 14796,
+          "errors": [],
+          "runs": [
+            {
+              "terrain": "wave",
+              "slope": 0,
+              "hz": 30,
+              "frames": 151
+            },
+            {
+              "terrain": "wave",
+              "slope": 0,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "terrain": "wave",
+              "slope": 0,
+              "hz": 120,
+              "frames": 601
+            },
+            {
+              "terrain": "ramp",
+              "slope": 0,
+              "hz": 30,
+              "frames": 151
+            },
+            {
+              "terrain": "ramp",
+              "slope": 0,
+              "hz": 60,
+              "frames": 301
+            },
+            {
+              "terrain": "ramp",
+              "slope": 0,
+              "hz": 120,
+              "frames": 601
+            }
+          ]
+        },
+        "moving-people": {
+          "checks": [
+            "local-00: walking mesh is visible and in reach",
+            "local-00: walking mesh projects inside the viewport",
+            "local-00: real pointer selects the walking person",
+            "local-00: pointer conversation does not relocate the visitor",
+            "local-00: clicked walker holds position during conversation",
+            "local-01: walking mesh is visible and in reach",
+            "local-01: walking mesh projects inside the viewport",
+            "local-01: real pointer selects the walking person",
+            "local-01: pointer conversation does not relocate the visitor",
+            "local-01: clicked walker holds position during conversation",
+            "local-02: walking mesh is visible and in reach",
+            "local-02: walking mesh projects inside the viewport",
+            "local-02: real pointer selects the walking person",
+            "local-02: pointer conversation does not relocate the visitor",
+            "local-02: clicked walker holds position during conversation",
+            "local-03: walking mesh is visible and in reach",
+            "local-03: walking mesh projects inside the viewport",
+            "local-03: real pointer selects the walking person",
+            "local-03: pointer conversation does not relocate the visitor",
+            "local-03: clicked walker holds position during conversation",
+            "local-04: walking mesh is visible and in reach",
+            "local-04: walking mesh projects inside the viewport",
+            "local-04: real pointer selects the walking person",
+            "local-04: pointer conversation does not relocate the visitor",
+            "local-04: clicked walker holds position during conversation",
+            "local-05: walking mesh is visible and in reach",
+            "local-05: walking mesh projects inside the viewport",
+            "local-05: real pointer selects the walking person",
+            "local-05: pointer conversation does not relocate the visitor",
+            "local-05: clicked walker holds position during conversation",
+            "No uncaught browser errors: "
+          ],
+          "clicks": [
+            {
+              "id": "local-00",
+              "speed": 0.22638543530503255,
+              "screen": [
+                809.8044873380474,
+                378.93733183106684
+              ],
+              "position": [
+                -2813.5596434615527,
+                -1274.5831293488723,
+                18.305978881311304
+              ]
+            },
+            {
+              "id": "local-01",
+              "speed": 0.43190000008344653,
+              "screen": [
+                775.1484044631011,
+                400.71786557539775
+              ],
+              "position": [
+                -2811.352653534798,
+                -1229.654914839914,
+                18.352803490528192
+              ]
+            },
+            {
+              "id": "local-02",
+              "speed": 0.26501999993324277,
+              "screen": [
+                798.0648655638961,
+                408.2675829493819
+              ],
+              "position": [
+                -2808.359080521051,
+                -1206.3094840131178,
+                18.429663337021697
+              ]
+            },
+            {
+              "id": "local-03",
+              "speed": 0.36358000006675717,
+              "screen": [
+                781.6604158842775,
+                401.75041722064003
+              ],
+              "position": [
+                -2771.2043702252795,
+                -1308.5151524856458,
+                18.438516701885018
+              ]
+            },
+            {
+              "id": "local-04",
+              "speed": 0.29056985922028106,
+              "screen": [
+                802.6501850264043,
+                411.2254312677693
+              ],
+              "position": [
+                -2765.591170238556,
+                -1227.7514022025468,
+                18.265583697204928
+              ]
+            },
+            {
+              "id": "local-05",
+              "speed": 0.2596007767535051,
+              "screen": [
+                800.1624610268457,
+                400.8330889242918
+              ],
+              "position": [
+                -2769.866850172378,
+                -1259.3127287286084,
+                18.36677691140473
+              ]
+            }
+          ],
+          "errors": [],
+          "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; no simulation state is injected."
+        },
+        "worker-contact": {
+          "touchSamples": 165,
+          "maxTouchGap": 7.290124059977643e-08,
+          "maxSidewaysBend": 0.30652191279975194,
+          "bodySamples": 372,
+          "bodyVertices": 6502698,
+          "maxWristBend": 1.2032830702735469,
+          "skinSamples": 1364,
+          "maxSkinHeight": -0.00043034197059910184,
+          "minSkinHeight": -0.0005768135157779852,
+          "workers": 62,
+          "kinds": [
+            "fabric",
+            "jewelry",
+            "samples",
+            "eyewear",
+            "tablet",
+            "tray"
+          ],
+          "docked": 17,
+          "contacts": 52204,
+          "maxError": 1.6311571475697446e-07,
+          "errors": []
+        }
+      }
+    }
+  },
+  "resident_assets_unchanged": {
+    "woman-casual.glb": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+    "woman-tailored.glb": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+    "man-workwear.glb": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+    "woman-daywear.glb": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+    "man-tailored.glb": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+    "man-casual.glb": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad"
+  },
+  "fitting_cost": {
+    "measurement": "Node CPU; bind-pose fitting only, once per avatar; 5 warmups and40 samples",
+    "median_ms": 12.572583000000009,
+    "p95_ms": 33.11170800000002
+  },
+  "visual_artifacts": [
+    "output/playwright/cuff-baseline-45.png",
+    "output/playwright/cuff-baseline-75.png",
+    "output/playwright/cuff-baseline-135.png",
+    "output/playwright/cuff-fitted-45.png",
+    "output/playwright/cuff-fitted-75.png",
+    "output/playwright/cuff-fitted-135.png"
+  ],
+  "source_sha256": {
+    "preview/src/sock-fitting.js": "a9c37f828e7a7021003f1a4e1a5310188336f332b24bacf1041697c5ed24b887",
+    "preview/src/shoe-skinning.js": "59b48076b226536832c031ffd9108eb49499c6bc7f0b3fbe234f2892b206adfe",
+    "preview/src/avatars.js": "b4ef4857b6947022645c0a2ac4e01bd51189bc46933f26455950ce77faed009f",
+    "preview/tests/cuff-fit.test.js": "9cbe1f0abc51216ade8798189063c15804c0ac3ac3eff67dd381ad686a73ced6",
+    "preview/e2e/cuff-clearance.js": "8faf77c2a8b893a3064266c475edfe654ddabd59ee9dc852d7ad8914a40d3e2b",
+    "preview/e2e/fixtures/cuff-clearance.js": "1366421b36bd10bc7805a61ce8de412ca945e7e4bf1845f848d869a6a469b834"
+  },
+  "limits": [
+    "Sampled sock vertices and triangle centroids above the ankle band, not continuous clothing collision",
+    "Fitting is specific to the shipped casual trousers and shoes02 sock islands",
+    "Bind-pose CPU timings do not measure district FPS",
+    "Heel-to-toe articulation, sharper steps, moving supports, and native parity remain open"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "recorded_at": "2026-09-25T02:35:18.264736+00:00",
+  "status": "Indoor-to-outdoor directory regression fixed and browser interaction regressions passed",
+  "root_cause": "Selecting an outdoor resident while inside a store retained the current room; outdoor encounters then stayed on the indoor side of the boundary.",
+  "fix": "Leave the active store through its mapped exit before focusing the outdoor encounter; reuse existing room and approach collision rules.",
+  "regression": "Visit an indoor identity first, then local-00, then every remaining directory identity. Red run left roomId set with no dialogue; green reaches all 193.",
+  "directory": {
+    "report": "data/generated/browser-directory-transitions/2026-09-24/all-people.json",
+    "unique_visits": 193,
+    "errors": [],
+    "coverage": "Directory approach, visible/reachable identity and dialogue; not 193 direct mesh clicks."
+  },
+  "browser": {
+    "store-encounters": {
+      "report": "data/generated/browser-directory-transitions/2026-09-24/store-encounters.json",
+      "checks": 0,
+      "visits": 30,
+      "errors": []
+    },
+    "interaction-lifecycle": {
+      "report": "data/generated/browser-directory-transitions/2026-09-24/interaction-lifecycle.json",
+      "checks": 13,
+      "visits": 0,
+      "errors": []
+    },
+    "moving-people": {
+      "report": "data/generated/browser-directory-transitions/2026-09-24/moving-people.json",
+      "checks": 31,
+      "visits": 6,
+      "errors": []
+    },
+    "carriage-conversation": {
+      "report": "data/generated/browser-directory-transitions/2026-09-24/carriage-conversation.json",
+      "checks": 3,
+      "visits": 0,
+      "errors": []
+    }
+  },
+  "verification": {
+    "unit_tests": 285,
+    "unit_failures": 0,
+    "build": "Succeeded; existing Three.js chunk-size advisory",
+    "port": "http://127.0.0.1:5181/",
+    "adaptation": "Temporary copies of checked-in E2E scripts replace port 5173 with 5181 only; scripts otherwise unchanged.",
+    "diff_check": "Passed",
+    "review": "Independent read-only review found no blocking issue; all 30 mapped exits and 720 store/outdoor encounter combinations retain outdoor room placement."
+  },
+  "carriage": {
+    "previous_receipt": "data/reports/jevica-carriage-final-check.json",
+    "source_hashes_matching": 13,
+    "source_hashes_total": 13,
+    "fresh_mounted_conversation_checks": 3,
+    "errors": []
+  },
+  "source_sha256": {
+    "preview/src/main.js": "b36ff137944ad4ec7544e5d35975be16ba777b93437852b567fcc820fb3daffd",
+    "preview/src/walking.js": "891f3fbd97dd8739adb8ce2abb58bfc7260f04a4ac96cb74817727c212ff9954",
+    "preview/src/community.js": "9571b556de30041ce33d0a69f7376e9279cfc3fb58b51be45daf0ef3e5864c86",
+    "preview/e2e/all-people.js": "7e4eb293776a7be06a8d78639c3dab45f33e72900278f8102a2fd57a171243b6",
+    "preview/e2e/store-encounters.js": "2662b1a05ecd1fefa0eb9eb554558cc017824a1f9bdd107a62e6b8e23392e0eb",
+    "preview/e2e/interaction-lifecycle.js": "5fecb253d8e08e9f4dae7a01aae60d8f306bf48e3dabaabb46a7e9c4d71ffac8",
+    "preview/e2e/moving-people.js": "ff0a1acab8eb7ed619f171987917fbd3e1f113dd00a0625989085eb79ab41885",
+    "preview/e2e/carriage-conversation.js": "ad9543498267e7a62087e14802a98e05a219121714098697902c45883da99147"
+  },
+  "limits": [
+    "The touch receipt predates this main.js change; no fresh touch-specific claim is made.",
+    "Native source and assets are in the separate native-encounters worktree.",
+    "The user confirmed that completion includes native movement, cloth, performance and interactions; that work is still incomplete.",
+    "Changes are uncommitted and not integrated into main."
+  ]
+}

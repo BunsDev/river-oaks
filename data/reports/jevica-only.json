@@ -1,0 +1,102 @@
+{
+  "date": "2026-09-23",
+  "status": "verified locally; uncommitted",
+  "scope": "Jevica is the only playable character. Invasion enemies remain independent.",
+  "removed": [
+    "Witch and Alien roster entries and greetings",
+    "Appearance selector and transformation prompts",
+    "Witch and Alien player costumes",
+    "Player broom and UFO vehicles",
+    "Witch flight pose",
+    "Witch and Alien portrait files",
+    "Witch spell materials and casting eligibility"
+  ],
+  "preserved": [
+    "Reference-inspired Jevica appearance",
+    "Bubble flight and camera controls",
+    "Celebrity reactions",
+    "Jevica casting and optional invasion encounter",
+    "District layout and human residents"
+  ],
+  "verification": {
+    "unit_tests": 238,
+    "production_build": "passed; existing Three.js chunk-size advisory",
+    "unit_log": "/tmp/jevica-only-final-tests.log",
+    "build_log": "/tmp/jevica-only-final-build.log",
+    "desktop_mobile_flight": {
+      "checks": [
+        "Jevica is the playable character",
+        "Retired appearance selector is absent",
+        "jevica: real model portrait loads",
+        "jevica: description updates",
+        "jevica: third-person camera",
+        "jevica: matching flight vehicle",
+        "jevica: completes ascent to cruising altitude",
+        "jevica: ascent changes real altitude",
+        "jevica: HUD reflects flight",
+        "jevica: landed at ground level",
+        "First-person toggle",
+        "V restores third person",
+        "Mobile character controls start collapsed",
+        "No mobile horizontal overflow",
+        "Keyboard expands character controls",
+        "44px flight target",
+        "Mobile portrait matches the current form",
+        "No uncaught browser errors: "
+      ],
+      "errors": [],
+      "url": "http://127.0.0.1:5181/",
+      "form": "jevica"
+    },
+    "invasion": {
+      "checks": [
+        "Jevica can begin",
+        "Five saucers arrive",
+        "Every crew member has a saucer",
+        "The crew are of more than one species",
+        "A spell banished an alien within 120 s (banished 1, phase active)",
+        "Status narrates the fight",
+        "The scenario ends and everyone returns (phase called-off, abducted 0)",
+        "The card offers another round",
+        "Jevica can begin a second invasion",
+        "World reload clears the old invasion, crew and abductions",
+        "Reload restores the Begin invasion control",
+        "No page errors: "
+      ],
+      "banished": 1,
+      "errors": []
+    },
+    "visual_review": [
+      "Mobile wand glow no longer produces black AO rectangle",
+      "Appearance selector absent and controls accessible",
+      "Reference gown and updated portrait visible"
+    ],
+    "red_checks": [
+      "Retired roster/factory assertions failed before removal",
+      "AO exclusion assertion failed before glow fix"
+    ],
+    "flight_probe": "A fixed 500 ms keyboard hold timed out once under load. Holding until the same measured 0.4 m ascent threshold with a 5 s bound passes; keyup runs in finally. Real input probe rose from 3.5 m to 4.1 m."
+  },
+  "appearance_report": "data/reports/jevica-reference-style.json",
+  "sha256": {
+    "preview/src/player-avatar.js": "7a047c1f1f5b9be965dbc15c18106aa5f9f1e94633747613b598ab326421b0ad",
+    "preview/src/player-costume.js": "ceb1a35d8860d3098421a494547c85fbda05b95e2c2765560419bf9caa6b6f68",
+    "preview/src/flight-vehicles.js": "466f49336c20f0ae7afda7a52bbf1bbbcc89426cad7ad430badac4778efb5610",
+    "preview/src/visitor-persona.js": "650275ee010f1835871fc28e5a593e03190c46f25e578421fc9a5cb3fe5847b1",
+    "preview/src/avatars.js": "d0efb1480a0a37bb1b3692012c0e32d3ee8ff21773331e964c00534932d18db9",
+    "preview/src/invasion.js": "dd427fbf8c526f2b5d3822e4afaa37b196354890b785f3f72ef2c1302ca236ab",
+    "preview/src/invasion-ui.js": "bb1ebbbf728c9aa7ac4202a486dc23d95c64d87d6604c484df0abdcf7660aa37",
+    "preview/src/invaders.js": "d174bfb867c096cb2784c9bccd7dde59252afe14f78b096993e73be6ea99138a",
+    "preview/src/jevica-costume.js": "1aec2f2ae65848a13adb9e50bfdc804b4dbc0856046a1593a79508f4092fd315",
+    "preview/src/jevica-embroidery.js": "c805a4df5fa340e749cd9d3734c8e59b670b5b8d78b06edb9f0d8390cb86b85e",
+    "preview/tests/player-costume.test.js": "d4d2a56c9eb87a128e4d24ab25d7efaf48787965880e57356f337e0566ee8eac",
+    "preview/tests/oz-folk.test.js": "42f81db475cdfe65e1f03babb0b0e0bd9ef514a47d1c0412f00623897c400bdc",
+    "preview/e2e/player-forms.js": "0b35f9d4bd913759a3d684f426b7c4e103dd57574a6eda985b3c9c422b358135",
+    "preview/public/assets/characters/jevica.glb": "582d811c60a1f34315caaf14959d80d93cef442a1420528b691f04ff4efa5f12",
+    "preview/public/assets/characters/jevica-portrait.png": "5a47f00ca5217be8b962a654add530c4b8f8406829b0021b5f6e396db1fdbd66"
+  },
+  "limits": [
+    "Uncommitted local changes; no hosted CI or merge in this pass",
+    "Procedural appearance and motion, not film-quality photorealism or complete cloth collision"
+  ]
+}

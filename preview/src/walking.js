@@ -1,4 +1,5 @@
 import { terrainHeight } from './geometry.js';
+import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 
@@ -21,7 +22,7 @@ function overlaps(x, z, ring) {
   return inside;
 }
 
-export function createWalkingEnvironment(world) {
+export function createWalkingEnvironment(world, placedObjects = []) {
   const [west, south, east, north] = world.bounds_m;
   const polygons = (world.collisionPolygons ?? []).map((ring) => ring.map(([x, y]) => [x, -y]));
   if (!world.collisionPolygons) for (const building of world.buildings ?? []) {
@@ -33,16 +34,26 @@ export function createWalkingEnvironment(world) {
   // Boutique interiors are free pockets inside footprints, entered through the mapped door.
   const rooms = storeRoomsFor(world);
   const roomFor = (x, z, shrink) => rooms.length ? roomAt(rooms, x, -z, shrink) : null;
-  const groundAt = (x, z) => roomFor(x, z, 0)?.floor ?? terrainHeight(world.terrain, x, -z) + (world.walkSurfaceOffset ?? 0);
-  const isFree = (x, z) => {
+  const groundAt = (x, z) => roomFor(x, z, 0)?.floor ?? groundSurfaceHeight(world,x,z);
+  const baseIsFree = (x, z) => {
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
     if (room) return !roomBlocked(room, x, -z, RADIUS);
     return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
+  const isFree = (x,z) => {
+    if(!baseIsFree(x,z))return false;
+    if(!placedObjects.length)return true;
+    // Every obstacle tests the same candidate position. Resolve its surface
+    // once, while keeping later queries fresh for moving objects and terrain.
+    const y=groundAt(x,z)+.9;
+    return !placedObjects.some(object=>object.contains(x,y,z,RADIUS));
+  };
   const canFly = (x, altitude, z) => {
     if(x<west+1 || x>east-1 || z<-north+1 || z>-south-1) return false;
-    if(isFree(x,z) && !roomFor(x,z,0)) return true;
+    if(placedObjects.some(object=>object.contains(x,altitude,z,1.3)))return false;
+    // A placed carriage has a finite height; it is not a building column.
+    if(baseIsFree(x,z) && !roomFor(x,z,0)) return true;
     // Conservative building columns keep airborne bodies and vehicles outside
     // walls until they clear the tallest nearby roof with two meters to spare.
     const roofs=(world.buildings ?? []).filter(building=>Math.abs(x-building.center[0])<Math.hypot(building.size[0],building.size[1])/2+1.5 && Math.abs(z+building.center[1])<Math.hypot(building.size[0],building.size[1])/2+1.5);
@@ -54,7 +65,10 @@ export function createWalkingEnvironment(world) {
     if((room?.storeId??null)!==(targetRoom?.storeId??null))return false;
     if(room)return !roomBlocksConversation(room,from,to);
     const steps=Math.max(1,Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/0.15));
-    for(let i=0;i<=steps;i++){const t=i/steps,x=from[0]+(to[0]-from[0])*t,z=-from[1]-(to[1]-from[1])*t;if(!isFree(x,z)||roomFor(x,z,0))return false;}
+    for(let i=0;i<=steps;i++) {
+      const t=i/steps,x=from[0]+(to[0]-from[0])*t,z=-from[1]-(to[1]-from[1])*t,y=from[2]+(to[2]-from[2])*t;
+      if(!baseIsFree(x,z)||roomFor(x,z,0)||placedObjects.some(object=>object.contains(x,y,z,.035)))return false;
+    }
     return true;
   };
   return { groundAt, isFree, canFly, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };

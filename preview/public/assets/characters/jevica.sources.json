@@ -5,13 +5,56 @@
   "source": "MakeHuman system assets; see sources.json and LICENSE-CC0.md",
   "license": "CC0-1.0",
   "fictional_generic_appearance": true,
-  "bytes": 5286012,
-  "sha256": "f5cf412f0ff67a79471c3546ccfe594440ba9b7ac8de7fc3da958d1fd0d0e761",
+  "bytes": 5779116,
+  "sha256": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a",
   "skin": "young_asian_female",
   "hair": "long01",
   "eyes": "high-poly",
   "eyelashes": "eyelashes01",
   "eyebrows": "eyebrow001",
   "body_subdivision": 1,
-  "costume": "Original fitted shell; runtime draped skirt, tiara and wand"
+  "macro": {
+    "gender": 0,
+    "age": 0.45,
+    "muscle": 0.24,
+    "weight": 0.46,
+    "proportions": 0.5,
+    "height": 0.5,
+    "cupsize": 0.56,
+    "firmness": 0.5,
+    "race": {
+      "asian": 0.33,
+      "caucasian": 0.33,
+      "african": 0.33
+    }
+  },
+  "detail_targets": {
+    "head/head-oval": 0.4,
+    "chin/chin-width-decr": 0.36,
+    "chin/chin-bones-decr": 0.35,
+    "chin/chin-prominent-decr": 0.12,
+    "cheek/l-cheek-volume-incr": 0.1,
+    "cheek/r-cheek-volume-incr": 0.1,
+    "mouth/mouth-angles-up": 0.18,
+    "mouth/mouth-upperlip-volume-incr": 0.1,
+    "mouth/mouth-lowerlip-volume-incr": 0.05,
+    "eyebrows/eyebrows-angle-up": 0.1,
+    "eyebrows/eyebrows-trans-up": 0.08,
+    "neck/measure-neck-circ-decr": 0.18,
+    "torso/measure-shoulder-dist-decr": 0.44
+  },
+  "hair_finish": "Soft waves below fitted roots; original skin weights retained",
+  "costume": "Original fitted shell; runtime draped skirt, tiara and wand",
+  "neutral_sha256": "582d811c60a1f34315caaf14959d80d93cef442a1420528b691f04ff4efa5f12",
+  "facial_animation": {
+    "targets": [
+      "eyeBlinkLeft",
+      "eyeBlinkRight"
+    ],
+    "source": "https://static.makehumancommunity.org/assets/assetpacks/faceunits01.html",
+    "author": "Mika Suominen",
+    "license": "CC0-1.0",
+    "archive_sha256": "d113107bd7eb59f3af4df6fc0ec29bfcc593f496d0b336aec14f086a80ce7146",
+    "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS; sparse target append preserves the original binary payload"
+  }
 }

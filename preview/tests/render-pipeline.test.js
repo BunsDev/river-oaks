@@ -56,6 +56,33 @@ test('UHD refraction uses a bounded offscreen buffer while the output keeps nati
   } finally {pipeline.dispose();}
 });
 
+test('AO skips already hidden room subtrees and restores visible geometry after each pass',()=>{
+  const {scene,leaf,renderer,pipeline}=fixture();
+  const room=new THREE.Group();room.visible=false;scene.add(room);
+  const dormant=new THREE.Object3D();room.add(dormant);
+  let inspections=0;Object.defineProperty(dormant,'userData',{get(){inspections++;return {aoExclude:true};}});
+  const line=new THREE.Line(),points=new THREE.Points(),excluded=new THREE.Group(),child=new THREE.Object3D();
+  excluded.userData.aoExclude=true;excluded.add(child);scene.add(line,points,excluded);
+  child.userData.aoExclude=true;
+  renderer.render=subject=>{
+    if(subject!==scene)return;
+    assert.equal(inspections,0,'Inactive room contents do not participate in AO visibility work');
+    assert.equal(dormant.visible,true,'A hidden parent already excludes its descendants');
+    assert.equal(child.visible,true,'Excluding a group leaves its children untouched');
+    for(const object of [leaf,line,points,excluded])assert.equal(object.visible,false);
+  };
+  try {
+    pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    for(const object of [leaf,line,points,excluded,child,dormant])assert.equal(object.visible,true);
+    assert.equal(room.visible,false);
+    // No cached exclusion list: newly added props are handled on the next frame.
+    const prop=new THREE.Object3D();prop.userData.aoExclude=true;scene.add(prop);
+    renderer.render=subject=>{if(subject===scene)assert.equal(prop.visible,false);};
+    pipeline.occlusion.render(renderer,{texture:{}},{texture:{}});
+    assert.equal(prop.visible,true);
+  } finally {pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();line.geometry.dispose();line.material.dispose();points.geometry.dispose();points.material.dispose();}
+});
+
 test('graphics quality scales the scene buffers while the canvas keeps native size',()=>{
   const {renderer,pipeline}=fixture();
   try {

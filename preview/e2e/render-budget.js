@@ -23,12 +23,7 @@ async page => {
     check(result.pipeline.renderScale===1&&result.pipeline.ao&&result.pipeline.aoScale===0.5&&result.pipeline.transmissionScale===0.5,`${label}: bounded auxiliary buffers`);
     await page.screenshot({path:`output/playwright/render-budget-${label}.png`});samples.push({label,...result});
   };
-  for(const form of ['jevica','witch','alien']) {
-    await page.locator('#player-form').selectOption(form);
-    await page.waitForFunction(form=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&d.playerForm===form;},form);
-    await measure(form);
-  }
-  await page.locator('#player-form').selectOption('jevica');await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerForm==='jevica'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+  await measure('jevica');
   await page.locator('#player-flight').click();await page.waitForFunction(()=>Number(document.querySelector('#walking-hud')?.dataset.altitude)>=3.4);
   await measure('jevica-bubble');
   await page.locator('#player-flight').click();await page.waitForFunction(()=>Number(document.querySelector('#walking-hud')?.dataset.altitude)===0);

@@ -1,5 +1,12 @@
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 export function createFlightState() { return { active:false, altitude:0, target:0, verticalSpeed:0, landing:false }; }
+export function beginFlight(state,environment,flight) {
+  const [x,,z]=state.position;
+  const clear=environment.canFly??((x,_height,z)=>environment.isFree(x,z));
+  if(flight.active||environment.roomAt?.(x,z)||!clear(x,environment.groundAt(x,z)+.04,z))return false;
+  Object.assign(flight,{active:true,target:3.5,landing:false});
+  return true;
+}
 export function stepFlight(state, environment, flight, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0 || !flight.active) return;
   const dt=Math.min(delta,0.08);

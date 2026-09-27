@@ -7,7 +7,7 @@ export function batchCostumeAttachments(attachments, owned) {
   for (const { group } of attachments) {
     const batches = new Map();
     for (const mesh of group.children) {
-      if (!mesh.isMesh) continue;
+      if (!mesh.isMesh || mesh.userData.deformableCostume) continue;
       if (!batches.has(mesh.material)) batches.set(mesh.material, []);
       batches.get(mesh.material).push(mesh);
     }

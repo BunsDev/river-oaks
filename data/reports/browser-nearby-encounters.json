@@ -1,0 +1,1035 @@
+{
+  "date": "2026-09-25",
+  "scope": "Browser nearby encounter candidate selection",
+  "fixes": [
+    "Apply reachability before limiting nearby results; short-circuit after finding the requested count.",
+    "Try all same-room candidates rather than stopping after six unavailable people.",
+    "Share the 4.5 meter vertical talking limit with direct encounters."
+  ],
+  "regression": {
+    "before": "Two new tests failed for blocked nearer candidates and the 4.0 to 4.5 meter vertical interval.",
+    "after": "334 unit tests pass; build passes with existing bundle-size advisory."
+  },
+  "browser": {
+    "visits": [
+      {
+        "location": "store-osm-node-6374756992-person-0",
+        "selected": "store-osm-node-6374756992-person-2",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "local-00",
+        "selected": "local-00",
+        "room": ""
+      },
+      {
+        "location": "local-03",
+        "selected": "local-03",
+        "room": ""
+      },
+      {
+        "location": "local-06",
+        "selected": "local-06",
+        "room": ""
+      },
+      {
+        "location": "local-09",
+        "selected": "local-09",
+        "room": ""
+      },
+      {
+        "location": "local-12",
+        "selected": "local-12",
+        "room": ""
+      },
+      {
+        "location": "local-15",
+        "selected": "local-15",
+        "room": ""
+      },
+      {
+        "location": "local-18",
+        "selected": "local-18",
+        "room": ""
+      },
+      {
+        "location": "local-21",
+        "selected": "local-21",
+        "room": ""
+      },
+      {
+        "location": "local-01",
+        "selected": "local-01",
+        "room": ""
+      },
+      {
+        "location": "local-02",
+        "selected": "local-02",
+        "room": ""
+      },
+      {
+        "location": "local-04",
+        "selected": "local-04",
+        "room": ""
+      },
+      {
+        "location": "local-05",
+        "selected": "local-05",
+        "room": ""
+      },
+      {
+        "location": "local-07",
+        "selected": "local-07",
+        "room": ""
+      },
+      {
+        "location": "local-08",
+        "selected": "local-08",
+        "room": ""
+      },
+      {
+        "location": "local-10",
+        "selected": "local-10",
+        "room": ""
+      },
+      {
+        "location": "local-11",
+        "selected": "local-11",
+        "room": ""
+      },
+      {
+        "location": "local-13",
+        "selected": "local-13",
+        "room": ""
+      },
+      {
+        "location": "local-14",
+        "selected": "local-14",
+        "room": ""
+      },
+      {
+        "location": "local-16",
+        "selected": "local-16",
+        "room": ""
+      },
+      {
+        "location": "local-17",
+        "selected": "local-16",
+        "room": ""
+      },
+      {
+        "location": "local-19",
+        "selected": "local-19",
+        "room": ""
+      },
+      {
+        "location": "local-20",
+        "selected": "local-20",
+        "room": ""
+      },
+      {
+        "location": "local-22",
+        "selected": "local-22",
+        "room": ""
+      },
+      {
+        "location": "local-23",
+        "selected": "local-23",
+        "room": ""
+      },
+      {
+        "location": "store-osm-node-6374756992-person-1",
+        "selected": "store-osm-node-6374756992-person-2",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-10",
+        "selected": "store-osm-node-6374756992-person-10",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-11",
+        "selected": "store-osm-node-6374756992-person-10",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-2",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-3",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-4",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-5",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-6",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-7",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-8",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-6374756992-person-9",
+        "selected": "store-osm-node-6374756992-person-5",
+        "room": "osm-node-6374756992"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-0",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-1",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-2",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-3",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-4",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-5",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-6",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-7",
+        "selected": "store-osm-node-8172494955-person-0",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-8",
+        "selected": "store-osm-node-8172494955-person-7",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494955-person-9",
+        "selected": "store-osm-node-8172494955-person-7",
+        "room": "osm-node-8172494955"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-0",
+        "selected": "store-osm-node-8172494957-person-5",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-1",
+        "selected": "store-osm-node-8172494957-person-5",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-2",
+        "selected": "store-osm-node-8172494957-person-5",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-3",
+        "selected": "store-osm-node-8172494957-person-5",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-4",
+        "selected": "store-osm-node-8172494957-person-3",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494957-person-5",
+        "selected": "store-osm-node-8172494957-person-3",
+        "room": "osm-node-8172494957"
+      },
+      {
+        "location": "store-osm-node-8172494958-person-2",
+        "selected": "store-osm-node-8172494958-person-3",
+        "room": "osm-node-8172494958"
+      },
+      {
+        "location": "store-osm-node-8172494958-person-3",
+        "selected": "store-osm-node-8172494958-person-3",
+        "room": "osm-node-8172494958"
+      },
+      {
+        "location": "store-osm-node-8172494958-person-4",
+        "selected": "store-osm-node-8172494958-person-6",
+        "room": "osm-node-8172494958"
+      },
+      {
+        "location": "store-osm-node-8172494958-person-5",
+        "selected": "store-osm-node-8172494958-person-3",
+        "room": "osm-node-8172494958"
+      },
+      {
+        "location": "store-osm-node-8172494958-person-6",
+        "selected": "store-osm-node-8172494958-person-6",
+        "room": "osm-node-8172494958"
+      },
+      {
+        "location": "store-osm-node-8172494960-person-2",
+        "selected": "store-osm-node-8172494960-person-6",
+        "room": "osm-node-8172494960"
+      },
+      {
+        "location": "store-osm-node-8172494960-person-3",
+        "selected": "store-osm-node-8172494960-person-3",
+        "room": "osm-node-8172494960"
+      },
+      {
+        "location": "store-osm-node-8172494960-person-4",
+        "selected": "store-osm-node-8172494960-person-6",
+        "room": "osm-node-8172494960"
+      },
+      {
+        "location": "store-osm-node-8172494960-person-5",
+        "selected": "store-osm-node-8172494960-person-3",
+        "room": "osm-node-8172494960"
+      },
+      {
+        "location": "store-osm-node-8172494960-person-6",
+        "selected": "store-osm-node-8172494960-person-6",
+        "room": "osm-node-8172494960"
+      },
+      {
+        "location": "store-osm-node-8172494963-person-0",
+        "selected": "store-osm-node-8172494963-person-0",
+        "room": "osm-node-8172494963"
+      },
+      {
+        "location": "store-osm-node-8172494963-person-1",
+        "selected": "store-osm-node-8172494963-person-0",
+        "room": "osm-node-8172494963"
+      },
+      {
+        "location": "store-osm-node-8172494963-person-2",
+        "selected": "store-osm-node-8172494963-person-3",
+        "room": "osm-node-8172494963"
+      },
+      {
+        "location": "store-osm-node-8172494963-person-3",
+        "selected": "store-osm-node-8172494963-person-3",
+        "room": "osm-node-8172494963"
+      },
+      {
+        "location": "store-osm-node-8172494964-person-0",
+        "selected": "store-osm-node-8172494964-person-3",
+        "room": "osm-node-8172494964"
+      },
+      {
+        "location": "store-osm-node-8172494964-person-1",
+        "selected": "store-osm-node-8172494964-person-3",
+        "room": "osm-node-8172494964"
+      },
+      {
+        "location": "store-osm-node-8172494964-person-2",
+        "selected": "store-osm-node-8172494964-person-3",
+        "room": "osm-node-8172494964"
+      },
+      {
+        "location": "store-osm-node-8172494964-person-3",
+        "selected": "store-osm-node-8172494964-person-3",
+        "room": "osm-node-8172494964"
+      },
+      {
+        "location": "store-osm-node-8172494964-person-4",
+        "selected": "store-osm-node-8172494964-person-4",
+        "room": "osm-node-8172494964"
+      },
+      {
+        "location": "store-osm-node-8172494965-person-0",
+        "selected": "store-osm-node-8172494965-person-1",
+        "room": "osm-node-8172494965"
+      },
+      {
+        "location": "store-osm-node-8172494965-person-1",
+        "selected": "store-osm-node-8172494965-person-1",
+        "room": "osm-node-8172494965"
+      },
+      {
+        "location": "store-osm-node-8172494965-person-2",
+        "selected": "store-osm-node-8172494965-person-1",
+        "room": "osm-node-8172494965"
+      },
+      {
+        "location": "store-osm-node-8172494965-person-3",
+        "selected": "store-osm-node-8172494965-person-3",
+        "room": "osm-node-8172494965"
+      },
+      {
+        "location": "store-osm-node-8172494966-person-1",
+        "selected": "store-osm-node-8172494966-person-3",
+        "room": "osm-node-8172494966"
+      },
+      {
+        "location": "store-osm-node-8172494966-person-2",
+        "selected": "store-osm-node-8172494966-person-3",
+        "room": "osm-node-8172494966"
+      },
+      {
+        "location": "store-osm-node-8172494966-person-3",
+        "selected": "store-osm-node-8172494966-person-3",
+        "room": "osm-node-8172494966"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-0",
+        "selected": "store-osm-node-8172494967-person-6",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-1",
+        "selected": "store-osm-node-8172494967-person-2",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-10",
+        "selected": "store-osm-node-8172494967-person-9",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-11",
+        "selected": "store-osm-node-8172494967-person-9",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-2",
+        "selected": "store-osm-node-8172494967-person-5",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-3",
+        "selected": "store-osm-node-8172494967-person-5",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-4",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-5",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-6",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-7",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-8",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494967-person-9",
+        "selected": "store-osm-node-8172494967-person-3",
+        "room": "osm-node-8172494967"
+      },
+      {
+        "location": "store-osm-node-8172494969-person-2",
+        "selected": "store-osm-node-8172494969-person-3",
+        "room": "osm-node-8172494969"
+      },
+      {
+        "location": "store-osm-node-8172494969-person-3",
+        "selected": "store-osm-node-8172494969-person-3",
+        "room": "osm-node-8172494969"
+      },
+      {
+        "location": "store-osm-node-8172494969-person-4",
+        "selected": "store-osm-node-8172494969-person-6",
+        "room": "osm-node-8172494969"
+      },
+      {
+        "location": "store-osm-node-8172494969-person-5",
+        "selected": "store-osm-node-8172494969-person-3",
+        "room": "osm-node-8172494969"
+      },
+      {
+        "location": "store-osm-node-8172494969-person-6",
+        "selected": "store-osm-node-8172494969-person-3",
+        "room": "osm-node-8172494969"
+      },
+      {
+        "location": "store-osm-node-8172494972-person-0",
+        "selected": "store-osm-node-8172494972-person-0",
+        "room": "osm-node-8172494972"
+      },
+      {
+        "location": "store-osm-node-8172494972-person-1",
+        "selected": "store-osm-node-8172494972-person-0",
+        "room": "osm-node-8172494972"
+      },
+      {
+        "location": "store-osm-node-8172494972-person-2",
+        "selected": "store-osm-node-8172494972-person-0",
+        "room": "osm-node-8172494972"
+      },
+      {
+        "location": "store-osm-node-8172494972-person-3",
+        "selected": "store-osm-node-8172494972-person-0",
+        "room": "osm-node-8172494972"
+      },
+      {
+        "location": "store-osm-node-8172494973-person-2",
+        "selected": "store-osm-node-8172494973-person-3",
+        "room": "osm-node-8172494973"
+      },
+      {
+        "location": "store-osm-node-8172494973-person-3",
+        "selected": "store-osm-node-8172494973-person-3",
+        "room": "osm-node-8172494973"
+      },
+      {
+        "location": "store-osm-node-8172494973-person-4",
+        "selected": "store-osm-node-8172494973-person-6",
+        "room": "osm-node-8172494973"
+      },
+      {
+        "location": "store-osm-node-8172494973-person-5",
+        "selected": "store-osm-node-8172494973-person-3",
+        "room": "osm-node-8172494973"
+      },
+      {
+        "location": "store-osm-node-8172494973-person-6",
+        "selected": "store-osm-node-8172494973-person-6",
+        "room": "osm-node-8172494973"
+      },
+      {
+        "location": "store-osm-node-8172494974-person-0",
+        "selected": "store-osm-node-8172494974-person-0",
+        "room": "osm-node-8172494974"
+      },
+      {
+        "location": "store-osm-node-8172494974-person-1",
+        "selected": "store-osm-node-8172494974-person-1",
+        "room": "osm-node-8172494974"
+      },
+      {
+        "location": "store-osm-node-8172494974-person-2",
+        "selected": "store-osm-node-8172494974-person-0",
+        "room": "osm-node-8172494974"
+      },
+      {
+        "location": "store-osm-node-8172494974-person-3",
+        "selected": "store-osm-node-8172494974-person-0",
+        "room": "osm-node-8172494974"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-0",
+        "selected": "store-osm-node-8172494976-person-6",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-1",
+        "selected": "store-osm-node-8172494976-person-5",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-10",
+        "selected": "store-osm-node-8172494976-person-9",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-11",
+        "selected": "store-osm-node-8172494976-person-9",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-2",
+        "selected": "store-osm-node-8172494976-person-7",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-3",
+        "selected": "store-osm-node-8172494976-person-7",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-4",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-5",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-6",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-7",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-8",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494976-person-9",
+        "selected": "store-osm-node-8172494976-person-3",
+        "room": "osm-node-8172494976"
+      },
+      {
+        "location": "store-osm-node-8172494977-person-0",
+        "selected": "store-osm-node-8172494977-person-2",
+        "room": "osm-node-8172494977"
+      },
+      {
+        "location": "store-osm-node-8172494977-person-1",
+        "selected": "store-osm-node-8172494977-person-1",
+        "room": "osm-node-8172494977"
+      },
+      {
+        "location": "store-osm-node-8172494977-person-2",
+        "selected": "store-osm-node-8172494977-person-2",
+        "room": "osm-node-8172494977"
+      },
+      {
+        "location": "store-osm-node-8172494979-person-0",
+        "selected": "store-osm-node-8172494979-person-2",
+        "room": "osm-node-8172494979"
+      },
+      {
+        "location": "store-osm-node-8172494979-person-1",
+        "selected": "store-osm-node-8172494979-person-2",
+        "room": "osm-node-8172494979"
+      },
+      {
+        "location": "store-osm-node-8172494979-person-2",
+        "selected": "store-osm-node-8172494979-person-2",
+        "room": "osm-node-8172494979"
+      },
+      {
+        "location": "store-osm-node-8172494979-person-3",
+        "selected": "store-osm-node-8172494979-person-1",
+        "room": "osm-node-8172494979"
+      },
+      {
+        "location": "store-osm-node-8172494980-person-1",
+        "selected": "store-osm-node-8172494980-person-1",
+        "room": "osm-node-8172494980"
+      },
+      {
+        "location": "store-osm-node-8172494980-person-2",
+        "selected": "store-osm-node-8172494980-person-1",
+        "room": "osm-node-8172494980"
+      },
+      {
+        "location": "store-osm-node-8172494980-person-3",
+        "selected": "store-osm-node-8172494980-person-1",
+        "room": "osm-node-8172494980"
+      },
+      {
+        "location": "store-osm-node-8172494981-person-2",
+        "selected": "store-osm-node-8172494981-person-6",
+        "room": "osm-node-8172494981"
+      },
+      {
+        "location": "store-osm-node-8172494981-person-3",
+        "selected": "store-osm-node-8172494981-person-3",
+        "room": "osm-node-8172494981"
+      },
+      {
+        "location": "store-osm-node-8172494981-person-4",
+        "selected": "store-osm-node-8172494981-person-6",
+        "room": "osm-node-8172494981"
+      },
+      {
+        "location": "store-osm-node-8172494981-person-5",
+        "selected": "store-osm-node-8172494981-person-3",
+        "room": "osm-node-8172494981"
+      },
+      {
+        "location": "store-osm-node-8172494981-person-6",
+        "selected": "store-osm-node-8172494981-person-6",
+        "room": "osm-node-8172494981"
+      },
+      {
+        "location": "store-osm-node-8172494985-person-2",
+        "selected": "store-osm-node-8172494985-person-3",
+        "room": "osm-node-8172494985"
+      },
+      {
+        "location": "store-osm-node-8172494985-person-3",
+        "selected": "store-osm-node-8172494985-person-3",
+        "room": "osm-node-8172494985"
+      },
+      {
+        "location": "store-osm-node-8172494985-person-4",
+        "selected": "store-osm-node-8172494985-person-6",
+        "room": "osm-node-8172494985"
+      },
+      {
+        "location": "store-osm-node-8172494985-person-5",
+        "selected": "store-osm-node-8172494985-person-3",
+        "room": "osm-node-8172494985"
+      },
+      {
+        "location": "store-osm-node-8172494985-person-6",
+        "selected": "store-osm-node-8172494985-person-6",
+        "room": "osm-node-8172494985"
+      },
+      {
+        "location": "store-osm-node-8172494987-person-2",
+        "selected": "store-osm-node-8172494987-person-2",
+        "room": "osm-node-8172494987"
+      },
+      {
+        "location": "store-osm-node-8172494987-person-3",
+        "selected": "store-osm-node-8172494987-person-2",
+        "room": "osm-node-8172494987"
+      },
+      {
+        "location": "store-osm-node-8172494987-person-4",
+        "selected": "store-osm-node-8172494987-person-6",
+        "room": "osm-node-8172494987"
+      },
+      {
+        "location": "store-osm-node-8172494987-person-5",
+        "selected": "store-osm-node-8172494987-person-3",
+        "room": "osm-node-8172494987"
+      },
+      {
+        "location": "store-osm-node-8172494987-person-6",
+        "selected": "store-osm-node-8172494987-person-6",
+        "room": "osm-node-8172494987"
+      },
+      {
+        "location": "store-osm-node-8172494989-person-2",
+        "selected": "store-osm-node-8172494989-person-6",
+        "room": "osm-node-8172494989"
+      },
+      {
+        "location": "store-osm-node-8172494989-person-3",
+        "selected": "store-osm-node-8172494989-person-3",
+        "room": "osm-node-8172494989"
+      },
+      {
+        "location": "store-osm-node-8172494989-person-4",
+        "selected": "store-osm-node-8172494989-person-6",
+        "room": "osm-node-8172494989"
+      },
+      {
+        "location": "store-osm-node-8172494989-person-5",
+        "selected": "store-osm-node-8172494989-person-3",
+        "room": "osm-node-8172494989"
+      },
+      {
+        "location": "store-osm-node-8172494989-person-6",
+        "selected": "store-osm-node-8172494989-person-6",
+        "room": "osm-node-8172494989"
+      },
+      {
+        "location": "store-osm-node-8172494990-person-1",
+        "selected": "store-osm-node-8172494990-person-2",
+        "room": "osm-node-8172494990"
+      },
+      {
+        "location": "store-osm-node-8172494990-person-2",
+        "selected": "store-osm-node-8172494990-person-2",
+        "room": "osm-node-8172494990"
+      },
+      {
+        "location": "store-osm-node-8172494990-person-3",
+        "selected": "store-osm-node-8172494990-person-2",
+        "room": "osm-node-8172494990"
+      },
+      {
+        "location": "store-osm-node-8172494991-person-2",
+        "selected": "store-osm-node-8172494991-person-6",
+        "room": "osm-node-8172494991"
+      },
+      {
+        "location": "store-osm-node-8172494991-person-3",
+        "selected": "store-osm-node-8172494991-person-6",
+        "room": "osm-node-8172494991"
+      },
+      {
+        "location": "store-osm-node-8172494991-person-4",
+        "selected": "store-osm-node-8172494991-person-6",
+        "room": "osm-node-8172494991"
+      },
+      {
+        "location": "store-osm-node-8172494991-person-5",
+        "selected": "store-osm-node-8172494991-person-3",
+        "room": "osm-node-8172494991"
+      },
+      {
+        "location": "store-osm-node-8172494991-person-6",
+        "selected": "store-osm-node-8172494991-person-6",
+        "room": "osm-node-8172494991"
+      },
+      {
+        "location": "store-osm-node-8172494993-person-0",
+        "selected": "store-osm-node-8172494993-person-1",
+        "room": "osm-node-8172494993"
+      },
+      {
+        "location": "store-osm-node-8172494993-person-1",
+        "selected": "store-osm-node-8172494993-person-1",
+        "room": "osm-node-8172494993"
+      },
+      {
+        "location": "store-osm-node-8172494993-person-2",
+        "selected": "store-osm-node-8172494993-person-1",
+        "room": "osm-node-8172494993"
+      },
+      {
+        "location": "store-osm-node-8172494993-person-3",
+        "selected": "store-osm-node-8172494993-person-1",
+        "room": "osm-node-8172494993"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-0",
+        "selected": "store-osm-node-8172494999-person-1",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-1",
+        "selected": "store-osm-node-8172494999-person-1",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-10",
+        "selected": "store-osm-node-8172494999-person-10",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-11",
+        "selected": "store-osm-node-8172494999-person-10",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-2",
+        "selected": "store-osm-node-8172494999-person-5",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-3",
+        "selected": "store-osm-node-8172494999-person-5",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-4",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-5",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-6",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-7",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-8",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172494999-person-9",
+        "selected": "store-osm-node-8172494999-person-3",
+        "room": "osm-node-8172494999"
+      },
+      {
+        "location": "store-osm-node-8172495000-person-0",
+        "selected": "store-osm-node-8172495000-person-1",
+        "room": "osm-node-8172495000"
+      },
+      {
+        "location": "store-osm-node-8172495000-person-1",
+        "selected": "store-osm-node-8172495000-person-1",
+        "room": "osm-node-8172495000"
+      },
+      {
+        "location": "store-osm-node-8172495000-person-2",
+        "selected": "store-osm-node-8172495000-person-1",
+        "room": "osm-node-8172495000"
+      },
+      {
+        "location": "store-osm-node-8172495000-person-3",
+        "selected": "store-osm-node-8172495000-person-3",
+        "room": "osm-node-8172495000"
+      },
+      {
+        "location": "store-osm-node-8172495003-person-2",
+        "selected": "store-osm-node-8172495003-person-2",
+        "room": "osm-node-8172495003"
+      },
+      {
+        "location": "store-osm-node-8172495003-person-3",
+        "selected": "store-osm-node-8172495003-person-2",
+        "room": "osm-node-8172495003"
+      },
+      {
+        "location": "store-osm-node-8172495003-person-4",
+        "selected": "store-osm-node-8172495003-person-6",
+        "room": "osm-node-8172495003"
+      },
+      {
+        "location": "store-osm-node-8172495003-person-5",
+        "selected": "store-osm-node-8172495003-person-3",
+        "room": "osm-node-8172495003"
+      },
+      {
+        "location": "store-osm-node-8172495003-person-6",
+        "selected": "store-osm-node-8172495003-person-6",
+        "room": "osm-node-8172495003"
+      },
+      {
+        "location": "store-osm-node-8172495005-person-2",
+        "selected": "store-osm-node-8172495005-person-6",
+        "room": "osm-node-8172495005"
+      },
+      {
+        "location": "store-osm-node-8172495005-person-3",
+        "selected": "store-osm-node-8172495005-person-6",
+        "room": "osm-node-8172495005"
+      },
+      {
+        "location": "store-osm-node-8172495005-person-4",
+        "selected": "store-osm-node-8172495005-person-6",
+        "room": "osm-node-8172495005"
+      },
+      {
+        "location": "store-osm-node-8172495005-person-5",
+        "selected": "store-osm-node-8172495005-person-6",
+        "room": "osm-node-8172495005"
+      },
+      {
+        "location": "store-osm-node-8172495005-person-6",
+        "selected": "store-osm-node-8172495005-person-6",
+        "room": "osm-node-8172495005"
+      },
+      {
+        "location": "store-osm-node-8172495006-person-0",
+        "selected": "store-osm-node-8172495006-person-2",
+        "room": "osm-node-8172495006"
+      },
+      {
+        "location": "store-osm-node-8172495006-person-1",
+        "selected": "store-osm-node-8172495006-person-2",
+        "room": "osm-node-8172495006"
+      },
+      {
+        "location": "store-osm-node-8172495006-person-2",
+        "selected": "store-osm-node-8172495006-person-2",
+        "room": "osm-node-8172495006"
+      },
+      {
+        "location": "store-osm-node-8172495006-person-3",
+        "selected": "store-osm-node-8172495006-person-2",
+        "room": "osm-node-8172495006"
+      },
+      {
+        "location": "store-osm-node-8172495006-person-4",
+        "selected": "store-osm-node-8172495006-person-2",
+        "room": "osm-node-8172495006"
+      }
+    ],
+    "errors": [],
+    "scope": "Real directory travel followed by the nearby button at every resident location; same-room reachable conversations."
+  },
+  "limitations": [
+    "The location sweep validates the Nearby control and same-room reachable selection, not every pointer or keyboard path.",
+    "Movement realism and full-scene frame pacing remain separate acceptance work."
+  ],
+  "sha256": {
+    "preview/src/nearby-people.js": "57ab4340ae064227c9197c0559d03ce93dd2175bbc919b47f1fd40c5e940ff3a",
+    "preview/src/walking-ui.js": "b7f304c066e85606645382a8c57268b16d83894cbadbc07c417334bca54dd801",
+    "preview/src/community-ui.js": "5c4bc64fd19891445e93f08f08b9e97ff05e3cb63f6200bcf9192ebf1e9994c9",
+    "preview/tests/nearby-people.test.js": "8e7a0270ea355dc3199aa8801d599ab382f08e4872b1c852a211da27b4c2b86e",
+    "preview/e2e/nearby-encounters.js": "cc0fa8dae6287b9262f2d89fdd0fa6c131cb464c13c34ed884a9dc5e662275f5"
+  },
+  "airborneRegression": {
+    "checks": [
+      "The elevated recipient is rendered and within talking reach",
+      "The recipient projects outside UI overlays",
+      "The actual flying mesh selects its own identity",
+      "Pointer conversation preserves Jevica\u2019s flight altitude",
+      "Pointer conversation does not move Jevica",
+      "Keyboard E addresses the same airborne recipient",
+      "Keyboard conversation preserves flight",
+      "A distant vertical separation is outside talking range",
+      "Keyboard E cannot open a distant airborne conversation",
+      "The elevated recipient is rendered and within talking reach",
+      "The recipient projects outside UI overlays",
+      "The actual flying mesh selects its own identity",
+      "Talking to the recipient from below leaves Jevica grounded",
+      "Undo restores ordinary grounded talking reach",
+      "No uncaught browser errors: "
+    ],
+    "id": "local-08",
+    "before": {
+      "position": [
+        -2763.5664903447564,
+        23.655761488080024,
+        1310.5492660966715
+      ],
+      "altitude": 3.5,
+      "flying": "true"
+    },
+    "after": {
+      "position": [
+        -2763.5664903447564,
+        23.655761488080024,
+        1310.5492660966715
+      ],
+      "altitude": 3.5,
+      "flying": "true"
+    },
+    "errors": [],
+    "scope": "Real wish, flight, pointer and keyboard controls; no actor state injection."
+  }
+}

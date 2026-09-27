@@ -1,0 +1,1490 @@
+{
+  "date": "2026-09-25",
+  "scope": "Fictional browser worker roles, authored dialogue and live task integration",
+  "index": [
+    {
+      "role": "Bartender",
+      "count": 5,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "Hopdoddy Burger Bar",
+        "Le Colonial",
+        "MAD Houston",
+        "Steak 48",
+        "Toulouse"
+      ],
+      "routine": "reviewing bar orders and coordinating drink service"
+    },
+    {
+      "role": "Cinema host",
+      "count": 1,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "IPIC Theaters"
+      ],
+      "routine": "welcoming cinema guests and checking lobby information"
+    },
+    {
+      "role": "Colorist",
+      "count": 1,
+      "tasks": [
+        "samples"
+      ],
+      "venues": [
+        "Bella Rinova"
+      ],
+      "routine": "comparing color samples and discussing tone"
+    },
+    {
+      "role": "Counter attendant",
+      "count": 1,
+      "tasks": [
+        "samples"
+      ],
+      "venues": [
+        "Amorino"
+      ],
+      "routine": "welcoming counter guests and presenting flavor choices"
+    },
+    {
+      "role": "Eyewear stylist",
+      "count": 1,
+      "tasks": [
+        "eyewear"
+      ],
+      "venues": [
+        "Oliver Peoples"
+      ],
+      "routine": "comparing frame shapes, colors and proportions"
+    },
+    {
+      "role": "Fitness trainer",
+      "count": 1,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "Equinox"
+      ],
+      "routine": "reviewing movement sessions and welcoming studio members"
+    },
+    {
+      "role": "Fragrance consultant",
+      "count": 1,
+      "tasks": [
+        "blotter"
+      ],
+      "venues": [
+        "Jo Malone London"
+      ],
+      "routine": "presenting scent blotters and discussing fragrance impressions"
+    },
+    {
+      "role": "Gallery guide",
+      "count": 1,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "Laura Rathe Fine Art"
+      ],
+      "routine": "welcoming gallery visitors and discussing artwork"
+    },
+    {
+      "role": "Gelato maker",
+      "count": 1,
+      "tasks": [
+        "samples"
+      ],
+      "venues": [
+        "Amorino"
+      ],
+      "routine": "comparing gelato flavors, texture and presentation"
+    },
+    {
+      "role": "Hair stylist",
+      "count": 1,
+      "tasks": [
+        "samples"
+      ],
+      "venues": [
+        "Bella Rinova"
+      ],
+      "routine": "comparing hair samples and discussing shape and movement"
+    },
+    {
+      "role": "Host",
+      "count": 5,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "Hopdoddy Burger Bar",
+        "Le Colonial",
+        "MAD Houston",
+        "Steak 48",
+        "Toulouse"
+      ],
+      "routine": "welcoming dining guests and keeping track of the room"
+    },
+    {
+      "role": "Jewelry adviser",
+      "count": 4,
+      "tasks": [
+        "jewelry"
+      ],
+      "venues": [
+        "Baccarat",
+        "Cartier",
+        "Harry Winston",
+        "de Boulle"
+      ],
+      "routine": "presenting jewelry and examining its setting and finish"
+    },
+    {
+      "role": "Leather goods specialist",
+      "count": 2,
+      "tasks": [
+        "fabric"
+      ],
+      "venues": [
+        "Moreau",
+        "Van Cleef & Arpels"
+      ],
+      "routine": "comparing material samples, stitching and accessory details"
+    },
+    {
+      "role": "Optical associate",
+      "count": 1,
+      "tasks": [
+        "eyewear"
+      ],
+      "venues": [
+        "Oliver Peoples"
+      ],
+      "routine": "examining eyewear construction and frame details"
+    },
+    {
+      "role": "Perfumer",
+      "count": 1,
+      "tasks": [
+        "blotter"
+      ],
+      "venues": [
+        "Jo Malone London"
+      ],
+      "routine": "considering scent notes, balance and how fragrances develop"
+    },
+    {
+      "role": "Projection technician",
+      "count": 1,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "IPIC Theaters"
+      ],
+      "routine": "reviewing projection and sound checks"
+    },
+    {
+      "role": "Salon host",
+      "count": 1,
+      "tasks": [
+        "samples"
+      ],
+      "venues": [
+        "Bella Rinova"
+      ],
+      "routine": "welcoming salon guests and helping consultations begin"
+    },
+    {
+      "role": "Server",
+      "count": 5,
+      "tasks": [
+        "tray"
+      ],
+      "venues": [
+        "Hopdoddy Burger Bar",
+        "Le Colonial",
+        "MAD Houston",
+        "Steak 48",
+        "Toulouse"
+      ],
+      "routine": "carrying service trays and attending to dining guests"
+    },
+    {
+      "role": "Studio host",
+      "count": 1,
+      "tasks": [
+        "tablet"
+      ],
+      "venues": [
+        "Equinox"
+      ],
+      "routine": "welcoming studio members and organizing the shared space"
+    },
+    {
+      "role": "Style adviser",
+      "count": 12,
+      "tasks": [
+        "fabric"
+      ],
+      "venues": [
+        "Alice + Olivia",
+        "Brunello Cucinelli",
+        "Dior",
+        "Diptyque",
+        "Dolce & Gabbana",
+        "Herm\u00e8s",
+        "Kiton",
+        "Saint Bernard",
+        "Veronica Beard",
+        "Vilebrequin",
+        "Vince",
+        "Zadig & Voltaire"
+      ],
+      "routine": "comparing fabrics and helping visitors put an outfit together"
+    },
+    {
+      "role": "Tailor",
+      "count": 11,
+      "tasks": [
+        "fabric"
+      ],
+      "venues": [
+        "Alice + Olivia",
+        "Brunello Cucinelli",
+        "Dior",
+        "Diptyque",
+        "Dolce & Gabbana",
+        "Herm\u00e8s",
+        "Kiton",
+        "Saint Bernard",
+        "Veronica Beard",
+        "Vilebrequin",
+        "Vince"
+      ],
+      "routine": "examining fabric, seams and garment proportions"
+    },
+    {
+      "role": "Watch specialist",
+      "count": 4,
+      "tasks": [
+        "jewelry"
+      ],
+      "venues": [
+        "Baccarat",
+        "Cartier",
+        "Harry Winston",
+        "de Boulle"
+      ],
+      "routine": "examining watch details and discussing their construction"
+    }
+  ],
+  "browser": {
+    "workers": [
+      {
+        "id": "store-osm-node-8172494989-person-2",
+        "role": "Style adviser",
+        "venue": "Alice + Olivia",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Morgan, the style adviser at Alice + Olivia. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Alice + Olivia. Welcome back to Alice + Olivia. I\u2019m Morgan, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494989-person-3",
+        "role": "Tailor",
+        "venue": "Alice + Olivia",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Casey, the tailor at Alice + Olivia. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Jevica! That gown is magical! Welcome to Alice + Olivia. Welcome back to Alice + Olivia. I\u2019m Casey, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495006-person-0",
+        "role": "Gelato maker",
+        "venue": "Amorino",
+        "theme": "gelato",
+        "station": "attend",
+        "task": "samples",
+        "fixtures": [
+          "gelato case",
+          "poster light boxes",
+          "lit shelving",
+          "tables"
+        ],
+        "about": "I\u2019m Casey, the gelato maker at Amorino. I think about texture as much as flavor. A good gelato should have a clear character without every ingredient competing at once.",
+        "story": "A simple flavor can reveal a lot about texture. That is why I enjoy comparing a quiet, creamy flavor with something bright and fruit-led.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Amorino. Welcome back to Amorino. I\u2019m Casey, the gelato maker. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495006-person-1",
+        "role": "Counter attendant",
+        "venue": "Amorino",
+        "theme": "gelato",
+        "station": "attend",
+        "task": "samples",
+        "fixtures": [
+          "gelato case",
+          "poster light boxes",
+          "lit shelving",
+          "tables"
+        ],
+        "about": "I\u2019m Taylor, the counter attendant at Amorino. I help guests get oriented at the counter. If the choices feel overwhelming, I start with the flavors they already enjoy.",
+        "story": "Some people choose by color before they read a flavor name. I like hearing whether they are in the mood for something familiar or something new.",
+        "returning": "Jevica! That gown is magical! Welcome to Amorino. Welcome back to Amorino. I\u2019m Taylor, the counter attendant. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495000-person-0",
+        "role": "Jewelry adviser",
+        "venue": "Baccarat",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Robin, the jewelry adviser at Baccarat. I help visitors notice a piece\u2019s setting, proportions and finish. Small changes in light can reveal details that are easy to miss.",
+        "story": "I turn a piece slowly instead of judging it from one angle. The setting should be interesting from the side as well as from the front.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Baccarat. Welcome back to Baccarat. I\u2019m Robin, the jewelry adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495000-person-1",
+        "role": "Watch specialist",
+        "venue": "Baccarat",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Avery, the watch specialist at Baccarat. I enjoy looking at dial legibility, case proportions and how a watch is put together. There is a lot to notice in a very small object.",
+        "story": "A crowded dial can be beautiful but take longer to read. I like comparing the hands and markers first, before getting distracted by the smaller details.",
+        "returning": "Jevica! That gown is magical! Welcome to Baccarat. Welcome back to Baccarat. I\u2019m Avery, the watch specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494957-person-1",
+        "role": "Hair stylist",
+        "venue": "Bella Rinova",
+        "theme": "salon",
+        "station": "style",
+        "task": "samples",
+        "fixtures": [
+          "styling stations",
+          "wash basins",
+          "lit shelving",
+          "reception desk"
+        ],
+        "about": "I\u2019m Jamie, the hair stylist at Bella Rinova. I like talking through shape, texture and how a style moves. A useful starting point is how someone wears their hair on an ordinary day.",
+        "story": "A style is never just a front view. I look at the silhouette from the side and imagine how it will settle when someone turns their head.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Bella Rinova. Welcome back to Bella Rinova. I\u2019m Jamie, the hair stylist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494957-person-3",
+        "role": "Colorist",
+        "venue": "Bella Rinova",
+        "theme": "salon",
+        "station": "style",
+        "task": "samples",
+        "fixtures": [
+          "styling stations",
+          "wash basins",
+          "lit shelving",
+          "reception desk"
+        ],
+        "about": "I\u2019m Alex, the colorist at Bella Rinova. I work with color and contrast. Samples help us talk about warm and cool tones without relying on a color name alone.",
+        "story": "Two similar color samples can look quite different beside each other. I compare them under the same light before talking about the difference.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Bella Rinova. Welcome back to Bella Rinova. I\u2019m Alex, the colorist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494957-person-5",
+        "role": "Salon host",
+        "venue": "Bella Rinova",
+        "theme": "salon",
+        "station": "attend",
+        "task": "samples",
+        "fixtures": [
+          "styling stations",
+          "wash basins",
+          "lit shelving",
+          "reception desk"
+        ],
+        "about": "I\u2019m Morgan, the salon host at Bella Rinova. I help visitors feel settled in the salon and find the right person to talk to. A good consultation starts with listening.",
+        "story": "People often bring a picture but are drawn to only one detail in it. Asking which detail they like helps the conversation become much clearer.",
+        "returning": "Jevica! That gown is magical! Welcome to Bella Rinova. Welcome back to Bella Rinova. I\u2019m Morgan, the salon host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494981-person-2",
+        "role": "Style adviser",
+        "venue": "Brunello Cucinelli",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Morgan, the style adviser at Brunello Cucinelli. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Jevica! That gown is magical! Welcome to Brunello Cucinelli. Welcome back to Brunello Cucinelli. I\u2019m Morgan, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494981-person-3",
+        "role": "Tailor",
+        "venue": "Brunello Cucinelli",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Casey, the tailor at Brunello Cucinelli. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Brunello Cucinelli. Welcome back to Brunello Cucinelli. I\u2019m Casey, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494965-person-0",
+        "role": "Jewelry adviser",
+        "venue": "Cartier",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Casey, the jewelry adviser at Cartier. I help visitors notice a piece\u2019s setting, proportions and finish. Small changes in light can reveal details that are easy to miss.",
+        "story": "I turn a piece slowly instead of judging it from one angle. The setting should be interesting from the side as well as from the front.",
+        "returning": "Jevica! That gown is magical! Welcome to Cartier. Welcome back to Cartier. I\u2019m Casey, the jewelry adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494965-person-1",
+        "role": "Watch specialist",
+        "venue": "Cartier",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Taylor, the watch specialist at Cartier. I enjoy looking at dial legibility, case proportions and how a watch is put together. There is a lot to notice in a very small object.",
+        "story": "A crowded dial can be beautiful but take longer to read. I like comparing the hands and markers first, before getting distracted by the smaller details.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Cartier. Welcome back to Cartier. I\u2019m Taylor, the watch specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494958-person-2",
+        "role": "Style adviser",
+        "venue": "Dior",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Quinn, the style adviser at Dior. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Dior. Welcome back to Dior. I\u2019m Quinn, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494958-person-3",
+        "role": "Tailor",
+        "venue": "Dior",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Sasha, the tailor at Dior. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Dior. Welcome back to Dior. I\u2019m Sasha, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494985-person-2",
+        "role": "Style adviser",
+        "venue": "Diptyque",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Reese, the style adviser at Diptyque. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Diptyque. Welcome back to Diptyque. I\u2019m Reese, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494985-person-3",
+        "role": "Tailor",
+        "venue": "Diptyque",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Alex, the tailor at Diptyque. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Diptyque. Welcome back to Diptyque. I\u2019m Alex, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495003-person-2",
+        "role": "Style adviser",
+        "venue": "Dolce & Gabbana",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Morgan, the style adviser at Dolce & Gabbana. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Dolce & Gabbana. Welcome back to Dolce & Gabbana. I\u2019m Morgan, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495003-person-3",
+        "role": "Tailor",
+        "venue": "Dolce & Gabbana",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Casey, the tailor at Dolce & Gabbana. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Dolce & Gabbana. Welcome back to Dolce & Gabbana. I\u2019m Casey, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494974-person-0",
+        "role": "Fitness trainer",
+        "venue": "Equinox",
+        "theme": "wellness",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "reception desk",
+          "towel shelves",
+          "seating",
+          "greenery"
+        ],
+        "about": "I\u2019m Casey, the fitness trainer at Equinox. I pay attention to controlled movement, comfortable pacing and making the studio feel approachable. People arrive with different levels of experience.",
+        "story": "I like watching the transitions between movements. A controlled start and a settled finish often say as much about coordination as the movement itself.",
+        "returning": "Jevica! That gown is magical! Welcome to Equinox. Welcome back to Equinox. I\u2019m Casey, the fitness trainer. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494974-person-3",
+        "role": "Studio host",
+        "venue": "Equinox",
+        "theme": "wellness",
+        "station": "greet",
+        "task": "tablet",
+        "fixtures": [
+          "reception desk",
+          "towel shelves",
+          "seating",
+          "greenery"
+        ],
+        "about": "I\u2019m Robin, the studio host at Equinox. I help visitors get oriented in the studio and keep the shared space easy to use. You can ask me about the layout while you explore.",
+        "story": "A welcoming studio depends on ordinary details: a clear walkway, a place to pause, and someone ready to answer a question.",
+        "returning": "Jevica! That gown is magical! Welcome to Equinox. Welcome back to Equinox. I\u2019m Robin, the studio host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494972-person-0",
+        "role": "Jewelry adviser",
+        "venue": "Harry Winston",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Robin, the jewelry adviser at Harry Winston. I help visitors notice a piece\u2019s setting, proportions and finish. Small changes in light can reveal details that are easy to miss.",
+        "story": "I turn a piece slowly instead of judging it from one angle. The setting should be interesting from the side as well as from the front.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Harry Winston. Welcome back to Harry Winston. I\u2019m Robin, the jewelry adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494972-person-1",
+        "role": "Watch specialist",
+        "venue": "Harry Winston",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Avery, the watch specialist at Harry Winston. I enjoy looking at dial legibility, case proportions and how a watch is put together. There is a lot to notice in a very small object.",
+        "story": "A crowded dial can be beautiful but take longer to read. I like comparing the hands and markers first, before getting distracted by the smaller details.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Harry Winston. Welcome back to Harry Winston. I\u2019m Avery, the watch specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494969-person-2",
+        "role": "Style adviser",
+        "venue": "Herm\u00e8s",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Reese, the style adviser at Herm\u00e8s. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Jevica! That gown is magical! Welcome to Herm\u00e8s. Welcome back to Herm\u00e8s. I\u2019m Reese, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494969-person-3",
+        "role": "Tailor",
+        "venue": "Herm\u00e8s",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Alex, the tailor at Herm\u00e8s. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Herm\u00e8s. Welcome back to Herm\u00e8s. I\u2019m Alex, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494955-person-0",
+        "role": "Host",
+        "venue": "Hopdoddy Burger Bar",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Alex, the host at Hopdoddy Burger Bar. I welcome guests and keep an eye on the dining room. A calm arrival helps everyone settle in before the meal begins.",
+        "story": "Hosting means noticing the room as a whole: an arriving group, a clear path between tables, or someone looking for a little help.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Hopdoddy Burger Bar. Welcome back to Hopdoddy Burger Bar. I\u2019m Alex, the host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494955-person-7",
+        "role": "Server",
+        "venue": "Hopdoddy Burger Bar",
+        "theme": "dining",
+        "station": "carry",
+        "task": "tray",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Avery, the server at Hopdoddy Burger Bar. I look after guests during service. Clear paths, a balanced tray and good timing make the room more comfortable for everyone.",
+        "story": "When carrying a tray, I plan the path before moving. A smooth turn matters more than hurrying between two tables.",
+        "returning": "Jevica! That gown is magical! Welcome to Hopdoddy Burger Bar. Welcome back to Hopdoddy Burger Bar. I\u2019m Avery, the server. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494955-person-8",
+        "role": "Bartender",
+        "venue": "Hopdoddy Burger Bar",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Quinn, the bartender at Hopdoddy Burger Bar. I enjoy the balance and presentation of a drink, and the rhythm of service. The small details help make the bar feel welcoming.",
+        "story": "Temperature, aroma and the shape of a glass all change the impression of a drink. Presentation starts before the first sip.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Hopdoddy Burger Bar. Welcome back to Hopdoddy Burger Bar. I\u2019m Quinn, the bartender. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494964-person-0",
+        "role": "Cinema host",
+        "venue": "IPIC Theaters",
+        "theme": "cinema",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "poster light boxes",
+          "concession counter",
+          "popcorn machine",
+          "velvet ropes"
+        ],
+        "about": "I\u2019m Casey, the cinema host at IPIC Theaters. I help guests find their way around the cinema lobby. A little guidance at the entrance lets people relax into the visit.",
+        "story": "A cinema lobby has its own rhythm: a quiet spell, then everyone arriving at once. Keeping the path clear makes that transition much easier.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to IPIC Theaters. Welcome back to IPIC Theaters. I\u2019m Casey, the cinema host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494964-person-1",
+        "role": "Projection technician",
+        "venue": "IPIC Theaters",
+        "theme": "cinema",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "poster light boxes",
+          "concession counter",
+          "popcorn machine",
+          "velvet ropes"
+        ],
+        "about": "I\u2019m Taylor, the projection technician at IPIC Theaters. My work is about the image and sound reaching the audience clearly. Framing, focus and consistent playback all deserve attention.",
+        "story": "A projection check includes the edges of the picture, not just its center. I also listen for whether quiet dialogue remains clear beneath the rest of the sound.",
+        "returning": "Jevica! That gown is magical! Welcome to IPIC Theaters. Welcome back to IPIC Theaters. I\u2019m Taylor, the projection technician. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494963-person-0",
+        "role": "Fragrance consultant",
+        "venue": "Jo Malone London",
+        "theme": "perfumery",
+        "station": "attend",
+        "task": "blotter",
+        "fixtures": [
+          "lit shelving",
+          "display tables",
+          "cash wrap",
+          "greenery"
+        ],
+        "about": "I\u2019m Robin, the fragrance consultant at Jo Malone London. I use blotters to help people compare fragrances one at a time. Describing a scent in your own words is a good place to begin.",
+        "story": "The first impression of a fragrance is only part of it. I leave a little time between smelling a blotter so the quieter notes have a chance to emerge.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Jo Malone London. Welcome back to Jo Malone London. I\u2019m Robin, the fragrance consultant. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494963-person-1",
+        "role": "Perfumer",
+        "venue": "Jo Malone London",
+        "theme": "perfumery",
+        "station": "greet",
+        "task": "blotter",
+        "fixtures": [
+          "lit shelving",
+          "display tables",
+          "cash wrap",
+          "greenery"
+        ],
+        "about": "I\u2019m Avery, the perfumer at Jo Malone London. My interest is in how scent notes work together: which ones arrive first, which linger, and how the balance changes over time.",
+        "story": "A fragrance can suggest something familiar without copying it exactly. A dry woody note beside a soft floral one can change the impression of both.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Jo Malone London. Welcome back to Jo Malone London. I\u2019m Avery, the perfumer. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494991-person-2",
+        "role": "Style adviser",
+        "venue": "Kiton",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Reese, the style adviser at Kiton. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Kiton. Welcome back to Kiton. I\u2019m Reese, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494991-person-3",
+        "role": "Tailor",
+        "venue": "Kiton",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Alex, the tailor at Kiton. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Kiton. Welcome back to Kiton. I\u2019m Alex, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494977-person-0",
+        "role": "Gallery guide",
+        "venue": "Laura Rathe Fine Art",
+        "theme": "gallery",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "framed canvases",
+          "sculpture plinths",
+          "consultation desk",
+          "seating"
+        ],
+        "about": "I\u2019m Alex, the gallery guide at Laura Rathe Fine Art. I help visitors find a starting point with an artwork. You do not need specialist language; tell me what catches your eye.",
+        "story": "Try looking at the empty space around a shape. Sometimes that is what changes the rhythm of a composition and draws you back to it.",
+        "returning": "Jevica! That gown is magical! Welcome to Laura Rathe Fine Art. Welcome back to Laura Rathe Fine Art. I\u2019m Alex, the gallery guide. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494976-person-0",
+        "role": "Host",
+        "venue": "Le Colonial",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Casey, the host at Le Colonial. I welcome guests and keep an eye on the dining room. A calm arrival helps everyone settle in before the meal begins.",
+        "story": "Hosting means noticing the room as a whole: an arriving group, a clear path between tables, or someone looking for a little help.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Le Colonial. Welcome back to Le Colonial. I\u2019m Casey, the host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494976-person-9",
+        "role": "Server",
+        "venue": "Le Colonial",
+        "theme": "dining",
+        "station": "carry",
+        "task": "tray",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Alex, the server at Le Colonial. I look after guests during service. Clear paths, a balanced tray and good timing make the room more comfortable for everyone.",
+        "story": "When carrying a tray, I plan the path before moving. A smooth turn matters more than hurrying between two tables.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Le Colonial. Welcome back to Le Colonial. I\u2019m Alex, the server. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494976-person-10",
+        "role": "Bartender",
+        "venue": "Le Colonial",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Jordan, the bartender at Le Colonial. I enjoy the balance and presentation of a drink, and the rhythm of service. The small details help make the bar feel welcoming.",
+        "story": "Temperature, aroma and the shape of a glass all change the impression of a drink. Presentation starts before the first sip.",
+        "returning": "Jevica! That gown is magical! Welcome to Le Colonial. Welcome back to Le Colonial. I\u2019m Jordan, the bartender. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494967-person-0",
+        "role": "Host",
+        "venue": "MAD Houston",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Robin, the host at MAD Houston. I welcome guests and keep an eye on the dining room. A calm arrival helps everyone settle in before the meal begins.",
+        "story": "Hosting means noticing the room as a whole: an arriving group, a clear path between tables, or someone looking for a little help.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to MAD Houston. Welcome back to MAD Houston. I\u2019m Robin, the host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494967-person-9",
+        "role": "Server",
+        "venue": "MAD Houston",
+        "theme": "dining",
+        "station": "carry",
+        "task": "tray",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Casey, the server at MAD Houston. I look after guests during service. Clear paths, a balanced tray and good timing make the room more comfortable for everyone.",
+        "story": "When carrying a tray, I plan the path before moving. A smooth turn matters more than hurrying between two tables.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to MAD Houston. Welcome back to MAD Houston. I\u2019m Casey, the server. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494967-person-10",
+        "role": "Bartender",
+        "venue": "MAD Houston",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Taylor, the bartender at MAD Houston. I enjoy the balance and presentation of a drink, and the rhythm of service. The small details help make the bar feel welcoming.",
+        "story": "Temperature, aroma and the shape of a glass all change the impression of a drink. Presentation starts before the first sip.",
+        "returning": "Jevica! That gown is magical! Welcome to MAD Houston. Welcome back to MAD Houston. I\u2019m Taylor, the bartender. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494980-person-1",
+        "role": "Leather goods specialist",
+        "venue": "Moreau",
+        "theme": "leather",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "lit shelving",
+          "display tables",
+          "seating",
+          "cash wrap"
+        ],
+        "about": "I\u2019m Jamie, the leather goods specialist at Moreau. I like showing people the small construction details in an accessory: the grain, the stitching and how the edges are finished.",
+        "story": "The edge of a leather sample tells a different story from its face. Looking at both makes the thickness and finish much easier to compare.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Moreau. Welcome back to Moreau. I\u2019m Jamie, the leather goods specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494979-person-0",
+        "role": "Eyewear stylist",
+        "venue": "Oliver Peoples",
+        "theme": "optician",
+        "station": "attend",
+        "task": "eyewear",
+        "fixtures": [
+          "eyewear walls",
+          "consultation desk",
+          "cash wrap"
+        ],
+        "about": "I\u2019m Alex, the eyewear stylist at Oliver Peoples. I help visitors compare frame shapes and colors. A small change in the width or line of a frame can change its whole character.",
+        "story": "I look at a frame from the side, too. The temples and the curve of the front can give a quiet design more personality than you first expect.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Oliver Peoples. Welcome back to Oliver Peoples. I\u2019m Alex, the eyewear stylist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494979-person-1",
+        "role": "Optical associate",
+        "venue": "Oliver Peoples",
+        "theme": "optician",
+        "station": "attend",
+        "task": "eyewear",
+        "fixtures": [
+          "eyewear walls",
+          "consultation desk",
+          "cash wrap"
+        ],
+        "about": "I\u2019m Jordan, the optical associate at Oliver Peoples. I pay attention to frame construction, the bridge and the hinges. I can talk through those details as we look around the eyewear studio.",
+        "story": "A hinge is a tiny piece of engineering that gets used constantly. It is one of the details I look at closely when comparing frames.",
+        "returning": "Jevica! That gown is magical! Welcome to Oliver Peoples. Welcome back to Oliver Peoples. I\u2019m Jordan, the optical associate. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494973-person-2",
+        "role": "Style adviser",
+        "venue": "Saint Bernard",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Drew, the style adviser at Saint Bernard. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Saint Bernard. Welcome back to Saint Bernard. I\u2019m Drew, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494973-person-3",
+        "role": "Tailor",
+        "venue": "Saint Bernard",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Robin, the tailor at Saint Bernard. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Saint Bernard. Welcome back to Saint Bernard. I\u2019m Robin, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494999-person-0",
+        "role": "Host",
+        "venue": "Steak 48",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Robin, the host at Steak 48. I welcome guests and keep an eye on the dining room. A calm arrival helps everyone settle in before the meal begins.",
+        "story": "Hosting means noticing the room as a whole: an arriving group, a clear path between tables, or someone looking for a little help.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Steak 48. Welcome back to Steak 48. I\u2019m Robin, the host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494999-person-9",
+        "role": "Server",
+        "venue": "Steak 48",
+        "theme": "dining",
+        "station": "carry",
+        "task": "tray",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Casey, the server at Steak 48. I look after guests during service. Clear paths, a balanced tray and good timing make the room more comfortable for everyone.",
+        "story": "When carrying a tray, I plan the path before moving. A smooth turn matters more than hurrying between two tables.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Steak 48. Welcome back to Steak 48. I\u2019m Casey, the server. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494999-person-10",
+        "role": "Bartender",
+        "venue": "Steak 48",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Taylor, the bartender at Steak 48. I enjoy the balance and presentation of a drink, and the rhythm of service. The small details help make the bar feel welcoming.",
+        "story": "Temperature, aroma and the shape of a glass all change the impression of a drink. Presentation starts before the first sip.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Steak 48. Welcome back to Steak 48. I\u2019m Taylor, the bartender. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-6374756992-person-0",
+        "role": "Host",
+        "venue": "Toulouse",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Sasha, the host at Toulouse. I welcome guests and keep an eye on the dining room. A calm arrival helps everyone settle in before the meal begins.",
+        "story": "Hosting means noticing the room as a whole: an arriving group, a clear path between tables, or someone looking for a little help.",
+        "returning": "Jevica! That gown is magical! Welcome to Toulouse. Welcome back to Toulouse. I\u2019m Sasha, the host. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-6374756992-person-9",
+        "role": "Server",
+        "venue": "Toulouse",
+        "theme": "dining",
+        "station": "carry",
+        "task": "tray",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Robin, the server at Toulouse. I look after guests during service. Clear paths, a balanced tray and good timing make the room more comfortable for everyone.",
+        "story": "When carrying a tray, I plan the path before moving. A smooth turn matters more than hurrying between two tables.",
+        "returning": "Jevica! That gown is magical! Welcome to Toulouse. Welcome back to Toulouse. I\u2019m Robin, the server. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-6374756992-person-10",
+        "role": "Bartender",
+        "venue": "Toulouse",
+        "theme": "dining",
+        "station": "attend",
+        "task": "tablet",
+        "fixtures": [
+          "back bar",
+          "reception desk",
+          "tables",
+          "pendant lamps"
+        ],
+        "about": "I\u2019m Avery, the bartender at Toulouse. I enjoy the balance and presentation of a drink, and the rhythm of service. The small details help make the bar feel welcoming.",
+        "story": "Temperature, aroma and the shape of a glass all change the impression of a drink. Presentation starts before the first sip.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Toulouse. Welcome back to Toulouse. I\u2019m Avery, the bartender. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494966-person-1",
+        "role": "Leather goods specialist",
+        "venue": "Van Cleef & Arpels",
+        "theme": "leather",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "lit shelving",
+          "display tables",
+          "seating",
+          "cash wrap"
+        ],
+        "about": "I\u2019m Jordan, the leather goods specialist at Van Cleef & Arpels. I like showing people the small construction details in an accessory: the grain, the stitching and how the edges are finished.",
+        "story": "The edge of a leather sample tells a different story from its face. Looking at both makes the thickness and finish much easier to compare.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Van Cleef & Arpels. Welcome back to Van Cleef & Arpels. I\u2019m Jordan, the leather goods specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495005-person-2",
+        "role": "Style adviser",
+        "venue": "Veronica Beard",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Drew, the style adviser at Veronica Beard. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Jevica! That gown is magical! Welcome to Veronica Beard. Welcome back to Veronica Beard. I\u2019m Drew, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172495005-person-3",
+        "role": "Tailor",
+        "venue": "Veronica Beard",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Robin, the tailor at Veronica Beard. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Veronica Beard. Welcome back to Veronica Beard. I\u2019m Robin, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494960-person-2",
+        "role": "Style adviser",
+        "venue": "Vilebrequin",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Quinn, the style adviser at Vilebrequin. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Jevica! That gown is magical! Welcome to Vilebrequin. Welcome back to Vilebrequin. I\u2019m Quinn, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494960-person-3",
+        "role": "Tailor",
+        "venue": "Vilebrequin",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Sasha, the tailor at Vilebrequin. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Vilebrequin. Welcome back to Vilebrequin. I\u2019m Sasha, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494987-person-2",
+        "role": "Style adviser",
+        "venue": "Vince",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Reese, the style adviser at Vince. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Jevica! That gown is magical! Welcome to Vince. Welcome back to Vince. I\u2019m Reese, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494987-person-3",
+        "role": "Tailor",
+        "venue": "Vince",
+        "theme": "fashion",
+        "station": "greet",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "seating"
+        ],
+        "about": "I\u2019m Alex, the tailor at Vince. I pay attention to fit: where a seam sits, how a sleeve falls, and whether a garment lets someone move comfortably.",
+        "story": "A seam can look straight on a flat surface and pull once someone moves. That is why I look at the fabric in motion as well as at rest.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to Vince. Welcome back to Vince. I\u2019m Alex, the tailor. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494990-person-1",
+        "role": "Style adviser",
+        "venue": "Zadig & Voltaire",
+        "theme": "fashion",
+        "station": "attend",
+        "task": "fabric",
+        "fixtures": [
+          "garment rails",
+          "lit shelving",
+          "display tables",
+          "cash wrap"
+        ],
+        "about": "I\u2019m Jordan, the style adviser at Zadig & Voltaire. I help people compare texture, color and proportion. Tell me what you like wearing, and we can start with a fabric that feels right.",
+        "story": "Two fabrics in the same color can behave very differently. I look at how each one catches the light and falls in a fold before pairing it with anything else.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to Zadig & Voltaire. Welcome back to Zadig & Voltaire. I\u2019m Jordan, the style adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494993-person-0",
+        "role": "Jewelry adviser",
+        "venue": "de Boulle",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Casey, the jewelry adviser at de Boulle. I help visitors notice a piece\u2019s setting, proportions and finish. Small changes in light can reveal details that are easy to miss.",
+        "story": "I turn a piece slowly instead of judging it from one angle. The setting should be interesting from the side as well as from the front.",
+        "returning": "I can't believe I'm meeting Jevica! Welcome to de Boulle. Welcome back to de Boulle. I\u2019m Casey, the jewelry adviser. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      },
+      {
+        "id": "store-osm-node-8172494993-person-1",
+        "role": "Watch specialist",
+        "venue": "de Boulle",
+        "theme": "jewelry",
+        "station": "attend",
+        "task": "jewelry",
+        "fixtures": [
+          "jewelry niches",
+          "glass vitrines",
+          "consultation desk"
+        ],
+        "about": "I\u2019m Taylor, the watch specialist at de Boulle. I enjoy looking at dial legibility, case proportions and how a watch is put together. There is a lot to notice in a very small object.",
+        "story": "A crowded dial can be beautiful but take longer to read. I like comparing the hands and markers first, before getting distracted by the smaller details.",
+        "returning": "Wait\u2026 Jevica?! You're really here! Welcome to de Boulle. Welcome back to de Boulle. I\u2019m Taylor, the watch specialist. Would you like to hear a little more about my work?",
+        "workPaused": true,
+        "workResumed": true
+      }
+    ],
+    "roles": 22,
+    "guest": "store-osm-node-8172494955-person-1",
+    "errors": [],
+    "scope": "All rendered workers: real topic controls, authored role dialogue, return memory and task pause/resume. No mocked reactions or actor state."
+  },
+  "verification": {
+    "unitTests": 335,
+    "unitFailures": 0,
+    "build": "passed; existing Three.js chunk-size advisory",
+    "before": "New role dialogue regression failed: Style adviser had no work profile.",
+    "browserScriptFinalAdjustment": "After the full run, added and separately executed a wait for reaction completion and sidebar collapse for the final screenshot; worker checks unchanged."
+  },
+  "limitations": [
+    "The 22 instantiated occupations share seven physical task families; this is not 22 bespoke animations.",
+    "The separate reaction service produced /v1/decisions 503 responses. Authored dialogue and local fallback behavior were exercised without mocks.",
+    "Movement quality and full-scene frame pacing still need the separate acceptance review."
+  ],
+  "sha256": {
+    "preview/src/worker-roles.js": "80bb941be376f04f859a7fa6356d317f57be1ea94c05e18620a1199ae59ed728",
+    "preview/src/store-encounters.js": "527223b34b886e49d36a9a37cb61e2c46f98dcd6ba244fdbaf04bb172136c16a",
+    "preview/src/personas.js": "76ff2c619a10ee57a92c48a64c85b863c1b6b1cf1cf95c2ccbd057558033e3d6",
+    "preview/src/community-ui.js": "f44c020b177804277ce0b18ac5ce747decf00ee5a45dee7d89883d7539c4a635",
+    "preview/src/work-props.js": "77826bd9122593a55b2fd46770681f1d2a6afe6c4df41611d5957b24d49ae8e5",
+    "preview/src/store-rooms.js": "64823860d75dcbd644ab56eb859b037393215f07b4e2535604fe3cb85aaacb6f",
+    "preview/e2e/worker-roles.js": "7fbec0ad7bee3ee316c7bcbb62929afef8bed788054c76c7391876dd481204e5",
+    "preview/tests/store-encounters.test.js": "274f54383f2167762749bd77505b6209fbbe0b12db3af4b3848a8f1672562cee"
+  },
+  "screenshots": [
+    "output/playwright/worker-role-perfumer.png",
+    "output/playwright/worker-role-guest.png"
+  ]
+}

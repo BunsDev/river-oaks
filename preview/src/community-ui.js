@@ -7,6 +7,7 @@ import './community.css';
 import './community-dialogue.css';
 import { supportAvailability } from './community-presentation.js';
 import { createLocalSpeech } from './speech.js';
+import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
 import { createResidentLife,stepResidentLife,residentPacket,applyResidentDecisions } from './resident-life.js';
 import { createNavigationService } from './navigation-service.js';
@@ -30,7 +31,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -51,7 +52,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const speech = createLocalSpeech(status => {
     text(voiceStatus, status);
     if (dialogueVoiceStatus) text(dialogueVoiceStatus, status);
-  });
+  }, {prepare:prepareSpeechAvatar});
   const nearbyList = node('div', 'nearby-people'); nearbyList.id = 'nearby-people';
   const nearbyRows = new Map();
   const nearbyEmpty = node('p', 'quiet-note', 'Walk toward a café or storefront to meet someone.');
@@ -59,7 +60,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
   const meetNearby = async () => {
-    for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, 6)) {
+    for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, Infinity)) {
       if (await selectLocal(item.local.id)) return true;
     }
     return false;
@@ -245,7 +246,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const lifeMayRun=()=>!getMultiplayer() && life && (lifeEnabled || state.running && state.physicalVisits && state.jobs.some(job=>job.helperId));
   lifeToggle.addEventListener('click',()=>{if(getMultiplayer())return;lifeEnabled=!lifeEnabled;invalidateLife();paint();});
   const dispatchLife=async(now,weather)=>{
-    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor()});
+    const packet=residentPacket(life,++tick,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose()});
     if(!packet) return;
     const currentLife=life,epoch=lifeEpoch,controller=new AbortController();lifeRequest=controller;nextLifeRequest=now+2000;
     const current=()=>life===currentLife && epoch===lifeEpoch && lifeMayRun() && !document.hidden;
@@ -365,6 +366,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
     text(avatar, local.name.split(/\s+/).map(part => part[0]).slice(0, 2).join(''));
+    text(about, local.persona?.work ? 'About your work' : 'What brings you here?');
+    text(story, local.persona?.work ? 'A detail from your work' : 'A local perspective');
     for (const [topic, control] of [['about', about], ['district', district], ['story', story]]) {
       control.setAttribute('aria-disabled', String(Boolean(request)));
       control.setAttribute('aria-pressed', String(currentTopic === topic));
@@ -636,6 +639,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   return {
     get state() { return state; },
     get speakingId() { return speech.speakingId; },
+    updateSpeech: speech.update,
     selectLocal,
     meetNearby,
     autoInteract(id, action) {
@@ -654,7 +658,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       selectionEpoch++;
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
-      state = createCommunity(world, rooms);
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer()});
       life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();
@@ -672,6 +676,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       Object.assign(state, snapshot.community, {selectedId});
       state.scenario = COMMUNITY_SCENARIOS[state.scenarioKey] ?? state.scenario;
       if (snapshot.wishes) state.wishes = structuredClone(snapshot.wishes);
+      const remoteIds=new Set(snapshot.locals.map(local=>local.id));
+      if(state.locals.some(local=>!remoteIds.has(local.id))){
+        state.locals=state.locals.filter(local=>remoteIds.has(local.id));
+        if(state.selectedId&&!remoteIds.has(state.selectedId))closeDialogue();
+        rebuildChooser();
+      }
       const byId = new Map(state.locals.map(local => [local.id,local]));
       for (const remote of snapshot.locals) {
         const local = byId.get(remote.id);
@@ -714,7 +724,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
         }
       }
       const revision=life?.revision;
-      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),paused:!lifeEnabled});
+      stepResidentLife(life,delta,{...weather,visitor:getVisitor(),visitorPose:getVisitorPose(),obstacles:getObstacles(),paused:!lifeEnabled});
       if(life && revision!==life.revision) invalidateLife();
       if(lifeMayRun() && !lifeRequest && now>=nextLifeRequest) dispatchLife(now,weather);
       if (state.status !== previousStatus && terminal(state)) invalidate();

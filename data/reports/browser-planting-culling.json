@@ -1,0 +1,514 @@
+{
+  "date": "2026-09-25",
+  "scope": "Reduce offscreen vegetation work while preserving character and environment detail",
+  "change": "Partition static shrub and grass instances into 12 meter cells with their own bounds. Keep shared source geometry/materials, all placements, colors and shadow flags.",
+  "before": {
+    "frames": 60,
+    "top": [
+      {
+        "key": "scene Mature urban shade trees [tree_small_02_leaves]",
+        "calls": 94,
+        "triangles": 7842762
+      },
+      {
+        "key": "shadow Mature urban shade trees [tree_small_02_leaves]",
+        "calls": 13,
+        "triangles": 5527233
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses [shrub_02]",
+        "calls": 2,
+        "triangles": 1730520
+      },
+      {
+        "key": "shadow Street furniture/Clipped boxwood and fountain grasses [shrub_02]",
+        "calls": 1,
+        "triangles": 865260
+      },
+      {
+        "key": "scene Retrofuturistic garden district []",
+        "calls": 32,
+        "triangles": 792112
+      },
+      {
+        "key": "scene Mesh []",
+        "calls": 50,
+        "triangles": 503560
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses [grass_medium_02]",
+        "calls": 2,
+        "triangles": 369360
+      },
+      {
+        "key": "scene facade:facade-spot [facade-spot]",
+        "calls": 2,
+        "triangles": 308000
+      },
+      {
+        "key": "shadow Retrofuturistic garden district []",
+        "calls": 14,
+        "triangles": 297880
+      },
+      {
+        "key": "scene Street furniture []",
+        "calls": 24,
+        "triangles": 260256
+      },
+      {
+        "key": "shadow Mesh []",
+        "calls": 11,
+        "triangles": 239884
+      },
+      {
+        "key": "shadow Street furniture/Clipped boxwood and fountain grasses [grass_medium_02]",
+        "calls": 1,
+        "triangles": 184680
+      },
+      {
+        "key": "scene Player character/Scene/Jevicarig [young_asian_female]",
+        "calls": 2,
+        "triangles": 177824
+      },
+      {
+        "key": "scene Scene/woman-casualrig/woman-casual [young_african_female]",
+        "calls": 10,
+        "triangles": 170120
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses []",
+        "calls": 28,
+        "triangles": 153216
+      },
+      {
+        "key": "scene Mature urban shade trees [tree_small_02_branches]",
+        "calls": 92,
+        "triangles": 147116
+      },
+      {
+        "key": "scene Jevica rose carriage [Polished champagne gold]",
+        "calls": 10,
+        "triangles": 130288
+      },
+      {
+        "key": "scene Jevica rose carriage [Dusty rose velvet]",
+        "calls": 10,
+        "triangles": 128784
+      },
+      {
+        "key": "scene Scene/man-casualrig/man-casual [young_caucasian_male]",
+        "calls": 8,
+        "triangles": 126528
+      },
+      {
+        "key": "scene Scene/man-tailoredrig/man-tailored [middleage_african_male]",
+        "calls": 8,
+        "triangles": 123840
+      },
+      {
+        "key": "scene Scene/man-tailoredrig/man-tailoredmale_elegantsuit01 [male_elegantsuit01]",
+        "calls": 8,
+        "triangles": 119648
+      },
+      {
+        "key": "scene Scene/woman-daywearrig/woman-daywear [young_asian_female]",
+        "calls": 6,
+        "triangles": 113136
+      },
+      {
+        "key": "scene Scene/woman-tailoredrig/woman-tailored [middleage_caucasian_female]",
+        "calls": 6,
+        "triangles": 103308
+      },
+      {
+        "key": "scene Scene/man-workwearrig/man-workwear [middleage_asian_male]",
+        "calls": 6,
+        "triangles": 100608
+      }
+    ]
+  },
+  "after": {
+    "frames": 60,
+    "top": [
+      {
+        "key": "scene Mature urban shade trees [tree_small_02_leaves]",
+        "calls": 94,
+        "triangles": 7842762
+      },
+      {
+        "key": "shadow Mature urban shade trees [tree_small_02_leaves]",
+        "calls": 13,
+        "triangles": 5527233
+      },
+      {
+        "key": "scene Retrofuturistic garden district []",
+        "calls": 32,
+        "triangles": 792112
+      },
+      {
+        "key": "scene Mesh []",
+        "calls": 50,
+        "triangles": 503560
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses [shrub_02]",
+        "calls": 22,
+        "triangles": 500940
+      },
+      {
+        "key": "scene facade:facade-spot [facade-spot]",
+        "calls": 2,
+        "triangles": 308000
+      },
+      {
+        "key": "shadow Retrofuturistic garden district []",
+        "calls": 14,
+        "triangles": 297880
+      },
+      {
+        "key": "scene Street furniture []",
+        "calls": 24,
+        "triangles": 260256
+      },
+      {
+        "key": "shadow Mesh []",
+        "calls": 11,
+        "triangles": 239884
+      },
+      {
+        "key": "scene Player character/Scene/Jevicarig [young_asian_female]",
+        "calls": 2,
+        "triangles": 177824
+      },
+      {
+        "key": "scene Scene/woman-casualrig/woman-casual [young_african_female]",
+        "calls": 10,
+        "triangles": 170120
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses []",
+        "calls": 28,
+        "triangles": 153216
+      },
+      {
+        "key": "scene Mature urban shade trees [tree_small_02_branches]",
+        "calls": 92,
+        "triangles": 147116
+      },
+      {
+        "key": "scene Jevica rose carriage [Polished champagne gold]",
+        "calls": 10,
+        "triangles": 130288
+      },
+      {
+        "key": "scene Jevica rose carriage [Dusty rose velvet]",
+        "calls": 10,
+        "triangles": 128784
+      },
+      {
+        "key": "scene Scene/man-casualrig/man-casual [young_caucasian_male]",
+        "calls": 8,
+        "triangles": 126528
+      },
+      {
+        "key": "scene Scene/man-tailoredrig/man-tailored [middleage_african_male]",
+        "calls": 8,
+        "triangles": 123840
+      },
+      {
+        "key": "scene Scene/man-tailoredrig/man-tailoredmale_elegantsuit01 [male_elegantsuit01]",
+        "calls": 8,
+        "triangles": 119648
+      },
+      {
+        "key": "scene Scene/woman-daywearrig/woman-daywear [young_asian_female]",
+        "calls": 6,
+        "triangles": 113136
+      },
+      {
+        "key": "scene Street furniture/Clipped boxwood and fountain grasses [grass_medium_02]",
+        "calls": 24,
+        "triangles": 106920
+      },
+      {
+        "key": "scene Scene/woman-tailoredrig/woman-tailored [middleage_caucasian_female]",
+        "calls": 6,
+        "triangles": 103308
+      },
+      {
+        "key": "scene Scene/man-workwearrig/man-workwear [middleage_asian_male]",
+        "calls": 6,
+        "triangles": 100608
+      },
+      {
+        "key": "shadow Boutique interiors layer/Boutique interiors [interior-black]",
+        "calls": 13,
+        "triangles": 93240
+      },
+      {
+        "key": "shadow Street furniture/Clipped boxwood and fountain grasses [shrub_02]",
+        "calls": 4,
+        "triangles": 91080
+      }
+    ]
+  },
+  "pixelComparison": {
+    "before": {
+      "calls": 19,
+      "triangles": 171830
+    },
+    "after": {
+      "calls": 29,
+      "triangles": 116570
+    },
+    "changedChannels": 0,
+    "meanError": 0,
+    "maxError": 0,
+    "instances": 105
+  },
+  "liveABBA": {
+    "runs": [
+      {
+        "mode": "baseline",
+        "medianMs": 33.399999999999636,
+        "p95Ms": 83.39999999999964,
+        "mainPassCpuMs": 18.916528924437593,
+        "calls": 1619,
+        "triangles": 24676279
+      },
+      {
+        "mode": "optimized",
+        "medianMs": 33.400000000001455,
+        "p95Ms": 83.40000000000146,
+        "mainPassCpuMs": 20.615702478353644,
+        "calls": 1667,
+        "triangles": 22244839
+      },
+      {
+        "mode": "optimized",
+        "medianMs": 49.900000000001455,
+        "p95Ms": 83.40000000000146,
+        "mainPassCpuMs": 17.099173551748606,
+        "calls": 1682,
+        "triangles": 22344403
+      },
+      {
+        "mode": "baseline",
+        "medianMs": 50,
+        "p95Ms": 83.40000000000146,
+        "mainPassCpuMs": 21.555371900235325,
+        "calls": 1634,
+        "triangles": 24775843
+      }
+    ],
+    "scope": "Same live scene and camera in ABBA order, original district-wide batches versus spatial batches; all people active, no GPU timer queries."
+  },
+  "npcRegression": {
+    "checks": [
+      "local-00: pedestrian resumes while Jevica stays still",
+      "local-00: walking mesh is visible and in reach",
+      "local-00: walking mesh projects inside the viewport",
+      "local-00: real pointer selects the walking person",
+      "local-00: pointer conversation does not relocate the visitor",
+      "local-00: clicked walker holds position during conversation",
+      "local-01: pedestrian resumes while Jevica stays still",
+      "local-01: walking mesh is visible and in reach",
+      "local-01: walking mesh projects inside the viewport",
+      "local-01: real pointer selects the walking person",
+      "local-01: pointer conversation does not relocate the visitor",
+      "local-01: clicked walker holds position during conversation",
+      "local-02: pedestrian resumes while Jevica stays still",
+      "local-02: walking mesh is visible and in reach",
+      "local-02: walking mesh projects inside the viewport",
+      "local-02: real pointer selects the walking person",
+      "local-02: pointer conversation does not relocate the visitor",
+      "local-02: clicked walker holds position during conversation",
+      "local-03: pedestrian resumes while Jevica stays still",
+      "local-03: walking mesh is visible and in reach",
+      "local-03: walking mesh projects inside the viewport",
+      "local-03: real pointer selects the walking person",
+      "local-03: pointer conversation does not relocate the visitor",
+      "local-03: clicked walker holds position during conversation",
+      "local-04: pedestrian resumes while Jevica stays still",
+      "local-04: walking mesh is visible and in reach",
+      "local-04: walking mesh projects inside the viewport",
+      "local-04: real pointer selects the walking person",
+      "local-04: pointer conversation does not relocate the visitor",
+      "local-04: clicked walker holds position during conversation",
+      "local-05: pedestrian resumes while Jevica stays still",
+      "local-05: walking mesh is visible and in reach",
+      "local-05: walking mesh projects inside the viewport",
+      "local-05: real pointer selects the walking person",
+      "local-05: pointer conversation does not relocate the visitor",
+      "local-05: clicked walker holds position during conversation",
+      "At least one route resumes inside the former visitor freeze radius",
+      "No floating NPC reaction captions",
+      "No uncaught browser errors: "
+    ],
+    "clicks": [
+      {
+        "id": "local-00",
+        "speed": 0.7973322200697797,
+        "screen": [
+          842.6158648880904,
+          430.61359072158365
+        ],
+        "position": [
+          -2813.490508444722,
+          -1274.4273487508724,
+          18.365242437910783
+        ]
+      },
+      {
+        "id": "local-01",
+        "speed": 0.7596908312391262,
+        "screen": [
+          751.6824793768513,
+          413.06937840644383
+        ],
+        "position": [
+          -2806.3571782794734,
+          -1229.6952649062898,
+          18.45053397018804
+        ]
+      },
+      {
+        "id": "local-02",
+        "speed": 0.6570311230132435,
+        "screen": [
+          798.9362551403325,
+          372.20762897007955
+        ],
+        "position": [
+          -2802.2783385480093,
+          -1199.579219985617,
+          18.382205400494076
+        ]
+      },
+      {
+        "id": "local-03",
+        "speed": 0.6653651833903546,
+        "screen": [
+          837.3696254938641,
+          302.2756420529038
+        ],
+        "position": [
+          -2776.257037160773,
+          -1291.0652404709301,
+          18.477159109768646
+        ]
+      },
+      {
+        "id": "local-04",
+        "speed": 0.6875128109295476,
+        "screen": [
+          785.7132545897651,
+          420.5577128302685
+        ],
+        "position": [
+          -2770.0859503786423,
+          -1245.096945535604,
+          18.394405666219235
+        ]
+      },
+      {
+        "id": "local-05",
+        "speed": 0.8395099226600372,
+        "screen": [
+          797.1424597033404,
+          407.8307695521083
+        ],
+        "position": [
+          -2770.208840561719,
+          -1239.3512825580665,
+          18.392378738562368
+        ]
+      }
+    ],
+    "releaseDistances": [
+      2.5000000000000124,
+      2.4999999999999964,
+      3.200000000000029,
+      2.499999999999929,
+      2.500000000000061,
+      3.20000000000002
+    ],
+    "errors": [],
+    "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+  },
+  "verification": {
+    "unitTests": 339,
+    "unitFailures": 0,
+    "build": "passed with existing Three.js chunk advisory",
+    "regressionBefore": "A single global bound submitted three test instances, including an offscreen plant; spatial bounds submit only the two visible instances.",
+    "finalScriptAdjustment": "Made the same inherited 1440x1000 viewport and normal-motion setting explicit after the ABBA run."
+  },
+  "limitations": [
+    "The ABBA run does not establish a frame-rate gain. Render submissions fell by 2,431,440 triangles per main pass, while draw calls increased by 48.",
+    "The pixel comparison uses a fixed planting fixture; live scene geometry counts and NPC interactions were checked separately.",
+    "Full-scene motion smoothness remains open.",
+    "GPU queries reflect elapsed time under the current desktop workload; the final 120-frame pass profile is diagnostic, not an isolated target-device performance acceptance."
+  ],
+  "sha256": {
+    "preview/src/landscape-models.js": "82546ab480f440cbad0cfda278d109e6991f753a9a9e39560bcc6bfb75998b0c",
+    "preview/src/spatial-instances.js": "769810d99084b1752875f06b363c71aa9ad8f27f3907cb74ba6aa739b953968f",
+    "preview/tests/spatial-instances.test.js": "237df72c5a376c94184845a809ddb1c941164b6f776a170ca39598276253ac21",
+    "preview/e2e/planting-culling.js": "247371176fd45ad8c066ba6b4c6d503334e6931358b8c66dd7e05d43a08541fe",
+    "preview/e2e/planting-live-cost.js": "cde4d5ea8e1990fb25d3bb65bd8a536f9e3321aa39af81ccbb25339aa2cab3eb",
+    "preview/e2e/render-pass-cost.js": "61002f1dae6331863e1eec5b73063b348d7a25ff23d511c205da0cee99624e18",
+    "preview/e2e/render-object-cost.js": "da3b594b6cb4a2b78c2fd62e5ac70bd0bded75dffea4932b0a93551ff2eba918"
+  },
+  "screenshots": [
+    "output/playwright/planting-culling.png"
+  ],
+  "renderPassProfile": {
+    "backend": {
+      "vendor": "Google Inc. (Apple)",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+      "gpuTimer": true
+    },
+    "disjoint": false,
+    "medianFrameMs": 49.900000000001455,
+    "p95FrameMs": 83.29999999999927,
+    "passes": [
+      {
+        "name": "RenderPass",
+        "frames": 120,
+        "cpuMs": 15.006666666269302,
+        "calls": 1667,
+        "triangles": 22244839,
+        "gpuSamples": 30,
+        "gpuMs": 33.44050513333333
+      },
+      {
+        "name": "GTAOPass",
+        "frames": 120,
+        "cpuMs": 3.44249999721845,
+        "calls": 568,
+        "triangles": 2876741,
+        "gpuSamples": 30,
+        "gpuMs": 17.708014699999996
+      },
+      {
+        "name": "UnrealBloomPass",
+        "frames": 120,
+        "cpuMs": 0.08333333631356557,
+        "calls": 13,
+        "triangles": 13,
+        "gpuSamples": 30,
+        "gpuMs": 15.657314699999999
+      },
+      {
+        "name": "OutputPass",
+        "frames": 120,
+        "cpuMs": 0.022500001390775046,
+        "calls": 1,
+        "triangles": 1,
+        "gpuSamples": 30,
+        "gpuMs": 12.194264866666666
+      }
+    ],
+    "errors": [],
+    "scope": "Local live street with all people, shadows and effects enabled. Pass CPU time includes driver submission; GPU timings are reported only when available and non-disjoint."
+  }
+}

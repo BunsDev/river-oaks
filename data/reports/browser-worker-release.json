@@ -1,0 +1,1095 @@
+{
+  "recorded_at": "2026-09-24T15:21:45.144881+00:00",
+  "scope": "Counter-supported worker set-down, withdrawal and re-grasp; carriage and encounter regressions",
+  "status": "verified locally; uncommitted; preserve active worktree",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "changes": [
+    "17 counter-supported routines release only after landing and re-grasp before lifting",
+    "Loads rest on actual worktop height instead of hovering 6 mm above it",
+    "Unsupported loads stay held; scent-strip pinch remains occupied",
+    "Released digits relax per instance; unloaded wrists follow their forearms",
+    "Existing task clocks preserve conversation and reduced-motion pauses"
+  ],
+  "baseline": {
+    "always_attached_hands": "/tmp/river-worker-release-red.log",
+    "sideways_wrist_bend": "/tmp/river-worker-release-wrist-red.log",
+    "angular_speed": "/tmp/river-worker-release-angular-red.log",
+    "dense_conversation_wrist_bend": "/tmp/river-worker-release-dense-wrist-red.log"
+  },
+  "verification": {
+    "unit_tests": {
+      "passed": 277,
+      "failed": 0,
+      "log": "/tmp/river-worker-release-tests.log"
+    },
+    "production_build": {
+      "passed": true,
+      "advisory": "Existing Three.js chunk exceeds 500 kB",
+      "log": "/tmp/river-worker-release-build.log"
+    },
+    "release": {
+      "results": [
+        {
+          "id": "store-osm-node-8172494985-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.46937219195254,
+          "maxAngularSpeed": 5.706575807624217,
+          "pausedWristDrift": 0.005792884140063583,
+          "pausedDrift": 3.550830132122225e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 144,
+          "bodySamples": 9
+        },
+        {
+          "id": "store-osm-node-8172494969-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.46937253810312896,
+          "maxAngularSpeed": 5.706575592513112,
+          "pausedWristDrift": 0.0057928870570687005,
+          "pausedDrift": 3.554549001920771e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494991-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.46943293123272867,
+          "maxAngularSpeed": 5.706540833538367,
+          "pausedWristDrift": 0.0057934024688580344,
+          "pausedDrift": 3.56710415047156e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494973-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.46331242547333307,
+          "maxAngularSpeed": 5.731406396845854,
+          "pausedWristDrift": 0.005965025923828997,
+          "pausedDrift": 4.426477556071192e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494966-person-1",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.46323733547278406,
+          "maxAngularSpeed": 5.731448749760774,
+          "pausedWristDrift": 0.005964300839606734,
+          "pausedDrift": 4.4167686433160534e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 140,
+          "bodySamples": 7
+        },
+        {
+          "id": "store-osm-node-8172495005-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.4633080816642551,
+          "maxAngularSpeed": 5.731408724799086,
+          "pausedWristDrift": 0.005964982075085526,
+          "pausedDrift": 4.423409254087957e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494987-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.4694336539672714,
+          "maxAngularSpeed": 5.706540321387891,
+          "pausedWristDrift": 0.005793408843852652,
+          "pausedDrift": 3.567098797815914e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494990-person-1",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.4633899937172176,
+          "maxAngularSpeed": 5.733900389938428,
+          "pausedWristDrift": 0.005857405949247735,
+          "pausedDrift": 4.733113562523591e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494989-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.3903540217652819,
+          "maxAngularSpeed": 5.359133087109605,
+          "pausedWristDrift": 0.005884077886811391,
+          "pausedDrift": 2.88172803816612e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494981-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.3903543057293176,
+          "maxAngularSpeed": 5.359132803357893,
+          "pausedWristDrift": 0.005884079832897157,
+          "pausedDrift": 2.4585429151234665e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494958-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.3295836530450866,
+          "maxAngularSpeed": 4.360637732877079,
+          "pausedWristDrift": 0.006163771999259206,
+          "pausedDrift": 1.6345322748733376e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172495003-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.39040703691589684,
+          "maxAngularSpeed": 5.359088653960135,
+          "pausedWristDrift": 0.005883997639983542,
+          "pausedDrift": 1.5266511750646716e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "kind": "blotter",
+          "hz": 30,
+          "maxSpeed": 0.4644509257216567,
+          "maxAngularSpeed": 5.447008404302138,
+          "pausedWristDrift": 0.005059063156530655,
+          "pausedDrift": 4.108444493207175e-08,
+          "gripSamples": 692,
+          "releaseSamples": 210,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494980-person-1",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.3903537496544131,
+          "maxAngularSpeed": 5.359133259840012,
+          "pausedWristDrift": 0.005884072971682001,
+          "pausedDrift": 2.4585709178253212e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494979-person-0",
+          "kind": "eyewear",
+          "hz": 30,
+          "maxSpeed": 0.3293109072077253,
+          "maxAngularSpeed": 4.3606902969524235,
+          "pausedWristDrift": 0.006163930713276079,
+          "pausedDrift": 1.3658360809757532e-07,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494960-person-2",
+          "kind": "fabric",
+          "hz": 30,
+          "maxSpeed": 0.3288769780108658,
+          "maxAngularSpeed": 4.360799275549125,
+          "pausedWristDrift": 0.006161617784788973,
+          "pausedDrift": 1.9150539431962222e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494957-person-5",
+          "kind": "samples",
+          "hz": 30,
+          "maxSpeed": 0.26901328804262653,
+          "maxAngularSpeed": 1.8397993656327947,
+          "pausedWristDrift": 0.004599685924528968,
+          "pausedDrift": 6.574039762795651e-08,
+          "gripSamples": 482,
+          "releaseSamples": 420,
+          "skinSamples": 142,
+          "bodySamples": 8
+        },
+        {
+          "id": "store-osm-node-8172494985-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4742347294231811,
+          "maxAngularSpeed": 5.75248440168439,
+          "pausedWristDrift": 0.006179415592711112,
+          "pausedDrift": 3.630951727419536e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 172,
+          "bodySamples": 23
+        },
+        {
+          "id": "store-osm-node-8172494969-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.47423509259904084,
+          "maxAngularSpeed": 5.752484299555852,
+          "pausedWristDrift": 0.006179418846221622,
+          "pausedDrift": 3.6339163356735636e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494991-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4742984538005957,
+          "maxAngularSpeed": 5.752461087971603,
+          "pausedWristDrift": 0.006179992829853019,
+          "pausedDrift": 3.637901707943199e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494973-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4710513858177704,
+          "maxAngularSpeed": 5.775913110102612,
+          "pausedWristDrift": 0.006365813452373676,
+          "pausedDrift": 4.4664259768255795e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494966-person-1",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.47097917953797913,
+          "maxAngularSpeed": 5.77595203481761,
+          "pausedWristDrift": 0.006365013282668244,
+          "pausedDrift": 4.455986762465358e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172495005-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4710472085197907,
+          "maxAngularSpeed": 5.775915109549297,
+          "pausedWristDrift": 0.0063657650677091246,
+          "pausedDrift": 4.4631749225876617e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494987-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.47429921202319725,
+          "maxAngularSpeed": 5.752460604303966,
+          "pausedWristDrift": 0.006179999928009248,
+          "pausedDrift": 3.6378900718173096e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494990-person-1",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4711478665542941,
+          "maxAngularSpeed": 5.778615107293114,
+          "pausedWristDrift": 0.006335746375139733,
+          "pausedDrift": 4.9132264269365964e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494989-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.40760536494174665,
+          "maxAngularSpeed": 5.555040906768214,
+          "pausedWristDrift": 0.006283219409815471,
+          "pausedDrift": 5.2267605018424884e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494981-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4076056409581075,
+          "maxAngularSpeed": 5.555040494984991,
+          "pausedWristDrift": 0.006283221536268554,
+          "pausedDrift": 2.4820064892108977e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494958-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.3836335083155424,
+          "maxAngularSpeed": 5.22047298919756,
+          "pausedWristDrift": 0.006589996837672122,
+          "pausedDrift": 1.6414873295917764e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172495003-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4076568978837484,
+          "maxAngularSpeed": 5.554994146283791,
+          "pausedWristDrift": 0.0062831337738486785,
+          "pausedDrift": 1.5596852959141215e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "kind": "blotter",
+          "hz": 60,
+          "maxSpeed": 0.46747271292015,
+          "maxAngularSpeed": 5.637617610473937,
+          "pausedWristDrift": 0.005296845320846409,
+          "pausedDrift": 4.089262142565541e-08,
+          "gripSamples": 1382,
+          "releaseSamples": 420,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494980-person-1",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.4076051005139318,
+          "maxAngularSpeed": 5.555040928419391,
+          "pausedWristDrift": 0.006283213958384866,
+          "pausedDrift": 2.4820169832882184e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494979-person-0",
+          "kind": "eyewear",
+          "hz": 60,
+          "maxSpeed": 0.38358090526087757,
+          "maxAngularSpeed": 5.220527945063117,
+          "pausedWristDrift": 0.00659016973778714,
+          "pausedDrift": 1.4002997177155248e-07,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494960-person-2",
+          "kind": "fabric",
+          "hz": 60,
+          "maxSpeed": 0.383497843008874,
+          "maxAngularSpeed": 5.220609025068414,
+          "pausedWristDrift": 0.006587615654989076,
+          "pausedDrift": 1.961008050442886e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494957-person-5",
+          "kind": "samples",
+          "hz": 60,
+          "maxSpeed": 0.28703891207105464,
+          "maxAngularSpeed": 2.0050494864941135,
+          "pausedWristDrift": 0.004904259369253895,
+          "pausedDrift": 6.180407261964555e-08,
+          "gripSamples": 962,
+          "releaseSamples": 840,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494985-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.47513996218460797,
+          "maxAngularSpeed": 5.756999582729697,
+          "pausedWristDrift": 0.006289656343963546,
+          "pausedDrift": 1.0991725070684642e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494969-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.47514033363831537,
+          "maxAngularSpeed": 5.757000099483056,
+          "pausedWristDrift": 0.006289659720995901,
+          "pausedDrift": 1.0988792038582975e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494991-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4752051302314925,
+          "maxAngularSpeed": 5.756960708173025,
+          "pausedWristDrift": 0.0062902557070192485,
+          "pausedDrift": 1.0984941246857551e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494973-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4739878477347415,
+          "maxAngularSpeed": 5.779649785352147,
+          "pausedWristDrift": 0.006481160984366794,
+          "pausedDrift": 1.1874175709066303e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494966-person-1",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.473920343829301,
+          "maxAngularSpeed": 5.779686871881655,
+          "pausedWristDrift": 0.006480334073251689,
+          "pausedDrift": 1.1887403790394071e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172495005-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4739839421092245,
+          "maxAngularSpeed": 5.779650924347228,
+          "pausedWristDrift": 0.00648111098852334,
+          "pausedDrift": 1.1879489216614763e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494987-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4752059055737271,
+          "maxAngularSpeed": 5.756960240065355,
+          "pausedWristDrift": 0.00629026307587126,
+          "pausedDrift": 1.0984955816874494e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494990-person-1",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4740848077074177,
+          "maxAngularSpeed": 5.782526222058033,
+          "pausedWristDrift": 0.006472717074173332,
+          "pausedDrift": 1.1873706989454604e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494989-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4263177215963676,
+          "maxAngularSpeed": 5.7466579435085325,
+          "pausedWristDrift": 0.006400024282152072,
+          "pausedDrift": 5.224675804034382e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494981-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.42631798346466354,
+          "maxAngularSpeed": 5.7466570357658835,
+          "pausedWristDrift": 0.006400027804499806,
+          "pausedDrift": 2.5014592230247042e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494958-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.40867841425765844,
+          "maxAngularSpeed": 5.52618206462717,
+          "pausedWristDrift": 0.006715895358863903,
+          "pausedDrift": 1.629963219761025e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172495003-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.42636662574043777,
+          "maxAngularSpeed": 5.746593194407215,
+          "pausedWristDrift": 0.00639993723269168,
+          "pausedDrift": 1.5688905709154938e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494963-person-0",
+          "kind": "blotter",
+          "hz": 120,
+          "maxSpeed": 0.4680095802360216,
+          "maxAngularSpeed": 5.824120640786504,
+          "pausedWristDrift": 0.005345984165035844,
+          "pausedDrift": 4.086734912128667e-08,
+          "gripSamples": 2764,
+          "releaseSamples": 838,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494980-person-1",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4263174706001686,
+          "maxAngularSpeed": 5.746657431757154,
+          "pausedWristDrift": 0.006400019974198061,
+          "pausedDrift": 2.501446130502948e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494979-person-0",
+          "kind": "eyewear",
+          "hz": 120,
+          "maxSpeed": 0.4086280094195444,
+          "maxAngularSpeed": 5.526244704114383,
+          "pausedWristDrift": 0.006716073537500168,
+          "pausedDrift": 1.4178663217193815e-07,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494960-person-2",
+          "kind": "fabric",
+          "hz": 120,
+          "maxSpeed": 0.4085484421508786,
+          "maxAngularSpeed": 5.526306818693028,
+          "pausedWristDrift": 0.006713434271053622,
+          "pausedDrift": 1.9670328884226365e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        },
+        {
+          "id": "store-osm-node-8172494957-person-5",
+          "kind": "samples",
+          "hz": 120,
+          "maxSpeed": 0.2962926138596992,
+          "maxAngularSpeed": 2.2074032673113573,
+          "pausedWristDrift": 0.004990647197523816,
+          "pausedDrift": 6.043789421976859e-08,
+          "gripSamples": 1926,
+          "releaseSamples": 1676,
+          "skinSamples": 170,
+          "bodySamples": 22
+        }
+      ],
+      "failures": [],
+      "failureCount": 0,
+      "errors": []
+    },
+    "release_maxima": {
+      "maxSpeed": 0.4752059055737271,
+      "maxAngularSpeed": 5.824120640786504,
+      "pausedDrift": 1.4178663217193815e-07,
+      "pausedWristDrift": 0.006716073537500168
+    },
+    "worker_contacts": {
+      "pinchSamples": 22,
+      "pinchVertices": 39842,
+      "maxPinchGap": 0.0003697232254467052,
+      "touchSamples": 165,
+      "maxTouchGap": 6.977946043207339e-08,
+      "maxSidewaysBend": 0.306095399707972,
+      "bodySamples": 372,
+      "bodyVertices": 6502698,
+      "maxWristBend": 1.2031626617512752,
+      "skinSamples": 1364,
+      "maxSkinHeight": -0.00043043528878428106,
+      "minSkinHeight": -0.0005767183675402521,
+      "workers": 62,
+      "kinds": [
+        "fabric",
+        "jewelry",
+        "tray",
+        "blotter",
+        "tablet",
+        "eyewear",
+        "samples"
+      ],
+      "docked": 17,
+      "contacts": 52204,
+      "maxError": 1.629456009203091e-07,
+      "errors": []
+    },
+    "reduced_motion": {
+      "people": 169,
+      "idle_task_updates": 0,
+      "max_work_drift": 0,
+      "max_idle_angle": 5.960464477539063e-08,
+      "min_attention": 0.9926764981212135,
+      "errors": []
+    },
+    "station_continuity": {
+      "cases": 507,
+      "rates": [
+        30,
+        60,
+        120
+      ],
+      "maxResumeAngle": 5.960464477539063e-08,
+      "maxResumeDistance": 0,
+      "maxPausedClockDrift": 0,
+      "errors": []
+    },
+    "picking": {
+      "checks": [
+        "Third-person body remains visible indoors",
+        "store-osm-node-8172494967-person-6: in reach and rendered",
+        "store-osm-node-8172494967-person-6: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-6: conversation does not teleport the visitor",
+        "store-osm-node-8172494967-person-9: in reach and rendered",
+        "store-osm-node-8172494967-person-9: actual mesh click selects its identity",
+        "store-osm-node-8172494967-person-9: conversation does not teleport the visitor",
+        "Worker resumes their task after recognition and conversation",
+        "Worker holds the task and attends during conversation",
+        "Actual seated rigs keep feet within 1 mm of planted targets",
+        "Worker hands follow their support or withdrawal targets within 1 mm",
+        "No uncaught browser errors: "
+      ],
+      "seatedFeet": 94,
+      "maxFootError": 1.29043200702043e-06,
+      "palmContacts": 124,
+      "maxPalmError": 1.4024368611261702e-07,
+      "errors": []
+    },
+    "carriage": {
+      "carriage": {
+        "checks": [
+          "riding: both soles contact the actual transformed footboard",
+          "riding-slope: both soles contact the actual transformed footboard",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003743152485,
+                "minX": -2.719301644971826,
+                "maxX": -2.478345608200862
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003867481168,
+                "minX": -2.7193016378760855,
+                "maxX": -2.478345607143537
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003810210338,
+                "minX": -2.7193016440595033,
+                "maxX": -2.4783456117813074
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003888902873,
+                "minX": -2.7193016358350195,
+                "maxX": -2.478345605483292
+              }
+            ]
+          }
+        ],
+        "before": {
+          "placement": {
+            "position": [
+              -2766.541185989181,
+              18.42157351781855,
+              1291.5552254559523
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": 0.0007859033689301711,
+            "roll": 0.005794460639896358,
+            "distance": 0,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.002556529702344788,
+              -1.8255044183505928e-05,
+              1.702436704690054e-05,
+              1.7024367050453313e-05
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            3.706143495563197e-05,
+            1.192113430192876e-08,
+            7.152682002242727e-09,
+            7.1526784495290485e-09
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.105314686426908,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.42531468642691,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.33440851050249343,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.42531468642691,
+            1295.064162750871
+          ]
+        },
+        "driven": {
+          "placement": {
+            "position": [
+              -2758.459791007122,
+              18.402803639010934,
+              1291.6786243089728
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107290474,
+            "roll": 0.0030442795631859415,
+            "distance": 8.082337046482989,
+            "terrainError": 0.009860024135232237,
+            "speed": 0.018818071536851142,
+            "wheelOffsets": [
+              -0.0060178414011857395,
+              -0.006017841401182187,
+              -0.003048047493805667,
+              -0.005360393111429104
+            ]
+          },
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            0.00019161506831721908,
+            0.00019161506831721908,
+            0.00018723187971758648,
+            -2.0265615162884387e-05
+          ],
+          "pose": {
+            "position": [
+              -2756.3552402472346,
+              20.651364326048935,
+              1291.7219969696241
+            ],
+            "riding": {
+              "seat": [
+                -2756.3552402472346,
+                20.031364326048934,
+                1291.7219969696241
+              ],
+              "yaw": 1.5555280143100032,
+              "quaternion": [
+                0.0035050230723816323,
+                0.7016868181399714,
+                0.0013897111510709941,
+                0.712475538362393
+              ],
+              "speed": 0.018818071536851142,
+              "distance": 8.082337046482989
+            },
+            "ground": 18.389201033013745,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -0.08606463927978991,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.357673542316,
+            19.203338390793355,
+            1291.7162463561178
+          ]
+        },
+        "after": {
+          "placement": {
+            "position": [
+              -2758.4561401417286,
+              18.402780178306024,
+              1291.678680055859
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107293536,
+            "roll": 0.0030560342138443103,
+            "distance": 8.085988337465443,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              -0.005996917884691759,
+              -0.0059969178846988646,
+              -0.0030583034807866553,
+              -0.0053394701404957225
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0.0002877198740414144,
+            0.00028771987404496713,
+            0.00017546874141416424,
+            -8.486146754194124e-07
+          ],
+          "pose": {
+            "position": [
+              -2756.510558444934,
+              20.09126994922486,
+              1288.7080383977159
+            ],
+            "riding": null,
+            "ground": 18.41126994922486,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -3.088891847781681,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.510558444934,
+            18.41126994922486,
+            1288.7080383977159
+          ]
+        },
+        "errors": []
+      },
+      "carriage-mobile": {
+        "checks": [
+          "Boarding has a 44px phone touch target",
+          "Holding the touch movement pad drives the mounted carriage",
+          "Releasing the touch pad brakes the carriage",
+          "Phone dismount retains a visible third-person body",
+          "Carriage controls do not overflow the phone viewport",
+          "No uncaught phone browser errors"
+        ],
+        "errors": []
+      },
+      "carriage-conversation": {
+        "checks": [
+          "Nearby conversation is available from the carriage",
+          "Talking retains the same mounted position",
+          "Dialogue opens for a real outdoor resident"
+        ],
+        "name": "Maya",
+        "errors": []
+      }
+    },
+    "directory_encounters": 193,
+    "directory_errors": [],
+    "independent_review": {
+      "outcome": "No remaining blockers; initial contact-invariant and source-preservation gaps addressed",
+      "rigs": 6,
+      "motion_hz": 120,
+      "triangle_hz": 60,
+      "triangle_intersections": 0,
+      "max_angular_speed_rad_s": 5.791,
+      "max_sideways_bend_degrees": 15.22,
+      "max_wrist_bend_degrees": 48.29,
+      "max_contact_error_m": 7.45e-08,
+      "scope": "Full-cycle motion with tray triangle checks during withdrawal and re-grasp; reported by independent read-only review"
+    }
+  },
+  "source_sha256": {
+    "preview/src/work-props.js": "82344d3b8875db4632c7611b4c5759063bd1d84f4760bd3eb23e0b27f12563a0",
+    "preview/src/worker-load-cycle.js": "e74496648f5a42cfd5c8a310e12cd32e7f1b9dfb53b1f3c059a2f1787e6ad877",
+    "preview/src/arm-contact.js": "ad3956907adb280811631065699157e272f225197c2300165e8e30424b0434ba",
+    "preview/src/hand-support.js": "50b99f09ffedadeb82825250d52fb86a8cb057f6767809e57c9d4ffb1d357e22",
+    "preview/src/pinch-grip.js": "2cc6967400024e533808492327a11811e94293e3b052acfacce0be63a61e6f55",
+    "preview/src/store-people.js": "08084a1af897915f52403ff6fd8c3d00de7ce8a331d47596994da7195f1f6718",
+    "preview/src/avatars.js": "9bdb01e3462278c27ff7c32482aa957ba52c9b8d43626e63bafbd11a3e630eb2",
+    "preview/tests/worker-release.test.js": "4e4359d32c608c0635b0faddc857b445740bd91270580a82478a4e550f134e23",
+    "preview/tests/fragrance-work.test.js": "96cf69b2dbacfc375d0f16e7540939a23167f3a4d7cb3e0d06c5bbd756585429",
+    "preview/e2e/worker-release.js": "c467d3209d9f762bf08b6df8d6140234b137e75d82970b1e5405ffcab7200915",
+    "preview/e2e/worker-contact.js": "66c94abce075b29e2f615cc099d406bc430be82285b4e12d6c53c61d29f488b4",
+    "preview/e2e/fixtures/workers.js": "ff54c226bab240dbd4186f73b6a3a8d39c08abaa01fa380fbfeca6ca5ec6afdc",
+    "preview/e2e/people-picking.js": "0600dea5315e4de2520ca45b61a2ccd25251a049c632085cd1a8a072f0c046de",
+    "preview/e2e/station-motion.js": "ac5dad3931956edb49eb18bcf630fedccbf092c1fa2caf58799f38a2662744a9",
+    "preview/e2e/station-reduced-motion.js": "4883ef428a8b2d18795d52ccddb2b50e68631771f84d1780230f368cb418a377",
+    "preview/e2e/carriage.js": "9bbbd0d47d36014f8dec73ad239cf650a377748d8de8448a4cf15fd847e4d0e2",
+    "preview/e2e/carriage-mobile.js": "76555d46a17f62f70975cc610518d7672194f943085c4bee5b6934d0399ef20d",
+    "preview/e2e/carriage-conversation.js": "ad9543498267e7a62087e14802a98e05a219121714098697902c45883da99147",
+    "preview/e2e/all-people.js": "c5725140fa61ab77de0ebc30250423fca284b908bd7903233f61fa13659f1f64"
+  },
+  "artifacts": [
+    "output/playwright/worker-release-station.json",
+    "output/playwright/worker-release-release-acceptance.json",
+    "output/playwright/worker-fabric-released.png",
+    "output/playwright/worker-fabric-grasped.png",
+    "output/playwright/worker-fabric-lifted.png",
+    "output/playwright/worker-eyewear-released.png",
+    "output/playwright/worker-eyewear-grasped.png",
+    "output/playwright/worker-eyewear-lifted.png",
+    "output/playwright/worker-samples-released.png",
+    "output/playwright/worker-samples-grasped.png",
+    "output/playwright/worker-samples-lifted.png",
+    "output/playwright/worker-blotter-released.png",
+    "output/playwright/worker-blotter-grasped.png",
+    "output/playwright/worker-blotter-lifted.png",
+    "output/playwright/carriage-riding.png",
+    "output/playwright/carriage-mobile.png",
+    "output/playwright/people-picking.png"
+  ],
+  "limits": [
+    "Skin/furniture checks sample vertices against box furniture; they do not prove continuous cloth or all-object collision",
+    "Independent hand/tray triangle checks cover six rigs and sampled release phases",
+    "Conversation contact points remain fixed while wrists may articulate with the torso",
+    "Object handovers and scent-strip release remain unfinished",
+    "Biomechanical validation, target-hardware performance and native parity remain open",
+    "The broader interaction and motion-realism goal remains active"
+  ]
+}

@@ -1,0 +1,1945 @@
+{
+  "createdAt": "2026-09-26T04:52:06.465930+00:00",
+  "scope": "Browser eye tracking for NPC conversation and Jevica spell targets; no native editor work.",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery",
+  "branch": "codex/jev-key-settings",
+  "baseHead": "a0bd8495dbf0b4f5422866f2b9b7cb4886938e16",
+  "sourceSha256": {
+    "preview/src/eye-tracking.js": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",
+    "preview/src/avatars.js": "570361c36df5af2171c0f3a75e52c3b19bb322586c9c62fc161b8ea18bd51993",
+    "preview/src/store-people.js": "e2eba2ef151e036fbce35884209b22af2e887ec3166fd20dfdb4c6bbc4e0ff78",
+    "preview/src/main.js": "7deed83c8c887c6ab882136e7e7c601b90bae31cd502905d2c0eb79a7df1ec0a",
+    "preview/tests/eye-tracking.test.js": "c6451e044ecf2de916c446003990571ef957b52b1738369569328dd744bdc1d0",
+    "preview/e2e/eye-tracking.js": "e1936ffc71880a61ab052ad5da3884e06c4f3d4caf30540ae74a546210d38dba",
+    "preview/e2e/eye-contact.js": "e336c8b9891a259d31b2154b7f51c70e13ce023be3e0d9e2572affe1aa77b699",
+    "preview/e2e/facial-motion.js": "5b4aff3f54b1d6cad7fabb124669841f59c714aad371d9e5548756f409cee622"
+  },
+  "unchangedAssetSha256": {
+    "woman-casual": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe",
+    "man-casual": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25",
+    "woman-tailored": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4",
+    "man-tailored": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7",
+    "woman-daywear": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639",
+    "man-workwear": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
+    "jevica": "722b96e2fd77b36c85ec01c1594a35e3f3f39b5ec76dfc3c9a351ef1eb4f117a"
+  },
+  "implementation": [
+    "Fit two pivots to the widest rings of the existing partial globe meshes. Preserve original positions, normals, UVs and material appearance.",
+    "Each avatar owns the cloned eye geometry and a two-bone eye skeleton. Original cached source geometry and bind skeletons remain unchanged.",
+    "Solve targets in the current head frame with separate eye origins, horizontal and vertical bounds, and faster damped acquisition than the head.",
+    "Layer onto the final head pose, retain purposeful tracking with reduced motion, and release behind-head or sub-0.25 m targets.",
+    "Held indoor workers track the visitor even after the conversation closes, while their task clock remains paused."
+  ],
+  "unitTests": {
+    "command": "npm test",
+    "passed": 372,
+    "failed": 0,
+    "summary": "\u2714 coherent ground probes remain isolated across worlds, bucket boundaries and surface rebuilds (1.292625ms)\n\u2139 tests 372\n\u2139 suites 0\n\u2139 pass 372\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 39741.865792",
+    "rawLog": "/tmp/eye-tests-final.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "warning": "Existing Three.js chunk exceeds 500 kB warning threshold.",
+    "rawLog": "/tmp/eye-build-final.log"
+  },
+  "browserAssertionCount": 145,
+  "browserRuns": {
+    "facial-motion": {
+      "seconds": 39.88,
+      "result": {
+        "checks": [
+          "Outdoor residents blink and reopen while conversing",
+          "Outdoor conversation drives bounded eye contact",
+          "Indoor workers blink and reopen while conversing",
+          "Worker conversation drives bounded eye contact",
+          "A telekinetically held worker keeps blinking while work is paused",
+          "Held worker retains bounded eye tracking",
+          "Reduced motion keeps the eyes open without repeated blinking",
+          "Reduced motion retains purposeful eye contact",
+          "No uncaught application or shader errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 316,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9620253164556962
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 318,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9182389937106918
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "held": true,
+            "eyeBounded": true,
+            "eyeMoved": true,
+            "frames": 318,
+            "maximum": 1,
+            "minimum": 0,
+            "quietFraction": 0.9182389937106918
+          }
+        ],
+        "reduced": {
+          "eyeBounded": true,
+          "eyeMoved": true,
+          "frames": 98,
+          "maximum": 0,
+          "minimum": 0,
+          "quietFraction": 1
+        },
+        "errors": []
+      }
+    },
+    "conversation-speech": {
+      "seconds": 40.11,
+      "result": {
+        "checks": [
+          "local-00: audio playback drives varied speech nods",
+          "local-00: mute returns to restrained listening motion",
+          "local-00: closing clears active speech",
+          "store-osm-node-8172494955-person-7: audio playback drives varied speech nods",
+          "store-osm-node-8172494955-person-7: mute returns to restrained listening motion",
+          "store-osm-node-8172494955-person-7: closing clears active speech",
+          "Reduced motion keeps optional nods still during playback",
+          "Close cancels active playback",
+          "Actual UI requested each controlled audio response",
+          "No uncaught speech interaction errors"
+        ],
+        "runs": [
+          {
+            "id": "local-00",
+            "speaking": {
+              "peak": 0.03383986724988699,
+              "minimum": 3.254402109546545e-15,
+              "speaking": true,
+              "frames": 357
+            },
+            "listening": {
+              "peak": 0.0195804317034182,
+              "minimum": 1.992105286293949e-24,
+              "speaking": false,
+              "frames": 243
+            }
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "speaking": {
+              "peak": 0.04839577644640835,
+              "minimum": 1.8165097088567385e-10,
+              "speaking": true,
+              "frames": 255
+            },
+            "listening": {
+              "peak": 0.01865723715816126,
+              "minimum": 2.356249230306621e-23,
+              "speaking": false,
+              "frames": 169
+            }
+          }
+        ],
+        "reduced": {
+          "peak": 0,
+          "minimum": 0,
+          "speaking": true,
+          "frames": 83
+        },
+        "voiceRequests": 3,
+        "errors": [],
+        "scope": "District UI and real HTMLAudio playback using a deterministic silent WAV response. This verifies speaking-state wiring, not synthesis quality or lip synchronization."
+      }
+    },
+    "npc-presence": {
+      "seconds": 27.76,
+      "result": {
+        "checks": [
+          "local-00: pedestrian resumes while Jevica stays still",
+          "local-00: walking mesh is visible and in reach",
+          "local-00: walking mesh projects inside the viewport",
+          "local-00: real pointer selects the walking person",
+          "local-00: pointer conversation does not relocate the visitor",
+          "local-00: clicked walker holds position during conversation",
+          "local-01: pedestrian resumes while Jevica stays still",
+          "local-01: walking mesh is visible and in reach",
+          "local-01: walking mesh projects inside the viewport",
+          "local-01: real pointer selects the walking person",
+          "local-01: pointer conversation does not relocate the visitor",
+          "local-01: clicked walker holds position during conversation",
+          "local-02: pedestrian resumes while Jevica stays still",
+          "local-02: walking mesh is visible and in reach",
+          "local-02: walking mesh projects inside the viewport",
+          "local-02: real pointer selects the walking person",
+          "local-02: pointer conversation does not relocate the visitor",
+          "local-02: clicked walker holds position during conversation",
+          "local-03: pedestrian resumes while Jevica stays still",
+          "local-03: walking mesh is visible and in reach",
+          "local-03: walking mesh projects inside the viewport",
+          "local-03: real pointer selects the walking person",
+          "local-03: pointer conversation does not relocate the visitor",
+          "local-03: clicked walker holds position during conversation",
+          "local-04: pedestrian resumes while Jevica stays still",
+          "local-04: walking mesh is visible and in reach",
+          "local-04: walking mesh projects inside the viewport",
+          "local-04: real pointer selects the walking person",
+          "local-04: pointer conversation does not relocate the visitor",
+          "local-04: clicked walker holds position during conversation",
+          "local-05: pedestrian resumes while Jevica stays still",
+          "local-05: walking mesh is visible and in reach",
+          "local-05: walking mesh projects inside the viewport",
+          "local-05: real pointer selects the walking person",
+          "local-05: pointer conversation does not relocate the visitor",
+          "local-05: clicked walker holds position during conversation",
+          "At least one route resumes inside the former visitor freeze radius",
+          "No floating NPC reaction captions",
+          "No uncaught browser errors: "
+        ],
+        "clicks": [
+          {
+            "id": "local-00",
+            "speed": 0.6896986380597427,
+            "screen": [
+              858.1016335903978,
+              397.8013349927388
+            ],
+            "position": [
+              -2813.5481860826044,
+              -1274.5589758160534,
+              18.3640348655638
+            ]
+          },
+          {
+            "id": "local-01",
+            "speed": 0.7596946343064661,
+            "screen": [
+              777.5749381643443,
+              393.7803767604595
+            ],
+            "position": [
+              -2806.28515344446,
+              -1229.7116981779707,
+              18.450718285270884
+            ]
+          },
+          {
+            "id": "local-02",
+            "speed": 0.710922307079646,
+            "screen": [
+              798.8747909182981,
+              378.25088341472497
+            ],
+            "position": [
+              -2802.4219510902135,
+              -1199.628818626843,
+              18.383311198355955
+            ]
+          },
+          {
+            "id": "local-03",
+            "speed": 0.9123334956141143,
+            "screen": [
+              796.6688544858929,
+              302.0978144193443
+            ],
+            "position": [
+              -2775.9808245555196,
+              -1291.1336224468007,
+              18.47577151096483
+            ]
+          },
+          {
+            "id": "local-04",
+            "speed": 0.7562350589173811,
+            "screen": [
+              795.7020160070956,
+              402.73928295665985
+            ],
+            "position": [
+              -2770.112189638275,
+              -1244.3430881023423,
+              18.39413103777007
+            ]
+          },
+          {
+            "id": "local-05",
+            "speed": 0.6885193352219139,
+            "screen": [
+              785.6238036047364,
+              427.49977743608355
+            ],
+            "position": [
+              -2770.1954232004555,
+              -1239.8794060745156,
+              18.391713858363957
+            ]
+          }
+        ],
+        "releaseDistances": [
+          3.2000000000002036,
+          3.2000000000001134,
+          3.19999999999998,
+          2.499999999999928,
+          3.1999999999999535,
+          2.4999999999999436
+        ],
+        "errors": [],
+        "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+      }
+    },
+    "force": {
+      "seconds": 26.31,
+      "result": {
+        "checks": [
+          "T enables Force mode",
+          "A real pointer click targets the person in Force mode",
+          "Force picking does not open a conversation",
+          "G acquires the selected person",
+          "The rendered person rises, not just the state",
+          "Force hold suspends pedestrian navigation",
+          "Wand and person both emit lift sparkles",
+          "X gently lands and releases the person",
+          "Sparkles finish fading after landing",
+          "Released person resumes walking",
+          "A Force push displaces a person and lands them",
+          "An existing street bin can be targeted through normal travel",
+          "The complete bin rises with its lid",
+          "Pointer spell controls return focus to walking",
+          "Walking preserves the active lift",
+          "Jevica walks while holding a target",
+          "The lifted bin follows her movement",
+          "Both sparkle emitters remain active within the pool budget while carrying",
+          "Jevica keeps facing the carried object after backpedalling",
+          "R pushes a real object and it settles at its new position",
+          "Indoor stations lift in place without crossing work surfaces",
+          "A levitated worker pauses their task",
+          "Escape lowers the worker and their task resumes",
+          "Force mode can be disabled",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "initial": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.3898119944356,
+              18.367535544152794,
+              1274.2021351792032
+            ],
+            "renderedPosition": [
+              -2813.3898119944356,
+              18.367535544152794,
+              1274.2021351792032
+            ],
+            "eligible": true
+          },
+          "held": {
+            "id": "local-00",
+            "name": "Maya",
+            "kind": "person",
+            "position": [
+              -2813.3649651177598,
+              19.400776539324404,
+              1274.1054221278516
+            ],
+            "renderedPosition": [
+              -2813.3649651177598,
+              19.400776539324404,
+              1274.1054221278516
+            ],
+            "eligible": true
+          }
+        },
+        "bin": {
+          "initial": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              18.481621820279667,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "raised": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2771.0986938402543,
+              19.499694868560038,
+              1310.0327574445103
+            ],
+            "renderedPosition": [
+              -2771.0986938402543,
+              19.499694868560038,
+              1310.0327574445103
+            ],
+            "eligible": true
+          },
+          "landed": {
+            "id": "street-bin-6",
+            "name": "Street bin",
+            "kind": "object",
+            "position": [
+              -2772.090717919221,
+              18.48382582773174,
+              1311.5282898366688
+            ],
+            "renderedPosition": [
+              -2772.090717919221,
+              18.48382582773174,
+              1311.5282898366688
+            ],
+            "eligible": false
+          }
+        },
+        "carry": {
+          "start": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2771.0986938402543,
+                19.55517743699285,
+                1310.0327574445103
+              ],
+              "velocity": [
+                0,
+                1.3283390664520034,
+                0
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2773.5919482344225,
+                20.166157637898984,
+                1304.644635877438
+              ],
+              "riding": null,
+              "ground": 18.486157637898984,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9935869180140988,
+              "speed": 0,
+              "velocity": [
+                0,
+                0
+              ],
+              "distance": 0,
+              "roomId": null,
+              "showBody": true
+            }
+          },
+          "end": {
+            "body": {
+              "id": "street-bin-6",
+              "name": "Street bin",
+              "mode": "lift",
+              "position": [
+                -2773.223463559247,
+                19.72678702679942,
+                1309.0767728893118
+              ],
+              "velocity": [
+                -0.013749445201098748,
+                -0.05975454002164924,
+                -0.006186203208033048
+              ],
+              "mass": 18,
+              "blocked": false
+            },
+            "pose": {
+              "position": [
+                -2775.719340445303,
+                20.174231939409605,
+                1303.6874714006142
+              ],
+              "riding": null,
+              "ground": 18.494231939409605,
+              "altitude": 0,
+              "flying": false,
+              "landing": false,
+              "yaw": -1.9935869180140988,
+              "speed": 8.324865300594184e-07,
+              "velocity": [
+                -7.592022554431333e-07,
+                -3.415831955759723e-07
+              ],
+              "distance": 2.3328012034049954,
+              "roomId": null,
+              "showBody": true
+            },
+            "yaw": 0.4340122963998789,
+            "fx": {
+              "count": 104,
+              "wand": 65,
+              "target": 39,
+              "capacity": 256,
+              "reducedMotion": false,
+              "wandTip": [
+                -2775.9568230851187,
+                19.981966067986917,
+                1303.8748629970803
+              ],
+              "targetCenter": [
+                -2773.223463559247,
+                20.28228702679942,
+                1309.0767728893118
+              ]
+            }
+          }
+        },
+        "personFX": {
+          "count": 71,
+          "wand": 41,
+          "target": 30,
+          "capacity": 256,
+          "reducedMotion": false,
+          "wandTip": [
+            -2810.496506219408,
+            19.915917366034375,
+            1275.4803594207594
+          ],
+          "targetCenter": [
+            -2813.3649651177598,
+            20.410584903786816,
+            1274.1054221278516
+          ]
+        },
+        "staff": "store-osm-node-8172495006-person-1",
+        "errors": []
+      }
+    },
+    "carriage": {
+      "seconds": 17.4,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed footboard",
+          "riding-slope: both soles contact the actual transformed footboard",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003743152485,
+                "minX": -2.719301644971826,
+                "maxX": -2.478345608200862
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003867481168,
+                "minX": -2.7193016378760855,
+                "maxX": -2.478345607143537
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1275003810210338,
+                "minX": -2.7193016440595033,
+                "maxX": -2.4783456117813074
+              },
+              {
+                "side": "r",
+                "minY": 1.1275003888902873,
+                "minX": -2.7193016358350195,
+                "maxX": -2.478345605483292
+              }
+            ]
+          }
+        ],
+        "before": {
+          "placement": {
+            "position": [
+              -2766.541185989181,
+              18.42157351781855,
+              1291.5552254559523
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": 0.0007859033689301711,
+            "roll": 0.005794460639896358,
+            "distance": 0,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.0025194879020453698,
+              -1.8267278509398466e-05,
+              1.7017506444005903e-05,
+              1.7017506447558617e-05
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            0,
+            3.552713678800501e-15,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.105314686426908,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.42531468642691,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.33440851050249343,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.42531468642691,
+            1295.064162750871
+          ],
+          "riderYaw": 0
+        },
+        "driven": {
+          "placement": {
+            "position": [
+              -2758.6416925125254,
+              18.403972550236134,
+              1291.675846764107
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010604605030309433,
+            "distance": 7.9004143364567625,
+            "terrainError": 0.009860024135232237,
+            "speed": 0.02991595573874755,
+            "wheelOffsets": [
+              0.00706223682177054,
+              0.00706223682177054,
+              0.00975790414085509,
+              0.004069625624943285
+            ]
+          },
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            -3.552713678800501e-15,
+            3.552713678800501e-15,
+            0,
+            -3.552713678800501e-15
+          ],
+          "pose": {
+            "position": [
+              -2756.5248890331272,
+              20.636572984189307,
+              1291.7192963903715
+            ],
+            "riding": {
+              "seat": [
+                -2756.5248890331272,
+                20.016572984189306,
+                1291.7192963903715
+              ],
+              "yaw": 1.5555280143100032,
+              "quaternion": [
+                0.006198265094052784,
+                0.7016870580451275,
+                -0.0012627828215302337,
+                0.7124571983363938
+              ],
+              "speed": 0.02991595573874755,
+              "distance": 7.9004143364567625
+            },
+            "ground": 18.39029197795996,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -0.08606463927978991,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.5335817659097,
+            19.188589770700517,
+            1291.7134504931714
+          ],
+          "riderYaw": 1.5522669949402343
+        },
+        "after": {
+          "placement": {
+            "position": [
+              -2758.6366076227278,
+              18.40393987439461,
+              1291.6759244078266
+            ],
+            "yaw": 3.1263243411048998,
+            "pitch": -0.006899182107292005,
+            "roll": 0.010609674899900737,
+            "distance": 7.905499819009911,
+            "terrainError": 0.009860024135232237,
+            "speed": 0,
+            "wheelOffsets": [
+              0.006884303540214631,
+              0.006884303540214631,
+              0.00953264793413311,
+              0.003844369418221305
+            ]
+          },
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            -7.105427357601002e-15,
+            0,
+            0,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2756.691025925933,
+              20.092429645313445,
+              1288.7052827496834
+            ],
+            "riding": null,
+            "ground": 18.412429645313445,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": -3.084843839807583,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2756.691025925933,
+            18.412429645313445,
+            1288.7052827496834
+          ],
+          "riderYaw": 1.5522641219569602
+        },
+        "errors": []
+      }
+    },
+    "casting-motion": {
+      "seconds": 5.13,
+      "result": {
+        "checks": [
+          "backpedal: actual Jevica rig reaches its foot targets",
+          "backpedal: support targets remain planted",
+          "backpedal: walking continues throughout the cast",
+          "strafe-left: actual Jevica rig reaches its foot targets",
+          "strafe-left: support targets remain planted",
+          "strafe-left: walking continues throughout the cast",
+          "strafe-right: actual Jevica rig reaches its foot targets",
+          "strafe-right: support targets remain planted",
+          "strafe-right: walking continues throughout the cast",
+          "No uncaught casting fixture errors"
+        ],
+        "runs": [
+          {
+            "name": "backpedal",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-left",
+            "error": 1.6883057536160649e-16,
+            "slip": 0,
+            "steps": 150
+          },
+          {
+            "name": "strafe-right",
+            "error": 1.6653345369377348e-16,
+            "slip": 0,
+            "steps": 150
+          }
+        ],
+        "errors": []
+      }
+    },
+    "district-frame-profile": {
+      "seconds": 19.44,
+      "result": {
+        "runs": [
+          {
+            "label": "street",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 50,
+            "maxMs": 100,
+            "render": {
+              "calls": 1652,
+              "triangles": 18091332,
+              "geometries": 303,
+              "textures": 294
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(idle) :0",
+                "ms": 851.826
+              },
+              {
+                "fn": "(program) :0",
+                "ms": 662.874
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 140.671
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 139.023
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 126.187
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 125.01
+              },
+              {
+                "fn": "uniformMatrix4fv :0",
+                "ms": 122.262
+              },
+              {
+                "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+                "ms": 105.724
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 88.867
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 81.948
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 77.307
+              },
+              {
+                "fn": "toLocal http://127.0.0.1:5181/src/store-rooms.js:48",
+                "ms": 69.909
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 68.171
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 53.737
+              },
+              {
+                "fn": "(garbage collector) :0",
+                "ms": 52.317
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 50.229
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 45.564
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44598",
+                "ms": 37.344
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 31.171
+              },
+              {
+                "fn": "bindVertexArray :0",
+                "ms": 29.618
+              }
+            ]
+          },
+          {
+            "label": "walking",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 50,
+            "maxMs": 50.100000000000364,
+            "render": {
+              "calls": 1563,
+              "triangles": 17779813,
+              "geometries": 303,
+              "textures": 294
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(idle) :0",
+                "ms": 538.606
+              },
+              {
+                "fn": "(program) :0",
+                "ms": 359.248
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 128.645
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 127.45
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 121.598
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 117.456
+              },
+              {
+                "fn": "roomAt http://127.0.0.1:5181/src/store-rooms.js:321",
+                "ms": 112.29
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 99.837
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 95.253
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 94.768
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 79.923
+              },
+              {
+                "fn": "isFree http://127.0.0.1:5181/src/walking.js?t=1790321666920:44",
+                "ms": 57.279
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 56.921
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 53.109
+              },
+              {
+                "fn": "(garbage collector) :0",
+                "ms": 39.22
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 33.476
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+                "ms": 31.129
+              },
+              {
+                "fn": "getVertexPosition http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:17663",
+                "ms": 29.287
+              },
+              {
+                "fn": "bindVertexArray :0",
+                "ms": 28.535
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 25.612
+              }
+            ]
+          },
+          {
+            "label": "worker-conversation",
+            "medianMs": 16.700000000000728,
+            "p95Ms": 33.400000000001455,
+            "maxMs": 50.100000000000364,
+            "render": {
+              "calls": 1765,
+              "triangles": 18586484,
+              "geometries": 357,
+              "textures": 377
+            },
+            "pipeline": {
+              "ao": true,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "topSelfMs": [
+              {
+                "fn": "(program) :0",
+                "ms": 413.224
+              },
+              {
+                "fn": "(idle) :0",
+                "ms": 393.935
+              },
+              {
+                "fn": "bindTexture :0",
+                "ms": 304.812
+              },
+              {
+                "fn": "applyBoneTransform http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:18031",
+                "ms": 145.708
+              },
+              {
+                "fn": "projectObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52080",
+                "ms": 131.614
+              },
+              {
+                "fn": "uniformMatrix4fv :0",
+                "ms": 122.876
+              },
+              {
+                "fn": "multiplyMatrices http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8252",
+                "ms": 120.538
+              },
+              {
+                "fn": "update http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:44378",
+                "ms": 117.51
+              },
+              {
+                "fn": "WebGLRenderer.renderBufferDirect http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:51786",
+                "ms": 110.554
+              },
+              {
+                "fn": "updateWorldMatrix http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10068",
+                "ms": 103.57
+              },
+              {
+                "fn": "updateMatrixWorld http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:10046",
+                "ms": 88.278
+              },
+              {
+                "fn": "groundSurfaceHeight http://127.0.0.1:5181/src/world-surface.js?t=1790321666920:36",
+                "ms": 73.096
+              },
+              {
+                "fn": "restRadius http://127.0.0.1:5181/src/jevica-drape.js:48",
+                "ms": 61.64
+              },
+              {
+                "fn": "render http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three_addons_postprocessing_GTAOPass__js.js?v=f785e9d5:1877",
+                "ms": 48.411
+              },
+              {
+                "fn": "getParameters http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:46085",
+                "ms": 37.322
+              },
+              {
+                "fn": "setValue http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:45357",
+                "ms": 37.045
+              },
+              {
+                "fn": "renderObject http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:47372",
+                "ms": 34.967
+              },
+              {
+                "fn": "getProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52227",
+                "ms": 34.771
+              },
+              {
+                "fn": "toArray http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:8764",
+                "ms": 34.674
+              },
+              {
+                "fn": "setProgram http://127.0.0.1:5181/@fs/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/people-motion-delivery/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=f785e9d5:52328",
+                "ms": 33.343
+              }
+            ]
+          }
+        ],
+        "errors": [],
+        "viewport": [
+          1440,
+          1000
+        ],
+        "scope": "Local Chromium RAF timing with CPU profiler enabled; not a target hardware benchmark."
+      }
+    },
+    "eye-tracking": {
+      "result": {
+        "checks": [
+          "woman-casual: independent eye pivots preserve the neutral portrait",
+          "woman-casual: both eyes track lateral and vertical targets",
+          "man-casual: independent eye pivots preserve the neutral portrait",
+          "man-casual: both eyes track lateral and vertical targets",
+          "woman-tailored: independent eye pivots preserve the neutral portrait",
+          "woman-tailored: both eyes track lateral and vertical targets",
+          "man-tailored: independent eye pivots preserve the neutral portrait",
+          "man-tailored: both eyes track lateral and vertical targets",
+          "woman-daywear: independent eye pivots preserve the neutral portrait",
+          "woman-daywear: both eyes track lateral and vertical targets",
+          "man-workwear: independent eye pivots preserve the neutral portrait",
+          "man-workwear: both eyes track lateral and vertical targets",
+          "jevica: independent eye pivots preserve the neutral portrait",
+          "jevica: both eyes track lateral and vertical targets",
+          "No eye animation application errors"
+        ],
+        "portraits": [
+          {
+            "profile": "woman-casual",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20663249327367444,
+                    "pitch": -0.03912933678223851
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.2359000370021911,
+                    "pitch": -0.03887280679118362
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.015374325875212666,
+                    "pitch": -2.2957105632159197e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.015374325875212742,
+                    "pitch": -2.2957105632154731e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  1.4901161193847656e-08
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.23590003282818384,
+                    "pitch": 0.03887236031253016
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20663248958539462,
+                    "pitch": 0.03912888735417691
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "man-casual",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20618327103909098,
+                    "pitch": -0.03913265118341348
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.2363432871889298,
+                    "pitch": -0.03886830520567306
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.015843126548963204,
+                    "pitch": 1.4083039838073073e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.015843126548963284,
+                    "pitch": 1.408303983807768e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.23634328975394175,
+                    "pitch": 0.038868579070863676
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20618327329704686,
+                    "pitch": 0.03913292691307628
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "woman-tailored",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  1.4901161193847656e-08,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20684807200344194,
+                    "pitch": -0.03912756820318054
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.23568725797543197,
+                    "pitch": -0.03887479094208692
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.015149316331844966,
+                    "pitch": -2.283482211733928e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.015149316331845042,
+                    "pitch": -2.283482211733488e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.2356872538271354,
+                    "pitch": 0.038874346820471424
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.206848068331214,
+                    "pitch": 0.03912712119079358
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "man-tailored",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20705903341539955,
+                    "pitch": -0.03912580520482274
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.23547899607517053,
+                    "pitch": -0.03887670092184541
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.014929104640244809,
+                    "pitch": -1.9595015056608434e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.014929104640244885,
+                    "pitch": -1.9595015056604096e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  1.4901161193847656e-08
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.2354789925183558,
+                    "pitch": 0.03887631979446304
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20705903026117004,
+                    "pitch": 0.039125421632862714
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "woman-daywear",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20671769764487918,
+                    "pitch": -0.039128495970035836
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.23581594160337938,
+                    "pitch": -0.038873450085399275
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.015285395511051823,
+                    "pitch": -8.400091773676149e-08
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.015285395511051899,
+                    "pitch": -8.400091773671706e-08
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.2358159400765999,
+                    "pitch": 0.03887328671409239
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20671769629480105,
+                    "pitch": 0.03912833152577041
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "man-workwear",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20658495520102463,
+                    "pitch": -0.03912965136906803
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.23594695087850528,
+                    "pitch": -0.0388722944143705
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.01542393998216162,
+                    "pitch": -1.5305738546181524e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.015423939982161697,
+                    "pitch": -1.530573854617704e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.23594694809513783,
+                    "pitch": 0.03887199674558788
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20658495274254182,
+                    "pitch": 0.03912935172754038
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "profile": "jevica",
+            "neutral": {
+              "pixels": 252000,
+              "changed": 0,
+              "max": 0
+            },
+            "samples": [
+              {
+                "label": "Left",
+                "errors": [
+                  2.1073424255447017e-08,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": -0.20677159510679743,
+                    "pitch": -0.039128148498624296
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.23576274580238846,
+                    "pitch": -0.038874071573610294
+                  }
+                ]
+              },
+              {
+                "label": "Forward",
+                "errors": [
+                  0,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.01522914117367808,
+                    "pitch": -1.8039628171457138e-07
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": -0.01522914115828818,
+                    "pitch": -2.127354868359426e-07
+                  }
+                ]
+              },
+              {
+                "label": "Right",
+                "errors": [
+                  1.4901161193847656e-08,
+                  0
+                ],
+                "pose": [
+                  {
+                    "name": "gaze_eye_r",
+                    "yaw": 0.23576274245996195,
+                    "pitch": 0.03887368931003615
+                  },
+                  {
+                    "name": "gaze_eye_l",
+                    "yaw": 0.20677159174369952,
+                    "pitch": 0.0391277636585661
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "errors": []
+      }
+    },
+    "eye-contact": {
+      "result": {
+        "checks": [
+          "woman-casual: eye contact follows the animated head with stable support",
+          "man-casual: eye contact follows the animated head with stable support",
+          "woman-tailored: eye contact follows the animated head with stable support",
+          "man-tailored: eye contact follows the animated head with stable support",
+          "woman-daywear: eye contact follows the animated head with stable support",
+          "man-workwear: eye contact follows the animated head with stable support",
+          "jevica: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494989-person-2: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494989-person-3: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494989-person-5: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494989-person-4: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494989-person-6: eye contact follows the animated head with stable support",
+          "store-osm-node-8172495006-person-4: eye contact follows the animated head with stable support",
+          "store-osm-node-8172495000-person-0: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494955-person-7: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494963-person-0: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494977-person-0: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494979-person-0: eye contact follows the animated head with stable support",
+          "store-osm-node-8172495006-person-1: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494957-person-4: eye contact follows the animated head with stable support",
+          "store-osm-node-8172494976-person-4: eye contact follows the animated head with stable support",
+          "Held workers retain eye contact without advancing their work",
+          "No uncaught eye-contact errors"
+        ],
+        "results": [
+          {
+            "id": "woman-casual",
+            "maxError": 0.011358704606410626,
+            "maxStep": 0.04315420135921922,
+            "maxLocalStep": 0.03571657303752081,
+            "maxHeadStep": 0.011514641170124783,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "man-casual",
+            "maxError": 0.011668126225441984,
+            "maxStep": 0.04304381195222091,
+            "maxLocalStep": 0.03562947146754362,
+            "maxHeadStep": 0.011517205275808707,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "woman-tailored",
+            "maxError": 0.01047660810644879,
+            "maxStep": 0.042837022562877844,
+            "maxLocalStep": 0.03544082665197116,
+            "maxHeadStep": 0.011486438575063767,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "man-tailored",
+            "maxError": 0.01133783792304417,
+            "maxStep": 0.04297349358570592,
+            "maxLocalStep": 0.03559506001306197,
+            "maxHeadStep": 0.01143123332772679,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "woman-daywear",
+            "maxError": 0.013813706309819068,
+            "maxStep": 0.04303880839503515,
+            "maxLocalStep": 0.03560271612473682,
+            "maxHeadStep": 0.011517785887507839,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "man-workwear",
+            "maxError": 0.012990216438087685,
+            "maxStep": 0.042854165544215436,
+            "maxLocalStep": 0.03547413601890833,
+            "maxHeadStep": 0.011469519326601839,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "jevica",
+            "maxError": 0.01184948342972759,
+            "maxStep": 0.042953691919032436,
+            "maxLocalStep": 0.03556271342119954,
+            "maxHeadStep": 0.011459728091870442,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "outdoor"
+          },
+          {
+            "id": "store-osm-node-8172494989-person-2",
+            "maxError": 0.013280945982076957,
+            "maxStep": 0.02539260501427185,
+            "maxLocalStep": 0.019076241747248805,
+            "maxHeadStep": 0.009545853747944212,
+            "maxFootDrift": 0,
+            "maxContactError": 6.987912747088115e-08,
+            "kind": "fabric",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494989-person-3",
+            "maxError": 0.013836739146782148,
+            "maxStep": 0.05152528131012359,
+            "maxLocalStep": 0.03819075267823821,
+            "maxHeadStep": 0.017597411280560946,
+            "maxFootDrift": 0,
+            "maxContactError": 6.61857228590673e-08,
+            "kind": "fabric",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494989-person-5",
+            "maxError": 0.013121133315539983,
+            "maxStep": 0.08080747753434689,
+            "maxLocalStep": 0.051135734741403004,
+            "maxHeadStep": 0.03459786897701709,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494989-person-4",
+            "maxError": 0.013343174006396735,
+            "maxStep": 0.08095373465884605,
+            "maxLocalStep": 0.05113573474138563,
+            "maxHeadStep": 0.03480466150101224,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494989-person-6",
+            "maxError": 0.013612483565404301,
+            "maxStep": 0.08082649835211517,
+            "maxLocalStep": 0.05113573474137695,
+            "maxHeadStep": 0.03464085614654214,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172495006-person-4",
+            "maxError": 0.011359739982644643,
+            "maxStep": 0.08090964636627028,
+            "maxLocalStep": 0.051135734741394316,
+            "maxHeadStep": 0.03725515755925109,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172495000-person-0",
+            "maxError": 0.010833103271513423,
+            "maxStep": 0.05634415090097913,
+            "maxLocalStep": 0.0420802216746855,
+            "maxHeadStep": 0.018928402062054574,
+            "maxFootDrift": 0,
+            "maxContactError": 6.208659808412591e-08,
+            "kind": "jewelry",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494955-person-7",
+            "maxError": 0.009823681392657803,
+            "maxStep": 0.047091098688361706,
+            "maxLocalStep": 0.03726520549175479,
+            "maxHeadStep": 0.013707334277487626,
+            "maxFootDrift": 0,
+            "maxContactError": 6.862400570313489e-08,
+            "kind": "tray",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494963-person-0",
+            "maxError": 0.010272844749463937,
+            "maxStep": 0.033779923180238695,
+            "maxLocalStep": 0.030280724633005598,
+            "maxHeadStep": 0.00994876390323157,
+            "maxFootDrift": 0,
+            "maxContactError": 7.882961831566041e-08,
+            "kind": "blotter",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494977-person-0",
+            "maxError": 0.013436328258936115,
+            "maxStep": 0.045823322609656277,
+            "maxLocalStep": 0.03282922857089246,
+            "maxHeadStep": 0.02000939523513309,
+            "maxFootDrift": 0,
+            "maxContactError": 3.441146541843148e-08,
+            "kind": "tablet",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494979-person-0",
+            "maxError": 0.010732626058070427,
+            "maxStep": 0.03193914807672607,
+            "maxLocalStep": 0.029579659720037288,
+            "maxHeadStep": 0.009470995757835183,
+            "maxFootDrift": 0,
+            "maxContactError": 7.048954340517065e-08,
+            "kind": "eyewear",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172495006-person-1",
+            "maxError": 0.013761826551109127,
+            "maxStep": 0.060705699681807945,
+            "maxLocalStep": 0.045232778086632584,
+            "maxHeadStep": 0.01968870418036114,
+            "maxFootDrift": 0,
+            "maxContactError": 1.1339775458290323e-07,
+            "kind": "samples",
+            "seated": false
+          },
+          {
+            "id": "store-osm-node-8172494957-person-4",
+            "maxError": 0.010882289073905883,
+            "maxStep": 0.03585410830083254,
+            "maxLocalStep": 0.03165569897421772,
+            "maxHeadStep": 0.010066425367668929,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": true
+          },
+          {
+            "id": "store-osm-node-8172494976-person-4",
+            "maxError": 0.008685179867336603,
+            "maxStep": 0.035091183473745007,
+            "maxLocalStep": 0.031092908095437053,
+            "maxHeadStep": 0.009975206293281904,
+            "maxFootDrift": 0,
+            "maxContactError": 0,
+            "kind": "guest",
+            "seated": true
+          }
+        ],
+        "held": {
+          "error": 0,
+          "workClockDrift": 0
+        },
+        "errors": []
+      }
+    }
+  },
+  "visualReview": {
+    "portraits": [
+      "output/playwright/eye-tracking-woman-casual.png",
+      "output/playwright/eye-tracking-man-casual.png",
+      "output/playwright/eye-tracking-woman-tailored.png",
+      "output/playwright/eye-tracking-man-tailored.png",
+      "output/playwright/eye-tracking-woman-daywear.png",
+      "output/playwright/eye-tracking-man-workwear.png",
+      "output/playwright/eye-tracking-jevica.png"
+    ],
+    "neutral": "All seven portraits pixel-identical to the pre-eye-pivot renderer (0 of 252000 pixels changed per profile).",
+    "reviewed": "Lateral and vertical tracking portraits reviewed for all seven models.",
+    "limits": [
+      {
+        "profile": "jevica",
+        "pose": [
+          {
+            "name": "gaze_eye_r",
+            "yaw": 0.29999999999999993,
+            "pitch": 0.17999999999999997
+          },
+          {
+            "name": "gaze_eye_l",
+            "yaw": 0.29999999999999993,
+            "pitch": 0.17999999999999997
+          }
+        ]
+      },
+      {
+        "profile": "man-casual",
+        "pose": [
+          {
+            "name": "gaze_eye_r",
+            "yaw": 0.29999999999999993,
+            "pitch": 0.17999999999999997
+          },
+          {
+            "name": "gaze_eye_l",
+            "yaw": 0.29999999999999993,
+            "pitch": 0.17999999999999997
+          }
+        ]
+      }
+    ],
+    "limitScreenshots": [
+      "output/playwright/eye-limits-jevica.png",
+      "output/playwright/eye-limits-man-casual.png"
+    ],
+    "limitReview": "Reviewed all four horizontal/vertical limit combinations, open and closed. No exposed socket holes or eyes protruding through closed lids in these views."
+  },
+  "acceptanceCriteria": {
+    "settledTargetErrorRadians": 0.025,
+    "localEyeStepRadians": 0.07,
+    "headStepRadians": 0.055,
+    "worldEyeStepRadians": 0.125,
+    "footDriftMeters": 0.002,
+    "handContactErrorMeters": 0.001,
+    "note": "World eye rotation combines eye motion and head motion; continuity is also checked separately for each contribution. Held-worker exact target alignment is checked inside the available eye range. Out-of-range targets deliberately clamp."
+  },
+  "localFrameProfileScope": "Observational Chromium RAF timing with CPU profiler enabled. Median 16.7 ms and p95 33.4-50 ms. Not a paired before/after comparison, target hardware benchmark or sustained 60 FPS guarantee.",
+  "limitations": [
+    "Jevica normal conversation gaze is not wired; her existing spell target drives her eyes.",
+    "Lip synchronization, expressive scanning/saccades and broader facial performance remain open.",
+    "Generic assets, character materials, cloth realism and sustained frame pacing do not yet meet a verified hyperrealistic end state."
+  ],
+  "followupEvidence": [
+    "SkeletonUtils.clone creates a separate 53-bone skeleton per skinned mesh in Jevica. Several cloned meshes refer to the same cloned bones; deduplication is a candidate for a separately measured optimization. No change to this ownership was made here."
+  ],
+  "dev": "http://127.0.0.1:5181/",
+  "testBrowserSession": "browser-only-checks; parked at about:blank; user session preserved"
+}

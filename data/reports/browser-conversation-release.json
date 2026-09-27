@@ -1,0 +1,298 @@
+{
+  "scope": "Browser residents: conversation-to-route heading continuity",
+  "date": "2026-09-25",
+  "before": {
+    "renderHeading": 3.141689875811398,
+    "simulationHeading": 1.5707963267948966,
+    "maxReleaseStepRadians": 1.5708935490165015
+  },
+  "rigs": {
+    "samples": [
+      {
+        "id": "local-00",
+        "profile": "woman-casual",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.6326907453250774,
+        "finalPosition": [
+          1.631822071988767,
+          0.05325218531143404,
+          0
+        ]
+      },
+      {
+        "id": "local-01",
+        "profile": "man-casual",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            3,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.7179180040837785,
+        "finalPosition": [
+          1.717096796737646,
+          3.0531117631839533,
+          0
+        ]
+      },
+      {
+        "id": "local-02",
+        "profile": "woman-tailored",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            6,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.7999580144903968,
+        "finalPosition": [
+          1.799179007477676,
+          6.052950476672607,
+          0
+        ]
+      },
+      {
+        "id": "local-03",
+        "profile": "man-tailored",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            9,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.8780176714267929,
+        "finalPosition": [
+          1.8772802133205613,
+          9.052624850274572,
+          0
+        ]
+      },
+      {
+        "id": "local-04",
+        "profile": "woman-daywear",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            12,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.6326907453250776,
+        "finalPosition": [
+          1.6318220719887673,
+          12.053252185311432,
+          0
+        ]
+      },
+      {
+        "id": "local-05",
+        "profile": "man-workwear",
+        "conversation": {
+          "renderHeading": 3.14159265358693,
+          "simulationHeading": 3.14159265358693,
+          "position": [
+            0,
+            15,
+            0
+          ],
+          "maxStep": 0.05333333333333323
+        },
+        "maxReleaseStep": 0.05333333333333323,
+        "maxHeadingError": 0,
+        "travel": 1.7179180040837785,
+        "finalPosition": [
+          1.717096796737646,
+          15.053111763183956,
+          0
+        ]
+      }
+    ],
+    "errors": [],
+    "scope": "Six rendered production rigs, controlled conversation and route release; 180 paused conversation frames followed by 120 walking frames at 60 Hz per rig."
+  },
+  "liveDistrict": {
+    "checks": [
+      "local-00: pedestrian resumes while Jevica stays still",
+      "local-00: walking mesh is visible and in reach",
+      "local-00: walking mesh projects inside the viewport",
+      "local-00: real pointer selects the walking person",
+      "local-00: pointer conversation does not relocate the visitor",
+      "local-00: clicked walker holds position during conversation",
+      "local-01: pedestrian resumes while Jevica stays still",
+      "local-01: walking mesh is visible and in reach",
+      "local-01: walking mesh projects inside the viewport",
+      "local-01: real pointer selects the walking person",
+      "local-01: pointer conversation does not relocate the visitor",
+      "local-01: clicked walker holds position during conversation",
+      "local-02: pedestrian resumes while Jevica stays still",
+      "local-02: walking mesh is visible and in reach",
+      "local-02: walking mesh projects inside the viewport",
+      "local-02: real pointer selects the walking person",
+      "local-02: pointer conversation does not relocate the visitor",
+      "local-02: clicked walker holds position during conversation",
+      "local-03: pedestrian resumes while Jevica stays still",
+      "local-03: walking mesh is visible and in reach",
+      "local-03: walking mesh projects inside the viewport",
+      "local-03: real pointer selects the walking person",
+      "local-03: pointer conversation does not relocate the visitor",
+      "local-03: clicked walker holds position during conversation",
+      "local-04: pedestrian resumes while Jevica stays still",
+      "local-04: walking mesh is visible and in reach",
+      "local-04: walking mesh projects inside the viewport",
+      "local-04: real pointer selects the walking person",
+      "local-04: pointer conversation does not relocate the visitor",
+      "local-04: clicked walker holds position during conversation",
+      "local-05: pedestrian resumes while Jevica stays still",
+      "local-05: walking mesh is visible and in reach",
+      "local-05: walking mesh projects inside the viewport",
+      "local-05: real pointer selects the walking person",
+      "local-05: pointer conversation does not relocate the visitor",
+      "local-05: clicked walker holds position during conversation",
+      "At least one route resumes inside the former visitor freeze radius",
+      "No floating NPC reaction captions",
+      "No uncaught browser errors: "
+    ],
+    "clicks": [
+      {
+        "id": "local-00",
+        "speed": 0.7239682839952912,
+        "screen": [
+          845.676812620795,
+          429.64195458531594
+        ],
+        "position": [
+          -2813.4741881068894,
+          -1274.460616944127,
+          18.36577994654825
+        ]
+      },
+      {
+        "id": "local-01",
+        "speed": 0.8277310275981441,
+        "screen": [
+          756.9282792569843,
+          413.36414131440824
+        ],
+        "position": [
+          -2806.9134060733386,
+          -1229.7254181376338,
+          18.448330577814268
+        ]
+      },
+      {
+        "id": "local-02",
+        "speed": 1.0982933619638158,
+        "screen": [
+          739.4020953517963,
+          416.00839573945393
+        ],
+        "position": [
+          -2803.1826422750487,
+          -1199.8907800960444,
+          18.389152857953455
+        ]
+      },
+      {
+        "id": "local-03",
+        "speed": 0.7842777393663255,
+        "screen": [
+          802.9366053503724,
+          351.5103555539818
+        ],
+        "position": [
+          -2775.076579338863,
+          -1291.356902543029,
+          18.47437747808665
+        ]
+      },
+      {
+        "id": "local-04",
+        "speed": 0.9228929706284765,
+        "screen": [
+          796.5360123024243,
+          400.685095903813
+        ],
+        "position": [
+          -2770.1219232273115,
+          -1243.5946381958356,
+          18.393266354126865
+        ]
+      },
+      {
+        "id": "local-05",
+        "speed": 0.9531017687215604,
+        "screen": [
+          786.454970793768,
+          432.80191822346217
+        ],
+        "position": [
+          -2770.3771694110605,
+          -1241.2787703198696,
+          18.395503114722825
+        ]
+      }
+    ],
+    "releaseDistances": [
+      2.5000000000001825,
+      2.5000000000000666,
+      2.500000000000016,
+      2.50000000000003,
+      3.200000000000047,
+      2.4999999999999347
+    ],
+    "errors": [],
+    "scope": "Real district routes, clocks and pointer events. Directory controls set up each approach; Jevica stays still when a conversation closes. No simulation state is injected."
+  },
+  "verification": {
+    "unitTests": 328,
+    "unitFailures": 0,
+    "build": "passed; existing large Three.js chunk advisory",
+    "newRegressionTests": "Both failed before implementation, pass at 30/60/144 Hz and while routes are paused"
+  },
+  "testSetupFix": "Wait for the published chatting state after a directory jump before measuring the visitor HUD position. Dialogue visibility alone can precede that update.",
+  "limitations": [
+    "This verifies facing continuity and the live interaction handoff, not all aspects of character realism.",
+    "Controlled rig measurements do not replace live scene or human visual acceptance."
+  ],
+  "sha256": {
+    "preview/src/resident-life.js": "79cf1b9af41c856f566211c2d85a118c4e82dfdf70de3842af8a044dc7512e82",
+    "preview/src/locals.js": "b6bc455d1340e7cb4c72f29dc83a6659a26fab3245bbd3908574537ab1e99270",
+    "preview/tests/resident-life.test.js": "d564fedf749232d18af4e534091eae9fcd2b29e29b913ac7c1d7299fd4954ecf",
+    "preview/e2e/conversation-release.js": "849c0177ba93059658624453ef792f27c16a831d093fb2201f844c6c7e306d61",
+    "preview/e2e/npc-presence.js": "5521ba620c81a94353bd3358d7b009b9b3b5437c17897a1e7055abbe73db9c9f"
+  }
+}

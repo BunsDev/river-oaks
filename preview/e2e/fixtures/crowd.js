@@ -31,7 +31,14 @@ function step() {
   frame++;stepResidentLife(life,1/60);
   state.locals.forEach(local=>{if(local.life.visits)local.life.waitUntil=Infinity;});
   group.userData.update(state,camera,frame*1000/60,null,null);
-  for(const [i,model] of models.entries())samples.push({frame,id:state.locals[i].id,position:[...state.locals[i].position],heading:state.locals[i].life.heading,speed:state.locals[i].life.speed,feet:model.userData.avatar.feet.map(leg=>({side:leg.side,contact:leg.contact,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray(),orientation:leg.orientation.toArray()}))});
+  for(const [i,model] of models.entries()) {
+    const avatar=model.userData.avatar;avatar.rig.model.updateMatrixWorld(true);
+    samples.push({frame,id:state.locals[i].id,position:[...state.locals[i].position],heading:state.locals[i].life.heading,speed:state.locals[i].life.speed,feet:avatar.feet.map(leg=>{
+      const source=leg.rollPose?leg.soleSources[leg.rollPose.pivotId]:null;
+      return {side:leg.side,contact:leg.contact,target:(leg.ikTarget??leg.target).toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray(),plantOrientation:leg.orientation.toArray(),pivot:leg.rollPose?.pivotId,
+        support:source?source.mesh.getVertexPosition(source.index,new THREE.Vector3()).applyMatrix4(source.mesh.matrixWorld).toArray():null};
+    })});
+  }
 }
 function render() {renderer.render(scene,camera);document.querySelector('#caption').textContent=`Six actual rigs · ${turning?'sharp corners and reversals':'opposing sidewalk crowds'} · frame ${frame}`;}
 const raycaster=new THREE.Raycaster();

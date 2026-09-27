@@ -16,8 +16,8 @@ export function buildDesignatedSidewalks(world,isFree) {
       const t=(i+0.5)/steps,center=[segment.a[0]+along[0]*length*t+across[0]*side*(segment.width/2+1.65),segment.a[1]+along[1]*length*t+across[1]*side*(segment.width/2+1.65)];
       if(!isFree(center[0],-center[1]) || network.classify(center)==='road')continue;
       // A pale stone walking band between the existing kerb and storefront.
-      add(center,along,across,length/steps-0.025,2.4,[0.59,0.58,0.54],0.258);
-      for(const edge of [-1,1])add([center[0]+across[0]*edge*1.17,center[1]+across[1]*edge*1.17],along,across,length/steps,0.055,[0.79,0.74,0.61],0.262);
+      add(center,along,across,length/steps-0.025,2.4,[0.68,0.72,0.66],0.258);
+      for(const edge of [-1,1])add([center[0]+across[0]*edge*1.17,center[1]+across[1]*edge*1.17],along,across,length/steps,0.055,[0.25,0.53,0.51],0.262);
     }
   }
   for(const crossing of network.crossings) {

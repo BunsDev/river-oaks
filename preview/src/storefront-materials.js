@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export function thinStorefrontGlass() {
   // A thin-sheet approximation: reflect the environment at Schlick's ratio and
   // alpha-blend the actual room behind it. No full-scene refraction render pass.
-  const material = new THREE.MeshStandardMaterial({ color: '#edf5f3', metalness: 1, roughness: 0.055, transparent: true, depthWrite: false, envMapIntensity: 1 });
+  const material = new THREE.MeshStandardMaterial({ color: '#c1e0d5', metalness: 1, roughness: 0.055, transparent: true, depthWrite: false, envMapIntensity: 1 });
   material.userData.thinStorefrontGlass = true;
   material.onBeforeCompile = shader => {
     shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `

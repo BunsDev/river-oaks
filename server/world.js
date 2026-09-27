@@ -46,7 +46,7 @@ function decodeCheckpoint(json) {
 export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 } = {}) {
   const environment = createWalkingEnvironment(worldData);
   const players = new Map(), ledgers = new Map(), focus = new Map();
-  const state = createCommunity(worldData, environment.rooms);
+  const state = createCommunity(worldData, environment.rooms, {carriage:false});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
@@ -342,7 +342,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         || typeof clock.paused!=='boolean' || clock.packet!==null || !record(clock.stats))) throw new Error('Invalid resident clock');
       // Navigation caches/functions derive from the same fingerprinted district.
       // Build them before committing; only serialized simulation state is restored.
-      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms));
+      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false}));
       if (nextLife) {Object.assign(nextLife,clock);nextLife.state=state;}
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state,nextState);
@@ -356,7 +356,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   }
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
-    const fresh=createCommunity(worldData,environment.rooms);
+    const fresh=createCommunity(worldData,environment.rooms,{carriage:false});
     fresh.generation=state.generation+1;
     Object.assign(state,fresh);localById.clear();
     for (const local of state.locals) localById.set(local.id,local);

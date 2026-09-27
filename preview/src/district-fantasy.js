@@ -1,91 +1,66 @@
 import * as THREE from 'three';
+import { RETRO } from './retro-palette.js';
 
-// Original ornament layered over the mapped district. No additional walk obstacles:
-// arches hug facades, while lanterns hang above pedestrian head height.
+// Space-age garden architecture follows the mapped facades and roof footprints.
+// Canopies, fins and orbital lights remain above the existing walking clearance.
 export function buildDistrictFantasy(world) {
-  const group = new THREE.Group();
-  group.name = 'Imagined district details';
-  const silver = new THREE.MeshStandardMaterial({ color: '#d8d5e1', metalness: 0.7, roughness: 0.32 });
-  // Facade jewels are a few hand-spans across. Refraction made three redraw the
-  // whole opaque district into a transmission buffer every frame they were on
-  // screen; a pearly thin film and a faint inner glow read the same at street scale.
-  const pearl = new THREE.MeshPhysicalMaterial({ color: '#f7edf5', metalness: 0, roughness: 0.08, ior: 1.46, clearcoat: 1, iridescence: 0.6, iridescenceIOR: 1.5, sheen: 0.4, sheenColor: '#e2a1c9', emissive: '#e2a1c9', emissiveIntensity: 0.06 });
-  const glow = new THREE.MeshStandardMaterial({ color: '#f7e8f1', emissive: '#e2a1c9', emissiveIntensity: 2.4, roughness: 0.35 });
-  const colors = ['#ad267e', '#e2a1c9', '#ca78ad', '#392b38'];
-  const enamels = colors.map(color => new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.38 }));
-  const graphite = new THREE.MeshStandardMaterial({ color: '#36343d', metalness: 0.45, roughness: 0.38 });
-  const timber = new THREE.MeshStandardMaterial({ color: '#665044', roughness: 0.76 });
-  const porcelain = new THREE.MeshPhysicalMaterial({ color: '#ede9e5', roughness: 0.35, clearcoat: 0.4 });
-  const box = new THREE.BoxGeometry(1, 1, 1);
-  const arch = new THREE.TorusGeometry(2.65, 0.055, 6, 32, Math.PI);
-  const jewel = new THREE.OctahedronGeometry(1);
-  const ring = new THREE.TorusGeometry(0.53, 0.028, 6, 24);
-  const batches = new Map();
-  const add = (geometry, material, position, scale, yaw, storeId) => {
-    const key = `${geometry.uuid}:${material.uuid}`;
-    if (!batches.has(key)) batches.set(key, { geometry, material, parts: [] });
-    batches.get(key).parts.push({ position, scale, yaw, storeId });
+  const group=new THREE.Group();group.name='Retrofuturistic garden district';
+  const enamel=color=>new THREE.MeshPhysicalMaterial({color,roughness:.30,clearcoat:.7,metalness:.12});
+  const ivory=enamel(RETRO.porcelain),accents=[RETRO.teal,RETRO.rose,RETRO.mint,RETRO.apricot].map(enamel);
+  const brass=new THREE.MeshStandardMaterial({color:RETRO.brass,roughness:.25,metalness:.83});
+  const glow=new THREE.MeshStandardMaterial({color:RETRO.light,emissive:RETRO.light,emissiveIntensity:1.4,roughness:.35});
+  const warm=new THREE.MeshStandardMaterial({color:'#ffe4ba',emissive:'#ffd0a3',emissiveIntensity:1.3});
+  const box=new THREE.BoxGeometry(1,1,1),dome=new THREE.SphereGeometry(1,32,12);
+  const ring=new THREE.TorusGeometry(1,.022,6,64);ring.rotateX(Math.PI/2);
+  const post=new THREE.CylinderGeometry(.5,.5,1,12),batches=new Map();
+  const add=(geometry,material,position,scale,yaw=0,storeId=null)=>{
+    const key=`${geometry.uuid}:${material.uuid}`;
+    if(!batches.has(key))batches.set(key,{geometry,material,parts:[]});
+    batches.get(key).parts.push({position,scale,yaw,storeId});
   };
-  world.stores.forEach((store, index) => {
-    const [x, north, base] = store.facade, [nx, ny] = store.outward;
-    const yaw = Math.atan2(nx, -ny), enamel = enamels[index % enamels.length];
-    const at = (across, height, depth = 0.55) => [x - ny * across + nx * depth, base + height, -north - nx * across - ny * depth];
-    const dining = ['restaurant','ice_cream'].includes(store.category);
-    const jewelry = ['jewelry','fashion_accessories'].includes(store.category);
-    const wellness = ['perfumery','wellness','hairdresser','optician'].includes(store.category);
-    if (dining) {
-      // A timber pergola and fine light rail give dining its own evening address.
-      add(box, graphite, at(0,5.5,0.34), [6.6,0.14,0.45], yaw, store.id);
-      for (let slat=0;slat<13;slat++) add(box,timber,at((slat-6)*0.49,5.4,0.8),[0.12,0.15,1.5],yaw,store.id);
-      add(box,glow,at(0,5.32,1.5),[6.1,0.025,0.025],yaw,store.id);
-    } else if (jewelry) {
-      // Dark brushed-metal portal with inset champagne light; no giant badge.
-      add(box,graphite,at(0,5.72,0.32),[6.7,0.16,0.46],yaw,store.id);
-      add(box,silver,at(0,5.62,0.52),[6.4,0.03,0.025],yaw,store.id);
-      for (const side of [-1,1]) {
-        add(box,graphite,at(side*3.25,3.0,0.3),[0.25,5.6,0.4],yaw,store.id);
-        add(box,glow,at(side*3.10,3.1,0.53),[0.018,4.9,0.025],yaw,store.id);
-      }
-      for (let flute=-7;flute<=7;flute++) add(box,silver,at(flute*0.34,5.4,0.27),[0.018,0.42,0.1],yaw,store.id);
-    } else if (wellness) {
-      // Satin ceramic fins above the sign, with a subtle asymmetric pink inset.
-      for (let fin=-8;fin<=8;fin++) add(box,porcelain,at(fin*0.38,5.5,0.3),[0.10,0.6,0.26],yaw,store.id);
-      add(box,enamel,at(2.9,2.55,0.27),[0.14,4.6,0.12],yaw,store.id);
-      add(box,glow,at(2.78,2.55,0.34),[0.018,4.4,0.025],yaw,store.id);
-    } else {
-      // Fashion retains the signature halo, with slimmer ceramic piers.
-      add(arch,silver,at(0,4.9),[1.12,0.5,1],yaw,store.id);
-      add(jewel,pearl,at(0,5.85,0.58),[0.22,0.34,0.15],yaw,store.id);
-      add(jewel,glow,at(0,5.85,0.5),[0.025,0.17,0.025],yaw,store.id);
-      for(const side of [-1,1]) {
-        add(box,porcelain,at(side*2.96,2.7,0.28),[0.16,4.4,0.2],yaw,store.id);
-        add(box,enamel,at(side*2.96,2.7,0.39),[0.035,4.25,0.025],yaw,store.id);
-      }
+  for(const [index,store] of world.stores.entries()) {
+    const [x,north,base]=store.facade,[nx,ny]=store.outward,yaw=Math.atan2(nx,-ny);
+    const at=(across,height,depth=.35)=>[x-ny*across+nx*depth,base+height,-north-nx*across-ny*depth];
+    const accent=accents[index%accents.length],building=world.buildings.find(b=>b.id===store.building_id);
+    add(dome,ivory,at(0,5.08,.80),[3.5,.19,1.25],yaw,store.id);
+    add(dome,accent,at(0,5.13,.80),[3.35,.19,1.16],yaw,store.id);
+    add(ring,brass,at(0,5.08,.80),[3.50,1,1.25],yaw,store.id);
+    add(ring,glow,at(0,4.98,.80),[3.20,1,1.07],yaw,store.id);
+    // Cantilevered horizontal fins and a pastel ceramic panel repeat across the street.
+    const top=Math.min(8.0,(building?.size[2]??9)-.6);
+    for(let i=0;i<3;i++)add(box,i===1?accent:ivory,at(0,top+i*.23,.28),[6.7,.085,.65-i*.1],yaw,store.id);
+    for(const side of [-1,1]) {
+      add(box,brass,at(side*3.25,3.16,.18),[.065,4.95,.11],yaw,store.id);
+      add(box,accent,at(side*3.34,3.16,.16),[.10,4.95,.08],yaw,store.id);
+      // Small orbital pendants, safely over head height.
+      add(post,brass,at(side*2.76,4.55,1.23),[.022,.81,.022],yaw,store.id);
+      add(dome,warm,at(side*2.76,4.09,1.23),[.14,.14,.14],yaw,store.id);
+      add(ring,brass,at(side*2.76,4.09,1.23),[.28,1,.28],yaw,store.id);
     }
-    // A restrained pair of glass pendants links the architectural families.
-    for (const side of [-1,1]) {
-      const across = side*(jewelry?3.25:2.65);
-      add(box,silver,at(across,4.35,0.8),[0.035,0.035,0.85],yaw,store.id);
-      add(box,silver,at(across,4.05,1.18),[0.016,0.60,0.016],yaw,store.id);
-      add(ring,silver,at(across,3.45,1.18),[0.58,0.85,0.7],yaw,store.id);
-      add(jewel,pearl,at(across,3.45,1.18),[0.13,0.31,0.13],yaw,store.id);
-      add(jewel,glow,at(across,3.45,1.18),[0.027,0.20,0.027],yaw,store.id);
+    // Atomic-age starburst on the fascia, flanking the existing readable sign.
+    for(let ray=0;ray<8;ray++) {
+      const a=ray*Math.PI/4,center=at(2.75+Math.cos(a)*.14,5.55+Math.sin(a)*.14,.38);
+      add(dome,brass,center,[.025,.025,.025],yaw,store.id);
     }
-  });
-  const dummy = new THREE.Object3D();
-  for (const { geometry, material, parts } of batches.values()) {
-    const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
-    mesh.userData.storeIds = parts.map(part => part.storeId);
-    parts.forEach((part, index) => {
-      dummy.position.fromArray(part.position);
-      dummy.scale.fromArray(part.scale);
-      dummy.rotation.set(0, part.yaw, 0);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(index, dummy.matrix);
-    });
-    mesh.castShadow = material !== glow;
-    mesh.receiveShadow = true;
-    group.add(mesh);
+    add(dome,warm,at(2.75,5.55,.39),[.065,.065,.05],yaw,store.id);
   }
+  for(const [index,building] of world.buildings.entries()) {
+    if(building.kind==='parking')continue;
+    const [x,north,base]=building.center,roof=base+building.size[2];
+    const radius=Math.min(2.6,building.size[0]*.17,building.size[1]*.17);
+    if(radius<1)continue;
+    add(dome,accents[index%accents.length],[x,roof+.75,-north],[radius,.50,radius]);
+    add(ring,brass,[x,roof+.71,-north],[radius*1.15,1,radius*1.15]);
+    add(ring,glow,[x,roof+.49,-north],[radius*.95,1,radius*.95]);
+    add(post,brass,[x,roof+1.80,-north],[.055,2,.055]);
+    add(dome,warm,[x,roof+2.84,-north],[.12,.12,.12]);
+  }
+  const dummy=new THREE.Object3D();
+  for(const {geometry,material,parts} of batches.values()) {
+    const mesh=new THREE.InstancedMesh(geometry,material,parts.length);mesh.userData.storeIds=parts.map(p=>p.storeId);
+    parts.forEach((p,i)=>{dummy.position.fromArray(p.position);dummy.scale.fromArray(p.scale);dummy.rotation.set(0,p.yaw,0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});
+    mesh.castShadow=material!==glow&&material!==warm;mesh.receiveShadow=true;group.add(mesh);
+  }
+  group.userData.direction='space-age-garden';
   return group;
 }

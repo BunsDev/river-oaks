@@ -7,68 +7,85 @@
     {
       "id": "woman-casual",
       "path": "/assets/characters/woman-casual.glb",
-      "bytes": 1575648,
-      "sha256": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e",
+      "bytes": 1670532,
+      "sha256": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe",
       "skin": "young_african_female",
       "outfit": "female_casualsuit01",
       "hair": "bob01",
       "shoes": "shoes02",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "26beaf1a242b5d6bc5d7341838acc6566c6711a6ae10733bed05b7c49a1b7a4e"
     },
     {
       "id": "man-casual",
       "path": "/assets/characters/man-casual.glb",
-      "bytes": 1718048,
-      "sha256": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad",
+      "bytes": 1809968,
+      "sha256": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25",
       "skin": "young_caucasian_male",
       "outfit": "male_casualsuit02",
       "hair": "short01",
       "shoes": "shoes01",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "891de0e9ff8f3e35c9566a178c59034df592492fa377352fecb002eb56a62fad"
     },
     {
       "id": "woman-tailored",
       "path": "/assets/characters/woman-tailored.glb",
-      "bytes": 1443576,
-      "sha256": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52",
+      "bytes": 1549580,
+      "sha256": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4",
       "skin": "middleage_caucasian_female",
       "outfit": "female_elegantsuit01",
       "hair": "bob02",
       "shoes": "shoes02",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "676b920e941aeb24604bbf67001e1555cfb280e0c3e06c72cba97d9293e0fb52"
     },
     {
       "id": "man-tailored",
       "path": "/assets/characters/man-tailored.glb",
-      "bytes": 1594528,
-      "sha256": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173",
+      "bytes": 1687016,
+      "sha256": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7",
       "skin": "middleage_african_male",
       "outfit": "male_elegantsuit01",
       "hair": "short04",
       "shoes": "shoes03",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "c88d284b4688d7d9d590d6e342596f58fd0a72bddea34e779506ae63455d2173"
     },
     {
       "id": "woman-daywear",
       "path": "/assets/characters/woman-daywear.glb",
-      "bytes": 1908000,
-      "sha256": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae",
+      "bytes": 2007824,
+      "sha256": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639",
       "skin": "young_asian_female",
       "outfit": "female_casualsuit02",
       "hair": "ponytail01",
       "shoes": "shoes01",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "b510eb7356a89dacb76ef9e6a2240d2bf427e613b84d980c4f50f70e2c43a8ae"
     },
     {
       "id": "man-workwear",
       "path": "/assets/characters/man-workwear.glb",
-      "bytes": 1615652,
-      "sha256": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e",
+      "bytes": 1710928,
+      "sha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
       "skin": "middleage_asian_male",
       "outfit": "male_worksuit01",
       "hair": "short02",
       "shoes": "shoes04",
-      "license": "CC0-1.0"
+      "license": "CC0-1.0",
+      "neutral_sha256": "c505dece437d98e128a6fc3f5dfb5eaf365329e73c11b88ef1d03eb016f1526e"
     }
-  ]
+  ],
+  "facial_animation": {
+    "targets": [
+      "eyeBlinkLeft",
+      "eyeBlinkRight"
+    ],
+    "source": "https://static.makehumancommunity.org/assets/assetpacks/faceunits01.html",
+    "author": "Mika Suominen",
+    "license": "CC0-1.0",
+    "archive_sha256": "d113107bd7eb59f3af4df6fc0ec29bfcc593f496d0b336aec14f086a80ce7146",
+    "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS; sparse target append preserves the original binary payload"
+  }
 }

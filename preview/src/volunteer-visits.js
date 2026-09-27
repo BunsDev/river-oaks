@@ -34,7 +34,7 @@ export function planVolunteerVisit(life) {
     if(job.phase!=='queued' || job.generation!==state.generation) continue;
     const recipient=state.locals.find(local=>local.id===job.localId);
     if(recipient.abducted || recipient.wish || recipient.wishDisruption) continue;
-    const pool=state.locals.filter(local=>!local.indoor && !local.priority && local!==recipient);
+    const pool=state.locals.filter(local=>!local.indoor && !local.stationary && !local.priority && local!==recipient);
     job.rejectedHelpers ??= [];
     let helper=state.locals.find(local=>local.id===job.helperId);
     if(!helper) {

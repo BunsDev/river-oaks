@@ -1,5 +1,9 @@
 import { buildDesignatedSidewalks } from './sidewalks.js';
+import { createBreakableGlass } from './breakable-glass.js';
+import { createForceControls } from './force-controls.js';
+import { createLiftSparkles } from './lift-sparkles.js';
 import { pickPerson, withinTalkingReach } from './people-picking.js';
+import { createPointerGesture } from './pointer-gesture.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createRenderPipeline } from './render-pipeline.js';
@@ -20,6 +24,7 @@ import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
+import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
@@ -39,7 +44,10 @@ import './district-theme.css';
 import './immersive.css';
 import './sidebar.css';
 import './visual-finish.css';
+import './retro-finish.css';
+import { setupUIMotion } from './ui-motion.js';
 
+setupUIMotion();
 setupThemeControls();
 setupSidebar();
 const $ = (selector) => document.querySelector(selector);
@@ -47,7 +55,8 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
-let autoControls, playerAvatar, invasion;
+let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
+let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
@@ -66,6 +75,7 @@ const reflectionPosition = new THREE.Vector3();
 // A small pool of warm point lights follows the visitor into the nearest boutiques.
 const storeLights = Array.from({ length: 8 }, () => { const light = new THREE.PointLight('#ffd9ae', 0, 10, 2); light.castShadow = false; scene.add(light); return light; });
 const walkerPosition = new THREE.Vector3();
+const wandTip = new THREE.Vector3(), drawingSize = new THREE.Vector2(), viewportSize = new THREE.Vector2();
 
 function showError(message) {
   const panel = $('#loading');
@@ -104,9 +114,11 @@ function initializeRenderer() {
   });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
     getVisitor: () => walking?.active ? walking.getPosition() : null,
-    getPersona: () => playerAvatar?.form ?? 'jevica',
-    getMultiplayer: () => multiplayer,
+    getVisitorPose: () => walking?.getPose() ?? null,
+    getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
+    getPersona: () => playerAvatar?.form ?? 'visitor',
     onWish: () => playerAvatar?.cast(performance.now()),
+    getMultiplayer: () => multiplayer,
     getRoomId: () => walking?.roomId ?? null,
     getWeather: () => ({storm:$('#weather').value === 'overcast',hour:Number($('#sun-hour').value),humidity:$('#weather').value==='haze'?0.9:0.72}),
     onFocus(local) {
@@ -125,12 +137,22 @@ function initializeRenderer() {
         return walking.focusPerson(local);
       }
       if (!walking.active) enterWalk();
+      if (walking.roomId) {
+        const store = world.stores.find(store => store.id === walking.roomId);
+        if (!store) return false;
+        leaveStore(store);
+      }
       return walking.focusPerson(local);
   } });
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
-  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals });
+  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world });
+  breakableGlass=createBreakableGlass({reducedMotion,
+    groundAt:(x,z)=>world?groundSurfaceHeight(world,x,z):0,
+    onChange:()=>storefrontReflections?.invalidate(),
+  });scene.add(breakableGlass.object);
+  liftSparkles=createLiftSparkles({reducedMotion});scene.add(liftSparkles.object);
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
   const visitTools = document.createElement('div');
@@ -138,6 +160,17 @@ function initializeRenderer() {
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
   visitTools.append($('.player-controls'), invasion.panel);
+  force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
+    getTargets:()=>[
+      ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
+      ...(storePeople?.userData.figures??[]).filter(figure=>figure.id).map(figure=>({object:figure.holder,id:figure.id})),
+    ].map(target=>{const local=community.state?.locals.find(local=>local.id===target.id);return {...target,local,name:local?.name??'Neighbor',mass:75,radius:.35,height:1.8};}).filter(target=>target.local)
+      .concat(forceObjects.map(object=>({object,...object.userData.forceBody}))),
+    onProjectileMove:(from,to,projectile)=>breakableGlass.trace(from,to,projectile),
+    getObstacles:()=>forceObstacles,getCarriage:()=>playerAvatar?.carriage,
+    onCast:target=>playerAvatar?.setForceTarget(target),onManual:()=>autoControls?.stop(),
+  });
+  visitTools.insertBefore(force.panel,invasion.panel);
   $('#viewport').append(visitTools);
   // The auto visit belongs to the whole visit: under the title on wide screens, atop the card grid on phones.
   const phoneLayout = window.matchMedia('(max-width: 700px)');
@@ -182,7 +215,8 @@ function startMultiplayer() {
   autoControls?.stop(); invasion?.reset();
   $('.auto-controls').hidden = true;
   invasion.panel.hidden = true;
-  playerAvatar?.lockForm('jevica', 'Everyone in the shared town plays as Jevica.');
+  force?.reset();force.panel.hidden=true;
+  playerAvatar?.setSharedMode(true);
   remotePlayers = createRemotePlayers(scene, host);
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
@@ -288,13 +322,16 @@ function roadSurface(data, roads, lift, material) {
 function buildRoads(data) {
   const group = new THREE.Group(); group.name = 'Roads and walkways';
   const lanes = data.roads.filter(road => !isWalkway(road)), walks = data.roads.filter(isWalkway);
-  const asphalt = roadSurface(data, lanes, 0.24, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#b4b8bd', roughness: 0.82, side: THREE.DoubleSide, variation: 0.3 }));
+  const asphalt = roadSurface(data, lanes, 0.24, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#849a9c', roughness: 0.63, side: THREE.DoubleSide, variation: 0.3 }));
   group.add(asphalt); group.userData.asphalt = asphalt;
   if (walks.length) group.add(roadSurface(data, walks, 0.26, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), color: '#efe9df', side: THREE.DoubleSide, variation: 0.18 })));
   return group;
 }
 
 function populateWorld(data) {
+  force?.reset();
+  breakableGlass?.reset();
+  liftSparkles?.reset();
   invasion?.reset();
   walking?.exit();
   storefrontReflections?.dispose(); storefrontReflections = null;
@@ -318,20 +355,30 @@ function populateWorld(data) {
   world = data;
   worldGroup = new THREE.Group();
   buildingMesh = buildDistrictBuildings(data);
+  const ground=buildGround(data),roads=buildRoads(data);
+  const sidewalks=buildDesignatedSidewalks(data,createWalkingEnvironment(data).isFree);
+  const supports=[ground.children[0],roads,...sidewalks.children];
+  registerGroundSurfaces(data,supports);
+  const furniture=buildStreetFurniture(data,createWalkingEnvironment(data).isFree);
+  registerGroundSurfaces(data,[...supports,...furniture.children.filter(item=>item.userData.supportSurface)]);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
-  localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor));
+  localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
-  layers = { ground: buildGround(data), roads: buildRoads(data), buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
+  layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(buildDistrictDetail(data));
-  worldGroup.add(buildDesignatedSidewalks(data,createWalkingEnvironment(data).isFree));
-  worldGroup.add(buildStreetFurniture(data, createWalkingEnvironment(data).isFree));
+  worldGroup.add(sidewalks);
+  worldGroup.add(furniture);
+  forceObjects=furniture.userData.forceObjects;
+  forceObstacles=[...furniture.userData.forceObstacles,...(data.trees??[]).map(tree=>({x:tree.position[0],z:-tree.position[1],radius:.35}))];
+  force?.setWorld(data,forceObjects);
   buildingMesh.add(buildDistrictFantasy(data));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
+  breakableGlass?.setWorld(buildingMesh);
   storefrontReflections = createStorefrontReflections({
     renderer, scene, materials: buildingMesh.userData.reflectionMaterials,
     excluded: [...buildingMesh.userData.reflectionExclusions, localsGroup, storePeople,
@@ -492,11 +539,14 @@ function render(now) {
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
+  if(!multiplayer)force?.update(delta,now);
+  breakableGlass?.update(delta);
   playerAvatar?.react(now);
   community?.update(delta, now);
   if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
   layers.trees?.userData.update?.(camera.position);
-  if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition());
+  if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
+  community?.updateSpeech(delta);
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
     if (visitor) walkerPosition.set(visitor[0], visitor[2], -visitor[1]);
@@ -509,7 +559,9 @@ function render(now) {
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
   remotePlayers?.update(now, camera);
-  playerAvatar?.update(now, camera);
+  renderer.getDrawingBufferSize(drawingSize);
+  playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y);
+  liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
   if (storefrontReflections && environmentAssets) {
@@ -545,28 +597,31 @@ function visibleInScene(object) {
   for (let ancestor = object; ancestor; ancestor = ancestor.parent) if (!ancestor.visible) return false;
   return true;
 }
-let pointerStart;
-host.addEventListener('pointerdown', (event) => {
-  pointerStart = event.button === 0 && event.isPrimary ? [event.clientX, event.clientY, event.pointerId] : null;
+const selectionGesture = createPointerGesture();
+host.addEventListener('pointerdown', event => {
+  // Walking picks own host capture, including while another dialogue is open.
+  // Free-camera controls retain their existing canvas capture ownership.
+  const captureTarget=walking?.active ? host : null;
+  if(selectionGesture.begin(event,{captureTarget}) && captureTarget)captureTarget.setPointerCapture(event.pointerId);
 });
-host.addEventListener('pointermove', (event) => {
-  // Once a gesture becomes a camera drag, returning to its origin is not a click.
-  if (pointerStart?.[2] === event.pointerId && Math.hypot(event.clientX - pointerStart[0], event.clientY - pointerStart[1]) > 5) pointerStart = null;
-});
+host.addEventListener('pointermove', event => selectionGesture.move(event));
 for (const type of ['pointercancel', 'lostpointercapture']) host.addEventListener(type, (event) => {
-  if (pointerStart?.[2] === event.pointerId) pointerStart = null;
+  selectionGesture.cancel(event);
 });
+host.addEventListener('blur', () => selectionGesture.cancel());
+window.addEventListener('blur', () => selectionGesture.cancel());
+document.addEventListener('visibilitychange', () => selectionGesture.cancel());
 host.addEventListener('pointerup', (event) => {
-  const start = pointerStart; pointerStart = null;
-  if (!start || event.button !== 0 || start[2] !== event.pointerId || Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5) return;
+  if (!selectionGesture.end(event)) return;
   const rect = host.getBoundingClientRect();
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
+  if(!multiplayer&&force?.pick(raycaster))return;
   const pose = walking.getPose();
-  const id = pickPerson(raycaster, [localsGroup, storePeople].filter(Boolean),
-    [buildingMesh, buildingMesh?.userData.interiors].filter(Boolean),
-    id => !walking.active || withinTalkingReach(community.state.locals.find(local => local.id === id), pose, point => walking.canSee(point)));
+  const id = pickPerson(raycaster, [localsGroup, storePeople, playerAvatar?.carriage.driver].filter(Boolean),
+    [buildingMesh, buildingMesh?.userData.interiors, playerAvatar?.carriage.object].filter(Boolean),
+    id => !walking.active || withinTalkingReach(community.state.locals.find(local => local.id === id), pose, (point,eyeHeight) => walking.canSee(point,eyeHeight)));
   if (id) community.selectLocal(id);
 
 });
@@ -574,8 +629,27 @@ host.addEventListener('pointerup', (event) => {
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats() });
-  window.__riverPeople = (bone = 'head') => [...(localsGroup?.userData.models ?? []).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
-    .filter(person => person.id).map(person => {
+  window.__riverPlayerAttention=()=>{
+    const rig=playerAvatar?.rig;if(!rig)return null;
+    rig.model.updateWorldMatrix(true,true);
+    return {...playerAvatar.attention,position:playerAvatar.object.position.toArray(),bodyYaw:playerAvatar.object.rotation.y,
+      head:rig.model.getObjectByName('head').getWorldQuaternion(new THREE.Quaternion()).toArray(),
+      feet:playerAvatar.feet.map(leg=>({contact:leg.contact,error:leg.error,target:leg.target?.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})),
+      eyes:rig.eyes.pose.map(p=>{const b=rig.model.getObjectByName(p.name);return {...p,position:b.getWorldPosition(new THREE.Vector3()).toArray(),forward:new THREE.Vector3(0,0,1).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion())).toArray()};})};
+  };
+  window.__riverGlass=(details=false)=>breakableGlass?.inspect(details);
+  window.__riverForce=()=>force?.inspect();
+  window.__riverLiftSparkles=()=>liftSparkles?.inspect();
+  window.__riverConversation=(id=community?.state?.selectedId)=>{
+    if(!id)return {id:null,speaking:false};
+    const station=storePeople?.userData.figures.find(p=>p.id===id);
+    const resident=localsGroup?.userData.models.find(p=>p.userData.localId===id)?.userData.avatar;
+    const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
+    return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
+  };
+  window.__riverCarriage = () => ({placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
+    .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);
       const bounds = new THREE.Box3().setFromObject(person.holder), point = bounds.getCenter(new THREE.Vector3());
       point.y = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.86;
@@ -585,8 +659,15 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       point.project(camera);
       const rect = host.getBoundingClientRect();
       const local=community.state.locals.find(local=>local.id===person.id);
-      return {id:person.id, role:person.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
-        reachable:withinTalkingReach(local,walking.getPose(),point=>walking.canSee(point)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+      return {id:person.id, position:[...local.position], renderedPosition:person.holder.getWorldPosition(new THREE.Vector3()).toArray(), role:person.role??local.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
+        reachable:withinTalkingReach(local,walking.getPose(),(point,eyeHeight)=>walking.canSee(point,eyeHeight)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
+    });
+  window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
+    .map(person => {
+      const local=community.state.locals.find(local=>local.id===person.id),effect=person.holder.getObjectByName('Wish effects');
+      let skin=0,clothes=0;
+      person.model?.traverse(item=>{if(item.isMesh && item.visible){if(/^(young|middleage|old)_/.test(item.material?.name ?? ''))skin++;else clothes++;}});
+      return {id:person.id,wish:local?.wish,disrupted:Boolean(local?.wishDisruption),modelReady:Boolean(person.model),bodyVisible:person.model?.visible,height:person.holder.position.y-local.position[2],skin,clothes,props:effect?.children.filter(child=>child.visible).map(child=>child.name) ?? []};
     });
   window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
     .map(person => {
@@ -597,9 +678,12 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     });
   window.__riverMotion = () => (localsGroup?.userData.models ?? []).filter(person=>person.visible && person.userData.avatar).map(person=>({
     id:person.userData.localId, status:community.state.locals.find(local=>local.id===person.userData.localId)?.life?.status,
-    feet:person.userData.avatar.feet.filter(leg=>leg.target).map(leg=>({
-      contact:leg.contact, target:leg.target.toArray(), actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray(),
-    })),
+    feet:person.userData.avatar.feet.filter(leg=>leg.target).map(leg=>{
+      const source=leg.rollPose?leg.soleSources[leg.rollPose.pivotId]:null;
+      const support=source?source.mesh.getVertexPosition(source.index,new THREE.Vector3()).applyMatrix4(source.mesh.matrixWorld):null;
+      return {contact:leg.contact,target:(leg.ikTarget??leg.target).toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray(),
+        support:support?.toArray(),surface:leg.supportPoint?[leg.supportPoint.x,groundSurfaceHeight(world,leg.supportPoint.x,leg.supportPoint.z),leg.supportPoint.z]:null};
+    }),
   }));
 }
 

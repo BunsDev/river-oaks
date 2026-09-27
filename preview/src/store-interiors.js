@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RETRO } from './retro-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
@@ -128,13 +129,13 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     darkMarble: standard({ map: track.t(marbleTexture(23, [72, 70, 72], [150, 140, 128])), roughness: 0.16 }),
     oak: standard({ map: track.t(plankTexture(5, ['#c9ad88', '#c4a682', '#cfb391', '#bea07c'])), roughness: 0.42 }),
     walnut: standard({ map: track.t(plankTexture(9, ['#5e4534', '#634937', '#584030', '#67503f'])), roughness: 0.38 }),
-    terrazzo: standard({ map: track.t(terrazzoTexture(3, '#e4dfd6', ['#b7a48f', '#8e8d86', '#d9c9b3', '#5f5a55', '#c9a79c'])), roughness: 0.3 }),
+    terrazzo: standard({ map: track.t(terrazzoTexture(3, RETRO.ivory, [RETRO.teal, RETRO.rose, RETRO.brass, RETRO.mint, '#f7f1e3'])), roughness: 0.3 }),
     carpet: standard({ map: track.t(carpetTexture(4)), roughness: 1 }),
   };
-  const themeFloor = { fashion: floors.oak, leather: floors.marble, jewelry: floors.marble, perfumery: floors.marble, optician: floors.marble, gallery: floors.oak, dining: floors.walnut, gelato: floors.terrazzo, salon: floors.terrazzo, wellness: floors.terrazzo, cinema: floors.carpet };
+  const themeFloor = { fashion: floors.terrazzo, leather: floors.marble, jewelry: floors.marble, perfumery: floors.marble, optician: floors.marble, gallery: floors.terrazzo, dining: floors.terrazzo, gelato: floors.terrazzo, salon: floors.terrazzo, wellness: floors.terrazzo, cinema: floors.carpet };
   for (const material of Object.values(floors)) { material.map.repeat.set(1, 1); material.emissiveMap = material.map; material.emissive.set('#ffffff'); material.emissiveIntensity = 0.18; }
   const plaster = track.t(plasterTexture(7));
-  const wallTint = { fashion: '#e9e2d6', leather: '#e3d9cb', jewelry: '#e6dfd3', perfumery: '#d8c4c3', optician: '#e8e6e0', gallery: '#f2f0ec', dining: '#5a4636', gelato: '#f0e8e2', salon: '#e6e2dc', wellness: '#dfe3dc', cinema: '#3a2c3c' };
+  const wallTint = { fashion:RETRO.ivory, leather:RETRO.mint, jewelry:RETRO.porcelain, perfumery:'#dbc2c1', optician:RETRO.mint, gallery:RETRO.porcelain, dining:RETRO.deepTeal, gelato:'#e4c7b4', salon:'#c4d5ce', wellness:RETRO.mint, cinema:RETRO.night };
   const walls = Object.fromEntries(Object.entries(wallTint).map(([theme, color]) => [theme, standard({ map: plaster, color, roughness: 0.92, emissive: color, emissiveIntensity: 0.3, envMapIntensity: 0.5 })]));
   const ceiling = standard({ color: '#f3efe8', roughness: 0.95, emissive: '#f3efe8', emissiveIntensity: 0.22 });
   const slat = standard({ color: '#f1ebe1', roughness: 0.8, emissive: '#f1ebe1', emissiveIntensity: 0.12 });
@@ -145,13 +146,13 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const velvet = standard({ color: '#ffffff', roughness: 1 });
   const brass = standard({ color: '#c9a866', roughness: 0.28, metalness: 0.85 });
   const chrome = standard({ color: '#d8dadf', roughness: 0.12, metalness: 1 });
-  const black = standard({ color: '#26262a', roughness: 0.55, metalness: 0.3 });
+  const black = standard({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.3 });
   const oak = standard({ color: '#b28d66', roughness: 0.6 });
-  const walnut = standard({ color: '#4d3728', roughness: 0.55 });
-  const white = standard({ color: '#f2efe9', roughness: 0.5 });
+  const walnut = standard({ color: RETRO.deepTeal, roughness: 0.55 });
+  const white = standard({ color: RETRO.ivory, roughness: 0.5 });
   const ceramic = standard({ color: '#ffffff', roughness: 0.3 });
   const marbleTop = standard({ map: floors.marble.map, roughness: 0.2 });
-  const stone = standard({ color: '#d9d1c2', roughness: 0.7 });
+  const stone = standard({ color: RETRO.porcelain, roughness: 0.7 });
   const glassCase = physical({ color: '#dfe8ea', transparent: true, opacity: 0.22, roughness: 0.04, metalness: 0, depthWrite: false, side: THREE.DoubleSide });
   const bottleGlass = physical({ color: '#ffffff', transparent: true, opacity: 0.55, roughness: 0.08, metalness: 0.05, depthWrite: false });
   const glow = standard({ color: '#fff1d6', emissive: '#ffd9a6', emissiveIntensity: 1.9, roughness: 0.4 });

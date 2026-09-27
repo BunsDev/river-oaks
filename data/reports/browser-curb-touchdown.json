@@ -1,0 +1,4881 @@
+{
+  "date": "2026-09-26",
+  "correction": "Keep the planned swing endpoint on the frame that reaches contact; do not extend it after swing progress reaches one.",
+  "runs": [
+    {
+      "profile": "woman-casual",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5783682420421519,
+      "maxNavigationStepSpeed": 0.5558626519117027,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.352851554059311,
+        "previousHeight": 2.4054638287940495,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.09842389040176,
+              1.6464922761093561,
+              -80.2214912977183
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.90157610959252,
+              1.74038406431635,
+              -80.49856760734387
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.098423890407894,
+              1.7251432530948017,
+              -80.32624941356363
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.9015761095926,
+              1.7402513222041407,
+              -80.49865377815189
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5783682420421519,
+      "maxNavigationStepSpeed": 0.7229303408605237,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.352851554059311,
+        "previousHeight": 2.4054638287940495,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.09842389040176,
+              1.7237890899673,
+              -80.2214912977183
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.90157610959252,
+              1.74038406431635,
+              -80.49856760734387
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.098423890407894,
+              1.7409200802843519,
+              -80.32624941356363
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.9015761095926,
+              1.7402513222041407,
+              -80.49865377815189
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.480304171716611,
+      "maxNavigationStepSpeed": 0.4316095235922912,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.350726441950422,
+        "previousHeight": 2.4000699143409756,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407176,
+              1.740301155140213,
+              -80.0635269208754
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.90157610959731,
+              1.6464877857905516,
+              -79.79763081553581
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407105,
+              1.7401833503754571,
+              -80.06360329291759
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.90157610959058,
+              1.7221077961894498,
+              -79.89974729054323
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.480304171716611,
+      "maxNavigationStepSpeed": 0.715449580598837,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.350726441950422,
+        "previousHeight": 2.4000699143409756,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407176,
+              1.740301155140213,
+              -80.0635269208754
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.90157610959731,
+              1.7220218498419415,
+              -79.79763081553581
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407105,
+              1.7401833503754571,
+              -80.06360329291759
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.90157610959058,
+              1.7385886206674723,
+              -79.89974729054323
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.575515370225009,
+      "maxNavigationStepSpeed": 0.7277015801725906,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.37885563801405,
+        "previousHeight": 2.4051142275178004,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.098423890402316,
+              1.718487334139263,
+              -80.28487630617866
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.90157610959506,
+              1.7402793593114287,
+              -80.51645442602971
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.098423890405684,
+              1.7262974506928173,
+              -80.33861550492433
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.9015761095951,
+              1.7402212871746627,
+              -80.51649207918243
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.3180920163918142,
+      "maxNavigationStepSpeed": 1.3180920163918142,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 45,
+        "height": 2.377985684435068,
+        "previousHeight": 2.399953884708265,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890410686,
+              1.6532089496324254,
+              -80.06851731143308
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368357,
+            "target": [
+              39.90157610953687,
+              1.769271187354356,
+              -80.34935718121336
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040875,
+              1.6512912914545002,
+              -80.07135508433778
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.2302631578947363,
+            "target": [
+              39.901576109525806,
+              1.770661187079231,
+              -80.39202273316657
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4833241047919277,
+      "maxNavigationStepSpeed": 0.5213265662176436,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.375347845927778,
+        "previousHeight": 2.400069914340977,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407055,
+              1.7402834497286317,
+              -80.0810563455019
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.90157610959548,
+              1.6680973234169139,
+              -79.84615302246236
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040702,
+              1.7402274937690156,
+              -80.08109262986083
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.901576109591524,
+              1.7221430726215534,
+              -79.89956531644121
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4833241047919277,
+      "maxNavigationStepSpeed": 0.8163979045066938,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.375347845927778,
+        "previousHeight": 2.400069914340977,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.098423890407055,
+              1.7402834497286317,
+              -80.0810563455019
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.90157610959548,
+              1.7283475373380137,
+              -79.84615302246236
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040702,
+              1.7402274937690156,
+              -80.08109262986083
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.901576109591524,
+              1.7387010905604001,
+              -79.89956531644121
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5770047459520242,
+      "maxNavigationStepSpeed": 0.8169986145770203,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.378735342493229,
+        "previousHeight": 2.391877048709496,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.09842389040224,
+              1.7184953542452017,
+              -80.29244456940884
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.901576109595794,
+              1.7402677716436348,
+              -80.52531720845319
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.098423890403886,
+              1.7242380450451698,
+              -80.31869591724642
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.901576109595815,
+              1.740239065433723,
+              -80.52533582217316
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4131022821213435,
+      "maxNavigationStepSpeed": 1.4131022821213435,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.3919719223812583,
+        "previousHeight": 2.4037477747322695,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389041057,
+              1.6535984864695261,
+              -80.07712977631358
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.901576109541914,
+              1.7689133269808714,
+              -80.33059781774406
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040977,
+              1.6528148903740547,
+              -80.0783129427405
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.90157610953623,
+              1.7701558227273826,
+              -80.35376947378533
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.486917324287873,
+      "maxNavigationStepSpeed": 0.6155443318543696,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.374983013196693,
+        "previousHeight": 2.387373990899092,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040781,
+              1.740272179803141,
+              -80.08983594402916
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.901576109595794,
+              1.7112962317280815,
+              -79.85376620456327
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040779,
+              1.740244495429274,
+              -80.08985389673146
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.90157610959389,
+              1.7185093584729592,
+              -79.87986227502704
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-casual",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.486917324287873,
+      "maxNavigationStepSpeed": 0.9130945176963223,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.374983013196693,
+        "previousHeight": 2.387373990899092,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040781,
+              1.740272179803141,
+              -80.08983594402916
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.901576109595794,
+              1.7293465584758556,
+              -79.85376620456327
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.09842389040779,
+              1.740244495429274,
+              -80.08985389673146
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.90157610959389,
+              1.7340608245296283,
+              -79.87986227502704
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5833389875874593,
+      "maxNavigationStepSpeed": 0.5525289867589223,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.3529054421626876,
+        "previousHeight": 2.405683408415603,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.101136088797254,
+              1.6354859841703622,
+              -80.21622499691307
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898863911141596,
+              1.7293672504465596,
+              -80.49411732264944
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.10113608879607,
+              1.7154839815916663,
+              -80.32108215575839
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89886391114198,
+              1.7292351635906358,
+              -80.49419167414999
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5833389875874593,
+      "maxNavigationStepSpeed": 0.7096691443606762,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.3529054421626876,
+        "previousHeight": 2.405683408415603,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.101136088797254,
+              1.7151443458453743,
+              -80.21622499691307
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898863911141596,
+              1.7293672504465596,
+              -80.49411732264944
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.10113608879607,
+              1.7286594360743952,
+              -80.32108215575839
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89886391114198,
+              1.7292351635906358,
+              -80.49419167414999
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4852749172618918,
+      "maxNavigationStepSpeed": 0.4282756967679413,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3507803300537993,
+        "previousHeight": 2.400289493962529,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101136088850936,
+              1.7292847491044223,
+              -80.05917792312914
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.89886391119293,
+              1.6354815216153769,
+              -79.79250661886118
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.1011360888506,
+              1.7291675320247508,
+              -80.05924381038373
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.898863911187576,
+              1.7119216964595796,
+              -79.89481765121026
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4852749172618918,
+      "maxNavigationStepSpeed": 0.7021883929634853,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3507803300537993,
+        "previousHeight": 2.400289493962529,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101136088850936,
+              1.7292847491044223,
+              -80.05917792312914
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.89886391119293,
+              1.7120988779942818,
+              -79.79250661886118
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.1011360888506,
+              1.7291675320247508,
+              -80.05924381038373
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.898863911187576,
+              1.7266560179015913,
+              -79.89481765121026
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5805345223937728,
+      "maxNavigationStepSpeed": 0.7262452579447665,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.378991565099457,
+        "previousHeight": 2.4053338071393533,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.101136088793325,
+              1.7098903642187466,
+              -80.27972356002368
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898863911152155,
+              1.7292630612799602,
+              -80.51183743982588
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.10113608879419,
+              1.715526960081849,
+              -80.33346027893823
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89886391115232,
+              1.72920527851842,
+              -80.51186992424054
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5805345223937728,
+      "maxNavigationStepSpeed": 0.8754107611655915,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.378991565099457,
+        "previousHeight": 2.4053338071393533,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.101136088793325,
+              1.7243718848454253,
+              -80.27972356002368
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898863911152155,
+              1.7292630612799602,
+              -80.51183743982588
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.10113608879419,
+              1.7300408150270266,
+              -80.33346027893823
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89886391115232,
+              1.72920527851842,
+              -80.51186992424054
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4883432569606914,
+      "maxNavigationStepSpeed": 0.517784348362822,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.375483773013185,
+        "previousHeight": 2.40028949396253,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886298,
+              1.7292671314045203,
+              -80.07661854497466
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89886391119638,
+              1.700861269756033,
+              -79.84112923296594
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101136088862816,
+              1.7292114540764871,
+              -80.07664984880105
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.89886391119278,
+              1.7119357692072816,
+              -79.89457332979113
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4883432569606914,
+      "maxNavigationStepSpeed": 0.802439899521401,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.375483773013185,
+        "previousHeight": 2.40028949396253,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886298,
+              1.7292671314045203,
+              -80.07661854497466
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89886391119638,
+              1.7153341893788423,
+              -79.84112923296594
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101136088862816,
+              1.7292114540764871,
+              -80.07664984880105
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.89886391119278,
+              1.726769962675086,
+              -79.89457332979113
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5820349913053455,
+      "maxNavigationStepSpeed": 0.8170442676791723,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.378871269578636,
+        "previousHeight": 2.3920548945061806,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.10113608879404,
+              1.7118939667814823,
+              -80.2872949944119
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898863911153875,
+              1.7292515311672043,
+              -80.5206642299077
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.10113608879453,
+              1.7154892546309446,
+              -80.31354543967413
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89886391115396,
+              1.729222967939665,
+              -80.52068028857286
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4227832235703097,
+      "maxNavigationStepSpeed": 1.4227832235703097,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.394044103709116,
+        "previousHeight": 2.405900630572202,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101136088882896,
+              1.6461537916480373,
+              -80.07132404161209
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.89886391113754,
+              1.7584969806832473,
+              -80.32587076353883
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608887897,
+              1.6452368574263472,
+              -80.07244920014705
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.89886391113082,
+              1.759873616490367,
+              -80.34905817554049
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.491947569641141,
+      "maxNavigationStepSpeed": 0.6129591824911529,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.3751189402821,
+        "previousHeight": 2.387551836695776,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886073,
+              1.729255917422864,
+              -80.08539469641951
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.898863911196436,
+              1.7037226140905672,
+              -79.84873208108822
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886065,
+              1.7292283708478235,
+              -80.08541018494866
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.89886391119469,
+              1.7078559325736518,
+              -79.87484242909763
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-daywear",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.491947569641141,
+      "maxNavigationStepSpeed": 0.8998252441838694,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.3751189402821,
+        "previousHeight": 2.387551836695776,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886073,
+              1.729255917422864,
+              -80.08539469641951
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.898863911196436,
+              1.7153898540446564,
+              -79.84873208108822
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10113608886065,
+              1.7292283708478235,
+              -80.08541018494866
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.89886391119469,
+              1.7221125579870673,
+              -79.87484242909763
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5928597838656477,
+      "maxNavigationStepSpeed": 0.54551400958335,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.360712683645577,
+        "previousHeight": 2.413808009774432,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.101523632498655,
+              1.6502625993739894,
+              -80.21637309010065
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750251,
+              1.7441921338422175,
+              -80.4935255771928
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.101523632499244,
+              1.728951455651184,
+              -80.32105341730193
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750252,
+              1.7440567684771917,
+              -80.49361583217441
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5928597838656477,
+      "maxNavigationStepSpeed": 0.7132284402781686,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.360712683645577,
+        "previousHeight": 2.413808009774432,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.101523632498655,
+              1.7284740396100329,
+              -80.21637309010065
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750251,
+              1.7441921338422175,
+              -80.4935255771928
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.101523632499244,
+              1.7441349163453266,
+              -80.32105341730193
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750252,
+              1.7440567684771917,
+              -80.49361583217441
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.494795713540067,
+      "maxNavigationStepSpeed": 0.4212608922388661,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3585875715366886,
+        "previousHeight": 2.4084140953213575,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.1015236324975,
+              1.7441075865123912,
+              -80.05848323555003
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.89847636750138,
+              1.6502580192570349,
+              -79.79256465146291
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101523632497496,
+              1.7439874523991283,
+              -80.05856322932488
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.898476367500805,
+              1.7235538647255253,
+              -79.8946382485698
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.494795713540067,
+      "maxNavigationStepSpeed": 0.705747678120332,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3585875715366886,
+        "previousHeight": 2.4084140953213575,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.1015236324975,
+              1.7441075865123912,
+              -80.05848323555003
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.89847636750138,
+              1.7238945842901277,
+              -79.79256465146291
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101523632497496,
+              1.7439874523991283,
+              -80.05856322932488
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.898476367500805,
+              1.7405870376169401,
+              -79.8946382485698
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5901480350656172,
+      "maxNavigationStepSpeed": 0.7194272082576703,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.3869559412470887,
+        "previousHeight": 2.4134584084981823,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.10152363249899,
+              1.723526755251832,
+              -80.27969613606231
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750248,
+              1.7440853598672448,
+              -80.51139046353582
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.10152363249914,
+              1.7308763498221713,
+              -80.33342986416554
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750248,
+              1.7440261395404877,
+              -80.51142990218044
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5901480350656172,
+      "maxNavigationStepSpeed": 0.878002651622598,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.3869559412470887,
+        "previousHeight": 2.4134584084981823,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.10152363249899,
+              1.7378816150939065,
+              -80.27969613606231
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750248,
+              1.7440853598672448,
+              -80.51139046353582
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.10152363249914,
+              1.7448655559406379,
+              -80.33342986416554
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89847636750248,
+              1.7440261395404877,
+              -80.51142990218044
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4979567696325624,
+      "maxNavigationStepSpeed": 0.5100314635570768,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.3834481491608166,
+        "previousHeight": 2.4084140953213593,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101523632497475,
+              1.7440895311408326,
+              -80.07602830596875
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89847636750106,
+              1.6719112778119631,
+              -79.84101379876493
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249747,
+              1.7440324688735263,
+              -80.07606631084778
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.898476367500926,
+              1.7235622836680298,
+              -79.89443151536604
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4979567696325624,
+      "maxNavigationStepSpeed": 0.8067375636054219,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.3834481491608166,
+        "previousHeight": 2.4084140953213593,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.101523632497475,
+              1.7440895311408326,
+              -80.07602830596875
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89847636750106,
+              1.7305600059506805,
+              -79.84101379876493
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249747,
+              1.7440324688735263,
+              -80.07606631084778
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.898476367500926,
+              1.7407033797835831,
+              -79.89443151536604
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5916697514840372,
+      "maxNavigationStepSpeed": 0.809800496091384,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.3868356457262676,
+        "previousHeight": 2.400099560321968,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.101523632498754,
+              1.7235371679149698,
+              -80.28725058407419
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898476367502504,
+              1.7440735431295484,
+              -80.52023788280393
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.101523632498804,
+              1.7289581757451196,
+              -80.31349775681656
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.898476367502504,
+              1.7440442693593956,
+              -80.52025737915648
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4090787106979974,
+      "maxNavigationStepSpeed": 1.4090787106979974,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.4004758486207303,
+        "previousHeight": 2.4122181712098802,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249722,
+              1.658016094561333,
+              -80.07212633356122
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.89847636750578,
+              1.7732793495421868,
+              -80.32502401822502
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249719,
+              1.6572258587277098,
+              -80.07334359014293
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.89847636750677,
+              1.7745986865896586,
+              -80.34810623803122
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.501582329819886,
+      "maxNavigationStepSpeed": 0.6057385577017627,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.3830833164297314,
+        "previousHeight": 2.3955965025115638,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249748,
+              1.7440780384336358,
+              -80.08480805083798
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.8984763675013,
+              1.6720608751390102,
+              -79.84860716729882
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249748,
+              1.7440498067223056,
+              -80.08482685479804
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.89847636750127,
+              1.7235554041806878,
+              -79.87470366120138
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "woman-tailored",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.501582329819886,
+      "maxNavigationStepSpeed": 0.9040748027241285,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.3830833164297314,
+        "previousHeight": 2.3955965025115638,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249748,
+              1.7440780384336358,
+              -80.08480805083798
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.8984763675013,
+              1.7328716648252034,
+              -79.84860716729882
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10152363249748,
+              1.7440498067223056,
+              -80.08482685479804
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.89847636750127,
+              1.737532499355887,
+              -79.87470366120138
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4034806058612004,
+      "maxNavigationStepSpeed": 0.6762151803547267,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.454413280323947,
+        "previousHeight": 2.501195967185987,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.110500151141515,
+              1.7943680245614306,
+              -80.22999684955961
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88949984885101,
+              1.734568436776661,
+              -80.50935063925148
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.110500151139526,
+              1.7326207273214105,
+              -80.33444862982087
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.889499848851116,
+              1.7344479332912637,
+              -80.50943057718608
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4034806058612004,
+      "maxNavigationStepSpeed": 0.7803373855254714,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.454413280323947,
+        "previousHeight": 2.501195967185987,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.110500151141515,
+              1.7323917205121522,
+              -80.22999684955961
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88949984885101,
+              1.734568436776661,
+              -80.50935063925148
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.110500151139526,
+              1.7351646965393603,
+              -80.33444862982087
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.889499848851116,
+              1.7344479332912637,
+              -80.50943057718608
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.305416535344306,
+      "maxNavigationStepSpeed": 0.5519627068862487,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.452288168232179,
+        "previousHeight": 2.495802052743656,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151148436,
+              1.7344931719209569,
+              -80.07438107892608
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88949984885831,
+              1.6408473716981458,
+              -79.80667664106883
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11050015114834,
+              1.7343862276576583,
+              -80.07445192828163
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.8894998488602,
+              1.732617245493594,
+              -79.90884780799944
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.305416535344306,
+      "maxNavigationStepSpeed": 0.7728568544573289,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.452288168232179,
+        "previousHeight": 2.495802052743656,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151148436,
+              1.7344931719209569,
+              -80.07438107892608
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88949984885831,
+              1.732391642339532,
+              -79.80667664106883
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11050015114834,
+              1.7343862276576583,
+              -80.07445192828163
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.8894998488602,
+              1.7348056558776197,
+              -79.90884780799944
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.3989246253492116,
+      "maxNavigationStepSpeed": 0.8529140639610144,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.4775309554872504,
+        "previousHeight": 2.5008463659097373,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.11050015113966,
+              1.7315505302083356,
+              -80.29312361725853
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88949984885065,
+              1.7344733855716137,
+              -80.52695718220829
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.11050015113978,
+              1.732663597216104,
+              -80.34684718727868
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.8894998488507,
+              1.7344206671924913,
+              -80.52699211247575
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.3583129887655154,
+      "maxNavigationStepSpeed": 1.3583129887655154,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 45,
+        "height": 2.4702716040338544,
+        "previousHeight": 2.492910153846613,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11050015118112,
+              1.6554409444578093,
+              -80.07758362995706
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368357,
+            "target": [
+              39.88949984883331,
+              1.7654172522598472,
+              -80.35883986083626
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151177455,
+              1.6528993742651341,
+              -80.08045719019677
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.2302631578947363,
+            "target": [
+              39.88949984882542,
+              1.7674603021562787,
+              -80.40135461517416
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3067333597229513,
+      "maxNavigationStepSpeed": 0.6458244291071047,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.474023163414941,
+        "previousHeight": 2.495802052743657,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151149644,
+              1.7344770988756022,
+              -80.09188779707293
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.8894998488593,
+              1.7296893418696149,
+              -79.85495852293296
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151149594,
+              1.7344263016109722,
+              -80.09192145748457
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.8894998488589,
+              1.7326631844254343,
+              -79.90850359403106
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3067333597229513,
+      "maxNavigationStepSpeed": 0.8856521181796584,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.474023163414941,
+        "previousHeight": 2.495802052743657,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151149644,
+              1.7344770988756022,
+              -80.09188779707293
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.8894998488593,
+              1.7324712084118326,
+              -79.85495852293296
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151149594,
+              1.7344263016109722,
+              -80.09192145748457
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.8894998488589,
+              1.734931178461695,
+              -79.90850359403106
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.400023705333595,
+      "maxNavigationStepSpeed": 0.9433930275615054,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.4774106599664294,
+        "previousHeight": 2.4890775241775427,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.110500151140016,
+              1.7322496005307033,
+              -80.30067847948305
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.889499848850065,
+              1.7344628662163908,
+              -80.5357244949124
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.11050015114011,
+              1.7326259877649095,
+              -80.32692059460157
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88949984885009,
+              1.7344368064843994,
+              -80.53574176256818
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.45813136973457,
+      "maxNavigationStepSpeed": 1.45813136973457,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.4852027262208582,
+        "previousHeight": 2.4973538209686463,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11050015118079,
+              1.6559592789679316,
+              -80.08615203827448
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.88949984883211,
+              1.7648751734177597,
+              -80.33993547831646
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151179274,
+              1.654917316294875,
+              -80.08735243868617
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.88949984882799,
+              1.7664511652883341,
+              -80.36304208657387
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.309936283475892,
+      "maxNavigationStepSpeed": 0.7442584251171702,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.473658330683856,
+        "previousHeight": 2.4845744663794886,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151150326,
+              1.7344668679739421,
+              -80.10064454651432
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.88949984885799,
+              1.7296552780354886,
+              -79.8625140255899
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151150305,
+              1.7344417358876905,
+              -80.10066120093252
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.88949984885763,
+              1.7315792640779533,
+              -79.88866844061394
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-casual",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.309936283475892,
+      "maxNavigationStepSpeed": 0.966762469304534,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.473658330683856,
+        "previousHeight": 2.4845744663794886,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151150326,
+              1.7344668679739421,
+              -80.10064454651432
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.88949984885799,
+              1.7325267905173338,
+              -79.8625140255899
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.110500151150305,
+              1.7344417358876905,
+              -80.10066120093252
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.88949984885763,
+              1.7343850648357495,
+              -79.88866844061394
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4427028222547023,
+      "maxNavigationStepSpeed": 0.6467368412098295,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.473783160874825,
+        "previousHeight": 2.521873254949982,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.11202089045421,
+              1.6633277039710788,
+              -80.23455450040827
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109535735,
+              1.7572105626785137,
+              -80.5137311023961
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.11202089045411,
+              1.7532104723963984,
+              -80.33864148853783
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109535834,
+              1.75707857573541,
+              -80.5138353263309
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4427028222547023,
+      "maxNavigationStepSpeed": 0.7521367994053341,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.473783160874825,
+        "previousHeight": 2.521873254949982,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.11202089045421,
+              1.7525386306367574,
+              -80.23455450040827
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109535735,
+              1.7572105626785137,
+              -80.5137311023961
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.11202089045411,
+              1.7578292513784641,
+              -80.33864148853783
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109535834,
+              1.75707857573541,
+              -80.5138353263309
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3446387513011038,
+      "maxNavigationStepSpeed": 0.5224844276727847,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.4716580488221362,
+        "previousHeight": 2.516479340532173,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046413,
+              1.7571281275060215,
+              -80.07879004760754
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88797910954503,
+              1.6633232299989176,
+              -79.8112663495065
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046404,
+              1.7570109829052862,
+              -80.07888243534484
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.88797910954468,
+              1.7520025609906276,
+              -79.91309325362404
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3446387513011038,
+      "maxNavigationStepSpeed": 0.7446562407260648,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.4716580488221362,
+        "previousHeight": 2.516479340532173,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046413,
+              1.7571281275060215,
+              -80.07879004760754
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88797910954503,
+              1.751781069856546,
+              -79.8112663495065
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046404,
+              1.7570109829052862,
+              -80.07888243534484
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.88797910954468,
+              1.7572194122371694,
+              -79.91309325362404
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4385287995484841,
+      "maxNavigationStepSpeed": 0.8204113793816425,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.4975481736812575,
+        "previousHeight": 2.521523653673732,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.112020890451355,
+              1.7507478677708819,
+              -80.29736878373336
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109534186,
+              1.7571064549966828,
+              -80.53128735382067
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.11202089045306,
+              1.753279340067482,
+              -80.35106030225947
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.887979109534236,
+              1.7570487088164217,
+              -80.53133290226047
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.3250873555290177,
+      "maxNavigationStepSpeed": 1.3250873555290177,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 45,
+        "height": 2.4878859213410474,
+        "previousHeight": 2.5099707105998643,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089049532,
+              1.6730414841694798,
+              -80.08319051936273
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368357,
+            "target": [
+              39.88797910945982,
+              1.7884727823378876,
+              -80.36248646349043
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089049176,
+              1.6705731310325804,
+              -80.08639281638288
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.2302631578947363,
+            "target": [
+              39.88797910943684,
+              1.7904717225509734,
+              -80.40486918271084
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3463375334812433,
+      "maxNavigationStepSpeed": 0.614738922637823,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.49404038164082,
+        "previousHeight": 2.516479340532174,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046605,
+              1.7571105223130328,
+              -80.09627724679301
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.88797910954548,
+              1.7476728482639499,
+              -79.85920536738537
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.112020890466006,
+              1.7570548807578228,
+              -80.09632113892289
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.88797910954294,
+              1.7520511670636028,
+              -79.91271883809134
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3463375334812433,
+      "maxNavigationStepSpeed": 0.8546813858791324,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.49404038164082,
+        "previousHeight": 2.516479340532174,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046605,
+              1.7571105223130328,
+              -80.09627724679301
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.88797910954548,
+              1.7529705373029736,
+              -79.85920536738537
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.112020890466006,
+              1.7570548807578228,
+              -80.09632113892289
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.88797910954294,
+              1.7573523554958275,
+              -79.91271883809134
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4397154115299848,
+      "maxNavigationStepSpeed": 0.9091886380400283,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.497427878160437,
+        "previousHeight": 2.5094255065898534,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.11202089045295,
+              1.7519071421649948,
+              -80.30492211308798
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.8879791095341,
+              1.7570949326737795,
+              -80.54004768782772
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.11202089045396,
+              1.7532189211736482,
+              -80.331148420655
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88797910953412,
+              1.7570663876908026,
+              -80.54007020440405
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.6131057023464912,
+      "maxNavigationStepSpeed": 1.6131057023464912,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.5332710925713053,
+        "previousHeight": 2.5467136400908594,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.1120208904594,
+              1.7025015961554513,
+              -80.10620130690319
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.88797910946397,
+              1.7879417704386826,
+              -80.34361383233968
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046011,
+              1.7032296524271504,
+              -80.10653234446359
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.88797910945211,
+              1.7894972887257414,
+              -80.36665203722066
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3496279892302887,
+      "maxNavigationStepSpeed": 0.7117202958232483,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.493675548909735,
+        "previousHeight": 2.5049224488199875,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046653,
+              1.7570993159948607,
+              -80.10503313759723
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.887979109543934,
+              1.7490280896704598,
+              -79.86675524189278
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046651,
+              1.7570717872629344,
+              -80.10505485431923
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.88797910954252,
+              1.7509147727099001,
+              -79.89289353368954
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-tailored",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3496279892302887,
+      "maxNavigationStepSpeed": 0.937098128883882,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.493675548909735,
+        "previousHeight": 2.5049224488199875,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046653,
+              1.7570993159948607,
+              -80.10503313759723
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.887979109543934,
+              1.7530596842510888,
+              -79.86675524189278
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11202089046651,
+              1.7570717872629344,
+              -80.10505485431923
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.88797910954252,
+              1.7558435368100305,
+              -79.89289353368954
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4118419550337036,
+      "maxNavigationStepSpeed": 0.6700823046712845,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.4602033844285636,
+        "previousHeight": 2.507264782929687,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.111639315800836,
+              1.727002260026728,
+              -80.23211318651951
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.888360684200116,
+              1.735145926701004,
+              -80.5115097299608
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.11163931580131,
+              1.7330153450474712,
+              -80.33655530732347
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.888360684200116,
+              1.7350229659663152,
+              -80.51159028615143
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4118419550337036,
+      "maxNavigationStepSpeed": 0.7726731797483533,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.4602033844285636,
+        "previousHeight": 2.507264782929687,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.111639315800836,
+              1.7327653189401557,
+              -80.23211318651951
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.888360684200116,
+              1.735145926701004,
+              -80.5115097299608
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.11163931580131,
+              1.7357525791784678,
+              -80.33655530732347
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.888360684200116,
+              1.7350229659663152,
+              -80.51159028615143
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3137778845148906,
+      "maxNavigationStepSpeed": 0.5458298250775062,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.458078272336968,
+        "previousHeight": 2.5018708684874644,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579987,
+              1.7350691269531968,
+              -80.07654926965505
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88836068419891,
+              1.6413897430981914,
+              -79.80880672369905
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.734960002480967,
+              -80.07662066614883
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.88836068419827,
+              1.7330117543527623,
+              -79.91097743052832
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3137778845148906,
+      "maxNavigationStepSpeed": 0.7651926493768269,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.458078272336968,
+        "previousHeight": 2.5018708684874644,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579987,
+              1.7350691269531968,
+              -80.07654926965505
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.88836068419891,
+              1.7327652062918641,
+              -79.80880672369905
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.734960002480967,
+              -80.07662066614883
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.88836068419827,
+              1.7353546931508075,
+              -79.91097743052832
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.407367399868793,
+      "maxNavigationStepSpeed": 0.845843798714041,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.483459058322291,
+        "previousHeight": 2.5069151816534374,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.11163931580099,
+              1.7318412468014348,
+              -80.29523289500872
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88836068420011,
+              1.7350489371669529,
+              -80.52910741140614
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.111639315801135,
+              1.7330595564018105,
+              -80.34895633381126
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88836068420011,
+              1.7349951440208522,
+              -80.5291426114681
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.3627598090030713,
+      "maxNavigationStepSpeed": 1.3627598090030713,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 45,
+        "height": 2.477514615710774,
+        "previousHeight": 2.5002272791941587,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579914,
+              1.6579353156299752,
+              -80.0794439970679
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368357,
+            "target": [
+              39.888360684200705,
+              1.7663659183890907,
+              -80.36093630393853
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.111639315799216,
+              1.6553629674067598,
+              -80.08236376285609
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.2302631578947363,
+            "target": [
+              39.888360684201615,
+              1.7684903018021074,
+              -80.40342787406418
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3151761342405877,
+      "maxNavigationStepSpeed": 0.6393987926238864,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.479951266250122,
+        "previousHeight": 2.5018708684874653,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.7350527261817108,
+              -80.09405812867995
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.88836068419908,
+              1.7299270348475821,
+              -79.85708118689031
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.7350008932980392,
+              -80.09409204910473
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.88836068419896,
+              1.733059130685152,
+              -79.91062968631452
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3151761342405877,
+      "maxNavigationStepSpeed": 0.8775658172070511,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.479951266250122,
+        "previousHeight": 2.5018708684874653,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.7350527261817108,
+              -80.09405812867995
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.88836068419908,
+              1.7328611624416366,
+              -79.85708118689031
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579988,
+              1.7350008932980392,
+              -80.09409204910473
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.88836068419896,
+              1.735482474499006,
+              -79.91062968631452
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.4084851398285814,
+      "maxNavigationStepSpeed": 0.9358742293748357,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.48333876280147,
+        "previousHeight": 2.495076138966708,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.11163931580083,
+              1.7329187836193418,
+              -80.30278727408393
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88836068420014,
+              1.7350382033375813,
+              -80.53787054054987
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.111639315800886,
+              1.7330207699941578,
+              -80.32902929016538
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.88836068420014,
+              1.7350116123216621,
+              -80.53788794158586
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5946101550164826,
+      "maxNavigationStepSpeed": 1.5946101550164826,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.513923581773412,
+        "previousHeight": 2.5272119997318825,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579996,
+              1.6772317466311846,
+              -80.10373635986254
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.88836068420092,
+              1.7658009523862965,
+              -80.34202684652125
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579995,
+              1.6779754415373096,
+              -80.1038723068102
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.88836068420137,
+              1.767418395463292,
+              -80.36512242190992
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.3183977179688533,
+      "maxNavigationStepSpeed": 0.7373189354553311,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.4795864335190374,
+        "previousHeight": 2.490573081168778,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579986,
+              1.7350422866840969,
+              -80.10281186818784
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.88836068419924,
+              1.7298939047641846,
+              -79.86463294617684
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579986,
+              1.7350166422175983,
+              -80.10282865126207
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.888360684199206,
+              1.7318737177910193,
+              -79.89078859394671
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "man-workwear",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.3183977179688533,
+      "maxNavigationStepSpeed": 0.9583166944564603,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.4795864335190374,
+        "previousHeight": 2.490573081168778,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579986,
+              1.7350422866840969,
+              -80.10281186818784
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.88836068419924,
+              1.7329184755267426,
+              -79.86463294617684
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.11163931579986,
+              1.7350166422175983,
+              -80.10282865126207
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.888360684199206,
+              1.734919865530321,
+              -79.89078859394671
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 30,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5837536113491835,
+      "maxNavigationStepSpeed": 0.5520698146161074,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.360851135207497,
+        "previousHeight": 2.41364292225247,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.10687303616602,
+              1.6360590499124288,
+              -80.21598508260317
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696377258,
+              1.7299598256345923,
+              -80.49386753596748
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.10687303616292,
+              1.7160126388678578,
+              -80.32083245965747
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696377295,
+              1.7298263723863037,
+              -80.49394252249388
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 30,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5837536113491835,
+      "maxNavigationStepSpeed": 0.707624233494224,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 15,
+        "height": 2.360851135207497,
+        "previousHeight": 2.41364292225247,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              40.10687303616602,
+              1.715668060515323,
+              -80.21598508260317
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696377258,
+              1.7299598256345923,
+              -80.49386753596748
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              40.10687303616292,
+              1.7292536430515397,
+              -80.32083245965747
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696377295,
+              1.7298263723863037,
+              -80.49394252249388
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 30,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4856895410236293,
+      "maxNavigationStepSpeed": 0.4278165247355048,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3587260230986082,
+        "previousHeight": 2.408249007799396,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036220236,
+              1.729876470828034,
+              -80.05892800204767
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.8931269638245,
+              1.63605454126016,
+              -79.79226921143886
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036219916,
+              1.7297580412511686,
+              -80.0589944519073
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.893126963821274,
+              1.7124241074056623,
+              -79.89457216488067
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 30,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4856895410236293,
+      "maxNavigationStepSpeed": 0.7001434807880269,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 27,
+        "height": 2.3587260230986082,
+        "previousHeight": 2.408249007799396,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036220236,
+              1.729876470828034,
+              -80.05892800204767
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.7368421052631585,
+            "target": [
+              39.8931269638245,
+              1.7126014594446777,
+              -79.79226921143886
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036219916,
+              1.7297580412511686,
+              -80.0589944519073
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052637,
+            "target": [
+              39.893126963821274,
+              1.7272394393327908,
+              -79.89457216488067
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 60,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5809531838871127,
+      "maxNavigationStepSpeed": 0.7251451678356524,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.3869441012447683,
+        "previousHeight": 2.41329332097622,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.106873036160806,
+              1.7103931782449922,
+              -80.27947844029208
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696378273,
+              1.729854558655491,
+              -80.51158601646131
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.106873036160366,
+              1.7160561217295125,
+              -80.3332132723705
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696378289,
+              1.729796178183411,
+              -80.51161877826411
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 60,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.5809531838871127,
+      "maxNavigationStepSpeed": 0.873188892727903,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 29,
+        "height": 2.3869441012447683,
+        "previousHeight": 2.41329332097622,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842108,
+            "target": [
+              40.106873036160806,
+              1.724942820796982,
+              -80.27947844029208
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696378273,
+              1.729854558655491,
+              -80.51158601646131
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6447368421052636,
+            "target": [
+              40.106873036160366,
+              1.7306404713448007,
+              -80.3332132723705
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696378289,
+              1.729796178183411,
+              -80.51161877826411
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 60,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4887619184540313,
+      "maxNavigationStepSpeed": 0.5173019228961007,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.3834363091584962,
+        "previousHeight": 2.4082490077993968,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303623087,
+              1.7298586708828552,
+              -80.07637426770566
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89312696382931,
+              1.701320395180074,
+              -79.84088340555158
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036230716,
+              1.7298024176207423,
+              -80.07640583884319
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.89312696382712,
+              1.712438404658351,
+              -79.89432542848168
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 60,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4887619184540313,
+      "maxNavigationStepSpeed": 0.8002288585459993,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 54,
+        "height": 2.3834363091584962,
+        "previousHeight": 2.4082490077993968,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303623087,
+              1.7298586708828552,
+              -80.07637426770566
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842087,
+            "target": [
+              39.89312696382931,
+              1.7158610896245106,
+              -79.84088340555158
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.106873036230716,
+              1.7298024176207423,
+              -80.07640583884319
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6447368421052615,
+            "target": [
+              39.89312696382712,
+              1.7273545875211112,
+              -79.89432542848168
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 120,
+      "edge": 0.7,
+      "maxWorldSpeed": 1.5824545781120847,
+      "maxNavigationStepSpeed": 0.8156455316152389,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 58,
+        "height": 2.3868238057239477,
+        "previousHeight": 2.400010927208215,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6907894736842093,
+            "target": [
+              40.1068730361615,
+              1.7123959364723917,
+              -80.28704800153565
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.893126963781704,
+              1.7298429092719234,
+              -80.52041880321698
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": false,
+            "swingProgress": 0.6677631578947355,
+            "target": [
+              40.10687303616135,
+              1.716017973782709,
+              -80.31329731736992
+            ]
+          },
+          {
+            "side": "r",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              39.89312696378178,
+              1.7298140505828385,
+              -80.52043499901022
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 120,
+      "edge": 0.8,
+      "maxWorldSpeed": 1.4258407367491621,
+      "maxNavigationStepSpeed": 1.4258407367491621,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 91,
+        "height": 2.4025238511571434,
+        "previousHeight": 2.4144058572967197,
+        "navigationHeight": 1.5,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303625102,
+              1.647621330523918,
+              -80.07093331231502
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.29934210526315913,
+            "target": [
+              39.8931269637829,
+              1.7592434813741271,
+              -80.32553394698456
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303624724,
+              1.6466943390634348,
+              -80.07206976535176
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.27631578947368535,
+            "target": [
+              39.89312696377773,
+              1.7606343460209297,
+              -80.3487057077165
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 120,
+      "edge": 1.1,
+      "maxWorldSpeed": 1.4923671564479868,
+      "maxNavigationStepSpeed": 0.6121316997715809,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.383071476427411,
+        "previousHeight": 2.395507869397811,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303622966,
+              1.7298473409001476,
+              -80.08514587308295
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.893126963827704,
+              1.7041724645671341,
+              -79.8484840918545
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303622958,
+              1.7298195093788296,
+              -80.08516149387364
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.893126963826425,
+              1.7083271197059784,
+              -79.87459317989901
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "profile": "jevica",
+      "hz": 120,
+      "edge": 1.2,
+      "maxWorldSpeed": 1.4923671564479868,
+      "maxNavigationStepSpeed": 0.8975220514303928,
+      "maxFootError": 2.220446049250313e-16,
+      "peak": {
+        "frame": 108,
+        "height": 2.383071476427411,
+        "previousHeight": 2.395507869397811,
+        "navigationHeight": 1.66,
+        "feet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303622966,
+              1.7298473409001476,
+              -80.08514587308295
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6907894736842134,
+            "target": [
+              39.893126963827704,
+              1.7159174070719048,
+              -79.8484840918545
+            ]
+          }
+        ],
+        "previousFeet": [
+          {
+            "side": "l",
+            "contact": true,
+            "swingProgress": null,
+            "target": [
+              40.10687303622958,
+              1.7298195093788296,
+              -80.08516149387364
+            ]
+          },
+          {
+            "side": "r",
+            "contact": false,
+            "swingProgress": 0.6677631578947396,
+            "target": [
+              39.893126963826425,
+              1.7227391082806167,
+              -79.87459317989901
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "maxWorldBodySpeed": 1.6131057023464912,
+  "maxLandingAnkleSpeed": 3.226858788116038,
+  "limits": "Synthetic production-rig diagnostic, not full realism acceptance. Other ankle landing discontinuities remain. The new unit gate proves planned touchdown X/Z preservation, not all landing smoothness."
+}

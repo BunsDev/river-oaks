@@ -9,6 +9,20 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1] / "data/raw/characters"
 ARCHIVES = [
     (
+        "visemes02.zip",
+        "https://files2.makehumancommunity.org/functional/visemes02.zip",
+        "a69ab6fb95ddd5f56f70acc7e859f5f9c6ae613c527d577ea1571eff2183d29e",
+        2_000_000,
+        "visemes02",
+    ),
+    (
+        "faceunits01.zip",
+        "https://files2.makehumancommunity.org/functional/faceunits01.zip",
+        "d113107bd7eb59f3af4df6fc0ec29bfcc593f496d0b336aec14f086a80ce7146",
+        2_000_000,
+        "faceunits",
+    ),
+    (
         "mpfb.zip",
         "https://github.com/makehumancommunity/mpfb2/archive/refs/tags/v2.0.17.zip",
         "d08e726c798fdc4eefb02b06b6c4efe37d40b5439777e53cf96dce0e5073297d",

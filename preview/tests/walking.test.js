@@ -46,3 +46,20 @@ test('speed is stable across refresh rates and diagonal input is normalized', ()
   assert.ok(Math.abs(run(30, { forward: 1 }) - run(120, { forward: 1 })) < 0.02);
   assert.ok(Math.abs(run(60, { forward: 1 }) - run(60, { forward: 1, strafe: 1 })) < 0.001);
 });
+
+test('placed-obstacle checks use one fresh ground height per position query',()=>{
+  let reads=0,height=.2;
+  const terrain={bounds_m:[-50,-50,50,50],buildings:[],get walkSurfaceOffset(){reads++;return height;}};
+  const samples=[],objects=Array.from({length:16},()=>({contains(x,y,z,radius){samples.push([x,y,z,radius]);return false;}}));
+  const environment=createWalkingEnvironment(terrain,objects);
+  assert.equal(environment.isFree(2,3),true);
+  assert.equal(reads,1,'A single candidate point must not resample terrain for every object');
+  assert.equal(samples.length,16);assert.ok(samples.every(s=>Math.abs(s[1]-1.1)<1e-10&&s[0]===2&&s[2]===3&&s[3]===.35));
+  height=.4;samples.length=0;assert.equal(environment.isFree(2,3),true);
+  assert.equal(reads,2,'A later query must see a changed surface');assert.ok(samples.every(s=>s[1]===1.3));
+  reads=0;samples.length=0;assert.equal(environment.isFree(51,3),false);
+  assert.equal(reads,0);assert.equal(samples.length,0,'World bounds still reject before object queries');
+  objects.length=0;assert.equal(environment.isFree(2,3),true);assert.equal(reads,0,'No object means no object-height query');
+  objects.push({contains(){return true;}},{contains(){throw new Error('Must stop after the first blocker');}});
+  assert.equal(environment.isFree(2,3),false);assert.equal(reads,1);
+});

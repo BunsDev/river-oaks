@@ -82,7 +82,7 @@ continuous collision, target-GPU performance or native Unreal parity.
 
 `preview/tests/frame-budget.test.js` checks that each skeleton uploads once per
 composed frame, that every shipped rig renders from one shared skeleton, and
-that the AO pass hides excluded objects from a cached list.
+that the AO pass hides excluded objects immediately while preserving hidden subtrees.
 `render-quality.test.js` covers the Auto resolution controller: it steps down
 when a 60 Hz display misses refreshes, recovers gradually, settles on a
 borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
@@ -131,3 +131,10 @@ inject simulation state. Results are recorded in
 [the wish receipt](../data/reports/jevica-wishes-e2e.json); screenshots go to
 `output/playwright/wish-*.png`. This covers the browser preview, not native Unreal
 or human accessibility acceptance.
+
+Run Playwright CLI from the repository root: speech and facial comparison scripts
+load generated candidates from `data/raw/` relative to that directory. Generate
+those optional candidates before running the comparison scripts. Solo directory
+and nearby encounter sweeps cover 194 people: 24 outdoor residents, 169 indoor
+residents, and Prince Jev, the carriage driver. Both wait for his model to load.
+Older dated reports with 193 people predate the carriage encounter.

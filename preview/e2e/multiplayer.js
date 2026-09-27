@@ -14,7 +14,12 @@ async page => {
     await other.goto(origin+'/?motion-debug=1');await ready(other);
     await page.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='bob'&&player.ready),null,{timeout:60000});
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready),null,{timeout:60000});
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.unicornsReady==='true'&&document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
     check(await page.locator('#player-form').count()===0,'Jevica is the only playable form');
+    check(await page.evaluate(()=>document.querySelector('.force-controls').hidden&&document.querySelector('#player-carriage').parentElement.hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
+    check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the solo coachman');
+    await page.locator('#canvas-host').focus();await page.keyboard.press('KeyT');
+    check(await page.evaluate(()=>!window.__riverForce().enabled),'Force shortcut cannot bypass shared-mode gating');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.length===2),'Two accounts share the roster and rendered Jevica avatars');
     await page.bringToFront();
     const openPanel=page.getByRole('button',{name:'Show controls',exact:true});
@@ -72,5 +77,5 @@ async page => {
     check(await other.getByRole('link',{name:'Sign in with WorkOS'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
     check(!errors.length,'No uncaught errors: '+errors.join('; '));
     return {passed:true,checks,errors,scope:'Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance.'};
-  } catch(error) {return {passed:false,checks,errors,failure:error.message};} finally {await otherContext.close();}
+  } catch(error) {return {passed:false,checks,errors,failure:error.message};} finally {await otherContext.close();await page.goto('about:blank');}
 }
