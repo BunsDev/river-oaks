@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { storefrontSpot } from '../src/arrival.js';
-import { clearOfRoads, isWalkway, laneFixtures } from '../src/street-furniture.js';
+import { clearOfRoads, distanceToRoad, isWalkway, laneFixtures } from '../src/street-furniture.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -26,8 +26,10 @@ for (const mode of ['arrive', 'leave']) test(`every storefront ${mode === 'arriv
 });
 
 test('fixtures still keep off walkways, while people may stand on them', () => {
-  const walk = world.roads.find(isWalkway), [px, py] = walk.points[0];
+  // A walkway point clear of every vehicle lane: fixtures may not use it, people may stand on it.
+  const lanes = world.roads.filter(road => !isWalkway(road));
+  const [px, py] = world.roads.filter(isWalkway).flatMap(road => road.points).find(([x, y]) => lanes.every(road => distanceToRoad(road, x, -y) > road.width_m / 2 + 1));
   assert.equal(clearOfRoads(world, px, -py, 0), false, 'a walkway centreline is not a fixture spot');
-  assert.equal(clearOfRoads(world, px, -py, 0, { vehiclesOnly: true }) || world.roads.some(road => !isWalkway(road)), true);
+  assert.equal(clearOfRoads(world, px, -py, 0, { vehiclesOnly: true }), true, 'people may stand on walkway pavement');
   for (const [x, , z] of laneFixtures(world).lamps) assert.ok(clearOfRoads(world, x, z), 'lamp on a road or walkway');
 });

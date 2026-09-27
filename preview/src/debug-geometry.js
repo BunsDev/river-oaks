@@ -86,13 +86,18 @@ export function storeMarkers(stores, heightAt) {
   return out;
 }
 
-// Flight clearance: the roof outline the bubble may not pass below, at the
-// same height the walking model computes (building top plus 3.1 m).
+// Flight clearance: the roof outline the bubble may not pass below, built the
+// same way as the walking model: mapped rings, a rotated rectangle for
+// buildings without one, and a 23.1 m cap over collision-only worlds.
 export function roofRings(world, terrainAt) {
-  return (world.buildings ?? []).filter(building => building.ring?.length).map(building => ({
-    ring: ringToScene(building.ring),
-    top: (building.center?.[2] ?? terrainAt(building.center[0], -building.center[1])) + building.size[2] + 3.1,
-  }));
+  const roofs = (world.buildings ?? []).map(building => {
+    const angle = (building.yaw_deg ?? 0) * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle);
+    const ring = building.ring?.length ? ringToScene(building.ring)
+      : [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => [building.center[0] + x * building.size[0] / 2 * c - y * building.size[1] / 2 * s, -building.center[1] - x * building.size[0] / 2 * s - y * building.size[1] / 2 * c]);
+    return { ring, top: (building.center?.[2] ?? terrainAt(building.center[0], -building.center[1])) + building.size[2] + 3.1 };
+  });
+  if (!roofs.length) for (const ring of (world.collisionPolygons ?? []).map(ringToScene)) roofs.push({ ring, top: Math.max(...ring.map(([x, z]) => terrainAt(x, z))) + 23.1 });
+  return roofs;
 }
 
 // Room footprints and their blocking fixtures as scene-space rings at floor height.
@@ -135,7 +140,8 @@ export function heaviestMeshes(root, limit = 12, isVisible = () => true) {
   const rows = [];
   root.traverse(object => {
     if (!object.isMesh || !isVisible(object)) return;
-    rows.push(describeObject(object));
+    // Keep the mesh itself: repeated meshes share a path and triangle count.
+    rows.push(Object.assign(describeObject(object), { object }));
   });
   return rows.sort((a, b) => b.drawnTriangles - a.drawnTriangles).slice(0, limit);
 }

@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY preview ./preview
+# vite.config.js loads the shared-town dev plugin from server/.
+COPY server ./server
 RUN npm run build
 RUN npm prune --omit=dev
 

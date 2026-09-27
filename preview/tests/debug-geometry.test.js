@@ -68,3 +68,23 @@ test('the polygon inspector counts triangles, instances and names', () => {
   const partial = new THREE.BufferGeometry(); partial.setAttribute('position', new THREE.Float32BufferAttribute(new Array(27).fill(0), 3)); partial.setDrawRange(0, 6);
   assert.equal(triangleCount(partial), 2, 'the draw range limits what is drawn');
 });
+
+test('flight clearance draws the same fallback roofs the walking model enforces', () => {
+  const box = { center: [10, 20, 1], size: [4, 2, 6], yaw_deg: 90 };
+  const [roof] = roofRings({ buildings: [box] }, () => 0);
+  assert.equal(roof.top, 1 + 6 + 3.1);
+  const xs = roof.ring.map(([x]) => x), zs = roof.ring.map(([, z]) => z);
+  assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - 2) < 1e-9 && Math.abs(Math.max(...zs) - Math.min(...zs) - 4) < 1e-9, 'a 90° yaw swaps width and depth');
+  const walking = createWalkingEnvironment({ bounds_m: [-50, -50, 50, 50], buildings: [box], collisionPolygons: [] });
+  assert.equal(walking.canFly(10, 9.5, -20), false, "below the roof clearance"); assert.equal(walking.canFly(10, 10.5, -20), true, "above it");
+  const cap = roofRings({ collisionPolygons: [[[0, 0], [2, 0], [2, 2]]] }, x => x);
+  assert.equal(cap.length, 1); assert.equal(cap[0].top, 2 + 23.1, 'collision-only worlds get the 23.1 m cap');
+});
+
+test('heaviest-mesh rows keep their own mesh even when repeated meshes look identical', () => {
+  const geometry = new THREE.BoxGeometry(), group = new THREE.Group();
+  const a = new THREE.Mesh(geometry), b = new THREE.Mesh(geometry); a.name = b.name = 'Planter'; group.add(a, b);
+  const rows = heaviestMeshes(group);
+  assert.equal(rows.length, 2); assert.notEqual(rows[0].object, rows[1].object);
+  assert.deepEqual(new Set(rows.map(row => row.object)), new Set([a, b]));
+});

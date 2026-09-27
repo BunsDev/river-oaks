@@ -64,6 +64,8 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
   const terrainAt = (x, z) => terrainHeight(world.terrain, x, -z);
   const persist = () => save({ open, layers: state });
 
+  // Markers that must always read on top (cursor, selection, bones) keep depthTest off whatever X-ray says.
+  const onTop = material => { material.depthTest = false; material.userData.alwaysOnTop = true; return material; };
   const lineMaterial = (color, opacity = 0.95) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: !state.xray, depthWrite: false });
   const lines = (positions, color, name, opacity) => {
     const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -127,7 +129,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
         const at = owner.getWorldPosition(new THREE.Vector3());
         if (Math.hypot(at.x - cx, at.z - cz) > 40) return;
         seen.add(owner);
-        const helper = new THREE.SkeletonHelper(owner); helper.material.depthTest = false; helper.material.transparent = true; helper.renderOrder = 11;
+        const helper = new THREE.SkeletonHelper(owner); onTop(helper.material); helper.material.transparent = true; helper.renderOrder = 11;
         helpers.push(helper);
       });
       counts.skeletons = helpers.length;
@@ -160,7 +162,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
     state[id] = on; persist();
     const input = panel.querySelector(`[data-debug-layer="${id}"]`); if (input) input.checked = on;
     if (id === 'wireframe') return applyWireframe(on);
-    if (id === 'xray') { root.traverse(item => [item.material].flat().forEach(material => { if (material && !item.isSkeletonHelper && item.name !== 'Selection face') { material.depthTest = !on; material.needsUpdate = true; } })); return; }
+    if (id === 'xray') { root.traverse(item => [item.material].flat().forEach(material => { if (material && !material.userData.alwaysOnTop) { material.depthTest = !on; material.needsUpdate = true; } })); return; }
     if (id === 'inspector') { host.classList.toggle('debug-inspecting', on); if (!on) select(null); return; }
     rebuild(id);
   }
@@ -197,18 +199,18 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
     }
     object.geometry.computeBoundingBox();
     const bounds = object.geometry.boundingBox.clone().applyMatrix4(matrix);
-    const boxHelper = new THREE.Box3Helper(bounds, COLORS.select); boxHelper.material.depthTest = false; parts.push(boxHelper);
+    const boxHelper = new THREE.Box3Helper(bounds, COLORS.select); onTop(boxHelper.material); parts.push(boxHelper);
     let faceText = '–';
     if (selection.face && object.geometry.attributes.position) {
       const position = object.geometry.attributes.position, { a, b, c } = selection.face;
       const corners = [a, b, c].map(index => new THREE.Vector3().fromBufferAttribute(position, index).applyMatrix4(matrix));
       // Outline plus normal arrow: a filled face would also darken the scene's ambient occlusion.
       const outline = lines([0, 1, 1, 2, 2, 0].flatMap(i => corners[i].toArray()), COLORS.face, 'Selection face');
-      outline.material.depthTest = false; outline.renderOrder = 12; parts.push(outline);
+      onTop(outline.material); outline.renderOrder = 12; parts.push(outline);
       const normal = selection.face.normal.clone().transformDirection(matrix);
       const centre = corners[0].clone().add(corners[1]).add(corners[2]).divideScalar(3);
       const arrow = new THREE.ArrowHelper(normal, centre, 1.2, COLORS.face, 0.3, 0.15); arrow.name = 'Selection normal';
-      arrow.traverse(item => { if (item.material) { item.material.depthTest = false; item.renderOrder = 12; } }); parts.push(arrow);
+      arrow.traverse(item => { if (item.material) { onTop(item.material); item.renderOrder = 12; } }); parts.push(arrow);
       const area = new THREE.Triangle(...corners).getArea();
       faceText = `#${selection.faceIndex} · normal ${fmt(normal.x)} ${fmt(normal.y)} ${fmt(normal.z)}`;
       faceText += ` · ${fmt(area)} m²`;
@@ -232,7 +234,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
 
   // Cursor readout: march the view ray over the game's own ground model.
   const marker = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.35, 32), new THREE.MeshBasicMaterial({ color: '#ffffff', side: THREE.DoubleSide, depthTest: false, transparent: true }));
-  marker.rotation.x = -Math.PI / 2; marker.renderOrder = 12; marker.name = 'Cursor'; marker.visible = false; root.add(marker);
+  onTop(marker.material); marker.rotation.x = -Math.PI / 2; marker.renderOrder = 12; marker.name = 'Cursor'; marker.visible = false; root.add(marker);
   let lastMove = 0;
   const onPointerMove = event => {
     if (!open || !world || panel.contains(event.target) || event.timeStamp - lastMove < 50) return;
@@ -272,14 +274,11 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
 
   function renderHeavy() {
     const list = $('[data-debug-heavy] ol'); if (!$('[data-debug-heavy]').open) return;
-    const meshes = [];
-    scene.traverse(object => { if (object.isMesh && !isOverlay(object) && visibleChain(object)) meshes.push(object); });
     const rows = heaviestMeshes(scene, 12, object => !isOverlay(object) && visibleChain(object));
-    const byRow = rows.map(row => meshes.find(mesh => describeObject(mesh).path === row.path && describeObject(mesh).drawnTriangles === row.drawnTriangles));
     list.replaceChildren(...rows.map((row, i) => {
       const item = document.createElement('li'), button = document.createElement('button');
       button.type = 'button'; button.textContent = `${row.drawnTriangles.toLocaleString()} · ${row.path}`; button.title = `${row.type} · ${row.materials.join(', ')} · click to inspect`;
-      button.addEventListener('click', () => { const mesh = byRow[i]; if (mesh) select({ object: mesh, point: mesh.getWorldPosition(new THREE.Vector3()), face: null, faceIndex: null }); });
+      button.addEventListener('click', () => { const mesh = row.object; if (mesh) select({ object: mesh, point: mesh.getWorldPosition(new THREE.Vector3()), face: null, faceIndex: null }); });
       item.append(button); return item;
     }));
   }

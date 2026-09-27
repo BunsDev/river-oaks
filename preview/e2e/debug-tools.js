@@ -44,6 +44,13 @@ async page => {
   check(selection.triangles > 0 && selection.vertices > 0, `Clicking inspects the mesh under the cursor (${selection.path}: ${selection.triangles} tris)`);
   check(await page.locator('#community-dialogue').isHidden(), 'Inspecting does not start a conversation');
   check((await page.locator('[data-debug-selection]').textContent()).includes('Polygons'), 'The selection panel lists polygon counts');
+  const depth = () => debug(() => { const top = [], normal = []; window.__riverDebug().root.traverse(o => [o.material].flat().forEach(m => { if (m) (m.userData.alwaysOnTop ? top : normal).push(m.depthTest); })); return { top, normal }; });
+  await page.locator('[data-debug-layer="xray"]').check();
+  const xrayOn = await depth();
+  await page.locator('[data-debug-layer="xray"]').uncheck();
+  const xrayOff = await depth();
+  check(xrayOn.top.length >= 3 && [...xrayOn.top, ...xrayOff.top].every(value => value === false), 'Cursor, selection and bones stay on top through an X-ray toggle');
+  check(xrayOn.normal.every(value => value === false) && xrayOff.normal.every(value => value === true), 'X-ray switches only the depth-tested overlays');
   await page.locator('[data-debug-heavy] summary').click();
   await page.waitForFunction(() => document.querySelectorAll('[data-debug-heavy] li').length >= 5);
   check(true, 'The heaviest meshes are listed');
