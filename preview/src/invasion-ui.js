@@ -50,13 +50,15 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
     environment = createWalkingEnvironment(world);
     const groundAt = (e, n) => environment.groundAt(e, -n);
     state = createInvasion(world, { count: 5, isFree: (e, n) => environment.isFree(e, -n), groundAt });
+    effects.clear();
     invaders?.dispose(); invaders = createInvaders({ scene, world, groundAt }); invaders.begin(state);
     toggle.textContent = 'Call off the invasion'; toggle.setAttribute('aria-pressed', 'true'); cast.hidden = false; counts.hidden = false;
     say('Saucers are landing at the edge of the district. Find them before they reach anyone.'); publish();
   };
   const finish = (message) => {
     if (state) releaseResidents(state, getLocals() ?? []);
-    invaders?.clear(); effects.clear();
+    // A win keeps the final banish burst alive to play out; it clears on the next round.
+    invaders?.clear(); if (state?.phase !== 'won') effects.clear();
     toggle.textContent = 'Begin invasion'; toggle.setAttribute('aria-pressed', 'false'); cast.hidden = true;
     $('#invasion-brief').textContent = 'Saucers land at the edge of the district and their crew beam neighbors aboard. Only magic sends them home.';
     if (message) say(message); publish();
