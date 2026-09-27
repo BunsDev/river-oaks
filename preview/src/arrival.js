@@ -6,15 +6,15 @@ import { clearOfRoads } from './street-furniture.js';
 // Candidates run from the authored spot back toward the shopfront and along
 // it; the first one clear of every vehicle lane (walkways are pavement) and
 // free to stand on wins.
-const ARRIVE = { distances: [4, 3.2, 2.4, 1.8, 1.2], laterals: [0, 2, -2, 4, -4] };
-const LEAVE = { distances: [2.6, 2, 1.6, 1.2], laterals: [0, 1.5, -1.5, 3, -3] };
+const ARRIVE = { distances: [1.2, 1, .8, .6, 1.6, 2, 2.4, 3.2, 4], laterals: [0, 1, -1, 2, -2, 3, -3, 4, -4, 6, -6] };
+const LEAVE = ARRIVE;
 
 export function storefrontSpot(world, store, mode = 'arrive', { isFree = () => true, clearance = 0.5 } = {}) {
   const leaving = mode === 'leave';
   const [nx, ny] = store.outward, { distances, laterals } = leaving ? LEAVE : ARRIVE;
   // Authored visit points often lie out in the lane already, so arrivals also
   // search outward from the shopfront itself.
-  const bases = leaving ? [store.facade] : [store.visit ?? store.facade, store.facade];
+  const bases = leaving ? [store.facade] : [store.facade,store.visit ?? store.facade];
   const at = (base, distance, lateral) => [base[0] + nx * distance - ny * lateral, base[1] + ny * distance + nx * lateral, ...(store.visit ?? store.facade).slice(2)];
   for (const base of bases) for (const distance of distances) for (const lateral of laterals) {
     const spot = at(base, distance, lateral);

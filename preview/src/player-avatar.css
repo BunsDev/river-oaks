@@ -2,3 +2,15 @@
 .player-controls #player-flight{margin-top:10px;background:#695073}.player-flight-pad{display:flex;gap:7px;margin-top:7px}.player-flight-pad[hidden]{display:none}.player-flight-pad button{touch-action:none;min-height:36px}
 .player-controls #player-carriage{margin-top:10px;min-height:44px}
 .player-controls #player-companion[aria-pressed=true]{background:#2d3a66;border-color:#d4a84f99}.player-controls .player-companion-status{margin-top:6px;color:#e9d9a6}
+/* TypeSafe reference: charcoal, paper white, rose accents and compact tool labels. */
+:root[data-theme] .player-controls .vehicle-garage{margin-top:14px;padding:12px;border:1px solid #787878;border-radius:5px;background:#1e1e1e;color:#fefefe;box-shadow:inset 0 1px 0 #ffffff0a}
+:root[data-theme] .player-controls .vehicle-garage[hidden]{display:none}
+:root[data-theme] .player-controls .vehicle-garage-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font:10px/1.4 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.05em;color:#dedede}
+:root[data-theme] .player-controls .vehicle-garage-title span:last-child{font-size:23px;line-height:1;color:#f386a1}
+:root[data-theme] .player-controls .vehicle-garage label{display:block;margin-bottom:5px;font-size:11px;color:#dedede}
+:root[data-theme] .player-controls .vehicle-garage select{box-sizing:border-box;width:100%;padding:9px 7px;border:1px solid #737373;border-radius:3px;background:#292929;color:#fefefe;font:12px/1.4 system-ui;cursor:pointer;color-scheme:dark}
+:root[data-theme] .player-controls .vehicle-garage button{margin-top:7px;border-radius:3px;border-color:#737373;background:#292929;color:#fefefe;box-shadow:none}
+:root[data-theme] .player-controls .vehicle-garage #player-chauffeur{background:#f386a1;border-color:#f386a1;color:#1e1e1e;font-weight:650}
+:root[data-theme] .player-controls .vehicle-garage button:disabled,:root[data-theme] .player-controls .vehicle-garage select:disabled{opacity:.45;cursor:default}
+:root[data-theme] .player-controls .vehicle-garage #player-drive-status{font:10px/1.5 'IBM Plex Mono',ui-monospace,monospace;color:#dedede;margin:9px 0 0}
+:root[data-theme] .player-controls .vehicle-garage :focus-visible{outline:2px solid #f386a1;outline-offset:3px}

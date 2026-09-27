@@ -1,3 +1,4 @@
+import { VEHICLES } from './vehicle-config.js';
 import {createResidentNavigation} from './navigation.js';
 import {createWalkingEnvironment} from './walking.js';
 
@@ -7,15 +8,20 @@ export function createCompanionNavigation(world,{placement=null}={}) {
   let routeWorld=world;
   if(placement) {
     const {position,yaw,scale=1,team=false}=placement,c=Math.cos(yaw),s=Math.sin(yaw);
-    const ring=(team?[[-8,-2.9],[-3.12,-2.9],[-3.12,-1.36],[3.12,-1.36],[3.12,1.36],[-3.12,1.36],[-3.12,2.9],[-8,2.9]]:[[-3.12,-1.36],[3.12,-1.36],[3.12,1.36],[-3.12,1.36]])
-      .map(([x,z])=>[position[0]+(x*c+z*s)*scale,-position[2]+(x*s-z*c)*scale]);
+    const spec=VEHICLES[placement.vehicle],halfLength=spec?.length/2,halfWidth=spec?.width/2;
+    const outlines=spec?[[[-halfLength,-halfWidth],[halfLength,-halfWidth],[halfLength,halfWidth],[-halfLength,halfWidth]]]:[[[-3.12,-1.36],[3.12,-1.36],[3.12,1.36],[-3.12,1.36]],...(team?[[[-8,-2.9],[-2.9,-2.9],[-2.9,2.9],[-8,2.9]]]:[])];
+    const rings=outlines.map(outline=>{
+      const cx=outline.reduce((n,p)=>n+p[0],0)/outline.length;
+      return outline.map(([x,z])=>[x+Math.sign(x-cx)*.18,z+Math.sign(z)*.18])
+        .map(([x,z])=>[position[0]+(x*c+z*s)*scale,-position[2]+(x*s-z*c)*scale]);
+    });
     const buildings=world.collisionPolygons??(world.buildings??[]).map(b=>b.ring??(()=>{
       const a=(b.yaw_deg??0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
       return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[b.center[0]+x*b.size[0]/2*c-y*b.size[1]/2*s,b.center[1]+x*b.size[0]/2*s+y*b.size[1]/2*c]);
     })());
-    routeWorld={...world,collisionPolygons:[...buildings,ring]};
+    routeWorld={...world,collisionPolygons:[...buildings,...rings]};
   }
-  const nav=createResidentNavigation(routeWorld);if(!nav)return null;
+  const nav=createResidentNavigation(routeWorld,{allowRoads:true});if(!nav)return null;
   const environment=createWalkingEnvironment(routeWorld);
   // Both endpoints may be inside shops. Explicit door portals and fixture
   // corners avoid forcing a narrow doorway onto the outdoor two-metre grid.
@@ -91,8 +97,8 @@ export function createCompanionRouteFollower(navigation,service) {
       const start=[position[0],-position[1]],end=[destination[0],-destination[1]];
       cooldown=Math.max(0,cooldown-Math.min(.08,Math.max(0,delta)));
       if(distance(start,end)<.14){path=[];waiting=false;return null;}
-      // Local adjustments stay responsive. Roads still use the pedestrian
-      // network; being close is never permission to cut across a wall.
+      // Local adjustments stay responsive. Jev may follow her across roads and plazas,
+      // but proximity never permits cutting through a wall.
       if(navigation.canWalk(start,end)){path=[];waiting=false;return destination;}
       if(!pending&&!cooldown&&(!path.length||!target||distance(target,end)>.65)) {
         const generation=epoch;target=end;pending=true;cooldown=.7;
@@ -102,7 +108,9 @@ export function createCompanionRouteFollower(navigation,service) {
           else if(!path.length)waiting=true;
         }).catch(()=>{if(generation===epoch){pending=false;waiting=true;}});
       }
-      while(path.length&&distance(start,path[0])<.18)path.shift();
+      // Skip a waypoint he is already on only when the next one is reachable from
+      // here; a planner snap point can be the only way around a corner.
+      while(path.length&&distance(start,path[0])<.18&&(path.length===1||navigation.canTravel(start,path[1])))path.shift();
       if(!path.length)return null;
       if(!navigation.canTravel(start,path[0])){path=[];waiting=true;return null;}
       return [path[0][0],-path[0][1]];

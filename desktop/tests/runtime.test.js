@@ -36,3 +36,19 @@ test('window restoration fits current displays and discards corrupt or disconnec
   assert.deepEqual(windowBounds({ x: null, y: 0, width: -1, height: 'bad' }, displays), { width: 1280, height: 800 });
   assert.deepEqual(windowBounds({}, [{ x: 0, y: 0, width: 1024, height: 768 }]), { width: 1024, height: 768 });
 });
+
+test('packaged bridge permits only bounded fixed loopback endpoints',async()=>{
+ const {bridgeRequest}=await import('../runtime.js');let target;
+ const fetcher=async(url,options)=>{target=url;assert.equal(options.credentials,'omit');return Response.json({available:false});};
+ const allowed=await bridgeRequest(new Request('app://game/v1/chauffeur'),fetcher);assert.equal(allowed.status,200);assert.equal(target,'http://127.0.0.1:8765/v1/chauffeur');
+ target=null;assert.equal((await bridgeRequest(new Request('app://game/v1/arbitrary'),fetcher)).status,404);assert.equal(target,null);
+ assert.equal((await bridgeRequest(new Request('app://game/v1/settings/jev',{method:'PUT',body:'x'.repeat(17000)}),fetcher)).status,413);
+ assert.equal((await bridgeRequest(new Request('app://game/v1/chauffeur'),async()=>{throw new Error('private');})).status,503);
+});
+
+test('desktop forwards bounded Jev speech as audio and permits changing his selected voice',async()=>{
+ const {bridgeRequest}=await import('../runtime.js');let target;
+ const audio=await bridgeRequest(new Request('app://game/v1/voice/jev',{method:'POST',body:JSON.stringify({text:'Hello'})}),async(url)=>{target=url;return new Response('ID3audio',{headers:{'Content-Type':'audio/mpeg'}});});
+ assert.equal(target,'http://127.0.0.1:8765/v1/voice/jev');assert.equal(audio.headers.get('content-type'),'audio/mpeg');assert.equal(await audio.text(),'ID3audio');
+ const selected=await bridgeRequest(new Request('app://game/v1/settings/elevenlabs/voice',{method:'PUT',body:JSON.stringify({voice_id:'s3TPKV1kjDlVtZbl4Ksh'})}),async()=>Response.json({configured:false}));assert.equal(selected.status,200);
+});

@@ -2,7 +2,7 @@ import { app, BrowserWindow, Menu, dialog, net, protocol, screen, session, shell
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { navigationAllowed, resolveAsset, windowBounds } from './runtime.js';
+import { bridgeRequest, navigationAllowed, resolveAsset, windowBounds } from './runtime.js';
 
 app.setName('River Oaks');
 app.enableSandbox();
@@ -93,6 +93,8 @@ else {
     if (!dev) {
       const root = fileURLToPath(new URL('../dist/preview/', import.meta.url));
       protocol.handle('app', async request => {
+        const bridge=await bridgeRequest(request,net.fetch);
+        if(bridge)return bridge;
         if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
         const file = await resolveAsset(root, request.url);
         if (!file) return new Response('Not found', { status: 404 });

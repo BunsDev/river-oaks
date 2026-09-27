@@ -2,6 +2,7 @@
   "mode": "packaged",
   "checks": [
     "all bundled assets and playable character loaded",
+    "configured ElevenLabs voice decodes and advances the desktop audio clock",
     "Palo Alto street surfaces loaded with clear-path dimensions",
     "sandbox and renderer isolation",
     "keyboard movement",
@@ -13,42 +14,49 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 11593,
+  "readyMs": 8814,
   "assets": {
-    "loaded": 114,
-    "total": 114,
+    "loaded": 107,
+    "total": 107,
     "failed": 0,
     "done": true
   },
+  "voice": {
+    "bytes": 66499,
+    "type": "audio/mpeg",
+    "currentTime": 0.18034,
+    "duration": 4.086712,
+    "voiceId": "s3TPKV1kjDlVtZbl4Ksh"
+  },
   "streetProfile": {
     "profile": "palo-alto",
-    "warningPanels": 513,
+    "warningPanels": 459,
     "crossingEndpoints": 136,
-    "constrainedPanels": 745,
+    "constrainedPanels": 1157,
     "sidewalkWidth": 3.81,
     "clearWidth": 2.4384
   },
   "sharedTown": false,
   "performance": {
-    "samples": 374,
-    "medianMs": 25.100000000002183,
-    "p95Ms": 29.5,
-    "meanFps": 37.323486851953504,
+    "samples": 424,
+    "medianMs": 24.899999999999636,
+    "p95Ms": 29.099999999998545,
+    "meanFps": 42.31368009261107,
     "canvas": [
       1280,
       768
     ],
     "quality": {
       "mode": "auto",
-      "scale": 0.61,
+      "scale": 1,
       "occlusion": true,
-      "fps": 38
+      "fps": 43
     },
     "renderer": {
-      "calls": 1716,
-      "triangles": 14022741,
-      "geometries": 356,
-      "textures": 246
+      "calls": 2320,
+      "triangles": 16378509,
+      "geometries": 326,
+      "textures": 232
     }
   },
   "gpu": {

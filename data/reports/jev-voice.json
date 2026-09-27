@@ -1,0 +1,23 @@
+{
+  "status": 200,
+  "content_type": "audio/mpeg",
+  "bytes": 66499,
+  "voice_id": "s3TPKV1kjDlVtZbl4Ksh",
+  "sha256": "4dd1cd45bcec159e8113a265e995b70186e63765fc02f908491683d82e7dbe6f",
+  "provider": "live ElevenLabs",
+  "audio": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "4.086712"
+    }
+  },
+  "created_at": "2026-09-27T11:03:41.912918+00:00"
+}

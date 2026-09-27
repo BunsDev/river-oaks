@@ -1,9 +1,10 @@
 import { batchCostumeAttachments } from './costume-batching.js';
 import * as THREE from 'three';
-import { measureHead } from './head-fit.js';
+import { measureHead, measureCrownBand } from './head-fit.js';
 import { createJevicaDrape } from './jevica-drape.js';
 import { createJevicaEmbroidery } from './jevica-embroidery.js';
 import { fitJevicaBodice } from './bodice-fitting.js';
+import { createRidingClothes } from './riding-clothes.js';
 
 // One hero costume. Shared resident geometry and textures are never mutated.
 export function createJevicaCostume(avatar) {
@@ -111,20 +112,20 @@ export function createJevicaCostume(avatar) {
   const gown = mesh(waist, skirt, silk, [0,0,0], [0.88,1,0.88]); gown.name = 'Jevica draped silk gown';
   const skirts=[gown];
   const head = attach('head');
-  const fit=measureHead(avatar.rig), crownRadius=fit.hair.radius+0.003;
-  const [crownX,crownZ]=fit.hair.centre, crownY=fit.skull.top-0.016;
-  for(const y of [crownY,crownY+0.018]) {
-    const band=mesh(head,new THREE.TorusGeometry(crownRadius,0.002,8,64),gold,[crownX,y,crownZ]);band.rotation.x=Math.PI/2;
+  const fit=measureHead(avatar.rig),crown=measureCrownBand(avatar.rig,fit.skull.top-.048),crownRadius=crown.rz,crownOval=crown.rx/crown.rz;
+  const [crownX,crownZ]=crown.centre,crownY=crown.y;
+  for(const y of [crownY,crownY+0.012]) {
+    const band=mesh(head,new THREE.TorusGeometry(crownRadius,0.002,8,64),gold,[crownX,y,crownZ]);band.rotation.x=Math.PI/2;band.scale.x=crownOval;
   }
   // Open gold filigree surrounds the crown rather than a solid metal cylinder.
-  for(let i=0;i<15;i++) {
-    const angle=i/15*Math.PI*2, height=0.046+0.024*Math.max(0,Math.cos(angle));
+  for(let i=0;i<11;i++) {
+    const angle=i/11*Math.PI*2, height=0.023+0.014*Math.max(0,Math.cos(angle));
     const points=Array.from({length:25},(_,j)=>{
       const a=j/24*Math.PI*2,theta=angle+Math.sin(a)*0.13,r=crownRadius+(1-Math.cos(a))*0.004;
-      return new THREE.Vector3(crownX+Math.sin(theta)*r,crownY+(1-Math.cos(a))*height/2,crownZ+Math.cos(theta)*r);
+      return new THREE.Vector3(crownX+Math.sin(theta)*r*crownOval,crownY+(1-Math.cos(a))*height/2,crownZ+Math.cos(theta)*r);
     });
     mesh(head,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points,true),32,0.0018,6,true),gold,[0,0,0]);
-    mesh(head,new THREE.OctahedronGeometry(0.005),crystal,[crownX+Math.sin(angle)*crownRadius,crownY+height,crownZ+Math.cos(angle)*crownRadius],[0.7,1.4,0.7]);
+    mesh(head,new THREE.OctahedronGeometry(0.005),crystal,[crownX+Math.sin(angle)*crownRadius*crownOval,crownY+height,crownZ+Math.cos(angle)*crownRadius],[0.7,1.4,0.7]);
   }
   for (const side of [-1,1]) {
     mesh(head, new THREE.OctahedronGeometry(0.01), crystal, [side*0.083,0.018,0.025], [0.65,1.6,0.7]);
@@ -151,6 +152,7 @@ export function createJevicaCostume(avatar) {
   glow.userData.aoExclude=true;hand.add(glow);
   for(const skirt of skirts)skirt.userData.deformableCostume=true;
   const drape=createJevicaDrape(avatar,waist,skirts);
+  const ridingClothes=createRidingClothes(model);
   batchCostumeAttachments(attachments, owned);
   const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
   const opticalPosition=new THREE.Vector3(),opticalScale=new THREE.Vector3();
@@ -171,6 +173,8 @@ export function createJevicaCostume(avatar) {
       crystal.transmission=.35*THREE.MathUtils.smoothstep(pixels,8,16);
     },
     update(_flying, now, riding=false) {
+      ridingClothes.update(riding);
+      hand.visible=!riding;
       avatar.object.updateWorldMatrix(true, true);
       inverse.copy(avatar.object.getWorldQuaternion(orientation)).invert();
       for (const item of attachments) {
@@ -180,6 +184,6 @@ export function createJevicaCostume(avatar) {
       avatar.object.updateWorldMatrix(true,true);
       drape.update(now,riding);
     },
-    dispose() { attachments.forEach(({group}) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
+    dispose() { ridingClothes.dispose(); attachments.forEach(({group}) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };
 }

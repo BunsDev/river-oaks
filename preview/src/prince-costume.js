@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { batchCostumeAttachments } from './costume-batching.js';
-import { measureHead } from './head-fit.js';
+import { measureHead, measureCrownBand } from './head-fit.js';
 import { loadAvatarTemplate } from './avatars.js';
 import { createPrinceShoppingBag } from './prince-shopping-bag.js';
 
@@ -143,16 +143,16 @@ diffuseColor.rgb=mix(rose,vec3(.93,.9,.84)*mix(.85,1.,clothLuma),silk);
       material.transparent=true;material.depthWrite=false;material.alphaTest=.02;
       model.traverse(item=>{if(item.isMesh&&item.material===material)item.castShadow=false;});
     } else if (/^short/.test(name)) {
-      material.color.set('#d8b56a');
-      material.roughness = 0.42; material.alphaTest = 0.35;
+      material.color.set('#827052');
+      material.roughness = 0.62; material.alphaTest = 0.35;
       material.onBeforeCompile = shader => {
         shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
 #ifdef USE_MAP
 float strand=clamp(dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722))*3.2,0.,1.);
-diffuseColor.rgb=diffuse*mix(.45,1.05,pow(strand,.5));
+diffuseColor.rgb=diffuse*mix(.38,1.08,pow(strand,.62));
 #endif`);
       };
-      material.customProgramCacheKey = () => 'river-oaks-prince-blonde-v2';
+      material.customProgramCacheKey = () => 'river-oaks-prince-dirty-blond-v3';
     }
     material.needsUpdate = true;
   }
@@ -176,13 +176,14 @@ diffuseColor.rgb=diffuse*mix(.45,1.05,pow(strand,.5));
   const head = attach('head'), fit = measureHead(avatar.rig);
   // Fit around the actual hairstyle; Owen's taller fringe extends beyond the
   // skull and must not slice through the gold band.
-  const headOrigin = head.origin, radius = Math.max(fit.skull.radius,fit.hair.radius) + 0.01, oval = 1;
-  const [hx, hz] = fit.hair.centre, band = fit.hair.top - 0.064;
+  const crown=measureCrownBand(avatar.rig,fit.hair.top-.060);
+  const headOrigin = head.origin, radius = crown.rz, oval = crown.rx/crown.rz;
+  const [hx, hz] = crown.centre, band = crown.y;
   const at = (angle, r, y) => [headOrigin.x + hx + Math.sin(angle) * r * oval, headOrigin.y + y, headOrigin.z + hz + Math.cos(angle) * r];
   for (const [y, tube] of [[band, 0.0032], [band + 0.02, 0.0024]]) mesh(head, new THREE.TorusGeometry(radius, tube, 8, 72), gold, at(0, 0, y), [Math.PI / 2, 0, 0], [oval, 1, 1]);
   mesh(head, new THREE.CylinderGeometry(radius, radius, 0.02, 72, 1, true), gold, at(0, 0, band + 0.01), [0, 0, 0], [oval, 1, 1]);
   for (let i = 0; i < 10; i++) {
-    const angle = i / 10 * Math.PI * 2, fleur = i % 2 === 0, height = (fleur ? 0.038 : 0.022) * (1 + 0.25 * Math.max(0, Math.cos(angle)));
+    const angle = i / 10 * Math.PI * 2, fleur = i % 2 === 0, height = (fleur ? 0.018 : 0.012) * (1 + 0.25 * Math.max(0, Math.cos(angle)));
     mesh(head, new THREE.ConeGeometry(fleur ? 0.0075 : 0.005, height, 10), gold, at(angle, radius, band + 0.02 + height / 2), [0, angle, 0]);
     mesh(head, new THREE.SphereGeometry(fleur ? 0.0052 : 0.0034, 12, 8), fleur ? gold : ruby, at(angle, radius, band + 0.02 + height));
     mesh(head, new THREE.SphereGeometry(0.0034, 10, 8), ruby, at(angle + Math.PI / 10, radius + 0.002, band + 0.01));

@@ -66,3 +66,26 @@ test('outdoor companion routing includes the parked coach and unicorn team footp
     previous=point;
   }
 });
+
+test('Prince Jev follows her freely across open roads while keeping solid obstacle clearance',()=>{
+ const world={...empty,roads:[{id:'road',kind:'service',width_m:8.4,points:[[-20,0,0],[20,0,0]]}]};
+ const nav=routes.createCompanionNavigation(world),start=[0,-6],end=[0,6];
+ assert.equal(nav.pedestrian.classify([0,0]),'road');assert.equal(nav.canWalk(start,end),true);assert.deepEqual(nav.route(start,end),[end]);
+ const blocked=routes.createCompanionNavigation({...world,collisionPolygons:[[[-1,-1],[1,-1],[1,1],[-1,1]]]});assert.equal(blocked.canWalk(start,end),false);
+});
+
+test('a waypoint just beside him is kept when the next one is only reachable from it',async()=>{
+  const {createCompanionRouteFollower}=await import('../src/companion-navigation.js');
+  // East/north planner points; the follower takes scene [x, z] with z = -north.
+  const near=[.17,0],corner=[.17,-2],goal=[3,-2];
+  const navigation={
+    canWalk:()=>false,
+    canTravel:(a,b)=>!(Math.abs(a[0])<.01&&Math.abs(a[1])<.01&&b===corner)&&!(b===goal&&a!==corner),
+  };
+  const follower=createCompanionRouteFollower(navigation,{route:async()=>[near,corner,goal]});
+  follower.update([0,0],[goal[0],-goal[1]],1/60);
+  await new Promise(resolve=>setTimeout(resolve,0));
+  const waypoint=follower.update([0,0],[goal[0],-goal[1]],1/60);
+  assert.deepEqual(waypoint,[near[0],-near[1]],'he takes the short step instead of discarding the route');
+  assert.equal(follower.waiting,false);
+});

@@ -1,7 +1,12 @@
+import {createFlightHands} from './flight-hands.js';
+import {createPrinceFlight,flightSlot,stepPrinceFlight} from './prince-flight.js';
+import {createAngelWings} from './angel-wings.js';
+import { VEHICLES } from './vehicle-config.js';
+import { createDrivingHands } from './driving-hands.js';
 import * as THREE from 'three';
 import {loadResidentAvatar} from './avatars.js';
 import {createPrinceCostume,loadPrinceSkinTexture} from './prince-costume.js';
-import {companionSlot,createCompanionBody,createCompanionBrain,playerHeading,stepCompanion} from './prince-companion.js';
+import {companionSlot,createCompanionBody,createCompanionBrain,playerHeading,protectiveSide,stepCompanion} from './prince-companion.js';
 import {createCompanionNavigation,createCompanionRouteService,createCompanionRouteFollower} from './companion-navigation.js';
 
 const SEAT=[-2.10,1.635,0];
@@ -12,28 +17,33 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
   const object=new THREE.Group();object.name='Prince Jev';object.userData.localId='carriage-driver';object.visible=false;scene.add(object);
   const up=new THREE.Vector3(0,1,0),seat=new THREE.Vector3(),orientation=new THREE.Quaternion(),turn=new THREE.Quaternion().setFromAxisAngle(up,-Math.PI/2);
   let avatar=null,costume=null,disposed=false,wanted=false,body=null,mode='seat',side=1,lastHeading=0,previous=null;
+  let returnStall=0,returnFrom=null;
   let world=null,placement=null,navigation=null,service=null,follower=null,exit=null,transition=null,identity=null,lastPose=null,lastCoach=null;
-  const listeners=new Set();
-  const status={enabled:false,mode:'seat',stance:'seat',source:null,label:'Driving your carriage',reason:null,decisions:0,carrying:false};
+  const listeners=new Set();let drivingHands=null,flight=null,wings=null,flightHands=null;
+  const vehicle=()=>VEHICLES[placement?.vehicle];
+  const driverSeat=()=>vehicle()?.driverSeat??SEAT;
+  const status={enabled:false,mode:'seat',stance:'seat',source:null,label:'Ready to drive',reason:null,decisions:0,carrying:false};
   const publish=changes=>{
     if(Object.entries(changes).every(([key,value])=>status[key]===value))return;
     Object.assign(status,changes);listeners.forEach(listener=>listener({...status}));
   };
   const person=()=>getLocals()?.find(p=>p.id==='carriage-driver');
   const reset=()=>{
-    wanted=false;mode='seat';body=null;exit=null;transition=null;previous=null;
+    wanted=false;mode='seat';body=null;flight=null;
+    if(avatar){avatar.object.position.set(0,0,0);avatar.object.rotation.set(0,0,0);}exit=null;transition=null;previous=null;
     avatar?.suspend();
     brain.reset();follower?.reset();service?.dispose();service=null;follower=null;navigation=null;costume?.update({carrying:false});
     const local=person();if(local){local.indoor=false;delete local.storeId;}
-    publish({enabled:false,mode,stance:'seat',source:null,label:'Driving your carriage',reason:null,carrying:false});
+    publish({enabled:false,mode,stance:'seat',source:null,label:'Ready to drive',reason:null,carrying:false});
   };
   const ready=Promise.all([loadAvatar(1,'carriage-driver','prince-jev',{folk:false}),loadSkinTexture().catch(()=>null)]).then(([next,skinTexture])=>{
     if(disposed){next.dispose();return;}
-    avatar=next;object.add(next.object);object.userData.avatar=next;costume=createCostume(next,{skinTexture});
+    avatar=next;object.add(next.object);object.userData.avatar=next;costume=createCostume(next,{skinTexture});wings=createAngelWings();next.object.add(wings.object);
+    if(next.rig?.model){drivingHands=createDrivingHands(next.rig.model,object);flightHands=createFlightHands(next.rig.model,next.object);}
     document.querySelector('#canvas-host').dataset.carriageDriverReady='true';
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   const seatPose=coach=>{
-    coach.updateWorldMatrix(true,false);coach.localToWorld(seat.set(...SEAT));coach.getWorldQuaternion(orientation).multiply(turn);
+    coach.updateWorldMatrix(true,false);coach.localToWorld(seat.set(...driverSeat()));coach.getWorldQuaternion(orientation).multiply(turn);
     return {position:seat.clone().addScaledVector(up.clone().applyQuaternion(orientation),-avatar.rig.hipHeight+.025),orientation};
   };
   const beginWalk=()=>{
@@ -42,7 +52,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     if(!nav||!base)return false;
     const seated=seatPose(lastCoach),start=[seated.position.x,-seated.position.z];
     for(const side of [1,-1]) {
-      const point=lastCoach.localToWorld(new THREE.Vector3(SEAT[0],0,side*(1.36+.55/lastCoach.scale.x))),end=[point.x,-point.z];
+      const point=lastCoach.localToWorld(new THREE.Vector3(driverSeat()[0],0,side*((vehicle()?.width/2||1.36)+.55/lastCoach.scale.x))),end=[point.x,-point.z];
       if(!nav.free(end)||!base.canTravel(start,end)||(getLocals()??[]).some(p=>p.id!=='carriage-driver'&&!p.abducted&&Math.hypot(p.position[0]-point.x,p.position[1]+point.z)<.7))continue;
       service?.dispose();navigation=nav;service=createRouteService(world,placement);follower=createCompanionRouteFollower(nav,service);
       exit=[point.x,nav.ground(end),point.z];body=createCompanionBody([point.x,point.z],object.rotation.y);
@@ -65,7 +75,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
         if(mode!=='seat'||!beginWalk())return false;
         wanted=true;publish({enabled:true,mode,label:'Stepping down to walk with you',source:null,reason:null});
       } else {
-        wanted=false;publish({enabled:false,label:mode==='seat'?'Driving your carriage':'Returning to the carriage',stance:mode==='seat'?'seat':'return',source:null,reason:null});
+        wanted=false;publish({enabled:false,label:mode==='seat'?'Ready to drive':'Returning to your vehicle',stance:mode==='seat'?'seat':'return',source:null,reason:null});
       }
       return true;
     },
@@ -82,20 +92,44 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
         object.position.fromArray(transition.from.map((v,i)=>v+(transition.to[i]-v)*t));object.rotation.set(0,body.heading,0);
         if(transition.progress===1) {
           mode=mode==='stepping-up'?'seat':'walking';transition=null;
-          if(mode==='seat'){body=null;service?.dispose();service=null;follower?.reset();publish({mode,stance:'seat',label:'Driving your carriage',source:null,reason:null});}
+          if(mode==='seat'){body=null;service?.dispose();service=null;follower?.reset();publish({mode,stance:'seat',label:'Ready to drive',source:null,reason:null});}
         }
+      }
+      if(mode==='walking'&&wanted&&pose?.flying&&environment?.canFly?.(object.position.x,object.position.y,object.position.z)) {
+        flight=createPrinceFlight(object.position.toArray(),body.heading);mode='flying';brain.reset();follower?.reset();
+      }
+      if(mode==='flying'&&environment) {
+        lastHeading=playerHeading(pose,lastHeading);
+        const landing=!wanted||!pose?.flying||Boolean(pose?.riding);
+        let target=pose?flightSlot(pose,lastHeading,side):[...flight.position];
+        if(landing) {
+          // Land near her on a clear patch, then resume the ordinary walking route.
+          const center=player??body.position;let spot=null;
+          for(const radius of [2.7,4,6,8])for(let i=0;i<16&&!spot;i++) {
+            const a=lastHeading+i*Math.PI/8,x=center[0]+Math.cos(a)*radius,z=center[1]+Math.sin(a)*radius,y=environment.groundAt(x,z);
+            if(environment.isFree(x,z)&&environment.canFly(x,y,z)&&navigation.free([x,-z]))spot=[x,y,z];
+          }
+          target=spot??[flight.position[0],flight.position[1],flight.position[2]];
+        }
+        const previousFlight=[...flight.position];
+        stepPrinceFlight(flight,target,environment,dt,{landing,playerSpeed:pose?.speed??0});
+        body.position=[flight.position[0],flight.position[2]];body.heading=flight.heading;
+        body.speed=Math.hypot(flight.velocity[0],flight.velocity[2]);body.distance+=Math.hypot(...flight.position.map((v,i)=>v-previousFlight[i]));
+        object.position.fromArray(flight.position);object.rotation.set(0,flight.heading,0);
+        publish({mode,stance:'beside',source:'local',reason:null,label:landing?'Landing beside you':flight.blocked?'Finding a clear flight path':'Flying beside you'});
+        if(flight.landed){mode='walking';follower?.reset();}
       }
       if(mode==='walking'&&environment) {
         const gap=player?Math.hypot(player[0]-body.position[0],player[1]-body.position[1]):0;
         const context={player_speed:pose?.speed??0,gap_m:gap,conversing:speaking||Boolean(getConversation()),flying:Boolean(pose?.flying),riding:Boolean(pose?.riding),indoor:Boolean(pose?.roomId),
           crowded:(getLocals()??[]).filter(p=>p.id!==local.id&&player&&Math.hypot(p.position[0]-player[0],-p.position[1]-player[1])<2.4).length>=2,
           narrow:Boolean(player&&!environment?.isFree(player[0]+Math.cos(lastHeading)*1.1,player[1]-Math.sin(lastHeading)*1.1))};
-        const returning=!wanted||context.riding,decision=returning?{stance:'return',source:null,reason:null,label:'Returning to the carriage'}:brain.update(context);
+        const returning=!wanted||context.riding,decision=returning?{stance:'return',source:null,reason:null,label:'Returning to your vehicle'}:brain.update(context);
         lastHeading=playerHeading(pose,lastHeading);
         let target=null;
-        if(!context.flying&&player&&environment) {
+        if(player&&environment) {
           if(returning)target=[exit[0],exit[2]];
-          else {const slot=companionSlot(player,lastHeading,decision.stance,(x,z)=>environment.isFree(x,z)&&navigation.canTravel([player[0],-player[1]],[x,-z]),side);if(slot){target=slot.point;side=slot.side;}}
+          else {const preferred=context.indoor?side:protectiveSide(world,player,lastHeading,side);const slot=companionSlot(player,lastHeading,context.flying?'beside':decision.stance,(x,z)=>environment.isFree(x,z)&&navigation.canTravel([player[0],-player[1]],[x,-z]),preferred);if(slot){target=slot.point;side=slot.side;}}
         }
         const waypoint=follower?.update(body.position,target,dt)??null;
         // No target means a deliberate hold or an unresolved route. Stop now;
@@ -103,10 +137,16 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
         if(!waypoint)body.speed=0;
         stepCompanion(body,waypoint,environment,dt,{player,playerSpeed:pose?.speed??0,face:player?Math.atan2(player[0]-body.position[0],player[1]-body.position[1]):null});
         const ground=environment.groundAt(...body.position);object.position.set(body.position[0],ground,body.position[1]);object.rotation.set(0,body.heading,0);
-        if(returning&&!context.flying&&Math.hypot(body.position[0]-exit[0],body.position[1]-exit[2])<.18) {
+        // Jevica often stands at his door; personal space can stop him a step short of
+        // it. Once he has stalled nearby, he climbs in from where he is.
+        const toExit=Math.hypot(body.position[0]-exit[0],body.position[1]-exit[2]);
+        // Measured by actual movement: blocked steps keep his speed but not his position.
+        returnStall=returning&&returnFrom&&Math.hypot(body.position[0]-returnFrom[0],body.position[1]-returnFrom[1])<.05*dt+1e-4?returnStall+dt:0;
+        returnFrom=[...body.position];
+        if(returning&&!context.flying&&(toExit<.18||returnStall>.75&&toExit<1.6)) {
           transition={from:object.position.toArray(),to:seatPose(coach).position.toArray(),progress:0};mode='stepping-up';
         }
-        publish({mode,stance:decision.stance,source:decision.source,reason:decision.reason??null,decisions:decision.decisions??status.decisions,label:context.flying?'Waiting safely on the ground':follower?.waiting?'Waiting for a clear path':decision.label});
+        publish({mode,stance:decision.stance,source:decision.source,reason:decision.reason??null,decisions:decision.decisions??status.decisions,label:context.flying?'Moving into clear space to take flight':follower?.waiting?'Waiting for a clear path':decision.label});
       }
       if(mode==='seat') {
         const seated=seatPose(coach);object.position.copy(seated.position);object.quaternion.copy(seated.orientation);
@@ -115,9 +155,17 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
       const room=mode==='seat'?null:environment?.roomAt(object.position.x,object.position.z);local.indoor=Boolean(room);if(room)local.storeId=room.storeId;else delete local.storeId;
       if(local.life)Object.assign(local.life,{heading:object.rotation.y,speed:body?.speed??0,distance:body?.distance??0});
       const riding=mode==='seat',action=status.stance==='greet'?'bow':'continue';
-      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding,seatToFloor:(1.635-1.1275)*coach.scale.x},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
-      object.updateWorldMatrix(true,true);costume?.update({carrying:!riding});publish({mode,carrying:!riding});
+      drivingHands?.reset();flightHands?.reset();
+      if(mode!=='flying'&&flight){flight.pitch*=Math.exp(-7*dt);flight.bank*=Math.exp(-7*dt);flight.blend*=Math.exp(-7*dt);if(flight.blend<.001)flight=null;}
+      const pitch=flight?.pitch??0,bank=flight?.bank??0,hip=avatar.rig.hipHeight;
+      avatar.object.rotation.set(pitch,0,bank,'YXZ');
+      avatar.object.position.set(0,hip*(1-Math.cos(pitch)),-hip*Math.sin(pitch));
+      wings?.update(now,dt,{amount:flight?.blend??0,speed:body?.speed??0,climbing:flight?.velocity[1]??0,bank:flight?.bank??0});
+      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,flying:mode==='flying'||Boolean(flight),superheroFlight:flight?.blend??0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding&&mode!=='flying',ridingDriver:true,ridingSpeed:placement?.speed??0,ridingSteering:placement?.steering??0,ridingKind:vehicle()?.kind,seatToFloor:vehicle()?vehicle().driverSeat[1]-vehicle().driverFloor:(1.635-1.1275)*coach.scale.x},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
+      if(riding&&vehicle())drivingHands?.(coach,vehicle());
+      if(flight)flightHands?.update({amount:flight.blend,speed:body?.speed??0,bank:flight.bank});
+      object.updateWorldMatrix(true,true);costume?.update({carrying:!riding&&mode!=='flying'});publish({mode,carrying:!riding&&mode!=='flying'});
     },
-    dispose(){reset();disposed=true;brain.dispose?.();costume?.dispose();avatar?.dispose();object.removeFromParent();listeners.clear();},
+    dispose(){reset();disposed=true;brain.dispose?.();wings?.dispose();costume?.dispose();avatar?.dispose();object.removeFromParent();listeners.clear();},
   };
 }

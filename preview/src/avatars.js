@@ -109,7 +109,7 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
 
 export async function loadResidentAvatar(index, id, profileOverride, { folk = true } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
-  const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.86 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
+  const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined });
   const { model, bones, rest } = avatar;
   if(id !== 'player' && folk) applyResidentStyle(avatar,id);
@@ -173,6 +173,13 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       }
       if(locomotion?.riding) {
         const seated={thigh_l:[0,0,0],thigh_r:[0,0,0],calf_l:[0,0,0],calf_r:[0,0,0],foot_l:[0,0,0],foot_r:[0,0,0],spine_03:[.035,0,0],upperarm_l:[.20,0,.025],upperarm_r:[.20,0,-.025],lowerarm_l:[0,0,.60],lowerarm_r:[0,0,.60]};
+        if(locomotion.ridingKind==='motorcycle'&&locomotion.ridingDriver) {
+          const motion=noMotion?0:Math.min(1,Math.abs(locomotion.ridingSpeed??0)/6);
+          const lean=noMotion?0:Math.max(-.05,Math.min(.05,(locomotion.ridingSteering??0)*.1));
+          seated.spine_01=[.055+motion*.018,0,lean*.4];
+          seated.spine_02=[.045+motion*.012,0,lean*.35];
+          seated.spine_03=[.025+(noMotion?0:Math.sin(t*1.4)*.003),0,lean*.25];
+        }
         model.position.y=baseY;
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
@@ -185,8 +192,20 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           leg.ikOrientation=worldRotation.clone().multiply(seatedShoes.get(leg));
           const scale=leg.foot.getWorldScale(new THREE.Vector3());
           const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
-          const target=root.localToWorld(new THREE.Vector3(leg.rest.x,board-bottom,.44));
-          leg.error=applyLegIK(leg,target,leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward));
+          const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
+          const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
+          if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
+          leg.error=applyLegIK(leg,target,pole);
+        }
+      }
+      if(locomotion?.superheroFlight) {
+        const blend=Math.min(1,locomotion.superheroFlight);
+        // One arm reaches forward, the other is bent near his chest; legs trail.
+        const flightPose={thigh_l:[-.08,0,-.035],thigh_r:[.06,0,.035],calf_l:[.10,0,0],calf_r:[.20,0,0],head:[-.55,0,0],neck_01:[-.18,0,0]};
+        for(const bone of bones)if(flightPose[bone.name]) {
+          const target=rest.get(bone).clone();
+          flightPose[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);target.multiply(adjustment);});
+          bone.quaternion.slerp(target,blend);
         }
       }
       avatar.eyes.update(lookTarget,elapsed);

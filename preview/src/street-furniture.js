@@ -1,9 +1,10 @@
+import { STREET, isWalkway, streetSection, sidewalkOffset, crossingDistance } from './street-profile.js';
+import { createPedestrianNetwork } from './pedestrian-network.js';
 import { buildPlanterPlanting } from './landscape-models.js';
 import * as THREE from 'three';
 import { groundSurfaceHeight } from './world-surface.js';
 import { RETRO } from './retro-palette.js';
 import { localToScene, routeSegments, sampleRoute, terrainHeight } from './geometry.js';
-import { physicalSurface } from './materials.js';
 
 // Street-scale detail derived from the mapped road centrelines: kerbs along
 // every vehicular lane, lamp columns and planters on alternating sides, and
@@ -24,8 +25,7 @@ export function distanceToRoad(road, x, z) {
 }
 
 // Walkways are paved paths for people; every other mapped road carries cars.
-export const WALKWAY_KINDS = new Set(['footway', 'pedestrian', 'path', 'steps']);
-export const isWalkway = road => WALKWAY_KINDS.has(road.kind);
+export { WALKWAY_KINDS, isWalkway } from './street-profile.js';
 
 // No fixture may stand on any mapped road or walkway, whatever its width.
 // With `vehiclesOnly`, walkways count as pavement (for where people arrive).
@@ -36,24 +36,24 @@ export function clearOfRoads(world, x, z, clearance = 0.7, { vehiclesOnly = fals
 // Kerbs stop short of junctions instead of crossing the joining lane, and
 // fixtures keep clear of every lane edge, including their own at inner bends.
 function crossesAnotherLane(world, road, x, z, clearance = 0.4) {
-  return world.roads.some(other => other !== road && other.width_m >= LANE_WIDTH_MIN && distanceToRoad(other, x, z) < other.width_m / 2 + clearance);
+  return world.roads.some(other => other !== road && !isWalkway(other) && distanceToRoad(other, x, z) < other.width_m / 2 + clearance);
 }
 
 // Kerb strips: [x, y, z, yaw, length] per subdivided lane segment side.
 export function kerbStrips(world) {
-  const strips = [];
+  const strips = [], network = createPedestrianNetwork(world);
   for (const road of world.roads) {
-    if (road.width_m < LANE_WIDTH_MIN) continue;
+    if (isWalkway(road)) continue;
     for (let i = 1; i < road.points.length; i++) {
       const a = localToScene(road.points[i - 1]), b = localToScene(road.points[i]);
       const dx = b[0] - a[0], dz = b[2] - a[2], length = Math.hypot(dx, dz);
       if (length < 0.5) continue;
-      const half = road.width_m / 2 + 0.12, ox = -dz / length * half, oz = dx / length * half;
-      const steps = Math.max(1, Math.ceil(length / 6)), yaw = Math.atan2(dx, dz);
+      const half = road.width_m / 2 + STREET.curbWidth / 2, ox = -dz / length * half, oz = dx / length * half;
+      const steps = Math.max(1, Math.ceil(length / 1.4)), yaw = Math.atan2(dx, dz);
       for (let step = 0; step < steps; step++) for (const side of [-1, 1]) {
         const f = (step + 0.5) / steps, x = a[0] + dx * f + ox * side, z = a[2] + dz * f + oz * side;
-        if (crossesAnotherLane(world, road, x, z)) continue;
-        strips.push([x, terrainHeight(world.terrain, x, -z) + 0.24, z, yaw, length / steps + 0.02]);
+        if (crossesAnotherLane(world, road, x, z) || crossingDistance(network,road.id,[x,-z]) < STREET.crossingWidth/2+STREET.flareRun+length/steps/2) continue;
+        strips.push([x, terrainHeight(world.terrain, x, -z) + sidewalkOffset(road.width_m,STREET.curbWidth/2)-STREET.curbReveal/2, z, yaw, length / steps + 0.02]);
       }
     }
   }
@@ -63,22 +63,23 @@ export function kerbStrips(world) {
 // Lamp columns and planters alternate sides along each lane, sampled by
 // distance so spacing is regular even where the source polyline is dense.
 export function laneFixtures(world, isFree = () => true) {
-  const lamps = [], planters = [], bins = [];
+  const lamps = [], planters = [], bins = [], network = createPedestrianNetwork(world);
+  const clearRamp=(road,x,z)=>crossingDistance(network,road.id,[x,-z])>STREET.crossingWidth/2+STREET.flareRun+.8;
   world.roads.forEach((road, roadIndex) => {
-    if (road.width_m < LANE_WIDTH_MIN) return;
+    if (isWalkway(road)) return;
     const route = routeSegments(road.points);
     if (!route || route.length < LAMP_SPACING) return;
-    const offset = road.width_m / 2 + 1.0;
+    const offset = road.width_m / 2 + (STREET.curbWidth+streetSection(road).furnitureWidth)/2;
     for (let distance = LAMP_SPACING / 2, count = 0; distance < route.length - 4; distance += LAMP_SPACING, count++) {
       const { position: [x, , z], direction } = sampleRoute(route, distance);
       const side = (count + roadIndex) % 2 ? 1 : -1;
       const px = x - direction[1] * offset * side, pz = z + direction[0] * offset * side;
-      if (!isFree(px, pz) || !clearOfRoads(world, px, pz)) continue;
+      if (!isFree(px, pz) || !clearOfRoads(world, px, pz) || !clearRamp(road,px,pz)) continue;
       const yaw = Math.atan2(direction[0], direction[1]);
       lamps.push([px, groundSurfaceHeight(world, px, pz), pz, yaw, side]);
       const mid = sampleRoute(route, Math.min(route.length - 2, distance + LAMP_SPACING / 2));
       const qx = mid.position[0] + mid.direction[1] * offset * side, qz = mid.position[2] - mid.direction[0] * offset * side;
-      if (isFree(qx, qz) && clearOfRoads(world, qx, qz)) (count % 3 === 2 ? bins : planters).push([qx, groundSurfaceHeight(world, qx, qz), qz, Math.atan2(mid.direction[0], mid.direction[1])]);
+      if (isFree(qx, qz) && clearOfRoads(world, qx, qz) && clearRamp(road,qx,qz)) (count % 3 === 2 ? bins : planters).push([qx, groundSurfaceHeight(world, qx, qz), qz, Math.atan2(mid.direction[0], mid.direction[1])+Math.PI/2]);
     }
   });
   return { lamps, planters, bins };
@@ -107,7 +108,6 @@ export function hedgeClusters(width, depth, height, seed = 7) {
 export function buildStreetFurniture(world, isFree) {
   const group = new THREE.Group(); group.name = 'Street furniture';
   const box = new THREE.BoxGeometry(1, 1, 1), disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 20), post = new THREE.CylinderGeometry(0.5, 0.5, 1, 10);
-  const granite = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.62 });
   const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.5, metalness: 0.65 });
   const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
   const stoneCast = new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: 0.85 });
@@ -121,7 +121,7 @@ export function buildStreetFurniture(world, isFree) {
     if (!batches.has(key)) batches.set(key, { geometry, material, parts: [] });
     batches.get(key).parts.push({ position, scale, yaw, color });
   };
-  for (const [x, y, z, yaw, length] of kerbStrips(world)) add(box, granite, [x, y, z], [0.24, 0.16, length], yaw);
+  // Curbs now belong to the graded street surface, including ramp openings.
   const { lamps, planters, bins } = laneFixtures(world, isFree);
   for (const [x, y, z, yaw, side] of lamps) {
     add(post, bronze, [x, y + 0.12, z], [0.34, 0.24, 0.34], yaw);
@@ -156,7 +156,6 @@ export function buildStreetFurniture(world, isFree) {
   for (const { geometry, material, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     parts.forEach((p, i) => { dummy.position.fromArray(p.position); dummy.scale.fromArray(p.scale); dummy.rotation.set(0, p.yaw, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix); if (p.color) mesh.setColorAt(i, p.color); });
-    mesh.userData.supportSurface=material===granite;
     mesh.castShadow = material !== mulch && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
   }
   group.userData.counts = { kerbs: kerbStrips(world).length, lamps: lamps.length, planters: planters.length, bins: bins.length, pits: treePits(world).length };

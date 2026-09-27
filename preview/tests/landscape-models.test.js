@@ -13,7 +13,7 @@ world.vegetation = JSON.parse(read('../public/data/district-vegetation.json'));
 test('mature crowns retain every existing stem and leave source layout untouched', () => {
   const before = structuredClone(world);
   const placements = matureTreePlacements(world);
-  assert.equal(placements.length, 230);
+  assert.equal(placements.length, world.vegetation.branch_supports.length);
   placements.forEach((tree, index) => {
     const [east, north] = world.vegetation.branch_supports[index].position;
     assert.deepEqual(tree.position, [east, groundSurfaceHeight(world, east, -north), -north]);

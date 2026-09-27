@@ -6,6 +6,13 @@ An inhabited science-fantasy interpretation of Houston’s River Oaks District: 
 
 Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build a standalone app with the game assets bundled. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
 
+
+Jev's garage offers a pink six-wheel glass-canopy car and rose motorcycle, with
+gold spinners, fitted passenger clothing and optional **Jev smart drive** through
+the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
+curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)
+and [street geometry](docs/street-standards.md).
+
 ## Run the live showcase
 
 The default game uses WorkOS sign-in and one shared town server. Players see each other as Jevica and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production requires authenticated, verified accounts.
@@ -38,7 +45,7 @@ Residents have roles, interests, routines, and per-scene conversation memories. 
 
 Workers support role-specific trays, samples and other props with their hands; reachable counter stations lift and return the load. You can talk across low counters, and selecting a person in the directory brings you within speaking range in their room. See [interaction and movement evidence](docs/people-interaction-progress.md) for tested coverage and remaining realism work.
 
-Mature tree models retain the existing stem layout, with distance-based detail, clipped planter shrubs and ornamental grasses. These are artistic additions informed by the source vegetation record; the independent historical canopy comparison still fails. See [vegetation evidence and asset provenance](docs/vegetation.md).
+Mature tree models retain stems outside the widened road clearance, with distance-based detail, clipped planter shrubs and ornamental grasses. These are artistic additions informed by the source vegetation record; the independent historical canopy comparison still fails. See [vegetation evidence and asset provenance](docs/vegetation.md).
 
 ### Optional free local speech
 
@@ -52,7 +59,7 @@ uv run --extra voice river-oaks serve
 
 On macOS, install eSpeak NG once with `brew install espeak-ng`. After upgrading from an older voice setup, rerun the model fetch command above to install the duration-capable model.
 
-In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
+In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload unless an ElevenLabs key is configured for Jev; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
@@ -148,3 +155,7 @@ controls. W/S rides or reverses, A/D or arrow keys steer, and **Leave carriage**
 steps onto clear ground. The ornate rose-and-gold coach, ceramic-and-teal district
 palette and human residents are intentional; see [world direction](docs/world-direction.md)
 and [character controls](docs/character-forms.md).
+
+Street geometry retains the Houston map and applies [Palo Alto street details](docs/street-standards.md).
+
+Prince Jev now follows Jevica into bubble flight with articulated angel wings and smooth obstacle-aware banking. Use **Walk with Prince Jev**, then **Take flight**. His ElevenLabs voice defaults to Adam (`s3TPKV1kjDlVtZbl4Ksh`); configure the key and optional voice ID in **Settings → ElevenLabs API key**. See [character controls](docs/character-forms.md).

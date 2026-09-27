@@ -8,7 +8,7 @@ export const COMPANION_STANCES = {
   trail: { label: 'Walk a step behind Jevica', forward: -1.25, side: 0.42 },
   pause: { label: 'Wait attentively near Jevica', hold: true },
   greet: { label: 'Offer Jevica a courtly bow', hold: true },
-  return: { label: 'Return to the carriage bench' },
+  return: { label: 'Return to the driver seat' },
 };
 const STEP = 0.4, PERSONAL = 0.62;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -18,6 +18,20 @@ const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 export function playerHeading(pose, previous = 0) {
   const [vx, vz] = pose?.velocity ?? [0, 0];
   return Math.hypot(vx, vz) > 0.2 ? Math.atan2(vx, vz) : previous;
+}
+
+export function protectiveSide(world,player,heading,previous=1) {
+ let best=Infinity,result=previous;
+ for(const road of world?.roads??[]) {
+  if(['footway','pedestrian','path','steps'].includes(road.kind))continue;
+  for(let i=1;i<road.points.length;i++){
+   const a=road.points[i-1],b=road.points[i],dx=b[0]-a[0],dz=a[1]-b[1],length2=dx*dx+dz*dz;if(!length2)continue;
+   const t=clamp(((player[0]-a[0])*dx+(player[1]+a[1])*dz)/length2,0,1),x=a[0]+dx*t-player[0],z=-a[1]+dz*t-player[1],gap=Math.hypot(x,z);
+   const side=x*Math.cos(heading)-z*Math.sin(heading);
+   if(gap<best&&gap<12&&Math.abs(side)>.4){best=gap;result=Math.sign(side);}
+  }
+ }
+ return result;
 }
 
 export function companionSlot(player, heading, stance, isFree, preferredSide = 1) {
@@ -59,7 +73,7 @@ export function stepCompanion(body, target, environment, delta, { player = null,
     if (gap > 0.1) {
       direction = Math.atan2(dx, dz);
       // Match her pace, close gaps quickly, and settle without overshooting.
-      desired = clamp(playerSpeed * 0.9 + (gap - 0.1) * 1.9, 0, gap > 5 ? 3.4 : 2.4);
+      desired = clamp(playerSpeed + (gap - 0.1) * 1.9, 0, Math.min(4.2,Math.max(2.4,playerSpeed+.65,gap>5?3.4:0)));
       desired = Math.min(desired, gap / dt);
     }
   }

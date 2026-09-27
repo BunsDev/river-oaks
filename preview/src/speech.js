@@ -39,7 +39,7 @@ export async function requestLocalVoice(local, text, signal, { fetcher = fetch, 
 }
 
 // Generation counters fence all asynchronous audio, including responses arriving after mute/close.
-export function createSpeechQueue({ generate, play, stop, onStatus = () => {} }) {
+export function createSpeechQueue({ generate, play, stop, onStatus = () => {}, labels = () => ({preparing:"Preparing local voice…",speaking:"Speaking locally",unavailable:"Local voice unavailable · try device voices"}) }) {
   let generation = 0, controller = null, enabled = false;
   const cancel = () => { generation++; controller?.abort(); controller = null; stop(); onStatus(enabled ? 'Ready' : 'Muted'); };
   return {
@@ -50,16 +50,16 @@ export function createSpeechQueue({ generate, play, stop, onStatus = () => {} })
       if (!enabled || typeof text !== 'string' || !text.trim()) return false;
       const current = generation;
       const abort = new AbortController(); controller = abort;
-      onStatus('Preparing local voice…');
+      onStatus(labels(local).preparing);
       try {
         const audio = await generate(local, text.slice(0, 480), abort.signal);
         if (current !== generation || !enabled) return false;
-        onStatus('Speaking locally');
+        onStatus(labels(local).speaking);
         await play(audio, local);
         if (current !== generation) return false;
         onStatus('Ready'); return true;
       } catch (error) {
-        if (current === generation) onStatus(error?.name === 'NotAllowedError' ? 'Press Replay to hear this line' : 'Local voice unavailable · try device voices');
+        if (current === generation) onStatus(error?.name === 'NotAllowedError' ? 'Press Replay to hear this line' : labels(local).unavailable);
         return false;
       } finally { if (controller === abort) controller = null; }
     },
@@ -72,7 +72,11 @@ export function createLocalSpeech(onStatus = () => {}, {prepare = async()=>null}
   const stop = () => { playback?.cancel(); speakingId = null; };
   const queue = createSpeechQueue({
     stop, onStatus,
+    labels: local => mode === 'elevenlabs' && local.id === 'carriage-driver'
+      ? {preparing:'Preparing Jev’s ElevenLabs voice…',speaking:'Jev · ElevenLabs',unavailable:'Jev voice unavailable · check ElevenLabs in Settings'}
+      : {preparing:'Preparing local voice…',speaking:'Speaking locally',unavailable:'Local voice unavailable · try device voices'},
     async generate(local, text, signal) {
+      if (mode === 'elevenlabs' && local.id === 'carriage-driver') return {blob:await requestJevVoice(text,signal),cues:[]};
       if (mode === 'device') {
         const voices = window.speechSynthesis?.getVoices().filter(voice => voice.localService && /^en[-_]/i.test(voice.lang)) ?? [];
         if (!voices.length) throw new Error('No installed local English voices');
@@ -123,8 +127,20 @@ export function createLocalSpeech(onStatus = () => {}, {prepare = async()=>null}
     get mode() { return mode; },
     get speakingId() { return speakingId; },
     update(delta) { playback?.update(delta);for(const face of fading)if(!face.update(null,delta))fading.delete(face); },
-    setMode(value) { mode = ['kokoro','device'].includes(value) ? value : 'off'; queue.setEnabled(mode !== 'off'); },
+    setMode(value) { mode = ['kokoro','device','elevenlabs'].includes(value) ? value : 'off'; queue.setEnabled(mode !== 'off'); },
     speak: queue.speak,
     cancel: queue.cancel,
   };
+}
+
+// Only the selected prince voice is remote; no credentials enter renderer requests.
+export async function requestJevVoice(text, signal, {fetcher=fetch}={}) {
+  const deadline=AbortSignal.any([signal,AbortSignal.timeout(22000)]);
+  deadline.throwIfAborted();
+  const response=await fetcher('/v1/voice/jev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:deadline});
+  deadline.throwIfAborted();
+  if(!response.ok || !response.headers.get('content-type')?.includes('audio/mpeg'))throw new Error('Jev voice unavailable');
+  const blob=await response.blob();deadline.throwIfAborted();
+  if(!blob.size || blob.size>2*1024*1024)throw new Error('Invalid voice audio');
+  return blob;
 }

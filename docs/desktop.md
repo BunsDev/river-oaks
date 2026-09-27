@@ -11,7 +11,7 @@ npm run desktop:dev
 
 The command starts a loopback Vite server (port 5174, or the next available port), the existing local shared town, and the native game window. Renderer edits hot reload; changes to `desktop/main.js` or `desktop/runtime.js` restart the desktop shell. Closing the game or pressing Ctrl+C stops its owned server. An independently running town is left alone.
 
-For standalone development, use `VITE_SINGLE_PLAYER=true npm run desktop:dev`. The optional Python bridge still runs separately with `uv run river-oaks serve`; Vite proxies its requests. The packaged game uses authored dialogue and local simulation fallbacks, with no Python bridge, WorkOS sign-in, or hosted multiplayer included.
+For standalone development, use `VITE_SINGLE_PLAYER=true npm run desktop:dev`. The optional Python bridge still runs separately with `uv run river-oaks serve`; Vite proxies its requests. The packaged game includes authored dialogue and local simulation fallbacks. It can also reach a separately running loopback bridge for Jev chauffeur, companion, auto-visit, ElevenLabs speech and key/voice settings through fixed endpoints. Python, WorkOS sign-in and hosted multiplayer are not bundled.
 
 Use **View → Toggle Developer Tools** to inspect the renderer. **Game → Reload game** (⌘R / Ctrl+R) rebuilds the scene. **View → Toggle Full Screen** gives the game the display; **Help → Game controls** lists movement and interaction keys. **View → Debug tools** (F3) shows colliders, the walkable grid, ground triangles, the source map and a polygon inspector; see [debug tools](debug-tools.md).
 
@@ -54,3 +54,5 @@ RIVER_OAKS_DESKTOP_EXECUTABLE="$PWD/dist/desktop/River Oaks-darwin-arm64/River O
 ```
 
 Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+
+Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.

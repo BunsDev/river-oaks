@@ -26,6 +26,8 @@ def branch_supports(world, voxels):
         [
             LineString([point[:2] for point in road["points"]]).buffer(
                 min(1.4, road["width_m"] / 4)
+                if road["kind"] in {"footway", "pedestrian", "path", "steps"}
+                else road["width_m"] / 2 + 0.65
             )
             for road in world["roads"]
         ]

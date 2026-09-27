@@ -105,7 +105,7 @@ movement. Keyboard users retain control focus. Mobile holds use a compact card
 above the movement pad. Shared UI feedback lasts 120–180 ms, with immediate
 keyboard navigation and no transitions under reduced motion. The third-person
 camera retracts immediately at obstacles and eases back into open space.
-Buildings, trees, fixed planters, shop fixtures, and the carriage stay fixed.
+Buildings, trees, fixed planters, shop fixtures, and parked vehicles stay fixed.
 
 `preview/e2e/force.js` checks real pointer and keyboard interactions with people,
 bins, and a worker. `preview/e2e/force-mobile.js` exercises touch controls.
@@ -116,55 +116,63 @@ of simulation time; its frame stays intact. Debris uses one shared mesh with a
 192-triangle maximum. Six unit tests cover misses, moving doors, exact restoration,
 resource ownership, ground clearance and low-energy contact.
 
-## Rose carriage
+## Royal vehicles and Prince Jev
 
-**Call carriage** parks the blush, ivory and gold coach on a clear nearby road.
-**Ride carriage** boards the cabin seat within eight metres. **W/S** moves forward
-or reverses; **A/D** and the arrow turn controls steer. Releasing movement brakes
-the coach. Its wheels rotate with travelled distance and follow the rendered
-road surface. The full footprint stays on roads and crossings and checks for
-buildings, trees and nearby residents. **Leave carriage** selects a clear exit
-with room for the third-person camera. Summoning and bubble flight are disabled
-while riding. Taking off also requires enough clear space for the bubble beside
-the parked coach. Nearby residents remain available for seated conversations.
+Choose the **Pink Rolls-Royce** or **Rose motorcycle**, then **Call vehicle** and
+**Ride with Jev**. The six-wheel glass-canopy car follows the supplied reference,
+with a continuous pink shell, slim lighting, gold aero wheel spinners and quiet
+jewel glints. Both vehicles use gold rather than silver brightwork. The original
+procedural models are artistic interpretations, not licensed scans or photorealism
+acceptance evidence. TypeSafe's charcoal, paper and rose styling informs the garage.
 
-Wheel contact uses the actual rotating tread vertices. Suspension moves each
-wheel vertically in world space, keeping it grounded on slopes and narrow raised
-road details without oscillating across their edges. The September 26 coach is
-10% smaller, including its parking footprint and tyre-contact samples. Decorative
-wheel centers spin on independent bearings and coast after braking; reduced
-motion keeps the centers attached to normal wheel rotation. The requested
-unicorn team, reins, hydraulics and carriage autopilot are still in development.
-Prince Jev, a fictional prince, drives the coach from the front bench. He wears
-a midnight-velvet dress tunic with an ivory collar, a gold coronet set with a
-sapphire and rubies, fringed gold epaulettes, a crimson sash, a gold belt,
-double-breasted buttons and a star of order (`preview/src/prince-costume.js`).
-The sash, belt and buttons are fitted to the rig's measured torso rather than
-placed by hand. His body is a dedicated hero mesh, `prince-jev.glb`, built by
-`scripts/build_prince.py`: a young, tall, athletic MPFB body with a defined jaw,
-cheekbones and brow, wearing the CC0 tailored suit, shoes and hair and Jevica's
-high-detail eyes, brows and lashes, surface-deformed onto his proportions. It is
-a fictional generic appearance, not a scan or likeness.
+Jev drives both; Jevica takes the rear passenger seat. W/S gives forward/reverse
+directions, A/D steers, and **Step out** finds clear ground. Tyre contact follows
+actual rotated tread samples. Parking and swept motion share the vehicle's real
+footprint and avoid buildings, pedestrians and tree supports. Spinners coast on
+independent bearings; reduced motion suppresses their decorative animation and
+pulsing glints. These vehicles currently belong to standalone play.
 
-**Companion mode.** Choose **Walk with Prince Jev** (or press **J**) and he
-steps down from the bench to walk with Jevica. Jev, through the loopback bridge's
-`/v1/companion` route, chooses how he accompanies her: beside her, a step ahead,
-a step behind, pausing attentively, a courtly bow, or returning to the carriage.
-Code keeps geometry: slots mirror or fall back to single file on narrow paths,
-and he never enters a footprint, the parked coach, a step over 40 cm or her
-personal space. When she flies far away he rejoins behind her; when she rides,
-he takes the bench again and steps back down when she leaves. While Jev is
-unconfigured or uncertain, a local stand-in keeps him walking and the panel says
-"Local follow" with the reason, so no local rule is presented as a Jev decision.
-He has a directory entry and accepts pointer and seated conversations; his
-Force and wish visuals remain open work.
+**Jev smart drive** calls `/v1/chauffeur` through the loopback bridge. Jev chooses
+cruise, slow, yield or stop; local code follows the right-hand mapped lane and
+retains collision and speed limits. Manual input immediately cancels the drive.
+Missing keys, invalid/stale answers and expired decisions hold position. Start
+`uv run --env-file .env river-oaks serve`, then use **Settings → Jev API key** if
+needed. The key stays in the bridge. Mock-provider tests verify the complete
+control path; live driving quality still requires a configured key and evaluation.
 
-The model is locally authored geometry inspired by the supplied September 23
-reference: curved cabin, gold filigree, faceted wheel hubs, pearl details, glass
-lanterns, velvet seats and a domed roof crest. It is not a scan or an identical
-licensed asset. Tufting buttons attach to indented upholstery triangles. Jevica's
-skirt folds over her lap, and both shoes solve against the cabin floor in the
-carriage's tilted frame. This is procedural posing, not simulated cloth.
+Jev is 1.74 m, close to Jevica's 1.685 m. His hair is dirty blond/brown. His crown
+uses an oval measured at the actual wearing height, with lower points; Jevica's
+filigree crown receives the same fitted treatment. Motorcycle posing uses a
+slight forward lean, outward knees, fitted hand grips and footpegs. Jevica wears
+opaque skinned rose trousers under her seated gown; the wand is stowed while
+riding. Costume and seated motion remain procedural, not simulated cloth.
+
+**Walk with Prince Jev** (J) lets him keep pace beside her across roads and plazas,
+through shop doors, and into flight. He chooses the street-facing side where clear.
+His authored dialogue and `/v1/companion` policy express affection and confidence
+while honoring her wishes and personal space. **Send Jev to the vehicle** cancels
+following; he lands and returns physically before the vehicle can move.
+
+When she takes off, Jev unfolds large pearl, blush and gold angel wings. Curved,
+layered feathers use eight instanced draws plus one sparkle draw; articulated wing
+shoulders and tips ease between lifting, hovering and gliding. His measured arm
+rig places one relaxed hand forward and the other close to his chest. Predictive
+following, bounded acceleration and jerk, swept clearance, look-ahead obstacle
+steering and banking keep motion continuous. Flight maneuvers are local game
+logic, not remote inference. Reduced motion suppresses decorative wingbeats.
+The system is a procedural artistic treatment, not physical feather simulation.
+
+Jev's ElevenLabs voice defaults to **Adam**, `s3TPKV1kjDlVtZbl4Ksh`.
+Add `ELEVENLABS_API_KEY` to the bridge environment, or use **Settings → ElevenLabs
+API key**. The manual key stays in memory until the bridge restarts. A separate
+voice-ID form changes the selected voice without replacing the key. The **Jev ·
+ElevenLabs / residents · local** speech mode routes only Jev's dialogue to
+ElevenLabs; other residents retain Kokoro. Voice remains explicitly mutable and
+can be turned off in Spoken dialogue. Closing the conversation, muting, hiding
+or leaving the app aborts pending playback. MP3 responses are bounded and cached
+for eight lines at most; this voice path currently has no phoneme-aligned lip sync.
+The bridge uses the official [text-to-speech API](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
+The encounter keeps its stable internal ID for conversations and interactions.
 
 ## Verification entry points
 
@@ -178,7 +186,8 @@ carriage's tilted frame. This is procedural posing, not simulated cloth.
 - `preview/e2e/ui-polish.js`: People/Places/Settings navigation, focus return,
   interrupted panel motion, theme changes, conversations and press feedback.
 - `preview/e2e/carriage.js`: mounted sole contact on flat and tilted coaches,
-  four road contacts, boarding, riding, safe exits, walking and bubble flight.
+  legacy carriage road contacts, boarding, riding, safe exits, walking and bubble flight.
+  Current vehicles and companion flight are covered by `node desktop/vehicles-e2e.js`.
 - `preview/e2e/carriage-mobile.js`: real touch boarding, driving, braking and
   dismounting at a 390×844 viewport.
 - `preview/e2e/carriage-conversation.js`: a real nearby resident conversation

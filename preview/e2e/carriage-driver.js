@@ -14,7 +14,8 @@ async page=>{
  await page.screenshot({path:'output/playwright/carriage-driver-conversation.png'});
  await page.locator('#community-close').click();await page.locator('#panel-toggle').click();
  await page.waitForTimeout(350);await page.screenshot({path:'output/playwright/carriage-driver-visible.png'});
- const point=await page.evaluate(()=>window.__riverPeople('spine_03').find(p=>p.id==='carriage-driver').screen);
+ // Seated in the car only his head and shoulders show above the door line.
+ const point=await page.evaluate(()=>window.__riverPeople('head').find(p=>p.id==='carriage-driver').screen);
  await page.mouse.click(...point);await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
  check((await page.locator('#community-name').textContent()).includes('Prince Jev'),'A real pointer click on the prince opens his conversation');
  await page.locator('#community-close').click();

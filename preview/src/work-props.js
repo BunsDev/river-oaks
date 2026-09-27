@@ -158,7 +158,9 @@ export function createWorkerTask(avatar,holder,room,spot) {
     // Its pose is fixed to the tray; looking at a visitor never moves the stand.
     const arm=arms.find(arm=>arm.side==='r'),home=new THREE.Vector3(-.12,dock.y+.17,.40);
     const frame=holder.getWorldQuaternion(new THREE.Quaternion()).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI*.70,0,-.15)));
-    placePinch(arm,holder.localToWorld(home.clone()),frame,holder.localToWorld(new THREE.Vector3(-.30,dock.y-.18,-.05)));
+    // Preserve the stand's fitted clearance; the free presentation pose uses a
+    // straighter wrist independently of the dock's fixed grasp orientation.
+    placePinch(arm,holder.localToWorld(home.clone()),frame,holder.localToWorld(new THREE.Vector3(-.30,dock.y-.18,-.05)),.20);
     stripRest={position:home.sub(dock),quaternion:holder.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(frame).normalize()};
     stripRest.stand=createBlotterRest(stripRest.position,stripRest.quaternion);
     stripRest.stand.model.traverse(item=>{item.userData.localId=holder.userData.localId;});

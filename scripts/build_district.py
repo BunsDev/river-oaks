@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
@@ -148,11 +149,22 @@ def build():
                             else "District access lane",
                         ),
                         "points": [[x, y, elevation(x, y)] for x, y in part.coords],
-                        "width_m": float(
-                            tags.get("width", 3 if kind in {"footway", "pedestrian"} else 6.5)
+                        "width_m": (
+                            float(tags.get("width", 3))
+                            if kind in {"footway", "pedestrian", "path", "steps"}
+                            else max(8.4, float(tags.get("width", 6.5)))
                         ),
+                        "mapped_width_m": float(
+                            tags.get(
+                                "width",
+                                3 if kind in {"footway", "pedestrian", "path", "steps"} else 6.5,
+                            )
+                        ),
+                        "mapped_width_source": "OSM" if "width" in tags else "provisional",
                         "kind": kind,
-                        "width_source": "OSM" if "width" in tags else "provisional",
+                        "width_source": ("OSM" if "width" in tags else "provisional")
+                        if kind in {"footway", "pedestrian", "path", "steps"}
+                        else "game adaptation: two clear traffic lanes plus gutters",
                     }
                 )
         if (
@@ -289,6 +301,13 @@ def build():
             ),
         ],
     }
+    result["street_design"] = {
+        "version": 1,
+        "minimum_curb_width_m": 8.4,
+        "clear_lane_width_m": 3.5904,
+        "gutters_m": 0.6096,
+        "basis": "Authored wider game streets; Houston centerlines and destinations retained.",
+    }
     result["terrain"] = observed_terrain
     cartier = next(store for store in stores if store["name"] == "Cartier")
     sx = (spawn_store["visit"][0] + cartier["visit"][0]) / 2
@@ -297,6 +316,7 @@ def build():
     result["walkLookAt"] = [sx, sy + 35, elevation(sx, sy + 35)]
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(result, separators=(",", ":")) + "\n")
+    subprocess.run(["node", str(ROOT / "scripts/fit_district_arrivals.mjs")], cwd=ROOT, check=True)
     print(json.dumps({key: len(result[key]) for key in ["buildings", "roads", "trees", "stores"]}))
 
 

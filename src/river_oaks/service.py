@@ -12,7 +12,14 @@ from fastapi.responses import JSONResponse, Response
 
 from .agents import DecisionEngine, Snapshot
 from .auto import AutoEngine, AutoSnapshot
+from .chauffeur import ChauffeurEngine, ChauffeurSnapshot
 from .companion import CompanionEngine, CompanionSnapshot
+from .elevenlabs_voice import (
+    ElevenLabsUnavailable,
+    ElevenLabsVoice,
+    JevVoiceRequest,
+    JevVoiceSelection,
+)
 from .geo import digest
 from .voice import LocalVoice, VoiceBusy, VoiceRequest, VoiceUnavailable
 
@@ -25,6 +32,8 @@ def create_app(
     voice=None,
     auto_engine=None,
     companion_engine=None,
+    chauffeur_engine=None,
+    elevenlabs_voice=None,
 ):
     world_path = Path(world_path or "unreal/Content/Data/world.json")
     report_path = Path(report_path or "data/reports/verification.json")
@@ -62,12 +71,26 @@ def create_app(
                     os.environ.get("TYPESAFE_API_KEY"),
                     model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
                 )
+            if chauffeur_engine is None:
+                app.state.chauffeur_engine = ChauffeurEngine(
+                    client,
+                    os.environ.get("TYPESAFE_API_KEY"),
+                    model=os.environ.get("JEV_AUTO_MODEL", "jev-1.13.0"),
+                )
+            if elevenlabs_voice is None:
+                app.state.elevenlabs_voice = ElevenLabsVoice(
+                    client, os.environ.get("ELEVENLABS_API_KEY")
+                )
             yield
 
     app = FastAPI(title="River Oaks decision bridge", lifespan=lifespan)
     app.state.engine = engine or DecisionEngine()
     app.state.auto_engine = auto_engine or AutoEngine()
     app.state.companion_engine = companion_engine or CompanionEngine()
+    app.state.chauffeur_engine = chauffeur_engine or ChauffeurEngine()
+    app.state.elevenlabs_voice = elevenlabs_voice or ElevenLabsVoice()
+    original_voice_key = None
+    voice_override = False
     original_keys = None
 
     def jev_settings():
@@ -75,6 +98,7 @@ def create_app(
             app.state.engine.api_key
             or app.state.auto_engine.api_key
             or app.state.companion_engine.api_key
+            or app.state.chauffeur_engine.api_key
         )
         source = "manual" if original_keys is not None else "server" if configured else "none"
         return JSONResponse(
@@ -113,10 +137,12 @@ def create_app(
                 app.state.engine.api_key,
                 app.state.auto_engine.api_key,
                 app.state.companion_engine.api_key,
+                app.state.chauffeur_engine.api_key,
             )
         app.state.engine.api_key = key
         app.state.auto_engine.api_key = key
         app.state.companion_engine.api_key = key
+        app.state.chauffeur_engine.api_key = key
         return jev_settings()
 
     @app.delete("/v1/settings/jev")
@@ -127,9 +153,75 @@ def create_app(
                 app.state.engine.api_key,
                 app.state.auto_engine.api_key,
                 app.state.companion_engine.api_key,
+                app.state.chauffeur_engine.api_key,
             ) = original_keys
             original_keys = None
         return jev_settings()
+
+    def elevenlabs_settings():
+        voice = app.state.elevenlabs_voice
+        return JSONResponse(
+            {
+                "configured": bool(voice.api_key),
+                "source": "manual" if voice_override else "server" if voice.api_key else "none",
+                "voice_id": voice.voice_id,
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
+    @app.get("/v1/settings/elevenlabs")
+    async def get_elevenlabs_settings():
+        return elevenlabs_settings()
+
+    @app.put("/v1/settings/elevenlabs")
+    async def set_elevenlabs_key(request: Request):
+        nonlocal original_voice_key, voice_override
+        if request.headers.get("content-type", "").split(";", 1)[0] != "application/json":
+            raise HTTPException(415, "Use application/json")
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > 8192:
+                raise HTTPException(400, "Invalid API key")
+        try:
+            payload = json.loads(body)
+        except (ValueError, UnicodeError):
+            raise HTTPException(400, "Invalid API key") from None
+        if not isinstance(payload, dict) or set(payload) != {"api_key"}:
+            raise HTTPException(400, "Invalid API key")
+        key = payload["api_key"]
+        if not isinstance(key, str) or not 1 <= len(key.strip()) <= 4096:
+            raise HTTPException(400, "Invalid API key")
+        key = key.strip()
+        if not all(33 <= ord(char) <= 126 for char in key):
+            raise HTTPException(400, "Invalid API key")
+        voice = app.state.elevenlabs_voice
+        if not voice_override:
+            original_voice_key = voice.api_key
+        voice_override = True
+        voice.set_key(key)
+        return elevenlabs_settings()
+
+    @app.delete("/v1/settings/elevenlabs")
+    async def reset_elevenlabs_key():
+        nonlocal voice_override
+        if voice_override:
+            app.state.elevenlabs_voice.set_key(original_voice_key)
+            voice_override = False
+        return elevenlabs_settings()
+
+    @app.put("/v1/settings/elevenlabs/voice")
+    async def select_elevenlabs_voice(packet: JevVoiceSelection):
+        app.state.elevenlabs_voice.set_voice(packet.voice_id)
+        return elevenlabs_settings()
+
+    @app.post("/v1/voice/jev")
+    async def jev_speech(packet: JevVoiceRequest):
+        try:
+            audio = await app.state.elevenlabs_voice.speak(packet)
+        except ElevenLabsUnavailable as error:
+            raise HTTPException(503, str(error)) from None
+        return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "no-store"})
 
     busy = asyncio.Lock()
     local_voice = voice or LocalVoice()
@@ -213,6 +305,18 @@ def create_app(
     async def companion_decision(packet: CompanionSnapshot):
         return JSONResponse(
             await app.state.companion_engine.decide(packet), headers={"Cache-Control": "no-store"}
+        )
+
+    @app.get("/v1/chauffeur")
+    async def chauffeur_status():
+        return JSONResponse(
+            dict(app.state.chauffeur_engine.status), headers={"Cache-Control": "no-store"}
+        )
+
+    @app.post("/v1/chauffeur")
+    async def chauffeur_decision(packet: ChauffeurSnapshot):
+        return JSONResponse(
+            await app.state.chauffeur_engine.decide(packet), headers={"Cache-Control": "no-store"}
         )
 
     @app.get("/v1/world")

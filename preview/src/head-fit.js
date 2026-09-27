@@ -71,3 +71,27 @@ export function measureHead(avatar) {
   const times = part => Object.fromEntries(Object.entries(part).map(([k, v]) => [k, Array.isArray(v) ? v.map(n => n * scale) : v * scale]));
   return { skull: times(unit.skull), hair: times(unit.hair) };
 }
+
+// Fit the crown at its actual wearing height, with independent side-to-side and
+// front-to-back radii. A circular band sized to the whole hairstyle looks loose.
+export function measureCrownBand(avatar,y) {
+ const model=avatar.model,head=model.getObjectByName('head'),points=[];
+ model.updateWorldMatrix(true,true);
+ const origin=head.getWorldPosition(new THREE.Vector3());
+ model.traverse(mesh=>{
+  if(!mesh.isSkinnedMesh||!(isSkin(mesh.material?.name??'')||isHair(mesh.material?.name??'')))return;
+  const headIndex=mesh.skeleton.bones.indexOf(head);if(headIndex<0)return;mesh.skeleton.update();
+  const {position,skinIndex,skinWeight}=mesh.geometry.attributes;
+  for(let i=0;i<position.count;i++){
+   let weight=0;for(let k=0;k<4;k++)if(skinIndex.getComponent(i,k)===headIndex)weight+=skinWeight.getComponent(i,k);if(weight<.5)continue;
+   const p=new THREE.Vector3().fromBufferAttribute(position,i);mesh.applyBoneTransform(i,p).applyMatrix4(mesh.matrixWorld).sub(origin);
+   if(p.y>=y-.008&&p.y<=y+.028)points.push(p);
+  }
+ });
+ if(points.length<6)return {y,centre:[0,.01],rx:.095,rz:.11};
+ const bounds=new THREE.Box3().setFromPoints(points),center=bounds.getCenter(new THREE.Vector3());
+ let rx=(bounds.max.x-bounds.min.x)/2,rz=(bounds.max.z-bounds.min.z)/2;
+ const expansion=Math.max(1,...points.map(p=>Math.hypot((p.x-center.x)/rx,(p.z-center.z)/rz)));
+ rx=rx*expansion+.0045;rz=rz*expansion+.0045;
+ return {y,centre:[center.x,center.z],rx,rz};
+}
