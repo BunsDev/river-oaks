@@ -4,7 +4,7 @@ import {mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 const profile=await mkdtemp(join(tmpdir(),'river-oaks-vehicles-'));
-const env={...process.env,RIVER_OAKS_DEV_URL:'http://127.0.0.1:5174/?motion-debug=1'};delete env.ELECTRON_RUN_AS_NODE;
+const env={...process.env,RIVER_OAKS_DEV_URL:process.env.RIVER_OAKS_DEV_URL??'http://127.0.0.1:5174/?motion-debug=1'};delete env.ELECTRON_RUN_AS_NODE;
 const app=await electron.launch({args:['.',`--user-data-dir=${profile}`],env,timeout:30000}),checks=[],errors=[];
 let page;
 try{
@@ -12,6 +12,8 @@ try{
  let source='unavailable',requests=0;
  await page.route('**/v1/chauffeur',async route=>{const p=route.request().postDataJSON();requests++;await route.fulfill({json:{schema_version:1,tick:p.tick,generation:p.generation,source,reason:source==='jev'?'accepted':'not_configured',candidate_id:source==='jev'?'slow':null,confidence:source==='jev'?.9:null}});});
  await page.locator('#loading').waitFor({state:'hidden'});await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+ if(!await page.locator('.visit-tools').evaluate(el=>el.open))await page.locator('.visit-tools-toggle').click();
+ await page.locator('.player-settings > summary').click();
  for(const kind of ['rolls','motorcycle']){
   await page.locator('#player-vehicle').selectOption(kind);await page.locator('#player-carriage').click();await page.locator('#player-ride').click();
   await page.waitForFunction(()=>window.__riverCarriage().riding);
@@ -20,7 +22,23 @@ try{
   source='unavailable';await page.locator('#player-chauffeur').click();await page.waitForFunction(()=>window.__riverCarriage().chauffeur.label.includes('API key'));
   const held=await page.evaluate(()=>window.__riverCarriage().placement.position);await page.waitForTimeout(300);const after=await page.evaluate(()=>window.__riverCarriage().placement.position);assert.ok(Math.hypot(after[0]-held[0],after[2]-held[2])<.01);
   source='jev';await page.waitForFunction(()=>window.__riverCarriage().chauffeur.source==='jev');await page.waitForFunction(start=>{const p=window.__riverCarriage().placement.position;return Math.hypot(p[0]-start[0],p[2]-start[2])>.15;},held);
-  await page.locator('#canvas-host').focus();await page.keyboard.press('KeyS');await page.waitForFunction(()=>!window.__riverCarriage().chauffeur.active);
+  // A quick tap can begin and end between animation frames. It must cancel
+  // smart driving at input time, even when no simulation frame sees the key.
+  await page.locator('#canvas-host').focus();
+  const activeAfterTap=await page.locator('#canvas-host').evaluate(host=>{
+   host.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyS',bubbles:true}));
+   host.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyS',bubbles:true}));
+   return window.__riverCarriage().chauffeur.active;
+  });
+  assert.equal(activeAfterTap,false,`${kind}: a between-frame tap immediately takes over from Jev`);
+  await page.locator('#player-chauffeur').click();
+  await page.waitForFunction(()=>window.__riverCarriage().chauffeur.source==='jev');
+  if(await page.locator('#walking-controls-toggle').getAttribute('aria-expanded')==='false')await page.locator('#walking-controls-toggle').click();
+  const activeAfterPad=await page.locator('[data-walk-key=KeyS]').evaluate(button=>{
+   button.click();
+   return window.__riverCarriage().chauffeur.active;
+  });
+  assert.equal(activeAfterPad,false,`${kind}: movement pad activation immediately takes over from Jev`);
   await page.screenshot({path:`output/playwright/desktop-${kind}.png`});await page.locator('#player-ride').click();await page.waitForFunction(()=>!window.__riverCarriage().riding);
   checks.push(`${kind}: select, summon, board, wheel contact, API hold, mocked Jev drive, manual takeover, exit`);
  }

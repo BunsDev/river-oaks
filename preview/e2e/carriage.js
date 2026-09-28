@@ -24,6 +24,7 @@ async page => {
   await page.goto(`${origin}/?motion-debug=1`);
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   await page.locator('#player-carriage').click();
   const before=await page.evaluate(()=>window.__riverCarriage());
   check(before.placement.scale===1&&before.placement.vehicle==='rolls','The pink Rolls-Royce parks at its true size');

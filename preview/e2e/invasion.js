@@ -10,6 +10,7 @@ async page => {
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   const read = () => page.locator('.invasion-controls').evaluate(el => JSON.parse(el.dataset.state));
   check(!await page.locator('#invasion-toggle').isDisabled(), 'Jevica can begin');
+  await page.locator('.invasion-controls > summary').click();
   await page.locator('#invasion-toggle').click();
   check((await read()).phase === 'active' && (await read()).remaining === 5, 'Five saucers arrive');
   await page.waitForFunction(() => JSON.parse(document.querySelector('.invasion-controls').dataset.state).landed >= 1, null, { timeout: 15000 });

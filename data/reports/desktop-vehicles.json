@@ -4,8 +4,8 @@
     "motorcycle: select, summon, board, wheel contact, API hold, mocked Jev drive, manual takeover, exit",
     "Prince Jev: dismount, takeoff, magical wings, bubble follow, gentle landing"
   ],
-  "requests": 4,
+  "requests": 6,
   "errors": [],
   "api": "mocked provider; live credentials required",
-  "createdAt": "2026-09-28T05:12:38.854Z"
+  "createdAt": "2026-09-28T18:54:28.876Z"
 }

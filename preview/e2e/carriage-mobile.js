@@ -6,6 +6,7 @@ async page => {
   await phone.goto('http://127.0.0.1:5173/?motion-debug=1');
   await phone.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await phone.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await phone.locator('#panel-toggle').click();
+  await phone.locator('.visit-tools-toggle').tap();
   if(!await phone.locator('.player-settings').evaluate(e=>e.open))await phone.locator('.player-settings summary').click();
   check(await phone.locator('#player-ride').evaluate(e=>e.getBoundingClientRect().height>=44),'Boarding has a 44px phone touch target');
   await phone.locator('#player-ride').tap();await phone.waitForFunction(()=>window.__riverCarriage().riding);

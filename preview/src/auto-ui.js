@@ -19,14 +19,18 @@ export function createAutoControls({ walking, community, getWorld, getStorm }) {
     onStatus(value) {
       button.textContent = value.enabled ? 'Stop auto visit' : 'Start Jev auto visit';
       button.setAttribute('aria-pressed', String(value.enabled));
-      status.textContent = `${value.source === 'jev' ? 'Jev · ' : ''}${value.label}${value.reason && value.reason !== 'model_wait' ? ` · ${value.reason.replaceAll('_',' ')}` : ''}`;
+      status.textContent = value.phase==='waiting'&&value.reason!=='model_wait'
+        ? value.reason==='not_configured'?'Connect Jev in Settings to begin a guided visit.'
+          :'Jev is taking a moment. You can explore freely or stop the visit.'
+        : `${value.source === 'jev' ? 'Jev · ' : ''}${value.label}`;
+      panel.dataset.active=String(value.enabled);
       panel.dataset.state = JSON.stringify(value);
     },
   });
   button.addEventListener('click', event => {
     if (controller.status.enabled) controller.stop();
     else {
-      if (world !== getWorld()) { navigation?.dispose(); world = getWorld(); navigation = createNavigationService(world, { interiors: true }); }
+      if (world !== getWorld()) { navigation?.dispose(); world = getWorld(); navigation = createNavigationService(world, { interiors: true, allowRoads: true }); }
       controller.start();
     }
     if(event.detail>0)document.querySelector('#canvas-host').focus({preventScroll:true});

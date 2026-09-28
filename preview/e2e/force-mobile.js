@@ -9,6 +9,7 @@ async page=>{
     await phone.goto('http://127.0.0.1:5181/?motion-debug=1');
     await phone.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.playerReady==='true';},null,{timeout:90000});
     if(await phone.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await phone.locator('#panel-toggle').tap();
+    await phone.locator('.visit-tools-toggle').tap();
     await phone.locator('.force-controls summary').tap();await phone.locator('#force-toggle').tap();
     phase='choose target';
     await phone.waitForFunction(()=>[...document.querySelector('#force-target').options].some(option=>option.value));
@@ -37,6 +38,7 @@ async page=>{
     check(!await phone.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'Force controls fit the phone viewport');
     phase='reduced load';await phone.emulateMedia({reducedMotion:'reduce'});await phone.reload();
     await phone.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.playerReady==='true';},null,{timeout:90000});
+    await phone.locator('.visit-tools-toggle').tap();
     await phone.locator('.force-controls summary').tap();await phone.locator('#force-toggle').tap();
     phase='reduced target';
     check(await phone.locator('#force-lift').isDisabled(),'A reduced-motion spawn with no nearby target cannot cast accidentally');

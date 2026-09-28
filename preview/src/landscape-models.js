@@ -38,8 +38,9 @@ export const TREE_LEAF_LAYERS = [3, 2, 2];
 export function treeDetailLevel(distance) {
   return distance < TREE_LOD_DISTANCES[0] ? 0 : distance < TREE_LOD_DISTANCES[1] ? 1 : 2;
 }
-// Sun shadows come from mid-detail crowns drawn only into the shadow map: a
-// quarter of the triangles, soft enough at shadow-map resolution to match, and
+// Sun shadows use the silhouette LOD, with all three overlapping leaf shells.
+// Fine leaf tessellation disappears in the filtered shadow map; keeping the
+// crown layers preserves its density with a quarter of the old proxy cost, and
 // every tree in the shadow frustum casts whatever its visible detail level.
 // Three builds the beauty render list before it renders shadows, so a proxy
 // shown as the light prepares its shadow and hidden after its own shadow draw
@@ -102,7 +103,7 @@ export function buildMatureTrees(world) {
         mesh.computeBoundingSphere();group.add(mesh);return mesh;
       });
       const batches=parts.map((level,index)=>instance(level,index,false));
-      instance(parts[1],1,true);
+      instance(parts[2],2,true);
       levels.push({center,batches});
     }
     const host=document.querySelector('#canvas-host');if(host)host.dataset.matureTrees=String(placements.length);

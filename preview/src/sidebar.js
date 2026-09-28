@@ -14,9 +14,10 @@ export function setupSidebar() {
     panel.inert = collapsed;
     panel.setAttribute('aria-hidden', String(collapsed));
     trigger.setAttribute('aria-expanded', String(!collapsed));
-    trigger.setAttribute('aria-label', collapsed ? 'Show controls' : 'Hide controls');
-    trigger.title = collapsed ? 'Show controls' : 'Hide controls';
+    trigger.setAttribute('aria-label', collapsed ? 'Explore River Oaks' : 'Close exploration panel');
+    trigger.title = collapsed ? 'People, places & settings' : 'Close exploration panel';
     trigger.querySelector('.trigger-arrow').textContent = collapsed ? '›' : '‹';
+    trigger.querySelector('.trigger-label').textContent = collapsed ? 'Explore' : 'Close';
   };
   trigger.addEventListener('click', (event) => {
     collapsed = !collapsed;
@@ -25,6 +26,12 @@ export function setupSidebar() {
     if (collapsed && event.detail > 0 && document.body.classList.contains('walking')) {
       document.querySelector('#canvas-host').focus({ preventScroll: true });
     }
+  });
+  panel.addEventListener('keydown',event=>{
+    if(event.key!=='Escape'||collapsed)return;
+    event.preventDefault();event.stopPropagation();collapsed=true;
+    try { localStorage.setItem(storageKey,'true'); } catch { /* Session controls remain available. */ }
+    apply();
   });
   window.addEventListener('storage', (event) => {
     if (event.key !== storageKey && event.key !== null) return;
