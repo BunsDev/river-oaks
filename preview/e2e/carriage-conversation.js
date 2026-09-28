@@ -10,7 +10,8 @@ async page => {
   for(const id of ids) {
     await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
     await page.locator('#community-dialogue').waitFor({state:'visible'});await page.locator('#community-close').click();
-    await page.locator('#player-carriage').click();
+    if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#player-carriage').click();
     const distance=await page.evaluate(()=>{const c=window.__riverCarriage();return c.placement?Math.hypot(c.pose.position[0]-c.placement.position[0],c.pose.position[2]-c.placement.position[2]):Infinity;});
     if(distance>8)continue;
     await page.locator('#player-ride').click();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');

@@ -1,16 +1,15 @@
 .player-controls{position:absolute;z-index:5;right:18px;top:18px;width:218px;padding:16px;border:1px solid #ffffff38;border-radius:18px;background:#211d2aee;color:#f6eef9;box-shadow:0 8px 32px #0003;backdrop-filter:blur(16px);font:12px/1.5 system-ui,sans-serif}.player-controls[hidden]{display:none}.player-controls-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#d9badf;margin-bottom:10px}.player-controls button{width:100%;min-height:40px;border:1px solid #bca8c855;border-radius:9px;background:#3b2d45;color:#fff;font:inherit;padding:8px;cursor:pointer}.player-controls p{margin:10px 0 0;font-size:11px;color:#d6c8de}.player-controls #player-status{color:#f5d2ed}.player-controls :focus-visible{outline:3px solid #e6a8ed;outline-offset:3px}@media(max-width:700px){.player-controls{top:112px;right:9px;width:162px;padding:11px}.player-controls #player-description{display:none}.player-controls #player-status{max-height:48px;overflow:auto}}
 .player-controls #player-flight{margin-top:10px;background:#695073}.player-flight-pad{display:flex;gap:7px;margin-top:7px}.player-flight-pad[hidden]{display:none}.player-flight-pad button{touch-action:none;min-height:36px}
 .player-controls #player-carriage{margin-top:10px;min-height:44px}
-.player-controls #player-companion[aria-pressed=true]{background:#2d3a66;border-color:#d4a84f99}.player-controls .player-companion-status{margin-top:6px;color:#e9d9a6}
-/* TypeSafe reference: charcoal, paper white, rose accents and compact tool labels. */
-:root[data-theme] .player-controls .vehicle-garage{margin-top:14px;padding:12px;border:1px solid #787878;border-radius:5px;background:#1e1e1e;color:#fefefe;box-shadow:inset 0 1px 0 #ffffff0a}
-:root[data-theme] .player-controls .vehicle-garage[hidden]{display:none}
-:root[data-theme] .player-controls .vehicle-garage-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font:10px/1.4 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.05em;color:#dedede}
-:root[data-theme] .player-controls .vehicle-garage-title span:last-child{font-size:23px;line-height:1;color:#f386a1}
-:root[data-theme] .player-controls .vehicle-garage label{display:block;margin-bottom:5px;font-size:11px;color:#dedede}
-:root[data-theme] .player-controls .vehicle-garage select{box-sizing:border-box;width:100%;padding:9px 7px;border:1px solid #737373;border-radius:3px;background:#292929;color:#fefefe;font:12px/1.4 system-ui;cursor:pointer;color-scheme:dark}
-:root[data-theme] .player-controls .vehicle-garage button{margin-top:7px;border-radius:3px;border-color:#737373;background:#292929;color:#fefefe;box-shadow:none}
-:root[data-theme] .player-controls .vehicle-garage #player-chauffeur{background:#f386a1;border-color:#f386a1;color:#1e1e1e;font-weight:650}
-:root[data-theme] .player-controls .vehicle-garage button:disabled,:root[data-theme] .player-controls .vehicle-garage select:disabled{opacity:.45;cursor:default}
-:root[data-theme] .player-controls .vehicle-garage #player-drive-status{font:10px/1.5 'IBM Plex Mono',ui-monospace,monospace;color:#dedede;margin:9px 0 0}
-:root[data-theme] .player-controls .vehicle-garage :focus-visible{outline:2px solid #f386a1;outline-offset:3px}
+/* Charcoal typography and rose accents share the surrounding satin surface. */
+:root[data-theme] .player-controls .vehicle-garage { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--soft); color:var(--ink); }
+:root[data-theme] .player-controls .vehicle-garage[hidden] { display:none; }
+.vehicle-garage-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font:10px/1.4 ui-monospace,monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.vehicle-garage-title span:last-child { font-size:20px; color:var(--accent); }
+:root[data-theme] .player-controls .vehicle-garage label { display:block; margin-bottom:6px; font-size:11px; color:var(--muted); }
+:root[data-theme] .player-controls .vehicle-garage select { box-sizing:border-box; width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:12px/1.4 system-ui; cursor:pointer; }
+:root[data-theme] .player-controls .vehicle-garage button { margin-top:8px; border-radius:10px; }
+:root[data-theme] .player-controls .vehicle-garage #player-chauffeur { background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600; }
+:root[data-theme] .player-controls :is(button,select):disabled { opacity:.45; cursor:default; }
+:root[data-theme] .player-controls .vehicle-garage #player-drive-status { font:11px/1.55 system-ui; color:var(--muted); margin:10px 0 0; }
+.player-controls button[hidden] { display:none; }

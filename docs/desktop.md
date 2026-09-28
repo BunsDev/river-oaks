@@ -17,6 +17,8 @@ Use **View → Toggle Developer Tools** to inspect the renderer. **Game → Relo
 
 Appearance and graphics preferences persist locally. Development and packaged play use separate profiles. Window size, location, maximized state, and fullscreen restore when reopening; a removed display falls back to visible bounds. Closing the window quits the application.
 
+The **Play & rides** dock groups flight, Jev, vehicles, and optional scenarios. **Explore** opens people, places, and settings. See [play controls and rendering evidence](experience-polish.md) for keyboard behavior and the browser acceptance suite.
+
 ## Local desktop build
 
 ```sh

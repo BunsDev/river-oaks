@@ -38,6 +38,7 @@ async page => {
     check(Number(await page.locator('#walking-hud').getAttribute('data-altitude'))===0,`${form}: landed at ground level`);
     await page.screenshot({path:`output/playwright/${form}-district.png`});
   }
+  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   await page.locator('#player-camera').click();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.cameraMode==='first');
   check(true,'First-person toggle');
@@ -50,7 +51,7 @@ async page => {
   check(!await page.locator('.player-settings').evaluate(el=>el.open),'Mobile character controls start collapsed');
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'No mobile horizontal overflow');
   await page.screenshot({path:'output/playwright/jevica-ui-mobile.png'});
-  await page.locator('.player-settings summary').focus();await page.keyboard.press('Enter');
+  await page.locator('.visit-tools-toggle').focus();await page.keyboard.press('Enter');
   check(await page.locator('#player-flight').isVisible(),'Keyboard expands character controls');
   check(await page.locator('#player-flight').evaluate(el=>el.getBoundingClientRect().height>=44),'44px flight target');
   await page.locator('.player-portrait img').evaluate(img=>img.decode());

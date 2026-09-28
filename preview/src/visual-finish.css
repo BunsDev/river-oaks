@@ -102,186 +102,108 @@ body { -webkit-font-smoothing: antialiased; }
 :root[data-theme] .walking-title strong { font: 400 34px/1.15 var(--font-display); letter-spacing: -.7px; }
 .walking-title > span { font: 600 10px/1.5 system-ui, sans-serif; letter-spacing: .16em; }
 .walking-title small { font-size: 11px; }
-.visit-tools { position: absolute; z-index: 5; top: 18px; right: 18px; width: 218px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100% - 36px); overflow-y: auto; scrollbar-width: thin; pointer-events: none; border-radius: 20px; }
-.visit-tools > * { flex-shrink: 0; pointer-events: auto; }
-:root[data-theme] .player-controls { position: static; width: 100%; padding: 16px; border-radius: 20px; font-family: inherit; }
-.player-controls .player-controls-title { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .12em; }
-.player-controls :is(label, p), .player-controls #player-status { color: var(--muted); }
-:root[data-theme] .player-controls :is(button, select) { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 12px; }
-:root[data-theme] .player-controls button[aria-pressed=true] { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--accent); }
-:root[data-theme] .auto-controls { position: static; width: 100%; max-width: none; transform: none; padding: 12px; border-radius: 20px; }
-.auto-controls button { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); font-weight: 600; }
-.auto-controls button::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; background: var(--muted); vertical-align: 1px; }
-.auto-controls button[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.auto-controls button[aria-pressed=true]::before { background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 15%, transparent); }
-.auto-controls p { color: var(--muted); font-size: 11px; line-height: 1.6; margin-top: 8px; }
-:root[data-theme] .walking-console { background: linear-gradient(150deg, #ffffff0f, transparent 65%), #202a25eb; border: 1px solid #f3f5e733; box-shadow: inset 0 1px 0 #ffffff12, var(--surface-shadow); border-radius: 20px; padding: 12px 12px 8px; }
-:root[data-theme] #walking-meet-nearby:not(.walking-secondary), :root[data-theme] #walking-talk:not(:disabled) { background: linear-gradient(#a24779, #883560); border: 1px solid #d397b6; color: #fff; box-shadow: inset 0 1px 0 #ffffff26, 0 3px 8px #0002; font-size: 13px; min-height: 44px; }
-:root[data-theme] #walking-controls-toggle { color: #efd3e2; font-size: 11px; }
-#walking-place { color: #c4cec6; font-family: inherit; font-size: 11px; }
-:root[data-theme] #community-dialogue { border-radius: 24px; }
-:root[data-theme] #community-dialogue h2 { font: 400 30px/1.1 var(--font-display); letter-spacing: -.5px; }
-#community-dialogue .community-dialogue-card { background: color-mix(in srgb, var(--panel) 85%, transparent); }
-#community-dialogue .community-avatar { background: var(--accent-soft); box-shadow: inset 0 1px 0 var(--edge-light), 0 2px 5px #18251e0a; }
-:root[data-theme] :is(button, select, input, summary, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-button:disabled { cursor: not-allowed; }
-@media (prefers-reduced-motion: no-preference) {
-  :is(.nearby-person, .auto-controls button, .player-controls button, #community-meet) { transition: transform 120ms cubic-bezier(.2,0,0,1), box-shadow 120ms cubic-bezier(.2,0,0,1); }
-  :is(.nearby-person, .auto-controls button, .player-controls button, #community-meet):active:not(:disabled) { transform: scale(.98); }
+/* Play dock: one column, with scrolling inside the open disclosure. */
+.visit-tools { position:absolute; z-index:5; top:18px; right:18px; width:264px; margin:0; color:var(--ink); }
+.visit-tools-toggle { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:0 16px; border:1px solid var(--line); border-radius:16px; background:var(--glass); box-shadow:0 4px 16px #152b2826; font-size:12px; font-weight:600; cursor:pointer; list-style:none; }
+.visit-tools-toggle::-webkit-details-marker { display:none; }
+.visit-tools-toggle::after { content:'+'; font-size:20px; font-weight:400; color:var(--muted); }
+.visit-tools[open] > .visit-tools-toggle::after { content:'−'; }
+.visit-tools-content { display:flex; flex-direction:column; gap:10px; max-height:calc(100dvh - 140px); margin-top:10px; padding:2px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.visit-tools-content > * { flex-shrink:0; box-sizing:border-box; margin:0; }
+:root[data-theme] .player-controls { position:static; width:100%; padding:16px; border-radius:20px; font-family:inherit; }
+.player-identity { position:relative; display:flex; align-items:center; gap:12px; padding-bottom:14px; }
+.player-portrait { flex:0 0 44px; height:56px; overflow:hidden; border:1px solid #b8a579; border-radius:10px; background:#e6d9be; }
+.player-portrait img { display:block; width:100%; height:100%; object-fit:cover; }
+.player-portrait [hidden] { display:none; }
+.player-controls .player-controls-title { margin:0 0 4px; color:var(--muted); font-size:9px; font-weight:600; letter-spacing:.12em; }
+.player-controls #player-name { margin:0; color:var(--ink); font:500 25px/1.1 var(--font-display); letter-spacing:-.6px; }
+.player-controls #player-role { display:none; }
+.player-mode { position:absolute; right:0; bottom:14px; font-size:10px; color:var(--muted); }
+.player-actions { display:grid; gap:8px; }
+:root[data-theme] .player-controls :is(button,select) { min-height:44px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-size:12px; line-height:1.4; font-family:inherit; }
+:root[data-theme] .player-controls .player-actions button { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; box-shadow:inset 0 1px 0 var(--edge-light); }
+:root[data-theme] .player-controls .player-actions button[hidden] { display:none; }
+:root[data-theme] .player-controls button[aria-pressed=true] { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+:root[data-theme] .player-controls #player-flight { margin-top:0; background:linear-gradient(135deg,#a35075,#793552); color:#fff6fa; border-color:#a56582; }
+:root[data-theme] .player-controls #player-flight[aria-pressed=true] { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.player-controls kbd { flex-shrink:0; font:500 10px/1 system-ui,sans-serif; display:grid; place-items:center; width:20px; height:20px; border:1px solid currentColor; border-radius:5px; opacity:.65; }
+.player-settings { margin-top:12px; padding-top:2px; border-top:1px solid var(--line); }
+.player-settings summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; list-style:none; color:var(--ink); cursor:pointer; font-size:12px; }
+.player-settings summary::-webkit-details-marker { display:none; }
+.player-settings summary svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; transform:rotate(-90deg); }
+.player-settings[open] summary svg { transform:none; }
+.player-controls #player-description { display:block; font-size:11px; line-height:1.6; margin:4px 0 12px; color:var(--muted); }
+.player-controls #player-status, .player-controls .player-companion-status { margin:10px 0 0; font-size:11px; line-height:1.55; color:var(--muted); }
+.player-controls :is(#player-status,.player-companion-status):empty { display:none; }
+.player-controls[aria-busy=true] .player-portrait { opacity:.5; }
+:root[data-theme] .player-controls button:hover:not(:disabled) { box-shadow:inset 0 0 0 1px var(--accent); }
+:root[data-theme] .auto-controls { position:static; width:100%; max-width:none; transform:none; padding:10px; border-radius:20px; }
+.auto-controls button { width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-size:12px; font-weight:600; }
+.auto-controls button::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:8px; background:var(--muted); vertical-align:1px; }
+.auto-controls button[aria-pressed=true] { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.auto-controls p { color:var(--muted); font-size:11px; line-height:1.6; margin:8px 2px 2px; }
+.auto-controls:not([data-active=true]) p { display:none; }
+:root[data-theme] .invasion-controls { padding:10px 14px; border:1px solid var(--line); border-radius:20px; background:var(--glass); color:var(--ink); box-shadow:0 4px 16px #152b2814; font-family:inherit; }
+.invasion-controls > summary { display:flex; align-items:center; gap:8px; min-height:44px; list-style:none; font-size:12px; font-weight:600; cursor:pointer; }
+.invasion-controls > summary::-webkit-details-marker { display:none; }
+.invasion-controls > summary::after { content:''; flex:0 0 6px; height:6px; border:solid currentColor; border-width:0 1.5px 1.5px 0; transform:rotate(-45deg); }
+.invasion-controls[open] > summary::after { transform:rotate(45deg); }
+#invasion-summary { margin-left:auto; padding:3px 7px; border:1px solid var(--line); border-radius:20px; color:var(--muted); font-size:10px; font-weight:400; }
+.invasion-body { display:flex; flex-direction:column; }
+.invasion-body p, .invasion-counts { color:var(--muted); font-size:11px; line-height:1.6; }
+:root[data-theme] .invasion-controls button { min-height:44px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-size:12px; }
+:root[data-theme] .invasion-controls #invasion-cast { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+.invasion-controls #invasion-status { font-size:11px; line-height:1.6; padding-top:10px; margin-top:12px; }
+.invasion-controls #invasion-status:empty { display:none; }
+.invasion-counts { gap:8px; margin:12px 0 0; }
+.invasion-counts > span { flex:1; padding:8px; border-radius:10px; background:var(--soft); }
+:root[data-theme] .force-controls { padding:10px 14px; border-radius:20px; }
+:root[data-theme] :is(.force-controls,.invasion-controls) { backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+:root[data-theme] .walking-console { background:linear-gradient(150deg,#ffffff0c,transparent 65%),#183337ed; border:1px solid #c4ae8055; box-shadow:inset 0 1px 0 #ffffff12,0 8px 30px #0a182033; border-radius:20px; padding:12px 12px 8px; }
+:root[data-theme] #walking-meet-nearby:not(.walking-secondary), :root[data-theme] #walking-talk:not(:disabled) { background:linear-gradient(#a24779,#883560); border:1px solid #d397b6; color:#fff; box-shadow:inset 0 1px 0 #ffffff26; font-size:13px; min-height:44px; }
+:root[data-theme] #walking-controls-toggle { color:#efd3e2; font-size:11px; }
+#walking-place { color:#c4cec6; font-family:inherit; font-size:11px; }
+:root[data-theme] #community-dialogue { border-radius:24px; }
+:root[data-theme] #community-dialogue h2 { font:500 30px/1.1 var(--font-display); letter-spacing:-.5px; }
+#community-dialogue .community-dialogue-card { background:color-mix(in srgb,var(--panel) 85%,transparent); }
+#community-dialogue .community-avatar { background:var(--accent-soft); box-shadow:inset 0 1px 0 var(--edge-light); }
+:root[data-theme] :is(button,select,input,summary,a):focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+button:disabled { cursor:not-allowed; }
+.walking-hud { background:radial-gradient(ellipse 520px 220px at 0 0,#0d1a1d8c,transparent 72%),linear-gradient(180deg,#12212644,transparent 20%,transparent 80%,#12212644); }
+@media (max-width:1100px) {
+  .walking-title small { display:none; }
+  :root[data-theme] .walking-title strong { font-size:28px; max-width:220px; }
 }
-@media (max-width: 1100px) {
-  .walking-title small { display: none; }
-  :root[data-theme] .walking-title strong { font-size: 28px; max-width: 220px; }
+@media (max-width:1100px) {
+  body:not(.panel-collapsed) :is(.walking-title,.visit-tools) { visibility:hidden; }
 }
-@media (min-width: 701px) and (max-width: 1100px) {
-  body:not(.panel-collapsed) .walking-console { left: calc(50% + 150px); }
+@media (max-width:700px) {
+  .visit-tools { top:82px; right:12px; width:min(248px,calc(100% - 24px)); }
+  .visit-tools-content { max-height:max(140px,calc(100dvh - 310px)); }
+  .walking:has(#walking-movement:not([hidden])) .visit-tools-content { max-height:max(140px,calc(100dvh - 430px)); }
+  :root[data-theme] .walking-title strong { font-size:26px; }
+  .walking-title > span { font-size:9px; }
+  .district-source { left:12px; right:auto; max-width:calc(100% - 24px); font-size:8px; }
 }
-@media (max-width: 900px) {
-  body:not(.panel-collapsed) :is(.walking-title, .visit-tools) { visibility: hidden; }
+@media (max-height:600px) and (min-width:701px) {
+  .visit-tools { width:248px; }
+  .visit-tools-content { max-height:calc(100dvh - 140px); }
 }
-@media (max-width: 700px) {
-  .visit-tools { top: 80px; left: 12px; right: 12px; width: auto; display: grid; grid-template-columns: 1fr 174px; gap: 8px; max-height: calc(100% - 256px); }
-  :root[data-theme] .player-controls { grid-column: 2; padding: 12px; border-radius: 18px; }
-  :root[data-theme] .auto-controls { grid-column: 1 / -1; grid-row: 1; padding: 8px 12px; border-radius: 16px; }
-  .auto-controls p { font-size: 10px; line-height: 1.4; margin-top: 4px; }
+@media (min-width:701px) {
+  :root[data-theme] .panel-trigger { width:auto; min-width:44px; height:44px; display:flex; flex-direction:row; gap:8px; align-items:center; justify-content:center; padding:0 12px; }
+  .panel-trigger .trigger-label { display:block; writing-mode:horizontal-tb; max-height:none; opacity:1; font:500 12px/1 system-ui,sans-serif; }
+  .panel-collapsed.walking .walking-title { left:140px; }
 }
-@media (max-width: 650px) {
-  :root[data-theme] #control-panel .identity { padding: 20px 20px 16px; }
-  :root[data-theme] #control-panel .identity h1 { font-size: 32px; margin-top: 10px; }
-  :root[data-theme] .walking-title strong { font-size: 26px; }
-  .walking-title > span { font-size: 9px; }
-  :root[data-theme] .walking-console { bottom: 32px; }
-  .district-source { left: 12px; right: auto; max-width: calc(100% - 24px); font-size: 8px; }
+@media (max-height:500px) and (max-width:700px) {
+  .visit-tools { top:12px; }
+  .visit-tools-content, .walking:has(#walking-movement:not([hidden])) .visit-tools-content { max-height:max(140px,calc(100dvh - 140px)); }
+  .walking:has(.visit-tools[open]) .walking-console { visibility:hidden; }
+  :root[data-theme] .walking-console { left:12px; translate:none; transform:none; width:calc(100% - 288px); min-width:260px; }
 }
-@media (max-height: 600px) and (min-width: 701px) {
-  .visit-tools { display: grid; grid-template-columns: 218px 218px; align-items: start; width: auto; gap: 12px; }
-  :root[data-theme] .player-controls { padding: 12px; }
-  .player-controls #player-description { display: none; }
-  :root[data-theme] .auto-controls { grid-column: 1; grid-row: 1; }
-  .walking-title { visibility: hidden; }
-}
-
-/* Jevica's character card: satin paper, restrained rose accents and real model portrait. */
-.visit-tools { width: 264px; gap: 12px; }
-:root[data-theme] .player-controls { padding: 18px; border-radius: 22px; }
-.player-identity { position: relative; display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
-.player-portrait { flex: 0 0 64px; height: 80px; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, #ddd2c9, #afa5a4); outline: 1px solid #0000001a; box-shadow: 0 3px 8px #251c2112; }
-[data-theme=dark] .player-portrait { outline-color: #ffffff1a; }
-.player-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.player-portrait span { display: grid; place-items: center; height: 100%; color: #514357; font: 44px Georgia,serif; }
-.player-portrait [hidden] { display: none; }
-.player-controls .player-controls-title { margin: 0 0 4px; font-size: 9px; letter-spacing: .14em; }
-.player-controls #player-name { margin: 0; font: 400 30px/1.1 var(--font-display); letter-spacing: -.7px; color: var(--ink); }
-.player-controls #player-role { display: block; max-width: 125px; margin-top: 5px; font-size: 10px; color: var(--muted); line-height: 1.4; }
-.player-mode { position: absolute; bottom: -9px; right: 0; padding: 3px 7px; border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 9px; line-height: 1.3; border: 1px solid var(--line); }
-.player-settings { padding-top: 16px; border-top: 1px solid var(--line); }
-.player-settings summary { display: flex; align-items: center; justify-content: space-between; min-height: 28px; list-style: none; color: var(--ink); cursor: pointer; font-size: 11px; }
-.player-settings summary::-webkit-details-marker { display: none; }
-.player-settings summary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(-90deg); }
-.player-settings[open] summary svg { transform: none; }
-.player-controls #player-description { display: block; font-size: 11px; line-height: 1.6; margin: 9px 0 14px; }
-.player-actions { display: grid; gap: 8px; }
-:root[data-theme] .player-controls .player-actions button { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px #231c2108; }
-:root[data-theme] .player-controls #player-flight { margin-top: 0; background: linear-gradient(135deg,#a35075,#793552); color: #fff6fa; border-color: #a56582; }
-:root[data-theme] .player-controls #player-flight[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.player-controls kbd { font: 500 10px/1 system-ui,sans-serif; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 5px; opacity: .65; }
-.player-controls #player-status { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--line); font-size: 10px; line-height: 1.6; }
-.player-controls[aria-busy=true] .player-portrait { opacity: .5; }
-:root[data-theme] .player-controls button:hover { box-shadow: inset 0 0 0 1px var(--accent); }
-@media (prefers-reduced-motion: no-preference) {
-  .player-controls button:active:not(:disabled) { transform: scale(.96); }
-}
-@media (max-width: 700px) {
-  .visit-tools { width: auto; grid-template-columns: 1fr minmax(174px, 210px); }
-  :root[data-theme] .player-controls { padding: 12px; border-radius: 18px; }
-  .player-identity { gap: 9px; padding-bottom: 12px; }
-  .player-portrait { flex-basis: 40px; height: 50px; border-radius: 8px; }
-  .player-controls #player-name { font-size: 24px; }
-  .player-controls #player-role { display: none; }
-  .player-mode { font-size: 8px; }
-  .player-settings summary { min-height: 44px; }
-  .player-settings { padding-top: 10px; }
-  .player-controls #player-status { max-height: none; margin-top: 5px; }
-  .player-controls #player-description { font-size: 10px; }
-}
-@media (max-height: 600px) and (min-width: 701px) {
-  .visit-tools { width: auto; grid-template-columns: 218px 264px; }
-}
-.player-controls[data-form=witch] { --accent: #704980; --accent-soft: #ede5f1; }
-:root[data-theme=dark] .player-controls[data-form=witch] { --accent: #d6b9e3; --accent-soft: #43324b; }
-:root[data-theme] .player-controls[data-form=witch] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#675072,#3b2c45); border-color: #8b6c9b; }
-.player-controls[data-form=alien] { --accent: #3b6c67; --accent-soft: #e2eeeb; }
-:root[data-theme=dark] .player-controls[data-form=alien] { --accent: #acd6c9; --accent-soft: #263f3a; }
-:root[data-theme] .player-controls[data-form=alien] #player-flight:not([aria-pressed=true]) { background: linear-gradient(135deg,#456e66,#263e3b); border-color: #668f84; }
-
-/* Visit tools as one family: the invasion card shares the character card's glass, controls and type. */
-:root[data-theme] .invasion-controls {
-  background: linear-gradient(145deg, var(--edge-light), transparent 38%), var(--glass);
-  border: 1px solid var(--edge-light);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent), var(--surface-shadow);
-  backdrop-filter: blur(28px) saturate(1.15);
-  -webkit-backdrop-filter: blur(28px) saturate(1.15);
-  color: var(--ink);
-  padding: 18px;
-  border-radius: 22px;
-  font-family: inherit;
-}
-.invasion-title span { font-weight: 650; color: var(--muted); }
-.invasion-title strong { color: var(--ink); }
-.invasion-controls p, .invasion-counts { color: var(--muted); }
-.invasion-counts b { color: var(--ink); font-variant-numeric: tabular-nums; }
-:root[data-theme] .invasion-controls button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 12px; box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px #231c2108; }
-:root[data-theme] .invasion-controls button:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--accent); }
-:root[data-theme] .invasion-controls #invasion-toggle[aria-pressed=true] { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
-:root[data-theme] .invasion-controls #invasion-cast { background: linear-gradient(135deg, #6b4a9e, #3d2d66); color: #fff; border-color: #8a6cc0; order: -1; }
-.invasion-controls kbd { opacity: .65; }
-.invasion-controls #invasion-status { font-size: 10px; line-height: 1.6; padding-top: 11px; margin-top: 14px; }
-.invasion-controls #invasion-status:empty { display: none; }
-/* While a round runs the card becomes the focus: counts first, cast above the call-off, a live edge. */
-.invasion-controls:has(#invasion-toggle[aria-pressed=true]) { display: flex; flex-direction: column; }
-.invasion-controls:has(#invasion-toggle[aria-pressed=true]) #invasion-cast { order: 0; }
-.invasion-controls:has(#invasion-toggle[aria-pressed=true]) #invasion-toggle { order: 1; min-height: 36px; }
-.invasion-controls:has(#invasion-toggle[aria-pressed=true]) #invasion-status { order: 2; }
-:root[data-theme] .invasion-controls:has(#invasion-toggle[aria-pressed=true]) { box-shadow: inset 0 0 0 1px #8a6cc0aa, 0 0 0 3px #8a6cc024, var(--surface-shadow); }
-.invasion-counts { gap: 8px; margin: 12px 0 0; }
-.invasion-counts > span { flex: 1; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--soft) 70%, transparent); display: flex; align-items: baseline; gap: 4px; }
-/* Visit tools stay in one column and scroll inside the viewport rather than running off it. */
-.visit-tools { max-height: calc(100% - 64px); }
-.visit-tools :is(.player-controls, .invasion-controls, .auto-controls) { box-sizing: border-box; }
-/* The on-foot title reads over bright sky too. */
-.walking-hud { background: radial-gradient(ellipse 520px 220px at 0 0, #0d1a1d8c, transparent 72%), linear-gradient(180deg, #12212655, transparent 20%, transparent 72%, #12212666); }
-
-@media (max-width: 700px) {
-  /* Phone: the auto visit bar across the top, then character and scenario side by side, both compact. */
-  .visit-tools { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; max-height: calc(100% - 300px); }
-  :root[data-theme] .player-controls { grid-column: 2; grid-row: 2; }
-  :root[data-theme] .invasion-controls { grid-column: 1; grid-row: 2; padding: 12px; border-radius: 18px; }
-  .invasion-title { margin-bottom: 0; }
-  .invasion-title strong { font-size: 20px; }
-  .invasion-controls:not(:has(#invasion-toggle[aria-pressed=true])) #invasion-brief { display: none; }
-  .invasion-controls #invasion-status { margin-top: 8px; padding-top: 8px; font-size: 10px; line-height: 1.45; }
-  .invasion-controls button { min-height: 44px; margin-top: 8px; }
-  .invasion-counts > span { padding: 6px 8px; }
-}
-@media (min-width: 701px) {
-  /* Wide screens: the auto visit sits under the on-foot title, leaving the right column to character and scenario. */
-  :root[data-theme] #viewport > .auto-controls { position: absolute; z-index: 5; top: 124px; left: 20px; transform: none; width: 264px; max-width: calc(100% - 40px); padding: 12px; border-radius: 20px; text-align: left; }
-  #viewport > .auto-controls button { text-align: center; }
-  #viewport > .auto-controls[hidden] { display: none; }
-}
-@media (min-width: 701px) and (max-width: 1100px) { :root[data-theme] #viewport > .auto-controls { top: 96px; } }
-@media (max-width: 900px) { body:not(.panel-collapsed) #viewport > .auto-controls { visibility: hidden; } }
-@media (max-height: 600px) and (min-width: 701px) { :root[data-theme] #viewport > .auto-controls { top: 20px; left: 76px; } }
-@media (min-width: 901px) {
-  /* Keep auto visit reachable beside the open settings and people rail. */
-  :root[data-theme] body:not(.panel-collapsed) #viewport > .auto-controls { left: 348px; top: 124px; width: min(264px, calc(100% - 642px)); }
-}
-@media (min-width: 901px) and (max-height: 600px) {
-  body:not(.panel-collapsed) .visit-tools { display: flex; width: 264px; }
-}
-@media (max-width: 700px) {
-  .invasion-counts { flex-direction: column; gap: 6px; }
-  .invasion-counts > span { white-space: nowrap; }
+/* A conversation owns its foreground space. The world remains visible behind it. */
+body:has(#community-dialogue:not([hidden])) .walking-console { visibility:hidden; pointer-events:none; }
+@media (max-width:1200px) {
+  body:has(#community-dialogue:not([hidden])) .visit-tools { visibility:hidden; pointer-events:none; }
 }
 
 /* Streaming assets: a quiet count at the top of the view while the sky,
@@ -337,13 +259,8 @@ body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-conso
   .clear-view-toggle:active { scale: .96; }
 }
 @media (max-width: 700px) { .clear-view-toggle { bottom: auto; top: 12px; right: 12px; min-height: 32px; padding: 4px 6px 4px 12px; } .clear-view-toggle kbd { display: none; } }
+@media (max-height:500px) and (max-width:700px) { .clear-view-toggle { top:auto; bottom:12px; } }
 
-/* A conversation takes the auto-visit card's corner: the card steps aside unless a visit is running, in which case the dialogue starts below it. */
-@media (min-width: 701px) {
-  #viewport > .auto-controls { transition: opacity 160ms ease, visibility 160ms; }
-  body:has(#community-dialogue:not([hidden])) #viewport > .auto-controls:not(:has([aria-pressed=true])) { opacity: 0; visibility: hidden; pointer-events: none; }
-  body:has(#viewport > .auto-controls [aria-pressed=true]) #community-dialogue { max-height: calc(100% - 250px); }
-}
 /* Movement controls read as a legend, not a terminal. */
 :root[data-theme] .walking-help { font-weight: 400; font-size: 10px; line-height: 1.7; font-family: inherit; color: #c9c5d2; margin: 10px 0 6px; letter-spacing: .01em; }
 :root[data-theme] .walking-help kbd, :root[data-theme] .walking-console kbd { font: 500 10px/1 system-ui, sans-serif; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid #ffffff40; border-radius: 5px; margin-left: 6px; opacity: .8; }

@@ -3,6 +3,9 @@ import { supportAvailability } from './community-presentation.js';
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const finitePoint = p => Array.isArray(p) && p.length >= 2 && p.every(Number.isFinite);
 const thresholds = { visit: 0.30, wait: 0.30, ask: 0.50, supply: 0.75, dispatch: 0.75, shelter: 0.75 };
+// Leave headroom inside the 2.8 m interaction range: a neighbor can keep
+// walking while the next decision is in flight. Never aim for their feet.
+const APPROACH_DISTANCE = 1.4;
 
 // Keep coordinates in the executor; the model may select IDs, never invent positions.
 export function visitorOptions(world, state, position, { visited = new Set(), blocked = new Set(), storm = state.storm } = {}) {
@@ -32,7 +35,7 @@ export function visitorOptions(world, state, position, { visited = new Set(), bl
         if (!availability.dispatch) add(`dispatch-${local.id}`, 'dispatch', `Arrange a volunteer visit for ${local.name}`, local.position, extra);
       } else if (!local.needKnown || !availability.supply || !availability.dispatch) {
         // Stop within speaking range; do not try to occupy another character's feet.
-        const gap = 2.1, ratio = Math.max(0, (d - gap) / d);
+        const ratio = Math.max(0, (d - APPROACH_DISTANCE) / d);
         const target = [position[0] + (local.position[0] - position[0]) * ratio, position[1] + (local.position[1] - position[1]) * ratio];
         add(`visit-${local.id}`, 'visit', `Meet ${local.name}${extra.needs_help ? ' · open support request' : ''}`, target, extra);
       }
@@ -139,7 +142,7 @@ export function createAutoVisitor({ getWorld, getState, getPosition, getStorm, r
           if (!local || distance(local.position, navigation.target) > 5 || (!fresh.candidates.some(c => c.id === candidate.id) && distance(position, local.position) > 2.8)) {
             navigation = null; halt(); next = 0; return;
           }
-          if (distance(position, local.position) <= 2.6) path.length = 0;
+          if (distance(position, local.position) <= APPROACH_DISTANCE + 0.2) path.length = 0;
         }
         while (path.length && distance(position, path[0]) < 0.3) path.shift();
         if (!path.length) {

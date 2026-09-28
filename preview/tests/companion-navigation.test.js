@@ -4,9 +4,30 @@ import fs from 'node:fs';
 import {createResidentNavigation} from '../src/navigation.js';
 import {createWalkingEnvironment} from '../src/walking.js';
 import {carriageContains} from '../src/carriage-parking.js';
-import {createCompanionBody,stepCompanion} from '../src/prince-companion.js';
+import {companionSlot,createCompanionBody,stepCompanion} from '../src/prince-companion.js';
+import {storefrontSpot} from '../src/arrival.js';
 const routes=await import('../src/companion-navigation.js').catch(()=>({}));
 const empty={scene:'district',bounds_m:[-30,-30,30,30],collisionPolygons:[]};
+
+test('a local trailing companion finds a reachable side when a storefront blocks every rear slot',()=>{
+  const world=JSON.parse(fs.readFileSync('preview/public/data/district.json'));
+  world.vegetation=JSON.parse(fs.readFileSync('preview/public/data/district-vegetation.json'));
+  const environment=createWalkingEnvironment(world),nav=routes.createCompanionNavigation(world);
+  const arrival=storefrontSpot(world,world.stores.find(store=>store.name==='Dior'),'arrive',{
+    isFree:(x,z)=>environment.isFree(x,z)&&!environment.roomAt(x,z),
+  });
+  const player=[arrival[0],-arrival[1]],body=createCompanionBody([player[0],player[1]+5]);
+  const free=(x,z)=>environment.isFree(x,z)&&nav.canTravel([player[0],-player[1]],[x,-z]);
+  const slot=companionSlot(player,0,'trail',free);
+  assert.ok(slot,'The real Dior entrance leaves a clear side even though every rear slot is blocked');
+  assert.ok(free(...slot.point),'The fallback must stay reachable without crossing the facade');
+  for(let frame=0;frame<600;frame++) {
+    const before=[...body.position];
+    stepCompanion(body,slot.point,environment,1/60,{player});
+    assert.ok(Math.hypot(body.position[0]-before[0],body.position[1]-before[1])<.08,'Approach stays physical');
+  }
+  assert.ok(Math.hypot(body.position[0]-player[0],body.position[1]-player[1])<2,'Local following reaches conversation distance');
+});
 
 test('the route follower guides physical steps around a wall without relocation',async()=>{
   assert.equal(typeof routes.createCompanionRouteFollower,'function');

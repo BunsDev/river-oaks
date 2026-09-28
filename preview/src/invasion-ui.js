@@ -7,13 +7,13 @@ import './invasion.css';
 
 // The invasion card: start the scenario, cast with Q, and read the outcome.
 export function createInvasionControls({ scene, host, walking, getWorld, getLocals, getForm, onCast = () => {} }) {
-  const panel = document.createElement('section'); panel.className = 'invasion-controls'; panel.setAttribute('aria-label', 'Alien invasion');
-  panel.innerHTML = `<div class="invasion-title"><span>Scenario</span><strong>Alien invasion</strong></div>
+  const panel = document.createElement('details'); panel.className = 'invasion-controls'; panel.setAttribute('aria-label', 'Alien invasion');
+  panel.innerHTML = `<summary>Alien invasion <span id="invasion-summary">Play</span></summary><div class="invasion-body">
     <p id="invasion-brief">Saucers land at the edge of the district and their crew beam neighbors aboard. Only magic sends them home.</p>
     <div class="invasion-counts" hidden><span><b id="invasion-aliens">0</b> aliens</span><span><b id="invasion-safe">0</b> beamed up</span></div>
     <button id="invasion-toggle" type="button" aria-pressed="false">Begin invasion</button>
     <button id="invasion-cast" type="button" hidden>Cast <kbd>Q</kbd></button>
-    <p id="invasion-status" role="status" aria-live="polite"></p>`;
+    <p id="invasion-status" role="status" aria-live="polite"></p></div>`;
   const $ = selector => panel.querySelector(selector);
   const toggle = $('#invasion-toggle'), cast = $('#invasion-cast'), status = $('#invasion-status'), counts = $('.invasion-counts');
   let state = null, invaders = null, environment = null, world = null, lastCast = 0;
@@ -35,6 +35,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
   };
   const publish = () => {
     const remaining = state ? state.aliens.filter(alien => !['banished', 'gone'].includes(alien.status)).length : 0;
+    $('#invasion-summary').textContent=state?.phase==='active'?`${remaining} left`:state?.phase==='won'?'Saved':'Play';
     panel.dataset.state = JSON.stringify({ phase: state?.phase ?? 'idle', remaining, banished: state?.banished ?? 0, abducted: state?.abducted.length ?? 0, canCast: magical(), landed: state ? state.aliens.filter(alien => alien.status !== 'landing').length : 0, crew: invaders?.crew ?? [], aliens: state ? state.aliens.map(alien => ({ id: alien.id, status: alien.status, position: alien.position.slice(0, 2) })) : [], nearest: nearestAlien(), effects: effects.stats });
     host.dataset.invasion = state?.phase ?? 'idle';
   };
@@ -47,6 +48,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
   };
   const begin = () => {
     world = getWorld(); if (!world || !magical()) return refreshGate();
+    panel.open=true;
     environment = createWalkingEnvironment(world);
     const groundAt = (e, n) => environment.groundAt(e, -n);
     state = createInvasion(world, { count: 5, isFree: (e, n) => environment.isFree(e, -n), groundAt });

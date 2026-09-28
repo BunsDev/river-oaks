@@ -16,7 +16,7 @@ async (page) => {
   });
   const settle = () => page.waitForTimeout(400);
   await page.setViewportSize({ width: 3840, height: 2160 });
-  await page.reload();
+  await page.goto('http://127.0.0.1:5181/');
   await page.waitForFunction(() => document.querySelector('#loading')?.hidden);
   const trigger = page.locator('#panel-toggle');
   if (await trigger.getAttribute('aria-expanded') === 'false') await trigger.click();
@@ -24,7 +24,7 @@ async (page) => {
   const open = await read();
   check(open.viewport[0] === 3840 && !open.inert, 'Floating panel must stay interactive above the full-width street');
 
-  await page.getByRole('button', { name: 'Hide controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Close exploration panel', exact: true }).click();
   await settle();
   const collapsed = await read();
   check(collapsed.viewport[0] === 3840 && collapsed.viewport[1] === 2160, 'Collapsed view must fill native UHD');
@@ -44,7 +44,7 @@ async (page) => {
   await settle();
   check((await read()).inert, 'Collapsed preference must survive reload');
 
-  await page.getByRole('button', { name: 'Show controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore River Oaks', exact: true }).click();
   await settle();
   await trigger.click();
   check((await read()).walking, 'Panel transitions retain walking');
@@ -52,10 +52,10 @@ async (page) => {
   await settle();
   const mobile = await read();
   check(mobile.viewport[0] === 390 && mobile.viewport[1] === 844 && !mobile.overflow, 'Collapsed mobile view must fill the screen');
-  await page.getByRole('button', { name: 'Show controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore River Oaks', exact: true }).click();
   await settle();
   check((await read()).expanded === 'true' && !(await read()).inert, 'Mobile trigger must restore controls');
-  await page.getByRole('button', { name: 'Hide controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Close exploration panel', exact: true }).click();
   await settle();
   await page.screenshot({ path: 'output/playwright/sidebar-mobile.png' });
   await page.setViewportSize({ width: 3840, height: 2160 });

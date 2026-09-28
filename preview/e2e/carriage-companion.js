@@ -7,7 +7,8 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.carriageDriverReady==='true'&&window.__riverCarriage?.().placement);
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
   await page.locator('[data-section=explore-section]').click();await page.locator('#destination').selectOption({label:'Dior'});
-  await page.locator('#visit-destination').click();await page.locator('#player-carriage').click();
+  await page.locator('#visit-destination').click();if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
+  await page.locator('#player-carriage').click();
   await page.locator('[data-section=community-section]').click();
   if(!await page.locator('#community-more').evaluate(element=>element.open))await page.locator('#community-more > summary').click();
   await page.locator('#community-local').selectOption('carriage-driver');await page.locator('#community-meet').click();

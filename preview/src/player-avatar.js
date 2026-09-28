@@ -17,21 +17,20 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     <div><div class="player-controls-title">Your character</div><h2 id="player-name">Jevica</h2><span id="player-role">The rose enchantress</span></div>
     <span id="player-mode" class="player-mode">On foot</span>
   </header>
-  <details class="player-settings" open><summary>Character controls<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>
+  <div class="player-actions player-quick-actions"><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Jev</span><kbd>J</kbd></button></div>
+  <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
+  <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite"></p>
+  <details class="player-settings"><summary>Rides & camera<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>
     <p id="player-description"></p>
-    <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button></div>
-    <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
+    <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button></div>
     <section class="vehicle-garage" aria-label="Jev chauffeur">
-      <div class="vehicle-garage-title"><span>JEV / CHAUFFEUR</span><span aria-hidden="true">∵</span></div>
+      <div class="vehicle-garage-title"><span>Your chauffeur</span><span aria-hidden="true">✧</span></div>
       <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option></select>
       <div class="player-actions"><button id="player-carriage" type="button">Call vehicle</button><button id="player-ride" type="button">Ride with Jev</button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
-    <div class="player-actions"><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Prince Jev</span><kbd>J</kbd></button></div>
-    <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite">Prince Jev is ready to drive.</p>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   document.querySelector('#viewport').append(panel);
-  panel.querySelector('.player-settings').open = !window.matchMedia('(max-width: 700px)').matches;
   const cameraButton = panel.querySelector('#player-camera'), status = panel.querySelector('#player-status');
   panel.addEventListener('click',event=>{
     if(event.detail>0&&event.target.closest('.player-actions button'))host.focus({preventScroll:true});
@@ -49,8 +48,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     if(carriage.riding)status.textContent=carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
-  // Companion mode: Prince Jev steps down and walks with Jevica. Jev chooses
-  // how he accompanies her; the status line names the actual decision source.
+  // Keep the detailed decision source in diagnostics; the player sees what Jev
+  // is doing and whether he is following locally while the connection recovers.
   const companionButton=panel.querySelector('#player-companion'),companionStatus=panel.querySelector('#player-companion-status');
   const toggleCompanion=()=>{
     const next=!carriage.prince.companion.enabled;
@@ -61,9 +60,9 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&!sharedMode){event.preventDefault();toggleCompanion();}});
   carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
-    companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to the vehicle':'Walk with Prince Jev';
-    const source=value.source==='jev'?'Jev · ':value.source==='local'&&value.enabled?`Local follow${value.reason&&value.reason!=='starting'?` (${value.reason.replaceAll('_',' ')})`:''} · `:'';
-    companionStatus.textContent=`${source}${value.label}${value.carrying?' · Carrying your shopping bag':''}`;
+    companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to your ride':'Walk with Jev';
+    const unavailable=value.source==='local'&&value.enabled&&(['offline','timeout','not_configured','unavailable','transport_error','invalid_answer','low_confidence','busy'].includes(value.reason)||/^provider_\d{3}$/.test(value.reason??''));
+    companionStatus.textContent=value.mode==='seat'&&!value.enabled?'':`${value.label}${value.carrying?' · Carrying your shopping bag':''}${unavailable?' · Smart guidance unavailable; Jev stays with you':''}`;
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
@@ -103,7 +102,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       const portraitImage=panel.querySelector('.player-portrait img');
       portraitImage.src=portrait.src;portraitImage.hidden=!hasPortrait;
       panel.querySelector('#player-description').textContent = identity.description;
-      status.textContent = 'Jevica is ready.';
+      status.textContent = '';
       host.dataset.playerForm = form;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
     } catch {
@@ -117,7 +116,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     get carriage(){return carriage;},
     get object(){return holder;},
     get form() {return form;},
-    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);panel.querySelector('.vehicle-garage').hidden=value;companionButton.parentElement.hidden=value;companionStatus.hidden=value;},
+    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);panel.querySelector('.vehicle-garage').hidden=value;companionButton.hidden=value;companionStatus.hidden=value;},
     get rig() {return avatar?.rig;},
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},

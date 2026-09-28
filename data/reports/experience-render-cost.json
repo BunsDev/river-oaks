@@ -1,0 +1,216 @@
+{
+  "capturedOn": "2026-09-28",
+  "baselineCommit": "607297b0934166ceea2e948756145a2aaa0fbf93",
+  "viewport": [
+    1440,
+    1000
+  ],
+  "graphics": "sharp",
+  "scope": "Same street, live residents, shadows, and effects; sequential A/B/B/A runs. Main-pass cost only; not a sustained 60 fps claim.",
+  "runs": [
+    {
+      "name": "baseline",
+      "backend": {
+        "vendor": "Google Inc. (Apple)",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "gpuTimer": true
+      },
+      "disjoint": false,
+      "medianFrameMs": 33.29999999999927,
+      "p95FrameMs": 33.400000000001455,
+      "passes": [
+        {
+          "name": "RenderPass",
+          "frames": 120,
+          "cpuMs": 14.006666640440622,
+          "calls": 1679,
+          "triangles": 13646262,
+          "gpuSamples": 30,
+          "gpuMs": 15.008830033333338
+        },
+        {
+          "name": "GTAOPass",
+          "frames": 120,
+          "cpuMs": 4.779166672627131,
+          "calls": 561,
+          "triangles": 2496552,
+          "gpuSamples": 30,
+          "gpuMs": 7.973078800000001
+        },
+        {
+          "name": "UnrealBloomPass",
+          "frames": 120,
+          "cpuMs": 0.0925000031789144,
+          "calls": 13,
+          "triangles": 13,
+          "gpuSamples": 30,
+          "gpuMs": 6.2637732333333345
+        },
+        {
+          "name": "OutputPass",
+          "frames": 120,
+          "cpuMs": 0.023333332935969033,
+          "calls": 1,
+          "triangles": 1,
+          "gpuSamples": 30,
+          "gpuMs": 4.754821766666667
+        }
+      ],
+      "errors": [],
+      "scope": "Local live street with all people, shadows and effects enabled. Pass CPU time includes driver submission; GPU timings are reported only when available and non-disjoint."
+    },
+    {
+      "name": "optimized",
+      "backend": {
+        "vendor": "Google Inc. (Apple)",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "gpuTimer": true
+      },
+      "disjoint": false,
+      "medianFrameMs": 33.30000000000018,
+      "p95FrameMs": 50,
+      "passes": [
+        {
+          "name": "RenderPass",
+          "frames": 120,
+          "cpuMs": 14.96416666507721,
+          "calls": 1648.5583333333334,
+          "triangles": 10157638.183333334,
+          "gpuSamples": 30,
+          "gpuMs": 13.760250999999995
+        },
+        {
+          "name": "GTAOPass",
+          "frames": 120,
+          "cpuMs": 4.61250001390775,
+          "calls": 553.3,
+          "triangles": 2340901.8666666667,
+          "gpuSamples": 30,
+          "gpuMs": 8.4991203
+        },
+        {
+          "name": "UnrealBloomPass",
+          "frames": 120,
+          "cpuMs": 0.10499998331069946,
+          "calls": 13,
+          "triangles": 13,
+          "gpuSamples": 30,
+          "gpuMs": 6.375578600000001
+        },
+        {
+          "name": "OutputPass",
+          "frames": 120,
+          "cpuMs": 0.021666669845581056,
+          "calls": 1,
+          "triangles": 1,
+          "gpuSamples": 30,
+          "gpuMs": 4.804224566666666
+        }
+      ],
+      "errors": [],
+      "scope": "Local live street with all people, shadows and effects enabled. Pass CPU time includes driver submission; GPU timings are reported only when available and non-disjoint."
+    },
+    {
+      "name": "optimized",
+      "backend": {
+        "vendor": "Google Inc. (Apple)",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "gpuTimer": true
+      },
+      "disjoint": false,
+      "medianFrameMs": 33.30000000000018,
+      "p95FrameMs": 33.400000000001455,
+      "passes": [
+        {
+          "name": "RenderPass",
+          "frames": 120,
+          "cpuMs": 15.050000001986822,
+          "calls": 1680,
+          "triangles": 10504534,
+          "gpuSamples": 30,
+          "gpuMs": 13.954955
+        },
+        {
+          "name": "GTAOPass",
+          "frames": 120,
+          "cpuMs": 4.83083333770434,
+          "calls": 561,
+          "triangles": 2346792,
+          "gpuSamples": 30,
+          "gpuMs": 9.212036999999999
+        },
+        {
+          "name": "UnrealBloomPass",
+          "frames": 120,
+          "cpuMs": 0.10416666467984517,
+          "calls": 13,
+          "triangles": 13,
+          "gpuSamples": 30,
+          "gpuMs": 7.8733827666666665
+        },
+        {
+          "name": "OutputPass",
+          "frames": 120,
+          "cpuMs": 0.02666667103767395,
+          "calls": 1,
+          "triangles": 1,
+          "gpuSamples": 30,
+          "gpuMs": 5.6164423999999995
+        }
+      ],
+      "errors": [],
+      "scope": "Local live street with all people, shadows and effects enabled. Pass CPU time includes driver submission; GPU timings are reported only when available and non-disjoint."
+    },
+    {
+      "name": "baseline",
+      "backend": {
+        "vendor": "Google Inc. (Apple)",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "gpuTimer": true
+      },
+      "disjoint": false,
+      "medianFrameMs": 33.30000000000018,
+      "p95FrameMs": 50,
+      "passes": [
+        {
+          "name": "RenderPass",
+          "frames": 120,
+          "cpuMs": 14.189166676998138,
+          "calls": 1679,
+          "triangles": 13646262,
+          "gpuSamples": 30,
+          "gpuMs": 15.609964699999999
+        },
+        {
+          "name": "GTAOPass",
+          "frames": 120,
+          "cpuMs": 4.826666661103567,
+          "calls": 561,
+          "triangles": 2496552,
+          "gpuSamples": 30,
+          "gpuMs": 8.851775766666664
+        },
+        {
+          "name": "UnrealBloomPass",
+          "frames": 120,
+          "cpuMs": 0.10916666785875956,
+          "calls": 13,
+          "triangles": 13,
+          "gpuSamples": 30,
+          "gpuMs": 6.323417533333333
+        },
+        {
+          "name": "OutputPass",
+          "frames": 120,
+          "cpuMs": 0.020000000794728596,
+          "calls": 1,
+          "triangles": 1,
+          "gpuSamples": 30,
+          "gpuMs": 4.6149119999999995
+        }
+      ],
+      "errors": [],
+      "scope": "Local live street with all people, shadows and effects enabled. Pass CPU time includes driver submission; GPU timings are reported only when available and non-disjoint."
+    }
+  ]
+}

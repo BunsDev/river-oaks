@@ -9,6 +9,9 @@ export function createClearView({ viewport, onChange = () => {} }) {
   let active = false;
   const set = next => {
     active = Boolean(next);
+    // H can be pressed from a focused card button, not just from the world.
+    // Return focus to the visible way back before hiding that card.
+    if(active&&document.activeElement?.closest('.visit-tools, .auto-controls, .walking-console'))button.focus({preventScroll:true});
     document.body.classList.toggle('clear-view', active);
     button.setAttribute('aria-pressed', String(active));
     button.querySelector('span').textContent = active ? 'Show controls' : 'Clear view';

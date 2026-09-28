@@ -7,6 +7,7 @@ import { pickPerson, withinTalkingReach } from './people-picking.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
+import { createPlayDock } from './play-dock.js';
 import { createRenderPipeline } from './render-pipeline.js';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -157,11 +158,10 @@ function initializeRenderer() {
   liftSparkles=createLiftSparkles({reducedMotion});scene.add(liftSparkles.object);
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
-  const visitTools = document.createElement('div');
-  visitTools.className = 'visit-tools';
+  const playDock = createPlayDock(), visitTools = playDock.content;
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'), invasion.panel);
+  visitTools.append($('.player-controls'), $('.auto-controls'), invasion.panel);
   force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
@@ -173,11 +173,7 @@ function initializeRenderer() {
     onCast:target=>playerAvatar?.setForceTarget(target),onManual:()=>autoControls?.stop(),
   });
   visitTools.insertBefore(force.panel,invasion.panel);
-  $('#viewport').append(visitTools);
-  // The auto visit belongs to the whole visit: under the title on wide screens, atop the card grid on phones.
-  const phoneLayout = window.matchMedia('(max-width: 700px)');
-  const placeAutoControls = () => phoneLayout.matches ? visitTools.prepend($('.auto-controls')) : $('#viewport').append($('.auto-controls'));
-  placeAutoControls(); phoneLayout.addEventListener('change', placeAutoControls);
+  $('#viewport').append(playDock.element);
   createClearView({ viewport: $('#viewport') });
   if (multiplayerMode === 'required') startMultiplayer();
   else if (multiplayerMode === 'auto') probeTown().then(town => {
@@ -638,7 +634,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
-  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s magical angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

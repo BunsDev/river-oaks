@@ -106,7 +106,8 @@ async page => {
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),'Mobile must not overflow');
   await page.screenshot({path:'output/playwright/auto-rail-mobile.png'});
   await toggle.click();
-  check(await page.locator('#auto-toggle').isVisible(),'Auto control stays accessible with rail closed on mobile');
+  await page.locator('.visit-tools-toggle').click();
+  check(await page.locator('#auto-toggle').isVisible(),'Auto control stays accessible in the mobile play dock');
   await page.setViewportSize({width:1440,height:1000});
   check(!errors.length,`Browser errors: ${errors.join('; ')}`);
   await page.unroute('**/v1/auto'); await page.unroute('**/v1/decisions');

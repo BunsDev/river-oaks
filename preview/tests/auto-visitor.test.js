@@ -88,3 +88,17 @@ test('candidate construction preserves proximity, resources, storm and scenario 
   opts=visitorOptions(f.world,f.state,[0,0],{storm:true});assert.ok(opts.candidates.every(c=>['shelter','wait'].includes(c.action)));
   opts=visitorOptions(f.world,f.state,[20,0.9],{storm:true});assert.deepEqual(opts.candidates.map(c=>c.action),['wait']);
 });
+
+test('approaching a moving neighbor retains speaking-range headroom for the next decision',async()=>{
+  const f=fixture();
+  f.state.locals.push({id:'maya',name:'Maya',position:[10,0,0],needKnown:false,priority:true,status:'needs_help',need:25,cooldownUntil:0});
+  f.auto.start();f.auto.update(.016);await settle();
+  f.move([7.5,0,1.68]);f.auto.update(.016);
+  assert.equal(f.auto.status.phase,'walking','Do not stop at the outer edge of speaking range while the neighbor keeps moving');
+  assert.equal(f.actions.at(-1)[0],'steer');
+  const target=f.actions.at(-1)[1];
+  assert.ok(Math.hypot(target[0]-10,target[1])>=1.2,'Keep comfortable personal space');
+  assert.ok(Math.hypot(target[0]-10,target[1])<=1.6,'Leave time for the next provider decision without losing reach');
+  f.move([...target,1.68]);f.auto.update(.016);
+  assert.equal(f.auto.status.phase,'arrived');
+});

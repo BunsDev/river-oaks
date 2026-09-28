@@ -1,7 +1,7 @@
 /* Shared feedback for People, Places, Settings, conversation, wishes and HUD. */
 :root { --ui-ease:cubic-bezier(.2,0,0,1); }
 .app-shell { transition:none; }
-.visit-tools { overscroll-behavior:contain; scrollbar-gutter:stable; }
+.visit-tools-content { overscroll-behavior:contain; }
 :is(.visit-tools,#control-panel,#community-dialogue) :is(button,select,summary) { touch-action:manipulation; }
 :is(.visit-tools,#control-panel,#community-dialogue) button { -webkit-tap-highlight-color:transparent; }
 :is(.visit-tools,#control-panel,#community-dialogue) button:not(:disabled) { cursor:pointer; }
@@ -32,8 +32,6 @@
   .visit-tools { scrollbar-gutter:auto; }
 }
 @media (max-width:700px) {
-  .visit-tools { display:flex; max-height:max(140px,calc(100dvh - 310px - env(safe-area-inset-bottom))); }
-  .walking:has(#walking-movement:not([hidden])) .visit-tools { max-height:max(140px,calc(100dvh - 445px - env(safe-area-inset-bottom))); }
   :root[data-theme] .walking-console { bottom:max(28px,env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion:reduce) {

@@ -30,6 +30,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
   step(input,delta){if(!driver.canDrive){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const controls=chauffeur.input(placement,input,delta,{roadClear:canOccupy(lookahead)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
   brake(){if(placement)placement.speed=0;chauffeur.request({mode:'stop'});},
+  takeOver(){if(chauffeur.status.active)this.brake();},
   stop(){mounted=false;if(placement)placement.speed=0;chauffeur.request({mode:'stop'});},
  };
  const summon=()=>{

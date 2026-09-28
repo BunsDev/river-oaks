@@ -39,8 +39,9 @@ export function companionSlot(player, heading, stance, isFree, preferredSide = 1
   if (spec.hold || stance === 'return') return null;
   const f = [Math.sin(heading), Math.cos(heading)], r = [Math.cos(heading), -Math.sin(heading)];
   const at = (forward, side) => [player[0] + f[0] * forward + r[0] * side, player[1] + f[1] * forward + r[1] * side];
-  // Mirror first, then fall back to single-file behind her on narrow paths.
-  const tries = [[spec.forward, spec.side * preferredSide], [spec.forward, -spec.side * preferredSide], [-1.2, 0.15], [-1.7, 0]];
+  // Mirror first, then fall back to single-file on narrow paths. At a facade,
+  // every rear slot can be blocked; try a nearby side or front before holding.
+  const tries = [[spec.forward, spec.side * preferredSide], [spec.forward, -spec.side * preferredSide], [-1.2, 0.15], [-1.7, 0], [0, .86 * preferredSide], [0, -.86 * preferredSide], [1.2, .15], [1.2, -.15]];
   for (const [forward, side] of tries) {
     const point = at(forward, side);
     if (isFree(point[0], point[1])) return { point, side: Math.sign(side) || preferredSide };

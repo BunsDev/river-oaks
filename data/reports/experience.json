@@ -1,0 +1,962 @@
+{
+  "createdAt": "2026-09-28T18:53:10.900Z",
+  "results": [
+    {
+      "name": "experience",
+      "status": "passed",
+      "seconds": 15.545,
+      "result": {
+        "checks": [
+          "Secondary character controls start closed",
+          "Flight is available without opening settings",
+          "Jev is available without opening settings",
+          "Optional scenario starts collapsed",
+          "Rides can be discovered from the character card",
+          "Clear view moves focus out of hidden controls",
+          "Escape closes the exploration panel",
+          "Closing the panel restores trigger focus",
+          "Small windows start with a compact play dock",
+          "Small-window play dock opens",
+          "Escape closes the play dock",
+          "Escape restores dock focus",
+          "No horizontal overflow",
+          "Shared mode hides the unavailable companion action",
+          "Short landscape windows retain a usable scrolling dock",
+          "The last disclosure action can be reached in landscape",
+          "The dock collapse indicator is not covered by Clear view",
+          "Clear view remains independently reachable in landscape",
+          "Unavailable guided visits explain how to connect Jev",
+          "Conversation clears competing controls in compact windows",
+          "Conversation Escape returns focus to the world",
+          "Play controls return after conversation",
+          "Reduced motion removes dock transitions",
+          "No page errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "sidebar",
+      "status": "passed",
+      "seconds": 14.365,
+      "result": {
+        "open": {
+          "expanded": "true",
+          "inert": false,
+          "viewport": [
+            3840,
+            2160
+          ],
+          "buffer": [
+            3840,
+            2160
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "collapsed": {
+          "expanded": "false",
+          "inert": true,
+          "viewport": [
+            3840,
+            2160
+          ],
+          "buffer": [
+            3840,
+            2160
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "persisted": true,
+        "keyboard": true,
+        "walking": true,
+        "mobile": {
+          "expanded": "false",
+          "inert": true,
+          "viewport": [
+            390,
+            844
+          ],
+          "buffer": [
+            390,
+            844
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "browserErrors": []
+      }
+    },
+    {
+      "name": "auto-mode",
+      "status": "passed",
+      "seconds": 19.967,
+      "result": {
+        "mode": "mocked_jev_integration",
+        "railTabs": true,
+        "keyboard": true,
+        "mobile": true,
+        "darkTheme": true,
+        "movement": true,
+        "manualTakeover": true,
+        "staleCancellation": true,
+        "visibilityEvent": true,
+        "blurEvent": true,
+        "nativeTabLifecycle": "not_verified_cli_keeps_tabs_visible",
+        "worldReload": true,
+        "unavailable": true,
+        "support": {
+          "enabled": true,
+          "phase": "interacting",
+          "source": "jev",
+          "action": "supply",
+          "label": "Bring supplies to Maya · That helps right away. I could still use another delivery or a volunteer visit.",
+          "reason": null,
+          "decisions": 3,
+          "arrivals": 0,
+          "interactions": 2
+        },
+        "resources": "10 kits · 4 volunteer visits left · 0 active visits",
+        "browserErrors": []
+      }
+    },
+    {
+      "name": "player-forms",
+      "status": "passed",
+      "seconds": 18.732,
+      "result": {
+        "checks": [
+          "Jevica is the playable character",
+          "Retired appearance selector is absent",
+          "jevica: real model portrait loads",
+          "jevica: description updates",
+          "jevica: third-person camera",
+          "jevica: matching flight vehicle",
+          "jevica: completes ascent to cruising altitude",
+          "jevica: ascent changes real altitude",
+          "jevica: HUD reflects flight",
+          "jevica: landed at ground level",
+          "First-person toggle",
+          "V restores third person",
+          "Mobile character controls start collapsed",
+          "No mobile horizontal overflow",
+          "Keyboard expands character controls",
+          "44px flight target",
+          "Mobile portrait matches the current form",
+          "No uncaught browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage",
+      "status": "passed",
+      "seconds": 22.983,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed cabin floor",
+          "riding-slope: both soles contact the actual transformed cabin floor",
+          "The pink Rolls-Royce parks at its true size",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Every rendered wheel spinner keeps turning after braking",
+          "Free-spinning centers leave tyre contact unchanged",
+          "Jevica talks to a nearby resident without leaving or moving the carriage",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Takeoff is rejected while the bubble overlaps the parked coach",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1725006163090275,
+                "minX": 0.19602348815286777,
+                "maxX": 0.5049414022658316
+              },
+              {
+                "side": "r",
+                "minY": 1.1725003498320707,
+                "minX": 0.19602373165565184,
+                "maxX": 0.504941750120151
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.172500606596924,
+                "minX": 0.19602349731649021,
+                "maxX": 0.504941413923545
+              },
+              {
+                "side": "r",
+                "minY": 1.1725003585107174,
+                "minX": 0.19602372411623642,
+                "maxX": 0.5049417380946915
+              }
+            ]
+          }
+        ],
+        "before": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "label": "Jev is ready",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2767.9624039063,
+            18.21532401046548,
+            1295.050995393165
+          ],
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.3956419313604,
+              18.462294871842012,
+              1295.0133343366692
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.01519046128359677,
+            "roll": -0.0019424883883721595,
+            "distance": 0,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.004768646132514931,
+            "speed": 0,
+            "steering": 0,
+            "wheelOffsets": [
+              -0.0031350380980832426,
+              0.0015719716850775,
+              -0.0014182181659059268,
+              0.0008569945155798564,
+              0.000461385014364879,
+              -0.0018357606097865187
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            }
+          ],
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            -3.552713678800501e-15,
+            -3.552713678800501e-15,
+            -3.552713678800501e-15,
+            -1.0658141036401503e-14,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.140093179893846,
+              1295.064162750871
+            ],
+            "riding": null,
+            "ground": 18.460093179893846,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 1.5542610866110522,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.460093179893846,
+            1295.064162750871
+          ],
+          "riderYaw": 0
+        },
+        "driven": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "label": "Manual directions",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2768.113298883293,
+            18.227461567192798,
+            1304.1748793743052
+          ],
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.5465263045107,
+              18.474497025558176,
+              1304.1375212196583
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.015125038124223647,
+            "roll": -0.0007486992686672354,
+            "distance": 9.125434366086415,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.004768646132514931,
+            "speed": 0.019793183458989807,
+            "steering": 0,
+            "wheelOffsets": [
+              0.003782352135971223,
+              -0.00354307481705618,
+              0.0022692157941719415,
+              -0.0014102617272122586,
+              -0.002890884006163219,
+              0.0018649771812739857
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": -6.5441311053513616
+            },
+            {
+              "rotation": -6.5441311053513616
+            },
+            {
+              "rotation": -6.5441311053513616
+            },
+            {
+              "rotation": -6.5441311053513616
+            },
+            {
+              "rotation": -6.5441311053513616
+            },
+            {
+              "rotation": -6.5441311053513616
+            }
+          ],
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            -3.552713678800501e-15
+          ],
+          "pose": {
+            "position": [
+              -2768.9651979640894,
+              19.75695097246905,
+              1302.8399200445326
+            ],
+            "riding": {
+              "kind": "rolls",
+              "seat": [
+                -2768.9651979640894,
+                19.136950972469048,
+                1302.8399200445326
+              ],
+              "cameraTarget": [
+                -2768.5819596215465,
+                19.725102312305054,
+                1305.1361357082396
+              ],
+              "seatToFloor": 0.39,
+              "yaw": -0.016535240183789046,
+              "quaternion": [
+                -0.00043684884908130666,
+                -0.008270119812743282,
+                0.007559093131626265,
+                0.9999371352202064
+              ],
+              "speed": 0.019793183458989807,
+              "distance": 9.125434366086415
+            },
+            "ground": 18.466150182620517,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 3.505057413406004,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2768.952686127949,
+            18.30899643866485,
+            1302.8407469943497
+          ],
+          "riderYaw": -0.016546559222172998
+        },
+        "after": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "label": "Jev is ready",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2768.113362724199,
+            18.22747579138935,
+            1304.178739993675
+          ],
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.5465901574566,
+              18.47451132792695,
+              1304.1413824955785
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.015125038124221757,
+            "roll": -0.0007461095903246671,
+            "distance": 9.129296169931186,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.004768646132514931,
+            "speed": 0,
+            "steering": 0,
+            "wheelOffsets": [
+              0.003681357947723285,
+              -0.0036440797161994,
+              0.002165784036911589,
+              -0.0015137023688431839,
+              -0.0030028979089884444,
+              0.001752960581580254
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": -0.267626229668398
+            },
+            {
+              "rotation": -0.267626229668398
+            },
+            {
+              "rotation": -0.267626229668398
+            },
+            {
+              "rotation": -0.267626229668398
+            },
+            {
+              "rotation": -0.267626229668398
+            },
+            {
+              "rotation": -0.267626229668398
+            }
+          ],
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            0,
+            0,
+            0,
+            -3.552713678800501e-15,
+            7.105427357601002e-15
+          ],
+          "pose": {
+            "position": [
+              -2765.578415794093,
+              20.154525662553155,
+              1306.090726218135
+            ],
+            "riding": null,
+            "ground": 18.474525662553155,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.8064844829263074,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.578415794093,
+            18.474525662553155,
+            1306.090726218135
+          ],
+          "riderYaw": -0.016546520086693713
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-driver",
+      "status": "passed",
+      "seconds": 29.9,
+      "result": {
+        "checks": [
+          "The directory opens a real conversation with Prince Jev",
+          "The rendered coachman is within speaking reach",
+          "A real pointer click on the prince opens his conversation",
+          "provider_401: local companion fallback explains the unavailable guidance",
+          "provider_429: local companion fallback explains the unavailable guidance",
+          "provider_503: local companion fallback explains the unavailable guidance",
+          "transport_error: local companion fallback explains the unavailable guidance",
+          "Healthy local companion changes do not claim a service outage",
+          "Prince Jev walks with Jevica in companion mode",
+          "Companion activity is visible and its actual decision source remains inspectable",
+          "The same coachman identity travels with the moving carriage",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "id": "carriage-driver",
+          "position": [
+            -2767.9624039063,
+            -1295.050995393165,
+            18.21532401046548
+          ],
+          "renderedPosition": [
+            -2767.9624039063,
+            18.21532401046548,
+            1295.050995393165
+          ],
+          "role": "Prince and companion",
+          "task": null,
+          "seated": false,
+          "reachable": true,
+          "visible": true,
+          "screen": [
+            714.0987317544716,
+            395.1061629121964
+          ],
+          "depth": 0.982758773616386
+        },
+        "companion": {
+          "state": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "pause",
+            "source": "local",
+            "label": "Wait attentively near Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true
+          },
+          "prince": [
+            -2766.674763293792,
+            -1295.0524679103748,
+            18.48805240589483
+          ],
+          "rider": [
+            -2766.955943252235,
+            18.48383350759914,
+            1295.0434612712677
+          ]
+        },
+        "start": {
+          "id": "carriage-driver",
+          "position": [
+            -2767.9624039063,
+            -1295.050995393165,
+            18.21532401046548
+          ],
+          "renderedPosition": [
+            -2767.9624039063,
+            18.21532401046548,
+            1295.050995393165
+          ],
+          "role": "Prince and companion",
+          "task": null,
+          "seated": false,
+          "reachable": true,
+          "visible": true,
+          "screen": [
+            661.7700208945952,
+            488.50091353016745
+          ],
+          "depth": 0.9879280151684501
+        },
+        "end": {
+          "id": "carriage-driver",
+          "position": [
+            -2768.032961684677,
+            -1299.373164822274,
+            18.223668868307406
+          ],
+          "renderedPosition": [
+            -2768.032961684677,
+            18.223668868307406,
+            1299.373164822274
+          ],
+          "role": "Prince and companion",
+          "task": null,
+          "seated": false,
+          "reachable": true,
+          "visible": true,
+          "screen": [
+            661.7745794624556,
+            488.3441537862694
+          ],
+          "depth": 0.9879279842255573
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-companion",
+      "status": "passed",
+      "seconds": 37.419,
+      "result": {
+        "checks": [
+          "Companionship is opt-in",
+          "The coach cannot depart or relocate while Jev is away",
+          "The companion state has an accessible announcement",
+          "Jev remains one stable rendered identity",
+          "The blonde adult prince carries the bag while accompanying Jevica",
+          "Entering a shop never teleports Jev",
+          "Jev follows into the boutique and remains conversational at his rendered position",
+          "His existing dialogue is available inside the shop",
+          "Dismissal returns him to the coach and puts the bag away",
+          "The invitation control resets after his return",
+          "No browser or shader errors"
+        ],
+        "outside": {
+          "companion": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "trail",
+            "source": "local",
+            "label": "Walk a step behind Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true,
+            "position": [
+              -2770.514903476969,
+              1287.6799285181144
+            ]
+          },
+          "person": {
+            "id": "carriage-driver",
+            "position": [
+              -2770.514903476969,
+              -1287.6799285181144,
+              18.402877653799226
+            ],
+            "renderedPosition": [
+              -2770.514903476969,
+              18.402877653799226,
+              1287.6799285181144
+            ],
+            "role": "Prince and companion",
+            "task": null,
+            "seated": false,
+            "reachable": true,
+            "visible": true,
+            "screen": [
+              503.18742976077993,
+              428.85602551382345
+            ],
+            "depth": 0.9771363595067717
+          }
+        },
+        "inside": {
+          "pose": {
+            "position": [
+              -2784.6718329341493,
+              20.171121621938177,
+              1285.4652578729838
+            ],
+            "riding": null,
+            "ground": 18.491121621938177,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.4344918962783212,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": "osm-node-8172494958",
+            "showBody": true
+          },
+          "companion": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "trail",
+            "source": "local",
+            "label": "Walk a step behind Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true,
+            "position": [
+              -2784.0029467381646,
+              1288.9145441162239
+            ]
+          },
+          "person": {
+            "id": "carriage-driver",
+            "position": [
+              -2784.0029467381646,
+              -1288.9145441162239,
+              18.491121621938177
+            ],
+            "renderedPosition": [
+              -2784.0029467381646,
+              18.491121621938177,
+              1288.9145441162239
+            ],
+            "role": "Prince and companion",
+            "task": null,
+            "seated": false,
+            "reachable": true,
+            "visible": true,
+            "screen": [
+              1354.5529511362754,
+              87.23295836493966
+            ],
+            "depth": 1.110158632696182
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-conversation",
+      "status": "passed",
+      "seconds": 8.987,
+      "result": {
+        "checks": [
+          "Nearby conversation is available from the carriage",
+          "Talking retains the same mounted position",
+          "Dialogue opens for a real outdoor resident",
+          "Jevica attends to her partner without rotating the seated body"
+        ],
+        "name": "Prince Jev",
+        "attention": {
+          "mode": "conversation",
+          "target": [
+            -2816.201884831592,
+            19.65209711747446,
+            1276.0530336741713
+          ],
+          "facing": null,
+          "position": [
+            -2815.360148714895,
+            18.17406506225435,
+            1277.3842778054595
+          ],
+          "bodyYaw": 0.013763364757314454,
+          "head": [
+            0.015264656773624647,
+            0.9579387264194191,
+            -0.010339938592212754,
+            -0.28637994415736057
+          ],
+          "feet": [
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2809.566860062152,
+                18.67510640137836,
+                1276.2538848787872
+              ],
+              "actual": [
+                -2815.4610375289863,
+                18.679974522820043,
+                1276.9404531587948
+              ]
+            },
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2809.74435719926,
+                18.678811552878937,
+                1276.1313690840316
+              ],
+              "actual": [
+                -2815.2473117703416,
+                18.680022764521325,
+                1276.9433947352459
+              ]
+            }
+          ],
+          "eyes": [
+            {
+              "name": "gaze_eye_r",
+              "yaw": 0.02208806420817918,
+              "pitch": -0.018510224518372868,
+              "position": [
+                -2815.3826055046425,
+                19.724147079134205,
+                1277.2390908352104
+              ],
+              "forward": [
+                -0.5677832106375488,
+                -0.04592038905416171,
+                -0.8218963096028443
+              ]
+            },
+            {
+              "name": "gaze_eye_l",
+              "yaw": -0.02013681612868674,
+              "pitch": -0.01851106140713423,
+              "position": [
+                -2815.4335056565756,
+                19.72628946409078,
+                1277.272497216582
+              ],
+              "forward": [
+                -0.532535332995426,
+                -0.04740681672785243,
+                -0.8450791164022193
+              ]
+            }
+          ]
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-mobile",
+      "status": "passed",
+      "seconds": 9.09,
+      "result": {
+        "checks": [
+          "Boarding has a 44px phone touch target",
+          "Holding the touch movement pad drives the mounted carriage",
+          "Releasing the touch pad brakes the carriage",
+          "Phone dismount retains a visible third-person body",
+          "Carriage controls do not overflow the phone viewport",
+          "No uncaught phone browser errors"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "force-mobile",
+      "status": "passed",
+      "seconds": 27.775,
+      "result": {
+        "checks": [
+          "force-lift has a 44px touch target",
+          "force-push has a 44px touch target",
+          "force-lower has a 44px touch target",
+          "Touch controls lift a real nearby person",
+          "Both sparkle emitters render on touch devices",
+          "Holding the real touch pad walks while preserving the lift",
+          "Spell tools do not overlap the open movement pad",
+          "Touch controls land and release the target",
+          "Force controls fit the phone viewport",
+          "A reduced-motion spawn with no nearby target cannot cast accidentally",
+          "The empty target list explains why lifting is unavailable",
+          "Reduced motion uses a small stationary glimmer field",
+          "Reduced-motion effects clear after release",
+          "No uncaught phone errors"
+        ],
+        "id": "local-06",
+        "errors": []
+      }
+    },
+    {
+      "name": "invasion",
+      "status": "passed",
+      "seconds": 18.858,
+      "result": {
+        "checks": [
+          "Jevica can begin",
+          "Five saucers arrive",
+          "Every crew member has a saucer",
+          "The crew are of more than one species",
+          "A spell banished an alien within 120 s (banished 1, phase active)",
+          "Status narrates the fight",
+          "Cast and impact effects fired (bursts 1, impacts 1)",
+          "The scenario ends and everyone returns (phase called-off, abducted 0)",
+          "The card offers another round",
+          "Jevica can begin a second invasion",
+          "World reload clears the old invasion, crew and abductions",
+          "Reload restores the Begin invasion control",
+          "No page errors: "
+        ],
+        "banished": 1,
+        "errors": []
+      }
+    }
+  ]
+}

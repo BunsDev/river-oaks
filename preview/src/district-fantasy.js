@@ -11,6 +11,8 @@ export function buildDistrictFantasy(world) {
   const glow=new THREE.MeshStandardMaterial({color:RETRO.light,emissive:RETRO.light,emissiveIntensity:1.4,roughness:.35});
   const warm=new THREE.MeshStandardMaterial({color:'#ffe4ba',emissive:'#ffd0a3',emissiveIntensity:1.3});
   const box=new THREE.BoxGeometry(1,1,1),dome=new THREE.SphereGeometry(1,32,12);
+  // Centimeter-scale fascia beads never need the canopy's tessellation.
+  const bead=new THREE.SphereGeometry(1,8,6);
   const ring=new THREE.TorusGeometry(1,.022,6,64);ring.rotateX(Math.PI/2);
   const post=new THREE.CylinderGeometry(.5,.5,1,12),batches=new Map();
   const add=(geometry,material,position,scale,yaw=0,storeId=null)=>{
@@ -40,7 +42,7 @@ export function buildDistrictFantasy(world) {
     // Atomic-age starburst on the fascia, flanking the existing readable sign.
     for(let ray=0;ray<8;ray++) {
       const a=ray*Math.PI/4,center=at(2.75+Math.cos(a)*.14,5.55+Math.sin(a)*.14,.38);
-      add(dome,brass,center,[.025,.025,.025],yaw,store.id);
+      add(bead,brass,center,[.025,.025,.025],yaw,store.id);
     }
     add(dome,warm,at(2.75,5.55,.39),[.065,.065,.05],yaw,store.id);
   }
