@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-09-28T23:03:45.774Z",
+  "createdAt": "2026-09-28T23:14:22.971Z",
   "status": "passed",
   "modes": [
     "development",
@@ -10,7 +10,7 @@
     {
       "name": "multiplayer-dev",
       "status": "passed",
-      "seconds": 13.759,
+      "seconds": 15.235,
       "result": {
         "checks": [
           "each browser is its own development player",
@@ -24,13 +24,13 @@
           "Shared mobile play hides solo companion and vehicle actions",
           "Shared mobile play hides local-only scenarios",
           "Shared mobile controls stay within the viewport",
-          ""
+          "No browser page errors"
         ],
         "a": {
-          "self": "dev-88ee825e0979",
+          "self": "dev-7ee643c06531",
           "players": [
-            "dev-88ee825e0979",
-            "dev-d9f2c6c47e96"
+            "dev-7ee643c06531",
+            "dev-d4bd28cbf055"
           ],
           "gate": true,
           "form": "jevica",
@@ -39,10 +39,10 @@
           "roster": "2 Jevicas in town"
         },
         "b": {
-          "self": "dev-d9f2c6c47e96",
+          "self": "dev-d4bd28cbf055",
           "players": [
-            "dev-88ee825e0979",
-            "dev-d9f2c6c47e96"
+            "dev-7ee643c06531",
+            "dev-d4bd28cbf055"
           ],
           "gate": true,
           "form": "jevica",
@@ -56,7 +56,7 @@
     {
       "name": "multiplayer",
       "status": "passed",
-      "seconds": 56.165,
+      "seconds": 47.511,
       "result": {
         "passed": true,
         "checks": [
@@ -84,7 +84,7 @@
     {
       "name": "multiplayer-gate",
       "status": "passed",
-      "seconds": 17.33,
+      "seconds": 18.844,
       "result": {
         "passed": true,
         "checks": [
