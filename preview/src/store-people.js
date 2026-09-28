@@ -1,5 +1,6 @@
 import { createConversationGaze } from './conversation-gaze.js';
 import { createConversationMotion } from './conversation-motion.js';
+import { createConversationBody } from './conversation-body.js';
 import { createFacialMotion } from './facial-motion.js';
 import { SuspendedStationGroup } from './suspended-station-group.js';
 import { createWishVisual } from './wish-effects.js';
@@ -72,6 +73,9 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       if (idle) { adjustment.setFromAxisAngle(bone.name === 'lowerarm_r' ? axes.z : axes.x, idle); bone.quaternion.multiply(adjustment); }
       if(bone.name==='head'&&figure.conversationPose?.roll) {adjustment.setFromAxisAngle(axes.z,figure.conversationPose.roll);bone.quaternion.multiply(adjustment);}
     }
+    // Workers keep both hands available to their existing contact solver.
+    // The torso can acknowledge a visitor without releasing a tray or tool.
+    if(t!==null)figure.conversationBody.apply(figure.conversationPose,{hands:!figure.task});
     if (figure.seatedFeet && figure.wishKind !== 'flight') {
       figure.holder.updateWorldMatrix(true,true);
       const forward=new THREE.Vector3(0,0,1).applyQuaternion(figure.holder.getWorldQuaternion(new THREE.Quaternion()));
@@ -114,6 +118,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
         roomGroup.add(holder);
         const figure = { id: spot.role === 'mannequin' ? null : storePersonId(room, spotIndex), heading: holder.rotation.y, groundOffset:room.floor-holder.position.y, holder, avatar, pose: POSES[spot.pose] ?? POSES.stand, sway: spot.role === 'staff' && spot.pose !== 'seated', role: spot.role, theme:room.theme, phase: seed * 0.61, workTime:seed*0.61, attention:0, lookYaw:0, lookPitch:0, gaze:createConversationGaze(), motionTime:seed*0.61, suspended:true };
         figure.conversation=createConversationMotion({seed:figure.id,reducedMotion});
+        figure.conversationBody=createConversationBody(avatar);
         figure.face=createFacialMotion(avatar.model,{seed:figure.id,reducedMotion});
         if (seated) {
           figure.seatedFeet=createFootPlacement(avatar.model,holder).legs;
@@ -168,7 +173,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
       // range. Resetting the pose while its task clock runs causes a return snap.
       if((!near||reducedMotion)&&!attending&&figure.attention<=.001){figure.suspended=true;continue;}
       const dt=figure.suspended?0:Math.min(.1,Math.max(0,delta));figure.suspended=false;
-      figure.conversationPose=figure.conversation.update(dt,{attending,speaking:speakingId===figure.id});
+      figure.conversationPose=figure.conversation.update(dt,{attending,speaking:speakingId===figure.id,gesturing:!local?.wish&&!local?.wishDisruption});
       const smoothing = 1-Math.exp(-5*dt);
       figure.attention += ((attending?1:0)-figure.attention)*smoothing;
       const head=figure.avatar.model.getObjectByName('head');
