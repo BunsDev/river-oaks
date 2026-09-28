@@ -162,7 +162,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
+        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
         outfit.updateOptics(camera,viewportHeight);
       }
       previous = pose ? now : null;

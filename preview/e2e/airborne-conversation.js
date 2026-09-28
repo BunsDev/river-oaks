@@ -15,6 +15,11 @@ async page=>{
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';},null,{timeout:90000});
   await page.getByRole('button',{name:'Meet someone nearby',exact:true}).click();
+  // Prince Jev parks beside Jevica and cannot receive wishes; move on to the next
+  // nearby resident, who stands in the same open street.
+  for(let i=0;i<4&&await page.locator('#community-local').inputValue()==='carriage-driver';i++){
+    await page.getByRole('button',{name:/Meet another neighbor/}).click();await page.waitForTimeout(400);
+  }
   await page.locator('#wish-choice').selectOption('flight');await page.locator('#wish-grant').click();
   const id=await page.locator('#community-local').inputValue();
   await page.waitForFunction(id=>window.__riverWishes().find(person=>person.id===id)?.height>=2.99,id);

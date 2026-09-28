@@ -26,7 +26,7 @@ async page => {
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   await page.locator('#player-carriage').click();
   const before=await page.evaluate(()=>window.__riverCarriage());
-  check(before.placement.scale===.78,'The coach is at its tuned .78 scale');
+  check(before.placement.scale===1&&before.placement.vehicle==='rolls','The pink Rolls-Royce parks at its true size');
   check(before.visible&&!before.riding,'Calling places a visible carriage near Jevica');
   check(before.tyreClearances.every(gap=>Math.abs(gap)<.001),'All four parked tyres meet rendered paving');
   await page.locator('#player-ride').click();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
@@ -42,7 +42,7 @@ async page => {
   check(driven.tyreClearances.every(gap=>Math.abs(gap)<.001),'All four moving tyres follow the rendered road');
   await page.waitForTimeout(700);
   const coast=await page.evaluate(()=>window.__riverCarriage());
-  check(coast.spinners.every((s,i)=>Math.abs(s.rotation-driven.spinners[i].rotation)>.02),'All four rendered wheel centers keep spinning after braking');
+  check(coast.spinners.every((s,i)=>Math.abs(s.rotation-driven.spinners[i].rotation)>.02),'Every rendered wheel spinner keeps turning after braking');
   check(coast.tyreClearances.every(gap=>Math.abs(gap)<.001),'Free-spinning centers leave tyre contact unchanged');
   if(await page.locator('#walking-talk').isVisible()) {
     const position=driven.pose.position;

@@ -125,7 +125,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const face=createFacialMotion(model,{seed:id??index,reducedMotion:noMotion});
-  const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42});
+  const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42,abduct:profile==='jevica'?.07:0});
   let previousTime=null,walkingSpeed=0;
   return {
     object:root, profile, rig:avatar,
@@ -212,6 +212,29 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           [0,1,2].forEach(i=>{const angle=(a?.[i]??0)*(1-glide)+(b?.[i]??0)*glide;if(angle){adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);target.multiply(adjustment);}});
           bone.quaternion.slerp(target,blend);
         }
+      }
+      else if(locomotion?.flying&&!locomotion?.riding) {
+        // Floating in her bubble: poised rather than standing at attention. One
+        // knee eases forward, the other trails with pointed feet; the free arm
+        // floats away from her side and the wand arm is carried forward. Moving,
+        // she leans into the travel and her arms and trailing leg stream back.
+        // Rig signs: thigh -x flexes the hip, calf +x bends the knee, foot +x
+        // points the toes, upper arm -x swings forward and +z (left) / -z
+        // (right) lifts it away from the body, forearm -x bends the elbow,
+        // spine_02 +x leans forward.
+        const m=noMotion?0:THREE.MathUtils.clamp((locomotion.flightSpeed??0)/5,0,1),drift=noMotion?0:Math.sin(t*.9),sway=noMotion?0:Math.sin(t*.55+1.3);
+        const float={
+          thigh_l:[-.14-.03*sway+.04*m,0,-.02],calf_l:[.30+.04*sway,0,0],foot_l:[.32,0,0],
+          thigh_r:[.08+.12*m,0,.02],calf_r:[.40+.1*m,0,0],foot_r:[.42,0,0],
+          spine_02:[-.02+.2*m,0,0],spine_03:[.06*m,0,0],
+          upperarm_l:[-.10+.22*m,0,.26+.03*drift],lowerarm_l:[-.22,0,0],
+          // The wand rides fixed in the hand: turn the wrist back as the elbow bends
+          // so it points forward and up instead of over her shoulder.
+          upperarm_r:[-.48+.16*m,0,-.08-.03*drift],lowerarm_r:[-.95,0,0],hand_r:[.85,0,0],
+        };
+        for(const bone of bones)if(float[bone.name]) float[bone.name].forEach((angle,i)=>{if(angle){adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);}});
+        // A slow, shallow bob: buoyant, not bouncing.
+        model.position.y+=noMotion?0:.022*Math.sin(t*1.15);
       }
       avatar.eyes.update(lookTarget,elapsed);
       kit.visible=Boolean(locomotion?.visitId && hand);

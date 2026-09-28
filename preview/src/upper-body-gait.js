@@ -40,7 +40,7 @@ function createArmClips(avatar,armSwing) {
 
 // Drive arm opposition from the rendered legs, not an independent stride clock.
 // This retains coordination when foot placement shortens a start or adapts a turn.
-export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.42}={}) {
+export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.42,abduct=0}={}) {
   const joints=new Map(avatar.bones.map(bone=>[bone.name,bone]));
   const forward=new THREE.Vector3(),offset=new THREE.Vector3(),hip=new THREE.Vector3(),rotation=new THREE.Quaternion();
   const neckRotation=new THREE.Quaternion(),neckParent=new THREE.Quaternion();
@@ -94,6 +94,8 @@ export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.4
         const free=side==='r'?1-.7*Math.max(carried,casting):1-.92*casting,amount=strength*free;
         rotate(`upperarm_${side}`,'x',-carryForward*amount);
         rotate(`lowerarm_${side}`,'x',-elbowFlex*amount);
+        // A full skirt holds the arms a little away from the body (+z left, -z right).
+        if(abduct)rotate(`upperarm_${side}`,'z',(side==='l'?1:-1)*abduct*amount);
       }
       // A small chest counter-rotation follows the same transfer. Counter it
       // through the neck so walking alone does not sweep the gaze side to side.
