@@ -3,7 +3,7 @@ import './multiplayer.css';
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers }) {
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
-  const title=element('h1','A little magic, together');title.id='multiplayer-title';
+  const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
   const description=element('p','Sign in to join the town as Jevica. Everyone shares the same residents, wishes, and consequences.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
   const login=element('a','Sign in with WorkOS','multiplayer-primary');login.href='/auth/login';login.hidden=true;
@@ -15,8 +15,26 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   const logout=element('button','Sign out');logout.type='button';
   panel.append(summary,list,notice,logout);document.querySelector('#community-section')?.prepend(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false;
-  let lastPose=0,lastFocus=0,traveling=false;const pending=new Map(),rows=new Map();
-  const setStatus=(message,locked=true)=>{status.textContent=message;gate.hidden=!locked;gateLogout.hidden=!locked||!identity;document.querySelector('.app-shell')?.toggleAttribute('inert',locked);panel.dataset.connected=String(connected);};
+  let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
+  const setStatus=(message,locked=true)=>{
+    const active=document.activeElement,inside=gate.contains(active);
+    if(locked&&!inside)returnFocus=active;
+    status.textContent=message;gate.hidden=!locked;gateLogout.hidden=!locked||!identity;
+    document.querySelector('.app-shell')?.toggleAttribute('inert',locked);panel.dataset.connected=String(connected);
+    if(locked&&(!inside||active.hidden))title.focus({preventScroll:true});
+    else if(!locked&&inside){
+      const target=returnFocus?.isConnected&&returnFocus!==document.body&&!returnFocus.closest('[inert]')&&returnFocus.getClientRects().length?returnFocus:document.querySelector('#canvas-host');
+      target?.focus({preventScroll:true});returnFocus=null;
+    }
+  };
+  gate.addEventListener('keydown',event=>{
+    if(event.key!=='Tab')return;
+    const actions=[login,retry,gateLogout].filter(node=>!node.hidden&&!node.disabled);
+    const first=actions[0],last=actions.at(-1);
+    if(!first){event.preventDefault();title.focus({preventScroll:true});}
+    else if(event.shiftKey&&[title,first].includes(document.activeElement)){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  });
   const api=async(path,options={})=>{
     const response=await fetch(path,{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
     const data=await response.json();

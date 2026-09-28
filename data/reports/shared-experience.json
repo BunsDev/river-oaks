@@ -1,0 +1,107 @@
+{
+  "createdAt": "2026-09-28T23:14:22.971Z",
+  "status": "passed",
+  "modes": [
+    "development",
+    "required"
+  ],
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "multiplayer-dev",
+      "status": "passed",
+      "seconds": 15.235,
+      "result": {
+        "checks": [
+          "each browser is its own development player",
+          "both players share one town",
+          "no sign-in gate blocks development",
+          "Jevica is the sole playable shared character",
+          "shared play hides the local invasion",
+          "players arrive on separate spots (1.60 m apart)",
+          "Shared mobile play starts with a compact dock",
+          "Flight remains discoverable in shared mobile play",
+          "Shared mobile play hides solo companion and vehicle actions",
+          "Shared mobile play hides local-only scenarios",
+          "Shared mobile controls stay within the viewport",
+          "No browser page errors"
+        ],
+        "a": {
+          "self": "dev-7ee643c06531",
+          "players": [
+            "dev-7ee643c06531",
+            "dev-d4bd28cbf055"
+          ],
+          "gate": true,
+          "form": "jevica",
+          "formSelector": false,
+          "invasion": true,
+          "roster": "2 Jevicas in town"
+        },
+        "b": {
+          "self": "dev-d4bd28cbf055",
+          "players": [
+            "dev-7ee643c06531",
+            "dev-d4bd28cbf055"
+          ],
+          "gate": true,
+          "form": "jevica",
+          "formSelector": false,
+          "invasion": true,
+          "roster": "2 Jevicas in town"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "multiplayer",
+      "status": "passed",
+      "seconds": 47.511,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Jevica is the only playable form",
+          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+          "Shared diagnostics and town exclude the solo coachman",
+          "Force shortcut cannot bypass shared-mode gating",
+          "Two accounts share the roster and rendered Jevica avatars",
+          "Confirmed grant moves keyboard focus to undo",
+          "Second player sees server-owned dragon wish",
+          "Egg hatches into a visible dragon",
+          "The same wish disrupts town residents for both players",
+          "Confirmed undo restores keyboard focus",
+          "Invisible resident keeps visible clothing in shared play",
+          "Reload rejoins the existing town and keeps its active wishes",
+          "Walking is validated and visible to the other player",
+          "Shared town has no mobile horizontal overflow",
+          "Sign-out revokes play and returns to the sign-in gate",
+          "No uncaught errors: "
+        ],
+        "errors": [],
+        "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+      }
+    },
+    {
+      "name": "multiplayer-gate",
+      "status": "passed",
+      "seconds": 18.844,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Disconnected game is locked",
+          "Disconnect focuses the recovery dialog title",
+          "Authenticated recovery hides the sign-in link",
+          "Forward Tab reaches the first available recovery action",
+          "Shift+Tab reaches sign-out without entering the inert game",
+          "Tab wraps to the first recovery action",
+          "Successful retry restores movement focus",
+          "Mobile recovery dialog fits the viewport",
+          "Signed-out gate starts with accessible title focus",
+          "Sign-in link is reachable by keyboard",
+          "Anonymous gate keeps keyboard focus on its available action"
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

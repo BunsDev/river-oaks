@@ -1,5 +1,6 @@
 async page => {
-  const check = (condition, message) => { if (!condition) throw new Error(message); };
+  const checks=[];
+  const check = (condition, message) => { if (!condition) throw new Error(message);checks.push(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const host = () => page.evaluate(() => { const d = document.querySelector('#canvas-host').dataset; return { quality: JSON.parse(d.quality || 'null'), pipeline: JSON.parse(d.pipeline || 'null'), canvas: [document.querySelector('canvas').width, document.querySelector('canvas').height] }; });
@@ -55,6 +56,6 @@ async page => {
   await page.locator('[data-section=explore-section]').click();
   await page.locator('#store-search').fill('h');
   check(!(await page.evaluate(() => document.body.classList.contains('clear-view'))), 'typing H in a field does not clear the view');
-  check(!errors.length, errors.join('; '));
-  return { progress, auto: auto.quality, smooth: smooth.pipeline, sharp: sharp.pipeline, cleared, errors };
+  check(!errors.length, errors.length ? errors.join('; ') : 'No browser page errors');
+  return { checks, progress, auto: auto.quality, smooth: smooth.pipeline, sharp: sharp.pipeline, cleared, errors };
 }
