@@ -1,6 +1,7 @@
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
 import { createConversationGaze } from './conversation-gaze.js';
 import { createConversationMotion } from './conversation-motion.js';
+import { createConversationBody } from './conversation-body.js';
 import { createFacialMotion } from './facial-motion.js';
 import { createEyeTracking } from './eye-tracking.js';
 import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
@@ -124,6 +125,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const gazeHead=model.getObjectByName('head'),gazeNeck=model.getObjectByName('neck_01');
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
+  const conversationBody=createConversationBody(avatar);
   const face=createFacialMotion(model,{seed:id??index,reducedMotion:noMotion});
   const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42,abduct:profile==='jevica'?.07:0});
   let previousTime=null,walkingSpeed=0;
@@ -141,8 +143,11 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const dt=Math.min(0.08,elapsed);previousTime=now;
       face.update(elapsed);
       walkingSpeed+=((locomotion?.speed ?? 0)-walkingSpeed)*(1-Math.exp(-18*dt));
-      const gesture=gestures.update(action,elapsed,t);
-      const conversationPose=conversation.update(elapsed,{attending:(id!=='player'||conversing)&&Boolean(lookTarget)&&action!=='startled',speaking});
+      // Ask keeps the greeting action active while talking. Let its initial
+      // wave settle into conversation phrases once attention is established.
+      const gesture=gestures.update(action==='greet'&&(speaking||lookTarget)?'continue':action,elapsed,t);
+      const conversationPose=conversation.update(elapsed,{attending:(id!=='player'||conversing)&&Boolean(lookTarget)&&action!=='startled',speaking,
+        gesturing:walkingSpeed<.1&&!locomotion?.flying&&!locomotion?.riding&&!locomotion?.carrying&&!locomotion?.visitId&&(action==='continue'||action==='greet'||action==='acknowledge')});
       const strength = Math.min(1,walkingSpeed/0.65);
       // Let leg reach determine pelvis lowering; a fixed walking drop keeps
       // the supporting knee crouched even directly beneath the body.
@@ -157,6 +162,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       }
       if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,locomotion,groundAt);
       upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId||locomotion?.carrying),casting:action==='force'});
+      if(!locomotion?.flying&&!locomotion?.riding)conversationBody.apply(conversationPose);
       for(const bone of bones) {
         const pose=gesture[bone.name];if(!pose)continue;
         for(const [i,axis] of ['x','y','z'].entries())if(pose[i]){adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}

@@ -28,9 +28,34 @@ test('speaking and listening transitions settle continuously; resumed culled and
  const first={...motion.update(1/60,{attending:false})};
  assert.ok(Math.abs(first.pitch-before.pitch)<.006);
  for(let i=0;i<180;i++)pose=motion.update(1/60,{attending:false});
- assert.ok(Math.abs(pose.pitch)<1e-8&&Math.abs(pose.roll)<1e-8,'Closing conversation returns to the neutral pose');
+ assert.ok(Object.values(pose).every(value=>Math.abs(value)<1e-8),'Closing conversation returns to the neutral pose');
  const reduced=createConversationMotion({seed:'worker',reducedMotion:true});
- for(let i=0;i<300;i++)assert.deepEqual(reduced.update(1/60,{attending:true,speaking:true}),{pitch:0,roll:0});
+ for(let i=0;i<300;i++)assert.ok(Object.values(reduced.update(1/60,{attending:true,speaking:true})).every(value=>value===0));
+});
+
+test('speakers use asymmetric hand phrases with rests; listeners keep their hands quiet',()=>{
+ const speaker=sample('resident-1'),listener=sample('resident-1',60,false);
+ assert.ok(speaker.some(p=>p.left>.6||p.right>.6),'Speaking lifts a hand into a gesture');
+ assert.ok(speaker.some(p=>Math.abs(p.left-p.right)>.4),'Hands do not mirror every phrase');
+ assert.ok(speaker.filter(p=>p.left<.02&&p.right<.02).length>speaker.length*.2,'Hands settle between phrases');
+ assert.ok(listener.every(p=>p.left===0&&p.right===0),'Listening does not keep gesticulating');
+ assert.ok(listener.some(p=>Math.abs(p.lean)>.001),'Listening includes a small upper-body weight shift');
+ for(let i=1;i<speaker.length;i++)for(const key of ['left','right','leftBeat','rightBeat','lean','turn','tilt']) {
+  assert.ok(Number.isFinite(speaker[i][key]));
+  assert.ok(Math.abs(speaker[i][key]-speaker[i-1][key])<.045,`${key} changes without snapping`);
+ }
+});
+
+test('busy hands and locomotion ease body gestures away while speech nods continue',()=>{
+ const motion=createConversationMotion({seed:'resident-1'});let pose;
+ for(let i=0;i<600;i++)pose=motion.update(1/60,{speaking:true});
+ const before={...pose};
+ pose=motion.update(1/60,{speaking:true,gesturing:false});
+ assert.ok(Math.abs(pose.left-before.left)<.045,'An interruption releases the gesture continuously');
+ let nods=0;
+ for(let i=0;i<300;i++){pose=motion.update(1/60,{speaking:true,gesturing:false});nods=Math.max(nods,pose.pitch);}
+ assert.ok(nods>.025,'Head motion survives a body-gesture interruption');
+ for(const key of ['left','right','leftBeat','rightBeat','lean','turn','tilt'])assert.ok(Math.abs(pose[key])<1e-8,`${key} returns to neutral`);
 });
 
 test('the same conversation cadence survives 30, 60 and 120 Hz',()=>{
@@ -38,5 +63,6 @@ test('the same conversation cadence survives 30, 60 and 120 Hz',()=>{
  for(let i=0;i<traces[0].length;i++)for(const trace of traces.slice(1)) {
   assert.ok(Math.abs(trace[i].pitch-traces[0][i].pitch)<.004,'Frame rate preserves the nod cadence');
   assert.ok(Math.abs(trace[i].roll-traces[0][i].roll)<.002);
+  for(const key of ['left','right','leftBeat','rightBeat','lean','turn','tilt'])assert.ok(Math.abs(trace[i][key]-traces[0][i][key])<.035,`${key}: frame rate preserves the gesture phrase`);
  }
 });

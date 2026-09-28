@@ -1,0 +1,377 @@
+{
+  "createdAt": "2026-09-28T13:34:51.627417+00:00",
+  "scope": "Actual production rigs and station tasks, including seated people. Procedural conversation phrases, planted feet, steady gaze and preserved hand contacts; not speech- or phoneme-aligned.",
+  "baseHead": "2829f7541f6667b6e11f8df624867dd25afd6b24",
+  "sourceSha256": {
+    "preview/src/conversation-motion.js": "e2b6bf52e91b32020fb8d27adcfe690c71aa3f2823c144c35470678799b9f5d0",
+    "preview/src/conversation-body.js": "94884f405a479ba9652b6e6c247d505aea388a82c406ac5d335835c9eadf5ee0",
+    "preview/src/avatars.js": "6e0358db200f0d3028108636234d72d1f7dfe469ef5c578ebe855017fd3c37cb",
+    "preview/src/store-people.js": "135d594c5b3d4f6d275380d370a0c0d5d479b30d331e32a64929d1d76d21eda9",
+    "preview/tests/conversation-motion.test.js": "7e5cdd2daedd2febff798fe43d39fa3a60af35960e7feec6d8aea250548ac23c",
+    "preview/tests/conversation-body.test.js": "e481dad50d81ea362637b890616ed06cfa8faf0233032577523c2a1dac83dd6b",
+    "preview/e2e/conversation-motion.js": "7bb33150717437c1339e9f96b81fa5f9a7a8399b20ebded99f7930531dd12c21"
+  },
+  "validation": {
+    "browser": "Chromium with Metal on macOS",
+    "unit": "556 preview tests before greeting integration fix; 27 focused tests after fix and integration of flight regression",
+    "visuals": [
+      "output/playwright/conversation-0-speaking.png",
+      "output/playwright/conversation-1-speaking.png",
+      "output/playwright/conversation-motion-station.png"
+    ],
+    "limitations": [
+      "Procedural gestures are not aligned to phonemes or sentence meaning.",
+      "Worker arms remain controlled by their existing object-contact tasks."
+    ],
+    "desktop": "Development-mode desktop E2E passed: 107 assets, Adam audio playback, movement, shops, conversation, fullscreen, renderer recovery; no page or GPU errors. Resident decision provider returned 503; fallback conversation was exercised."
+  },
+  "checks": [
+    "woman-casual: speech has nods and quiet intervals",
+    "woman-casual: hands gesture then rest (0.23298419065761602)",
+    "woman-casual: continuous head motion with planted feet",
+    "man-casual: speech has nods and quiet intervals",
+    "man-casual: hands gesture then rest (0.2397353988397909)",
+    "man-casual: continuous head motion with planted feet",
+    "woman-tailored: speech has nods and quiet intervals",
+    "woman-tailored: hands gesture then rest (0.2324039269778026)",
+    "woman-tailored: continuous head motion with planted feet",
+    "man-tailored: speech has nods and quiet intervals",
+    "man-tailored: hands gesture then rest (0.2600965313740499)",
+    "man-tailored: continuous head motion with planted feet",
+    "woman-daywear: speech has nods and quiet intervals",
+    "woman-daywear: hands gesture then rest (0.1835858409313168)",
+    "woman-daywear: continuous head motion with planted feet",
+    "man-workwear: speech has nods and quiet intervals",
+    "man-workwear: hands gesture then rest (0.2750114290288713)",
+    "man-workwear: continuous head motion with planted feet",
+    "jevica: speech has nods and quiet intervals",
+    "jevica: hands gesture then rest (0.23620383646790838)",
+    "jevica: continuous head motion with planted feet",
+    "30 Hz/close: gestures yield and culling does not catch up",
+    "30 Hz/walking: gestures yield and culling does not catch up",
+    "30 Hz/carrying: gestures yield and culling does not catch up",
+    "30 Hz/force: gestures yield and culling does not catch up",
+    "30 Hz/startled: gestures yield and culling does not catch up",
+    "30 Hz/flying: gestures yield and culling does not catch up",
+    "30 Hz/riding: gestures yield and culling does not catch up",
+    "60 Hz/close: gestures yield and culling does not catch up",
+    "60 Hz/walking: gestures yield and culling does not catch up",
+    "60 Hz/carrying: gestures yield and culling does not catch up",
+    "60 Hz/force: gestures yield and culling does not catch up",
+    "60 Hz/startled: gestures yield and culling does not catch up",
+    "60 Hz/flying: gestures yield and culling does not catch up",
+    "60 Hz/riding: gestures yield and culling does not catch up",
+    "120 Hz/close: gestures yield and culling does not catch up",
+    "120 Hz/walking: gestures yield and culling does not catch up",
+    "120 Hz/carrying: gestures yield and culling does not catch up",
+    "120 Hz/force: gestures yield and culling does not catch up",
+    "120 Hz/startled: gestures yield and culling does not catch up",
+    "120 Hz/flying: gestures yield and culling does not catch up",
+    "120 Hz/riding: gestures yield and culling does not catch up",
+    "fabric: staff receive speaking motion",
+    "fabric: speech preserves support and paused work",
+    "jewelry: staff receive speaking motion",
+    "jewelry: speech preserves support and paused work",
+    "seated: staff receive speaking motion",
+    "seated: speech preserves support and paused work",
+    "tray: staff receive speaking motion",
+    "tray: speech preserves support and paused work",
+    "blotter: staff receive speaking motion",
+    "blotter: speech preserves support and paused work",
+    "tablet: staff receive speaking motion",
+    "tablet: speech preserves support and paused work",
+    "eyewear: staff receive speaking motion",
+    "eyewear: speech preserves support and paused work",
+    "samples: staff receive speaking motion",
+    "samples: speech preserves support and paused work",
+    "Reduced motion suppresses conversation head and body gestures",
+    "No uncaught conversation motion errors"
+  ],
+  "outdoor": [
+    {
+      "profile": "woman-casual",
+      "maxStep": 0.0038159443211754455,
+      "maxFootDrift": 0,
+      "peak": 0.04965159124196244,
+      "handTravel": 0.23298419065761602,
+      "quietHandFraction": 0.4125,
+      "quietFraction": 0.6472222222222223
+    },
+    {
+      "profile": "man-casual",
+      "maxStep": 0.0037496118218604425,
+      "maxFootDrift": 0,
+      "peak": 0.051540201769723286,
+      "handTravel": 0.2397353988397909,
+      "quietHandFraction": 0.46805555555555556,
+      "quietFraction": 0.6569444444444444
+    },
+    {
+      "profile": "woman-tailored",
+      "maxStep": 0.0029866642890107845,
+      "maxFootDrift": 0,
+      "peak": 0.041599710547904234,
+      "handTravel": 0.2324039269778026,
+      "quietHandFraction": 0.44305555555555554,
+      "quietFraction": 0.6430555555555556
+    },
+    {
+      "profile": "man-tailored",
+      "maxStep": 0.0032932299740863176,
+      "maxFootDrift": 0,
+      "peak": 0.05192078795339237,
+      "handTravel": 0.2600965313740499,
+      "quietHandFraction": 0.42916666666666664,
+      "quietFraction": 0.6555555555555556
+    },
+    {
+      "profile": "woman-daywear",
+      "maxStep": 0.00329950646943778,
+      "maxFootDrift": 0,
+      "peak": 0.041773336595559755,
+      "handTravel": 0.1835858409313168,
+      "quietHandFraction": 0.5152777777777777,
+      "quietFraction": 0.6291666666666667
+    },
+    {
+      "profile": "man-workwear",
+      "maxStep": 0.0031566566320534476,
+      "maxFootDrift": 0,
+      "peak": 0.05287689467039777,
+      "handTravel": 0.2750114290288713,
+      "quietHandFraction": 0.39444444444444443,
+      "quietFraction": 0.6458333333333334
+    },
+    {
+      "profile": "jevica",
+      "maxStep": 0.003467846728997325,
+      "maxFootDrift": 0,
+      "peak": 0.04849327083920641,
+      "handTravel": 0.23620383646790838,
+      "quietHandFraction": 0.475,
+      "quietFraction": 0.6208333333333333
+    }
+  ],
+  "stations": [
+    {
+      "id": "store-osm-node-8172494989-person-2",
+      "kind": "fabric",
+      "maxFootDrift": 0,
+      "maxStep": 0.0067687350370570195,
+      "maxContactError": 9.518429327489121e-08,
+      "peak": 0.047209895138536274,
+      "quietFraction": 0.5875,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172495000-person-0",
+      "kind": "jewelry",
+      "maxFootDrift": 0,
+      "maxStep": 0.0062355915923864745,
+      "maxContactError": 6.72307216551592e-08,
+      "peak": 0.0463280128710941,
+      "quietFraction": 0.6,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172494957-person-4",
+      "kind": "seated",
+      "maxFootDrift": 0,
+      "maxStep": 0.0069511822085368165,
+      "maxContactError": 0,
+      "peak": 0.04771426966761763,
+      "quietFraction": 0.6583333333333333,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172494955-person-7",
+      "kind": "tray",
+      "maxFootDrift": 0,
+      "maxStep": 0.007189720411908635,
+      "maxContactError": 6.910152620796052e-08,
+      "peak": 0.048384680410998,
+      "quietFraction": 0.6458333333333334,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172494963-person-0",
+      "kind": "blotter",
+      "maxFootDrift": 0,
+      "maxStep": 0.007167795765218154,
+      "maxContactError": 4.033911520656049e-08,
+      "peak": 0.05021152414515669,
+      "quietFraction": 0.6666666666666666,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172494977-person-0",
+      "kind": "tablet",
+      "maxFootDrift": 0,
+      "maxStep": 0.004960816131111183,
+      "maxContactError": 2.960994807650659e-08,
+      "peak": 0.039566647708178006,
+      "quietFraction": 0.65,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172494979-person-0",
+      "kind": "eyewear",
+      "maxFootDrift": 0,
+      "maxStep": 0.007750007408668134,
+      "maxContactError": 6.101763681504561e-08,
+      "peak": 0.048991377758622556,
+      "quietFraction": 0.6666666666666666,
+      "workClockDrift": 0
+    },
+    {
+      "id": "store-osm-node-8172495006-person-0",
+      "kind": "samples",
+      "maxFootDrift": 0,
+      "maxStep": 0.007225189883665774,
+      "maxContactError": 1.6284373338324965e-07,
+      "peak": 0.04921766661768606,
+      "quietFraction": 0.6583333333333333,
+      "workClockDrift": 0
+    }
+  ],
+  "interruptions": [
+    {
+      "hz": 30,
+      "stage": "close",
+      "remaining": 5.984191824106262e-15,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "walking",
+      "remaining": 1.709117947421614e-16,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "carrying",
+      "remaining": 7.202379722362318e-22,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "force",
+      "remaining": 1.2861604434717318e-13,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "startled",
+      "remaining": 3.6273483322483695e-19,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "flying",
+      "remaining": 2.147829069214414e-12,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 30,
+      "stage": "riding",
+      "remaining": 2.3258891746538474e-12,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "close",
+      "remaining": 5.500371374228944e-15,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "walking",
+      "remaining": 1.8476187077795838e-16,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "carrying",
+      "remaining": 7.789746930479762e-22,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "force",
+      "remaining": 1.389768282883999e-13,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "startled",
+      "remaining": 3.9222931070255396e-19,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "flying",
+      "remaining": 2.124598814020012e-12,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 60,
+      "stage": "riding",
+      "remaining": 2.3412166929117553e-12,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "close",
+      "remaining": 5.277682815696341e-15,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "walking",
+      "remaining": 1.9226079143770208e-16,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "carrying",
+      "remaining": 8.107961976199445e-22,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "force",
+      "remaining": 1.4457198218196665e-13,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "startled",
+      "remaining": 4.0820637590395664e-19,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "flying",
+      "remaining": 2.112243391283477e-12,
+      "resumeDelta": 0
+    },
+    {
+      "hz": 120,
+      "stage": "riding",
+      "remaining": 2.349043684073635e-12,
+      "resumeDelta": 0
+    }
+  ],
+  "reduced": {
+    "pitch": 0,
+    "roll": 0,
+    "lean": 0,
+    "turn": 0,
+    "tilt": 0,
+    "left": 0,
+    "right": 0,
+    "leftBeat": 0,
+    "rightBeat": 0
+  },
+  "errors": []
+}
