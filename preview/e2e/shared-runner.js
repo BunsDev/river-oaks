@@ -1,0 +1,107 @@
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
+import { once } from 'node:events';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { chromium } from 'playwright';
+
+const root = fileURLToPath(new URL('../../', import.meta.url));
+const modes = process.argv.slice(2);
+if (modes.some(mode => !['development', 'required'].includes(mode))) throw new Error('Choose development or required shared play.');
+const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
+const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
+let browser, child;
+const interruption = new AbortController();
+const signals = new Map(['SIGINT', 'SIGTERM', 'SIGHUP'].map(signal => [signal, () => {
+  if (interruption.signal.aborted) return;
+  process.exitCode = signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 129;
+  interruption.abort(new Error(`Shared acceptance interrupted by ${signal}.`));
+  // Closing the browser cancels active Playwright waits; finally owns cleanup.
+  void browser?.close().catch(() => {});
+}]));
+for (const [signal, handler] of signals) process.on(signal, handler);
+
+async function unused(port) {
+  const socket = createServer();
+  try {
+    await new Promise((resolve, reject) => { socket.once('error', reject); socket.listen(port, '127.0.0.1', resolve); });
+  } catch (error) { throw new Error(`Shared acceptance needs unused loopback port ${port}; existing services are left running.`, { cause: error }); }
+  finally { if (socket.listening) await new Promise(resolve => socket.close(resolve)); }
+}
+async function stop() {
+  if (!child?.pid || child.exitCode !== null || child.signalCode !== null) { child = null; return; }
+  const owned = child, exited = once(owned, 'exit');
+  const deadline = setTimeout(() => owned.kill('SIGKILL'), 5000);
+  owned.kill('SIGTERM');
+  try { await exited; } finally { clearTimeout(deadline); child = null; }
+}
+async function start(mode) {
+  const development = mode === 'development';
+  for (const port of development ? [5179, 8787] : [5180, 8788]) await unused(port);
+  const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', '5179'] : ['server/tests/browser-fixture.js'];
+  const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
+  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', MODERATION_FILE: join(temporary, 'moderation.json') };
+  interruption.signal.throwIfAborted();
+  child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  await new Promise((resolve, reject) => {
+    let output = '';
+    const finish = error => {
+      clearTimeout(deadline);
+      interruption.signal.removeEventListener('abort', abort);
+      if (error) reject(error); else resolve();
+    };
+    const abort = () => finish(interruption.signal.reason);
+    const deadline = setTimeout(() => finish(new Error(`${mode} startup timed out.\n${output}`)), 30000);
+    interruption.signal.addEventListener('abort', abort, { once: true });
+    child.once('error', finish);
+    child.once('exit', code => finish(new Error(`${mode} server exited ${code}.\n${output}`)));
+    for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => {
+      output = (output + chunk).slice(-4000);
+      if (output.includes(ready)) finish();
+    });
+  });
+}
+try {
+  await mkdir(join(root, 'output/playwright'), { recursive: true });
+  await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+  browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, ...(process.platform === 'darwin' ? { args: ['--use-angle=metal'] } : {}) });
+  for (const mode of modes.length ? modes : ['development', 'required']) {
+    interruption.signal.throwIfAborted();
+    await start(mode);
+    for (const name of mode === 'development' ? ['multiplayer-dev'] : ['multiplayer', 'multiplayer-gate']) {
+      interruption.signal.throwIfAborted();
+      const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
+      page.setDefaultTimeout(60000);
+      // These journeys exercise shared transport, never optional paid providers.
+      await context.route('**/v1/**', route => route.fulfill({ status: 503, json: { source: 'unavailable', reason: 'acceptance_fixture' } }));
+      try {
+        console.log(`Running ${name}`);
+        const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replaceAll('http://127.0.0.1:5173', 'http://127.0.0.1:5179');
+        const result = await eval(`(${source})`)(page);
+        if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
+        report.results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
+        console.log(`Passed ${name}`);
+      } catch (error) {
+        interruption.signal.throwIfAborted();
+        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack });
+        await page.screenshot({ path: join(root, `output/playwright/shared-${name}-failure.png`) }).catch(() => {});
+        console.error(`Failed ${name}: ${error.message}`); process.exitCode = 1;
+      } finally {
+        // Some older page-function harnesses create extra contexts. Close every
+        // context before the next journey so a failed run cannot retain a peer.
+        for (const active of browser.contexts()) await active.close().catch(error => { if (!interruption.signal.aborted) throw error; });
+        await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+      }
+    }
+    await stop();
+  }
+} catch (error) {
+  report.error = error.stack; process.exitCode ||= 1; console.error(error.message);
+} finally {
+  try { await browser?.close(); } finally { await stop(); await rm(temporary, { recursive: true, force: true }); }
+  report.status = interruption.signal.aborted ? 'interrupted' : process.exitCode ? 'failed' : 'passed';
+  for (const [signal, handler] of signals) process.removeListener(signal, handler);
+  await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+}

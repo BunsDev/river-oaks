@@ -11,6 +11,7 @@
     "build": "vite build --config preview/vite.config.js",
     "test": "node --test preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
+    "test:shared": "node preview/e2e/shared-runner.js",
     "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",

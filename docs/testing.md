@@ -4,7 +4,9 @@ Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geome
 
 Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. `npm run dev` joins the local shared town, which locks the character to Jevica and hides the invasion and auto visit. Run the solo browser scripts below (character forms, invasion, auto visit, render budget) against `VITE_MULTIPLAYER=off npm run dev`. `preview/e2e/multiplayer-dev.js` covers the town itself: two browsers join as development identities with no WorkOS, see each other, and arrive on separate spots. Production builds stay single player unless built with `VITE_MULTIPLAYER=required`.
 
-For two-player browser acceptance, run `node server/tests/browser-fixture.js`, then:
+Run `npm run test:experience` for the solo browser suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `npm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The current [shared receipt](../data/reports/shared-experience.json) records all three shared journeys.
+
+For an interactive two-player check, run `node server/tests/browser-fixture.js`, then:
 
 ```sh
 npx --yes --package @playwright/cli playwright-cli -s=multiplayer open 'http://127.0.0.1:5180/?motion-debug=1' --headed
@@ -92,7 +94,7 @@ when a 60 Hz display misses refreshes, recovers gradually, settles on a
 borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
 streaming count and the capped wait for surface textures.
 
-`preview/e2e/hud-and-quality.js` runs against `npm run dev`. It waits for the
+`npm run test:experience -- hud-and-quality` starts its own solo server. It waits for the
 progress pill to count every file and step aside, switches Settings > Graphics
 between Auto, Smoothest and Sharpest while the canvas keeps native size,
 reloads to check the choice persists, and toggles Clear view with H and the
