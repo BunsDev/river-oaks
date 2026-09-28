@@ -1,0 +1,24 @@
+{
+  "recordedAt": "2026-09-28T19:14:15.622Z",
+  "passed": true,
+  "checks": [
+    "Jevica is the only playable form",
+    "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+    "Shared diagnostics and town exclude the solo coachman",
+    "Force shortcut cannot bypass shared-mode gating",
+    "Two accounts share the roster and rendered Jevica avatars",
+    "Confirmed grant moves keyboard focus to undo",
+    "Second player sees server-owned dragon wish",
+    "Egg hatches into a visible dragon",
+    "The same wish disrupts town residents for both players",
+    "Confirmed undo restores keyboard focus",
+    "Invisible resident keeps visible clothing in shared play",
+    "Reload rejoins the existing town and keeps its active wishes",
+    "Walking is validated and visible to the other player",
+    "Shared town has no mobile horizontal overflow",
+    "Sign-out revokes play and returns to the sign-in gate",
+    "No uncaught errors: "
+  ],
+  "errors": [],
+  "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+}

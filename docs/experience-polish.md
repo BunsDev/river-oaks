@@ -10,9 +10,11 @@ npm run test:experience
 npm run test:experience -- experience
 ```
 
-The runner starts its own standalone Vite server and runs each flow in a fresh Chromium context. It writes results to `data/reports/experience.json` and screenshots to `output/playwright/`. It covers desktop, phone, and short landscape layouts; focus and Escape behavior; reduced motion; guided visits; vehicles; companion conversations; touch movement; telekinesis; and the invasion scenario. Provider decision checks use mocked replies. Optional services can be unavailable during the suite.
+The runner starts its own standalone Vite server and runs each flow in a fresh Chromium context. It writes results to `data/reports/experience.json` and screenshots to `output/playwright/`. It covers desktop, phone, and short landscape layouts; focus and Escape behavior; reduced motion; guided visits; vehicles; companion conversations; touch movement; telekinesis; and the invasion scenario. The UI-polish flow covers theme changes and interrupted panel motion; the unicorn flow checks retained artwork in its studio fixture. Provider decision checks use mocked replies. Optional services can be unavailable during the suite.
 
 Manual driving takes over immediately on a movement key or pad press, including taps that end between animation frames. When Jev follows locally, he can choose a clear position beside or in front of you if a storefront blocks his preferred trailing position. Building and personal-space clearance still apply.
+
+Guided visits reconsider support as soon as they reach a moving neighbor. This avoids repeatedly pausing just outside speaking range while the neighbor walks away. Physical range checks and the pause between support interactions still apply.
 
 Run native window and renderer recovery checks with:
 
