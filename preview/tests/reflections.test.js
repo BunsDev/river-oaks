@@ -10,7 +10,7 @@ function fixture(scene = new THREE.Scene()) {
   const renderer = {
     coordinateSystem: THREE.WebGLCoordinateSystem, xr: { enabled: true },
     autoClear: true, toneMapping: THREE.ACESFilmicToneMapping,
-    shadowMap: { autoUpdate: true, needsUpdate: true }, target, face: 3, mip: 2, calls: 0,
+    shadowMap: { enabled: true, autoUpdate: true, needsUpdate: true }, target, face: 3, mip: 2, calls: 0,
     getRenderTarget() { return this.target; }, getActiveCubeFace() { return this.face; }, getActiveMipmapLevel() { return this.mip; },
     setRenderTarget(value, face, mip) { this.target = value; this.face = face; this.mip = mip; },
     render() { this.calls++; assert.equal(hidden.visible, false); assert.equal(this.shadowMap.autoUpdate, false); },
@@ -28,6 +28,31 @@ function fixture(scene = new THREE.Scene()) {
   const probe = createStorefrontReflections({ renderer, scene, materials: [material], excluded: [hidden, alreadyHidden], filter });
   return { probe, renderer, material, hidden, alreadyHidden, target, resources, filter };
 }
+
+test('reflection captures wait for visible shadow maps without consuming a cube face', () => {
+  const scene = new THREE.Scene(), sun = new THREE.DirectionalLight();
+  sun.castShadow = true; scene.add(sun);
+  const { probe, renderer, material } = fixture(scene), position = new THREE.Vector3();
+  for (let frame = 0; frame < 6; frame++) probe.update(frame * 17, position);
+  assert.equal(renderer.calls, 0, 'A PCF shadow sampler cannot use an uninitialized depth texture');
+  assert.equal(material.envMap, null); assert.equal(probe.stats.failed, false);
+  assert.equal(renderer.shadowMap.needsUpdate, true, 'The main view must still initialize the shadow map');
+  sun.shadow.map = new THREE.WebGLRenderTarget(16, 16);
+  for (let frame = 6; frame < 12; frame++) probe.update(frame * 17, position);
+  assert.equal(renderer.calls, 6); assert.equal(probe.stats.captures, 1); assert.ok(material.envMap);
+  probe.dispose(); sun.dispose();
+});
+
+test('disabled shadows and lights under hidden parents do not block reflections', () => {
+  for (const enabled of [false, true]) {
+    const scene = new THREE.Scene(), parent = new THREE.Group(), light = new THREE.DirectionalLight();
+    light.castShadow = true; parent.visible = !enabled; parent.add(light); scene.add(parent);
+    const { probe, renderer } = fixture(scene); renderer.shadowMap.enabled = enabled;
+    for (let frame = 0; frame < 6; frame++) probe.update(frame * 17, new THREE.Vector3());
+    assert.equal(probe.stats.captures, 1);
+    probe.dispose(); light.dispose();
+  }
+});
 
 test('local reflection work is spread over frames and only complete captures are published', () => {
   const { probe, renderer, material, resources, filter } = fixture(); const position = new THREE.Vector3(3, 2, 4);

@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:server
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:reflections:webgl
       - run: npm run build
   verify:
     runs-on: ubuntu-latest
