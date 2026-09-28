@@ -14,7 +14,7 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 6071,
+  "readyMs": 7414,
   "assets": {
     "loaded": 107,
     "total": 107,
@@ -24,7 +24,7 @@
   "voice": {
     "bytes": 73186,
     "type": "audio/mpeg",
-    "currentTime": 0.335873,
+    "currentTime": 0.357015,
     "duration": 4.504671,
     "voiceId": "s3TPKV1kjDlVtZbl4Ksh"
   },
@@ -38,10 +38,10 @@
   },
   "sharedTown": false,
   "performance": {
-    "samples": 457,
-    "medianMs": 20.899999999999636,
-    "p95Ms": 25.099999999998545,
-    "meanFps": 45.623808240238795,
+    "samples": 426,
+    "medianMs": 16.900000000001455,
+    "p95Ms": 33.80000000000109,
+    "meanFps": 42.49376558603491,
     "canvas": [
       1280,
       768
@@ -50,7 +50,7 @@
       "mode": "auto",
       "scale": 1,
       "occlusion": true,
-      "fps": 46
+      "fps": 42
     },
     "renderer": {
       "calls": 2320,
