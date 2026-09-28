@@ -38,11 +38,14 @@ test('walking flexes the elbows and lets wrists follow through, then settles at 
       const avatar=instantiateAvatar(source,{targetHeight:1.7}),root=new THREE.Group();root.add(avatar.model);
       const feet=createFootPlacement(avatar.model,root),motion=createUpperBodyGait(avatar,root),baseY=avatar.model.position.y;
       const ranges=Object.fromEntries(['lowerarm_l','lowerarm_r','hand_l','hand_r'].map(name=>[name,{min:Infinity,max:-Infinity,previous:null,maxSpeed:0}]));
+      let elbowMin=Infinity,elbowMax=-Infinity;
+      const elbow=side=>{const shoulder=position(avatar,`upperarm_${side}`),joint=position(avatar,`lowerarm_${side}`),hand=position(avatar,`hand_${side}`);return 180-shoulder.sub(joint).angleTo(hand.sub(joint))*180/Math.PI;};
       let distance=0;
       for(let frame=0;frame<=5*hz;frame++) {
         const speed=frame<3*hz?1.1:0;distance+=speed/hz;
         reset(avatar);avatar.model.position.y=baseY-.018;root.position.z=distance;
         feet.update(1/hz,{speed,distance},()=>0);motion.update(1/hz,speed,feet.legs);
+        if(frame>hz&&frame<3*hz){avatar.model.updateMatrixWorld(true);for(const side of ['l','r']){const angle=elbow(side);elbowMin=Math.min(elbowMin,angle);elbowMax=Math.max(elbowMax,angle);}}
         for(const [name,r]of Object.entries(ranges)) {
           const bone=avatar.model.getObjectByName(name),q=avatar.rest.get(bone).clone().invert().multiply(bone.quaternion);
           const flex=2*Math.atan2(new THREE.Vector3(q.x,q.y,q.z).dot(avatar.axes.get(bone).x),q.w);
@@ -55,7 +58,9 @@ test('walking flexes the elbows and lets wrists follow through, then settles at 
       for(const [name,r]of Object.entries(ranges)) {
         assert.ok(r.maxSpeed<2,`${profile}/${hz}: ${name} changes without snapping: ${r.maxSpeed}`);
         if(name.startsWith('lowerarm')) {
-          assert.ok(r.min<-.08&&r.min>-.35&&r.max<.01,`${profile}/${hz}: elbows flex forward, not backward: ${JSON.stringify(r)}`);
+          // Anatomical flexion, not deviation from the bent rest pose: walking elbows
+          // stay softly bent and never straighten past the joint or clench.
+          assert.ok(elbowMin>15&&elbowMax<60,`${profile}/${hz}: elbows stay softly bent while walking: ${elbowMin.toFixed(1)}..${elbowMax.toFixed(1)}°`);
           assert.ok(r.max-r.min>.04,`${profile}/${hz}: elbows articulate throughout the stride`);
         }else assert.ok(r.max-r.min>.008&&Math.max(Math.abs(r.min),Math.abs(r.max))<.06,`${profile}/${hz}: subtle wrist follow-through`);
       }
@@ -124,11 +129,13 @@ test('carrying eases down the loaded arm swing without suppressing the free arm'
     for(const [part,result]of Object.entries(ranges)) {
       const l=avatar.model.getObjectByName(`${part}_l`),r=avatar.model.getObjectByName(`${part}_r`);
       if(result.previous)result.maxChange=Math.max(result.maxChange,r.quaternion.angleTo(result.previous));result.previous=r.quaternion.clone();
-      if(frame>=120){result.left=Math.max(result.left,l.quaternion.angleTo(avatar.rest.get(l)));result.right=Math.max(result.right,r.quaternion.angleTo(avatar.rest.get(r)));}
+      // Swing amplitude within the stride, not the constant walking posture offset.
+      if(frame===120){result.leftReference=l.quaternion.clone();result.rightReference=r.quaternion.clone();}
+      if(frame>120){result.left=Math.max(result.left,l.quaternion.angleTo(result.leftReference));result.right=Math.max(result.right,r.quaternion.angleTo(result.rightReference));}
     }
   }
   for(const [part,{left,right,maxChange}]of Object.entries(ranges)) {
-    assert.ok(left>(part==='hand'?.008:.1)&&right<left*.4,`${part}: the carried side moves less than the free side`);
+    assert.ok(left>(part==="hand"?.008:part==="lowerarm"?.06:.1)&&right<left*.4,`${part}: the carried side moves less than the free side (${left.toFixed(3)} vs ${right.toFixed(3)})`);
     assert.ok(maxChange<.1,'Picking up a load must not snap the arm');
   }
   motion.dispose();avatar.dispose();

@@ -11,13 +11,16 @@ export function createFlightHands(model,holder) {
       const glide=THREE.MathUtils.smoothstep(speed, .4,4.5),rotation=holder.getWorldQuaternion(new THREE.Quaternion());
       for(const arm of arms) {
         const right=arm.side==='r',side=right?-1:1;
-        const hover=new THREE.Vector3(side*.30,1.08,.22);
+        // Hovering, the arms hang relaxed beside the thighs, slightly out for balance;
+        // hands at hip height with elbows out read as hands on hips.
+        const hover=new THREE.Vector3(side*.31,.90,.10);
         const reach=right?new THREE.Vector3(-.23,1.94,.12):new THREE.Vector3(.28,1.23,.30);
         const target=holder.localToWorld(hover.lerp(reach,glide));
         const old=[arm.thigh,arm.calf,arm.foot].map(bone=>bone.quaternion.clone());
         const forward=new THREE.Vector3(0,right?1:-1,0),normal=new THREE.Vector3(0,0,1),across=new THREE.Vector3().crossVectors(normal,forward);
         const frame=rotation.clone().multiply(new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(across,normal,forward)));
-        const pole=holder.localToWorld(new THREE.Vector3(side*(.48+Math.abs(bank)*.1),right?1.50:1.13,.13));
+        // Elbows point back when relaxed and out only as the glide pose reaches.
+        const pole=holder.localToWorld(new THREE.Vector3(side*.30,1.22,-.38).lerp(new THREE.Vector3(side*(.48+Math.abs(bank)*.1),right?1.50:1.13,.13),glide));
         placePalm(arm,target,frame,pole);
         for(const [i,bone]of [arm.thigh,arm.calf,arm.foot].entries())bone.quaternion.slerp(old[i],1-amount);
       }

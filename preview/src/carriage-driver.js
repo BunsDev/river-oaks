@@ -1,5 +1,5 @@
 import {createFlightHands} from './flight-hands.js';
-import {createPrinceFlight,flightSlot,stepPrinceFlight} from './prince-flight.js';
+import {createPrinceFlight,flightSlot,glideAmount,stepPrinceFlight} from './prince-flight.js';
 import {createAngelWings} from './angel-wings.js';
 import { VEHICLES } from './vehicle-config.js';
 import { createDrivingHands } from './driving-hands.js';
@@ -161,7 +161,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
       avatar.object.rotation.set(pitch,0,bank,'YXZ');
       avatar.object.position.set(0,hip*(1-Math.cos(pitch)),-hip*Math.sin(pitch));
       wings?.update(now,dt,{amount:flight?.blend??0,speed:body?.speed??0,climbing:flight?.velocity[1]??0,bank:flight?.bank??0});
-      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,flying:mode==='flying'||Boolean(flight),superheroFlight:flight?.blend??0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding&&mode!=='flying',ridingDriver:true,ridingSpeed:placement?.speed??0,ridingSteering:placement?.steering??0,ridingKind:vehicle()?.kind,seatToFloor:vehicle()?vehicle().driverSeat[1]-vehicle().driverFloor:(1.635-1.1275)*coach.scale.x},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
+      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,flying:mode==='flying'||Boolean(flight),superheroFlight:flight?.blend??0,flightGlide:flight?glideAmount(flight.pitch/Math.max(flight.blend,.01)):0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding&&mode!=='flying',ridingDriver:true,ridingSpeed:placement?.speed??0,ridingSteering:placement?.steering??0,ridingKind:vehicle()?.kind,seatToFloor:vehicle()?vehicle().driverSeat[1]-vehicle().driverFloor:(1.635-1.1275)*coach.scale.x},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
       if(riding&&vehicle())drivingHands?.(coach,vehicle());
       if(flight)flightHands?.update({amount:flight.blend,speed:body?.speed??0,bank:flight.bank});
       object.updateWorldMatrix(true,true);costume?.update({carrying:!riding&&mode!=='flying'});publish({mode,carrying:!riding&&mode!=='flying'});

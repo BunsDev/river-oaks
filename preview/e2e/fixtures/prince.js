@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { avatarProfile, loadResidentAvatar } from '../../src/avatars.js';
 import { createPrinceCostume, loadPrinceSkinTexture } from '../../src/prince-costume.js';
+import { createAngelWings } from '../../src/angel-wings.js';
+import { createFlightHands } from '../../src/flight-hands.js';
+import { glideAmount } from '../../src/prince-flight.js';
 
 // ?rig=man-tailored compares Prince Jev's costume on another shipped rig.
 // ?reference=owen renders the actual NPC without prince costume overrides.
@@ -32,5 +35,19 @@ function render(view='full',time=0,{speed=0,action='continue'}={}) {
   renderer.render(scene,camera);
   return {triangles:renderer.info.render.triangles,calls:renderer.info.render.calls};
 }
-window.princeFixture = {render,avatar,costume};
+// Flight review: the hover (pitch ≈ 0.18) and glide (pitch ≈ 1.28) poses with wings and hands.
+let wings=null,hands=null;
+function flight({pitch=.18,speed=0,time=1000,view='three-quarter',frames=45}={}) {
+  wings??=createAngelWings({reducedMotion:true});if(!wings.object.parent)avatar.object.add(wings.object);
+  hands??=createFlightHands(avatar.rig.model,avatar.object);
+  const hip=avatar.rig.hipHeight,yaw=view==='front'||view==='side'?0:-0.6;
+  for(let i=0;i<frames;i++){
+    avatar.object.rotation.set(pitch,yaw,0,'YXZ');avatar.object.position.set(0,1.2+hip*(1-Math.cos(pitch)),-hip*Math.sin(pitch));
+    avatar.update(time+i*16,'continue',false,{speed:0,flying:true,superheroFlight:1,flightGlide:glideAmount(pitch),distance:0},()=>0);
+    costume?.update();wings.update(time+i*16,1/60,{amount:1,speed});hands.update({amount:1,speed});
+  }
+  camera.position.set(view==='side'?4.6:1.4,2.1,view==='side'?.6:5.6);camera.lookAt(0,1.9,0);
+  renderer.render(scene,camera);
+}
+window.princeFixture = {render,flight,avatar,costume};
 render(); document.body.dataset.ready = 'true';

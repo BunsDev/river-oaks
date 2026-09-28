@@ -125,7 +125,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const face=createFacialMotion(model,{seed:id??index,reducedMotion:noMotion});
-  const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.18:.22});
+  const upperBody=createUpperBodyGait(avatar,root,{reducedMotion:noMotion,armSwing:profile==='jevica'?.34:.42});
   let previousTime=null,walkingSpeed=0;
   return {
     object:root, profile, rig:avatar,
@@ -146,7 +146,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const strength = Math.min(1,walkingSpeed/0.65);
       // Let leg reach determine pelvis lowering; a fixed walking drop keeps
       // the supporting knee crouched even directly beneath the body.
-      model.position.y = baseY - 0.018 + Math.cos((locomotion?.distance ?? 0)/1.1*Math.PI*4)*0.008*strength;
+      model.position.y = baseY - 0.004*strength;
       for (const bone of bones) {
         bone.quaternion.copy(rest.get(bone));
         if(noMotion && !locomotion?.speed) continue;
@@ -199,12 +199,17 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         }
       }
       if(locomotion?.superheroFlight) {
-        const blend=Math.min(1,locomotion.superheroFlight);
-        // One arm reaches forward, the other is bent near his chest; legs trail.
-        const flightPose={thigh_l:[-.08,0,-.035],thigh_r:[.06,0,.035],calf_l:[.10,0,0],calf_r:[.20,0,0],head:[-.55,0,0],neck_01:[-.18,0,0]};
-        for(const bone of bones)if(flightPose[bone.name]) {
+        const blend=Math.min(1,locomotion.superheroFlight),glide=THREE.MathUtils.clamp(locomotion.flightGlide??1,0,1);
+        // Hovering: a relaxed, asymmetric hang with one knee drawn up and the feet
+        // pointed. Gliding: legs stream back nearly straight and the head lifts to
+        // look ahead once the body is horizontal. Rig signs: thigh -x flexes the
+        // hip, calf +x bends the knee, foot +x points the toes.
+        const hover={thigh_l:[-.42,0,-.04],calf_l:[.95,0,0],foot_l:[.38,0,0],thigh_r:[.06,0,.03],calf_r:[.36,0,0],foot_r:[.44,0,0]};
+        const stream={thigh_l:[-.06,0,-.035],calf_l:[.12,0,0],foot_l:[.52,0,0],thigh_r:[.08,0,.035],calf_r:[.24,0,0],foot_r:[.52,0,0],head:[-.55,0,0],neck_01:[-.18,0,0]};
+        for(const bone of bones) {
+          const a=hover[bone.name],b=stream[bone.name];if(!a&&!b)continue;
           const target=rest.get(bone).clone();
-          flightPose[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);target.multiply(adjustment);});
+          [0,1,2].forEach(i=>{const angle=(a?.[i]??0)*(1-glide)+(b?.[i]??0)*glide;if(angle){adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);target.multiply(adjustment);}});
           bone.quaternion.slerp(target,blend);
         }
       }
