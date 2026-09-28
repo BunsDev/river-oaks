@@ -83,13 +83,15 @@ export function fitPinchGrip(avatar,arm,gap=0.0012) {
 
 // The free end of a light strip follows the hand. Relax the authored paper
 // angle toward the forearm instead of forcing a sideways wrist bend to hold it.
-export function placePinch(arm,point,frame,pole) {
+// Keep the presentation hand near neutral (about five degrees); the paper is
+// light and free to turn, so its authored angle must not dictate a bent wrist.
+export function placePinch(arm,point,frame,pole,maxBend=0.08) {
   let actual;
   for(let iteration=0;iteration<8;iteration++) {
     actual=placePalm(arm,point,frame,pole);
     const bend=arm.foot.quaternion.angleTo(arm.wristRest);
-    if(bend<=0.21)break;
-    const local=arm.wristRest.clone().slerp(arm.foot.quaternion,0.20/bend);
+    if(bend<=maxBend+0.005)break;
+    const local=arm.wristRest.clone().slerp(arm.foot.quaternion,maxBend/bend);
     frame.copy(arm.calf.getWorldQuaternion(new THREE.Quaternion())).multiply(local).multiply(arm.frameToHand.clone().invert());
   }
   frame.copy(arm.foot.getWorldQuaternion(new THREE.Quaternion())).multiply(arm.frameToHand.clone().invert());

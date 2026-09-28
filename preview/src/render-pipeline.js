@@ -93,7 +93,7 @@ export function createRenderPipeline(renderer, scene, camera) {
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.055, 0.2, 2.0);
   const output = new OutputPass();
   composer.addPass(render); composer.addPass(occlusion); composer.addPass(bloom); composer.addPass(output);
-  let size = { width: 1, height: 1, pixelRatio: 1 }, renderScale = 1;
+  let size = { width: 1, height: 1, pixelRatio: 1 }, renderScale = 1, sized = false;
   const applySize = () => {
     // The canvas keeps its native pixel ratio. The scene and every pass buffer
     // render at renderScale of it, and the output pass upsamples to the canvas.
@@ -107,7 +107,7 @@ export function createRenderPipeline(renderer, scene, camera) {
   };
   return {
     occlusion,
-    resize(width, height, pixelRatio) { size = { width, height, pixelRatio }; applySize(); },
+    resize(width, height, pixelRatio) { if(width<=0||height<=0)return; size = { width, height, pixelRatio }; applySize(); sized=true; },
     // Graphics quality: 1 is native resolution. Changing it reallocates buffers.
     setRenderScale(scale) {
       const next = Math.min(1, Math.max(0.25, Number(scale) || 1));
@@ -116,7 +116,7 @@ export function createRenderPipeline(renderer, scene, camera) {
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
     get stats() { return { ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
-    render(delta) { composeFrame(() => composer.render(delta)); },
+    render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
 }

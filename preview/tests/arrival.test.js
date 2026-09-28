@@ -18,8 +18,9 @@ test('mapped walkways are paths for people, not lanes for cars', () => {
 
 for (const mode of ['arrive', 'leave']) test(`every storefront ${mode === 'arrive' ? 'arrival' : 'exit'} lands on walkable pavement near the door`, () => {
   for (const store of world.stores) {
-    const [x, north] = storefrontSpot(world, store, mode, { isFree: environment.isFree });
+    const [x, north] = storefrontSpot(world, store, mode, { isFree: (x,z)=>environment.isFree(x,z)&&!environment.roomAt(x,z) });
     assert.ok(clearOfRoads(world, x, -north, 0, { vehiclesOnly: true }), `${store.name}: not in a vehicle lane`);
+    assert.equal(environment.roomAt(x,-north),null,`${store.name}: outside the doorway interior state`);
     assert.ok(environment.isFree(x, -north), `${store.name}: free to stand on`);
     assert.ok(Math.hypot(x - store.facade[0], north - store.facade[1]) <= 10, `${store.name}: near the door`);
   }

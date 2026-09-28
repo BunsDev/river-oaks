@@ -33,8 +33,8 @@ test('lane fixtures follow the mapped lanes, keep out of footprints and avoid na
   assert.ok(lamps.length > 10 && planters.length > 3 && bins.length > 0);
   for (const [x, , z] of [...lamps, ...planters, ...bins]) {
     assert.ok(environment.isFree(x, z), 'fixtures never intersect a building');
-    const nearest = Math.min(...world.roads.filter(road => road.width_m >= LANE_WIDTH_MIN).map(road => distanceToLane(road, x, z)));
-    assert.ok(nearest >= 6.5 / 2 + 0.7 - 0.01 && nearest <= 6.5 / 2 + 1.0 + 0.05, `fixture sits beside a lane, not ${nearest.toFixed(2)} m away`);
+    const nearest = Math.min(...world.roads.filter(road => road.width_m >= LANE_WIDTH_MIN).map(road => distanceToLane(road, x, z)-road.width_m/2));
+    assert.ok(nearest >= 0.7 - 0.01 && nearest <= 1.0 + 0.05, `fixture sits beside a lane, not ${nearest.toFixed(2)} m away`);
   }
   const blocked = laneFixtures(world, () => false);
   assert.deepEqual([blocked.lamps.length, blocked.planters.length, blocked.bins.length], [0, 0, 0]);

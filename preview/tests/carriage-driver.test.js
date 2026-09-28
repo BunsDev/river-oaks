@@ -48,8 +48,11 @@ test('far travel and flight never teleport the hero; world replacement clears co
     await f.step(pose(2,3),.1);f.driver.setCompanion(true);await f.step(pose(2,3),3);
     const before=f.driver.object.position.clone();await f.step(pose(30,30),.1);
     assert.ok(f.driver.object.position.distanceTo(before)<.5,'Large gaps must be routed, never rejoined by relocation');
-    const landed=f.driver.object.position.clone();await f.step(pose(30,30,{flying:true}),3);
-    assert.ok(f.driver.object.position.distanceTo(landed)<1e-8,'He waits on the ground during flight');
+    const landed=f.driver.object.position.clone();await f.step(pose(20,20,{flying:true,position:[20,6,20]}),3);
+    assert.ok(f.driver.object.position.distanceTo(landed)>.5,'He follows her into flight');
+    assert.equal(f.driver.companion.mode,'flying');
+    assert.ok(f.driver.object.position.y>0);
+    await f.step(pose(10,10),15);assert.equal(f.driver.companion.mode,'walking');
     f.replace();await f.step(pose(2,3),.1);assert.equal(f.driver.companion.mode,'seat');assert.equal(f.driver.companion.enabled,false);
   }finally{f.dispose();}
 });
@@ -90,4 +93,31 @@ test('outdoor conversation rays use eye height above the bench while bodies cann
   assert.equal(env.isFree(-1.89,0),false);
   assert.equal(env.hasSightLine([-1.89,-3,1.68],[-1.89,0,2.2]),true);
   assert.equal(env.hasSightLine([-1.89,-3,1.3],[-1.89,0,1.4]),false);
+});
+
+test('he still returns to the seat when Jevica stands where he stepped out',async()=>{
+  const f=await renderedDriver();try {
+    await f.step(pose(2,3),.1);f.driver.setCompanion(true);await f.step(pose(2,3),.6);
+    // Wait until he has stepped down, then note where he landed.
+    for(let i=0;i<20&&f.driver.companion.mode!=='walking';i++)await f.step(pose(2,3),.25);
+    const [ex,ez]=f.driver.companion.position;
+    f.driver.setCompanion(false);
+    // She stands on his exit spot; personal space keeps him from stepping right onto it.
+    await f.step(pose(ex+.3,ez),12);
+    assert.equal(f.driver.companion.mode,'seat','returns instead of stalling beside her');
+    assert.equal(f.driver.canDrive,true);
+  }finally{f.dispose();}
+});
+
+test('the car canopy is glass: eyes see the seated driver, bodies and the bubble still cannot pass',async()=>{
+  const {createWalkingEnvironment}=await import('../src/walking.js');
+  const {VEHICLES}=await import('../src/vehicle-config.js');
+  const placement={position:[0,0,0],yaw:0,scale:1,vehicle:'rolls'},seat=VEHICLES.rolls.driverSeat;
+  const env=createWalkingEnvironment({bounds_m:[-20,-20,20,20],buildings:[]},[{contains:(...point)=>carriageContains(placement,...point)}]);
+  const head=[seat[0],-seat[2],seat[1]+.62];
+  assert.equal(env.hasSightLine([seat[0],-3,1.68],head),true,'the driver is visible through the canopy');
+  assert.equal(env.hasSightLine([seat[0],-3,.6],[seat[0],-seat[2],.6]),false,'the solid body still blocks a low line');
+  assert.equal(env.isFree(seat[0],seat[2]),false,'nobody walks into the car');
+  assert.equal(carriageContains(placement,0,1.6,0,.35),true,'glass still stops a body at canopy height');
+  assert.equal(env.canFly(0,1.6,0),false,'and the flight bubble');
 });

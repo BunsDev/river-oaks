@@ -132,3 +132,8 @@ test('graphics quality scales the scene buffers while the canvas keeps native si
     assert.equal(pipeline.stats.renderScale,1,'invalid scales fall back to native');
   } finally {pipeline.dispose();}
 });
+
+test('initial rendering waits for viewport dimensions before using bloom mip buffers',()=>{
+ const {renderer,pipeline}=fixture();let rendered=0;renderer.render=()=>rendered++;
+ try {pipeline.setRenderScale(.6);pipeline.render(1/60);assert.equal(rendered,0);pipeline.resize(0,0,1);pipeline.render(1/60);assert.equal(rendered,0);}finally{pipeline.dispose();}
+});

@@ -14,12 +14,12 @@ function inside(point,ring) {
 
 // Small metric grid, queried lazily. It is a simulation route planner, not a
 // survey of pedestrian access. Large neighborhood scenes stay outside this budget.
-export function createResidentNavigation(world) {
+export function createResidentNavigation(world,{allowRoads=false}={}) {
   const bounds=world.bounds_m;
   if(world.scene!=='district' || !bounds?.every(Number.isFinite)) return null;
-  const [west,south,east,north]=bounds, cell=2;
+  const [west,south,east,north]=bounds, cell=1;
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;
-  if(width<2 || height<2 || size>40000) return null;
+  if(width<2 || height<2 || size>80000) return null;
   const environment=createWalkingEnvironment(world), trunks=new Map(), pedestrian=createPedestrianNetwork(world);
   for(const support of world.vegetation?.branch_supports ?? []) {
     const [x,y]=support.position,key=`${Math.floor(x/4)},${Math.floor(y/4)}`;
@@ -39,7 +39,13 @@ export function createResidentNavigation(world) {
     if(!finite(a) || !finite(b)) return false;
     const length=distance(a,b);
     if(length>Math.hypot(east-west,north-south)) return false;
-    const steps=Math.max(1,Math.ceil(length/0.2));
+    // Resolve thin fixture corners that the physical walker cannot step through.
+    const steps=Math.max(1,Math.ceil(length/0.05));
+    // A body already beside a fixture must not choose a long segment that
+    // skips the immediate edge in the first sample interval.
+    if(length>0)for(const offset of [.001,.01,.025])for(const t of [Math.min(.5,offset/length),Math.max(.5,1-offset/length)]) {
+      if(!free([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]))return false;
+    }
     let previous=ground(a);
     for(let i=0;i<=steps;i++) {
       const point=[a[0]+(b[0]-a[0])*i/steps,a[1]+(b[1]-a[1])*i/steps],z=ground(point);
@@ -48,11 +54,12 @@ export function createResidentNavigation(world) {
     }
     return true;
   };
-  const walkable = (a,b) => canTravel(a,b) && Number.isFinite(pedestrian.segmentCost(a,b));
+  const travelCost=(a,b)=>allowRoads?distance(a,b):pedestrian.segmentCost(a,b);
+  const walkable = (a,b) => canTravel(a,b) && Number.isFinite(travelCost(a,b));
   const position = id => [west+(id%width)*cell,south+Math.floor(id/width)*cell];
   const occupancy=new Int8Array(size),edges=new Map();
   const available = id => {
-    if(!occupancy[id]) occupancy[id]=free(position(id)) && pedestrian.classify(position(id))!=='road'?1:-1;
+    if(!occupancy[id]) occupancy[id]=free(position(id)) && (allowRoads||pedestrian.classify(position(id))!=='road')?1:-1;
     return occupancy[id]===1;
   };
   const links = id => {
@@ -76,7 +83,7 @@ export function createResidentNavigation(world) {
   };
   const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
-    if(walkable(start,end) && pedestrian.segmentCost(start,end)<=distance(start,end)*1.15) return [[...end]];
+    if(walkable(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
     const starts=connectors(start),goals=new Set(connectors(end));
     if(!starts.length || !goals.size) return null;
     const scores=new Float64Array(size).fill(Infinity),parent=new Int32Array(size).fill(-1),closed=new Uint8Array(size),heap=[];
@@ -90,14 +97,14 @@ export function createResidentNavigation(world) {
       if(heap.length) { let i=0;while(i*2+1<heap.length) {let child=i*2+1;if(child+1<heap.length && heap[child+1].priority<heap[child].priority) child++;if(heap[child].priority>=last.priority) break;heap[i]=heap[child];i=child;}heap[i]=last; }
       return first;
     };
-    for(const id of starts) {scores[id]=Number.isFinite(pedestrian.segmentCost(start,position(id)))?pedestrian.segmentCost(start,position(id)):distance(start,position(id))*8;push(id,scores[id]);}
+    for(const id of starts) {scores[id]=Number.isFinite(travelCost(start,position(id)))?travelCost(start,position(id)):distance(start,position(id))*8;push(id,scores[id]);}
     let found=-1,visits=0;
     while(heap.length && visits<15000) {
       const {id,cost}=pop();if(closed[id] || cost>scores[id]) continue;
       closed[id]=1;visits++;
       if(goals.has(id)) {found=id;break;}
       for(const next of links(id)) {
-        const score=cost+pedestrian.segmentCost(position(id),position(next));
+        const score=cost+travelCost(position(id),position(next));
         if(score>=scores[next]) continue;
         scores[next]=score;parent[next]=id;push(next,score);
       }
@@ -110,13 +117,13 @@ export function createResidentNavigation(world) {
     const result=[];let previous=start,index=0;
     while(index<path.length) {
       let next=index;
-      let retained=pedestrian.segmentCost(previous,path[next]);
-      while(next+1<path.length) {retained+=pedestrian.segmentCost(path[next],path[next+1]);if(!walkable(previous,path[next+1]) || pedestrian.segmentCost(previous,path[next+1])>retained*1.03)break;next++;}
+      let retained=travelCost(previous,path[next]);
+      while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!walkable(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
       result.push(path[next]);previous=path[next];index=next+1;
     }
     return result;
   };
-  // Interior furniture needs finer waypoints than the outdoor two-meter grid.
+  // Interior furniture needs finer waypoints than the outdoor grid.
   // A visibility graph around expanded fixture corners stays bounded per room.
   const interiorExit = (room,start) => {
     const end=room.toWorld(0,-1),points=[start,end,room.toWorld(0,0.8)];

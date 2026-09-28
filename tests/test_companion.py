@@ -81,7 +81,7 @@ async def test_jev_controls_the_companion_stance_with_its_own_policy():
         engine = CompanionEngine(client, "fixture")
         result = await engine.decide(packet(player_speed=1.2, crowded=True))
     assert result["source"] == "jev" and result["candidate_id"] == "trail"
-    assert engine.status["policy_version"] == "prince-companion-v2"
+    assert engine.status["policy_version"] == "prince-companion-v3"
     assert engine.status["policy_sha256"] != AutoEngine().status["policy_sha256"]
 
 

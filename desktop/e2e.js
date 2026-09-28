@@ -38,6 +38,31 @@ try {
   assert.equal(report.assets.failed, 0);
   assert.deepEqual(failedAssets, []);
   check('all bundled assets and playable character loaded');
+  const voiceSettings=await page.evaluate(async()=>{try{const r=await fetch('/v1/settings/elevenlabs');return r.ok?await r.json():null;}catch{return null;}});
+  if(voiceSettings?.configured) {
+    report.voice=await page.evaluate(async()=>{
+      const response=await fetch('/v1/voice/jev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:"My love, I'm right here beside you. Wherever you wish to go, I'll keep pace."}),signal:AbortSignal.timeout(22000)});
+      if(!response.ok)throw new Error('Voice bridge failed');
+      const blob=await response.blob(),url=URL.createObjectURL(blob),audio=new Audio(url);audio.muted=true;
+      try {
+        await new Promise((resolve,reject)=>{
+          const timer=setTimeout(()=>reject(new Error('Audio clock did not advance')),8000);
+          audio.ontimeupdate=()=>{if(audio.currentTime>.1){clearTimeout(timer);resolve();}};
+          audio.onerror=()=>{clearTimeout(timer);reject(new Error('Audio decode failed'));};
+          audio.play().catch(error=>{clearTimeout(timer);reject(error);});
+        });
+        return {bytes:blob.size,type:blob.type,currentTime:audio.currentTime,duration:audio.duration};
+      }finally{audio.pause();audio.src='';URL.revokeObjectURL(url);}
+    });
+    report.voice.voiceId=voiceSettings.voice_id;
+    check('configured ElevenLabs voice decodes and advances the desktop audio clock');
+  }
+
+  report.streetProfile = await page.locator('#canvas-host').evaluate(el => JSON.parse(el.dataset.streetProfile));
+  assert.equal(report.streetProfile.profile, 'palo-alto');
+  assert.ok(report.streetProfile.warningPanels > 0);
+  assert.ok(report.streetProfile.clearWidth >= 2.4384);
+  check('Palo Alto street surfaces loaded with clear-path dimensions');
   const security = await app.evaluate(({ BrowserWindow }) => {
     const prefs = BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences();
     return { sandbox: prefs.sandbox, contextIsolation: prefs.contextIsolation, nodeIntegration: prefs.nodeIntegration };
@@ -60,18 +85,18 @@ try {
   await page.locator('[data-section=explore-section]').click();
   await page.locator('#destination').selectOption({ label: 'Hermès' });
   const beforeTravel = await position();
-  await page.locator('#visit-destination').click();
+  await page.locator('#visit-destination').click();console.log('Checking shop arrival');
   await page.waitForFunction(before => {
     const after = JSON.parse(document.querySelector('#walking-hud').dataset.position);
     return Math.hypot(after[0] - before[0], after[2] - before[2]) > 1;
   }, beforeTravel);
   // The shared server intentionally rate-limits travel to once per second.
   if (sharedTown) await page.waitForTimeout(1100);
-  await page.locator('#enter-destination').click();
+  await page.locator('#enter-destination').click();console.log('Checking shop entry');
   await page.waitForFunction(() => document.body.classList.contains('inside-store'));
   await page.locator('#canvas-host').focus();
   if (sharedTown) await page.waitForTimeout(1100);
-  await page.keyboard.press('KeyF');
+  await page.keyboard.press('KeyF');console.log('Checking shop exit');
   await page.waitForFunction(() => !document.body.classList.contains('inside-store'));
   check('shop arrival, enter and exit');
   await page.locator('[data-section=community-section]').click();
@@ -164,6 +189,9 @@ try {
   report.status = 'passed';
 } catch (error) {
   report.status = 'failed'; report.error = error.stack; report.errors = errors;
+  const failedPage=await app.firstWindow();
+  report.failureUI=await failedPage.evaluate(()=>({position:document.querySelector('#walking-hud')?.dataset.position,body:document.body.className,places:document.querySelector('#explore-section')?.textContent,walking:document.querySelector('#walking-hud')?.textContent})).catch(()=>null);
+  await failedPage.screenshot({path:join(root,`output/playwright/desktop-${report.mode}-failure.png`)}).catch(()=>{});
   throw error;
 } finally {
   await mkdir(join(root, 'data/reports'), { recursive: true });

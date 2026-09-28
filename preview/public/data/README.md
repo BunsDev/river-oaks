@@ -11,3 +11,10 @@ The coordinate frame is EPSG:32615 relative to longitude −95.425, latitude 29.
 The visual material set is independently licensed CC0 by [Poly Haven](https://polyhaven.com/license). `../assets/materials/sources.json` records each source and downloaded file hash; `scripts/fetch_visual_assets.py` recreates the set.
 
 `district-vegetation.json` separately contains a public-domain USGS 3DEP derivative from the 2018 Coastal Texas survey. Voxel positions/heights derive from classified vegetation returns; leaf forms and branch supports are interpreted. It preserves the four OSM stem records and does not establish present-day accuracy. The independent historical canopy comparison fails. See [acquisition and verification](../../../docs/vegetation.md) for rebuild commands, licenses, counts and limitations.
+
+The September 27 game adaptation retains Houston centerlines while setting vehicle
+streets to at least 8.4 m curb-to-curb. `mapped_width_m` preserves the original
+width and `mapped_visit` preserves the previous authored arrival. The builder
+runs `scripts/fit_district_arrivals.mjs` to fit arrivals beside the widened lanes.
+Twenty-nine interpreted branch supports were removed from the driving clearance;
+observed canopy voxels and mapped tree points remain unchanged.

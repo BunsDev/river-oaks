@@ -30,7 +30,7 @@ for(const profile of AVATAR_PROFILES)test(`${profile}: fragrance pinch contacts 
         const y=task.strip.getWorldPosition(new THREE.Vector3()).y;low=Math.min(low,y);high=Math.max(high,y);
         for(const contact of task.contacts)assert.ok(contact.error<0.001,`${time}: ${contact.kind} contact drift ${contact.error}`);
         const hand=avatar.model.getObjectByName('hand_r');
-        assert.ok(hand.quaternion.angleTo(avatar.rest.get(hand))<0.25,`${time}: pinch bends the wrist excessively`);
+        assert.ok(hand.quaternion.angleTo(avatar.rest.get(hand))<0.09,`${time}: free scent-strip wrist should stay within five degrees of neutral`);
         const skin=skinInStripFrame(avatar.model,task.strip);
         const overlaps=p=>p.x>=bounds.min.x&&p.x<=bounds.max.x&&p.z>=bounds.min.z&&p.z<=bounds.max.z;
         const index=skin.index.filter(overlaps),thumb=skin.thumb.filter(overlaps);

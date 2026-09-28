@@ -21,9 +21,14 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     <p id="player-description"></p>
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button><button id="player-flight" type="button" aria-pressed="false"><span data-flight-label>Take flight</span><kbd>B</kbd></button></div>
     <div class="player-flight-pad" hidden><button type="button" data-flight-key="Space" aria-label="Ascend">↑ Rise</button><button type="button" data-flight-key="KeyC" aria-label="Descend">↓ Lower</button></div>
-    <div class="player-actions"><button id="player-carriage" type="button">Call carriage</button><button id="player-ride" type="button">Ride carriage</button></div>
+    <section class="vehicle-garage" aria-label="Jev chauffeur">
+      <div class="vehicle-garage-title"><span>JEV / CHAUFFEUR</span><span aria-hidden="true">∵</span></div>
+      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option></select>
+      <div class="player-actions"><button id="player-carriage" type="button">Call vehicle</button><button id="player-ride" type="button">Ride with Jev</button></div>
+      <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
+    </section>
     <div class="player-actions"><button id="player-companion" type="button" aria-pressed="false"><span data-companion-label>Walk with Prince Jev</span><kbd>J</kbd></button></div>
-    <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite">Prince Jev is driving your carriage.</p>
+    <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite">Prince Jev is ready to drive.</p>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   document.querySelector('#viewport').append(panel);
   panel.querySelector('.player-settings').open = !window.matchMedia('(max-width: 700px)').matches;
@@ -33,27 +38,30 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   });
   const carriageButton=panel.querySelector('#player-carriage');
   carriageButton.addEventListener('click',()=>{
-    status.textContent=carriage.summon()?'Your carriage is waiting nearby.':'Find a clear stretch of road for your carriage.';
+    status.textContent=carriage.summon()?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
     if(carriage.placement)walking.lookAt([carriage.placement.position[0],-carriage.placement.position[2],carriage.placement.position[1]]);
   });
+  const vehicleSelect=panel.querySelector('#player-vehicle'),driveButton=panel.querySelector('#player-chauffeur'),driveStatus=panel.querySelector('#player-drive-status');
+  vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else status.textContent=`${carriage.label} is ready.`;});
+  driveButton.addEventListener('click',()=>{if(carriage.chauffeur.active)carriage.stopTour();else if(!carriage.tour())status.textContent='Board your vehicle on a clear road to start a scenic drive.';});
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',()=>{
-    if(carriage.riding)status.textContent=carriage.leave()?'You stepped out of the carriage.':'There is no clear place to step out here.';
-    else status.textContent=carriage.board()?'W/S to ride or reverse. A/D or arrows to steer.':'Walk closer to your carriage before boarding.';
+    if(carriage.riding)status.textContent=carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
+    else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
   // Companion mode: Prince Jev steps down and walks with Jevica. Jev chooses
   // how he accompanies her; the status line names the actual decision source.
   const companionButton=panel.querySelector('#player-companion'),companionStatus=panel.querySelector('#player-companion-status');
   const toggleCompanion=()=>{
     const next=!carriage.prince.companion.enabled;
-    if(next&&!carriage.placement){status.textContent='Call your carriage first; Prince Jev rides with it.';return;}
-    if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Prince Jev, with a clear space beside the bench.';
+    if(next&&!carriage.placement){status.textContent='Call your ride first; Prince Jev comes with it.';return;}
+    if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Jev, with a clear space beside the vehicle.';
   };
   companionButton.addEventListener('click',toggleCompanion);
   host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&!sharedMode){event.preventDefault();toggleCompanion();}});
   carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
-    companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to the carriage':'Walk with Prince Jev';
+    companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to the vehicle':'Walk with Prince Jev';
     const source=value.source==='jev'?'Jev · ':value.source==='local'&&value.enabled?`Local follow${value.reason&&value.reason!=='starting'?` (${value.reason.replaceAll('_',' ')})`:''} · `:'';
     companionStatus.textContent=`${source}${value.label}${value.carrying?' · Carrying your shopping bag':''}`;
     host.dataset.companion=JSON.stringify(value);
@@ -109,7 +117,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     get carriage(){return carriage;},
     get object(){return holder;},
     get form() {return form;},
-    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);carriageButton.parentElement.hidden=value;companionButton.parentElement.hidden=value;companionStatus.hidden=value;},
+    setSharedMode(value){sharedMode=value;carriage.setEnabled(!value);panel.querySelector('.vehicle-garage').hidden=value;companionButton.parentElement.hidden=value;companionStatus.hidden=value;},
     get rig() {return avatar?.rig;},
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},
@@ -129,9 +137,13 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
       companionButton.disabled=sharedMode||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
       rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement||away;
-      rideButton.textContent=carriage.riding?'Leave carriage':'Ride carriage';
+      rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
+      vehicleSelect.disabled=sharedMode||carriage.riding||away;driveButton.disabled=sharedMode||!carriage.riding||away;
+      driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
+      if(driveStatus.textContent!==carriage.chauffeur.label)driveStatus.textContent=carriage.chauffeur.label;
+      host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);
       host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding;
-      carriageButton.title=pose?.roomId?'Step outside to call your carriage':pose?.flying?'Land to call your carriage':'';
+      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
       if (pose && avatar) {
@@ -150,7 +162,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),seatToFloor:pose.riding?.seatToFloor,vehicle:form}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
+        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
         outfit.updateOptics(camera,viewportHeight);
       }
       previous = pose ? now : null;

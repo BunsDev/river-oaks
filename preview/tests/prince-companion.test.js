@@ -181,3 +181,16 @@ test('Prince Jev ships as a dedicated rigged hero mesh with blinks, detailed eye
   assert.equal(manifest.appearance_reference.id,'local-11');
   assert.equal(manifest.appearance_reference.sha256,sha(fs.readFileSync('preview/public/assets/characters/man-workwear.glb')));
 });
+
+test('Jev keeps up with her brisk walking pace without entering her personal space',()=>{
+ const body=createCompanionBody([.86,-1]);let player=[0,0],worst=0;
+ for(let frame=0;frame<1200;frame++){player=[0,frame/60*3.2];const target=companionSlot(player,0,'beside',open.isFree).point;stepCompanion(body,target,open,1/60,{player,playerSpeed:3.2});if(frame>180)worst=Math.max(worst,Math.hypot(body.position[0]-player[0],body.position[1]-player[1]));}
+ assert.ok(worst<1.3,`stays beside her at a brisk pace: ${worst}`);
+ const before=[...body.position];stepCompanion(body,null,open,1/60,{player,playerSpeed:0});assert.ok(Math.hypot(body.position[0]-before[0],body.position[1]-before[1])<.07);
+});
+
+test('protective positioning chooses the street-facing side without controlling Jevica',async()=>{
+ const {protectiveSide}=await import('../src/prince-companion.js');const world={roads:[{kind:'service',points:[[-4,-20],[-4,20]]}]};
+ assert.equal(protectiveSide(world,[0,0],0),-1);
+ assert.equal(protectiveSide(world,[0,0],Math.PI),1);
+});

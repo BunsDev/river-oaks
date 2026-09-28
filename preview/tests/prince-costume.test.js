@@ -32,14 +32,14 @@ test('Jev borrows Owen\'s actual head shape and hairstyle while keeping the dedi
   assert.equal(hair,true,'Jev uses Owen\'s short02 hairstyle');
 });
 
-test('Prince Jev retains the dedicated hero geometry and facial rig with isolated blonde, fair and pink materials',async()=>{
+test('Prince Jev retains the dedicated hero geometry and facial rig with isolated dirty-blond, fair and pink materials',async()=>{
   const source=await loadCharacterRig('prince-jev'),rig=instantiateAvatar(source,{targetHeight:1.805}),object=new THREE.Group();object.add(rig.model);
   const geometry=new Map();rig.model.traverse(mesh=>{if(mesh.isMesh)geometry.set(mesh,mesh.geometry);});
   const donor=new THREE.Texture(),costume=createPrinceCostume({object,rig},{skinTexture:donor});
   try {
     const skin=[...rig.materials].find(([source])=>/^middleage_/.test(source.name))[1],hair=[...rig.materials].find(([source])=>/^short/.test(source.name))[1];
     assert.equal(skin.map,donor,'The young light-skin atlas replaces the older dark baked texture');
-    assert.equal(hair.color.getHexString(),'d8b56a');
+    assert.equal(hair.color.getHexString(),'827052');
     assert.ok(costume.materials.some(material=>material.name==='Prince Jev rose tunic'&&material.color.getHexString()==='efa1c3'));
     for(const [mesh,original]of geometry)assert.equal(mesh.geometry,original,'Hero body, facial details and weights remain intact');
     assert.ok([...geometry.keys()].some(mesh=>mesh.morphTargetDictionary?.eyeBlinkLeft!==undefined));

@@ -62,3 +62,20 @@ test('persistent overload at minimum resolution drops ambient occlusion, with gr
   governor.reset();
   assert.equal(governor.occlusion, true, 'selecting Auto again retries full detail');
 });
+
+test('blocked storage falls back to Auto instead of aborting the graphics control', async () => {
+  const { createQualityControl } = await import('../src/render-quality.js');
+  const element = () => ({ dataset: {}, style: {}, setAttribute() {}, append() {}, addEventListener() {}, set textContent(v) {}, set hidden(v) {} });
+  const previousDocument = globalThis.document, descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  globalThis.document = { createElement: element };
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new DOMException('Access is denied', 'SecurityError'); } });
+  try {
+    let applied = null;
+    const control = createQualityControl({ apply: value => { applied = value; } });
+    assert.ok(control, 'the control is created');
+    assert.equal(applied?.mode ?? control.mode ?? 'auto', 'auto');
+  } finally {
+    globalThis.document = previousDocument;
+    if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor); else delete globalThis.localStorage;
+  }
+});

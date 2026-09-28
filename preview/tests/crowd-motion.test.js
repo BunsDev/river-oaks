@@ -91,9 +91,10 @@ test('people already at personal-space distance can turn aside and pass without 
   assert.ok(state.locals[0].position[0]>4.9 && state.locals[1].position[0]<-4.9,'Both walkers must escape the close encounter');
 });
 
-test('a resident displaced toward a tree replans from the actual position',()=>{
+test('a resident displaced toward a tree replans in the recorded pre-widening layout',()=>{
   const district=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
   district.vegetation=JSON.parse(readFileSync(new URL('../public/data/district-vegetation.json',import.meta.url)));
+  for(const road of district.roads)if(road.mapped_width_m)road.width_m=road.mapped_width_m;
   const start=[-2770.5740137108996,-1242.727749410543,0],end=[-2769.875526102923,-1259.2950448434674];
   const {state,life}=walking([start],[[end]],{...district,communityLocations:[{id:'start',name:'Start',position:start}]}),local=state.locals[0];
   assert.equal(life.navigation.canWalk(start,end),false,'The original straight segment must be blocked');

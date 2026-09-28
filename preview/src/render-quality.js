@@ -66,7 +66,10 @@ export function createRenderScaleGovernor({ min = 0.6, max = 1, slowMs = 26, fas
 
 // The Settings control. `apply` receives { mode, scale, occlusion } whenever the
 // effective quality changes; `sample` is fed each animation frame's interval.
-export function createQualityControl({ apply, storage = globalThis.localStorage }) {
+export function createQualityControl({ apply, storage: given }) {
+  // Reading localStorage can itself throw (blocked storage, opaque origins).
+  let storage = given ?? null;
+  if (given === undefined) try { storage = globalThis.localStorage; } catch { storage = null; }
   let mode = DEFAULT_QUALITY, lastScale = null, lastOcclusion = null, frames = 0, frameTime = 0, fps = 0;
   try { mode = normalizeQuality(storage?.getItem(storageKey)); } catch { /* Storage may be disabled; Auto still works. */ }
   const governor = createRenderScaleGovernor();

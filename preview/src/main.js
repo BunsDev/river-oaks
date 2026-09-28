@@ -1,3 +1,4 @@
+import { buildRoads } from './street-roads.js';
 import { buildDesignatedSidewalks } from './sidewalks.js';
 import { createBreakableGlass } from './breakable-glass.js';
 import { createForceControls } from './force-controls.js';
@@ -35,7 +36,6 @@ import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { storefrontSpot } from './arrival.js';
-import { isWalkway } from './street-furniture.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
 import { createRemotePlayers } from './remote-players.js';
@@ -288,48 +288,6 @@ function buildGround(data) {
   return group;
 }
 
-// Mapped walkways (footway, pedestrian) were drawn with the vehicle-lane
-// asphalt, so the district's pedestrian walks read as streets. They are now
-// paved like the plazas, lifted 2 cm so they sit over any lane they cross.
-function roadSurface(data, roads, lift, material) {
-  const vertices = [];
-  for (const road of roads) {
-    for (let i = 1; i < road.points.length; i += 1) {
-      const a = localToScene(road.points[i - 1]), b = localToScene(road.points[i]);
-      const dx = b[0] - a[0], dz = b[2] - a[2], length = Math.hypot(dx, dz);
-      if (!length) continue;
-      const half = road.width_m / 2, ox = -dz / length * half, oz = dx / length * half;
-      // Subdivide long source segments to follow observed terrain without moving the centerline.
-      const steps = Math.max(1, Math.ceil(length / 16));
-      const at = (fraction, side) => {
-        const x = a[0] + dx * fraction + ox * side;
-        const z = a[2] + dz * fraction + oz * side;
-        const y = data.terrain ? terrainHeight(data.terrain, x, -z) : a[1] + (b[1] - a[1]) * fraction;
-        return [x, y + lift, z];
-      };
-      for (let step = 0; step < steps; step += 1) {
-        const p = at(step / steps, 1), q = at(step / steps, -1), r = at((step + 1) / steps, 1), s = at((step + 1) / steps, -1);
-        vertices.push(...p, ...r, ...q, ...q, ...r, ...s);
-      }
-    }
-  }
-  const geometry = geometryFromTriangles(vertices);
-  const uvs = [];
-  for (let index = 0; index < vertices.length; index += 3) uvs.push(vertices[index], vertices[index + 2]);
-  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.receiveShadow = true;
-  return mesh;
-}
-
-function buildRoads(data) {
-  const group = new THREE.Group(); group.name = 'Roads and walkways';
-  const lanes = data.roads.filter(road => !isWalkway(road)), walks = data.roads.filter(isWalkway);
-  const asphalt = roadSurface(data, lanes, 0.24, physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#849a9c', roughness: 0.63, side: THREE.DoubleSide, variation: 0.3 }));
-  group.add(asphalt); group.userData.asphalt = asphalt;
-  if (walks.length) group.add(roadSurface(data, walks, 0.26, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), color: '#efe9df', side: THREE.DoubleSide, variation: 0.18 })));
-  return group;
-}
 
 function populateWorld(data) {
   force?.reset();
@@ -359,11 +317,13 @@ function populateWorld(data) {
   worldGroup = new THREE.Group();
   buildingMesh = buildDistrictBuildings(data);
   const ground=buildGround(data),roads=buildRoads(data);
-  const sidewalks=buildDesignatedSidewalks(data,createWalkingEnvironment(data).isFree);
+  const streetEnvironment=createWalkingEnvironment(data);
+  const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
+  const sidewalks=buildDesignatedSidewalks(data,streetSpace);
+  host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
-  const furniture=buildStreetFurniture(data,createWalkingEnvironment(data).isFree);
-  registerGroundSurfaces(data,[...supports,...furniture.children.filter(item=>item.userData.supportSurface)]);
+  const furniture=buildStreetFurniture(data,streetSpace);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
   localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion });
@@ -429,7 +389,8 @@ function leaveStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'leave'});
   // Step out onto the threshold, facing the door you just came through.
   const [x, north] = store.facade;
-  enterWalk(storefrontSpot(world, store, 'leave', { isFree: walkingEnvironment().isFree }), [x, north], 0.05);
+  const environment=walkingEnvironment();
+  enterWalk(storefrontSpot(world, store, 'leave', { isFree: (x,z)=>environment.isFree(x,z)&&!environment.roomAt(x,z) }), [x, north], 0.05);
 }
 
 function describeInterior(store) {
@@ -442,7 +403,8 @@ function describeInterior(store) {
 
 function arriveAtStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
-  enterWalk(storefrontSpot(world, store, 'arrive', { isFree: walkingEnvironment().isFree }), store.facade, 0.22);
+  const environment=walkingEnvironment();
+  enterWalk(storefrontSpot(world, store, 'arrive', { isFree: (x,z)=>environment.isFree(x,z)&&!environment.roomAt(x,z) }), store.facade, 0.22);
 }
 
 function updateAtmosphere() {
@@ -676,7 +638,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
-  window.__riverCarriage = () => ({companion:playerAvatar?.carriage.prince.companion,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s magical angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners,visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

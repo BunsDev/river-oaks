@@ -127,3 +127,12 @@ test('facial playback follows the audio clock and releases on mute or hidden-pag
  const secondReady=new Promise(r=>ready=r);speech.setMode('kokoro');const second=speech.speak({id:'local-1'},'Ah');await secondReady;window.dispatchEvent(new Event('blur'));
  assert.equal(await second,false);assert.equal(faces[1].disposed,true);assert.equal(speech.speakingId,null);assert.ok(media.every(m=>m.paused));
 });
+
+test('Jev voice uses the dedicated endpoint, no renderer key, and rejects invalid or cancelled audio',async()=>{
+  const {requestJevVoice}=await import('../src/speech.js');
+  const controller=new AbortController();let calls=0;
+  const fetcher=async(url,options)=>{calls++;assert.equal(url,'/v1/voice/jev');assert.deepEqual(JSON.parse(options.body),{text:'My love.'});assert.deepEqual(options.headers,{'Content-Type':'application/json'});return new Response('ID3audio',{headers:{'Content-Type':'audio/mpeg'}});};
+  assert.equal(await (await requestJevVoice('My love.',controller.signal,{fetcher})).text(),'ID3audio');
+  controller.abort();await assert.rejects(requestJevVoice('My love.',controller.signal,{fetcher}),{name:'AbortError'});assert.equal(calls,1);
+  await assert.rejects(requestJevVoice('Hello',new AbortController().signal,{fetcher:async()=>new Response('{}',{headers:{'Content-Type':'application/json'}})}));
+});

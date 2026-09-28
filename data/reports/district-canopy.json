@@ -2,8 +2,8 @@
   "recorded_at": "2026-09-17T13:55:49.604414+00:00",
   "status": "fail",
   "scope": "District canopy source/derivative evidence; not overall project acceptance",
-  "runtime_sha256": "b65a9947cb9d838d4718b72f70fb51fc93f64656aa5c304c542de8ab86582657",
-  "runtime_bytes": 659941,
+  "runtime_sha256": "c2e70f6a529f76d74e410ff05efa4f9ee749c9c009f7a0ab0c28e05712bf60b3",
+  "runtime_bytes": 651861,
   "source_integrity": {
     "status": "pass",
     "files": 69,
@@ -65,5 +65,13 @@
     "reference_date": "Service label 2016; exact flight date/native resolution unavailable",
     "limitation": "Large disagreement requires reference classification, site-change and sensor-season review; no accuracy pass inferred."
   },
-  "source_receipt_sha256": "6bb0b3197097c3c22c5a85f47d065fd62472426d0d772debbfe7e36f6a1d2c98"
+  "source_receipt_sha256": "6bb0b3197097c3c22c5a85f47d065fd62472426d0d772debbfe7e36f6a1d2c98",
+  "street_adaptation": {
+    "version": 1,
+    "removed_interpreted_supports": 29,
+    "curb_clearance_m": 0.65,
+    "basis": "Authored road clearance; original observed canopy voxels retained.",
+    "observed_voxels_unchanged": true,
+    "recorded_at": "2026-09-27T10:24:52.129611+00:00"
+  }
 }

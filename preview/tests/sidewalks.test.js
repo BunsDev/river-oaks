@@ -23,8 +23,9 @@ test('district residents start on legal pedestrian surfaces without changing map
   delete data.vegetation;assert.equal(JSON.stringify(data),before);
 });
 
-test('route segments cannot skip narrow road-edge gaps between legal endpoints',()=>{
+test('route segments cannot skip narrow road-edge gaps in the recorded 6.5 m regression layout',()=>{
   const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
+  for(const road of data.roads)if(road.mapped_width_m)road.width_m=road.mapped_width_m;
   const network=createPedestrianNetwork(data),start=[-2770.7888276220483,-1343.2890495727813],end=[-2764.280118916899,-1341.6085898216527];
   assert.notEqual(network.classify(start),'road');assert.notEqual(network.classify(end),'road');
   assert.equal(network.segmentCost(start,end),Infinity,'The first 18 cm crosses outside a marked crossing');

@@ -52,21 +52,24 @@ fascia bands carry the palette across facades without named storefronts. The
 interface uses the same colors and rounded forms. These are authored visual
 interpretations, not evidence of historical or surveyed Houston architecture.
 
-The mapped roads, buildings, store entrances and mature tree locations stay in
-place. Human residents and existing worker roles remain the population standard.
-Jevica's ornate rose carriage complements this setting with gilded scrollwork,
-jeweled wheels and fitted tufted upholstery. She can board its cabin seat, ride
-along the roads and step out onto clear ground; see [character controls](character-forms.md).
+Houston street centerlines, buildings and store entrances stay in place. Human
+residents and existing worker roles remain the population standard. Jev chauffeurs
+Jevica in a pink six-wheel glass-canopy car or a rose motorcycle, with fitted seats,
+gold spinners and restrained jewel glints; see [character controls](character-forms.md).
 
 ## Streets and planting
 
-Retain the existing street, building, tree-stem and planter layout. The vegetation
+Retain the Houston street and building layout. Vehicle streets widen to 8.4 m
+with two clear lanes; interpreted stems in the road clearance are removed. Street furniture follows
+the shared sidewalk profile, with planters aligned along the furnishing strip. The vegetation
 pass uses detailed local tree meshes and PBR materials for fuller mature crowns,
 with clipped shrubs and ornamental grasses in the existing rectangular planters.
 See [vegetation provenance](vegetation.md) for actual asset sources and the
 separation between measured data and artistic foliage.
 
-Designated pale stone sidewalk bands follow the existing vehicular streets.
+Palo Alto-derived curb, gutter, sidewalk and ramp dimensions follow the existing
+Houston streets. See [street standards](street-standards.md) for source drawings,
+metric dimensions and retained terrain/right-of-way constraints.
 Zebra crossings identify permitted road crossings. Resident routing prefers
 sidewalks and existing footways, allows plaza connections and avoids unmarked
 road travel. People and public stops initially positioned in carriageways move
@@ -75,7 +78,7 @@ road to leave it; this is not permission to route through the road as a shortcut
 Indoor work positions and architecture retain their existing locations.
 
 Browser outdoor ground queries use the rendered terrain, road, sidewalk and kerb
-triangles. Jevica, resident foot placement, carriage tyres, tree stems and street
+triangles. Jevica, resident foot placement, vehicle tyres, tree stems and street
 fixtures use those support heights. Room floors retain their own authoritative
 height. The terrain sampler is a rendering contact correction, not a relocation
 of the district or a replacement for native collision acceptance.

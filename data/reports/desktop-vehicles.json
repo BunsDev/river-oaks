@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "rolls: select, summon, board, wheel contact, API hold, mocked Jev drive, manual takeover, exit",
+    "motorcycle: select, summon, board, wheel contact, API hold, mocked Jev drive, manual takeover, exit",
+    "Prince Jev: dismount, takeoff, magical wings, bubble follow, gentle landing"
+  ],
+  "requests": 4,
+  "errors": [],
+  "api": "mocked provider; live credentials required",
+  "createdAt": "2026-09-27T11:02:45.039Z"
+}

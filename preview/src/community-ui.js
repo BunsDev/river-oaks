@@ -47,7 +47,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const lifeStatus=node('p','quiet-note','Residents are getting ready.');lifeStatus.id='community-life-status';
   const voiceLabel = node('label', 'community-label', 'Spoken dialogue'); voiceLabel.htmlFor = 'community-voice';
   const voiceMode = node('select', 'community-select'); voiceMode.id = 'community-voice';
-  for (const [value,label] of [['off','Off · captions only'],['kokoro','Kokoro · local neural voices'],['device','Device voices · local only']]) { const option=node('option','',label); option.value=value; voiceMode.append(option); }
+  for (const [value,label] of [['off','Off · captions only'],['elevenlabs','Jev · ElevenLabs / residents · local'],['kokoro','Kokoro · local neural voices'],['device','Device voices · local only']]) { const option=node('option','',label); option.value=value; voiceMode.append(option); }
   const voiceStatus = node('p','community-voice-status','Muted · no speech is generated'); voiceStatus.id='community-voice-status'; voiceStatus.setAttribute('role','status');
   const speech = createLocalSpeech(status => {
     text(voiceStatus, status);
@@ -153,7 +153,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   const dialogueVoice = voiceMode.cloneNode(true); dialogueVoice.id = 'community-dialogue-voice';
   const replay = button('Replay voice', 'community-replay');
   replay.setAttribute('aria-describedby', 'community-dialogue-voice-status');
-  dialogueVoiceStatus = node('p', 'community-voice-status', 'Voice is off. Choose a local voice to listen.');
+  dialogueVoiceStatus = node('p', 'community-voice-status', 'Voice is off. Choose a voice to listen.');
   dialogueVoiceStatus.id = 'community-dialogue-voice-status';
   dialogueVoiceStatus.setAttribute('role', 'status');
   audioControls.append(dialogueVoiceLabel, dialogueVoice, replay, dialogueVoiceStatus);
@@ -374,12 +374,12 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     }
     topics.setAttribute('aria-busy', String(Boolean(request)));
     dialogueVoice.value = speech.mode;
-    text(audioSummary, `Voice · ${speech.mode === 'off' ? 'Off' : speech.mode === 'device' ? 'Device voices' : 'Local neural voice'}`);
+    text(audioSummary, `Voice · ${speech.mode === 'off' ? 'Off' : speech.mode === 'device' ? 'Device voices' : speech.mode === 'elevenlabs' ? 'Jev · ElevenLabs' : 'Local neural voice'}`);
     text(portrayalLabel, local.persona?.portrayal ? local.persona.era === 'historical' ? 'Fictional portrayal · heritage encounter' : 'Fictional portrayal · no endorsement' : 'Fictional River Oaks resident');
     biography.hidden = !local.persona?.source;
     if (local.persona?.source) { biography.href=local.persona.source; biography.title=local.persona.fact; biography.setAttribute('aria-label',`Public biography of ${local.name}`); }
     replay.disabled = speech.mode === 'off';
-    if (speech.mode === 'off') text(dialogueVoiceStatus, 'Voice is off. Choose a local voice to listen.');
+    if (speech.mode === 'off') text(dialogueVoiceStatus, 'Voice is off. Choose a voice to listen.');
     const helping=state.jobs.find(job=>job.helperId===local.id);
     text(role, `${helping ? `Volunteering for ${state.locals.find(person=>person.id===helping.localId).name}` : local.role} · ${local.species ? `${local.species} · ` : ''}${local.anchorName}`);
     text(dialogueText, message);
@@ -570,6 +570,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const local = state?.locals.find(item => item.id === state.selectedId);
     if (local && !local.abducted) speech.speak(local, message);
   };
+  window.addEventListener('jevvoiceconfigured', () => changeVoice('elevenlabs'));
   voiceMode.addEventListener('change', () => changeVoice(voiceMode.value));
   dialogueVoice.addEventListener('change', () => changeVoice(dialogueVoice.value));
   replay.addEventListener('click', () => { const local=state?.locals.find(item=>item.id===state.selectedId); if(local && !local.abducted) speech.speak(local,message); });
