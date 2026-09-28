@@ -185,7 +185,8 @@ export function createFootPlacement(model, root) {
         descent=Math.max(descent,navigationHeight-groundAt(leg.ikTarget.x,leg.ikTarget.z));
         const hip = leg.thigh.getWorldPosition(new THREE.Vector3());
         const horizontal = (hip.x-leg.ikTarget.x)**2+(hip.z-leg.ikTarget.z)**2;
-        const reach = leg.upperLength+leg.lowerLength-0.012;
+        // A 3 mm reserve keeps the stance knee near-straight (about 10°) without IK snapping.
+        const reach = leg.upperLength+leg.lowerLength-0.003;
         const vertical = Math.sqrt(Math.max(0,reach*reach-horizontal));
         lower = Math.max(lower,hip.y-leg.ikTarget.y-vertical);
         if(leg.swing&&!leg.swing.settling) {
@@ -212,7 +213,7 @@ export function createFootPlacement(model, root) {
       // The body may still be transferring down from the upper surface. Its
       // temporary height offset must not consume the leg's compression budget.
       lower=Math.min(.18+Math.min(.2,descent)+Math.max(0,heightLag),lower);
-      pelvisLower=Math.max(lower,pelvisLower*Math.exp(-6*delta));
+      pelvisLower=Math.max(lower,pelvisLower*Math.exp(-16*delta));
       model.position.y -= pelvisLower/scale;
       root.updateWorldMatrix(true,true);
       for (const leg of legs) {

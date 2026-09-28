@@ -40,11 +40,13 @@ function createArmClips(avatar,armSwing) {
 
 // Drive arm opposition from the rendered legs, not an independent stride clock.
 // This retains coordination when foot placement shortens a start or adapts a turn.
-export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.22}={}) {
+export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.42}={}) {
   const joints=new Map(avatar.bones.map(bone=>[bone.name,bone]));
   const forward=new THREE.Vector3(),offset=new THREE.Vector3(),hip=new THREE.Vector3(),rotation=new THREE.Quaternion();
   const neckRotation=new THREE.Quaternion(),neckParent=new THREE.Quaternion();
-  const clips=createArmClips(avatar,armSwing);
+  // Measured on the shipped rigs: a small forward carry centres the swing on the
+  // body, and easing the rest pose's elbow bend lets the forearms hang naturally.
+  const clips=createArmClips(avatar,armSwing),carryForward=.1,elbowFlex=-.15;
   let phase=0,velocity=0,carried=0,casting=0,lean=0,leanVelocity=0,lag=0,strength=0,strengthVelocity=0;
   const rotate=(name,axis,angle)=>{
     const bone=joints.get(name);if(!bone)return;
@@ -84,6 +86,15 @@ export function createUpperBodyGait(avatar,root,{reducedMotion=false,armSwing=.2
       strength=strengthTarget+(strengthDifference+strengthC*dt)*strengthDecay;
       strengthVelocity=(strengthVelocity-strengthFrequency*strengthC*dt)*strengthDecay;
       clips.apply(phase,lag,strength,carried,casting);
+      // The relaxed standing pose holds the arms behind the hips with bent
+      // elbows. While walking, centre them and let the forearms hang. Forward
+      // is a negative shoulder angle and extension a positive elbow angle on
+      // both sides of these rigs.
+      for(const side of ['l','r']) {
+        const free=side==='r'?1-.7*Math.max(carried,casting):1-.92*casting,amount=strength*free;
+        rotate(`upperarm_${side}`,'x',-carryForward*amount);
+        rotate(`lowerarm_${side}`,'x',-elbowFlex*amount);
+      }
       // A small chest counter-rotation follows the same transfer. Counter it
       // through the neck so walking alone does not sweep the gaze side to side.
       rotate('spine_01','y',-.035*phase);

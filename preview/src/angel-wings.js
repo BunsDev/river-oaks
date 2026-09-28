@@ -1,61 +1,101 @@
 import * as THREE from 'three';
 
-// Cambered feathers with asymmetric vanes, tapered tips and fine barb edges.
-function featherGeometry() {
-  const positions=[],colors=[],indices=[],rows=24,columns=6;
-  const blush=new THREE.Color('#ecd4cd'),pearl=new THREE.Color('#fff9e9');
+// A feather: a curved vane on each side of the shaft. Primaries are long and
+// narrow with a notched (emarginated) outer vane near the tip; secondaries and
+// coverts are broad with a rounded trailing edge.
+function featherGeometry({narrow=false}={}) {
+  const positions=[],colors=[],uvs=[],indices=[],rows=24,columns=6;
+  const base=new THREE.Color('#f3ece2'),tip=new THREE.Color(narrow?'#d9d4cc':'#e7e1d8');
   for(let row=0;row<=rows;row++)for(let column=0;column<=columns;column++) {
     const t=row/rows,u=column/columns*2-1;
-    const width=.11*Math.pow(Math.sin(Math.PI*t),.62)*(1-.28*t)*(1-.025*Math.sin(t*155));
-    const x=u*width*(u<0?.82:1.12)+.028*t*t;
-    const z=.065*Math.sin(Math.PI*t)+.035*t*t-.022*u*u*Math.sin(Math.PI*t);
-    positions.push(x,-t,z);
-    const shade=blush.clone().lerp(pearl,Math.min(1,t*3+.2)).multiplyScalar(1-.035*Math.abs(u));colors.push(shade.r,shade.g,shade.b);
+    const outer=u>0;
+    // Rounded tips; primaries taper sharply and step in on the outer vane.
+    // Full width soon after the base, then a rounded (not square) tip.
+    let width=(narrow?.075:.11)*Math.pow(Math.max(0,Math.sin(Math.PI*(.06+.94*t))),narrow?.6:.42)*(narrow?1-.25*t:1);
+    if(narrow&&outer&&t>.58)width*=.55;
+    width*=1-.018*Math.sin(t*140+u*3);
+    const x=u*width*(outer?1.08:.84)+.024*t*t;
+    // Camber and a slight twist toward the tip.
+    const z=.05*Math.sin(Math.PI*t)+.03*t*t-.02*u*u*Math.sin(Math.PI*t)+.012*u*t;
+    positions.push(x,-t,z);uvs.push((u+1)/2,t);
+    const shade=base.clone().lerp(tip,Math.pow(t,1.6)).multiplyScalar(1-.05*Math.abs(u)-.03*(1-t));
+    colors.push(shade.r,shade.g,shade.b);
     if(row<rows&&column<columns){const a=row*(columns+1)+column,b=a+columns+1;indices.push(a,b,a+1,a+1,b,b+1);}
   }
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
 }
+
+// Deterministic jitter so no two feathers in a row are identical.
+const random=seed=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296-.5;};
+
+// Fine barbs angled off the shaft, a darker rachis line and soft, slightly
+// split edges. Drawn once on a canvas; without a DOM (tests) feathers stay plain.
+function vaneTexture() {
+  const document=globalThis.document;if(!document?.createElement)return null;
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=256;
+  const g=canvas.getContext?.('2d');if(!g)return null;
+  const image=g.createImageData(64,256),seed=random(7);
+  const splits=Array.from({length:7},()=>({v:.2+(seed()+.5)*.7,side:seed()>0?1:-1}));
+  for(let y=0;y<256;y++)for(let x=0;x<64;x++) {
+    const u=x/63*2-1,v=y/255,edge=Math.abs(u);
+    // Barbs sweep toward the tip; brightness ripples across them.
+    const barb=.96+.04*Math.sin((v*60+edge*12)*Math.PI);
+    const rachis=Math.exp(-Math.pow(u/.03,2))*.12;
+    let alpha=THREE.MathUtils.smoothstep(1-edge,0,.16);
+    for(const split of splits)if(Math.sign(u)===split.side&&Math.abs(v-split.v)<.006+.01*edge)alpha*=.2+.8*(1-edge);
+    const shade=Math.round(255*Math.max(0,barb-rachis)),i=(y*64+x)*4;
+    image.data[i]=image.data[i+1]=image.data[i+2]=shade;image.data[i+3]=Math.round(255*alpha);
+  }
+  g.putImageData(image,0,0);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;return texture;
+}
+
+
+// About 5.8 m tip to tip, 23% smaller than the first 7.6 m version, and shaped
+// like a bird's wing rather than a fan.
+export const WING_SCALE=.8;
 
 // Feathers are instanced per articulated section. Wingbeats never rebuild geometry.
 export function createAngelWings({reducedMotion=globalThis.window?.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false}={}) {
-  const object=new THREE.Group();object.name='Jev’s magical angel wings';object.visible=false;object.position.set(0,1.32,-.17);
-  const feather=featherGeometry();
-  const ivory=new THREE.MeshPhysicalMaterial({color:'#ffffff',vertexColors:true,roughness:.52,metalness:.04,sheen:.8,sheenColor:'#ffeadf',sheenRoughness:.6,clearcoat:.12,side:THREE.DoubleSide,emissive:'#eabf8c',emissiveIntensity:.025});
-  const gold=new THREE.MeshStandardMaterial({color:'#d8b775',metalness:.7,roughness:.38,emissive:'#d7a646',emissiveIntensity:.08});
-  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,.006),new THREE.Vector3(.007,-.35,.065),new THREE.Vector3(.018,-.7,.071),new THREE.Vector3(.028,-1,.04)]);
-  const quill=new THREE.TubeGeometry(curve,12,.003,4,false),matrix=new THREE.Object3D(),hinges=[];
-  const addFeathers=(parent,side,descriptors)=>{
-    const plumes=new THREE.InstancedMesh(feather,ivory,descriptors.length),shafts=new THREE.InstancedMesh(quill,gold,descriptors.length);
+  const object=new THREE.Group();object.name='Jev’s angel wings';object.visible=false;object.position.set(0,1.32,-.17);
+  const broad=featherGeometry(),narrow=featherGeometry({narrow:true});
+  const vane=vaneTexture();
+  const plumage=new THREE.MeshPhysicalMaterial({color:'#ffffff',vertexColors:true,map:vane,alphaTest:vane?.35:0,roughness:.62,metalness:0,sheen:.55,sheenColor:'#fff4ea',sheenRoughness:.7,side:THREE.DoubleSide,emissive:'#f4e2c8',emissiveIntensity:.006});
+  const shaft=new THREE.MeshStandardMaterial({color:'#efe7d8',roughness:.5,metalness:0});
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,.006),new THREE.Vector3(.007,-.35,.05),new THREE.Vector3(.018,-.7,.055),new THREE.Vector3(.026,-1,.03)]);
+  const quill=new THREE.TubeGeometry(curve,12,.0025,4,false),matrix=new THREE.Object3D(),hinges=[],tint=new THREE.Color();
+  const addFeathers=(parent,side,descriptors,geometry,seed)=>{
+    const plumes=new THREE.InstancedMesh(geometry,plumage,descriptors.length),shafts=new THREE.InstancedMesh(quill,shaft,descriptors.length),jitter=random(seed);
     plumes.castShadow=true;plumes.receiveShadow=true;
     for(const [i,f]of descriptors.entries()) {
-      matrix.position.set(side*f.x,f.y,f.z);matrix.rotation.set(f.curl??0,side*(f.twist??0),side*f.angle);matrix.scale.set(f.width,f.length,1);
+      const angle=f.angle+jitter()*.05,length=f.length*(1+jitter()*.08);
+      matrix.position.set(side*f.x,f.y,f.z);matrix.rotation.set((f.curl??0)+jitter()*.04,side*((f.twist??0)+jitter()*.04),side*angle);matrix.scale.set(f.width,length,1);
       matrix.updateMatrix();plumes.setMatrixAt(i,matrix.matrix);shafts.setMatrixAt(i,matrix.matrix);
+      plumes.setColorAt(i,tint.setScalar(1+jitter()*.06));
     }
     plumes.computeBoundingSphere();shafts.computeBoundingSphere();parent.add(plumes,shafts);
   };
   for(const side of [-1,1]) {
-    const hinge=new THREE.Group(),tip=new THREE.Group();hinge.position.x=side*.14;tip.position.set(side*1.12,.50,-.02);hinge.add(tip);object.add(hinge);hinges.push({hinge,tip,side});
-    const inner=[],outer=[];
-    // Broad inner secondaries, two rows of overlapping shoulder coverts.
-    for(let row=0;row<3;row++)for(let i=0;i<16;i++){
-      const t=i/15;
-      inner.push({x:.06+t*1.16,y:Math.sin(t*Math.PI*.62)*.54+row*.085,z:.02+row*.038,angle:.08+t*.35,width:row===0?1.04:.85,length:(row===0?.82:row===1?.48:.29)*(1+t*.10),curl:-.12+t*.14,twist:.10*Math.sin(t*Math.PI)});
-    }
-    // Long fingered primaries fan out from the elbow, individually twisted.
-    for(let i=0;i<14;i++){
-      const t=i/13;
-      outer.push({x:t*1.18,y:.10*Math.sin(t*Math.PI)-t*.28,z:-t*.04,angle:.3+t*1.02,width:1.10,length:1.05+t*.4,curl:.02+t*.12,twist:.08+t*.12});
-    }
-    for(let row=0;row<2;row++)for(let i=0;i<18;i++){
-      const t=i/17;
-      outer.push({x:t*1.19,y:.1*Math.sin(t*Math.PI)-t*.28+row*.07,z:.05+row*.038,angle:.25+t*.95,width:.90,length:(row===0?.64:.33)+t*.15,curl:.04,twist:t*.1});
-    }
-    addFeathers(hinge,side,inner);addFeathers(tip,side,outer);
+    const hinge=new THREE.Group(),tip=new THREE.Group();hinge.position.x=side*.14;tip.position.set(side*1.1,.24,-.02);hinge.add(tip);object.add(hinge);hinges.push({hinge,tip,side});
+    const secondaries=[],coverts=[],primaries=[],handCoverts=[];
+    // Arm: a row of broad secondaries (longest near the body as tertials), then
+    // greater and median coverts overlapping their bases.
+    for(let i=0;i<15;i++){const t=i/14;secondaries.push({x:.08+t*1.06,y:Math.sin(t*Math.PI*.6)*.26,z:.02,angle:.06+t*.3,width:1.4,length:.78+(1-t)*.12,curl:-.1+t*.12,twist:.08*Math.sin(t*Math.PI)});}
+    for(let row=0;row<2;row++)for(let i=0;i<16;i++){const t=i/15;coverts.push({x:.06+t*1.1,y:Math.sin(t*Math.PI*.6)*.26+.07+row*.075,z:.055+row*.035,angle:.08+t*.3,width:row?1.15:1.3,length:(row?.26:.44)*(1+t*.08),curl:-.1+t*.1,twist:.06*t});}
+    // Hand: ten primaries fanning from the wrist, longest near the tip.
+    for(let i=0;i<10;i++){const t=i/9;primaries.push({x:t*1.05,y:.06*Math.sin(t*Math.PI)-t*.22,z:-t*.035,angle:.28+t*1.0,width:1.45,length:1.0+t*.46,curl:.02+t*.1,twist:.06+t*.14});}
+    for(let i=0;i<12;i++){const t=i/11;handCoverts.push({x:t*1.08,y:.06*Math.sin(t*Math.PI)-t*.22+.07,z:.05,angle:.24+t*.95,width:1.4,length:.52+t*.14,curl:.04,twist:t*.1});}
+    // The alula: a small tuft at the wrist.
+    for(let i=0;i<3;i++)handCoverts.push({x:-.04+i*.03,y:.1+i*.02,z:.09,angle:-.1+i*.12,width:.6,length:.22-i*.03,curl:.1,twist:.1});
+    // One instanced plume mesh and one shaft mesh per section keeps the draw count
+    // at four per wing. Hand coverts share the primaries' tapered shape.
+    addFeathers(hinge,side,[...secondaries,...coverts],broad,side>0?11:23);
+    addFeathers(tip,side,[...primaries,...handCoverts],narrow,side>0?53:67);
   }
-  const points=new Float32Array(40*3);
-  for(let i=0;i<40;i++){const side=i%2?1:-1,t=Math.floor(i/2)/19;points.set([side*(.3+t*3),Math.sin(t*Math.PI)*.6-.35,-.08+(i%3)*.06],i*3);}
+  const points=new Float32Array(24*3);
+  for(let i=0;i<24;i++){const side=i%2?1:-1,t=Math.floor(i/2)/11;points.set([side*(.3+t*2.4),Math.sin(t*Math.PI)*.35-.3,-.08+(i%3)*.06],i*3);}
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(points,3));
-  const magic=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{time:{value:0},amount:{value:0}},vertexShader:`uniform float time;uniform float amount;varying float glow;void main(){vec3 p=position;float seed=position.x*13.+position.y*19.;glow=(.15+.85*pow(max(0.,sin(time*1.1+seed)),10.))*amount;p.y+=sin(time*.6+seed)*.05;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(45./max(1.,-mv.z),1.,7.);}`,fragmentShader:`varying float glow;void main(){vec2 p=abs(gl_PointCoord-.5);float a=max(exp(-40.*length(p)),max(exp(-100.*p.x-12.*p.y),exp(-100.*p.y-12.*p.x)));gl_FragColor=vec4(1.,.80,.52,a*glow);}`});
+  const magic=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{time:{value:0},amount:{value:0}},vertexShader:`uniform float time;uniform float amount;varying float glow;void main(){vec3 p=position;float seed=position.x*13.+position.y*19.;glow=(.15+.85*pow(max(0.,sin(time*1.1+seed)),12.))*amount;p.y+=sin(time*.6+seed)*.05;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(36./max(1.,-mv.z),1.,5.);}`,fragmentShader:`varying float glow;void main(){vec2 p=abs(gl_PointCoord-.5);float a=max(exp(-40.*length(p)),max(exp(-100.*p.x-12.*p.y),exp(-100.*p.y-12.*p.x)));gl_FragColor=vec4(1.,.86,.66,a*glow*.45);}`});
   const glints=new THREE.Points(geometry,magic);glints.frustumCulled=false;object.add(glints);
   let extension=0,phase=0,amplitude=0,frequency=1.5;
   return {object,
@@ -68,14 +108,14 @@ export function createAngelWings({reducedMotion=globalThis.window?.matchMedia?.(
       phase+=frequency*dt;
       const flap=reducedMotion?0:Math.sin(phase)*amplitude;
       for(const {hinge,tip,side}of hinges) {
-        // The elbow follows the shoulder with a slight delay, relaxing on recovery.
+        // The hand follows the arm with a slight delay, relaxing on the recovery stroke.
         hinge.rotation.y=side*((1-extension)*1.4+.12+flap+side*bank*.35);
-        hinge.rotation.z=side*(.08+(reducedMotion?0:Math.cos(phase)*.035*extension));
+        hinge.rotation.z=side*(.05+(reducedMotion?0:Math.cos(phase)*.035*extension));
         tip.rotation.y=side*((1-extension)*.7+(reducedMotion?0:Math.sin(phase-.48)*amplitude*.55));
-        tip.rotation.z=side*(.035+(reducedMotion?0:Math.sin(phase-.65)*amplitude*.12));
+        tip.rotation.z=side*(.02+(reducedMotion?0:Math.sin(phase-.65)*amplitude*.12));
       }
-      object.scale.setScalar(.25+.75*extension);magic.uniforms.time.value=reducedMotion?0:now/1000;magic.uniforms.amount.value=extension;
+      object.scale.setScalar((.25+.75*extension)*WING_SCALE);magic.uniforms.time.value=reducedMotion?0:now/1000;magic.uniforms.amount.value=extension;
     },
-    dispose(){object.removeFromParent();feather.dispose();quill.dispose();ivory.dispose();gold.dispose();geometry.dispose();magic.dispose();},
+    dispose(){object.removeFromParent();vane?.dispose();broad.dispose();narrow.dispose();quill.dispose();plumage.dispose();shaft.dispose();geometry.dispose();magic.dispose();},
   };
 }

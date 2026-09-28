@@ -1,5 +1,8 @@
 // Physical flight companion: bounded acceleration, swept clearance and gentle landing.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+export const HOVER_LEAN=.18,GLIDE_PITCH=1.28;
+// 0 while hovering, 1 in a horizontal glide: drives the body pose between them.
+export const glideAmount=pitch=>clamp((pitch-HOVER_LEAN)/(GLIDE_PITCH-HOVER_LEAN),0,1);
 const angle=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 export function createPrinceFlight(position,heading=0) {
   return {position:[...position],velocity:[0,0,0],acceleration:[0,0,0],avoidAge:0,avoidance:null,heading,pitch:0,bank:0,blend:0,landed:false,blocked:false};
@@ -67,7 +70,9 @@ export function stepPrinceFlight(state,target,environment,delta,{landing=false,p
   const altitude=state.position[1]-environment.groundAt(state.position[0],state.position[2]);
   const targetBlend=landing?clamp(altitude/1.1,0,1):clamp(altitude/.8,0,1);
   state.blend+=(targetBlend-state.blend)*(1-Math.exp(-5*dt));
-  state.pitch+=(clamp(horizontal/4,0,1)*1.28*state.blend-state.pitch)*(1-Math.exp(-4*dt));
+  // Hovering leans about 10° into the wind rather than standing bolt upright;
+  // speed tips the body toward a horizontal glide.
+  state.pitch+=((HOVER_LEAN+clamp(horizontal/4,0,1)*(GLIDE_PITCH-HOVER_LEAN))*state.blend-state.pitch)*(1-Math.exp(-4*dt));
   state.bank+=(clamp(-turn*.3,-.22,.22)*state.blend-state.bank)*(1-Math.exp(-4*dt));
   state.landed=landing&&gap<.08&&altitude<.05&&horizontal<.2&&environment.isFree(state.position[0],state.position[2]);
   if(state.landed){state.position[1]=environment.groundAt(state.position[0],state.position[2]);state.velocity=[0,0,0];}
