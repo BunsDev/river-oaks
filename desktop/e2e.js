@@ -27,7 +27,11 @@ try {
   console.log(`Desktop test window: ${report.mode}`);
   page.setDefaultTimeout(120000);
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
+  page.on('console', message => {
+    if (message.type() === 'error') console.error(message.text());
+    // Chromium reports failed GPU draws as warnings, not page errors.
+    if (/\b(?:GL_)?(?:INVALID_[A-Z_]+|OUT_OF_MEMORY|FRAMEBUFFER_INCOMPLETE[A-Z_]*)\b/.test(message.text())) errors.push(message.text());
+  });
   page.on('requestfailed', request => console.error('Request failed:', request.url(), request.failure()?.errorText));
   page.on('response', response => { if (response.status() >= 400 && /\/(assets|data)\//.test(response.url())) failedAssets.push(`${response.status()} ${response.url()}`); });
   await page.locator('#loading').waitFor({ state: 'hidden' });

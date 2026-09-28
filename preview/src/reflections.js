@@ -28,6 +28,14 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
       if (!capturing) {
         const moved = position.distanceToSquared(lastPosition) > 16 * 16;
         if (version === publishedVersion && (!moved || now - lastCapture < 2000)) return;
+        // Captures reuse the main view's shadows. Before its first render, PCF
+        // samplers have no comparison-depth texture to bind. Leave that work to
+        // the main view before starting a cube, including after district reload.
+        let shadowsReady = true;
+        if (renderer.shadowMap.enabled) scene.traverseVisible(object => {
+          if (object.isLight && object.castShadow && object.shadow && !object.shadow.map) shadowsReady = false;
+        });
+        if (!shadowsReady) return;
         cube.position.copy(position); cube.updateMatrixWorld(true);
         captureVersion = version; face = 0; capturing = true;
       }

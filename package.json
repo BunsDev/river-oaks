@@ -10,6 +10,7 @@
     "dev": "vite --config preview/vite.config.js",
     "build": "vite build --config preview/vite.config.js",
     "test": "node --test preview/tests/*.test.js",
+    "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
     "start": "node --env-file-if-exists=.env server/start.js",
