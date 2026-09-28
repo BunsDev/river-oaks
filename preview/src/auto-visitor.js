@@ -147,7 +147,9 @@ export function createAutoVisitor({ getWorld, getState, getPosition, getStorm, r
         while (path.length && distance(position, path[0]) < 0.3) path.shift();
         if (!path.length) {
           if (!candidate.target_id) visited.add(candidate.id);
-          navigation = null; halt(); next = now() + 500;
+          // A moving neighbor can leave speaking range during a fixed arrival
+          // pause. Recheck their available actions immediately; static stops rest.
+          navigation = null; halt(); next = now() + (candidate.target_id ? 0 : 500);
           publish({ phase: 'arrived', arrivals: status.arrivals + 1, label: `Arrived · ${candidate.label}` }); return;
         }
         navigation.age += dt;

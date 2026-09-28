@@ -14,15 +14,15 @@ async page => {
     await other.goto(origin+'/?motion-debug=1');await ready(other);
     await page.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='bob'&&player.ready),null,{timeout:60000});
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready),null,{timeout:60000});
-    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.unicornsReady==='true'&&document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
     check(await page.locator('#player-form').count()===0,'Jevica is the only playable form');
-    check(await page.evaluate(()=>document.querySelector('.force-controls').hidden&&document.querySelector('#player-carriage').parentElement.hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
+    check(await page.evaluate(()=>document.querySelector('.force-controls').hidden&&document.querySelector('.vehicle-garage').hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
     check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the solo coachman');
     await page.locator('#canvas-host').focus();await page.keyboard.press('KeyT');
     check(await page.evaluate(()=>!window.__riverForce().enabled),'Force shortcut cannot bypass shared-mode gating');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.length===2),'Two accounts share the roster and rendered Jevica avatars');
     await page.bringToFront();
-    const openPanel=page.getByRole('button',{name:'Show controls',exact:true});
+    const openPanel=page.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await openPanel.isVisible())await openPanel.click();
     const target=await page.evaluate(()=>{
       const locals=window.__riverMultiplayer().snapshot.locals.filter(local=>!local.indoor&&!local.wish);
@@ -56,7 +56,7 @@ async page => {
     await page.waitForFunction(()=>document.querySelector('.wish-card')?.getAttribute('aria-busy')==='false' && !document.querySelector('#wish-choice')?.disabled);
     await page.locator('#wish-choice').press('Escape');
     await page.locator('#community-dialogue').waitFor({state:'hidden'});
-    const closePanel=page.getByRole('button',{name:'Hide controls',exact:true});
+    const closePanel=page.getByRole('button',{name:'Close exploration panel',exact:true});
     if(await closePanel.isVisible())await closePanel.click();
     const before=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
     await page.bringToFront();await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');
@@ -68,7 +68,7 @@ async page => {
     await page.screenshot({path:'output/playwright/multiplayer-mobile.png'});
     // Sign out through the same authenticated HTTP + socket lifecycle used by the client.
     await other.bringToFront();
-    const showControls=other.getByRole('button',{name:'Show controls',exact:true});
+    const showControls=other.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await showControls.isVisible())await showControls.click();
     await other.getByRole('button',{name:'Sign out',exact:true}).click();
     await other.waitForFunction(()=>document.querySelector('.multiplayer-gate')?.hidden===false);

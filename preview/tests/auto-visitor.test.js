@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAutoVisitor, visitorOptions } from '../src/auto-visitor.js';
+import { createWalkingState, stepWalking, steerWalkingToward } from '../src/walking.js';
+import { createCommunity, interactWithLocal, stepCommunity } from '../src/community.js';
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
 function fixture(overrides = {}) {
@@ -101,4 +103,38 @@ test('approaching a moving neighbor retains speaking-range headroom for the next
   assert.ok(Math.hypot(target[0]-10,target[1])<=1.6,'Leave time for the next provider decision without losing reach');
   f.move([...target,1.68]);f.auto.update(.016);
   assert.equal(f.auto.status.phase,'arrived');
+});
+
+for(const initialGap of [1.4,2.5,3.2])test(`guided support catches a walking neighbor from ${initialGap} m away`,async()=>{
+  const world={stores:[],communityLocations:[{id:'maya',name:'Maya stop',position:[initialGap,0,0]}]};
+  const state=createCommunity(world,[],{carriage:false});state.running=true;
+  const local=state.locals[0],environment={isFree:()=>true,groundAt:()=>0};
+  const walker=createWalkingState(environment,[0,0,0],-Math.PI/2);
+  const position=()=>[walker.position[0],-walker.position[2]],interactions=[];
+  let clock=0,input={};
+  const auto=createAutoVisitor({getWorld:()=>world,getState:()=>state,getPosition:position,getStorm:()=>false,now:()=>clock,
+    route:async(_from,to)=>[to],steer:(point,dt)=>{input=steerWalkingToward(walker,point,dt);},
+    halt:()=>{input={};walker.velocity=[0,0];walker.speed=0;},
+    decide:async packet=>{
+      const candidate=['ask','supply','visit'].map(action=>packet.candidates.find(c=>c.action===action&&c.target_id===local.id)).find(Boolean)??packet.candidates.find(c=>c.action==='wait');
+      return {schema_version:1,tick:packet.tick,generation:packet.generation,candidate_id:candidate.id,source:'jev',confidence:1};
+    },
+    interact:(id,action)=>{
+      const gap=Math.hypot(position()[0]-local.position[0],position()[1]-local.position[1]);
+      assert.ok(gap<=2.8,'Support still requires physical speaking range');
+      const selected=state.selectedId,result=interactWithLocal(state,id,action);state.selectedId=selected;
+      interactions.push({action,at:clock,gap});return result;
+    }});
+  auto.start();
+  // Maya's normal 1.05 m/s pace versus the production walking motor. Keep her
+  // moving through the ask-to-supply cooldown instead of freezing the target.
+  for(let frame=0;frame<1200&&interactions.length<2;frame++){
+    const dt=1/60;clock+=dt*1000;local.position[0]+=1.05*dt;stepCommunity(state,dt);
+    auto.update(dt);await settle();stepWalking(walker,environment,input,dt);
+  }
+  auto.stop();
+  assert.deepEqual(interactions.map(i=>i.action),['ask','supply'],'Catch the moving neighbor and complete support within 20 seconds');
+  assert.equal(state.supplies,10,'The delivery spends real scenario supplies');
+  assert.ok(interactions[1].at-interactions[0].at>=3000,'Interaction pacing is preserved');
+  assert.ok(walker.distance>0,'Support follows physical walking');
 });

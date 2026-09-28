@@ -42,6 +42,7 @@ async page=>{
     check(await page.locator('#rail-tab-1').getAttribute('aria-selected')==='true',`Opening ${i+1}: immediate keyboard navigation works`);
     await page.locator('#panel-toggle').click();await page.waitForTimeout(220);
   }
+  if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   await page.locator('#player-camera').click();
   check(await page.evaluate(()=>document.activeElement.id==='canvas-host'),'Pointer camera controls return focus to movement');
   await page.locator('#player-camera').click();

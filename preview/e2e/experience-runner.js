@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['experience', 'sidebar', 'auto-mode', 'player-forms', 'carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
+const suite = ['experience', 'sidebar', 'ui-polish', 'auto-mode', 'player-forms', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
 const names = process.argv.slice(2);
 if (names.some(name => !suite.includes(name))) throw new Error(`Choose harnesses from: ${suite.join(', ')}`);
 process.env.VITE_SINGLE_PLAYER = 'true';

@@ -186,8 +186,11 @@ The encounter keeps its stable internal ID for conversations and interactions.
 - `preview/e2e/ui-polish.js`: People/Places/Settings navigation, focus return,
   interrupted panel motion, theme changes, conversations and press feedback.
 - `preview/e2e/carriage.js`: mounted sole contact on flat and tilted coaches,
-  legacy carriage road contacts, boarding, riding, safe exits, walking and bubble flight.
+  current vehicle road contacts, boarding, riding, safe exits, walking and bubble flight.
   Current vehicles and companion flight are covered by `node desktop/vehicles-e2e.js`.
+- `preview/e2e/unicorn-carriage.js`: retained unicorn artwork, coach following,
+  ground contact and gait transitions in the studio fixture. The live district uses
+  the Rolls and motorcycle.
 - `preview/e2e/carriage-mobile.js`: real touch boarding, driving, braking and
   dismounting at a 390×844 viewport.
 - `preview/e2e/carriage-conversation.js`: a real nearby resident conversation
