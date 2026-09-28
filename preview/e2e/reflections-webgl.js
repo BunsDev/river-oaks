@@ -18,9 +18,10 @@ try {
   await page.route('**/reflection-test.html', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Reflection WebGL regression</title>' }));
   await page.goto(`http://127.0.0.1:${vite.httpServer.address().port}/reflection-test.html`);
   const result = await page.evaluate(async () => {
-    const source = await (await fetch('/src/reflections.js')).text();
-    const THREE = await import(source.match(/from "([^"]+)"/)[1]);
     const { createStorefrontReflections } = await import('/src/reflections.js');
+    const threeUrl = performance.getEntriesByType('resource').map(entry => entry.name).find(url => /\/three\.js\?/.test(url));
+    if (!threeUrl) throw new Error('The running Vite Three.js module was not observed');
+    const THREE = await import(threeUrl);
     const renderer = new THREE.WebGLRenderer(); renderer.setSize(128, 128);
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
     const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
