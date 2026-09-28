@@ -15,7 +15,7 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 5532,
+  "readyMs": 7497,
   "assets": {
     "loaded": 107,
     "total": 107,
@@ -23,10 +23,10 @@
     "done": true
   },
   "voice": {
-    "bytes": 66499,
+    "bytes": 73186,
     "type": "audio/mpeg",
-    "currentTime": 0.318832,
-    "duration": 4.086712,
+    "currentTime": 0.338685,
+    "duration": 4.504671,
     "voiceId": "s3TPKV1kjDlVtZbl4Ksh"
   },
   "streetProfile": {
@@ -39,23 +39,23 @@
   },
   "sharedTown": false,
   "performance": {
-    "samples": 431,
-    "medianMs": 17,
-    "p95Ms": 34.099999999998545,
-    "meanFps": 42.992518703241906,
+    "samples": 432,
+    "medianMs": 17.099999999998545,
+    "p95Ms": 34,
+    "meanFps": 43.09183948289792,
     "canvas": [
-      1920,
-      1138
+      1280,
+      768
     ],
     "quality": {
       "mode": "auto",
       "scale": 0.6,
-      "occlusion": true,
+      "occlusion": false,
       "fps": 43
     },
     "renderer": {
-      "calls": 2334,
-      "triangles": 16417840,
+      "calls": 1739,
+      "triangles": 13834426,
       "geometries": 326,
       "textures": 232
     }

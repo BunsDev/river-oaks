@@ -40,7 +40,7 @@ export function createRemotePlayers(scene,host){
         if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
         holder.visible=holder.position.distanceTo(camera.position)<120;
-        if(avatar&&holder.visible){avatar.update(now,'continue',false,{speed:delta?Math.min(3.4,moved/delta):0,flightSpeed:delta?moved/delta:0,distance:entry.distance,flying:target.altitude>0.1,vehicle:'jevica'},()=>holder.position.y);entry.outfit.update(target.altitude>0.1);entry.vehicle.object.visible=target.altitude>0.1;}
+        if(avatar&&holder.visible){avatar.update(now,'continue',false,{speed:delta?Math.min(3.4,moved/delta):0,flightSpeed:delta?Math.hypot(dx,dz)/delta:0,distance:entry.distance,flying:target.altitude>0.1,vehicle:'jevica'},()=>holder.position.y);entry.outfit.update(target.altitude>0.1);entry.vehicle.object.visible=target.altitude>0.1;}
         const point=holder.position.clone().add(new THREE.Vector3(0,2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
         if(!label.hidden)label.style.transform=`translate(${(point.x+1)*host.clientWidth/2}px,${(1-point.y)*host.clientHeight/2}px) translate(-50%,-100%)`;
       }

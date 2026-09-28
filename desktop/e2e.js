@@ -136,11 +136,25 @@ try {
     return { samples: intervals.length, medianMs: intervals[Math.floor(intervals.length * 0.5)], p95Ms: intervals[Math.floor(intervals.length * 0.95)], meanFps: 1000 * intervals.length / intervals.reduce((a, b) => a + b, 0), canvas: [canvas.width, canvas.height], quality: JSON.parse(host.dataset.quality), renderer: JSON.parse(host.dataset.renderStats) };
   });
   assert.ok(report.performance.samples > 100, 'render loop keeps advancing');
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setFullScreen(true));
-  await page.waitForTimeout(1200);
-  assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), true);
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setFullScreen(false));
-  await page.waitForTimeout(1200);
+  for (const fullScreen of [true, false]) {
+    await app.evaluate(async ({ BrowserWindow }, fullScreen) => {
+      const window = BrowserWindow.getAllWindows()[0];
+      if (window.isFullScreen() === fullScreen) return;
+      // macOS fullscreen transitions are asynchronous. Observe completion
+      // before asserting state or starting the opposite transition.
+      const event = fullScreen ? 'enter-full-screen' : 'leave-full-screen';
+      await new Promise((resolve, reject) => {
+        const done = () => { clearTimeout(timer); resolve(); };
+        const timer = setTimeout(() => {
+          window.removeListener(event, done);
+          reject(new Error(`Timed out waiting for ${event}`));
+        }, 10000);
+        window.once(event, done);
+        window.setFullScreen(fullScreen);
+      });
+    }, fullScreen);
+    assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), fullScreen);
+  }
   check('native fullscreen round trip');
   // Playwright forces renderer visibility; native window state and the
   // visibility binding's unit tests cover minimize without relying on that emulation.

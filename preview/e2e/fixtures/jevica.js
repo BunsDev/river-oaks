@@ -32,7 +32,7 @@ function render(view='full',time=0,speed=0,pose={}) {
   if (view === 'portrait') {camera.position.set(0,1.61,1.40);camera.lookAt(0,1.48,0);}
   else {camera.position.set(2.1,1.4,4.4);camera.lookAt(0,0.90,0);}
   camera.position.add(holder.position);camera.lookAt(holder.position.x,holder.position.y+(view==='portrait'?1.48:.90),holder.position.z);
-  avatar.update(time,pose.action??'continue',false,{speed,distance:pose.distance??time/1000*speed,heading:pose.heading,flying:pose.flying??false,flightSpeed:pose.flightSpeed??0,vehicle:form},()=>0);
+  avatar.update(time,pose.action??'continue',false,{speed,distance:pose.distance??time/1000*speed,heading:pose.heading,flying:pose.flying??false,flightSpeed:pose.flightSpeed??speed,vehicle:form},()=>0);
   const costumeStart=performance.now();outfit.update(pose.flying??false,time);
   outfit.updateOptics?.(camera,innerHeight);
   const costumeUpdateMs=performance.now()-costumeStart;

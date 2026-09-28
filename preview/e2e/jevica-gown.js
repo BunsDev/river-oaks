@@ -10,6 +10,9 @@ async page => {
     const run=await page.evaluate(async hz=>{
       const {measureJevicaClearance,measureJevicaArmClearance}=await import('/e2e/fixtures/jevica-clearance.js');
       const f=window.jevicaFixture,measurements=[],timings=[];
+      let flightSpeed;
+      const update=f.avatar.update.bind(f.avatar);
+      f.avatar.update=(...args)=>{flightSpeed=args[3].flightSpeed;return update(...args);};
       let time=0,distance=0,x=100,z=-80;
       const stages=[
         {name:'walk',speed:1.65},
@@ -17,12 +20,14 @@ async page => {
         {name:'fast-walk',speed:3.2},
         {name:'stop',speed:0},
         {name:'bubble-pose',speed:0,flying:true},
+        {name:'bubble-cruise',speed:3.2,flying:true},
         {name:'landing-resume',speed:1.65},
       ];
       for(const stage of stages)for(let frame=1;frame<=hz;frame++) {
         time+=1000/hz;distance+=stage.speed/hz;
         const yaw=stage.turn?frame/hz*Math.PI:0;x+=Math.sin(yaw)*stage.speed/hz;z+=Math.cos(yaw)*stage.speed/hz;
         const info=f.render('full',time,stage.speed,{distance,flying:stage.flying,yaw,position:[x,stage.flying?3.5:0,z]});
+        if(stage.flying&&flightSpeed!==stage.speed)throw new Error(`${stage.name}: fixture dropped flight speed ${stage.speed}`);
         timings.push(info.costumeUpdateMs);
         if(frame===1||frame===Math.round(hz/2)||frame===hz)measurements.push({stage:stage.name,frame,...measureJevicaClearance(f),arms:measureJevicaArmClearance(f)});
       }
