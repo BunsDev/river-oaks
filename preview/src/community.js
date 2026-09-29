@@ -193,6 +193,8 @@ export function interactWithLocal(state, id, action) {
   if (action === 'ask') {
     if (local.needKnown) return respond(false, 'already_asked', 'You already checked in. Their current need is shown below.');
     local.needKnown = true;
+    // An ask in a storm starts no wait for help, whatever resident life is doing.
+    local.askedInStorm = Boolean(state.storm);
     local.action = state.storm ? 'seek_shelter' : 'greet';
     local.reactionUntil = state.elapsed + 120;
     return respond(true, 'needs_shared', local.priority ? `I could use ${state.scenario.need}. A visit would resolve it; supply kits help right away.` : 'I have what I need. Please check on the neighbors with an open request.');
