@@ -20,6 +20,16 @@ function saucer(owned) {
 }
 
 // Aliens, saucers, abduction beams and spell bolts, driven by the simulation state.
+// Heights above the ground: the saucer hovers SAUCER_HEIGHT above its landing
+// point plus any hover, and the crew member is drawn up into it when banished,
+// meeting the saucer as the banish completes.
+export const SAUCER_HEIGHT = 2.9;
+export function liftHeights(status, progress) {
+  const hover = status === 'landing' ? (1 - progress) * LANDING_ALTITUDE : status === 'banished' ? progress * progress * LANDING_ALTITUDE : status === 'gone' ? LANDING_ALTITUDE : 0;
+  const crew = status === 'landing' ? Math.max(0, (0.85 - progress) / 0.3) * SAUCER_HEIGHT : status === 'banished' ? progress * progress * (SAUCER_HEIGHT + LANDING_ALTITUDE) : 0;
+  return { hover, saucer: SAUCER_HEIGHT + hover, crew };
+}
+
 export function createInvaders({ scene, world, groundAt }) {
   const holder = new THREE.Group(); holder.name = 'Invasion'; scene.add(holder);
   const owned = new Set(), crew = new Map(), bolts = new Map();
@@ -46,17 +56,17 @@ export function createInvaders({ scene, world, groundAt }) {
       for (const alien of state.aliens) {
         const entry = crew.get(alien.id); if (!entry) continue;
         const ground = groundAt(alien.position[0], alien.position[1]);
-        const hover = alien.status === 'landing' ? (1 - alien.progress) * LANDING_ALTITUDE : alien.status === 'banished' ? alien.progress * alien.progress * LANDING_ALTITUDE : alien.status === 'gone' ? LANDING_ALTITUDE : 0;
+        const {hover, crew: crewLift} = liftHeights(alien.status, alien.progress);
         entry.object.position.set(alien.position[0], ground, -alien.position[1]);
         entry.object.rotation.y = alien.heading;
         entry.object.visible = alien.status !== 'gone';
         const reeling = alien.status === 'banished' ? Math.sin(alien.progress * Math.PI) : 0;
-        entry.saucer.position.set(reeling * 0.6, 2.9 + hover, 0); entry.saucer.rotation.y += delta * (0.9 + reeling * 12); entry.saucer.rotation.z = reeling * 0.55;
+        entry.saucer.position.set(reeling * 0.6, SAUCER_HEIGHT + hover, 0); entry.saucer.rotation.y += delta * (0.9 + reeling * 12); entry.saucer.rotation.z = reeling * 0.55;
         entry.saucer.userData.beam.visible = alien.status === 'abducting';
         if (alien.status === 'abducting') { const beam = entry.saucer.userData.beam; beam.scale.y = 1.6 + alien.progress * 0.2; beam.material.opacity = 0.2 + 0.25 * Math.abs(Math.sin(now / 160)); }
         if (entry.avatar) {
           entry.avatar.object.visible = alien.status !== 'landing' || alien.progress > 0.55;
-          entry.avatar.object.position.y = alien.status === 'landing' ? Math.max(0, (0.85 - alien.progress) / 0.3) * 2.9 : alien.status === 'banished' ? alien.progress * alien.progress * 2.9 : 0;
+          entry.avatar.object.position.y = crewLift;
           // The spell spins the crew member and pitches them over before the saucer swallows them.
           entry.avatar.object.rotation.set(alien.status === 'banished' ? alien.progress * 1.2 : 0, alien.status === 'banished' ? entry.avatar.object.rotation.y + delta * (6 + alien.progress * 30) : 0, alien.status === 'banished' ? Math.sin(alien.progress * Math.PI * 3) * 0.35 : 0);
           entry.avatar.update(now, alien.status === 'abducting' ? 'greet' : alien.status === 'menacing' ? 'startled' : alien.status === 'banished' ? 'amazed' : 'continue', false, { speed: alien.speed, distance: alien.distance }, () => ground);

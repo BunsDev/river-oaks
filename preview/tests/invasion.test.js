@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createInvasion, stepInvasion, castSpell, releaseResidents, landingSites, canCast, MAGIC_FORMS, SPELL_RANGE, RESIDENTS_LOST_LIMIT, LANDING_SECONDS, BEAM_SECONDS } from '../src/invasion.js';
+import { createInvasion, stepInvasion, castSpell, releaseResidents, landingSites, canCast, MAGIC_FORMS, SPELL_RANGE, RESIDENTS_LOST_LIMIT, LANDING_SECONDS, BEAM_SECONDS, BANISH_SECONDS } from '../src/invasion.js';
 
 const world = { bounds_m: [-60, -40, 60, 40], walkSpawn: [0, 0, 0] };
 const open = { isFree: () => true, groundAt: () => 0 };
@@ -76,6 +76,9 @@ test('the district is saved when every alien is banished, and falls after too ma
   const win = createInvasion(world, { count: 2, ...open });
   run(win, LANDING_SECONDS + 0.1, open);
   for (const alien of win.aliens) { castSpell(win, { form: 'jevica', position: [alien.position[0] + 3, alien.position[1], 0] }); run(win, 1, open); }
+  // The last crew member is still rising into the saucer: the win waits for it.
+  assert.equal(win.phase, 'active');assert.ok(win.aliens.every(alien => ['banished', 'gone'].includes(alien.status)));
+  run(win, BANISH_SECONDS, open);
   assert.equal(win.phase, 'won');
   const lose = createInvasion(world, { count: 1, ...open });
   const alien = lose.aliens[0];
@@ -95,4 +98,26 @@ test('the bundled district offers five free landing sites', () => {
     assert.equal(state.aliens.length, 5);
     for (const alien of state.aliens) assert.ok(environment.isFree(alien.position[0], -alien.position[1]), `${alien.id} lands on free ground`);
   });
+});
+
+test('an invasion works in a world without a walk spawn', () => {
+  const invasion = createInvasion({ bounds_m: [-100, -100, 100, 100] }, { count: 3, ...open });
+  assert.ok(invasion.aliens.every(alien => Number.isFinite(alien.heading)), 'crew face the district centre');
+});
+
+test('two crew beaming the same neighbour abduct them once', () => {
+  const invasion = createInvasion(world, { count: 2, ...open });
+  run(invasion, LANDING_SECONDS + 0.1, open);
+  const [a, b] = invasion.aliens, resident = { id: 'r1', position: [(a.position[0] + b.position[0]) / 2, (a.position[1] + b.position[1]) / 2, 0] };
+  a.position = [resident.position[0] + .5, resident.position[1], 0]; b.position = [resident.position[0] - .5, resident.position[1], 0];
+  run(invasion, BEAM_SECONDS + 1, { ...open, residents: [resident] });
+  assert.deepEqual(invasion.abducted, ['r1']);
+});
+
+test('a banished crew member is drawn up into their saucer', async () => {
+  const { liftHeights } = await import('../src/invaders.js');
+  const start = liftHeights('banished', 0), end = liftHeights('banished', 1);
+  assert.equal(start.crew, 0);
+  assert.ok(Math.abs(end.crew - end.saucer) < 1e-9, `crew ${end.crew} m meets the saucer at ${end.saucer} m`);
+  for (let p = 0; p <= 1; p += .1) assert.ok(liftHeights('banished', p).crew <= liftHeights('banished', p).saucer + 1e-9, 'never above the saucer');
 });

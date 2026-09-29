@@ -31,7 +31,9 @@ function sign(name, illuminated = false) {
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
   const material = new THREE.MeshStandardMaterial({
     map: texture, emissiveMap: illuminated ? texture : null, emissive: illuminated ? '#ffffff' : '#000000', emissiveIntensity: illuminated ? 0.18 : 0,
-    roughness: plaque ? 0.7 : 0.45, metalness: plaque ? 0 : 0.35, transparent: !plaque, alphaTest: plaque ? 0 : 0.2,
+    // Cut-out lettering: alpha-tested and opaque, so signs never sort (and flicker)
+    // against the storefront glass in the transparent pass.
+    roughness: plaque ? 0.7 : 0.45, metalness: plaque ? 0 : 0.35, transparent: false, alphaTest: plaque ? 0 : 0.2,
   });
   return material;
 }

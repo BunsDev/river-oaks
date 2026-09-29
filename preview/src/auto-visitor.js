@@ -23,7 +23,8 @@ export function visitorOptions(world, state, position, { visited = new Set(), bl
       add(`shelter-${stop.id}`, 'shelter', `Take cover near ${stop.name}`, stop.position);
     }
   } else {
-    const locals = state.locals.filter(local => !local.indoor).sort((a,b) => distance(position,a.position)-distance(position,b.position));
+    // Abducted neighbours are aboard a saucer: nobody to meet or help.
+    const locals = state.locals.filter(local => !local.indoor && !local.abducted).sort((a,b) => distance(position,a.position)-distance(position,b.position));
     for (const local of locals.slice(0, 16)) {
       const d = distance(position, local.position), availability = supportAvailability(state, local);
       const extra = { target_id: local.id, known: local.needKnown, needs_help: local.priority && local.status === 'needs_help',

@@ -27,9 +27,11 @@ export function landingSites(world, count, isFree, seed = 7) {
 
 export function createInvasion(world, { count = 5, seed = 7, isFree = () => true, groundAt = () => 0 } = {}) {
   const sites = landingSites(world, count, isFree, seed);
+  // Face the walk spawn, or the district centre when a world has none.
+  const [west, south, east, north] = world.bounds_m, aim = world.walkSpawn ?? [(west + east) / 2, (south + north) / 2];
   return {
     phase: 'active', elapsed: 0, cooldown: 0, banished: 0, abducted: [], events: [],
-    aliens: sites.map((site, index) => ({ id: `alien-${index}`, position: [site[0], site[1], groundAt(site[0], site[1])], heading: Math.atan2(world.walkSpawn[0] - site[0], world.walkSpawn[1] - site[1]), speed: 0, distance: 0, status: 'landing', progress: 0, targetId: null })),
+    aliens: sites.map((site, index) => ({ id: `alien-${index}`, position: [site[0], site[1], groundAt(site[0], site[1])], heading: Math.atan2(aim[0] - site[0], aim[1] - site[1]), speed: 0, distance: 0, status: 'landing', progress: 0, targetId: null })),
     spells: [],
   };
 }
@@ -64,9 +66,10 @@ export function stepInvasion(state, dt, { isFree = () => true, groundAt = () => 
       continue;
     }
     if (alien.status === 'menacing') { alien.status = 'roaming'; alien.targetId = null; }
-    let target = prey.find(local => local.id === alien.targetId);
+    // Another crew member may have finished beaming someone earlier this step.
+    let target = prey.find(local => local.id === alien.targetId && !local.abducted);
     if (!target || alien.status === 'roaming') {
-      target = prey.reduce((best, local) => (!best || distance2(local.position, alien.position) < distance2(best.position, alien.position)) ? local : best, null);
+      target = prey.reduce((best, local) => local.abducted ? best : (!best || distance2(local.position, alien.position) < distance2(best.position, alien.position)) ? local : best, null);
       alien.targetId = target?.id ?? null;
     }
     if (!target) { alien.speed = 0; alien.status = 'roaming'; continue; }
@@ -74,7 +77,7 @@ export function stepInvasion(state, dt, { isFree = () => true, groundAt = () => 
     if (gap <= ABDUCT_RANGE) {
       alien.status = 'abducting'; alien.speed = 0; alien.heading = Math.atan2(target.position[0] - alien.position[0], target.position[1] - alien.position[1]);
       alien.progress = Math.min(1, alien.progress + dt / BEAM_SECONDS);
-      if (alien.progress >= 1) { state.abducted.push(target.id); target.abducted = true; state.events.push({ type: 'abducted', id: target.id, alien: alien.id }); alien.status = 'roaming'; alien.progress = 0; alien.targetId = null; }
+      if (alien.progress >= 1) { if (!target.abducted) state.abducted.push(target.id); target.abducted = true; state.events.push({ type: 'abducted', id: target.id, alien: alien.id }); alien.status = 'roaming'; alien.progress = 0; alien.targetId = null; }
     } else {
       if (alien.status === 'abducting') { alien.status = 'roaming'; alien.progress = 0; }
       steer(alien, target.position, dt, isFree, groundAt);
@@ -87,7 +90,9 @@ export function stepInvasion(state, dt, { isFree = () => true, groundAt = () => 
     if (hit) { hit.status = 'banished'; hit.progress = 0; hit.speed = 0; state.banished++; spell.ttl = 0; state.events.push({ type: 'banished', id: hit.id }); }
   }
   state.spells = state.spells.filter(spell => spell.ttl > 0);
-  if (state.aliens.every(alien => ['banished', 'gone'].includes(alien.status))) { state.phase = 'won'; state.events.push({ type: 'won' }); }
+  // Won once the last banished crew member has risen into the saucer, so the
+  // finale plays before the scenario tears the invaders down.
+  if (state.aliens.every(alien => alien.status === 'gone')) { state.phase = 'won'; state.events.push({ type: 'won' }); }
   else if (state.abducted.length >= RESIDENTS_LOST_LIMIT) { state.phase = 'lost'; state.events.push({ type: 'lost' }); for (const alien of state.aliens) if (!['banished', 'gone'].includes(alien.status)) { alien.status = 'banished'; alien.progress = 0; } }
   return state;
 }
