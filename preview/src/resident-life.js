@@ -156,7 +156,11 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
     if(!local.priority||local.status!=='needs_help'||!local.needKnown||['supply','dispatch'].includes(local.lastInteraction)){delete local.life.helpWait;return false;}
     // A storm cancels this ask's wait: keep the expired marker so clearing
     // skies do not start a fresh one until the scenario resets and she is asked again.
-    if(storm){if(local.life.helpWait)local.life.helpWait.until=Math.min(local.life.helpWait.until,life.elapsed);return false;}
+    if(storm){
+      if(local.life.helpWait?.generation===state.generation)local.life.helpWait.until=Math.min(local.life.helpWait.until,life.elapsed);
+      else local.life.helpWait={generation:state.generation,until:life.elapsed};
+      return false;
+    }
     if(local.life.helpWait?.generation!==state.generation)local.life.helpWait={generation:state.generation,until:life.elapsed+HELP_WAIT};
     return life.elapsed<local.life.helpWait.until;
   };

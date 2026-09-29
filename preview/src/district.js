@@ -9,31 +9,23 @@ import { clearOfRoads, hedgeClusters } from './street-furniture.js';
 import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 
-// Signs are drawn once per tenant. Reference-guided frontages keep a backlit
-// plaque; every other tenant reads as pin-mounted lettering on the limestone,
-// with a soft contact shadow so the letters sit proud of the wall.
+// Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
+// (the retro palette), backlit on reference-guided frontages. The plaque fills
+// the canvas, so signs are opaque and never sort against the glazing.
 function sign(name, illuminated = false) {
   const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 128;
   const context = canvas.getContext('2d');
-  const plaque = RETRO.deepTeal;
-  context.clearRect(0, 0, 1024, 128);
-  if (plaque) { context.fillStyle = plaque; context.fillRect(0, 0, 1024, 128); }
+  context.fillStyle = RETRO.deepTeal; context.fillRect(0, 0, 1024, 128);
   const ink = RETRO.ivory;
   context.textAlign = 'center'; context.textBaseline = 'middle';
   context.font = `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Futura, Avenir, sans-serif`;
   context.strokeStyle=RETRO.brass;context.lineWidth=3;context.strokeRect(8,8,1008,112);
   const text = name === 'Cartier' || name === 'Le Colonial' || name === 'Steak 48' ? name : name.toUpperCase();
-  if (!plaque) {
-    context.save(); context.shadowColor = 'rgba(0,0,0,0.55)'; context.shadowBlur = 7; context.shadowOffsetX = 3; context.shadowOffsetY = 6;
-    context.fillStyle = ink; context.fillText(text, 512, 62, 955); context.restore();
-  }
   context.fillStyle = ink; context.fillText(text, 512, 62, 955);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
   const material = new THREE.MeshStandardMaterial({
     map: texture, emissiveMap: illuminated ? texture : null, emissive: illuminated ? '#ffffff' : '#000000', emissiveIntensity: illuminated ? 0.18 : 0,
-    // Cut-out lettering: alpha-tested and opaque, so signs never sort (and flicker)
-    // against the storefront glass in the transparent pass.
-    roughness: plaque ? 0.7 : 0.45, metalness: plaque ? 0 : 0.35, transparent: false, alphaTest: plaque ? 0 : 0.2,
+    roughness: 0.7, metalness: 0,
   });
   return material;
 }

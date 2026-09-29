@@ -308,3 +308,14 @@ test('a storm cancels the wait rather than restarting it when the storm clears',
   const after=[...local.position];step(life,5*60,{storm:false});
   assert.ok(moved(local,after)>.3,`after the storm they go about their day, not wait again (${moved(local,after).toFixed(2)} m)`);
 });
+
+test('an ask made during a storm does not start a wait once the storm clears',()=>{
+  const moved=(person,from)=>Math.hypot(person.position[0]-from[0],person.position[1]-from[1]);
+  const {state,life}=create();step(life,180);
+  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local,'someone is walking');
+  step(life,30,{storm:true});
+  Object.assign(local,{priority:true,status:'needs_help',needKnown:true,lastInteraction:'ask'});
+  step(life,120,{storm:true});step(life,15*60,{storm:false});
+  const after=[...local.position];step(life,5*60,{storm:false});
+  assert.ok(moved(local,after)>.3,`after the storm they carry on (${moved(local,after).toFixed(2)} m)`);
+});

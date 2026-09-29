@@ -68,6 +68,8 @@ export function stepInvasion(state, dt, { isFree = () => true, groundAt = () => 
     if (alien.status === 'menacing') { alien.status = 'roaming'; alien.targetId = null; }
     // Another crew member may have finished beaming someone earlier this step.
     let target = prey.find(local => local.id === alien.targetId && !local.abducted);
+    // A beam on someone who is already gone restarts on the next neighbour.
+    if (!target && alien.status === 'abducting') { alien.status = 'roaming'; alien.progress = 0; }
     if (!target || alien.status === 'roaming') {
       target = prey.reduce((best, local) => local.abducted ? best : (!best || distance2(local.position, alien.position) < distance2(best.position, alien.position)) ? local : best, null);
       alien.targetId = target?.id ?? null;
