@@ -276,17 +276,35 @@ test('wish incidents stop nearby walkers and undo lets them continue',async()=>{
 });
 
 test('a neighbour who has just said what would help waits for it, then carries on',()=>{
+  const moved=(person,from)=>Math.hypot(person.position[0]-from[0],person.position[1]-from[1]);
   const {state,life}=create();step(life,180);
   const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local,'someone is walking');
-  Object.assign(local,{priority:true,status:'needs_help',needKnown:true});
+  Object.assign(local,{priority:true,status:'needs_help',needKnown:true,lastInteraction:'ask'});
   step(life,60);const waiting=[...local.position];
   step(life,20*60);
-  assert.ok(Math.hypot(local.position[0]-waiting[0],local.position[1]-waiting[1])<.05,'they stay put while help is on its way');
+  assert.ok(moved(local,waiting)<.05,'they stay put while help is on its way');
+  // Released by the timeout: they must actually walk again, not just change status.
   step(life,15*60);
-  assert.ok(Math.hypot(local.position[0]-waiting[0],local.position[1]-waiting[1])>.5||local.life.status!=='walking','after half a minute they resume their day');
-  // Help arriving ends the wait straight away.
-  const other=state.locals.find(person=>person!==local&&person.life.speed>.1)??state.locals.find(person=>person!==local);
-  Object.assign(other,{priority:true,status:'needs_help',needKnown:true,lastInteraction:'ask'});step(life,60);
-  const held=[...other.position];other.lastInteraction='supply';step(life,10*60);
-  assert.ok(Math.hypot(other.position[0]-held[0],other.position[1]-held[1])>.3||other.life.status!=='walking','a delivered kit lets them carry on');
+  assert.ok(moved(local,waiting)>.5,`after half a minute they resume walking (${moved(local,waiting).toFixed(2)} m)`);
+});
+
+test('help arriving ends the wait at once',()=>{
+  const moved=(person,from)=>Math.hypot(person.position[0]-from[0],person.position[1]-from[1]);
+  const {state,life}=create();step(life,180);
+  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local,'someone is walking');
+  Object.assign(local,{priority:true,status:'needs_help',needKnown:true,lastInteraction:'ask'});
+  step(life,60);const held=[...local.position];step(life,60);assert.ok(moved(local,held)<.05,'waiting');
+  local.lastInteraction='supply';step(life,10*60);
+  assert.ok(moved(local,held)>.5,`a delivered kit lets them walk on (${moved(local,held).toFixed(2)} m)`);
+});
+
+test('a storm cancels the wait rather than restarting it when the storm clears',()=>{
+  const moved=(person,from)=>Math.hypot(person.position[0]-from[0],person.position[1]-from[1]);
+  const {state,life}=create();step(life,180);
+  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local,'someone is walking');
+  Object.assign(local,{priority:true,status:'needs_help',needKnown:true,lastInteraction:'ask'});
+  step(life,60);
+  step(life,120,{storm:true});step(life,15*60,{storm:false});
+  const after=[...local.position];step(life,5*60,{storm:false});
+  assert.ok(moved(local,after)>.3,`after the storm they go about their day, not wait again (${moved(local,after).toFixed(2)} m)`);
 });

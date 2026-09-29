@@ -77,7 +77,9 @@ async page => {
   await page.locator('#community-close').click();
   const count = (await read()).interactions;
   await page.locator('#auto-toggle').click();
-  await page.waitForFunction(n => JSON.parse(document.querySelector('.auto-controls').dataset.state).interactions >= n + 2, count, {timeout:20000});
+  // The neighbour is still walking her route until she is asked, so reaching her
+  // takes 4-26 s depending on where she heads; this step checks proximity, not speed.
+  await page.waitForFunction(n => JSON.parse(document.querySelector('.auto-controls').dataset.state).interactions >= n + 2, count, {timeout:45000});
   const support = await read();
   check(packets.some(p => p.candidates.some(c => c.action === 'supply' && c.distance_m <= 2.8)), 'Support requires current physical proximity');
   await page.locator('#auto-toggle').click();

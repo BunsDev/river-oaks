@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-09-29T19:03:12.163Z",
+  "createdAt": "2026-09-29T19:34:17.151Z",
   "status": "passed",
   "modes": [
     "development",
@@ -10,7 +10,7 @@
     {
       "name": "multiplayer-dev",
       "status": "passed",
-      "seconds": 9.448,
+      "seconds": 9.64,
       "result": {
         "checks": [
           "each browser is its own development player",
@@ -27,10 +27,10 @@
           "No browser page errors"
         ],
         "a": {
-          "self": "dev-ce0d20cfc979",
+          "self": "dev-c60e68a4a794",
           "players": [
-            "dev-ce0d20cfc979",
-            "dev-cc57fd2f84ea"
+            "dev-c60e68a4a794",
+            "dev-08cb1e2ce442"
           ],
           "gate": true,
           "form": "jevica",
@@ -39,10 +39,10 @@
           "roster": "2 Jevicas in town"
         },
         "b": {
-          "self": "dev-cc57fd2f84ea",
+          "self": "dev-08cb1e2ce442",
           "players": [
-            "dev-ce0d20cfc979",
-            "dev-cc57fd2f84ea"
+            "dev-c60e68a4a794",
+            "dev-08cb1e2ce442"
           ],
           "gate": true,
           "form": "jevica",
@@ -56,7 +56,7 @@
     {
       "name": "multiplayer",
       "status": "passed",
-      "seconds": 40.898,
+      "seconds": 50.924,
       "result": {
         "passed": true,
         "checks": [
@@ -84,7 +84,7 @@
     {
       "name": "multiplayer-gate",
       "status": "passed",
-      "seconds": 14.693,
+      "seconds": 40.186,
       "result": {
         "passed": true,
         "checks": [

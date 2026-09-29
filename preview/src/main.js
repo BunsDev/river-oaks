@@ -8,7 +8,7 @@ import { createPointerGesture } from './pointer-gesture.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
-import { createRenderPipeline } from './render-pipeline.js';
+import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
@@ -108,7 +108,7 @@ function initializeRenderer() {
     if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
-  else if (debugOcclusion === 'only') pipeline.occlusion.output = 5;
+  else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
   loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost', (event) => {

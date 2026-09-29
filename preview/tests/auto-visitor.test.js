@@ -138,3 +138,14 @@ for(const initialGap of [1.4,2.5,3.2])test(`guided support catches a walking nei
   assert.ok(interactions[1].at-interactions[0].at>=3000,'Interaction pacing is preserved');
   assert.ok(walker.distance>0,'Support follows physical walking');
 });
+
+test('abducted neighbours are never offered as people to meet or help',()=>{
+  const world={stores:[],communityLocations:[{name:'Garden',position:[10,0,0]}]};
+  const state={generation:1,storm:false,supplies:4,helpBudget:1,elapsed:0,scenario:{supplyCost:2,supplyRelief:30},locals:[
+    {id:'here',name:'Here',position:[2,0,0],priority:true,status:'needs_help',need:80},
+    {id:'taken',name:'Taken',position:[1,0,0],priority:true,status:'needs_help',need:90,abducted:true},
+  ]};
+  const options=visitorOptions(world,state,[0,0,1.68]).candidates;
+  assert.ok(options.some(option=>option.target_id==='here'),'the neighbour on the ground is offered');
+  assert.ok(options.every(option=>option.target_id!=='taken'),'the abducted neighbour is not');
+});
