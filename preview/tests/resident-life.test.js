@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCommunity,chooseCommunityScenario } from '../src/community.js';
+import { createCommunity,chooseCommunityScenario,interactWithLocal } from '../src/community.js';
 import { createResidentLife,stepResidentLife,residentPacket,applyResidentDecisions } from '../src/resident-life.js';
 
 const world={scene:'district',bounds_m:[-30,-30,30,30],collisionPolygons:[[[-3,-8],[3,-8],[3,8],[-3,8]]],communityLocations:[
@@ -318,4 +318,18 @@ test('an ask made during a storm does not start a wait once the storm clears',()
   step(life,120,{storm:true});step(life,15*60,{storm:false});
   const after=[...local.position];step(life,5*60,{storm:false});
   assert.ok(moved(local,after)>.3,`after the storm they carry on (${moved(local,after).toFixed(2)} m)`);
+});
+
+test('an ask made in a storm while walks are paused does not start a wait later',()=>{
+  const moved=(person,from)=>Math.hypot(person.position[0]-from[0],person.position[1]-from[1]);
+  const {state,life}=create();step(life,180);
+  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local,'someone is walking');
+  Object.assign(local,{priority:true,status:'needs_help'});
+  state.storm=true;
+  assert.equal(interactWithLocal(state,local.id,'ask').ok,true);
+  state.selectedId=null;
+  step(life,120,{paused:true,storm:true});
+  state.storm=false;step(life,15*60,{storm:false});
+  const after=[...local.position];step(life,5*60,{storm:false});
+  assert.ok(moved(local,after)>.3,`once walks resume in clear weather they carry on (${moved(local,after).toFixed(2)} m)`);
 });
