@@ -7,6 +7,7 @@ import { helperVisit,syncVolunteerVisits,planVolunteerVisit,observeVolunteerArri
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const ACTIONS=new Set(['continue','pause','greet','redirect','seek_shelter','slow','stop']);
 const SOURCES=new Set(['jev','local_rules','safety_override']);
+const HELP_WAIT=30;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 // Collision avoidance is physical occupancy, not a projection of every visible
 // person onto the street. Low flight still overlaps a standing pedestrian.
@@ -147,7 +148,16 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
   life.elapsed+=dt;
   // A nearby visitor participates in passing and collision avoidance below.
   // Only an explicit interaction owns the route; a passing nod never stops it.
-  const held=local=>Boolean(local.abducted || local.force || local.wish || local.wishDisruption) || (!storm && !local.life.visitId && Boolean(local.visitorReaction) && !local.visitorReaction.passive) || state.selectedId===local.id || (!storm && local.status==='aid_en_route');
+  // Someone who has just told Jevica what would help waits for it rather than
+  // wandering off; once help arrives, or after half a minute without it, they
+  // carry on.
+  const awaitingHelp=local=>{
+    // Help that has arrived (a kit or a dispatched volunteer) also ends the wait.
+    if(storm||!local.priority||local.status!=='needs_help'||!local.needKnown||['supply','dispatch'].includes(local.lastInteraction)){delete local.life.helpWait;return false;}
+    if(local.life.helpWait?.generation!==state.generation)local.life.helpWait={generation:state.generation,until:life.elapsed+HELP_WAIT};
+    return life.elapsed<local.life.helpWait.until;
+  };
+  const held=local=>awaitingHelp(local) || Boolean(local.abducted || local.force || local.wish || local.wishDisruption) || (!storm && !local.life.visitId && Boolean(local.visitorReaction) && !local.visitorReaction.passive) || state.selectedId===local.id || (!storm && local.status==='aid_en_route');
   // Rotate ownership of the route-search slot so inaccessible stops cannot starve others.
   let planned=planVolunteerVisit(life);const cursor=life.cursor;
   for(let offset=0;offset<state.locals.length;offset++) {
