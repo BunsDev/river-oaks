@@ -121,3 +121,13 @@ test('a banished crew member is drawn up into their saucer', async () => {
   assert.ok(Math.abs(end.crew - end.saucer) < 1e-9, `crew ${end.crew} m meets the saucer at ${end.saucer} m`);
   for (let p = 0; p <= 1; p += .1) assert.ok(liftHeights('banished', p).crew <= liftHeights('banished', p).saucer + 1e-9, 'never above the saucer');
 });
+
+test('losing a beamed neighbour to another crew member restarts the beam', () => {
+  const invasion = createInvasion(world, { count: 2, ...open });
+  run(invasion, LANDING_SECONDS + 0.1, open);
+  const [a, b] = invasion.aliens, first = { id: 'r1', position: [0, 0, 0] }, second = { id: 'r2', position: [0.3, 0, 0] };
+  a.position = [0.5, 0, 0]; b.position = [-0.5, 0, 0];
+  for (const alien of [a, b]) Object.assign(alien, { status: 'abducting', targetId: 'r1', progress: 0.99 });
+  stepInvasion(invasion, 0.1, { ...open, residents: [first, second] });
+  assert.deepEqual(invasion.abducted, ['r1'], 'the second crew member does not abduct a new neighbour in the same instant');
+});

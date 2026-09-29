@@ -58,11 +58,20 @@ def test_pinned_downloads_pass(tmp_path):
     assert json.loads((tmp_path / "sources.json").read_text()) == lock
 
 
-def test_a_changed_source_url_is_refused(tmp_path):
+def test_a_changed_source_url_is_refused_before_contacting_it(tmp_path):
     payloads = files()
     pin(tmp_path, payloads)
+    (tmp_path / "brick-color.jpg").unlink()
+    seen = []
+    inner = provider(payloads, "https://elsewhere.example/")
+
+    def record(request):
+        seen.append(str(request.url))
+        return inner.handle_request(request)
+
     with pytest.raises(ValueError, match="source URL changed"):
-        fetcher.fetch(output=tmp_path, transport=provider(payloads, "https://elsewhere.example/"))
+        fetcher.fetch(output=tmp_path, transport=httpx.MockTransport(record))
+    assert not any(url.startswith("https://elsewhere.example/") for url in seen)
 
 
 def test_a_changed_payload_is_refused(tmp_path):

@@ -43,6 +43,13 @@ def fetch(update=False, output=OUTPUT, transport=None):
 
         def save(asset, kind, item, filename):
             path = output / filename
+            pinned = lock.get(filename)
+            # Refuse an unpinned or changed source before contacting it.
+            if not update:
+                if pinned is None:
+                    raise ValueError(f"{filename} is not pinned; rerun with --update to pin it")
+                if item["url"] != pinned["source"]:
+                    raise ValueError(f"{filename}: source URL changed from the pinned one")
             if path.exists() and hashlib.md5(path.read_bytes()).hexdigest() == item["md5"]:
                 payload = path.read_bytes()
             else:
@@ -58,12 +65,7 @@ def fetch(update=False, output=OUTPUT, transport=None):
                 if hashlib.md5(payload).hexdigest() != item["md5"]:
                     raise ValueError("Asset integrity check failed")
             sha256 = hashlib.sha256(payload).hexdigest()
-            pinned = lock.get(filename)
             if not update:
-                if pinned is None:
-                    raise ValueError(f"{filename} is not pinned; rerun with --update to pin it")
-                if item["url"] != pinned["source"]:
-                    raise ValueError(f"{filename}: source URL changed from the pinned one")
                 if sha256 != pinned["sha256"]:
                     raise ValueError(f"{filename}: payload does not match the pinned SHA-256")
             if not path.exists() or path.read_bytes() != payload:
