@@ -164,8 +164,12 @@ The system is a procedural artistic treatment, not physical feather simulation.
 
 Jev's ElevenLabs voice defaults to **Adam**, `s3TPKV1kjDlVtZbl4Ksh`.
 Add `ELEVENLABS_API_KEY` to the bridge environment, or use **Settings → ElevenLabs
-API key**. The manual key stays in memory until the bridge restarts. A separate
-voice-ID form changes the selected voice without replacing the key. The **Jev ·
+API key**. The manual key stays in memory until the bridge restarts. **Jev's voice**
+in the same section offers the named voices in `preview/src/jev-voices.js` (Adam,
+`OQkHNgFcqzRY82loyxsc`, and the original Jev voice) and a **Custom voice ID…**
+option for any voice in your ElevenLabs library. Choosing a voice applies it at
+once without replacing the key; the bridge reports the active voice back so the
+picker shows it after a reload. The **Jev ·
 ElevenLabs / residents · local** speech mode routes only Jev's dialogue to
 ElevenLabs; other residents retain Kokoro. Voice remains explicitly mutable and
 can be turned off in Spoken dialogue. Closing the conversation, muting, hiding
