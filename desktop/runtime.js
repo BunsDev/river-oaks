@@ -43,3 +43,32 @@ export function windowBounds(saved, displays) {
   const display = displays.find(d => x >= d.x && y >= d.y && x + width <= d.x + d.width && y + height <= d.y + d.height);
   return display ? { x, y, width, height } : fallback;
 }
+
+// The optional Python bridge (decisions, local Kokoro voices, Jev's ElevenLabs
+// voice) on 127.0.0.1:8765. Development starts it alongside Vite so voices
+// work without a separate terminal; a bridge someone already started is
+// reused, and a machine without uv simply runs the game without it.
+export const BRIDGE_PORT = 8765;
+export const BRIDGE_HEALTH = `http://127.0.0.1:${BRIDGE_PORT}/health`;
+export function bridgeCommand({ voice = true } = {}) {
+  return { command: 'uv', args: ['run', ...(voice ? ['--extra', 'voice'] : []), 'river-oaks', 'serve', '--port', String(BRIDGE_PORT)] };
+}
+// A bridge is ready when /health answers with its status; anything else
+// (connection refused, a different service on the port) is not our bridge.
+export async function bridgeReady(fetcher, { timeoutMs = 1500 } = {}) {
+  try {
+    const response = await fetcher(BRIDGE_HEALTH, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!response.ok) return false;
+    const body = await response.json();
+    return body?.status === 'ok';
+  } catch { return false; }
+}
+// Poll until the bridge answers, or give up; bounded so a broken install
+// never stalls the game window.
+export async function waitForBridge(fetcher, { attempts = 40, intervalMs = 500, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (await bridgeReady(fetcher)) return true;
+    await sleep(intervalMs);
+  }
+  return false;
+}
