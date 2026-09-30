@@ -1,3 +1,5 @@
+import { JEV_VOICES, isVoiceId, resolveJevVoice } from './jev-voices.js';
+
 export function createJevSettings(provider = 'jev') {
   const eleven = provider === 'elevenlabs';
   const name = eleven ? 'ElevenLabs' : 'Jev';
@@ -16,17 +18,44 @@ export function createJevSettings(provider = 'jev') {
     </div>`;
   if (eleven) panel.querySelectorAll('[id]').forEach(node => { if (node.id.startsWith('jev-key-')) node.id = node.id.replace('jev-', 'elevenlabs-'); });
   if (eleven) {
+    // Jev's voice: a list of named voices, or any ElevenLabs voice ID.
     const voiceForm=document.createElement('form');voiceForm.className='jev-voice-selection';
-    voiceForm.innerHTML='<label for="elevenlabs-voice-id">Jev’s voice ID</label><input id="elevenlabs-voice-id" value="s3TPKV1kjDlVtZbl4Ksh" maxlength="64" pattern="[A-Za-z0-9]{1,64}" required autocomplete="off" spellcheck="false"><button type="submit">Use voice</button>';
+    const options=JEV_VOICES.map(voice=>`<option value="${voice.id}">${voice.name}${voice.note?` · ${voice.note}`:''}</option>`).join('');
+    voiceForm.innerHTML=`<label for="elevenlabs-voice">Jev’s voice</label><select id="elevenlabs-voice">${options}<option value="custom">Custom voice ID…</option></select>
+      <div class="jev-voice-custom" hidden><label for="elevenlabs-voice-id">Voice ID</label><input id="elevenlabs-voice-id" maxlength="64" pattern="[A-Za-z0-9]{1,64}" autocomplete="off" spellcheck="false" placeholder="From your ElevenLabs voice library"><button type="submit">Use voice</button></div>
+      <p id="elevenlabs-voice-status" role="status" aria-live="polite"></p>`;
     panel.querySelector('.rail-disclosure-body').append(voiceForm);
-    voiceForm.addEventListener('submit',async event=>{
-      event.preventDefault();const button=voiceForm.querySelector('button');button.disabled=true;
+    const select=voiceForm.querySelector('select'),custom=voiceForm.querySelector('.jev-voice-custom'),idInput=custom.querySelector('input'),voiceStatus=voiceForm.querySelector('#elevenlabs-voice-status');
+    let selecting=false;
+    const choose=async id=>{
+      if(selecting||!isVoiceId(id))return;selecting=true;select.disabled=true;
+      voiceStatus.textContent='Updating Jev’s voice…';
       try {
-        const response=await fetch('/v1/settings/elevenlabs/voice',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({voice_id:voiceForm.querySelector('input').value.trim()}),signal:AbortSignal.timeout(5000)});
+        const response=await fetch('/v1/settings/elevenlabs/voice',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({voice_id:id}),signal:AbortSignal.timeout(5000)});
         if(!response.ok)throw new Error('Voice could not be selected');
         await request();
-      }catch{status.textContent='Could not update the voice. Check the voice ID and bridge.';}finally{button.disabled=false;}
+      }catch{voiceStatus.textContent='Could not update the voice. Check the voice ID and bridge.';}finally{selecting=false;select.disabled=false;}
+    };
+    select.addEventListener('change',()=>{
+      custom.hidden=select.value!=='custom';
+      if(select.value==='custom'){idInput.focus();return;}
+      choose(select.value);
     });
+    voiceForm.addEventListener('submit',event=>{
+      event.preventDefault();const id=idInput.value.trim();
+      if(!isVoiceId(id)){idInput.setCustomValidity('Enter a voice ID of letters and digits only.');idInput.reportValidity();return;}
+      choose(id);
+    });
+    idInput.addEventListener('input',()=>idInput.setCustomValidity(''));
+    // The bridge reports the active voice; reflect it without re-sending it.
+    panel.showVoice=id=>{
+      const voice=resolveJevVoice(id);if(!voice)return;
+      select.value=voice.custom?'custom':voice.id;
+      // Show the ID field only when the list has no entry for this voice.
+      custom.hidden=select.value!=='custom';
+      if(!custom.hidden)idInput.value=voice.id;
+      voiceStatus.textContent=`Jev speaks as ${voice.custom?`custom voice ${voice.id}`:voice.name}.`;
+    };
   }
   const form = panel.querySelector('form'), input = panel.querySelector('input');
   const save = panel.querySelector('[type=submit]'), reset = panel.querySelector(`[id$="key-reset"]`);
@@ -46,7 +75,7 @@ export function createJevSettings(provider = 'jev') {
       const value = await response.json();
       if (!['manual', 'server', 'none'].includes(value.source)) throw new Error('bridge_unavailable');
       source = value.source;
-      if(eleven&&value.voice_id)panel.querySelector('#elevenlabs-voice-id').value=value.voice_id;
+      if(eleven&&value.voice_id)panel.showVoice(value.voice_id);
       if (eleven && value.configured) window.dispatchEvent(new Event('jevvoiceconfigured'));
       status.textContent = source === 'manual' ? `Manual key configured. ${name} validates it on the next request.`
         : source === 'server' ? 'Using the server’s configured key.' : `No key configured. Add a key to enable ${name}.`;

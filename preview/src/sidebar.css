@@ -53,3 +53,8 @@
 #control-panel #quality-readout{font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 #control-panel .quality-modes{margin:10px 0 0}
 #control-panel .quality-note{margin-top:8px;min-height:3.3em}
+#control-panel .jev-voice-selection select{box-sizing:border-box;width:100%;min-height:44px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:13px}
+#control-panel .jev-voice-custom{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+#control-panel .jev-voice-custom[hidden]{display:none}
+#control-panel .jev-voice-custom button{min-height:44px;font-size:12px;padding:10px;border:1px solid var(--section-color);border-radius:10px;background:var(--section-soft);color:var(--section-color)}
+#control-panel #elevenlabs-voice-status{color:var(--muted);margin:6px 0 0}
