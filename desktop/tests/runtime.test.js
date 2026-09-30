@@ -52,3 +52,17 @@ test('desktop forwards bounded Jev speech as audio and permits changing his sele
  assert.equal(target,'http://127.0.0.1:8765/v1/voice/jev');assert.equal(audio.headers.get('content-type'),'audio/mpeg');assert.equal(await audio.text(),'ID3audio');
  const selected=await bridgeRequest(new Request('app://game/v1/settings/elevenlabs/voice',{method:'PUT',body:JSON.stringify({voice_id:'s3TPKV1kjDlVtZbl4Ksh'})}),async()=>Response.json({configured:false}));assert.equal(selected.status,200);
 });
+
+test('the development bridge is reused when running, started with local voices, and never blocks the window',async()=>{
+ const {bridgeCommand,bridgeReady,waitForBridge,BRIDGE_HEALTH}=await import('../runtime.js');
+ assert.deepEqual(bridgeCommand(),{command:'uv',args:['run','--extra','voice','river-oaks','serve','--port','8765']});
+ assert.deepEqual(bridgeCommand({voice:false}).args,['run','river-oaks','serve','--port','8765']);
+ assert.equal(await bridgeReady(async url=>{assert.equal(url,BRIDGE_HEALTH);return Response.json({status:'ok',mode:'local_rules'});}),true);
+ assert.equal(await bridgeReady(async()=>Response.json({hello:'other service'})),false,'a different service on the port is not the bridge');
+ assert.equal(await bridgeReady(async()=>new Response('down',{status:503})),false);
+ assert.equal(await bridgeReady(async()=>{throw new TypeError('fetch failed');}),false,'connection refused is simply not ready');
+ let calls=0;const sleeps=[];
+ assert.equal(await waitForBridge(async()=>{calls++;if(calls<3)throw new Error('starting');return Response.json({status:'ok'});},{sleep:async ms=>{sleeps.push(ms);}}),true);
+ assert.equal(calls,3);assert.deepEqual(sleeps,[500,500]);
+ assert.equal(await waitForBridge(async()=>{throw new Error('never');},{attempts:4,sleep:async()=>{}}),false,'a broken install gives up instead of stalling');
+});
