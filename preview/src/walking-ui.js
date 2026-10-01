@@ -202,7 +202,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (!state) return false;
       const target=personPosition(local),eyeHeight=personEyeHeight(local);
       if(canTalk(local)) {
-        clear();transport?.brake();this.lookAt(target,eyeHeight);place();return true;
+        // Stop where you stand: arriving at a run must not coast into the conversation.
+        clear();transport?.brake();state.velocity=[0,0];state.acceleration=[0,0];state.speed=0;this.lookAt(target,eyeHeight);place();return true;
       }
       // An airborne or mounted conversation never rebuilds grounded movement.
       if(flight.active || transport)return false;
@@ -211,7 +212,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       if (!position) return false;
       clear();
       // Already within talking range: turn toward them and stay put.
-      if (position === visitor) { this.lookAt(target,eyeHeight); place(); return true; }
+      if (position === visitor) { state.velocity=[0,0];state.acceleration=[0,0];state.speed=0;this.lookAt(target,eyeHeight); place(); return true; }
       const walked = state.distance;
       state = createWalkingState(environment, position, state.yaw);
       state.distance = walked;
