@@ -247,7 +247,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         model.position.y+=noMotion?0:.022*Math.sin(t*1.15);
       }
       avatar.eyes.update(lookTarget,elapsed);
-      look?.update(now,{reducedMotion:noMotion});
+      look?.update(now,{reducedMotion:noMotion,blink:face.pose,gaze:avatar.eyes.pose});
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
     },

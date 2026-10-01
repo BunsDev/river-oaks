@@ -105,8 +105,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       const chosenProfile=appearance,character=sharedAppearance(chosenProfile),rigProfile=character.rig??chosenProfile;
       const portrait = new Image();
       let portraitReady=Promise.resolve(false);
-      if(character.reference||chosenProfile==='jevica'){
-        portrait.src=character.reference??'/assets/characters/jevica-portrait.png';
+      if(character.portrait||character.reference||chosenProfile==='jevica'){
+        portrait.src=character.portrait??character.reference??'/assets/characters/jevica-portrait.png';
         portraitReady=portrait.decode().then(()=>true,()=>false);
       }
       const avatarIndex=rigProfile==='jevica'?identity.avatar:AVATAR_PROFILES.indexOf(rigProfile);
@@ -129,7 +129,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       panel.querySelector('#player-role').textContent = character.role;
       const portraitImage=panel.querySelector('.player-portrait img');
       if(hasPortrait)portraitImage.src=portrait.src;
-      portraitImage.classList.toggle('turnaround',Boolean(hasPortrait&&character.reference));
+      portraitImage.classList.toggle('turnaround',Boolean(hasPortrait&&character.reference&&!character.portrait));
       portraitImage.classList.toggle('tall-reference',Boolean(hasPortrait&&character.portraitStyle==='tall'));
       portraitImage.classList.toggle('collage-reference',Boolean(hasPortrait&&character.portraitStyle==='collage'));
       portraitImage.style.setProperty('--portrait-left',character.portraitLeft??'0px');

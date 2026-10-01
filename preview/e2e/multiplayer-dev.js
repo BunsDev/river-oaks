@@ -20,6 +20,11 @@ async page => {
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
   check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
+  await page.locator('#player-appearance').selectOption('woman-casual');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+  await second.waitForFunction(id=>window.__riverMultiplayer().snapshot?.players.find(p=>p.id===id)?.appearance==='woman-casual',a.self);
+  await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='woman-casual'),a.self);
+  check(true,'Sable selection reaches the other browser and its rendered remote avatar');
   check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');

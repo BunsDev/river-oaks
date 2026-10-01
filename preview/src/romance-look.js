@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createSableLook } from './sable-look.js';
 import { createReferenceStyle } from './reference-archetypes.js';
 
 // The imported rigs provide facial proportions, skin detail and tailored clothes.
@@ -103,6 +104,7 @@ function tailFurGeometry(length,kind,colors){
 }
 
 export function createRomanceLook(avatar,root,appearance) {
+  if(appearance?.id==='woman-casual')return createSableLook(avatar,root,appearance);
   const style=WARDROBE[appearance?.id];
   if(!style)return {update(){},dispose(){}};
   const animal=appearance.id==='midnight-host-wolf'?HOST_WOLF:ANIMALS[appearance.kind],resources=new Set(),materials=new Set(),group=new THREE.Group();
