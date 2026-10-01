@@ -46,6 +46,35 @@ async page => {
   const atBench = await second.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 1.5; }, [a.self, await page.evaluate(() => { const h = JSON.parse(document.querySelector('#walking-hud').dataset.position); return [h[0], -h[2]]; })], { timeout: 15000 }).then(() => true, () => false);
   check(atBench, 'a landmark teleport is a server-checked position travel the other browser sees');
   if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
+  // Builder mode: a live preview shows where a creation will land and
+  // whether the town accepts it there; clicking the ground places it.
+  const builder = () => page.evaluate(() => window.__riverMultiplayer().builder);
+  const dockOpen = await page.locator('.visit-tools').evaluate(node => node.open);
+  if (!dockOpen) await page.locator('.visit-tools-toggle').click();
+  await page.locator('#build-mode').click();
+  check((await page.locator('#build-mode').getAttribute('aria-pressed')) === 'true', 'Builder mode can be switched on');
+  const canvas = await page.locator('#canvas-host').boundingBox();
+  const aimAt = async (fx, fy) => { await page.mouse.move(canvas.x + canvas.width * fx, canvas.y + canvas.height * fy); await page.waitForTimeout(250); return builder(); };
+  let aim = null;
+  for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') break; }
+  check(aim?.ghost?.visible, 'The preview appears where the pointer meets the ground');
+  check(aim.valid === 'true' && /Ready/.test(aim.hint), `An open spot is marked ready (${aim.hint})`);
+  await page.screenshot({ path: 'output/playwright/builder-mode.png' });
+  const before = (await page.evaluate(() => window.__riverMultiplayer().snapshot.builds.length));
+  const aimed = aim.ghost.position;
+  await page.mouse.down(); await page.mouse.up();
+  await page.waitForFunction(n => window.__riverMultiplayer().snapshot.builds.length > n, before, { timeout: 15000 });
+  const placed = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds.at(-1));
+  check(Math.hypot(placed.position[0] - aimed[0], placed.position[1] + aimed[2]) < .11, 'A click places the creation exactly where the preview stood');
+  await page.waitForFunction(() => /creation|standing/.test(document.querySelector('#build-hint')?.textContent ?? ''), null, { timeout: 5000 }).catch(() => {});
+  const blocked = await builder();
+  check(blocked.valid === 'false', `The preview turns red on the spot just taken (${blocked.hint})`);
+  const yaw = (await builder()).yaw; await page.keyboard.press('KeyR');
+  check(Math.abs((await builder()).yaw - yaw - Math.PI / 12) < 1e-6, 'R turns the preview');
+  await page.keyboard.press('Escape');
+  check(!(await builder()).active && !(await builder()).ghost, 'Escape leaves builder mode and removes the preview');
+  check(await page.locator('.visit-tools').evaluate(node => node.open), 'Escape in builder mode leaves the dock open');
+  await page.locator('.visit-tools-toggle').click();
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>!document.querySelector('.visit-tools').open);
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
