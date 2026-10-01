@@ -96,6 +96,9 @@ def test_actual_git_hook_prevents_commit(repo):
             "user.name=Test",
             "-c",
             "user.email=test@example.invalid",
+            # Independent of the developer's signing setup; the repository hook still runs.
+            "-c",
+            "commit.gpgsign=false",
             "commit",
             "-m",
             "This synthetic-secret commit must be rejected",
@@ -125,6 +128,11 @@ def test_history_scan_automatically_loads_repository_rules(repo):
             "user.name=Test",
             "-c",
             "user.email=test@example.invalid",
+            # Independent of the developer's global git: no signing, no global hooks.
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "core.hooksPath=/dev/null",
             "commit",
             "-qm",
             "Synthetic history fixture",
@@ -140,6 +148,11 @@ def test_history_scan_automatically_loads_repository_rules(repo):
             "user.name=Test",
             "-c",
             "user.email=test@example.invalid",
+            # Independent of the developer's global git: no signing, no global hooks.
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "core.hooksPath=/dev/null",
             "commit",
             "-qm",
             "Remove fixture",
