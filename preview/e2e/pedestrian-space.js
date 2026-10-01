@@ -10,9 +10,17 @@ async page=>{
   await page.setViewportSize({width:1440,height:1000});
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';},null,{timeout:90000});
-  await page.getByRole('button',{name:'Meet someone nearby',exact:true}).click();
+  // Meet a resident, not the nearest someone: since the carriage arrived that
+  // is Prince Jev, Jevica's companion, who has no decision agent of his own.
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=community-section]').click();
+  const resident=await page.locator('#community-local option').evaluateAll(options=>options.map(option=>option.value).find(value=>value.startsWith('local-')));
+  check(Boolean(resident),'A district resident can be met from the People panel');
+  await page.locator('#community-local').selectOption(resident);
+  await page.getByRole('button',{name:'Meet a local',exact:true}).click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
   await page.locator('#community-close').click();
+  await page.locator('#panel-toggle').click();
   const ground=await packet();
   check(visitors(ground).length>0,'Ground-level Jevica remains a nearby pedestrian');
   await page.locator('#player-flight').click();
