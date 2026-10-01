@@ -72,6 +72,8 @@ int32 FRiverSkeletalBackend::CreateHuman(const FString& AgentId, const FRiverApp
     const double Scale = *Stature * 100. / Bounds.GetSize().Z;
     auto* Component = NewObject<USkeletalMeshComponent>(Owner.Get());
     if (!Component) return INDEX_NONE;
+    // Every accepted pose moves this component, so say so rather than rely on the default.
+    Component->SetMobility(EComponentMobility::Movable);
     Component->SetSkeletalMesh(Assets->Mesh.Get());
     Component->SetAnimInstanceClass(Assets->AnimClass.Get());
     Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);

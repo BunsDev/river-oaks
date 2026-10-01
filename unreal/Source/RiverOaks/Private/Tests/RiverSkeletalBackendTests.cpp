@@ -162,6 +162,7 @@ bool FRiverSkeletalConfigurationTest::RunTest(const FString& Parameters)
     if (TestEqual(TEXT("one component for the live human"), Components.Num(), 1))
     {
         auto* Component = Components[0];
+        TestTrue(TEXT("skeletal component is movable"), Component->Mobility == EComponentMobility::Movable);
         FRiverHumanPose Pose;
         Pose.Sequence = 1;
         Pose.Root = FTransform(FVector(100, 200, 90));
@@ -176,22 +177,40 @@ bool FRiverSkeletalConfigurationTest::RunTest(const FString& Parameters)
         auto* Anim = Cast<URiverLocomotionAnimInstance>(Component->GetAnimInstance());
         if (TestNotNull(TEXT("locomotion animation initialized"), Anim))
         {
+            // The animation instance reads the simulation's word for it and nothing else.
+            TestEqual(TEXT("first pose carries its locomotion name"), Anim->Locomotion, FName(TEXT("walk")));
+            TestEqual(TEXT("first pose selects the walk state"), Anim->State, ERiverLocomotionState::Walk);
+            TestTrue(TEXT("first pose has no step to accumulate"), FMath::IsNearlyZero(Anim->TravelDistanceCm, .01));
             Pose.Sequence = 2;
             Pose.SimTimeSeconds = 1.;
             Pose.Root.SetLocation(FVector(200, 200, 90));
             TestTrue(TEXT("second authoritative pose applied"), Live.ApplyPose(Handle, Pose));
             TestEqual(TEXT("speed works when first pose is at time zero"), Anim->GroundSpeed, 100.f);
+            TestTrue(TEXT("travel distance accumulates the authoritative step"),
+                FMath::IsNearlyEqual(Anim->TravelDistanceCm, 100., .01));
             TestTrue(TEXT("stature survives subsequent poses"), FMath::IsNearlyEqual(
                 Bounds.GetSize().Z * Component->GetComponentScale().Z, 166., .01));
-            TestFalse(TEXT("stale pose is refused"), Live.ApplyPose(Handle, Pose));
             Pose.Sequence = 3;
+            Pose.SimTimeSeconds = 2.;
+            Pose.Root.SetLocation(FVector(220, 200, 90));
+            Pose.Locomotion = TEXT("jog");
+            TestTrue(TEXT("third authoritative pose applied"), Live.ApplyPose(Handle, Pose));
+            TestEqual(TEXT("state follows a changed locomotion name"), Anim->State, ERiverLocomotionState::Jog);
+            TestEqual(TEXT("speed derives from successive positions"), Anim->GroundSpeed, 20.f);
+            TestTrue(TEXT("travel distance wraps at one stride"),
+                FMath::IsNearlyEqual(Anim->TravelDistanceCm, 10., .01));
+            TestFalse(TEXT("stale pose is refused"), Live.ApplyPose(Handle, Pose));
+            TestEqual(TEXT("stale pose leaves the state alone"), Anim->State, ERiverLocomotionState::Jog);
+            Pose.Sequence = 4;
             Pose.SimTimeSeconds = std::numeric_limits<double>::quiet_NaN();
             TestFalse(TEXT("nonfinite time is refused"), Live.ApplyPose(Handle, Pose));
-            TestEqual(TEXT("invalid pose does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(2));
-            Pose.SimTimeSeconds = 2.;
+            TestEqual(TEXT("invalid pose does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(3));
+            TestTrue(TEXT("refused pose leaves travel distance alone"),
+                FMath::IsNearlyEqual(Anim->TravelDistanceCm, 10., .01));
+            Pose.SimTimeSeconds = 3.;
             Component->DestroyComponent();
             TestFalse(TEXT("externally destroyed component refuses pose"), Live.ApplyPose(Handle, Pose));
-            TestEqual(TEXT("missing component does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(2));
+            TestEqual(TEXT("missing component does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(3));
         }
     }
     Live.DestroyHuman(Handle);
