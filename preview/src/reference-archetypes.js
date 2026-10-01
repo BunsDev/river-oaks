@@ -216,7 +216,7 @@ export function createReferenceStyle(avatar,appearance){
       for(let i=0;i<(masculine?5:3);i++)leaf(torso,leafGold,[side*(.13+i*.006),.25-i*.07,.15],.015,side*.4,0);
     }
     box(torso,olive,[0,-.03,.13],[.12,.26,.014],.006);
-    if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.176,.168,.3,24),trousers,[0,-.07,0]);seat.scale.z=.78;}
+    if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.182,.17,.42,24),trousers,[0,-.13,0]);seat.scale.z=.84;}
     drape(pelvis,linen,{from:.55,to:Math.PI*2-.55,length:.84,name:'Forest aristocrat drape'});
     drape(pelvis,olive,{from:-.24,to:.24,length:.7,rx:.2,rz:.152,jag:.08,lobes:1});
     drape(pelvis,olive,{from:Math.PI-.3,to:Math.PI+.3,length:.8,rx:.2,rz:.152,jag:.1,lobes:2});
@@ -243,7 +243,7 @@ export function createReferenceStyle(avatar,appearance){
         if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1});
         // Cream linen trousers under the drape.
         const thigh=along(`thigh_${side}`,`calf_${side}`);
-        if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.078,.112,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=.95;}
+        if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.08,.132,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=1;}
       }
       // Tall vine-bound boots: a fitted shaft to the knee and a block heel.
       const shin=along(`calf_${side}`,`foot_${side}`);
