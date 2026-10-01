@@ -39,7 +39,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   });
   const carriageButton=panel.querySelector('#player-carriage');
   carriageButton.addEventListener('click',()=>{
-    status.textContent=carriage.summon()?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
+    const summoned=carriage.summon();status.textContent=summoned?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
+    walking.notify?.(status.textContent);
     if(carriage.placement)walking.lookAt([carriage.placement.position[0],-carriage.placement.position[2],carriage.placement.position[1]]);
   });
   const vehicleSelect=panel.querySelector('#player-vehicle'),driveButton=panel.querySelector('#player-chauffeur'),driveStatus=panel.querySelector('#player-drive-status');
@@ -86,8 +87,14 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   const listeners = new Set();
   const reactions = createVisitorReactions(),attention=createPlayerAttention();
   const flightButton=panel.querySelector('#player-flight');
-  flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())status.textContent='Move into clear outdoor space to take flight.';});
-  host.addEventListener('keydown',event=>{if(event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())status.textContent='Move into clear outdoor space to take flight.';}});
+  // A refused take-off says so where the player is looking, not only in the dock.
+  const refuseFlight=()=>{
+    const hud=document.querySelector('#walking-hud')?.dataset??{};
+    const message=hud.inside?'You’re indoors: step outside to take flight.':walking.getPose?.()?.riding?'Step out of your ride to take flight.':'No room to take off here: step out from under the arcade or trees.';
+    status.textContent=message;walking.notify?.(message);
+  };
+  flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())refuseFlight();});
+  host.addEventListener('keydown',event=>{if(event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())refuseFlight();}});
   for(const button of panel.querySelectorAll('[data-flight-key]')) {
     const release=()=>host.dispatchEvent(new KeyboardEvent('keyup',{code:button.dataset.flightKey,bubbles:true}));
     button.addEventListener('pointerdown',event=>{event.preventDefault();button.setPointerCapture(event.pointerId);host.focus();host.dispatchEvent(new KeyboardEvent('keydown',{code:button.dataset.flightKey,bubbles:true}));});
