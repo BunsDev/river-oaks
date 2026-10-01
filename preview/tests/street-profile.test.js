@@ -106,5 +106,6 @@ test('zebra bars span the crossing along the road and warnings retain their dept
   for(let i=0;i<warnings.count;i++)if(Math.abs(warnings.getX(i)-crossing.center[0])<=STREET.crossingWidth/2+.001)offsets.push(Math.abs(warnings.getZ(i))-road.width_m/2);
   close(Math.min(...offsets),STREET.warningSetback);
   close(Math.max(...offsets)-Math.min(...offsets),STREET.warningDepth);
-  assert.equal(sidewalks.children.length,3,'street details stay batched');
+  // Stone curb and gutter, brick pavers, paint and tactile warnings: one mesh each.
+  assert.equal(sidewalks.children.length,4,'street details stay batched');
 });

@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
+import { paverSurface } from './materials.js';
 import { STREET, streetSection, streetOffset, sidewalkOffset, crossingDistance, streetStations } from './street-profile.js';
 
-// Batched concrete, paint and warning surfaces. The same triangles support feet
+// Batched herringbone brick, stone curb, paint and warning surfaces. The same triangles support feet
 // and carriage wheels through registerGroundSurfaces; there is no visual-only curb.
 export function buildDesignatedSidewalks(world,isFree=()=>true) {
   const network=createPedestrianNetwork(world),group=new THREE.Group();group.name='Palo Alto street surfaces';
-  const surfaces={positions:[],colors:[],uvs:[]},paint={positions:[],colors:[],uvs:[]},warnings={positions:[],colors:[],uvs:[]};
+  const surfaces={positions:[],colors:[],uvs:[]},pavers={positions:[],colors:[],uvs:[]},paint={positions:[],colors:[],uvs:[]},warnings={positions:[],colors:[],uvs:[]};
   const color=hex=>new THREE.Color(hex).toArray();
   const concrete=color('#ccc9bf'),gutter=color('#aaa9a0'),curb=color('#dfdacd'),white=color('#f2eee0');
   const stats={profile:'palo-alto',warningPanels:0,crossingEndpoints:network.crossings.length*2,constrainedPanels:0,sidewalkWidth:STREET.sidewalkWidth,clearWidth:STREET.clearWidth};
@@ -40,7 +41,10 @@ export function buildDesignatedSidewalks(world,isFree=()=>true) {
       for(let band=1;band<edges.length;band++) {
         const lo=edges[band-1],hi=edges[band],vertices=[at(start,lo),at(end,lo),at(end,hi),at(start,hi)];
         if(!vertices.every(v=>isFree(v[0],-v[1])&&network.clearOfOtherRoads(v,segment.road))) {stats.constrainedPanels++;continue;}
-        add(surfaces,vertices,hi<=STREET.curbWidth?curb:concrete);
+        // The curb band stays pale stone; the walking surface is brick laid in
+        // courses that follow the street, with UVs measured in metres.
+        if(hi<=STREET.curbWidth)add(surfaces,vertices,curb);
+        else add(pavers,vertices,[1,1,1],[[start,lo],[end,lo],[end,hi],[start,hi]]);
         const atCrossing=crossingDistance(network,segment.road,middle)<=STREET.crossingWidth/2+1e-7;
         if(atCrossing&&lo>=STREET.warningSetback-1e-8&&hi<=STREET.warningSetback+STREET.warningDepth+1e-8) {
           add(warnings,vertices,[1,1,1],[[start/.06,lo/.06],[end/.06,lo/.06],[end/.06,hi/.06],[start/.06,hi/.06]]);
@@ -69,9 +73,9 @@ export function buildDesignatedSidewalks(world,isFree=()=>true) {
     textureData.set([212*light,167*light,44*light,255],offset);
   }
   const tactile=new THREE.DataTexture(textureData,32,32);tactile.wrapS=tactile.wrapT=THREE.RepeatWrapping;tactile.colorSpace=THREE.SRGBColorSpace;tactile.needsUpdate=true;
-  for(const [name,batch]of Object.entries({concrete:surfaces,markings:paint,warnings})) {
+  for(const [name,batch]of Object.entries({concrete:surfaces,pavers,markings:paint,warnings})) {
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(batch.positions,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(batch.colors,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(batch.uvs,2));geometry.computeVertexNormals();
-    const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.94,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:name==='concrete'?-1:-2,polygonOffsetUnits:name==='concrete'?-1:-2,...(name==='warnings'?{map:tactile,bumpMap:tactile,bumpScale:.003}:{})});
+    const material=name==='pavers'?paverSurface({side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}):new THREE.MeshStandardMaterial({vertexColors:true,roughness:.94,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:name==='concrete'?-1:-2,polygonOffsetUnits:name==='concrete'?-1:-2,...(name==='warnings'?{map:tactile,bumpMap:tactile,bumpScale:.003}:{})});
     const mesh=new THREE.Mesh(geometry,material);mesh.name=`Street ${name}`;mesh.receiveShadow=true;group.add(mesh);
     if(name==='warnings')mesh.userData.texture=tactile;
   }

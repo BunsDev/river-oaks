@@ -123,6 +123,36 @@
       "license": "CC0-1.0"
     },
     {
+      "asset": "brick_floor",
+      "kind": "color",
+      "path": "/assets/materials/paver-color.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_floor/brick_floor_diff_1k.jpg",
+      "asset_page": "https://polyhaven.com/a/brick_floor",
+      "bytes": 469580,
+      "sha256": "9c783b294d5a3127d7c5f5e52df67bbd418aebc90ec05696da5aac2bba834058",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "brick_floor",
+      "kind": "normal",
+      "path": "/assets/materials/paver-normal.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_floor/brick_floor_nor_gl_1k.jpg",
+      "asset_page": "https://polyhaven.com/a/brick_floor",
+      "bytes": 657888,
+      "sha256": "bade4c251490568a766103b2807616110e1870e0f683a8238489d8a677dc6800",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "brick_floor",
+      "kind": "arm",
+      "path": "/assets/materials/paver-arm.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_floor/brick_floor_arm_1k.jpg",
+      "asset_page": "https://polyhaven.com/a/brick_floor",
+      "bytes": 189160,
+      "sha256": "17243a67e61cab91cf7c6484d2014972d4065ef39f446184579d7e98c49e841f",
+      "license": "CC0-1.0"
+    },
+    {
       "asset": "large_sandstone_blocks_01",
       "kind": "color",
       "path": "/assets/materials/stone-color.jpg",

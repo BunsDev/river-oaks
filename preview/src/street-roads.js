@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
-import { physicalSurface } from './materials.js';
+import { physicalSurface, paverSurface } from './materials.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { isWalkway, streetOffset, streetSection, streetStations, crossingDistance } from './street-profile.js';
 
@@ -28,7 +28,7 @@ export function buildRoads(world) {
       }
     }
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geometry.computeVertexNormals();
-    const mesh=new THREE.Mesh(geometry,walkway?physicalSurface('pavement',{tileSize:2,color:'#d8d5cc',roughness:.95,side:THREE.DoubleSide}):asphalt);
+    const mesh=new THREE.Mesh(geometry,walkway?paverSurface({side:THREE.DoubleSide}):asphalt);
     mesh.receiveShadow=true;group.add(mesh);if(!walkway)group.userData.asphalt=mesh;
   }
   // Dashed centre markings make the two independent travel lanes legible.

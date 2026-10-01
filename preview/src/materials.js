@@ -12,6 +12,9 @@ export function configureMaterials(renderer) {
 function texture(name, channel) {
   const key = `${name}-${channel}`;
   if (maps.has(key)) return maps.get(key);
+  // Node unit tests build street geometry without a DOM: hand back an
+  // unloaded texture so materials still construct.
+  if (typeof document === 'undefined') { const map = new THREE.Texture(); maps.set(key, map); return map; }
   const map = new THREE.TextureLoader().load(`/assets/materials/${key}.jpg`, undefined, undefined, () => {
     errors.add(key);
     document.dispatchEvent(new CustomEvent('visualasseterror', { detail: { count: errors.size } }));
@@ -27,6 +30,14 @@ function texture(name, channel) {
 // Optional low-frequency tone variation breaks the visible repeat of a tiled
 // texture over large ground planes; it multiplies albedo only. textureContrast
 // (< 1) quiets the photographed surface's high-frequency albedo at eye level.
+// High-street brick: clay pavers in herringbone with sand joints. One brick is
+// about 20 cm, so a texture repeat spans 1.15 m. The warm tint lifts the
+// photographed grey toward fired clay; low variation keeps it laid, not worn.
+export const PAVER_TILE = 1.15;
+export function paverSurface(options = {}) {
+  return physicalSurface('paver', { tileSize: PAVER_TILE, color: '#f4d6c2', normalScale: new THREE.Vector2(0.75, 0.75), variation: 0.14, textureContrast: 0.9, ...options });
+}
+
 export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, textureContrast = 1, ...options } = {}) {
   const arm = texture(name, 'arm');
   const material = new THREE.MeshStandardMaterial({
