@@ -13,7 +13,11 @@ async page=>{
   await page.screenshot({path:`output/playwright/bodice-visible-${reference?'reference':'fitted'}.png`});runs.push({reference,samples});
   if(reference)await page.unroute('**/src/bodice-fitting.js*');
  }
- const exposed=runs[0].samples.filter(s=>s.hits[0]?.name==='Jevica').length;
- if(exposed<3||runs[1].samples.some(s=>s.hits[0]?.name!=='Jevica_fitted_bodice'))throw new Error(JSON.stringify(runs));
- return {exposedReferencePoints:exposed,coveredFittedPoints:runs[1].samples.length,runs};
+ // Clearance of the bodice over the skin along each ray (negative: skin shows through).
+ const clearance=sample=>{const cloth=sample.hits.find(h=>h.name==='Jevica_fitted_bodice'),body=sample.hits.find(h=>h.name==='Jevica');return cloth&&body?body.distance-cloth.distance:Infinity;};
+ // Without fitting the skin shows through or sits within 6 mm, where the two
+ // surfaces flicker; fitted, the bodice is in front everywhere with 8 mm to spare.
+ const unfitted=runs[0].samples.filter(s=>clearance(s)<.006).length;
+ if(unfitted<3||runs[1].samples.some(s=>s.hits[0]?.name!=='Jevica_fitted_bodice'||clearance(s)<.008))throw new Error(JSON.stringify(runs));
+ return {unfittedNearSkin:unfitted,minFittedClearance:Math.min(...runs[1].samples.map(clearance)),runs};
 }

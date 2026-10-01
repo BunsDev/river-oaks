@@ -187,7 +187,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     },
     update(now,camera,viewportHeight) {
       const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
-      carriage.update(now);
+      carriage.update(now);carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
       carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
       companionButton.disabled=sharedMode||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));

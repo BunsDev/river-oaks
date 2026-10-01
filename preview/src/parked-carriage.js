@@ -58,6 +58,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   },
   board(){const pose=walking.getPose();if(!enabled||!driver.canDrive||!placement||!pose||pose.flying||pose.roomId||Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8)return false;mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;},
   leave(){if(!mounted)return false;const exit=findCarriageExit(placement,environment,getLocals()??[]);if(!exit)return false;walking.dismount(exit);return true;},summon,
+  updateOptics(camera,viewportHeight){driver.updateOptics?.(camera,viewportHeight);},
   update(now=performance.now()){
    if(!enabled)return;
    if(placement){apply();model.animate(now,placement.speed,reducedMotion);driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});}

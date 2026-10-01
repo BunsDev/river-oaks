@@ -107,7 +107,11 @@ export function createPrinceCostume(avatar,{skinTexture=null}={}) {
   const surface = parameters => { const material = new THREE.MeshPhysicalMaterial(parameters); owned.add(material); return material; };
   const gold = surface({ color: '#d4a84f', metalness: 1, roughness: 0.24, clearcoat: 0.4, clearcoatRoughness: 0.2 });
   gold.name = 'Prince Jev gold';
-  const sapphire = surface({ color: '#1b3fae', roughness: 0.05, metalness: 0.05, clearcoat: 1, ior: 1.77, transmission: 0.2, thickness: 0.01 });
+  // Refraction starts at zero and is restored by updateOptics when the gems are
+  // large on screen: any transmissive material makes Three redraw the whole
+  // opaque district into a texture every frame, even for three 17 mm sapphires.
+  const sapphire = surface({ color: '#1b3fae', roughness: 0.05, metalness: 0.05, clearcoat: 1, ior: 1.77, transmission: 0, thickness: 0.01 });
+  sapphire.name = 'Prince Jev sapphires';
   const ruby = surface({ color: '#a3122e', roughness: 0.06, metalness: 0.05, clearcoat: 1, ior: 1.77 });
   const sashCloth = surface({ color: '#8a1430', roughness: 0.62, sheen: 0.7, sheenColor: new THREE.Color('#ff8fa6'), sheenRoughness: 0.45, side: THREE.DoubleSide });
   sashCloth.name = 'Prince Jev royal sash';
@@ -242,6 +246,7 @@ diffuseColor.rgb=diffuse*mix(.38,1.08,pow(strand,.62));
   batchCostumeAttachments(attachments, owned);
   const shoppingBag=createPrinceShoppingBag(avatar);
   const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
+  const opticalPosition = new THREE.Vector3(), opticalScale = new THREE.Vector3();
   return {
     get materials() { return [...owned].filter(item => item.isMaterial); },
     get bag() { return shoppingBag.object; },
@@ -253,6 +258,17 @@ diffuseColor.rgb=diffuse*mix(.38,1.08,pow(strand,.62));
         item.bone.getWorldQuaternion(orientation); item.group.quaternion.copy(inverse).multiply(orientation).multiply(item.rest);
       }
       shoppingBag.update(carrying);
+    },
+    // Same rule as Jevica's jewels: keep the facets and clearcoat at every
+    // distance, and restore refraction as a sapphire spans 8–16 CSS pixels.
+    updateOptics(camera, viewportHeight) {
+      if (!camera || !Number.isFinite(viewportHeight) || viewportHeight <= 0 || !root.visible) { sapphire.transmission = 0; return; }
+      camera.updateWorldMatrix(true, false);
+      head.bone.getWorldPosition(opticalPosition).applyMatrix4(camera.matrixWorldInverse);
+      root.getWorldScale(opticalScale);
+      const diameter = 0.017 * Math.max(opticalScale.x, opticalScale.y, opticalScale.z);
+      const pixels = -opticalPosition.z > 0.01 ? diameter * viewportHeight * 0.5 * camera.projectionMatrix.elements[5] / -opticalPosition.z : 0;
+      sapphire.transmission = 0.2 * THREE.MathUtils.smoothstep(pixels, 8, 16);
     },
     dispose() { shoppingBag.dispose();attachments.forEach(({ group }) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };

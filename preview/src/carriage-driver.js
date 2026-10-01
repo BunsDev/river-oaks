@@ -166,6 +166,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
       if(flight)flightHands?.update({amount:flight.blend,speed:body?.speed??0,bank:flight.bank});
       object.updateWorldMatrix(true,true);costume?.update({carrying:!riding&&mode!=='flying'});publish({mode,carrying:!riding&&mode!=='flying'});
     },
+    updateOptics(camera,viewportHeight){costume?.updateOptics?.(camera,viewportHeight);},
     dispose(){reset();disposed=true;brain.dispose?.();wings?.dispose();costume?.dispose();avatar?.dispose();object.removeFromParent();listeners.clear();},
   };
 }
