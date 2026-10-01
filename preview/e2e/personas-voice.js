@@ -22,11 +22,12 @@ async (page) => {
   });
   await rail('settings-section');
   await page.locator('button[data-theme-preference=light]').click();
-  const light=await palette(); check(light.bg==='#f4f2ed' && light.accent==='#913b68','Light tokens must match the district visual finish');
+  // The retrofuturistic finish (retro-finish.css) is the district's current palette and loads last.
+  const light=await palette(); check(light.bg==='#e8e5d8' && light.accent==='#286768','Light tokens must match the district visual finish');
   await page.locator('button[data-theme-preference=system]').click();
   await page.emulateMedia({colorScheme:'dark'});
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
-  const dark=await palette(); check(dark.bg==='#181e1c' && dark.accent==='#efb4d0','Dark tokens must match the district visual finish');
+  const dark=await palette(); check(dark.bg==='#132e34' && dark.accent==='#b8e4ca','Dark tokens must match the district visual finish');
   check(dark.font.includes('Segoe UI'),'System UI font must apply');
   await page.emulateMedia({colorScheme:'light'});
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');

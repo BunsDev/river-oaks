@@ -70,8 +70,16 @@ async (page) => {
   check((await resources()).join('|') === '12|4|60:00', 'Reset restores resources and clock');
   check(await page.locator('#community-ask').isVisible(), 'Reset clears known needs');
 
-  await meet('local-07'); await page.locator('#community-ask').click(); await settled();
-  check(await page.locator('#community-support-status').textContent() === 'No request', 'Comfortable residents do not imply a support need');
+  // Which residents need help comes from the scenario's targets, so find a
+  // comfortable one by asking rather than assuming a fixed id.
+  let comfortable=null;
+  for (const id of await page.locator('#community-local option[value^=local-]').evaluateAll(options=>options.map(option=>option.value))) {
+    await meet(id); await page.locator('#community-ask').click(); await settled();
+    const status=await page.locator('#community-support-status').textContent();
+    if (status==='No request') { comfortable=id; break; }
+    check(status==='Needs support','A resident who was asked either needs support or has no request');
+  }
+  check(Boolean(comfortable),'Comfortable residents do not imply a support need');
   reactionMode = 'slow';
   await page.locator('#community-about').click();
   check(await page.locator('#community-about').getAttribute('aria-pressed') === 'true', 'Selected topic is exposed');
@@ -122,7 +130,14 @@ async (page) => {
     await page.locator('[data-section=community-section]').click();
     for (const [width, height] of [[1440, 1000], [1280, 720], [390, 844], [320, 568], [844, 390]]) {
       await page.setViewportSize({ width, height });
-      await meet('local-07');
+      // Measure an open conversation with whichever resident is reachable now:
+      // one standing somewhere Jevica cannot reach is (rightly) declined.
+      let opened=false;
+      for (const id of [comfortable, ...await page.locator('#community-local option[value^=local-]').evaluateAll(options=>options.map(option=>option.value))]) {
+        await meet(id);
+        if (await page.locator('#community-dialogue').waitFor({ state: 'visible', timeout: 2500 }).then(()=>true,()=>false)) { opened=true; break; }
+      }
+      check(opened, `${theme} ${width}x${height}: a reachable resident opens a conversation`);
       const bounds = await page.locator('#community-dialogue').evaluate(el => {
         const body = el.querySelector('.community-dialogue-body');
         const rect = node => { const r = node.getBoundingClientRect(); return { top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height }; };
@@ -131,7 +146,7 @@ async (page) => {
           minimumTarget:Math.min(...[...el.querySelectorAll('button, summary')].filter(node => node.getClientRects().length).map(node => node.getBoundingClientRect().height)) };
       });
       check(bounds.dialog.left >= 0 && bounds.dialog.right <= width + 1 && bounds.dialog.top >= 0 && bounds.dialog.bottom <= height + 1, `${theme} ${width}x${height}: dialog inside viewport`);
-      check(!bounds.overflow && bounds.scrollable, `${theme} ${width}x${height}: independent scroll without horizontal overflow`);
+      check(!bounds.overflow && bounds.scrollable, `${theme} ${width}x${height}: independent scroll without horizontal overflow (overflow ${bounds.overflow}, scrollable ${bounds.scrollable}, dialog ${Math.round(bounds.dialog.height)}px, body ${Math.round(bounds.body.height)}px)`);
       check(bounds.close.height >= 44 && bounds.next.height >= 44 && bounds.minimumTarget >= 44, 'Touch targets remain at least 44px');
       await page.locator('.community-dialogue-body').focus();
       await page.keyboard.press('End');
