@@ -4,7 +4,7 @@ const element = (tag,text,className) => { const node=document.createElement(tag)
 export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers }) {
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
   const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
-  const description=element('p','Sign in to join the town as Jevica. Everyone shares the same residents, wishes, and consequences.');
+  const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
   const login=element('a','Sign in with WorkOS','multiplayer-primary');login.href='/auth/login';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
@@ -13,7 +13,15 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   const panel=element('section',null,'multiplayer-roster');panel.setAttribute('aria-label','Players in town');
   const summary=element('strong','Connecting'),list=element('div'),notice=element('p');notice.setAttribute('role','status');
   const logout=element('button','Sign out');logout.type='button';
-  panel.append(summary,list,notice,logout);document.querySelector('#community-section')?.prepend(panel);
+  const chatSection=element('section',null,'multiplayer-chat');chatSection.setAttribute('aria-label','Town chat');
+  const chatTitle=element('h3','Town chat'),chatHistory=element('div',null,'multiplayer-chat-history');
+  chatHistory.setAttribute('role','log');chatHistory.setAttribute('aria-label','Town messages');chatHistory.setAttribute('aria-live','off');
+  const chatForm=element('form',null,'multiplayer-chat-form'),chatInput=element('input'),chatSend=element('button','Send');
+  chatInput.type='text';chatInput.maxLength=280;chatInput.placeholder='Message the town';chatInput.setAttribute('aria-label','Message the town');
+  chatSend.type='submit';chatInput.disabled=chatSend.disabled=true;chatForm.append(chatInput,chatSend);
+  const chatStatus=element('p',null,'multiplayer-chat-status');chatStatus.setAttribute('role','status');
+  chatSection.append(chatTitle,chatHistory,chatForm,chatStatus);
+  panel.append(summary,list,notice,chatSection,logout);document.querySelector('#community-section')?.prepend(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false;
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
@@ -45,7 +53,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     return data;
   };
   const displayPlayers=players=>{
-    summary.textContent=`${players.length} ${players.length===1?'Jevica':'Jevicas'} in town`;
+    summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
     for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);}
     for(const player of players){
       let row=rows.get(player.id);
@@ -58,6 +66,21 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
         }
       }
     }
+  };
+  const chatRows=new Map();let chatInitialized=false;
+  const displayChat=messages=>{
+    const atEnd=chatHistory.scrollHeight-chatHistory.scrollTop-chatHistory.clientHeight<24;
+    const ids=new Set(messages.map(message=>message.id));
+    for(const [id,row] of chatRows)if(!ids.has(id)){row.remove();chatRows.delete(id);}
+    for(const message of messages){
+      if(chatRows.has(message.id))continue;
+      const row=element('p',null,'multiplayer-chat-message');
+      const author=element('strong',message.authorName+(message.authorId===selfId?' (you)':''));
+      row.append(author,document.createTextNode(`: ${message.text}`));chatRows.set(message.id,row);chatHistory.append(row);
+    }
+    if(atEnd)chatHistory.scrollTop=chatHistory.scrollHeight;
+    // Avoid announcing restored history on join, then announce each new row.
+    if(!chatInitialized){chatInitialized=true;chatHistory.setAttribute('aria-live','polite');}
   };
   const clearPending=()=>{for(const request of pending.values()){clearTimeout(request.timer);request.reject(new Error('Disconnected. Your action was not confirmed.'));}pending.clear();};
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5)));};
@@ -79,7 +102,8 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
           if(data.type==='snapshot'){
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);}
-            onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);
+            onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
+            chatInput.disabled=chatSend.disabled=false;
           }else if(data.type==='result'){
             if(data.correction)onCorrection(data.correction);
             const request=pending.get(data.requestId);if(request){clearTimeout(request.timer);pending.delete(data.requestId);request.resolve(data);}
@@ -88,7 +112,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       });
       ws.addEventListener('close',event=>{
         clearTimeout(deadline);if(socket!==ws)return;
-        socket=null;connected=false;connecting=false;clearPending();onPlayers([],selfId);
+        socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;clearPending();onPlayers([],selfId);
         if(stopped)return;
         const terminal=[4003,4009].includes(event.code);
         setStatus(event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=false;
@@ -105,6 +129,13 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       pending.set(requestId,{resolve,reject,timer});socket.send(JSON.stringify({...message,requestId}));
     });
   }
+  chatForm.addEventListener('submit',async event=>{
+    event.preventDefault();const text=chatInput.value.trim();if(!text||!connected)return;
+    chatSend.disabled=true;chatStatus.textContent='';
+    try{const result=await command({type:'chat',text});if(result.ok)chatInput.value='';else chatStatus.textContent=result.message;}
+    catch(error){chatStatus.textContent=error.message;}
+    finally{chatSend.disabled=!connected;if(connected)chatInput.focus();}
+  });
   retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;

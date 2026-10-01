@@ -58,6 +58,12 @@ test('invalid, duplicate, non-Jevica and absent resident grants do not mutate st
   assert.equal(state.locals[0].wish.kind,'dragon');
   assert.equal(undoWish(state,'maya','alien').ok,false);
 });
+test('wish pleas address account names literally, including replacement tokens',()=>{
+  const state=setup(),name="A$&B$'";
+  assert.equal(grantWish(state,'maya','dragon','jevica',name).ok,true);
+  stepWishes(state,29);
+  assert.equal(state.locals[0].wish.message,`A$&B$', please take my dragon back before it roasts another shopping bag!`);
+});
 test('time is finite, frame independent, and gifts can be undone early', () => {
   const a=setup(),b=setup();
   grantWish(a,'maya','flight','jevica');grantWish(b,'maya','flight','jevica');

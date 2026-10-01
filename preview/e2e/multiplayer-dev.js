@@ -14,12 +14,14 @@ async page => {
   try {
   await join(page); await join(second);
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length >= 2, null, { timeout: 30000 });
-  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, form: document.querySelector('#canvas-host').dataset.playerForm, formSelector: Boolean(document.querySelector('#player-form')), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
+  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: !document.querySelector('.player-appearance')?.hidden, invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
-  check(a.form === 'jevica' && b.form === 'jevica' && !a.formSelector && !b.formSelector, 'Jevica is the sole playable shared character');
+  check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
+  check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
+  check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
   check(spacing >= 1.2, `players arrive on separate spots (${spacing.toFixed(2)} m apart)`);

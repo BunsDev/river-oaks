@@ -14,6 +14,8 @@ import { createResidentGestures } from './resident-gestures.js';
 import { relaxResidentArms } from './avatar-stance.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { stabilizeShoeSoles } from './shoe-skinning.js';
+import { createRomanceLook } from './romance-look.js';
+import { sharedAppearance } from './shared-appearances.js';
 
 export const AVATAR_PROFILES = ['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
 const cache = new Map();
@@ -108,7 +110,7 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
   return avatar;
 }
 
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true } = {}) {
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined });
@@ -116,6 +118,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   if(id !== 'player' && folk) applyResidentStyle(avatar,id);
   const root = new THREE.Group();
   root.add(model);
+  const look=(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
+    ? createRomanceLook(avatar,root,sharedAppearance(appearanceId)) : null;
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const adjustment = new THREE.Quaternion();
   const feet = createFootPlacement(model, root), baseY = model.position.y;
@@ -243,9 +247,10 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         model.position.y+=noMotion?0:.022*Math.sin(t*1.15);
       }
       avatar.eyes.update(lookTarget,elapsed);
+      look?.update(now,{reducedMotion:noMotion});
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
     },
-    dispose() { upperBody.dispose(); avatar.dispose(); },
+    dispose() { upperBody.dispose(); look?.dispose(); avatar.dispose(); },
   };
 }

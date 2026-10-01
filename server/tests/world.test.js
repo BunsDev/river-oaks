@@ -21,10 +21,129 @@ function setup() {
   const world = createSharedWorld(data, { now: () => time });
   assert.equal(world.join({userId:'a',name:'Alice'}).ok,true);
   assert.equal(world.join({userId:'b',name:'Bob'}).ok,true);
-  return {world,advance(ms){time+=ms;}};
+  return {world,advance(ms){time+=ms;},now(){return time;}};
 }
 const cast = (world,userId='a',localId='local-00') => world.command(userId,{type:'wish',localId,kind:'dragon'});
 const travel = (world,id,userId='a') => world.command(userId,{type:'travel',localId:id});
+
+test('town chat is attributed, bounded, rate limited and survives checkpoint recovery',()=>{
+  const {world,advance,now}=setup();
+  assert.equal(world.command('a',{type:'chat',text:'  Hello   Bob!  '}).ok,true);
+  assert.deepEqual(world.snapshot().chat.map(({authorId,authorName,text})=>({authorId,authorName,text})),
+    [{authorId:'a',authorName:'Alice',text:'Hello Bob!'}]);
+  assert.equal(world.command('a',{type:'chat',text:'again'}).error,'chat_cooldown');
+  for(const text of ['', ' '.repeat(5), 'x'.repeat(281), 'hi\nthere', '\u202ehello'])
+    assert.equal(world.command('b',{type:'chat',text}).error,'invalid_chat');
+  assert.equal(world.snapshot().chat.length,1);
+  advance(1000);
+  assert.equal(world.command('a',{type:'chat',text:'After a pause'}).ok,true);
+  for(let i=0;i<42;i++){advance(1000);assert.equal(world.command('a',{type:'chat',text:`Line ${i}`}).ok,true);}
+  assert.equal(world.snapshot().chat.length,40);
+  assert.equal(world.snapshot().chat[0].text,'Line 2');
+  const snapshot=world.snapshot();snapshot.chat[0].text='changed';
+  assert.equal(world.snapshot().chat[0].text,'Line 2');
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
+  assert.deepEqual(restored.snapshot().chat,world.snapshot().chat);
+  assert.equal(restored.command('a',{type:'chat',text:'too soon'}).error,'chat_cooldown');
+  world.leave('a');
+  assert.equal(world.snapshot().chat[0].authorName,'Alice','history remains readable after departure');
+  world.reset();assert.deepEqual(world.snapshot().chat,[]);
+});
+
+test('appearance belongs to the authenticated account and survives departure and checkpoint recovery',()=>{
+  const {world,advance,now}=setup();
+  assert.equal(world.snapshot().players[0].appearance,'jevica');
+  assert.equal(world.command('a',{type:'appearance',appearance:'woman-tailored'}).ok,true);
+  assert.equal(world.snapshot().players.find(player=>player.id==='a').appearance,'woman-tailored');
+  assert.equal(world.snapshot().players.find(player=>player.id==='b').appearance,'jevica');
+  assert.equal(world.command('b',{type:'appearance',appearance:'man-casual',userId:'a'}).error,'invalid_appearance');
+  assert.equal(world.command('b',{type:'appearance',appearance:'unknown'}).error,'invalid_appearance');
+  assert.equal(world.command('a',{type:'appearance',appearance:'man-workwear'}).error,'appearance_cooldown');
+  world.leave('a');advance(61000);world.step(0.05);
+  assert.equal(world.join({userId:'a',name:'Alice again'}).player.appearance,'woman-tailored');
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'woman-tailored');
+  restored.leave('a');
+  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'woman-tailored');
+});
+
+test('midnight host and starlight maker variants remain selectable and durable',()=>{
+  const {world,advance,now}=setup();
+  for(const appearance of ['man-tailored','midnight-host-hybrid','midnight-host-wolf','man-workwear','kai-explorer','kai-noir']){
+    advance(2100);
+    assert.equal(world.command('a',{type:'appearance',appearance}).ok,true,appearance);
+    assert.equal(world.snapshot().players.find(player=>player.id==='a').appearance,appearance);
+  }
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'kai-noir');
+  restored.leave('a');
+  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'kai-noir');
+});
+
+test('appearance migration restores a town checkpoint written before player looks existed',()=>{
+  const {world,now}=setup(),checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  delete checkpoint.payload.appearances;
+  delete checkpoint.payload.builds;
+  for(const player of checkpoint.payload.players)delete player.appearance;
+  for(const [,ledger] of checkpoint.payload.ledgers)delete ledger.appearanceAt;
+  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.ok(restored.snapshot().players.every(player=>player.appearance==='jevica'));
+  assert.equal(restored.command('a',{type:'appearance',appearance:'woman-daywear'}).ok,true);
+  assert.deepEqual(restored.snapshot().builds,[]);
+});
+
+test('player creations are owned, spatially checked, shared, and durable',()=>{
+  const {world,advance,now}=setup();
+  const place={type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0};
+  const result=world.command('a',place);
+  assert.equal(result.ok,true);assert.equal(result.item.ownerId,'a');assert.equal(result.item.ground,0);
+  assert.deepEqual(world.snapshot().builds,[result.item]);
+  assert.equal(world.command('b',{type:'build',action:'remove',id:result.item.id}).error,'not_build_owner');
+  assert.equal(world.command('b',{...place,position:[-12,3.2]}).error,'blocked_build_site');
+  assert.equal(world.command('a',{type:'build',action:'edit',id:result.item.id,position:[-11,3],yaw:Math.PI/2}).ok,true);
+  assert.deepEqual(world.snapshot().builds[0].position,[-11,3]);
+  assert.equal(world.snapshot().builds[0].yaw,Math.PI/2);
+  const copy=world.snapshot();copy.builds[0].position[0]=999;
+  assert.equal(world.snapshot().builds[0].position[0],-11);
+  world.leave('a');advance(61000);world.step(.05);
+  assert.equal(world.join({userId:'a',name:'Alice again'}).ok,true);
+  assert.equal(world.snapshot().builds[0].ownerId,'a');
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
+  assert.deepEqual(restored.snapshot().builds,world.snapshot().builds);
+  assert.equal(restored.command('a',{type:'build',action:'remove',id:result.item.id}).ok,true);
+  assert.deepEqual(restored.snapshot().builds,[]);
+  world.reset();assert.deepEqual(world.snapshot().builds,[]);
+});
+
+test('build commands reject road, invalid position, and forged checkpoint records without mutation',()=>{
+  const roads=[{points:[[-12,2],[-12,8]],width_m:3}];
+  const blocked=createSharedWorld({...data,roads});blocked.join({userId:'a',name:'Alice'});
+  assert.equal(blocked.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3],yaw:0}).error,'blocked_build_site');
+  const {world,now}=setup(),before=world.snapshot();
+  for(const command of [
+    {type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3],yaw:Infinity},
+    {type:'build',action:'place',kind:'unknown',finish:'teal',position:[-12,3],yaw:0},
+    {type:'build',action:'place',kind:'lamp',finish:'teal',position:[12,3],yaw:0},
+    {type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3,0],yaw:0},
+  ])assert.equal(world.command('a',command).ok,false);
+  const far=world.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position:[12,3],yaw:0});
+  assert.equal(far.error,'build_out_of_reach');assert.match(far.message,/outside.*ground.*nearby/);
+  assert.deepEqual(world.snapshot().builds,before.builds);
+  assert.equal(world.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3],yaw:0}).ok,true);
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.builds[0].ownerId='forged';
+  checkpoint.payload.builds[0].position=[0,0];
+  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  const fresh=createSharedWorld(data,{now});
+  assert.equal(fresh.restore(checkpoint).error,'invalid_checkpoint');
+  assert.deepEqual(fresh.snapshot().builds,[]);
+});
 
 test('shared flight and checkpoint restore honor the same tall-roof ceiling as the browser',()=>{
   const tall={...data,buildings:[{center:[0,0,2],size:[6,16,48],ring:data.collisionPolygons[0]}]};
@@ -57,6 +176,18 @@ test('two accounts share one authoritative wish and NPC simulation', () => {
   assert.deepEqual(after,world.snapshot());
   after.locals[0].wish.kind='dog';
   assert.equal(world.snapshot().locals[0].wish.kind,'dragon','snapshots cannot mutate shared state');
+});
+
+test('shared wish dialogue addresses its account owner instead of a fixed heroine',()=>{
+  const {world}=setup();
+  assert.equal(travel(world,'local-00').ok,true);
+  assert.equal(cast(world).ok,true);
+  for(let i=0;i<600;i++)world.step(0.05);
+  const wish=world.snapshot().locals[0].wish;
+  assert.equal(wish.ownerName,'Alice');
+  assert.match(wish.message,/Alice/);
+  assert.doesNotMatch(wish.message,/Jevica/);
+  assert.match(world.command('a',{type:'undoWish',localId:'local-00'}).message,/Alice/);
 });
 
 test('duplicate grants and other-owner undo are atomic rejections',()=>{

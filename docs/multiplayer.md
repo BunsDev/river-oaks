@@ -22,8 +22,16 @@ Development identities only exist on a loopback `http` origin, outside
 the standalone server (`server/dev-auth.js`). The Vercel function and the Redis
 backend always require WorkOS and fail closed with `503` without it.
 
-While the town runs, the character locks to Jevica and the solo-only invasion
-and auto visit are hidden, since each would diverge from the shared town.
+While the town runs, the character panel offers 11 selectable looks built on seven shipped rigs, including fox, wolf, lynx, human, and hybrid styles.
+The selection belongs to the signed-in account, is visible to other players, and
+survives reconnects, logout, and server replacement through the town checkpoint.
+The town retains up to 4,096 account selections; older inactive selections are
+evicted as it fills. The solo-only invasion and auto visit are hidden, since
+each would diverge from the shared town.
+The People panel also includes town chat. Messages are visible to everyone in
+the room, attributed to the signed-in player, and kept as a rolling 40-message
+history across reconnects. The server limits messages to 280 characters and
+one send per second per account; chat history clears when the town is reset.
 
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 

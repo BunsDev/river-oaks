@@ -6,11 +6,30 @@ async page => {
   await page.emulateMedia({reducedMotion:'reduce'});
   const current=await page.evaluate(()=>location.origin);
   await page.goto(current.startsWith('http')?current:'http://127.0.0.1:5173/');
+  await page.evaluate(()=>localStorage.removeItem('river-oaks-character'));
+  await page.reload();
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('#canvas-host').getAttribute('data-player-form')==='jevica','Jevica is the playable character');
-  check(await page.locator('#player-form').count()===0,'Retired appearance selector is absent');
+  check(await page.locator('#player-appearance').isVisible(),'Solo character picker is available');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+  for(const [profile,role] of [['woman-casual','Fox charmer'],['man-casual','Wolf wanderer'],['woman-tailored','Velvet confidante'],['man-tailored','Midnight host · human'],['midnight-host-hybrid','Midnight host · wolf-eared'],['midnight-host-wolf','Midnight host · wolf'],['man-workwear','Starlight maker · celestial formal'],['kai-explorer','Starlight maker · explorer casual'],['kai-noir','Starlight maker · starlit noir'],['woman-daywear','Lynx muse']]){
+    await page.locator('#player-appearance').selectOption(profile);
+    await page.waitForFunction(id=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance===id;},profile);
+    check(await page.locator('#player-role').textContent()===role,`${profile}: identity and 3D appearance update`);
+    if(profile==='woman-daywear')check(await page.locator('.player-monogram').isVisible(),`${profile}: portrait fallback shows the current character`);
+    else {
+      check(await page.locator('.player-portrait img').isVisible(),`${profile}: reference portrait is visible`);
+      check(await page.locator('#player-reference').getAttribute('href')===`/assets/characters/references/${({
+        'woman-casual':'sable-fox-turnaround','man-casual':'rowan-wolf-turnaround','woman-tailored':'vesper-velvet-turnaround',
+        'man-tailored':'aurel-human','midnight-host-hybrid':'aurel-hybrid','midnight-host-wolf':'aurel-wolf',
+        'man-workwear':'kai-three-celestial-styles','kai-explorer':'kai-three-celestial-styles','kai-noir':'kai-three-celestial-styles',
+      })[profile]}.png`,`${profile}: full reference is linked`);
+    }
+  }
+  await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
+  check(await page.locator('#player-appearance').inputValue()==='woman-daywear','Solo character persists on this device');
+  await page.locator('#player-appearance').selectOption('jevica');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='jevica');
   for(const form of ['jevica']) {
     await page.waitForFunction(form=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.playerForm===form;},form);
     await page.locator('.player-portrait img').evaluate(img=>img.decode());

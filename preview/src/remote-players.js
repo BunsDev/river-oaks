@@ -1,14 +1,35 @@
 import * as THREE from 'three';
-import { loadResidentAvatar } from './avatars.js';
+import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
+import { DEFAULT_SHARED_APPEARANCE, sharedAppearance } from './shared-appearances.js';
 
-export function createRemotePlayers(scene,host){
+export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   let disposed=false,previous=null;
-  const remove=entry=>{entry.removed=true;entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  const loadAppearance=(entry,player)=>{
+    const appearance=sharedAppearance(player.appearance)?.id??DEFAULT_SHARED_APPEARANCE;
+    if(entry.requestedAppearance!==appearance){
+      entry.requestedAppearance=appearance;entry.failures=0;entry.retryAt=0;
+      if(entry.pendingAppearance&&entry.pendingAppearance!==appearance){entry.pendingAppearance=null;entry.version++;}
+    }
+    if(entry.pendingAppearance===appearance||entry.loadedAppearance===appearance)return;
+    if(now()<entry.retryAt)return;
+    entry.pendingAppearance=appearance;const version=++entry.version;
+    const rigProfile=sharedAppearance(appearance).rig??appearance;
+    loadResidentAvatar(rigProfile==='jevica'?4:AVATAR_PROFILES.indexOf(rigProfile),'remote-'+player.id,rigProfile,{folk:false,appearanceId:appearance}).then(avatar=>{
+      if(disposed||entry.removed||entry.version!==version){avatar.dispose();return;}
+      const outfit=appearance==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
+      const vehicle=createFlightVehicle('jevica');
+      entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
+      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.holder.add(avatar.object,vehicle.object);
+      entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
+      entry.label.textContent=player.name;
+    }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);entry.label.textContent=player.name+' · avatar unavailable';}});
+  };
   return {
-    stats(){return [...entries].map(([id,entry])=>({id,ready:Boolean(entry.avatar),position:entry.holder.position.toArray()}));},
+    stats(){return [...entries].map(([id,entry])=>({id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,position:entry.holder.position.toArray()}));},
     sync(players,selfId){
       const peers=players.filter(player=>player.id!==selfId);
       for(const [id,entry]of entries)if(!peers.some(player=>player.id===id)){remove(entry);entries.delete(id);}
@@ -17,13 +38,9 @@ export function createRemotePlayers(scene,host){
         if(!entry){
           const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
-          entry={holder,label,target:player,removed:false,distance:0};entries.set(player.id,entry);
-          loadResidentAvatar(4,'remote-'+player.id,'jevica').then(avatar=>{
-            if(disposed||entry.removed){avatar.dispose();return;}
-            entry.avatar=avatar;entry.outfit=createPlayerCostume(avatar,'jevica');entry.vehicle=createFlightVehicle('jevica');holder.add(avatar.object,entry.vehicle.object);
-          }).catch(()=>{label.textContent=player.name+' · avatar unavailable';});
+          entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
         }
-        entry.target=player;
+        entry.target=player;entry.label.textContent=player.name;loadAppearance(entry,player);
       }
     },
     update(now,camera){
@@ -34,7 +51,7 @@ export function createRemotePlayers(scene,host){
         const moved=holder.position.distanceTo(before);entry.distance+=moved;
         // Face the way they walk, as the local avatar does; a player standing
         // still keeps their last heading. Facing the camera yaw while moving
-        // made every remote Jevica moonwalk.
+        // made remote players moonwalk.
         const dx=holder.position.x-before.x,dz=holder.position.z-before.z;
         if(entry.heading===undefined)entry.heading=target.yaw+Math.PI;
         if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);

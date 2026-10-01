@@ -1,4 +1,4 @@
-// Jevica is the sole playable identity.
+// Jevica remains the spell persona; solo and shared play choose visual characters separately.
 export const VISITOR_FORMS = [
   { id:'jevica', label:'Jevica', role:'The rose enchantress', avatar:4, profile:'jevica', reaction:'acknowledge', description:'Rose-pink silk, gold floral embroidery, a luminous star wand and a flying bubble.' },
 ];

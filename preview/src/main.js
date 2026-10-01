@@ -42,6 +42,8 @@ import { storefrontSpot } from './arrival.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
 import { createRemotePlayers } from './remote-players.js';
+import { createSharedBuildLayer } from './shared-build-layer.js';
+import { createSharedBuildControls } from './shared-build-ui.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -62,7 +64,7 @@ let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
-let multiplayer, remotePlayers;
+let multiplayer, remotePlayers, buildLayer, buildControls;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
@@ -153,7 +155,8 @@ function initializeRenderer() {
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
-  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world });
+  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
+    requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}) });
   breakableGlass=createBreakableGlass({reducedMotion,
     groundAt:(x,z)=>world?groundSurfaceHeight(world,x,z):0,
     onChange:()=>storefrontReflections?.invalidate(),
@@ -162,9 +165,10 @@ function initializeRenderer() {
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
   const playDock = createPlayDock(), visitTools = playDock.content;
+  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'), $('.auto-controls'), invasion.panel);
+  visitTools.append($('.player-controls'),buildControls.panel,$('.auto-controls'), invasion.panel);
   force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
@@ -213,8 +217,8 @@ function initializeRenderer() {
 }
 
 // Join the shared town. Local simulations (auto visits, the invasion) would
-// diverge from everyone else's town, so they stop and hide; the character
-// locks to Jevica, the town's shared protagonist.
+// diverge from everyone else's town, so they stop and hide. The town owns each
+// player's appearance; solo character choices stay on this device.
 function startMultiplayer() {
   if (multiplayer) return;
   autoControls?.stop(); invasion?.reset();
@@ -223,11 +227,13 @@ function startMultiplayer() {
   force?.reset();force.panel.hidden=true;
   playerAvatar?.setSharedMode(true);
   remotePlayers = createRemotePlayers(scene, host);
+  buildLayer ??= createSharedBuildLayer(scene);
+  buildControls?.show();
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
-    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot); },
+    onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
-    onPlayers: (players, selfId) => remotePlayers.sync(players, selfId),
+    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);playerAvatar?.setSharedIdentity(players.find(player=>player.id===selfId));buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],selfId);},
   });
   host.dataset.multiplayer = 'joined';
 }
@@ -559,6 +565,7 @@ function render(now) {
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
   remotePlayers?.update(now, camera);
+  buildLayer?.update(camera.position);
   renderer.getDrawingBufferSize(drawingSize);
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y);
   liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
@@ -653,7 +660,7 @@ try {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats() });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats() });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

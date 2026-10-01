@@ -9,5 +9,13 @@
 .multiplayer-person { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
 .multiplayer-person span { flex: 1; overflow-wrap: anywhere; }
 .multiplayer-roster p { font-size: 12px; line-height: 1.4; }
+.multiplayer-chat { margin: 16px 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.multiplayer-chat h3 { margin: 0 0 8px; font-size: 14px; }
+.multiplayer-chat-history { min-height: 64px; max-height: 180px; overflow-y: auto; overflow-wrap: anywhere; }
+.multiplayer-chat-message { margin: 0 0 8px; }
+.multiplayer-chat-message strong { color: var(--accent, #934969); }
+.multiplayer-chat-form { display: flex; gap: 6px; }
+.multiplayer-chat-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.multiplayer-chat-status { min-height: 1.4em; margin: 4px 0 0; }
 .remote-player-labels { pointer-events: none; position: absolute; inset: 0; overflow: hidden; z-index: 3; }
 .remote-player-label { position: absolute; top: 0; left: 0; padding: 4px 9px; border-radius: 20px; background: #372534d9; color: white; font-size: 12px; }
