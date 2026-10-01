@@ -226,7 +226,7 @@ for remaining browser movement and performance acceptance.
 Sable keeps the stable `woman-casual` appearance ID and Jevica base rig. Both
 local and remote players pass through `createSableLook` in
 `preview/src/sable-look.js`. Her owned mesh hides the original human face,
-replaces the hair with layered waves, fits the sunglasses to the crown, and
+replaces the hair with layered waves, leaves the crown free of sunglasses, and
 attaches a full cream-tipped tail to the pelvis. The ivory outfit has a triangular
 hem slit, a flat belt, chest-level pendant and connected heeled sandals. The
 visible fox eyes follow the existing blink/gaze timing; reduced motion restores
@@ -260,10 +260,27 @@ gaze moves each iris texture and catchlights inside fixed eyelids; blink folds
 the eyelids and lashes together. Eye maps belong to the individual avatar and
 are disposed with the look. Reduced-motion behavior is unchanged.
 
-Short cheek and inner-ear fibres, tapered brows, and wrapping temple locks add
+Short cheek fibres, tapered brows, and wrapping temple locks add
 close-up detail. The character selector portrait is regenerated from this same
 playable model with `node preview/e2e/sable-portrait.js`. This remains a procedural
 interpretation: it is not a pixel-identical reconstruction of the supplied art.
 Unit coverage checks finite UVs/normals, independent bounded gaze/blink, shared
 rig isolation and texture disposal; `npm run test:experience -- sable` checks the
 real local/remote loader and playable character journey.
+
+### Sable all-angle refinement
+
+Sunglasses and their frames/arms are removed. The ears now have closed, cupped
+geometry with warm backs, rounded rims and cream interiors. A continuous scalp
+cap and thick, tapered hair locks replace the flat ear and hair cards. Their
+roots follow the crown before falling into waves. The shorter muzzle, smaller
+irises and shorter lashes soften the face; brows and a subdivided eye surface
+follow the actual sculpt, preventing detached eyes or fur cutting through them.
+
+Run `node preview/e2e/sable-turntable.js` for ten views of each local and remote
+avatar: eight horizontal angles plus elevated and low views. It writes PNGs and
+`results.json` to `output/playwright/sable-turntable/`. Inspect these images for
+likeness and silhouette; the automated assertions verify rendering, absence of
+sunglasses and both ears, not subjective naturalness. Unit ray checks verify ear
+volume from four directions and prevent fur occluding the open eye interiors.
+The supplied reference stays unchanged; the selector uses the updated model.

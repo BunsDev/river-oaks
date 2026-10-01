@@ -34,7 +34,6 @@ export function createSableLook(avatar, root, appearance) {
   }
   const furMap=new THREE.DataTexture(texels,128,128);furMap.wrapS=furMap.wrapT=THREE.RepeatWrapping;furMap.needsUpdate=true;textures.add(furMap);
 
-  const gold = material('#c39553',{metalness:.8,roughness:.25});
   // Remove the original human face and neckline from this instance's indexed
   // mesh. Hiding triangles, rather than moving vertices, preserves body weights.
   model.traverse(mesh => {
@@ -69,80 +68,78 @@ export function createSableLook(avatar, root, appearance) {
 
   const eyes=createSableFace(head,{add,ball,tube,material,textures});
   for(const side of [-1,1]){
-    // Broad cupped ears with a softly curved outline and ivory inset.
-    const ear=new THREE.Group();ear.position.set(side*.076,.120,-.024);ear.rotation.z=-side*.19;head.add(ear);
-    function earSurface(inset){
-      const points=[],faces=[],slices=22,width=inset?.030:.050,height=inset?.112:.148;
-      for(let row=0;row<=slices;row++){
-        const t=row/slices,w=width*(1-t)**.72;
-        for(let col=0;col<=12;col++){
-          const u=col/6-1;points.push(u*w,t*height,Math.sin(Math.PI*t)*.008+(1-u*u)*.013+(inset?.006:0));
-          if(row<slices&&col<12){const n=row*13+col;faces.push(n,n+1,n+13,n+1,n+14,n+13);}
-        }
-      }
-      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));g.setIndex(faces);g.computeVertexNormals();return g;
+    // A closed, cupped pinna has a rounded rim, a warm back and a recessed
+    // cream interior. Unlike a two-sided card it retains volume in profile.
+    const ear=new THREE.Group();ear.position.set(side*.076,.104,-.030);ear.rotation.set(-.08,side*.18,-side*.19);head.add(ear);
+    const points=[],colors=[],faces=[],rows=40,cols=48;
+    const amber=new THREE.Color('#b77c51'),cream=new THREE.Color('#f2e3d4'),tip=new THREE.Color('#71503b');
+    for(let row=0;row<=rows;row++)for(let col=0;col<=cols;col++){
+      const t=row/rows,a=col/cols*Math.PI*2,profile=Math.sin(Math.PI*t)**.72;
+      const u=Math.cos(a),front=Math.sin(a),width=.055*(1-t)**.7*THREE.MathUtils.smoothstep(t,0,.20);
+      points.push(u*width,t*.145,profile*(.017*u*u+.015*front));
+      const inner=THREE.MathUtils.smoothstep(front,.35,.75)*(1-THREE.MathUtils.smoothstep(t,.70,.94));
+      const color=amber.clone().lerp(cream,inner).lerp(tip,THREE.MathUtils.smoothstep(t,.81,1)*.65);
+      colors.push(color.r,color.g,color.b);
+      if(row<rows&&col<cols){const n=row*(cols+1)+col;faces.push(n,n+cols+1,n+1,n+1,n+cols+1,n+cols+2);}
     }
-    const outer=material('#b87948',{roughness:.9,side:THREE.DoubleSide});
-    const inner=material('#f6e7d6',{roughness:1,side:THREE.DoubleSide});
-    add(ear,earSurface(false),outer,[0,0,0],[1,1,1],'Sable ear');
-    add(ear,earSurface(true),inner,[0,.014,.002]);
-    const fibres=[];
-    for(let i=0;i<240;i++){
-      const t=.05+((i*73)%241)/241*.83,u=(((i*131)%239)/239*2-1),w=.030*(1-t)**.72;
-      const x=u*w,y=.014+t*.112,z=Math.sin(Math.PI*t)*.008+(1-u*u)*.013+.009;
-      const length=.003+(i%6)*.0006;
-      fibres.push(x-.0003,y,z,x+.0003,y,z,x+u*.001,y+length,z+.002);
-    }
-    const earFur=new THREE.BufferGeometry();earFur.setAttribute('position',new THREE.Float32BufferAttribute(fibres,3));earFur.computeVertexNormals();
-    add(ear,earFur,inner,[0,0,.0005],[1,1,1],'Sable inner ear fur');
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.setIndex(faces);geometry.computeVertexNormals();
+    add(ear,geometry,material('#ffffff',{vertexColors:true,roughness:.94}),[0,0,0],[1,1,1],'Sable ear');
   }
 
   // Wide tapered locks with a curved cross-section form a continuous crown and
   // layered waves. Fine longitudinal grooves catch light without rope geometry.
-  const hair=material('#9b7353',{roughness:.52,sheen:.75,sheenColor:new THREE.Color('#d9b797'),side:THREE.DoubleSide});
-  ball(head,hair,[0,.103,-.025],[.087,.056,.080],'Sable hair crown');
+  const hairPixels=new Uint8Array(128*256*4);
+  for(let y=0;y<256;y++)for(let x=0;x<128;x++){
+    const value=128+38*Math.sin(x*2.3+Math.sin(y*.023)) +18*Math.sin(x*5.7+y*.017),i=(y*128+x)*4;
+    hairPixels[i]=hairPixels[i+1]=hairPixels[i+2]=value;hairPixels[i+3]=255;
+  }
+  const hairMap=new THREE.DataTexture(hairPixels,128,256);hairMap.wrapS=hairMap.wrapT=THREE.RepeatWrapping;hairMap.needsUpdate=true;textures.add(hairMap);
+  const hair=material('#9b7353',{roughness:.6,sheen:.75,sheenColor:new THREE.Color('#d9b797'),bumpMap:hairMap,bumpScale:.00065,side:THREE.DoubleSide});
+  const crownPositions=[],crownUV=[],crownIndices=[],crownRows=32,crownCols=256;
+  for(let row=0;row<=crownRows;row++)for(let col=0;col<=crownCols;col++){
+    const a=col/crownCols*Math.PI*2,front=Math.max(0,Math.cos(a));
+    const polar=row/crownRows*(.70+1.35*(1-front)**.8);
+    const groove=.0008*Math.sin(a*48+polar*3),r=Math.sin(polar);
+    crownUV.push(col/crownCols*4,row/crownRows);
+    crownPositions.push((.100+groove)*r*Math.sin(a),.058+.110*Math.cos(polar),-.022+(.100+groove)*r*Math.cos(a));
+    if(row<crownRows&&col<crownCols){const n=row*(crownCols+1)+col;crownIndices.push(n,n+crownCols+1,n+1,n+1,n+crownCols+1,n+crownCols+2);}
+  }
+  const crown=new THREE.BufferGeometry();crown.setAttribute('position',new THREE.Float32BufferAttribute(crownPositions,3));crown.setAttribute('uv',new THREE.Float32BufferAttribute(crownUV,2));crown.setIndex(crownIndices);crown.computeVertexNormals();
+  add(head,crown,hair,[0,0,0],[1,1,1],'Sable hair crown');
   const locks=[];
   function lock(points,width,phase=0,wrap=0){
-    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),verts=[],idx=[],norm=new THREE.Vector3(),tangent=new THREE.Vector3();
-    const rows=44,cols=12;
+    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),verts=[],uv=[],idx=[],norm=new THREE.Vector3(),tangent=new THREE.Vector3();
+    const rows=48,cols=16,axis=new THREE.Vector3(0,1,0);
     for(let row=0;row<=rows;row++){
       const t=row/rows,p=curve.getPoint(t);curve.getTangent(t,tangent);
-      norm.set(tangent.y,-tangent.x,0).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),wrap);
-      const w=width*Math.min(1,t*10+.08,(1-t)*7+.035);
+      norm.set(tangent.y,-tangent.x,0).normalize().applyAxisAngle(axis,wrap);
+      // Re-project the width axis after wrapping so the cross-section stays
+      // perpendicular to the strand even through a deep S-shaped wave.
+      norm.addScaledVector(tangent,-norm.dot(tangent)).normalize();
+      const depth=new THREE.Vector3().crossVectors(tangent,norm).normalize();
+      const taper=Math.min(1,.015+t*9,(1-t)*9+.015),w=width*taper;
       for(let col=0;col<=cols;col++){
-        const u=col/cols*2-1,q=p.clone().addScaledVector(norm,u*w);
-        q.z+=Math.sqrt(Math.max(0,1-u*u))*width*.35+Math.cos(u*36+phase)*.0009;
-        verts.push(...q);
+        const a=col/cols*Math.PI*2,u=Math.cos(a),v=Math.sin(a);
+        const q=p.clone().addScaledVector(norm,u*w).addScaledVector(depth,v*(.0035*taper+.00018*Math.cos(u*31+phase)));
+        verts.push(...q);uv.push(col/cols,row/rows*2);
         if(row<rows&&col<cols){const n=row*(cols+1)+col;idx.push(n,n+1,n+cols+1,n+1,n+cols+2,n+cols+1);}
       }
     }
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();locks.push(g);
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();locks.push(g);
   }
-  // Back curtain, from the crown to the waist, overlapping to avoid bald gaps.
-  for(let i=0;i<15;i++){
-    const x=(i-7)*.016,phase=i*.7;
-    lock([[x*.28,.158,-.029],[x*.85,.112,-.103],[x,.01,-.130],[x+Math.sin(phase)*.025,-.13,-.165],[x+Math.cos(phase)*.030,-.26,-.180],[x+Math.sin(phase+1)*.033,-.41,-.164],[x*.88,-.55+(i%3)*.017,-.152]],.021,phase);
+  // Roots follow the same ellipsoid as the cap before falling into waves;
+  // this removes the flat shelf and disconnected ribbon ends at the crown.
+  for(let i=0;i<23;i++){
+    const a=Math.PI*.38+i/22*Math.PI*1.24,phase=i*.13;
+    const scalp=t=>[.101*Math.sin(t)*Math.sin(a),.058+.110*Math.cos(t)-.005+.008*THREE.MathUtils.smoothstep(t,.2,1.1),-.022+.101*Math.sin(t)*Math.cos(a)];
+    const drape=(y,r,wave)=>[Math.sin(a)*(r+Math.sin(phase+wave)*.018),y,-.022+Math.cos(a)*(r+Math.cos(phase+wave)*.014)];
+    lock([scalp(.18),scalp(.62),scalp(1.12),drape(.006,.116,0),drape(-.13,.137,1.5),drape(-.27,.131,3.1),drape(-.41,.149,4.7),drape(-.54+(i%4)*.009,.123,6)],.019,phase,a-Math.PI);
   }
   for(const side of [-1,1])for(let i=0;i<7;i++){
-    const shift=i*.006;
-    lock([[.015*side,.156+shift*.2,.002],[side*.047,.141,.064+shift*.4],[side*(.087+shift*.4),.092,.045+shift],[side*(.110+shift),.002,.025+shift*.5],[side*(.125+shift),-.11,.068],[side*(.094+shift),-.23,.115],[side*(.127+shift),-.36,.121],[side*(.102+shift),-.48+i*.009,.117]],.017,i);
-  }
-  // Temple layers wrap around the head, covering the side view between the
-  // front waves and the back curtain instead of leaving the scalp exposed.
-  for(const side of [-1,1])for(let i=0;i<8;i++){
-    const z=.015-i*.018;
-    lock([[side*.028,.150,z*.5],[side*.084,.095,z],[side*.103,.008,z-.012],[side*.119,-.13,z-.025],[side*.105,-.27,z-.044],[side*.128,-.41,z-.033],[side*.107,-.53+i*.006,z-.023]],.021,i,side*.95);
+    const shift=i*.005,rootZ=.026-i*.012,rootY=.058+.110*Math.sqrt(1-((rootZ+.022)/.1)**2)-.007;
+    lock([[.009*side,rootY,rootZ],[side*.043,.147,.023-i*.006],[side*(.082+shift*.4),.093,.041+shift],[side*(.106+shift),.002,.035+shift*.5],[side*(.121+shift),-.11,.068],[side*(.098+shift),-.23,.103],[side*(.123+shift),-.36,.112],[side*(.103+shift),-.48+i*.009,.103]],.014,i);
   }
   const hairGeometry=mergeGeometries(locks);locks.forEach(g=>g.dispose());add(head,hairGeometry,hair,[0,0,0],[1,1,1],'Sable ash blonde waves');
-
-  // Glasses rest on the crown between the ears, not above their tips.
-  const lens=material('#302820',{metalness:.15,roughness:.2});
-  for(const side of [-1,1]){
-    const glass=ball(head,lens,[side*.040,.152,.051],[.033,.018,.007],'Sable sunglasses');glass.rotation.z=side*-.18;
-    const rim=add(head,new THREE.TorusGeometry(.030,.0019,8,32),gold,[side*.040,.152,.058],[1,.57,1]);rim.rotation.z=side*-.18;
-    tube(head,gold,[[side*.07,.154,.05],[side*.098,.139,-.036]],.0018);
-  }
-  tube(head,gold,[[-.011,.154,.058],[0,.158,.059],[.011,.154,.058]],.0018);
 
   // A low sweeping, full fox tail attached to the pelvis, following turns and
   // gait without leaving its root behind when the body bobs or sits.

@@ -132,3 +132,42 @@ test('Sable detailed face has finite textured contours and independently owned e
   for(const texture of owned)texture.addEventListener('dispose',()=>released++);
   look.dispose();assert.equal(released,owned.size,'new face and eye textures are released');avatar.dispose();
 });
+
+test('Sable has volumetric ears and unobstructed eye surfaces without sunglasses',async()=>{
+  const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
+  const root=new THREE.Group();root.add(avatar.model);
+  const look=createRomanceLook(avatar,root,sharedAppearance('woman-casual'));
+  try{
+    root.updateMatrixWorld(true);
+    const head=root.getObjectByName('fox face'),face=root.getObjectByName('Sable sculpted face');
+    const ears=[],eyes=[];
+    head.traverse(item=>{
+      assert.doesNotMatch(item.name,/sunglasses/i);
+      if(item.name==='Sable ear')ears.push(item);
+      if(item.name==='Sable chestnut eye')eyes.push(item);
+      if(item.geometry)for(const attribute of Object.values(item.geometry.attributes))assert.ok(Array.from(attribute.array).every(Number.isFinite),item.name);
+    });
+    assert.equal(ears.length,2);
+    for(const ear of ears){
+      const mesh=new THREE.Mesh(ear.geometry,ear.material);
+      mesh.updateMatrixWorld(true);
+      for(const [origin,direction] of [[[0,.058,1],[0,0,-1]],[[0,.058,-1],[0,0,1]],[[1,.058,0],[-1,0,0]],[[-1,.058,0],[1,0,0]]]){
+        const hits=new THREE.Raycaster(new THREE.Vector3(...origin),new THREE.Vector3(...direction)).intersectObject(mesh);
+        assert.ok(hits.length>0,'ear is visible from front, rear and both profiles');
+        assert.ok(hits[0].distance<.997,'ear retains thickness instead of collapsing to a flat card');
+      }
+    }
+    const direction=new THREE.Vector3(0,0,-1).transformDirection(head.matrixWorld);
+    assert.equal(eyes.length,2);
+    for(const eye of eyes){
+      const {position,uv}=eye.geometry.attributes;let samples=0;
+      for(let i=0;i<position.count;i+=13){
+        if(uv.getX(i)<.2||uv.getX(i)>.8||uv.getY(i)<.4||uv.getY(i)>.6)continue;
+        const p=new THREE.Vector3().fromBufferAttribute(position,i).applyMatrix4(eye.matrixWorld).addScaledVector(direction,-1);
+        const hits=new THREE.Raycaster(p,direction).intersectObjects([face,eye]);
+        assert.equal(hits[0]?.object,eye,'fur must not protrude through the visible eye');samples++;
+      }
+      assert.ok(samples>10,'check the interior, not just the outline');
+    }
+  }finally{look.dispose();avatar.dispose();}
+});
