@@ -118,7 +118,7 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
     const eyeMap=irisMap.clone();eyeMap.needsUpdate=true;textures.add(eyeMap);opening.userData.irisMap=eyeMap;
     const eyeUV=eyeGeometry.attributes.uv;
     for(let i=0;i<ep.count;i++)eyeUV.setXY(i,ep.getX(i)/.058+.5,ep.getY(i)/.058+.5);
-    add(opening,eyeGeometry,material('#ffffff',{map:eyeMap,roughness:.42,clearcoat:.12}),[0,0,0],[1,1,1],'Sable chestnut eye');
+    add(opening,eyeGeometry,material('#ffffff',{map:eyeMap,roughness:.55,clearcoat:0,specularIntensity:.12}),[0,0,0],[1,1,1],'Sable chestnut eye');
     const eyeball = new THREE.Group();eyeball.name='Sable iris gaze';opening.add(eyeball);
     ball(eyeball,glint,[-.004,.006,.018],[.0023,.0028,.0008],'Sable eye catchlight');
     ball(eyeball,glint,[.005,-.006,.018],[.0008,.0008,.0005]);
