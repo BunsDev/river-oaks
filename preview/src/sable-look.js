@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createReferenceStyle } from './reference-archetypes.js';
+import { createSableFace } from './sable-face.js';
 
 // Sable owns her geometry. The shared Jevica template, skeleton and other looks
 // remain untouched. Coordinates below are metres in each bone's rest frame.
@@ -33,8 +34,7 @@ export function createSableLook(avatar, root, appearance) {
   }
   const furMap=new THREE.DataTexture(texels,128,128);furMap.wrapS=furMap.wrapT=THREE.RepeatWrapping;furMap.needsUpdate=true;textures.add(furMap);
 
-  const cream = material('#f6e7d6',{roughness:.9});
-  const dark = material('#33201c',{roughness:.48}), gold = material('#c39553',{metalness:.8,roughness:.25});
+  const gold = material('#c39553',{metalness:.8,roughness:.25});
   // Remove the original human face and neckline from this instance's indexed
   // mesh. Hiding triangles, rather than moving vertices, preserves body weights.
   model.traverse(mesh => {
@@ -67,47 +67,8 @@ export function createSableLook(avatar, root, appearance) {
     mesh.material.needsUpdate=true;
   });
 
-  // One continuous tapered skull and muzzle; cream markings are vertex color,
-  // so there are no separate white balls or exposed human chin below the fox.
-  const positions=[], colors=[], indices=[];
-  const amber=new THREE.Color('#b87948'), ivory=new THREE.Color('#f5e6d5');
-  const rings=[[-.083,.010,.041,.020],[-.073,.033,.057,.024],[-.055,.058,.071,.025],[-.029,.087,.079,.014],[.005,.105,.087,.004],[.042,.100,.094,-.003],[.079,.095,.087,-.008],[.113,.081,.077,-.011],[.141,.057,.059,-.015],[.154,.024,.033,-.018],[.157,.001,.001,-.018]];
-  const segments=64;
-  for(let j=0;j<rings.length;j++)for(let i=0;i<=segments;i++){
-    const [y,rx,rz,cz]=rings[j],a=i/segments*Math.PI*2,front=Math.max(0,Math.cos(a));
-    const x=Math.sin(a)*rx,z=Math.cos(a)*rz+cz;
-    const marking=1-THREE.MathUtils.smoothstep(y,-.035+Math.abs(x)*.40,-.006+Math.abs(x)*.4);
-    const c=amber.clone().lerp(ivory,marking*THREE.MathUtils.smoothstep(front,.05,.45));
-    positions.push(x,y,z);colors.push(c.r,c.g,c.b);
-    if(j<rings.length-1&&i<segments){const n=j*(segments+1)+i;indices.push(n,n+1,n+segments+1,n+1,n+segments+2,n+segments+1);}
-  }
-  const skull=new THREE.BufferGeometry();skull.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));skull.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));skull.setIndex(indices);skull.computeVertexNormals();
-  add(head,skull,material('#ffffff',{vertexColors:true,roughness:.88}),[0,0,0],[1,1,1],'Sable sculpted face');
-  ball(head,cream,[0,-.035,.098],[.056,.026,.037],'Sable muzzle');
-  const nose=ball(head,dark,[0,-.010,.125],[.018,.011,.013],'Sable nose');
-  // Rounded triangular fox nose, narrowing toward the philtrum.
-  const np=nose.geometry.attributes.position;
-  for(let i=0;i<np.count;i++)np.setX(i,np.getX(i)*(.74+.26*(np.getY(i)+1)/2));
-  nose.geometry.computeVertexNormals();
-  tube(head,dark,[[0,-.018,.135],[0,-.032,.136],[.015,-.040,.133],[.031,-.034,.129]],.0015,'Sable smile');
-  tube(head,dark,[[0,-.032,.136],[-.014,-.040,.133],[-.029,-.035,.129]],.0013);
-
-  const eyes=[];
-  const white=material('#ffefd9',{roughness:.3}), iris=material('#99501f',{roughness:.25}), pupil=material('#160e0b',{roughness:.19}), gleam=material('#fff8e7',{emissive:'#a99b83',roughness:.1});
+  const eyes=createSableFace(head,{add,ball,tube,material,textures});
   for(const side of [-1,1]){
-    const socket=new THREE.Group();socket.name=`Sable eye ${side}`;socket.position.set(side*.043,.047,.074);socket.rotation.z=side*.13;head.add(socket);
-    const opening=new THREE.Group();opening.name='Sable eyelid opening';socket.add(opening);eyes.push(opening);
-    const almond=new THREE.Shape();almond.moveTo(-.027,0);almond.quadraticCurveTo(0,.029,.027,0);almond.quadraticCurveTo(0,-.021,-.027,0);
-    const eyeShape=new THREE.ShapeGeometry(almond,24),ep=eyeShape.attributes.position;
-    for(let i=0;i<ep.count;i++)ep.setZ(i,.009+.004*(1-(ep.getX(i)/.027)**2));
-    eyeShape.computeVertexNormals();
-    add(opening,eyeShape.clone(),dark,[0,0,-.001],[1.1,1.15,1]);
-    add(opening,eyeShape,white,[0,0,.002]);
-    ball(opening,iris,[-side*.003,-.001,.016],[.0135,.011,.006]);
-    ball(opening,pupil,[-side*.003,-.001,.021],[.0078,.009,.003]);
-    ball(opening,gleam,[-.004,.005,.024],[.003,.003,.0015]);
-    tube(socket,dark,[[-side*.026,.011,.010],[0,.016,.012],[side*.025,.010,.009],[side*.034,.016,.004]],.0028,'Sable upper lashes');
-    tube(head,material('#67422d'),[[side*.018,.080,.073],[side*.041,.089,.074],[side*.069,.078,.064]],.0035,'Sable brow');
     // Broad cupped ears with a softly curved outline and ivory inset.
     const ear=new THREE.Group();ear.position.set(side*.076,.120,-.024);ear.rotation.z=-side*.19;head.add(ear);
     function earSurface(inset){
@@ -125,6 +86,15 @@ export function createSableLook(avatar, root, appearance) {
     const inner=material('#f6e7d6',{roughness:1,side:THREE.DoubleSide});
     add(ear,earSurface(false),outer,[0,0,0],[1,1,1],'Sable ear');
     add(ear,earSurface(true),inner,[0,.014,.002]);
+    const fibres=[];
+    for(let i=0;i<240;i++){
+      const t=.05+((i*73)%241)/241*.83,u=(((i*131)%239)/239*2-1),w=.030*(1-t)**.72;
+      const x=u*w,y=.014+t*.112,z=Math.sin(Math.PI*t)*.008+(1-u*u)*.013+.009;
+      const length=.003+(i%6)*.0006;
+      fibres.push(x-.0003,y,z,x+.0003,y,z,x+u*.001,y+length,z+.002);
+    }
+    const earFur=new THREE.BufferGeometry();earFur.setAttribute('position',new THREE.Float32BufferAttribute(fibres,3));earFur.computeVertexNormals();
+    add(ear,earFur,inner,[0,0,.0005],[1,1,1],'Sable inner ear fur');
   }
 
   // Wide tapered locks with a curved cross-section form a continuous crown and
@@ -132,13 +102,13 @@ export function createSableLook(avatar, root, appearance) {
   const hair=material('#9b7353',{roughness:.52,sheen:.75,sheenColor:new THREE.Color('#d9b797'),side:THREE.DoubleSide});
   ball(head,hair,[0,.103,-.025],[.087,.056,.080],'Sable hair crown');
   const locks=[];
-  function lock(points,width,phase=0){
+  function lock(points,width,phase=0,wrap=0){
     const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),verts=[],idx=[],norm=new THREE.Vector3(),tangent=new THREE.Vector3();
     const rows=44,cols=12;
     for(let row=0;row<=rows;row++){
       const t=row/rows,p=curve.getPoint(t);curve.getTangent(t,tangent);
-      norm.set(tangent.y,-tangent.x,0).normalize();
-      const w=width*Math.min(1,(1-t)*7+.035);
+      norm.set(tangent.y,-tangent.x,0).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),wrap);
+      const w=width*Math.min(1,t*10+.08,(1-t)*7+.035);
       for(let col=0;col<=cols;col++){
         const u=col/cols*2-1,q=p.clone().addScaledVector(norm,u*w);
         q.z+=Math.sqrt(Math.max(0,1-u*u))*width*.35+Math.cos(u*36+phase)*.0009;
@@ -156,6 +126,12 @@ export function createSableLook(avatar, root, appearance) {
   for(const side of [-1,1])for(let i=0;i<7;i++){
     const shift=i*.006;
     lock([[.015*side,.156+shift*.2,.002],[side*.047,.141,.064+shift*.4],[side*(.087+shift*.4),.092,.045+shift],[side*(.110+shift),.002,.025+shift*.5],[side*(.125+shift),-.11,.068],[side*(.094+shift),-.23,.115],[side*(.127+shift),-.36,.121],[side*(.102+shift),-.48+i*.009,.117]],.017,i);
+  }
+  // Temple layers wrap around the head, covering the side view between the
+  // front waves and the back curtain instead of leaving the scalp exposed.
+  for(const side of [-1,1])for(let i=0;i<8;i++){
+    const z=.015-i*.018;
+    lock([[side*.028,.150,z*.5],[side*.084,.095,z],[side*.103,.008,z-.012],[side*.119,-.13,z-.025],[side*.105,-.27,z-.044],[side*.128,-.41,z-.033],[side*.107,-.53+i*.006,z-.023]],.021,i,side*.95);
   }
   const hairGeometry=mergeGeometries(locks);locks.forEach(g=>g.dispose());add(head,hairGeometry,hair,[0,0,0],[1,1,1],'Sable ash blonde waves');
 
@@ -210,7 +186,10 @@ export function createSableLook(avatar, root, appearance) {
       if(!reducedMotion)tail.rotateY(Math.sin(now*.0015)*.085);
       eyes.forEach((eye,i)=>{
         eye.scale.y=Math.max(.04,1-(reducedMotion?0:i?blink.left:blink.right));
-        const pose=gaze[i];eye.position.x=(pose?.yaw??0)*.018;eye.position.y=-(pose?.pitch??0)*.016;
+        const pose=gaze[i],iris=eye.getObjectByName('Sable iris gaze');
+        iris.position.x=THREE.MathUtils.clamp(pose?.yaw??0,-.3,.3)*.010;
+        iris.position.y=-THREE.MathUtils.clamp(pose?.pitch??0,-.2,.2)*.010;
+        eye.userData.irisMap.offset.set(-iris.position.x/.058,-iris.position.y/.058);
       });
     },
     dispose(){
