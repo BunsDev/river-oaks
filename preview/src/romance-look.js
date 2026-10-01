@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createSableLook } from './sable-look.js';
 import { createReferenceStyle } from './reference-archetypes.js';
 import { measureHead } from './head-fit.js';
+import { createAnimalFace, trimHumanHead } from './animal-face.js';
 
 // The imported rigs provide facial proportions, skin detail and tailored clothes.
 // These additions belong to each avatar instance, never to the cached GLB.
@@ -170,41 +171,25 @@ export function createRomanceLook(avatar,root,appearance) {
   if(animal){
     // Hair from the human source rig would cut through the new ears and skull.
     if(appearance.id!=='woman-casual')avatar.model.traverse(item=>{if(item.isMesh&&/bob|ponytail|short|long\d/i.test(item.name))item.visible=false;});
-    const fur=mat(animal.fur,{bumpMap:furTexture(),bumpScale:.004,roughness:.96});
-    const light=mat(animal.light,{bumpMap:furTexture(),bumpScale:.003,roughness:.94});
-    const dark=mat(animal.dark,{roughness:.88});
-    const iris=mat(animal.iris,{roughness:.28});
-    const eye=mat('#f2e9d7',{roughness:.28});
-    const black=mat('#141619',{roughness:.12});
-    const shine=mat('#ffffff',{roughness:.12,emissive:'#555555'});
-    const face=new THREE.Group();face.name=`${appearance.kind} face`;head.add(face);
-    // Animal heads were authored for a 0.20 skull top; seat them on the measured skull.
-    face.position.y=(measureHead(avatar)?.skull.top??.2)-.2;
-    ball(face,fur,[0,.105,.003],[.116,.138,.11]);
-    ball(face,light,[0,.026,.082],[.067,.042,.069]);
-    ball(face,fur,[0,.083,.099],[.051,.054,.057]);
-    for(const side of [-1,1]){
-      ball(face,light,[side*.036,.052,.12],[.046,.031,.053]);
-      ball(face,dark,[side*.045,.136,.102],[.026,.024,.012]);
-      ball(face,eye,[side*.045,.134,.11],[.020,.018,.011]);
-      ball(face,iris,[side*.045,.133,.12],[.011,.013,.007]);
-      ball(face,black,[side*.045,.133,.125],[.005,.010,.004]);
-      ball(face,shine,[side*.049,.139,.128],[.003,.003,.002]);
-      const ear=add(face,new THREE.ConeGeometry(appearance.kind==='wolf'?.052:.048,appearance.kind==='lynx'?.11:.135,20),fur,[side*.079,.218,-.004],[1,1,.65]);
-      ear.rotation.z=-side*.24;
-      const inner=add(face,new THREE.ConeGeometry(.028,appearance.kind==='lynx'?.07:.09,20),light,[side*.079,.225,.028],[1,1,.4]);inner.rotation.z=-side*.24;
-      const tuft=add(face,new THREE.ConeGeometry(.025,.072,12),fur,[side*.108,.051,-.01],[1,1,.58]);tuft.rotation.z=side*1.0;
-      if(appearance.kind==='lynx'){
-        const tip=add(face,new THREE.ConeGeometry(.009,.055,10),dark,[side*.095,.285,-.004]);tip.rotation.z=-side*.18;
-        for(let i=0;i<3;i++)ball(face,dark,[side*(.066+i*.016),.079-i*.017,.103-i*.012],[.006,.004,.003]);
-      }
-    }
-    ball(face,dark,[0,.063,.167],[.025,.017,.019]);
-    ball(face,dark,[0,.026,.151],[.006,.013,.004]);
+    // A sculpted head replaces the human one on this instance only: the skin's
+    // head triangles are trimmed, and the rig's own eyes, brows and lashes hidden.
+    const hiddenParts=[],replacements=[],textures=new Set();
+    avatar.model.traverse(item=>{if(item.isMesh&&/^brown|brow|lash/i.test(item.material?.name??'')){hiddenParts.push([item,item.visible]);item.visible=false;}});
+    trimHumanHead(avatar.model,{geometries:resources,replacements});
+    const face=new THREE.Group();face.name=`${appearance.kind} face`;
+    avatar.model.updateMatrixWorld(true);
+    face.quaternion.copy(head.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(avatar.model.getWorldQuaternion(new THREE.Quaternion())));
+    head.add(face);
+    const physical=(color,options={})=>{const material=new THREE.MeshPhysicalMaterial({color,roughness:.8,...options});materials.add(material);return material;};
+    const named=(parent,geometry,material,position=[0,0,0],scale=[1,1,1],name)=>{const mesh=add(parent,geometry,material,position,scale);if(name)mesh.name=name;return mesh;};
+    const sphere=(parent,material,position,scale,name)=>named(parent,new THREE.SphereGeometry(1,32,24),material,position,scale,name);
+    const tube=(parent,material,points,radius,name)=>named(parent,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),40,radius,8,false),material,[0,0,0],[1,1,1],name);
+    createAnimalFace(face,appearance.id==='midnight-host-wolf'?'host-wolf':appearance.kind,{add:named,ball:sphere,tube,material:physical,textures,fit:measureHead(avatar)});
+    const restoreHead=()=>{for(const [item,visible] of hiddenParts)item.visible=visible;for(const [mesh,original] of replacements)mesh.geometry=original;for(const texture of textures)texture.dispose();};
     const tail=new THREE.Group();tail.name=`${appearance.kind} tail`;tail.position.set(0,avatar.hipHeight+.025,-.105);group.add(tail);
     add(tail,tailGeometry(animal.tail,appearance.kind,animal),mat('#ffffff',{vertexColors:true,bumpMap:furTexture(),bumpScale:.004,roughness:.97}),[0,0,0]);
     if(appearance.kind!=='lynx')add(tail,tailFurGeometry(animal.tail,appearance.kind,animal),mat('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.98}),[0,0,0]);
-    return {update(now,{reducedMotion=false}={}){if(!reducedMotion){tail.rotation.y=Math.sin(now*.0015)*.16;tail.rotation.x=Math.sin(now*.0011+.8)*.08;}},dispose(){reference.dispose();face.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
+    return {update(now,{reducedMotion=false}={}){if(!reducedMotion){tail.rotation.y=Math.sin(now*.0015)*.16;tail.rotation.x=Math.sin(now*.0011+.8)*.08;}},dispose(){reference.dispose();restoreHead();face.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
   }
   // Small, physically shaded accessories keep the human archetypes recognizable
   // at conversational distance without replacing their detailed source faces.
