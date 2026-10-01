@@ -15,6 +15,8 @@ import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
+import { createLandmarks, destinationFromSearch, openSpotNear, placesOf } from './places.js';
+import { setupPlacesUI } from './places-ui.js';
 import { renderPixelRatio } from './viewport.js';
 import { createWalkingControls } from './walking-ui.js';
 import { createCommunityPanel } from './community-ui.js';
@@ -57,6 +59,7 @@ const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
+let placesUI = null, landmarks = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers;
@@ -183,6 +186,9 @@ function initializeRenderer() {
   });
   else host.dataset.multiplayer = 'off';
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
+  let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
+  landmarks = createLandmarks({ storage });
+  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0 });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
@@ -397,6 +403,30 @@ function describeInterior(store) {
   return `${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Imagined interior, not a photographed store.`;
 }
 
+// Places: a spot teleports to a clear outdoor point beside it, a storefront
+// arrives the way the directory does, a landmark or shared link restores the
+// exact position and facing. The town decides for shared play; solo play
+// applies the same outdoor-only rule locally.
+async function goToPlace(place) {
+  if (!world || !walking) return { ok: false, message: 'The district is still loading.' };
+  if (multiplayer) {
+    const target = place.kind === 'spot' ? { placeId: place.ref } : place.kind === 'shop' ? { storeId: place.ref, mode: 'arrive' } : { position: [place.position[0], place.position[1]] };
+    const result = await multiplayer.travel(target);
+    if (result?.ok && Number.isFinite(place.yaw) && ['landmark', 'link'].includes(place.kind)) walking.setYaw(place.yaw);
+    return result;
+  }
+  if (place.kind === 'shop') {
+    const store = world.stores.find(item => item.id === place.ref);
+    if (store) { arriveAtStore(store); return { ok: true }; }
+  }
+  const environment = walkingEnvironment();
+  const spot = openSpotNear((x, north) => environment.isFree(x, -north) && !environment.roomAt(x, -north), place.position, place.kind === 'spot' ? 4 : 1.2);
+  if (!spot) return { ok: false, message: `${place.name} is not reachable right now.` };
+  enterWalk(spot, ['spot', 'arrival'].includes(place.kind) && (spot[0] !== place.position[0] || spot[1] !== place.position[1]) ? place.position : null);
+  if (Number.isFinite(place.yaw) && ['landmark', 'link'].includes(place.kind)) walking.setYaw(place.yaw);
+  return { ok: true };
+}
+
 function arriveAtStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
   const environment=walkingEnvironment();
@@ -460,6 +490,14 @@ async function loadWorld() {
     if (multiplayer?.snapshot) {
       community.applyRemote(multiplayer.snapshot);
       walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+    }
+    const places = placesOf(data);
+    placesUI?.setPlaces(places);
+    // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
+    const linked = destinationFromSearch(location.search, places, data.bounds_m);
+    if (linked) {
+      const result = await goToPlace(linked);
+      placesUI?.say(result?.ok === false ? (result.message ?? `${linked.name} is not reachable right now.`) : `You're at ${linked.name}`, result?.ok === false ? 'error' : 'ok');
     }
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);

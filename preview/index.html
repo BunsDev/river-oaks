@@ -24,12 +24,27 @@
           </div>
         </header>
         <nav class="experience-nav" aria-label="District experiences">
-          <button data-section="community-section">People nearby</button><button data-section="explore-section">Shops & cafés</button><button data-section="settings-section">Settings</button>
+          <button data-section="community-section">People nearby</button><button data-section="explore-section">Places</button><button data-section="settings-section">Settings</button>
         </nav>
         <div class="panel-scroll">
           <section class="panel-section scene-section" id="explore-section" tabindex="-1" aria-label="Explore">
-            <div class="section-label">Shops & cafés</div>
+            <div class="section-label">Places</div>
             <p class="district-address">4444 Westheimer · Houston</p>
+            <div id="places" class="places">
+              <p id="places-here" class="places-here" aria-live="polite">Not walking yet</p>
+              <details class="places-group" open>
+                <summary>Go somewhere <span id="places-count" class="place-kind"></span></summary>
+                <ul id="places-list" class="places-list" aria-label="Places in the district"></ul>
+              </details>
+              <details class="places-group" open>
+                <summary>Your landmarks</summary>
+                <div class="landmark-add"><label class="sr-only" for="landmark-name">Landmark name</label><input id="landmark-name" type="text" maxlength="40" placeholder="Name this spot" autocomplete="off" /><button id="landmark-add" type="button">Save here</button></div>
+                <p id="landmarks-empty" class="quiet-note">No landmarks yet. Stand somewhere you like and save it.</p>
+                <ul id="landmarks-list" class="places-list" aria-label="Your landmarks"></ul>
+              </details>
+              <p id="places-status" role="status"></p>
+            </div>
+            <div class="section-label">Shops & cafés</div>
             <div id="district-directory" class="district-directory" hidden>
               <label for="store-search">Find your next stop</label>
               <input id="store-search" type="search" placeholder="Search boutiques & dining" autocomplete="off" />

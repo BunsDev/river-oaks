@@ -58,3 +58,19 @@
 #control-panel .jev-voice-custom[hidden]{display:none}
 #control-panel .jev-voice-custom button{min-height:44px;font-size:12px;padding:10px;border:1px solid var(--section-color);border-radius:10px;background:var(--section-soft);color:var(--section-color)}
 #control-panel #elevenlabs-voice-status{color:var(--muted);margin:6px 0 0}
+
+/* Places: the world's spots and the player's landmarks, above the directory. */
+#control-panel .places{display:grid;gap:8px;margin:0 0 14px}
+#control-panel .places-here{font-size:12px;line-height:1.5;color:var(--muted,#6b7280);margin:0}
+#control-panel .places-here strong{color:inherit;font-weight:600}
+#control-panel .places-list{list-style:none;margin:6px 0 0;padding:4px 0 0;border-top:1px solid rgba(127,127,127,.18);display:grid;gap:4px;max-height:220px;overflow:auto}
+#control-panel .places-list li{display:flex;align-items:center;gap:6px;font-size:13px}
+#control-panel .places-list li .place-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#control-panel .places-list li .place-kind{font-size:11px;color:var(--muted,#6b7280)}
+#control-panel .places-list button{font:inherit;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;cursor:pointer}
+#control-panel .places-list button:hover{background:rgba(127,127,127,.12)}
+#control-panel .landmark-add{display:flex;gap:6px}
+#control-panel .landmark-add input{flex:1;min-width:0;font:inherit;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit}
+#control-panel .landmark-add button{font:inherit;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;cursor:pointer;white-space:nowrap}
+#control-panel #places-status{font-size:12px;line-height:1.4;min-height:1.2em;margin:0}
+#control-panel .places summary{cursor:pointer;font-size:13px;font-weight:600}
