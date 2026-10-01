@@ -220,3 +220,32 @@ The encounter keeps its stable internal ID for conversations and interactions.
 Browser artifacts go to `output/playwright/`. Native Unreal work is stopped and
 outside this scope. See [people interaction progress](people-interaction-progress.md)
 for remaining browser movement and performance acceptance.
+
+## Sable reference refinement
+
+Sable keeps the stable `woman-casual` appearance ID and Jevica base rig. Both
+local and remote players pass through `createSableLook` in
+`preview/src/sable-look.js`. Her owned mesh hides the original human face,
+replaces the hair with layered waves, fits the sunglasses to the crown, and
+attaches a full cream-tipped tail to the pelvis. The ivory outfit has a triangular
+hem slit, a flat belt, chest-level pendant and connected heeled sandals. The
+visible fox eyes follow the existing blink/gaze timing; reduced motion restores
+the tail's rest orientation and leaves the eyes open. Source rig geometry is
+never modified, and instance geometry, textures and materials are disposed.
+
+The character card uses `sable-portrait.png`, captured from the playable model.
+The separate full-reference link retains the supplied city-crosswalk image.
+Regenerate the portrait with `node preview/e2e/sable-portrait.js`.
+
+This remains a **procedural approximation**, not an identical reconstruction of
+the reference. Fur density, hair grooming, facial sculpt, body proportions,
+cloth deformation and material detail still differ. A matching authored rig and
+materials would replace this approximation; the reference PNG is not a 3D asset.
+
+Verification: `node --test preview/tests/romance-look.test.js`,
+`npm run test:experience -- sable player-forms`, and
+`npm run test:shared -- development`. The Sable journey captures front, profile,
+back, portrait, walking and mobile views and exercises both local and remote
+avatar construction. Shared-town acceptance checks the selected Sable appearance
+reaching a second browser's rendered remote avatar. These checks establish
+functional behavior, not visual equivalence or production deployment.

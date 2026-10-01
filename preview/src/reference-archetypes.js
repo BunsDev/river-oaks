@@ -42,8 +42,8 @@ export function createReferenceStyle(avatar,appearance){
     box(holder,bag,[x,y,z],large?[.22,.19,.095]:[.17,.16,.075],.018);
     box(holder,bag,[x,y+.047,z+.05],large?[.20,.084,.015]:[.16,.07,.014],.01);
     box(holder,gold,[x,y+.018,z+.061],[.028,.024,.009],.004);
-    tube(holder,gold,[[side*.10,.28,-.025],[side*.15,.17,.025],[side*.21,.04,.07],[x,y+.075,z]],.004);
-    tube(holder,leather,[[side*.10,.28,-.04],[side*.15,.17,.015],[side*.21,.04,.055]],.009);
+    tube(holder,gold,appearance.id==='woman-casual'?[[side*.10,.30,.012],[side*.16,.22,.093],[side*.21,.04,.11],[x,y+.075,z]]:[[side*.10,.28,-.025],[side*.15,.17,.025],[side*.21,.04,.07],[x,y+.075,z]],.004);
+    tube(holder,leather,appearance.id==='woman-casual'?[[side*.10,.30,.002],[side*.16,.22,.080],[side*.21,.04,.098]]:[[side*.10,.28,-.04],[side*.15,.17,.015],[side*.21,.04,.055]],.009);
   }
   function dressSkirt(color,{wrap=false,slit=false}={}){
     const surface=material(color,wrap?{roughness:.9,sheen:1,sheenColor:new THREE.Color('#a94d68'),side:THREE.DoubleSide}:{roughness:.46,sheen:.32,side:THREE.DoubleSide});
@@ -51,9 +51,10 @@ export function createReferenceStyle(avatar,appearance){
     for(let layer=0;layer<levels.length;layer++){
       const [y,rx,rz]=levels[layer];
       for(let i=0;i<=segments;i++){
-        const a=i/segments*Math.PI*2;vertices.push(Math.sin(a)*rx,y,Math.cos(a)*rz);uv.push(i/segments,layer/(levels.length-1));
+        const a=i/segments*Math.PI*2;
+        const hem=slit&&layer===0?Math.max(0,1-Math.abs(i-4)/2)*.085:0;
+        vertices.push(Math.sin(a)*rx,y+hem,Math.cos(a)*rz);uv.push(i/segments,layer/(levels.length-1));
         if(layer<levels.length-1&&i<segments){
-          if(slit&&layer===0&&i>=3&&i<=5)continue;
           const n=layer*(segments+1)+i;indices.push(n,n+1,n+segments+1,n+1,n+segments+2,n+segments+1);
         }
       }
@@ -64,24 +65,34 @@ export function createReferenceStyle(avatar,appearance){
       tube(pelvis,material('#8d3b52',{roughness:.82}),[[-.18,.015,.085],[-.10,-.035,.14],[.02,-.10,.151],[.16,-.16,.10]],.009);
     }else{
       const belt=material('#eee1d4',{roughness:.46});
-      const around=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;around.push([Math.sin(a)*.171,.091,Math.cos(a)*.117]);}
-      tube(pelvis,belt,around,.016);
-      for(const x of [-.023,.023]){const loop=mesh(pelvis,new THREE.TorusGeometry(.023,.005,7,20),gold,[x,.091,.12]);loop.scale.x=.85;}
+      const beltBand=mesh(pelvis,new THREE.CylinderGeometry(.169,.177,.029,48,1,true),belt,[0,.091,0]);beltBand.scale.z=.685;
+      for(const x of [-.023,.023]){const loop=mesh(pelvis,new THREE.TorusGeometry(.015,.003,8,24),gold,[x*.72,.091,.12]);loop.scale.x=.85;}
     }
     const strap=material(color,{roughness:wrap?.86:.48});
-    for(const side of [-1,1])tube(torso,strap,[[side*.105,.17,.074],[side*.12,.28,.02]],wrap?.005:.009);
+    if(wrap)for(const side of [-1,1])tube(torso,strap,[[side*.105,.17,.074],[side*.12,.28,.02]],.005);
   }
   function sandals(){
     const ivory=material('#eee1d5',{roughness:.48}),skin=material('#bb895f',{roughness:.9});
     model.traverse(item=>{if(item.isMesh&&/shoes01/i.test(item.name))item.visible=false;});
     for(const side of ['l','r']){
       const foot=aligned(`foot_${side}`);if(!foot)continue;
-      box(foot,ivory,[0,-.053,.055],[.115,.019,.26],.012);
-      ball(foot,skin,[0,-.014,.067],[.054,.031,.118]);
-      box(foot,ivory,[0,.018,.14],[.112,.015,.031],.005);
-      box(foot,ivory,[0,-.038,-.055],[.048,.09,.053],.007);
-      const ankle=mesh(foot,new THREE.TorusGeometry(.053,.008,7,20),ivory,[0,.085,-.012]);ankle.rotation.x=Math.PI/2;
-      ball(foot,gold,[side==='l'?.054:-.054,.085,-.012],[.009,.009,.007]);
+      const points=[],faces=[],stations=[[-.052,.044,.039],[.01,.039,.041],[.09,-.031,.047],[.18,-.049,.048],[.193,-.047,.039]];
+      for(const [z,y,width] of stations)points.push(-width,y,z,width,y,z,-width,y-.012,z,width,y-.012,z);
+      for(let i=0;i<stations.length-1;i++){const n=i*4;faces.push(n,n+4,n+1,n+1,n+4,n+5,n+2,n+3,n+6,n+3,n+7,n+6,n,n+2,n+4,n+2,n+6,n+4,n+1,n+5,n+3,n+3,n+5,n+7);}
+      faces.push(0,1,2,1,3,2,16,18,17,17,18,19);
+      const soleGeometry=new THREE.BufferGeometry();soleGeometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));soleGeometry.setIndex(faces);soleGeometry.computeVertexNormals();
+      const sole=mesh(foot,soleGeometry,ivory);sole.name='Sable sandal sole';
+      // The source skin ends at the ankle. Connect it to a sloping instep and
+      // open toes, with a block heel and straps touching the foot.
+      ball(foot,skin,[0,.064,-.005],[.041,.074,.044]);
+      const instep=ball(foot,skin,[0,.001,.073],[.044,.034,.100]);instep.rotation.x=.36;
+      ball(foot,skin,[0,-.028,.139],[.046,.020,.048]);
+      box(foot,ivory,[0,-.002,.139],[.099,.013,.033],.005);
+      box(foot,ivory,[0,-.006,-.027],[.043,.11,.045],.006);
+      const ankle=mesh(foot,new THREE.TorusGeometry(.043,.0055,8,32),ivory,[0,.105,-.008]);ankle.rotation.x=Math.PI/2;
+      ball(foot,gold,[side==='l'?.044:-.044,.105,-.008],[.006,.007,.003]);
+      tube(foot,ivory,[[0,.105,-.05],[0,.049,-.056],[0,.02,-.041]],.010);
+
     }
   }
   function boots(color,{rugged=false}={}){
@@ -113,14 +124,9 @@ export function createReferenceStyle(avatar,appearance){
     }
   }
   if(appearance.id==='woman-casual'){
-    dressSkirt('#f1e7dd',{slit:true});wavyHair('#c6a381',12);pendant();shoulderBag({color:'#f0e4d9'});sandals();
-    const lens=material('#242326',{metalness:.35,roughness:.18}),frame=material('#bb945e',{metalness:.75,roughness:.2});
-    for(const side of [-1,1]){
-      const glass=ball(face,lens,[side*.052,.293,.048],[.047,.023,.009]);glass.rotation.z=side*.15;
-      const rim=mesh(face,new THREE.TorusGeometry(.038,.004,7,20),frame,[side*.052,.293,.058]);rim.scale.y=.58;rim.rotation.z=side*.15;
-    }
-    tube(face,frame,[[-.012,.295,.06],[.012,.295,.06]],.003);
-    for(const side of [-1,1])ball(face,gold,[side*.093,-.035,.012],[.007,.011,.006]);
+    dressSkirt('#f1e7dd',{slit:true});shoulderBag({color:'#f0e4d9'});sandals();
+    tube(torso,gold,[[-.063,.292,.052],[-.044,.235,.113],[0,.194,.141],[.044,.235,.113],[.063,.292,.052]],.0018);
+    ball(torso,gold,[0,.183,.143],[.009,.012,.003]);
   }else if(appearance.id==='woman-tailored'){
     dressSkirt('#541a30',{wrap:true});wavyHair('#4a3030',12);pendant();shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
     for(const side of [-1,1]){

@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { loadResidentAvatar } from '../../src/avatars.js';
 import { createPlayerCostume } from '../../src/player-costume.js';
 import { VISITOR_FORMS } from '../../src/visitor-persona.js';
+import { sharedAppearance } from '../../src/shared-appearances.js';
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
@@ -24,8 +25,9 @@ const form='jevica';
 const params=new URLSearchParams(location.search), resident=params.get('resident');
 const identity=VISITOR_FORMS[0];
 // ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig.
-const avatar = resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
-const outfit = resident ? {update(){}} : createPlayerCostume(avatar,form); const holder=new THREE.Group();scene.add(holder);holder.add(avatar.object);
+const appearance=sharedAppearance(params.get('appearance'));
+const avatar = appearance ? await loadResidentAvatar(4,params.get('remote')?'remote-studio':'player',appearance.rig??appearance.id,{folk:false,appearanceId:appearance.id}) : resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
+const outfit = resident||appearance ? {update(){}} : createPlayerCostume(avatar,form); const holder=new THREE.Group();scene.add(holder);holder.add(avatar.object);
 function render(view='full',time=0,speed=0,pose={}) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : 0;
   holder.position.fromArray(pose.position??[0,0,0]);holder.rotation.y=pose.yaw??0;

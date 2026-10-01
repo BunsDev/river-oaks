@@ -32,7 +32,12 @@ test('anthropomorphic details attach to owned bones, animate, and release their 
     assert.ok(face?.parent?.isBone,`${profile} face follows the head bone`);
     assert.ok(tail?.children[0]?.geometry.attributes.normal,`${profile} tail has smooth surface normals`);
     assert.ok(tail.children[0].geometry.attributes.uv,`${profile} tail carries fur texture coordinates`);
-    assert.ok(tail.children[0].geometry.attributes.normal.getX(0)>0,`${profile} tail surface faces outward`);
+    const {position,normal}=tail.children[0].geometry.attributes;
+    const ring=profile==='woman-casual'?32:12,center=new THREE.Vector3();
+    for(let i=0;i<ring;i++)center.add(new THREE.Vector3().fromBufferAttribute(position,i));
+    center.divideScalar(ring);
+    const radial=new THREE.Vector3().fromBufferAttribute(position,0).sub(center).normalize();
+    assert.ok(radial.dot(new THREE.Vector3().fromBufferAttribute(normal,0))>0,`${profile} tail surface faces outward`);
     look.update(1200);assert.notEqual(tail.rotation.y,0);
     look.update(0,{reducedMotion:true});assert.ok(Number.isFinite(tail.rotation.y));
     assert.deepEqual([...source.scene.getObjectsByProperty('isMesh',true)].map(mesh=>mesh.material.color?.getHex()),originalColors,'cached rig stays untouched');
@@ -71,4 +76,29 @@ test('reference outfits and both midnight host identities attach to moving bones
     for(const group of attachments)assert.equal(group.parent,null);
     avatar.dispose();
   }
+});
+
+test('Sable replaces the human face without changing the shared template or a second avatar',async()=>{
+  const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
+  const neighbor=instantiateAvatar(source,{targetHeight:source.height,id:'remote-neighbor'});
+  const skin=avatar.model.getObjectByName('Jevica'),original=skin.geometry;
+  const before=Array.from(original.index.array),root=new THREE.Group();root.add(avatar.model);
+  const look=createRomanceLook(avatar,root,sharedAppearance('woman-casual'));
+  assert.notEqual(skin.geometry,original);
+  assert.ok(skin.geometry.index.count<original.index.count,'the human head triangles are removed');
+  assert.deepEqual(Array.from(original.index.array),before,'cached indices are untouched');
+  assert.equal(neighbor.model.getObjectByName('Jevica').geometry,original);
+  assert.equal(avatar.model.getObjectByName('Jevicalong01').visible,false);
+  assert.equal(neighbor.model.getObjectByName('Jevicalong01').visible,true);
+  const tail=root.getObjectByName('fox tail');assert.equal(tail.parent.name,'pelvis');
+  const rest=tail.quaternion.clone();look.update(1200);assert.ok(tail.quaternion.angleTo(rest)>.01);
+  look.update(1300,{reducedMotion:true});assert.ok(tail.quaternion.angleTo(rest)<1e-6,'reduced motion restores the rest pose');
+  const eye=root.getObjectByName('Sable eyelid opening');
+  look.update(1400,{blink:{left:1,right:1},gaze:[{yaw:.2,pitch:.1}]});
+  assert.equal(eye.scale.y,.04);assert.ok(eye.position.x>0);
+  look.update(1500,{reducedMotion:true,blink:{left:1,right:1}});assert.equal(eye.scale.y,1);
+  let released=0;skin.geometry.addEventListener('dispose',()=>released++);
+  const texture=tail.children[0].material.bumpMap;texture.addEventListener('dispose',()=>released++);
+  look.dispose();assert.equal(released,2);assert.equal(skin.geometry,original);assert.equal(avatar.model.getObjectByName('Jevicalong01').visible,true);
+  avatar.dispose();neighbor.dispose();
 });
