@@ -13,7 +13,8 @@ const scene = new THREE.Scene(); scene.background = new THREE.Color('#c8c1bc');
 const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
 scene.environment = pmrem.fromScene(room).texture; scene.environmentIntensity = 0.4; room.dispose(); pmrem.dispose();
 scene.add(new THREE.HemisphereLight('#f4f3ff', '#aea092', 0.5));
-const sun = new THREE.DirectionalLight('#fff1e4', 2.4); sun.position.set(2, 4, 5); sun.castShadow = true; scene.add(sun);
+const sun = new THREE.DirectionalLight('#fff1e4', 2.4); sun.position.set(2, 4, 5); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.normalBias = 0.015; Object.assign(sun.shadow.camera, { left: -2, right: 2, top: 2.6, bottom: -.2 }); scene.add(sun);
 const fill = new THREE.DirectionalLight('#dbe9ff', 1.2); fill.position.set(-3, 2, -2); scene.add(fill);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#c8c1bc', roughness: .85 }));
 floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
@@ -22,7 +23,7 @@ const look = sharedAppearance(new URLSearchParams(location.search).get('look') ?
 const avatar = await loadResidentAvatar(0, 'player', look.rig ?? look.id, { folk: false, appearanceId: look.id });
 scene.add(avatar.object);
 window.lookFixture = {
-  look: look.id,
+  look: look.id, avatar,
   render(view = 'front') {
     avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI / 2 : 0;
     avatar.update(0, 'continue', false, { speed: 0, distance: 0 }, () => 0);

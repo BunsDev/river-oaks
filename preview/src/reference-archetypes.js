@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { measureHead } from './head-fit.js';
 
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
@@ -100,7 +101,8 @@ export function createReferenceStyle(avatar,appearance){
     for(const side of ['l','r']){
       const foot=aligned(`foot_${side}`);if(!foot)continue;
       box(foot,sole,[0,-.056,.06],rugged?[.142,.04,.30]:[.107,.024,.27],.012);
-      ball(foot,upper,[0,.005,.09],rugged?[.077,.075,.15]:[.062,.06,.145]);
+      // A fitted boot foot: a rounded last that tapers to the toe, not a ball.
+      const last=box(foot,upper,[0,-.012,.075],rugged?[.112,.085,.27]:[.094,.07,.255],rugged?.034:.03);last.rotation.x=-.06;
       const shaft=mesh(foot,new THREE.CylinderGeometry(rugged?.078:.067,rugged?.085:.073,rugged?.23:.17,16),upper,[0,rugged?.12:.10,-.014]);
       shaft.scale.z=.84;
       if(rugged){
@@ -262,7 +264,7 @@ export function createReferenceStyle(avatar,appearance){
     tube(torso,gold,[[-.063,.292,.052],[-.044,.235,.113],[0,.194,.141],[.044,.235,.113],[.063,.292,.052]],.0018);
     ball(torso,gold,[0,.183,.143],[.009,.012,.003]);
   }else if(appearance.id==='woman-tailored'){
-    dressSkirt('#541a30',{wrap:true});wavyHair('#4a3030',12);pendant();shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
+    dressSkirt('#541a30',{wrap:true});pendant();shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
     for(const side of [-1,1]){
       const hoop=mesh(face,new THREE.TorusGeometry(.013,.0025,7,20),gold,[side*.091,-.045,.02]);hoop.rotation.y=side*.25;
     }
@@ -288,19 +290,14 @@ export function createReferenceStyle(avatar,appearance){
     const cloth=material(base,{roughness:formal?.67:.86,sheen:.42,sheenColor:new THREE.Color(formal?'#fff1d7':'#6c5b5d')}),
       secondary=material(formal?'#302c35':explorer?'#817766':'#302b31',{roughness:.8}),
       starlight=material('#c9a760',{metalness:.81,roughness:.26});
-    box(torso,secondary,[0,.07,.13],[.26,.35,.031],.013);
+    if(!explorer)box(torso,secondary,[0,.03,.128],[.24,.44,.026],.012);
     if(!explorer){
       for(const side of [-1,1]){
-        const lapel=box(torso,cloth,[side*.139,.15,.151],[.085,.38,.036],.013);lapel.rotation.z=side*.13;
+        const lapel=box(torso,cloth,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
         const skirt=box(pelvis,cloth,[side*.167,-.34,-.045],[.226,.80,.12],.02);skirt.rotation.z=side*.08;
-        box(torso,secondary,[side*.071,-.045,.176],[.11,.26,.021],.009);
       }
       boots(formal?'#b4a998':'#1c1a1d',{rugged:!formal});
     }else{
-      box(torso,cloth,[0,.12,.157],[.27,.42,.035],.012);
-      for(const side of ['l','r']){
-        const calf=aligned(`calf_${side}`);if(calf)box(calf,secondary,[side==='l'?.09:-.09,.10,.027],[.13,.14,.06],.01);
-      }
       shoulderBag({color:'#4d3c32',side:-1,large:true});boots('#252328',{rugged:true});
     }
     // Embroidered points and narrow orbit lines match the supplied celestial motifs.
@@ -313,11 +310,6 @@ export function createReferenceStyle(avatar,appearance){
     const sun=mesh(face,new THREE.TorusGeometry(.016,.002,7,20),starlight,[0,-.074,.102]);
     for(let i=0;i<8;i++){const angle=i*Math.PI/4;const ray=box(face,starlight,[Math.cos(angle)*.026,-.074+Math.sin(angle)*.026,.104],[.011,.002,.002],.001);ray.rotation.z=angle;}
     tube(face,starlight,[[0,-.015,.089],[0,-.058,.101]],.002);
-    const hair=material(explorer?'#81654d':'#6d533f',{roughness:.9});
-    for(let i=0;i<22;i++){
-      const a=i*2.4,x=Math.sin(a)*(.08+(i%4)*.01),z=Math.cos(a)*.065-.01;
-      const tuft=mesh(face,new THREE.ConeGeometry(.022,.08+(i%5)*.013,9),hair,[x,.196+(i%4)*.017,z]);tuft.rotation.z=-x*2.2;
-    }
     if(!explorer){
       for(const side of [-1,1])for(let i=0;i<3;i++)ball(torso,starlight,[side*(.14+i*.015),.26-i*.09,.176],[.003,.004,.002]);
     }
@@ -327,27 +319,31 @@ export function createReferenceStyle(avatar,appearance){
       shirt=material('#201b1d',{roughness:.89}),silver=material('#b6aaa0',{metalness:.83,roughness:.23});
     box(torso,shirt,[0,.16,.128],[.225,.29,.026],.013);
     for(const side of [-1,1]){
-      const lapel=box(torso,coat,[side*.14,.16,.149],[.091,.39,.04],.014);lapel.rotation.z=side*.14;
-      const vestPanel=box(torso,vest,[side*.069,.02,.161],[.108,.27,.024],.012);vestPanel.rotation.z=-side*.09;
-      const collar=box(torso,coat,[side*.13,.36,.081],[.16,.11,.07],.014);collar.rotation.z=-side*.19;
+      const lapel=box(torso,coat,[side*.12,.1,.138],[.07,.27,.022],.01);lapel.rotation.z=side*.2;
+      const vestPanel=box(torso,vest,[side*.06,-.01,.134],[.1,.26,.016],.008);vestPanel.rotation.z=-side*.09;
       const skirt=box(pelvis,coat,[side*.17,-.36,-.039],[.24,.82,.13],.02);skirt.rotation.z=side*.09;
       // A few restrained brocade lines read at conversation distance.
-      for(let i=0;i<3;i++)tube(torso,darkGold,[[side*(.12+i*.012),.28,.172],[side*(.16+i*.009),.15,.175],[side*(.14+i*.013),.02,.17]],.0018);
+      for(let i=0;i<3;i++)tube(torso,darkGold,[[side*(.11+i*.01),.2,.151],[side*(.13+i*.008),.1,.152],[side*(.12+i*.011),-.01,.149]],.0016);
     }
-    for(let i=0;i<4;i++)ball(torso,darkGold,[0,.12-i*.075,.179],[.006,.006,.004]);
-    tube(torso,silver,[[.015,-.08,.18],[.09,-.13,.17],[.16,-.095,.12]],.003);
+    for(let i=0;i<4;i++)ball(torso,darkGold,[0,.1-i*.065,.145],[.006,.006,.004]);
+    tube(torso,silver,[[.015,-.06,.146],[.08,-.1,.14],[.15,-.075,.11]],.0026);
     box(pelvis,leather,[0,.09,.137],[.31,.029,.016],.005);
     box(pelvis,silver,[0,.09,.149],[.037,.036,.009],.005);
     boots('#1c1a1d',{rugged:true});
     // Dark, loosely swept locks remain legible when the source short hair is hidden.
-    const hair=material('#282326',{roughness:.88});
-    for(let i=0;i<24;i++){
-      const a=i*2.4,x=Math.sin(a)*(.08+(i%4)*.009),z=Math.cos(a)*.066-.02;
-      const tuft=mesh(face,new THREE.ConeGeometry(.019+(i%3)*.003,.074+(i%5)*.012,9),hair,[x,.197+(i%4)*.016,z]);tuft.rotation.z=-x*2.5;
-    }
-    for(const side of [-1,1])tube(face,hair,[[side*.08,.18,-.035],[side*.11,.05,-.025],[side*.095,-.035,-.03]],.014);
     tube(face,silver,[[0,-.025,.087],[0,-.078,.1]],.0025);
     ball(face,silver,[0,-.082,.103],[.013,.018,.007]);
+  }
+  // Hair and headwear above were authored for a 0.20 skull top; the shipped
+  // rigs measure 0.149-0.160, which left them floating. Lower everything rooted
+  // on the scalp to the measured skull, leaving neck pieces where they are.
+  if(face&&appearance.identity!=='forest-aristocrat'){
+    const lift=(measureHead(avatar)?.skull.top??.2)-.2;
+    for(const child of face.children){
+      child.geometry?.computeBoundingBox?.();
+      const top=child.geometry?.boundingBox?child.position.y+child.geometry.boundingBox.max.y*child.scale.y:child.position.y;
+      if(top>.12)child.position.y+=lift;
+    }
   }
   return {dispose(){for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();}};
 }
