@@ -44,6 +44,8 @@ import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
+import { builderTarget, evaluatePlacement, poseFeet } from './builder-mode.js';
+import { buildKind, buildRoads as buildSiteRoads } from './shared-build.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -165,7 +167,7 @@ function initializeRenderer() {
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
   const playDock = createPlayDock(), visitTools = playDock.content;
-  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
+  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
   visitTools.append($('.player-controls'),buildControls.panel,$('.auto-controls'), invasion.panel);
@@ -566,6 +568,7 @@ function render(now) {
   multiplayer?.update(now);
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
+  updateBuilder();
   renderer.getDrawingBufferSize(drawingSize);
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y);
   liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
@@ -605,6 +608,47 @@ function visibleInScene(object) {
   for (let ancestor = object; ancestor; ancestor = ancestor.parent) if (!ancestor.visible) return false;
   return true;
 }
+// Builder mode: the preview follows the pointer over the canvas (or sits a
+// few steps ahead), judged by the same rule the town applies.
+const builderPointer = { at: null, ray: new THREE.Raycaster() };
+let builderRoads = null, builderAim = '';
+host.addEventListener('pointermove', event => {
+  const rect = host.getBoundingClientRect();
+  builderPointer.at = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+});
+host.addEventListener('pointerleave', () => { builderPointer.at = null; });
+function updateBuilder() {
+  const builder = buildControls?.builder;
+  if (!builder?.active || !world || !walking?.active) { buildLayer?.setGhost(null); builderAim = ''; return; }
+  const pose = walking.getPose();
+  if (!pose || pose.flying || pose.riding || pose.roomId) {
+    buildLayer?.setGhost(null);
+    if (builderAim !== 'grounded') { builderAim = 'grounded'; buildControls.aimAt(null, { valid: false, message: 'Stand outside on the ground to build.' }); }
+    return;
+  }
+  let ray = null;
+  if (builderPointer.at) {
+    builderPointer.ray.setFromCamera(builderPointer.at, camera);
+    ray = { origin: builderPointer.ray.ray.origin.toArray(), direction: builderPointer.ray.ray.direction.toArray() };
+  }
+  const target = builderTarget(pose, ray), kindId = builder.moving?.kind ?? builder.kind, kind = buildKind(kindId);
+  if (world !== builderRoads?.world) builderRoads = { world, roads: buildSiteRoads(world) };
+  const snapshot = multiplayer?.snapshot;
+  const key = JSON.stringify([target, kindId, builder.finish, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
+  if (key === builderAim) return;
+  builderAim = key;
+  const verdict = evaluatePlacement({ environment: walkingEnvironment(), roads: builderRoads.roads, kind, position: target, feet: poseFeet(pose),
+    builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
+  buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
+  buildControls.aimAt(target, verdict);
+}
+document.addEventListener('keydown', event => {
+  if (!buildControls?.builder.active || event.target.closest?.('input, textarea, select, button, [contenteditable]')) return;
+  if (event.code === 'KeyR' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); buildControls.rotate(event.shiftKey ? -1 : 1); }
+  else if (event.code === 'Enter' && !event.repeat) { event.preventDefault(); void buildControls.place(); }
+  else if (event.code === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); buildControls.setBuilder(false); }
+}, true);
+
 const selectionGesture = createPointerGesture();
 host.addEventListener('pointerdown', event => {
   // Walking picks own host capture, including while another dialogue is open.
@@ -621,6 +665,8 @@ window.addEventListener('blur', () => selectionGesture.cancel());
 document.addEventListener('visibilitychange', () => selectionGesture.cancel());
 host.addEventListener('pointerup', (event) => {
   if (!selectionGesture.end(event)) return;
+  // In builder mode a click on the canvas places at the preview.
+  if (buildControls?.builder.active && walking?.active) { void buildControls.place(); return; }
   const rect = host.getBoundingClientRect();
   const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
   const raycaster = new THREE.Raycaster();
@@ -660,7 +706,7 @@ try {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats() });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

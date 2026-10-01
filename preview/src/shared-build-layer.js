@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildFinish } from './shared-build.js';
+import { buildFinish, buildKind } from './shared-build.js';
 
 // Small authored models share their materials and geometry across placements.
 // Their world transforms, ownership, and lifetime come only from snapshots.
@@ -54,8 +54,35 @@ export function createSharedBuildLayer(scene) {
     }
     templates.set(key,group);return group;
   };
+  // Builder mode's preview: a translucent copy of the item and a footprint ring
+  // the size the town checks, green where it can go and red where it cannot.
+  let ghost=null;
+  const ghostOk=material('#5fd38a',{transparent:true,opacity:.42,depthWrite:false,emissive:'#2f8f58',emissiveIntensity:.5}),ghostBad=material('#e5534b',{transparent:true,opacity:.42,depthWrite:false,emissive:'#a3332c',emissiveIntensity:.5});
+  const ringOk=material('#5fd38a',{transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide,emissive:'#5fd38a',emissiveIntensity:.6}),ringBad=material('#e5534b',{transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide,emissive:'#e5534b',emissiveIntensity:.6});
+  const fillOk=material('#5fd38a',{transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide}),fillBad=material('#e5534b',{transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide});
+  const ring=new THREE.RingGeometry(.94,1,48),fill=new THREE.CircleGeometry(.94,48);ring.rotateX(-Math.PI/2);fill.rotateX(-Math.PI/2);geometries.add(ring);geometries.add(fill);
+  const arrow=new THREE.ConeGeometry(.09,.22,3);arrow.rotateX(Math.PI/2);geometries.add(arrow);
+  const makeGhost=(kind,finish)=>{
+    const group=new THREE.Group();group.name='Builder preview';group.userData.key=`${kind}:${finish}`;
+    const model=template(kind,finish).clone();model.traverse(item=>{if(item.isMesh){item.castShadow=false;item.receiveShadow=false;item.renderOrder=2;}});
+    const radius=buildKind(kind).radius,footprint=new THREE.Group();footprint.scale.setScalar(radius);
+    const edge=new THREE.Mesh(ring,ringOk),floor=new THREE.Mesh(fill,fillOk),front=new THREE.Mesh(arrow,ringOk);
+    edge.position.y=floor.position.y=.03;front.position.set(0,.05,1.18);front.scale.setScalar(1/radius);
+    for(const mesh of [edge,floor,front]){mesh.renderOrder=3;footprint.add(mesh);}
+    group.add(model,footprint);group.userData.parts={model,edge,floor,front};object.add(group);return group;
+  };
   return {
     object,
+    setGhost(spec){
+      if(!spec){if(ghost){ghost.removeFromParent();ghost=null;}return;}
+      const key=`${spec.kind}:${spec.finish}`;
+      if(ghost?.userData.key!==key){ghost?.removeFromParent();ghost=makeGhost(spec.kind,spec.finish);}
+      ghost.position.set(spec.position[0],spec.ground,-spec.position[1]);ghost.rotation.y=spec.yaw;ghost.visible=true;
+      const {model,edge,floor,front}=ghost.userData.parts;
+      model.traverse(item=>{if(item.isMesh)item.material=spec.valid?ghostOk:ghostBad;});
+      edge.material=front.material=spec.valid?ringOk:ringBad;floor.material=spec.valid?fillOk:fillBad;
+    },
+    get ghost(){return ghost;},
     sync(items){
       const visible=new Set(items.map(item=>item.id));
       for(const [id,entry] of entries)if(!visible.has(id)){entry.removeFromParent();entries.delete(id);}
@@ -68,6 +95,6 @@ export function createSharedBuildLayer(scene) {
     },
     update(cameraPosition){for(const entry of entries.values())entry.visible=entry.position.distanceToSquared(cameraPosition)<110*110;},
     stats(){return {count:entries.size,visible:[...entries.values()].filter(item=>item.visible).length};},
-    dispose(){object.removeFromParent();object.clear();entries.clear();for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
+    dispose(){ghost=null;object.removeFromParent();object.clear();entries.clear();for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
   };
 }

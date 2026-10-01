@@ -17,3 +17,14 @@
 .shared-build-row strong{font-size:11px}
 .shared-build-actions{display:flex;gap:5px}
 .shared-build-actions button{flex:1;min-width:0;padding:5px 2px;font-size:10px}
+#build-mode{width:100%;margin-top:10px}
+#build-mode[aria-pressed=true]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.shared-build-aim{margin-top:10px;padding:10px;border:1px dashed var(--line);border-radius:12px}
+.shared-build-aim[hidden]{display:none}
+#build-hint{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--ink)}
+#build-hint[data-valid=true]::before{content:'●';margin-right:6px;color:#3fae6c}
+#build-hint[data-valid=false]::before{content:'●';margin-right:6px;color:#d9493f}
+.shared-build-turn{display:flex;gap:6px}
+.shared-build-turn button{flex:1}
+.shared-build-keys{margin:8px 0 0!important;font-size:10px!important}
+.shared-build-row.moving{border-color:var(--accent)}

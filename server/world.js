@@ -5,7 +5,7 @@ import { createWalkingEnvironment, createWalkingState } from '../preview/src/wal
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
 import { DEFAULT_SHARED_APPEARANCE, sharedAppearance } from '../preview/src/shared-appearances.js';
-import { buildKind, buildFinish } from '../preview/src/shared-build.js';
+import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, APPEARANCE_COOLDOWN_MS = 2000, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
@@ -24,10 +24,6 @@ const nonnegative = value => Number.isFinite(value) && value >= 0;
 const integer = value => Number.isSafeInteger(value) && value >= 0;
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const point = (value, size) => Array.isArray(value) && value.length === size && value.every(Number.isFinite);
-const segmentDistance=(x,y,a,b)=>{
-  const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1)));
-  return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy);
-};
 function checkpointJSON(value) {
   return JSON.stringify(value, (_key, item) => {
     if (typeof item === 'number' && (!Number.isFinite(item) || Object.is(item,-0))) {
@@ -59,18 +55,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
   const residentIdentities = state.locals.map(({id,name,indoor,storeId})=>({id,name,indoor,storeId}));
-  const roads=(worldData.roads??[]).flatMap(road=>(road.points??[]).slice(1).map((end,index)=>({a:road.points[index],b:end,radius:Math.max(.5,(road.width_m??3)/2)})));
-  const buildSite=(position,kind,occupied=builds,ignoreId=null)=>{
-    const [east,north]=position,z=-north,ground=environment.groundAt(east,z);
-    if (!Number.isFinite(ground) || environment.roomAt(east,z)) return null;
-    for(let i=0;i<8;i++){
-      const angle=i*Math.PI/4,x=east+Math.cos(angle)*kind.radius,n=north+Math.sin(angle)*kind.radius;
-      if(!environment.isFree(x,-n) || Math.abs(environment.groundAt(x,-n)-ground)>.35)return null;
-    }
-    if(!environment.isFree(east,z) || roads.some(road=>segmentDistance(east,north,road.a,road.b)<road.radius+kind.radius+.25))return null;
-    if([...occupied.values()].some(item=>item.id!==ignoreId&&distance(item.position,position)<buildKind(item.kind).radius+kind.radius+.25))return null;
-    return ground;
-  };
+  const roads=buildRoads(worldData);
+  // The same rule the browser's builder mode previews (shared-build.js).
+  const buildSite=(position,kind,occupied=builds,ignoreId=null)=>checkBuildSite({environment,roads,position,kind,builds:[...occupied.values()],ignoreId}).ground ?? null;
   const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
@@ -277,12 +264,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       const kind=buildKind(placing?message.kind:previous.kind),finish=placing?buildFinish(message.finish):buildFinish(previous.finish);
       if(!kind || !finish)return reject('invalid_build');
       if(player.altitude>.1 || environment.roomAt(player.position[0],-player.position[1])
-        || distance(player.position,message.position)>3.6 || editing&&distance(player.position,previous.position)>4.5)
+        || distance(player.position,message.position)>BUILD_REACH || editing&&distance(player.position,previous.position)>BUILD_EDIT_REACH)
         return reject('build_out_of_reach',placing?'Stand outside on the ground and place nearby.':'Stand outside on the ground near this creation to move or turn it.');
       if(placing&&(builds.size>=MAX_BUILDS || [...builds.values()].filter(item=>item.ownerId===userId).length>=MAX_BUILDS_PER_USER))return reject('build_limit');
       const ground=buildSite(message.position,kind,builds,previous?.id);
       if(ground===null)return reject('blocked_build_site','Find open, level ground away from roads and other creations.');
-      if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+.65))return reject('blocked_build_site');
+      if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site');
       const yaw=Math.round(Math.atan2(Math.sin(message.yaw),Math.cos(message.yaw))/(Math.PI/8))*(Math.PI/8);
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time}
