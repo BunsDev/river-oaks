@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { hedgeClusters, kerbStrips, laneFixtures, treePits, LANE_WIDTH_MIN } from '../src/street-furniture.js';
+import { hedgeClusters, kerbStrips, laneFixtures, treePits, treeGrateTexture, TREE_GRATE, LANE_WIDTH_MIN } from '../src/street-furniture.js';
 import { upperWindowLevels } from '../src/district.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { localToScene } from '../src/geometry.js';
@@ -40,11 +40,22 @@ test('lane fixtures follow the mapped lanes, keep out of footprints and avoid na
   assert.deepEqual([blocked.lamps.length, blocked.planters.length, blocked.bins.length], [0, 0, 0]);
 });
 
-test('tree pits cover mapped trees and scanned trunks with bounded radii', () => {
+test('every rendered tree gets exactly one flush square pit, squared to its street', () => {
   const pits = treePits({ ...world, vegetation });
-  assert.equal(pits.length, world.trees.length + vegetation.branch_supports.length);
-  assert.ok(pits.every(([, , , radius]) => radius >= 0.65 && radius <= 1.4));
-  assert.equal(treePits({ ...world, vegetation: undefined }).length, world.trees.length);
+  assert.equal(pits.length, vegetation.branch_supports.length, 'scanned trunks, not the OSM points they replace');
+  const keys = new Set(pits.map(([x, , z]) => `${x.toFixed(2)}:${z.toFixed(2)}`));
+  assert.equal(keys.size, pits.length, 'no tree has two pits');
+  assert.ok(pits.every(([, , , size, yaw]) => size === TREE_GRATE && Number.isFinite(yaw)));
+  assert.equal(treePits({ ...world, vegetation: undefined }).length, world.trees.length, 'without scans, the mapped trees get pits');
+  const street = { roads: [{ points: [[0, 0], [10, 10]] }], trees: [{ position: [5, 2, 0], height_m: 8, crown_radius_m: 3 }] };
+  assert.ok(Math.abs(treePits(street)[0][4] - Math.PI / 4) < 1e-9, 'the grate is square to the nearest street');
+});
+
+test('the grate texture has an iron rim, slots and a soil opening at the trunk', () => {
+  const data = treeGrateTexture(64).image.data, at = (x, y) => data[(y * 64 + x) * 4];
+  assert.ok(at(32, 32) < at(1, 1), 'the centre opening is darker than the rim');
+  const row = Array.from({ length: 64 }, (_, x) => at(x, 20));
+  assert.ok(new Set(row).size >= 2, 'slots alternate with iron');
 });
 
 test('hedge lobes fill their planter deterministically', () => {
