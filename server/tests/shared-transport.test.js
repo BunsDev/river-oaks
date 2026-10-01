@@ -12,7 +12,7 @@ import { createModeration } from '../moderation.js';
 const district = JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
 const publicOrigin = 'https://sim.jev.works';
 
-async function fixture(t, { moderation } = {}) {
+async function fixture(t, { moderation, worldData=district } = {}) {
   let time = 100000, app;
   const sessions = new Map([
     ['alice-session', {userId:'alice',name:'Alice',sessionId:'alice-session'}],
@@ -39,7 +39,7 @@ async function fixture(t, { moderation } = {}) {
       res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:true}));return true;
     },
   };
-  const world=createSharedWorld(district,{now:()=>time});
+  const world=createSharedWorld(worldData,{now:()=>time});
   app=createGameServer({auth,world,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   t.after(()=>app.close());
@@ -122,6 +122,47 @@ test('real shared snapshots propagate grants and owner undo across two WebSocket
   f.advance();
   const removed=await bob.waitFor(message=>message.type==='snapshot' && message.locals.find(local=>local.id===localId)?.wish===null,after);
   assert.equal(removed.wishes.granted,1);assert.equal(removed.wishes.resolved,1);
+});
+
+test('town chat reaches both accounts through the shared WebSocket transport',async t=>{
+  const f=await fixture(t),alice=await connect(f,'alice-session'),bob=await connect(f,'bob-session');
+  const sent=await alice.command({type:'chat',text:'Hello from Alice'});
+  assert.equal(sent.ok,true);
+  const own=await alice.waitFor(message=>message.type==='snapshot'&&message.chat?.some(entry=>entry.id===sent.id));
+  assert.equal(own.chat.at(-1).authorId,'alice');
+  f.advance();
+  const received=await bob.waitFor(message=>message.type==='snapshot'&&message.chat?.some(entry=>entry.id===sent.id));
+  assert.equal(received.chat.at(-1).text,'Hello from Alice');
+});
+
+test('player creations reach peers through snapshots and only the owner can remove them',async t=>{
+  const worldData={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],stores:[],buildings:[],roads:[],communityLocations:[]};
+  const f=await fixture(t,{worldData}),alice=await connect(f,'alice-session'),bob=await connect(f,'bob-session');
+  const placed=await alice.command({type:'build',action:'place',kind:'planter',finish:'teal',position:[-12,3],yaw:0});
+  assert.equal(placed.ok,true);
+  const own=await alice.waitFor(message=>message.type==='snapshot'&&message.builds?.some(item=>item.id===placed.item.id));
+  assert.equal(own.builds[0].ownerName,'Alice');
+  f.advance();
+  const seen=await bob.waitFor(message=>message.type==='snapshot'&&message.builds?.some(item=>item.id===placed.item.id));
+  assert.equal(seen.builds[0].finish,'teal');
+  assert.equal((await bob.command({type:'build',action:'remove',id:placed.item.id})).error,'not_build_owner');
+  const before=bob.messages.length;
+  assert.equal((await alice.command({type:'build',action:'remove',id:placed.item.id})).ok,true);
+  f.advance();
+  assert.deepEqual((await bob.waitFor(message=>message.type==='snapshot'&&message.builds?.length===0,before)).builds,[]);
+});
+
+test('appearance change is visible to peers and restored when the account rejoins',async t=>{
+  const f=await fixture(t),alice=await connect(f,'alice-session'),bob=await connect(f,'bob-session');
+  const changed=await alice.command({type:'appearance',appearance:'woman-tailored'});
+  assert.equal(changed.ok,true);
+  f.advance();
+  const seen=await bob.waitFor(message=>message.type==='snapshot'&&message.players.some(player=>player.id==='alice'&&player.appearance==='woman-tailored'));
+  assert.equal(seen.players.find(player=>player.id==='bob').appearance,'jevica');
+  alice.ws.close();
+  await closed(alice.ws);
+  const rejoined=await connect(f,'alice-session');
+  assert.equal(rejoined.messages[0].players.find(player=>player.id==='alice').appearance,'woman-tailored');
 });
 
 test('tickets bind account and session, expire, and are consumed once',async t=>{

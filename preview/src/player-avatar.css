@@ -13,3 +13,6 @@
 :root[data-theme] .player-controls :is(button,select):disabled { opacity:.45; cursor:default; }
 :root[data-theme] .player-controls .vehicle-garage #player-drive-status { font:11px/1.55 system-ui; color:var(--muted); margin:10px 0 0; }
 .player-controls button[hidden] { display:none; }
+.player-appearance { display:block; margin-top:10px; color:#f6eef9; font-size:11px; }
+.player-appearance[hidden] { display:none; }
+.player-appearance select { box-sizing:border-box; display:block; width:100%; min-height:40px; margin-top:4px; padding:6px; border:1px solid #bca8c855; border-radius:9px; background:#3b2d45; color:#fff; font:inherit; }

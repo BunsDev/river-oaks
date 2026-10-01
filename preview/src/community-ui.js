@@ -435,7 +435,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       : kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
     if (state !== currentState || state.selectedId !== local.id || dialogue.hidden) return result;
     if (result.ok) {
-      message = result.message; attribution = 'Jevica’s magic'; currentTopic = null;
+      message = result.message; attribution = getMultiplayer()?'Shared town magic':'Jevica’s magic'; currentTopic = null;
       onWish(); paint(); speech.speak(local, message);
     }
     return result;
@@ -476,7 +476,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     state.selectedId = id;
     chooser.value = id;
     currentTopic = null;
-    const reaction = visitorGreeting(local, getPersona()), greeting = conversationLine(local, 'greeting');
+    const reaction = visitorGreeting(local, getMultiplayer()?null:getPersona()), greeting = conversationLine(local, 'greeting');
     message = local.wish?.message ?? (reaction ? `${reaction} ${greeting}` : greeting);
     attribution = `Authored dialogue · ${local.source === 'jev' ? 'Jev' : 'local'} reaction`;
     dialogue.hidden = false;

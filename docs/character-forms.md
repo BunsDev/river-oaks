@@ -1,6 +1,7 @@
 # Playable character forms
 
-**Jevica is the only playable character.** The Witch and Alien forms were removed
+**Jevica is the standalone playable character.** The shared town lets each player
+choose from Jevica and six shipped clothed human rigs. The Witch and Alien forms were removed
 on September 23, 2026, together with their portraits, costumes, broom and personal
 UFO. Her bubble flight, celebrity reactions, camera controls and magic remain.
 Residents are humans with six coordinated fashion palettes; see
@@ -201,7 +202,7 @@ The encounter keeps its stable internal ID for conversations and interactions.
   while Jevica remains seated at the same position.
 - `preview/e2e/touch-people.js`: trusted touch ownership, cancellation, capture
   loss, focus loss, actual seated/worker mesh taps and phone/tablet movement pads.
-- `preview/e2e/player-forms.js`: the sole playable identity, absence of the appearance selector, real portrait loading,
+- `preview/e2e/player-forms.js`: standalone Jevica, real portrait loading,
   takeoff, measured ascent, landing, camera toggles and mobile keyboard controls.
 - `preview/e2e/character-portraits.js`: regenerate Jevica's local PNG portrait
   from `/e2e/fixtures/jevica.html` using the Playwright CLI.

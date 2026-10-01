@@ -29,12 +29,12 @@ function refreshTrouble(state) {
   state.wishes.affected = state.locals.filter(local => local.wishDisruption).length;
 }
 export const crewWishMessage = local => `${local.name} travels with Jevica. Wishes are for district residents.`;
-export function grantWish(state, localId, kind, caster) {
+export function grantWish(state, localId, kind, caster, casterName='Jevica') {
   const local = state?.locals.find(person => person.id === localId), definition = wishFor(kind);
   // The carriage crew travel with Jevica and have no wish visuals; wishes are for district residents.
   if (local?.vehicleRole) return { ok: false, message: crewWishMessage(local) };
   if (!state?.wishes || caster !== 'jevica' || !local || local.abducted || !definition || local.wish || local.force) return { ok: false, message: 'Choose a resident without an active wish or Force hold.' };
-  local.wish = { kind, age: 0, phase: 'gift', message: definition.gift };
+  local.wish = { kind, age: 0, phase: 'gift', message: definition.gift, ownerName:casterName };
   state.wishes.granted++;
   record(state, local, definition.gift);
   return { ok: true, message: definition.gift };
@@ -42,10 +42,11 @@ export function grantWish(state, localId, kind, caster) {
 export function undoWish(state, localId, caster) {
   const local = state?.locals.find(person => person.id === localId);
   if (!state?.wishes || caster !== 'jevica' || !local?.wish) return { ok: false, message: 'There is no wish to undo.' };
+  const ownerName=local.wish.ownerName??'Jevica';
   delete local.wish;
   state.wishes.resolved++;
   refreshTrouble(state);
-  const message = 'Thank you, Jevica. I am myself again. Some wishes are better left as wishes.';
+  const message = `Thank you, ${ownerName}. I am myself again. Some wishes are better left as wishes.`;
   record(state, local, message);
   return { ok: true, message };
 }
@@ -59,7 +60,7 @@ export function stepWishes(state, delta) {
     const phase = wish.age >= definition.pleaAfter ? 'pleading' : wish.age >= definition.twistAfter ? 'trouble' : 'gift';
     if (wish.phase !== phase) {
       wish.phase = phase;
-      wish.message = phase === 'pleading' ? definition.plea : definition.twist;
+      wish.message = phase === 'pleading' ? definition.plea.replace('Jevica',wish.ownerName??'Jevica') : definition.twist;
       record(state, local, wish.message);
     }
   }

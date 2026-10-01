@@ -22,9 +22,9 @@ duties. Mannequins are displays, not conversation targets. Alien anatomy is used
 
 ## Player and flight
 
-The player is **Jevica**, a fictional celebrated magical visitor with a
+Standalone play centers **Jevica**, a fictional celebrated magical visitor with a
 Glinda-inspired pink gown, blonde hair, gold filigree crown and luminous star wand. The character name is
-Jevica throughout the experience. She is the sole playable identity. The Witch and Alien player forms, their
+Jevica in her authored story. Shared-town players use their account names and select from seven shipped human appearances. The Witch and Alien player forms, their
 portraits, the broom, and the personal UFO were retired on September 23, 2026.
 See [character forms](character-forms.md) for the latest visual reference,
 rendering decisions and verification entry points.

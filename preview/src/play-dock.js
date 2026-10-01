@@ -3,7 +3,7 @@
 export function createPlayDock() {
   const dock=document.createElement('details');dock.className='visit-tools';
   const toggle=document.createElement('summary');toggle.className='visit-tools-toggle';
-  toggle.textContent='Play & rides';
+  toggle.textContent='Play, build & rides';
   const content=document.createElement('div');content.className='visit-tools-content';
   dock.append(toggle,content);
   const compact=window.matchMedia('(max-width: 700px), (max-height: 600px)');

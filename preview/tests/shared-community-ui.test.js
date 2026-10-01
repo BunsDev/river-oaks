@@ -134,6 +134,12 @@ test('shared conversation does not request or apply local inference', async () =
   } finally { globalThis.fetch = original; }
 });
 
+test('shared residents greet an account without treating every visitor as Jevica',async()=>{
+  const {panel,byId}=setup();
+  assert.equal(await panel.selectLocal(panel.state.locals[0].id),true);
+  assert.doesNotMatch(byId('community-speech').textContent,/Jevica!/);
+});
+
 test('wish confirmation waits for snapshot before moving focus to undo', async () => {
   const { byId } = dom();
   const panel = createWishPanel({ onGrant: async () => ({ok:true}), onUndo: async () => ({ok:true}), onSelect: async () => false });
