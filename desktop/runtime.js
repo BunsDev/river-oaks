@@ -53,14 +53,17 @@ export const BRIDGE_HEALTH = `http://127.0.0.1:${BRIDGE_PORT}/health`;
 export function bridgeCommand({ voice = true } = {}) {
   return { command: 'uv', args: ['run', ...(voice ? ['--extra', 'voice'] : []), 'river-oaks', 'serve', '--port', String(BRIDGE_PORT)] };
 }
-// A bridge is ready when /health answers with its status; anything else
-// (connection refused, a different service on the port) is not our bridge.
+// A bridge is ready when /health answers with the bridge's own contract: its
+// status and decision mode. A different service on the port, or a connection
+// refused, is not our bridge.
+// The decision engine reports exactly one of these (src/river_oaks/agents.py).
+export const BRIDGE_MODES = new Set(['local_rules', 'jev']);
 export async function bridgeReady(fetcher, { timeoutMs = 1500 } = {}) {
   try {
     const response = await fetcher(BRIDGE_HEALTH, { signal: AbortSignal.timeout(timeoutMs) });
     if (!response.ok) return false;
     const body = await response.json();
-    return body?.status === 'ok';
+    return body?.status === 'ok' && typeof body.mode === 'string' && BRIDGE_MODES.has(body.mode);
   } catch { return false; }
 }
 // Poll until the bridge answers, or give up; bounded so a broken install

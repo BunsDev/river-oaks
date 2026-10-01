@@ -199,14 +199,29 @@ bool FRiverSkeletalConfigurationTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("speed derives from successive positions"), Anim->GroundSpeed, 20.f);
             TestTrue(TEXT("travel distance wraps at one stride"),
                 FMath::IsNearlyEqual(Anim->TravelDistanceCm, 10., .01));
-            TestFalse(TEXT("stale pose is refused"), Live.ApplyPose(Handle, Pose));
+            // Rejected poses carry a different root and locomotion, so a refusal that
+            // wrongly reached ApplyLocomotion would change the state, speed and
+            // distance below rather than leaving them coincidentally unchanged.
+            FRiverHumanPose Rejected = Pose;
+            Rejected.SimTimeSeconds = 3.;
+            Rejected.Root.SetLocation(FVector(300, 200, 90));
+            Rejected.Locomotion = TEXT("walk");
+            TestFalse(TEXT("stale pose is refused"), Live.ApplyPose(Handle, Rejected));
             TestEqual(TEXT("stale pose leaves the state alone"), Anim->State, ERiverLocomotionState::Jog);
-            Pose.Sequence = 4;
-            Pose.SimTimeSeconds = std::numeric_limits<double>::quiet_NaN();
-            TestFalse(TEXT("nonfinite time is refused"), Live.ApplyPose(Handle, Pose));
-            TestEqual(TEXT("invalid pose does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(3));
-            TestTrue(TEXT("refused pose leaves travel distance alone"),
+            TestEqual(TEXT("stale pose leaves the locomotion name alone"), Anim->Locomotion, FName(TEXT("jog")));
+            TestEqual(TEXT("stale pose leaves the speed alone"), Anim->GroundSpeed, 20.f);
+            TestTrue(TEXT("stale pose leaves travel distance alone"),
                 FMath::IsNearlyEqual(Anim->TravelDistanceCm, 10., .01));
+            Rejected.Sequence = 4;
+            Rejected.SimTimeSeconds = std::numeric_limits<double>::quiet_NaN();
+            TestFalse(TEXT("nonfinite time is refused"), Live.ApplyPose(Handle, Rejected));
+            TestEqual(TEXT("invalid pose does not consume sequence"), Live.Ledger().LastSequence(Handle), uint64(3));
+            TestEqual(TEXT("nonfinite pose leaves the state alone"), Anim->State, ERiverLocomotionState::Jog);
+            TestEqual(TEXT("nonfinite pose leaves the locomotion name alone"), Anim->Locomotion, FName(TEXT("jog")));
+            TestEqual(TEXT("nonfinite pose leaves the speed alone"), Anim->GroundSpeed, 20.f);
+            TestTrue(TEXT("nonfinite pose leaves travel distance alone"),
+                FMath::IsNearlyEqual(Anim->TravelDistanceCm, 10., .01));
+            Pose.Sequence = 4;
             Pose.SimTimeSeconds = 3.;
             Component->DestroyComponent();
             TestFalse(TEXT("externally destroyed component refuses pose"), Live.ApplyPose(Handle, Pose));

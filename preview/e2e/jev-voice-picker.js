@@ -28,6 +28,13 @@ async page => {
   check(puts.at(-1) === 'OQkHNgFcqzRY82loyxsc', 'Choosing it sends that voice ID to the bridge');
   check(await page.locator('.jev-voice-custom').isHidden(), 'Choosing a named voice does not open the ID field');
   await page.screenshot({ path: 'output/playwright/jev-voice-picker.png' });
+  // The PUT reply is the confirmation; a failing follow-up GET must not undo it.
+  await page.route('**/v1/settings/elevenlabs', route => route.abort());
+  await select.selectOption('GVERRoGD1VgvkBmxamFb');
+  await page.waitForFunction(() => document.querySelector('#elevenlabs-voice-status')?.textContent.includes('Original Jev'));
+  check(puts.at(-1) === 'GVERRoGD1VgvkBmxamFb' && !(await page.locator('#elevenlabs-voice-status').textContent()).includes('Could not'), 'A voice change is confirmed from the PUT reply even if the settings GET fails');
+  await page.unroute('**/v1/settings/elevenlabs');
+  await page.route('**/v1/settings/elevenlabs', route => route.fulfill({ json: settings() }));
   // Any library voice by ID.
   await select.selectOption('custom');
   check(await page.locator('.jev-voice-custom').isVisible(), 'Custom voice ID reveals an ID field');
