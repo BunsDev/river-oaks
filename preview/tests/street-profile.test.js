@@ -17,7 +17,12 @@ test('the retained road width has a two-percent crown and Type A gutter/curb rel
   close(section.curbFace,3.25);
   close(section.gutterWidth,.6096);
   close((streetOffset(6.5,0)-streetOffset(6.5,section.asphaltHalf))/section.asphaltHalf,.02);
-  close(sidewalkOffset(6.5,0,Infinity)-streetOffset(6.5,3.25),.1524);
+  close(sidewalkOffset(6.5,0,Infinity)-streetOffset(6.5,3.25),STREET.curbReveal);
+  // The walk grades from the curb top down to the plaza, which stays below every flowline.
+  close(sidewalkOffset(6.5,STREET.sidewalkWidth,Infinity),STREET.plazaOffset);
+  assert.ok(STREET.plazaOffset<streetOffset(6.5,3.25)&&STREET.plazaOffset<streetOffset(8.4,4.2),'the district ground stays under the gutter');
+  // On the district's 8.4 m streets the walk falls 8 cm over its 3.8 m width (2.1%), which reads flat.
+  assert.ok((sidewalkOffset(8.4,0,Infinity)-STREET.plazaOffset)/STREET.sidewalkWidth<=.022,'the sidewalk cross slope stays gentle');
   assert.ok(section.sidewalkWidth>=3.048 && section.clearWidth>=2.4384);
 });
 
@@ -36,7 +41,8 @@ test('rendered ramps and sidewalks are the same ground that feet query, with no 
   registerGroundSurfaces(data,[sidewalks]);
   const section=streetSection(road);
   for(const out of [.02,.5,1,2,3,section.sidewalkWidth-.01]) {
-    close(groundSurfaceHeight(data,crossing.center[0],-(section.curbFace+out)),sidewalkOffset(6.5,out,0));
+    const gap=Math.abs(groundSurfaceHeight(data,crossing.center[0],-(section.curbFace+out))-sidewalkOffset(6.5,out,0));
+    assert.ok(gap<1e-5,`rendered ramp is ${(gap*1000).toFixed(2)} mm from its profile at ${out} m`);
   }
   for(const [x,,z,,length] of kerbStrips(data)) {
     assert.ok(Math.abs(x-crossing.center[0])>STREET.crossingWidth/2+length/2,'curb segment must stop before ramp opening');
@@ -92,7 +98,8 @@ test('road, gutter and ramp supports meet flush with bounded slopes',t=>{
     previous=height;
   }
   const out=0,core=STREET.crossingWidth/2;
-  close((sidewalkOffset(6.5,out,core+STREET.flareRun)-sidewalkOffset(6.5,out,core))/STREET.flareRun,.0855);
+  const flare=(sidewalkOffset(6.5,out,core+STREET.flareRun)-sidewalkOffset(6.5,out,core))/STREET.flareRun;
+  assert.ok(flare>0&&flare<=.1,`ramp flares stay within ten percent (${flare.toFixed(4)})`);
 });
 
 test('zebra bars span the crossing along the road and warnings retain their depth',()=>{

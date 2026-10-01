@@ -54,6 +54,7 @@ import './sidebar.css';
 import './visual-finish.css';
 import './retro-finish.css';
 import { setupUIMotion } from './ui-motion.js';
+import { STREET } from './street-profile.js';
 
 setupUIMotion();
 setupThemeControls();
@@ -274,7 +275,7 @@ function buildGround(data) {
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     surface = new THREE.Mesh(geometry, paverSurface());
-    surface.position.y = 0.15;
+    surface.position.y = STREET.plazaOffset;
   } else {
     surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), paverSurface());
     surface.rotation.x = -Math.PI / 2;
