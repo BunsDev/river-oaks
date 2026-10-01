@@ -1,6 +1,6 @@
 import { STREET, isWalkway, streetSection, sidewalkOffset, crossingDistance } from './street-profile.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
-import { buildPlanterPlanting } from './landscape-models.js';
+import { buildPlanterPlanting, matureTreePlacements } from './landscape-models.js';
 import * as THREE from 'three';
 import { groundSurfaceHeight } from './world-surface.js';
 import { RETRO } from './retro-palette.js';
@@ -85,11 +85,39 @@ export function laneFixtures(world, isFree = () => true) {
   return { lamps, planters, bins };
 }
 
+// One flush, square tree pit per rendered trunk, its grate square to the
+// nearest street like a set paving unit: [x, y, z, size, yaw]. Pits follow
+// the same placements that draw the trees, so none is empty or doubled.
+export const TREE_GRATE = 1.3, TREE_FRAME = 0.1;
 export function treePits(world) {
-  const pits = [];
-  for (const tree of world.trees ?? []) pits.push([tree.position[0], groundSurfaceHeight(world,tree.position[0],-tree.position[1]), -tree.position[1], Math.min(1.4, Math.max(0.7, tree.crown_radius_m * 0.28))]);
-  for (const support of world.vegetation?.branch_supports ?? []) pits.push([support.position[0], groundSurfaceHeight(world,support.position[0],-support.position[1]), -support.position[1], Math.min(1.3, Math.max(0.65, support.radius_m * 0.32))]);
-  return pits;
+  const segments = (world.roads ?? []).flatMap(road => (road.points ?? []).slice(1).map((b, i) => [road.points[i], b]));
+  const streetYaw = (x, north) => {
+    let best = Infinity, yaw = 0;
+    for (const [a, b] of segments) {
+      const dx = b[0] - a[0], dy = b[1] - a[1], length2 = dx * dx + dy * dy;
+      if (!length2) continue;
+      const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (north - a[1]) * dy) / length2));
+      const gap = Math.hypot(a[0] + dx * t - x, a[1] + dy * t - north);
+      if (gap < best) { best = gap; yaw = Math.atan2(dy, dx); }
+    }
+    return yaw;
+  };
+  return matureTreePlacements(world).map(({ position: [x, y, z] }) => [x, y, z, TREE_GRATE, streetYaw(x, -z)]);
+}
+
+// Cast-iron grate: concentric square slot rings broken by radial ties, a
+// solid rim, and a round opening where the trunk rises through soil.
+export function treeGrateTexture(size = 64) {
+  const data = new Uint8Array(size * size * 4), iron = [52, 54, 52], slot = [16, 17, 16], soil = [40, 32, 25];
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const u = (x + 0.5) / size * 2 - 1, v = (y + 0.5) / size * 2 - 1, ring = Math.max(Math.abs(u), Math.abs(v)), r = Math.hypot(u, v);
+    const tie = Math.abs(Math.abs(u) - Math.abs(v)) < 0.06 || Math.abs(u) < 0.035 || Math.abs(v) < 0.035;
+    const color = r < 0.3 ? soil : r < 0.36 ? iron : ring > 0.9 ? iron : !tie && (ring * 9) % 1 < 0.42 ? slot : iron;
+    data.set([...color, 255], (y * size + x) * 4);
+  }
+  const texture = new THREE.DataTexture(data, size, size);
+  texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter; texture.generateMipmaps = true; texture.needsUpdate = true;
+  return texture;
 }
 
 // Clipped boxwood: overlapping rounded lobes filling a planter of the given
@@ -111,8 +139,11 @@ export function buildStreetFurniture(world, isFree) {
   const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.5, metalness: 0.65 });
   const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
   const stoneCast = new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: 0.85 });
-  const mulch = new THREE.MeshStandardMaterial({ color: '#3a2d22', roughness: 1 });
   const grate = new THREE.MeshStandardMaterial({ color: '#4a4b48', roughness: 0.6, metalness: 0.55 });
+  // Tree pits sit flush in the paving: a pale stone frame and an iron grate.
+  const flush = { polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 };
+  const pitStone = new THREE.MeshStandardMaterial({ color: '#bdb3a2', roughness: 0.86, ...flush });
+  const treeGrate = new THREE.MeshStandardMaterial({ map: treeGrateTexture(), roughness: 0.55, metalness: 0.6, ...flush });
   const orbital = new THREE.TorusGeometry(.52,.023,6,40);orbital.rotateX(Math.PI/2);
   const canopy = new THREE.SphereGeometry(1,20,10),brass=new THREE.MeshStandardMaterial({color:RETRO.brass,metalness:.8,roughness:.28});
   const batches = new Map(), dummy = new THREE.Object3D();
@@ -149,14 +180,14 @@ export function buildStreetFurniture(world, isFree) {
     bin.userData.forceBody={id:`street-bin-${index}`,name:'Street bin',mass:18,radius:.28,height:1.01};
     group.add(bin);group.userData.forceObjects.push(bin);
   }
-  for (const [x, y, z, radius] of treePits(world)) {
-    add(disc, grate, [x, y + 0.006, z], [radius * 2 + 0.3, 0.02, radius * 2 + 0.3]);
-    add(disc, mulch, [x, y + 0.012, z], [radius * 2, 0.03, radius * 2]);
+  for (const [x, y, z, size, yaw] of treePits(world)) {
+    add(box, pitStone, [x, y + 0.004, z], [size + TREE_FRAME * 2, 0.008, size + TREE_FRAME * 2], yaw);
+    add(box, treeGrate, [x, y + 0.006, z], [size, 0.008, size], yaw);
   }
   for (const { geometry, material, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     parts.forEach((p, i) => { dummy.position.fromArray(p.position); dummy.scale.fromArray(p.scale); dummy.rotation.set(0, p.yaw, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix); if (p.color) mesh.setColorAt(i, p.color); });
-    mesh.castShadow = material !== mulch && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
+    mesh.castShadow = material !== pitStone && material !== treeGrate && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
   }
   group.userData.counts = { kerbs: kerbStrips(world).length, lamps: lamps.length, planters: planters.length, bins: bins.length, pits: treePits(world).length };
   return group;
