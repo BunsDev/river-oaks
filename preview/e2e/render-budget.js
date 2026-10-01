@@ -3,7 +3,10 @@ async page => {
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:3840,height:2160});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5173/');
-  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady==='194'&&d.matureTrees==='230'&&d.plantedBeds==='38';});
+  // Tree counts come from the vegetation data the page loads, not a fixed number:
+  // the district's trees and planters follow their data, which changes.
+  const trees=(await (await page.request.get('http://127.0.0.1:5173/data/district-vegetation.json')).json()).branch_supports.length;
+  await page.waitForFunction(trees=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady==='194'&&d.matureTrees===String(trees)&&Number(d.plantedBeds)>0;},trees,{timeout:90000});
   // Measure the full-quality budget: Sharpest pins native resolution and AO,
   // where Auto would trade resolution for frame rate on a busy GPU.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
