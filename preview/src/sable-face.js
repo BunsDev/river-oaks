@@ -38,7 +38,7 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
   function surface(y, angle) {
     const [rx, rz, cz] = section(y), front = Math.max(0, Math.cos(angle));
     const x = Math.sin(angle) * Math.max(0, rx);
-    const muzzle = .031 * gauss(y + .032, .028) * Math.exp(-((x / .052) ** 4));
+    const muzzle = .023 * gauss(y + .032, .028) * Math.exp(-((x / .052) ** 4));
     const bridge = .011 * gauss(x, .018) * gauss(y - .014, .055) + .019*gauss(x,.021)*gauss(y-.006,.021);
     const socket = .010 * gauss(Math.abs(x) - .043, .025) * gauss(y - .049, .023);
     return new THREE.Vector3(x, y, Math.cos(angle) * Math.max(0, rz) + cz + front ** 6 * (muzzle + bridge - socket));
@@ -64,11 +64,11 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
   add(head, skull, faceMaterial, [0,0,0], [1,1,1], 'Sable sculpted face');
 
   // A softly rounded triangular nose sits into the integrated nasal bridge.
-  const nose=ball(head,material('#251b18',{roughness:.42,clearcoat:.2}),[0,-.006,.124],[.016,.010,.011],'Sable nose');
+  const nose=ball(head,material('#251b18',{roughness:.42,clearcoat:.2}),[0,-.006,.119],[.016,.010,.011],'Sable nose');
   const np=nose.geometry.attributes.position;
   for(let i=0;i<np.count;i++)np.setX(i,np.getX(i)*(.58+.42*(np.getY(i)+1)/2));
   nose.geometry.computeVertexNormals();
-  for(const side of [-1,1])ball(head,dark,[side*.009,-.005,.132],[.0028,.0017,.0011],'Sable nostril');
+  for(const side of [-1,1])ball(head,dark,[side*.009,-.005,.127],[.0028,.0017,.0011],'Sable nostril');
   const mouth = material('#644238', { roughness: .8 });
   const onFace = points => points.map(([x,y]) => {
     const [rx] = section(y), p = surface(y, Math.asin(THREE.MathUtils.clamp(x/rx,-1,1)));
@@ -86,7 +86,7 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
   const irisBase=new THREE.Color('#754329'), irisGold=new THREE.Color('#bd8247'), irisColor=new THREE.Color();
   for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
     const dx = (x-127.5)/127.5, dy = (y-127.5)/127.5, r = Math.hypot(dx,dy), a = Math.atan2(dy,dx);
-    const irisRadius = r / .57;
+    const irisRadius = r / .52;
     const fibre = Math.sin(a*93 + Math.sin(r*31)*.8)*.09 + Math.sin(a*173-r*13)*.045;
     const ring = 1 - smooth(irisRadius,.78,1)*.78;
     const c = irisColor.copy(irisBase).lerp(irisGold, (1-smooth(irisRadius,.35,.72))*.52).multiplyScalar((.90+fibre)*ring);
@@ -111,9 +111,16 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
   for (const side of [-1,1]) {
     const socket=new THREE.Group();socket.name=`Sable eye ${side}`;socket.position.set(side*.044,.049,.075);socket.rotation.z=side*.12;head.add(socket);
     const opening=new THREE.Group();opening.name='Sable eyelid opening';socket.add(opening);eyes.push(opening);
-    const almond=new THREE.Shape();almond.moveTo(-.029,0);almond.bezierCurveTo(-.016,.020,.014,.020,.029,0);almond.bezierCurveTo(.014,-.017,-.014,-.017,-.029,0);
-    const eyeGeometry=new THREE.ShapeGeometry(almond,32),ep=eyeGeometry.attributes.position;
-    for(let i=0;i<ep.count;i++)ep.setZ(i,.010+.007*(1-(ep.getX(i)/.029)**2));eyeGeometry.computeVertexNormals();
+    // Interior vertices are essential: a triangulated outline bridges across
+    // the curved skull and lets fur cut through the white of the eye.
+    const eyePositions=[],eyeIndices=[],eyeRows=20,eyeCols=48;
+    for(let row=0;row<=eyeRows;row++)for(let col=0;col<=eyeCols;col++){
+      const u=col/eyeCols*2-1,h=Math.max(0,1-u*u)**.85;
+      eyePositions.push(u*.029,(-.0128+row/eyeRows*.0278)*h,.010+.007*(1-u*u));
+      if(row<eyeRows&&col<eyeCols){const n=row*(eyeCols+1)+col;eyeIndices.push(n,n+1,n+eyeCols+1,n+1,n+eyeCols+2,n+eyeCols+1);}
+    }
+    const eyeGeometry=new THREE.BufferGeometry();eyeGeometry.setAttribute('position',new THREE.Float32BufferAttribute(eyePositions,3));eyeGeometry.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(eyePositions.length/3*2),2));eyeGeometry.setIndex(eyeIndices);
+    const ep=eyeGeometry.attributes.position;eyeGeometry.computeVertexNormals();
     add(opening,eyeGeometry.clone(),dark,[0,0,-.0006],[1.07,1.07,1]);
     const eyeMap=irisMap.clone();eyeMap.needsUpdate=true;textures.add(eyeMap);opening.userData.irisMap=eyeMap;
     const eyeUV=eyeGeometry.attributes.uv;
@@ -128,15 +135,31 @@ export function createSableFace(head, { add, ball, tube, material, textures }) {
     tube(opening,lid,[[-.029,0,.010],[-.014,-.010,.016],[0,-.014,.018],[.014,-.010,.016],[.029,0,.010]],.0014,'Sable lower eyelid');
     // Tapered individual lashes are merged into one mesh per eye.
     const lashes=[],lashIndices=[];
-    for(let i=0;i<9;i++){
-      const t=i/8,x=side*(.009+t*.018),y=.015*(1-(Math.abs(x)/.031)**2),length=.004+t*.006;
+    for(let i=0;i<7;i++){
+      const t=i/6,x=side*(.009+t*.018),y=.015*(1-(Math.abs(x)/.031)**2),length=.0025+t*.005;
       const start=lashes.length/3;
       lashes.push(x-.0006,y,.019,x+.0006,y,.019,x+side*length*.75,y+length,.018);
       lashIndices.push(start,start+1,start+2);
     }
     const lashGeometry=new THREE.BufferGeometry();lashGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lashes,3));lashGeometry.setIndex(lashIndices);lashGeometry.computeVertexNormals();
     add(opening,lashGeometry,material('#211512',{side:THREE.DoubleSide,roughness:.65}),[0,0,0],[1,1,1],'Sable individual lashes');
-    brow([[side*.019,.083,.076],[side*.039,.089,.076],[side*.060,.083,.067],[side*.071,.077,.057]]);
+    // Fit every eye layer to the socket surface in head space. The old flat
+    // opening sat centimetres clear of the temple when viewed from the side.
+    head.updateMatrixWorld(true);
+    opening.traverse(mesh=>{
+      if(!mesh.isMesh)return;
+      const toHead=new THREE.Matrix4().copy(head.matrixWorld).invert().multiply(mesh.matrixWorld);
+      const fromHead=toHead.clone().invert(),vertices=mesh.geometry.attributes.position;
+      const toOpening=new THREE.Matrix4().copy(opening.matrixWorld).invert().multiply(mesh.matrixWorld);
+      for(let i=0;i<vertices.count;i++){
+        const local=new THREE.Vector3().fromBufferAttribute(vertices,i),depth=local.clone().applyMatrix4(toOpening).z;
+        const p=local.applyMatrix4(toHead),[rx]=section(p.y);
+        p.z=surface(p.y,Math.asin(THREE.MathUtils.clamp(p.x/rx,-1,1))).z+.0018+(depth-.010)*.45;
+        p.applyMatrix4(fromHead);vertices.setXYZ(i,p.x,p.y,p.z);
+      }
+      vertices.needsUpdate=true;mesh.geometry.computeVertexNormals();
+    });
+    brow(onFace([[side*.019,.083],[side*.039,.089],[side*.060,.083],[side*.071,.077]]));
   }
 
   // Short swept cheek fibres soften the silhouette without a separate mesh per
