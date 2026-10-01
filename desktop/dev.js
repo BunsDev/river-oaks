@@ -17,14 +17,17 @@ async function startBridge() {
   bridge = spawn(command, args, { cwd: root, env: process.env, stdio: ['ignore', 'inherit', 'inherit'] });
   bridge.once('error', error => { bridge = null; console.warn(`  ➜  Bridge not started (${error.code === 'ENOENT' ? 'uv is not installed' : error.message}); device voices and local rules only.`); });
   bridge.once('exit', code => { if (bridge && !stopping) console.warn(`  ➜  Bridge exited with code ${code}; device voices and local rules only.`); bridge = null; });
-  if (await waitForBridge(fetch)) console.log(`  ➜  Bridge: decisions and local voices on 127.0.0.1:${BRIDGE_PORT}`);
-  else if (bridge) console.warn('  ➜  Bridge is still starting; voices become available once it answers /health.');
+  // Readiness is reported in the background: the window never waits for it.
+  void waitForBridge(fetch).then(ready => {
+    if (stopping) return;
+    if (ready) console.log(`  ➜  Bridge: decisions and local voices on 127.0.0.1:${BRIDGE_PORT}`);
+    else if (bridge) console.warn('  ➜  Bridge is still starting; voices become available once it answers /health.');
+  });
 }
 await vite.listen();
 const address = vite.httpServer.address();
 const url = `http://127.0.0.1:${address.port}/`;
 console.log(`River Oaks desktop development: ${url}`);
-await startBridge();
 function launch() {
   const env = { ...process.env, RIVER_OAKS_DEV_URL: url };
   delete env.ELECTRON_RUN_AS_NODE;
@@ -56,3 +59,5 @@ async function stop(code = 0) {
 process.once('SIGINT', () => void stop());
 process.once('SIGTERM', () => void stop());
 launch();
+// After the window and its lifecycle handlers: a slow or missing bridge delays nothing.
+if (!stopping) void startBridge();

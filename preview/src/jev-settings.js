@@ -33,7 +33,11 @@ export function createJevSettings(provider = 'jev') {
       try {
         const response=await fetch('/v1/settings/elevenlabs/voice',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({voice_id:id}),signal:AbortSignal.timeout(5000)});
         if(!response.ok)throw new Error('Voice could not be selected');
-        await request();
+        // The PUT answers with the updated settings: confirm from that, so a
+        // transient follow-up failure cannot report a change that already took.
+        const value=await response.json();
+        if(!isVoiceId(value.voice_id))throw new Error('Voice could not be selected');
+        panel.showVoice(value.voice_id);
       }catch{voiceStatus.textContent='Could not update the voice. Check the voice ID and bridge.';}finally{selecting=false;select.disabled=false;}
     };
     select.addEventListener('change',()=>{
