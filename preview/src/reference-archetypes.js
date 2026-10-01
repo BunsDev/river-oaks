@@ -270,21 +270,14 @@ export function createReferenceStyle(avatar,appearance){
     }
   }else if(appearance.id==='man-casual'){
     const jacket=material('#453b39',{roughness:.91}),shirt=material('#ece6dc',{roughness:.86}),fur=material('#a9a49f',{roughness:.98});
-    box(torso,shirt,[0,.115,.132],[.25,.32,.027],.014);
+    box(torso,shirt,[0,.1,.128],[.15,.26,.014],.007);
     for(const side of [-1,1]){
-      const lapel=box(torso,jacket,[side*.135,.16,.146],[.08,.3,.035],.012);lapel.rotation.z=side*.17;
-      const collar=box(torso,jacket,[side*.14,.35,.075],[.15,.12,.065],.018);collar.rotation.z=-side*.22;
-      box(torso,jacket,[side*.20,-.055,.143],[.11,.10,.033],.011);
+      const lapel=box(torso,jacket,[side*.12,.1,.136],[.068,.26,.02],.009);lapel.rotation.z=side*.2;
+      box(torso,jacket,[side*.17,-.06,.133],[.1,.09,.018],.008);
     }
     for(let i=0;i<3;i++)ball(torso,darkGold,[0,.21-i*.07,.152],[.006,.006,.004]);
     shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});pendant();
-    for(let i=0;i<17;i++){
-      const a=i*2.4,x=Math.sin(a)*(.09+(i%3)*.013),z=Math.cos(a)*.065-.02;
-      const tuft=mesh(face,new THREE.ConeGeometry(.019+(i%3)*.004,.075+(i%4)*.016,10),fur,[x,.205+(i%4)*.022,z]);tuft.rotation.z=-x*2;
-    }
-    for(const side of [-1,1])for(let i=0;i<4;i++){
-      const tuft=mesh(face,new THREE.ConeGeometry(.021,.095,10),fur,[side*(.085+i*.012),.015-i*.018,-.02]);tuft.rotation.z=side*1.15;
-    }
+    // The sculpted wolf head (animal-face.js) carries the fur; no tuft cones over it.
   }else if(appearance.identity==='starlight-maker'){
     const formal=appearance.variant==='formal',explorer=appearance.variant==='explorer',base=formal?'#dfd1bd':explorer?'#282e38':'#1e1b20';
     const cloth=material(base,{roughness:formal?.67:.86,sheen:.42,sheenColor:new THREE.Color(formal?'#fff1d7':'#6c5b5d')}),

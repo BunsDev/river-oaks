@@ -25,9 +25,9 @@ scene.add(avatar.object);
 window.lookFixture = {
   look: look.id, avatar,
   render(view = 'front') {
-    avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI / 2 : 0;
+    avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI / 2 : view === 'three-quarter' ? -.62 : 0;
     avatar.update(0, 'continue', false, { speed: 0, distance: 0 }, () => 0);
-    if (view === 'portrait') { camera.position.set(0, 1.62, 1.25); camera.lookAt(0, 1.5, 0); }
+    if (view === 'portrait' || view === 'three-quarter') { camera.position.set(0, 1.62, view === 'three-quarter' ? .95 : 1.25); camera.lookAt(0, 1.55, 0); }
     else { camera.position.set(0, 1.05, 4.6); camera.lookAt(0, .95, 0); }
     renderer.render(scene, camera);
     return { bounds: new THREE.Box3().setFromObject(avatar.object).getSize(new THREE.Vector3()).toArray().map(v => +v.toFixed(2)) };
