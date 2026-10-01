@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { physicalSurface, paverSurface } from './materials.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
-import { isWalkway, streetOffset, streetSection, streetStations, crossingDistance } from './street-profile.js';
+import { STREET, isWalkway, streetOffset, streetSection, streetStations, crossingDistance } from './street-profile.js';
 
 export function buildRoads(world) {
   const network = createPedestrianNetwork(world);
@@ -22,13 +22,13 @@ export function buildRoads(world) {
           const vertices=[[cuts[step-1]/length,offsets[band-1]],[cuts[step]/length,offsets[band-1]],[cuts[step]/length,offsets[band]],[cuts[step-1]/length,offsets[band]]];
           for(const index of [0,2,1,0,3,2]) {
             const [t,d]=vertices[index],x=a[0]+ux*length*t-uy*d,y=a[1]+uy*length*t+ux*d;
-            positions.push(x,terrainHeight(world.terrain,x,y)+(walkway ? 0.26 : streetOffset(road.width_m,d,crossingDistance(network,road.id,[x,y]))),-y);uvs.push(x,-y);
+            positions.push(x,terrainHeight(world.terrain,x,y)+(walkway ? STREET.plazaOffset + 0.004 : streetOffset(road.width_m,d,crossingDistance(network,road.id,[x,y]))),-y);uvs.push(x,-y);
           }
         }
       }
     }
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geometry.computeVertexNormals();
-    const mesh=new THREE.Mesh(geometry,walkway?paverSurface({side:THREE.DoubleSide}):asphalt);
+    const mesh=new THREE.Mesh(geometry,walkway?paverSurface({side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}):asphalt);
     mesh.receiveShadow=true;group.add(mesh);if(!walkway)group.userData.asphalt=mesh;
   }
   // Dashed centre markings make the two independent travel lanes legible.

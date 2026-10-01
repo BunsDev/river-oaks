@@ -4,12 +4,18 @@ export const FOOT = 0.3048;
 export const STREET = Object.freeze({
   crownHeight: 0.30, roadCrossSlope: 0.02,
   gutterWidth: 2 * FOOT, gutterDepression: 1.5 * FOOT / 12,
-  curbWidth: 6 * FOOT / 12, curbReveal: 6 * FOOT / 12,
+  // A low 6 cm curb, as on upscale shopping streets: the sidewalk grades
+  // gently from its top down to the plaza, so the paving reads as one even
+  // floor with no step where the sidewalk meets the district ground.
+  curbWidth: 6 * FOOT / 12, curbReveal: 0.06,
   sidewalkCrossSlope: 0.015, clearWidth: 8 * FOOT,
+  // The district ground's height above terrain: below every gutter flowline
+  // so the road stays visible, and just under shop floors (walkSurfaceOffset).
+  plazaOffset: 0.17,
   // 12.5 ft fits the perpendicular ramp and its 4 ft 2 in landing, and
   // exceeds the commercial minimum of 10 ft without narrowing the clear path.
   sidewalkWidth: 12.5 * FOOT, rampRun: 2.54, landing: 50 * FOOT / 12,
-  rampSlope: 0.075, rampGutterSlope: 0.05, flareRun: 0.1524 / 0.09,
+  rampSlope: 0.075, rampGutterSlope: 0.05, flareRun: 0.06 / 0.09,
   warningDepth: 3 * FOOT, warningSetback: 7 * FOOT / 12,
   crossingWidth: 4.4, // Retained game crossing corridor, not a city siting rule.
 });
@@ -38,11 +44,13 @@ export function streetOffset(width, lateral, crossingDistance = Infinity) {
 }
 
 export function sidewalkOffset(width, outward, crossingDistance = Infinity) {
-  const flowline = streetOffset(width, width / 2);
-  const normal = flowline + STREET.curbReveal + outward * STREET.sidewalkCrossSlope;
-  const rampFlowline = streetOffset(width, width / 2, 0);
-  const rise = flowline + STREET.curbReveal - rampFlowline;
-  const ramp = rampFlowline + rise * Math.min(1, Math.max(0, outward) / STREET.rampRun) + outward * STREET.sidewalkCrossSlope;
+  const flowline = streetOffset(width, width / 2), curbTop = flowline + STREET.curbReveal;
+  // From the curb top the walk grades evenly to the plaza at its back edge.
+  const grade = out => curbTop + (STREET.plazaOffset - curbTop) * Math.min(1, Math.max(0, out) / STREET.sidewalkWidth);
+  const normal = grade(outward), rampFlowline = streetOffset(width, width / 2, 0);
+  // A crossing ramp rises in a straight line from the ramp flowline to that
+  // grade at the end of its run, so the flat rendered bands match it exactly.
+  const ramp = outward >= STREET.rampRun ? normal : rampFlowline + (grade(STREET.rampRun) - rampFlowline) * Math.max(0, outward) / STREET.rampRun;
   const blend = flareBlend(crossingDistance);
   return ramp + (normal - ramp) * blend;
 }
