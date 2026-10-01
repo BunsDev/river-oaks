@@ -31,7 +31,10 @@ async page=>{
   const failures=[];
   for(const run of runs)for(const [profile,r]of Object.entries(run.profiles)) {
     if(!Number.isFinite(r.correlation)||r.correlation>-.8||r.maxArmRange<.2||r.maxWristSpeed>3||r.opposed<r.aligned*4)failures.push({terrain:run.terrain,hz:run.hz,profile,...r});
-    if(r.elbowMax-r.elbowMin<.04||r.elbowMin<-.35||r.elbowMax>.01||r.wristMax-r.wristMin<.008||r.finalFlex>.001||r.maxFootError>.005)failures.push({terrain:run.terrain,hz:run.hz,profile,reason:'Forearm articulation, stop or foot contact',...r});
+    // Walking eases the rest pose's elbow bend by up to .15 rad so forearms hang
+    // naturally (upper-body-gait.js). Every rig rests at 39-46 degrees of bend, so
+    // .18 rad of extension still leaves the elbow well bent: no hyperextension.
+    if(r.elbowMax-r.elbowMin<.04||r.elbowMin<-.35||r.elbowMax>.18||r.wristMax-r.wristMin<.008||r.finalFlex>.001||r.maxFootError>.005)failures.push({terrain:run.terrain,hz:run.hz,profile,reason:'Forearm articulation, stop or foot contact',...r});
   }
   if(failures.length||errors.length)throw new Error(JSON.stringify({failures,runs,errors}));
   return {runs,errors};
