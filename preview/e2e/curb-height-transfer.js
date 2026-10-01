@@ -6,7 +6,7 @@ async page=>{
   const route=async request=>{
     if(!reference)return request.continue();
     const response=await request.fetch(),source=await response.text();
-    const expression='bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-12*delta);';
+    const expression='bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-STEP_TRANSFER*delta);';
     if(!source.includes(expression))throw new Error('Missing body height response seam');
     await request.fulfill({response,body:source.replace(expression,'bodyRootHeight=origin.y;')});
   };
@@ -65,6 +65,9 @@ async page=>{
   } finally {await page.unroute('**/src/foot-placement.js*',route);}
   const corrected=runs.filter(r=>r.mode==='corrected').flatMap(r=>Object.values(r.profiles));
   const baseline=runs.find(r=>r.mode==='reference');
-  if(errors.length||corrected.some(r=>r.transitions!==1||r.maxNavigationStepSpeed>=2||r.maxFootError>.003)||!Object.values(baseline.profiles).every(r=>r.maxNavigationStepSpeed>3))throw new Error(JSON.stringify({runs,errors}));
+  // Sensitivity: without the transfer at least one rig must break the 2 m/s limit the
+  // corrected runs are held to. (Since the pelvis release eases in world height, some
+  // rigs absorb a curb even without the transfer, so 'every rig > 3 m/s' no longer holds.)
+  if(errors.length||corrected.some(r=>r.transitions!==1||r.maxNavigationStepSpeed>=2||r.maxFootError>.003)||!(Math.max(...Object.values(baseline.profiles).map(r=>r.maxNavigationStepSpeed))>2))throw new Error(JSON.stringify({runs,errors}));
   return {runs,views,errors,scope:'Production avatar animations and exact rendered 16 cm box curb. The navigation-height handoff is gated; whole-stride peaks remain a separate diagnostic.'};
 }
