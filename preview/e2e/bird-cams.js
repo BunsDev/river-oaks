@@ -1,0 +1,48 @@
+async page => {
+  // Bird cams: ride along through a bird Jev flies, take over, hand back, switch, land.
+  const checks = [], errors = [];
+  const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
+  page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('http://127.0.0.1:5173/');
+  await page.locator('#loading').waitFor({ state: 'hidden', timeout: 120000 });
+  const birds = () => page.evaluate(() => window.__riverBirds());
+  await page.waitForFunction(() => window.__riverBirds?.()?.started, null, { timeout: 30000 });
+  const dock = page.locator('.visit-tools');
+  if (!(await dock.evaluate(node => node.open))) await page.locator('.visit-tools-toggle').click();
+  check(await page.locator('.bird-cams-row').count() === 3, 'The Bird cams card lists three birds');
+  await page.waitForFunction(() => window.__riverBirds().birds.every(bird => bird.watching), null, { timeout: 15000 });
+  check(true, 'Jev sends every bird to watch something');
+  const footCamera = (await birds()).camera;
+  await page.locator('.bird-cams-row[data-bird=dove] button').click();
+  await page.waitForTimeout(1200);
+  let state = await birds();
+  const dove = state.birds.find(bird => bird.id === 'dove');
+  check(state.riding?.id === 'dove' && await page.locator('.bird-ride').isVisible(), 'Ride along shows the ride bar');
+  check(Math.hypot(state.camera[0] - dove.position[0], state.camera[1] - dove.position[1], state.camera[2] - dove.position[2]) < 1.5, 'The camera is at the bird’s eyes');
+  check(state.camera[1] - footCamera[1] > 4, `The view is from the air (${(state.camera[1] - footCamera[1]).toFixed(1)} m above the walking view)`);
+  await page.screenshot({ path: 'output/playwright/bird-cam-jev.png' });
+  const before = state.birds.find(bird => bird.id === 'dove').position;
+  await page.waitForTimeout(1500);
+  const moved = (await birds()).birds.find(bird => bird.id === 'dove').position;
+  check(Math.hypot(moved[0] - before[0], moved[2] - before[2]) > 4, 'Jev keeps flying while you ride along');
+  const footBefore = await page.locator('#walking-hud').getAttribute('data-position');
+  await page.locator('#canvas-host').focus();
+  await page.keyboard.down('KeyW'); await page.keyboard.down('KeyA'); await page.waitForTimeout(1200); await page.keyboard.up('KeyA'); await page.keyboard.up('KeyW');
+  state = await birds();
+  check(state.riding.mode === 'manual' && /You are flying/.test(await page.locator('#bird-ride-status').textContent()), 'A flight key takes the controls');
+  check(await page.locator('#walking-hud').getAttribute('data-position') === footBefore, 'Flight keys steer the bird, not the walker left on the ground');
+  await page.screenshot({ path: 'output/playwright/bird-cam-manual.png' });
+  await page.keyboard.press('KeyT');
+  check((await birds()).riding.mode === 'jev', 'T gives the bird back to Jev');
+  await page.keyboard.press('KeyN');
+  check((await birds()).riding.id === 'jay', 'N moves to the next bird');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(600);
+  state = await birds();
+  check(!state.riding && await page.locator('.bird-ride').isHidden(), 'Esc lands and hides the ride bar');
+  check(Math.abs(state.camera[1] - footCamera[1]) < 1, 'Landing returns to the walking view');
+  check(!errors.length, errors.length ? errors.join('; ') : 'No page errors');
+  return { checks };
+}

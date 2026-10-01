@@ -55,6 +55,8 @@ import './visual-finish.css';
 import './retro-finish.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
+import { createBirdCams } from './bird-cams.js';
+import { createBirdCamsUI } from './bird-cams-ui.js';
 
 setupUIMotion();
 setupThemeControls();
@@ -68,6 +70,7 @@ let placesUI = null, landmarks = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers, buildLayer, buildControls;
+let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
 let layers = {}, loading = false;
@@ -183,6 +186,10 @@ function initializeRenderer() {
     onCast:target=>playerAvatar?.setForceTarget(target),onManual:()=>autoControls?.stop(),
   });
   visitTools.insertBefore(force.panel,invasion.panel);
+  // Bird cams: Jev flies a few birds over the district; ride along or take over.
+  birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? walkingEnvironment() : null, getInterests: birdInterests });
+  birdCamsUI = createBirdCamsUI(birdCams);
+  visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
   $('#viewport').append(playDock.element);
   createClearView({ viewport: $('#viewport') });
   if (multiplayerMode === 'required') startMultiplayer();
@@ -563,8 +570,11 @@ function render(now) {
   }
   updateStoreLights();
   if (!multiplayer) autoControls?.update(delta);
-  if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
+  // Riding a bird pauses walking; the bird drives the camera below.
+  if (birdCams?.riding) walking?.halt();
+  else if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
+  birdCams?.update(delta);
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
   remotePlayers?.update(now, camera);
@@ -618,6 +628,23 @@ host.addEventListener('pointermove', event => {
   builderPointer.at = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
 });
 host.addEventListener('pointerleave', () => { builderPointer.at = null; });
+// What Jev's birds find worth watching: residents by what they are doing,
+// Jevica, other players, and the community spots as a quiet fallback.
+const BIRD_ACTIVITY = [[/held by the force|enchant|wish/i, 7], [/chatting|helping|greeting|aid/i, 6], [/seeking cover|turning|walking|on the way|heading/i, 2.5], [/rest|paused|sheltered|at work/i, 1.2]];
+function birdInterests() {
+  const interests = [];
+  for (const local of community?.state?.locals ?? []) {
+    if (local.indoor || !Array.isArray(local.position)) continue;
+    const status = String(local.status ?? ''), weight = BIRD_ACTIVITY.find(([pattern]) => pattern.test(status))?.[1] ?? 2;
+    interests.push({ id: `local:${local.id}`, label: status ? `${local.name} (${status})` : local.name, position: [local.position[0], local.position[1]], weight: local.id === community.state.selectedId ? weight + 3 : weight });
+  }
+  const me = walking?.getPosition();
+  if (me) interests.push({ id: 'player', label: playerAvatar?.form === 'jevica' || !playerAvatar ? 'Jevica' : 'you', position: [me[0], me[1]], weight: 4 });
+  for (const player of multiplayer?.snapshot?.players ?? []) if (player.id !== multiplayer.identity?.id) interests.push({ id: `player:${player.id}`, label: player.name, position: player.position, weight: 4 });
+  for (const spot of world?.communityLocations ?? []) interests.push({ id: `spot:${spot.id}`, label: spot.name, position: [spot.position[0], spot.position[1]], weight: 1.5 });
+  return interests;
+}
+
 function updateBuilder() {
   const builder = buildControls?.builder;
   if (!builder?.active || !world || !walking?.active) { buildLayer?.setGhost(null); builderAim = ''; return; }
@@ -700,6 +727,8 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
+// Read-only bird cam state for development and browser acceptance runs.
+if (import.meta.env.DEV) window.__riverBirds = () => birdCams ? { ...birdCams.state, camera: camera.position.toArray(), walking: walking?.active ?? false } : null;
 try {
   if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
@@ -707,7 +736,7 @@ try {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

@@ -62,6 +62,8 @@ With both development servers running, the browser CLI scripts `preview/e2e/dist
 
 `preview/e2e/places.js` drives the **Places** tab in solo play: the arrival label, one row per named place, a teleport beside a community spot, saving, reloading, returning to and removing a landmark, and the `?place=` and `?at=` links, including a link outside the district (ignored) and one into a building (refused).
 
+`preview/e2e/bird-cams.js` rides along with a bird Jev is flying: three birds listed and watching something, the camera at the bird's eyes and in the air, Jev still flying, a flight key taking the controls without moving the walker, T handing back, N switching birds, and Esc landing back in the walking view.
+
 `preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `VITE_MULTIPLAYER=off npm run dev`.
 
 For pointer regressions, start `npm run dev`, then run the Playwright CLI scripts:
