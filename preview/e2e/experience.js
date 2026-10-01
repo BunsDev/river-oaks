@@ -20,7 +20,8 @@ async page => {
   check(await page.locator('#panel-toggle').evaluate(el=>el===document.activeElement),'Closing the panel restores trigger focus');
   await page.screenshot({path:'output/playwright/aaa-hud-desktop.png'});
   await page.setViewportSize({width:390,height:844});
-  check(await page.locator('.visit-tools').evaluate(el=>!el.open),'Small windows start with a compact play dock');
+  // The media-query change that collapses the dock is delivered after the resize, not during it.
+  check(await page.waitForFunction(()=>!document.querySelector('.visit-tools').open,null,{timeout:2000}).then(()=>true,()=>false),'Small windows start with a compact play dock');
   await page.locator('.visit-tools-toggle').click();
   check(await page.locator('#player-flight').isVisible(),'Small-window play dock opens');
   await page.locator('#player-flight').focus();await page.keyboard.press('Escape');

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createSableLook } from './sable-look.js';
 import { createReferenceStyle } from './reference-archetypes.js';
+import { measureHead } from './head-fit.js';
 
 // The imported rigs provide facial proportions, skin detail and tailored clothes.
 // These additions belong to each avatar instance, never to the cached GLB.
@@ -177,6 +178,8 @@ export function createRomanceLook(avatar,root,appearance) {
     const black=mat('#141619',{roughness:.12});
     const shine=mat('#ffffff',{roughness:.12,emissive:'#555555'});
     const face=new THREE.Group();face.name=`${appearance.kind} face`;head.add(face);
+    // Animal heads were authored for a 0.20 skull top; seat them on the measured skull.
+    face.position.y=(measureHead(avatar)?.skull.top??.2)-.2;
     ball(face,fur,[0,.105,.003],[.116,.138,.11]);
     ball(face,light,[0,.026,.082],[.067,.042,.069]);
     ball(face,fur,[0,.083,.099],[.051,.054,.057]);
