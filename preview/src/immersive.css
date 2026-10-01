@@ -56,6 +56,11 @@
 :root[data-theme] #walking-meet-nearby.walking-secondary { min-height: 36px; margin: 0; padding: 6px; background: transparent; border-color: transparent; font-size: 11px; font-weight: 400; }
 #walking-place { margin: 8px 0 0; font-size: 10px; line-height: 1.6; }
 :root[data-theme] #walking-controls-toggle { margin: 0; min-height: 36px; }
+/* With a fine pointer the two quiet text rows need less height, so the console
+   keeps the street in view (under 160px); touch keeps its 44px targets below. */
+@media (pointer: fine) {
+  :root[data-theme] #walking-controls-toggle, :root[data-theme] #walking-meet-nearby.walking-secondary { min-height: 30px; padding-block: 4px; }
+}
 .walking-pad button { min-width: 44px; min-height: 44px; }
 .walking-help { margin-bottom: 8px; }
 .community-activities { border-top: 1px solid var(--line); }
