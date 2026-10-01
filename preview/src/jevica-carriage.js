@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { seeThroughNearCamera } from './near-camera-fade.js';
 import { batchCostumeAttachments } from './costume-batching.js';
 import { fitTuftedButtons } from './tufted-upholstery.js';
 
@@ -6,7 +7,8 @@ import { fitTuftedButtons } from './tufted-upholstery.js';
 export function createJevicaCarriage() {
   const object=new THREE.Group();object.name='Jevica rose carriage';
   const owned=new Set(),groups=[object],wheels=[],spinners=[];
-  const surface=(name,color,options={})=>{const m=new THREE.MeshPhysicalMaterial({color,roughness:.42,...options});m.name=name;owned.add(m);return m;};
+  // The camera can end up inside the carriage's arches (Jevica rising beside it): they dissolve near the lens.
+  const surface=(name,color,options={})=>{const m=seeThroughNearCamera(new THREE.MeshPhysicalMaterial({color,roughness:.42,...options}));m.name=name;owned.add(m);return m;};
   const gold=surface('Polished champagne gold','#b59448',{metalness:.96,roughness:.24,clearcoat:.45});
   const darkGold=surface('Antique gold in recesses','#7c592c',{metalness:.84,roughness:.38});
   const cream=surface('Ivory enamel','#f1dfbd',{roughness:.29,clearcoat:.9});

@@ -56,6 +56,7 @@ import './retro-finish.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
 import { createBirdCams } from './bird-cams.js';
+import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 
 setupUIMotion();
@@ -333,7 +334,8 @@ function populateWorld(data) {
   }
   world = data;
   worldGroup = new THREE.Group();
-  buildingMesh = buildDistrictBuildings(data);
+  // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
+  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
   const ground=buildGround(data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
   const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
@@ -350,13 +352,13 @@ function populateWorld(data) {
   layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
-  worldGroup.add(buildDistrictDetail(data));
+  worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
   forceObjects=furniture.userData.forceObjects;
   forceObstacles=[...furniture.userData.forceObstacles,...(data.trees??[]).map(tree=>({x:tree.position[0],z:-tree.position[1],radius:.35}))];
   force?.setWorld(data,forceObjects);
-  buildingMesh.add(buildDistrictFantasy(data));
+  buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
   breakableGlass?.setWorld(buildingMesh);

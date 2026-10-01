@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { spatialInstanceBatches } from './spatial-instances.js';
+import { seeThroughNearCamera } from './near-camera-fade.js';
 
 const loader = new GLTFLoader(), templates = new Map();
 function template(name) {
@@ -18,8 +19,10 @@ function materialFrom(source, foliage = false) {
   material.roughness=foliage?0.86:1;material.metalness=0;
   material.envMapIntensity=0.55;
   if(foliage) {material.color.set('#f4ffea');material.emissive.set('#29421a');material.emissiveIntensity=0.16;}
+  seeThroughNearCamera(material);
   return material;
 }
+
 export function matureTreePlacements(world) {
   const supports=world.vegetation?.branch_supports;
   return (supports?.length?supports:(world.trees ?? []).map(tree=>({position:tree.position,height_m:tree.height_m,radius_m:tree.crown_radius_m}))).map((tree,index)=>({
