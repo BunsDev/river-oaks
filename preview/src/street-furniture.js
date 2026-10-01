@@ -186,6 +186,8 @@ export function buildStreetFurniture(world, isFree) {
   }
   for (const { geometry, material, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
+    // A per-build texture is released with the world (see the reload teardown in main.js).
+    if (material === treeGrate) mesh.userData.texture = treeGrate.map;
     parts.forEach((p, i) => { dummy.position.fromArray(p.position); dummy.scale.fromArray(p.scale); dummy.rotation.set(0, p.yaw, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix); if (p.color) mesh.setColorAt(i, p.color); });
     mesh.castShadow = material !== pitStone && material !== treeGrate && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
   }
