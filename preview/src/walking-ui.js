@@ -189,6 +189,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       return clearConversationLine(environment,visitorPosition(),point,eyeHeight??(local?personEyeHeight(local):undefined));
     },
     getPosition() { return state ? [state.position[0], -state.position[2], state.position[1]] : null; },
+    getYaw() { return state ? state.yaw : 0; },
+    setYaw(yaw) { if (state && Number.isFinite(yaw)) { state.yaw = yaw; place(); } },
     get roomId() { return active && state ? currentRoom()?.storeId ?? null : null; },
     focusPerson(local) {
       if (!state) return false;

@@ -392,3 +392,26 @@ test('players arriving together each get their own spot near the spawn', async (
   }
   assert.ok(spots.every(spot => Math.hypot(spot[0] - spots[0][0], spot[1] - spots[0][1]) < 7), 'everyone still arrives together');
 });
+
+test('travel reaches community places and bare positions outdoors, and refuses anything else', () => {
+  const {world,advance} = setup();
+  const byPlace = world.command('a',{type:'travel',placeId:'c'});
+  assert.equal(byPlace.ok,true,'a community place is a destination');
+  assert.ok(Math.hypot(byPlace.player.position[0]-0,byPlace.player.position[1]-15)<4.5,'arrives beside the plaza');
+  advance(1500);
+  const byPoint = world.command('a',{type:'travel',position:[20,-20]});
+  assert.equal(byPoint.ok,true,'an open position inside the district is a destination');
+  assert.ok(Math.hypot(byPoint.player.position[0]-20,byPoint.player.position[1]+20)<1.3,'lands within a step of the asked-for spot');
+  assert.equal(byPoint.player.yaw,byPlace.player.yaw,'a bare position keeps the traveller facing as they were');
+  advance(1500);
+  assert.equal(world.command('a',{type:'travel',position:[0,0]}).ok,false,'inside a wall is refused, not nudged across it');
+  assert.equal(world.command('a',{type:'travel',position:[500,0]}).ok,false,'outside the district is refused');
+  assert.equal(world.command('a',{type:'travel',position:[1,'2']}).ok,false);
+  assert.equal(world.command('a',{type:'travel',position:[1,2,3]}).ok,false);
+  assert.equal(world.command('a',{type:'travel',placeId:'nope'}).ok,false);
+  assert.equal(world.command('a',{type:'travel',placeId:'c',position:[20,-20]}).ok,false,'one destination per travel');
+  assert.equal(world.command('a',{type:'travel',placeId:'c',mode:'enter'}).ok,false,'modes belong to stores');
+  const quick = world.command('a',{type:'travel',placeId:'d'});
+  assert.equal(quick.ok,true);
+  assert.equal(world.command('a',{type:'travel',placeId:'c'}).ok,false,'the travel cooldown still applies');
+});

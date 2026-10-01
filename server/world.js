@@ -128,19 +128,46 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
+  // A travel names exactly one destination: a resident, a store (with a mode),
+  // a community place, or a bare [x, north] inside the district for landmarks
+  // and shared links. Every destination is still searched for a clear,
+  // outdoor spot on the server, so no travel can land inside a wall or a room.
+  const inBounds = (x,north) => x>=worldData.bounds_m[0] && x<=worldData.bounds_m[2] && north>=worldData.bounds_m[1] && north<=worldData.bounds_m[3];
   function travel(player, message, ledger, time) {
-    if (!fields(message,['type','localId','storeId','mode']) || Object.hasOwn(message,'localId') && !textId(message.localId)
-      || Object.hasOwn(message,'storeId') && !textId(message.storeId) || (textId(message.localId) === textId(message.storeId))) return reject('invalid_destination');
+    if (!fields(message,['type','localId','storeId','mode','placeId','position']) || Object.hasOwn(message,'localId') && !textId(message.localId)
+      || Object.hasOwn(message,'storeId') && !textId(message.storeId) || Object.hasOwn(message,'placeId') && !textId(message.placeId)
+      || Object.hasOwn(message,'position') && !(Array.isArray(message.position) && message.position.length===2 && message.position.every(Number.isFinite))) return reject('invalid_destination');
+    if (['localId','storeId','placeId','position'].filter(key=>Object.hasOwn(message,key)).length!==1) return reject('invalid_destination');
     const local = localById.get(message.localId);
     const store = worldData.stores?.find(store=>store.id===message.storeId);
     const room = environment.rooms.find(room=>room.storeId===message.storeId);
+    const place = (worldData.communityLocations ?? []).find(place=>place.id===message.placeId);
+    const point = Object.hasOwn(message,'position') ? message.position : null;
     if (Object.hasOwn(message,'mode') && (!store || !['enter','leave','arrive'].includes(message.mode))) return reject('invalid_destination');
-    if (!local && !store) return reject('unknown_destination');
+    if (point && !inBounds(point[0],point[1])) return reject('invalid_destination');
+    if (!local && !store && !place && !point) return reject('unknown_destination');
     const mode = message.mode ?? 'enter';
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
     let destination = null;
-    if (local) {
+    if (place || point) {
+      // Outdoors only, close to the asked-for spot: a place a few metres off
+      // is still that place, a link to inside a wall is not honoured.
+      const origin = place ? place.position : point;
+      const accept = (x,north) => {
+        if (!environment.isFree(x,-north) || environment.roomAt(x,-north)) return false;
+        destination=[x,north,environment.groundAt(x,-north)];
+        return true;
+      };
+      accept(origin[0],origin[1]);
+      for (const radius of (place ? [0.6,1.2,1.8,2.4,3,4] : [0.4,0.8,1.2])) {
+        if (destination) break;
+        for (let i=0;i<24;i++) {
+          const angle=i/24*Math.PI*2;
+          if (accept(origin[0]+Math.cos(angle)*radius,origin[1]+Math.sin(angle)*radius)) break;
+        }
+      }
+    } else if (local) {
       // Search a small, deterministic ring for a clear conversation position,
       // including seated residents behind low counters inside stores.
       for (const radius of [1.8,1.2,2.5,0.8,3.2]) {
@@ -177,8 +204,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     if (!destination) return reject('destination_blocked');
     ledger.travelAt=time;
     focus.delete(player.id);
-    const target=local?.position ?? (mode==='enter' && room ? room.toWorld(room.center,room.depth-1) : store.facade);
-    Object.assign(player,{position:destination,altitude:0,yaw:Math.atan2(destination[0]-target[0],target[1]-destination[1]),poseAt:time,moveBudget:0.1,liftBudget:0.1});
+    const target=local?.position ?? place?.position ?? (point ? null : mode==='enter' && room ? room.toWorld(room.center,room.depth-1) : store.facade);
+    // A bare position keeps the traveller's own facing; a place faces its spot.
+    const yaw=target && !(target[0]===destination[0] && target[1]===destination[1]) ? Math.atan2(destination[0]-target[0],target[1]-destination[1]) : player.yaw;
+    Object.assign(player,{position:destination,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }

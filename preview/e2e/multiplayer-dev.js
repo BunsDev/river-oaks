@@ -24,6 +24,26 @@ async page => {
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
   check(spacing >= 1.2, `players arrive on separate spots (${spacing.toFixed(2)} m apart)`);
   await page.screenshot({ path: 'output/playwright/multiplayer-dev.png' });
+  // Places in shared play: the town decides every teleport, and the other
+  // browser sees the result in its snapshot.
+  const district = await (await page.request.get('http://127.0.0.1:5173/data/district.json')).json();
+  const spot = district.communityLocations[5];
+  const toggle = page.locator('#panel-toggle'); if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.locator(`#places-list li[data-place-id="spot:${spot.id}"] button[aria-label^="Go to"]`).click();
+  await page.waitForFunction(name => document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`), spot.name, { timeout: 15000 });
+  const seen = async (tab, id) => tab.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 4.5; }, [id, spot.position], { timeout: 15000 }).then(() => true, () => false);
+  check(await seen(page, a.self) && await seen(second, a.self), `a shared teleport lands beside ${spot.name} in both browsers' snapshots`);
+  await page.waitForTimeout(1100);
+  await page.locator('#landmark-name').fill('Town bench'); await page.locator('#landmark-add').click();
+  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'));
+  await page.keyboard.down('KeyW'); await page.waitForTimeout(900); await page.keyboard.up('KeyW');
+  await page.waitForTimeout(1100);
+  await page.locator('#landmarks-list li button[aria-label^="Go to"]').click();
+  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Town bench"), null, { timeout: 15000 });
+  const atBench = await second.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 1.5; }, [a.self, await page.evaluate(() => { const h = JSON.parse(document.querySelector('#walking-hud').dataset.position); return [h[0], -h[2]]; })], { timeout: 15000 }).then(() => true, () => false);
+  check(atBench, 'a landmark teleport is a server-checked position travel the other browser sees');
+  if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>!document.querySelector('.visit-tools').open);
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
