@@ -91,7 +91,20 @@ export function createWalkingState(environment, position = environment.spawn, ya
     }
     if (!found) throw new Error('No accessible walking position near this destination');
   }
-  return { position: [x, environment.groundAt(x, z) + EYE_HEIGHT, z], yaw, pitch: 0, distance: 0, speed: 0, velocity: [0, 0] };
+  return { position: [x, environment.groundAt(x, z) + EYE_HEIGHT, z], yaw, pitch: 0, distance: 0, speed: 0, velocity: [0, 0], acceleration: [0, 0] };
+}
+
+// Velocity follows the input as a critically damped spring, so a key press
+// builds acceleration over a few frames instead of jumping to it. The first
+// frame of a step used to carry the whole peak at once, which read as a jolt.
+// Semi-implicit Euler on the fixed 120 Hz substep keeps it frame-rate stable.
+export const WALK_RESPONSE = 16;
+export function trackVelocity(state, vx, vz, dt) {
+  const acceleration = state.acceleration ?? (state.acceleration = [0, 0]), omega = WALK_RESPONSE;
+  acceleration[0] += (-2 * omega * acceleration[0] - omega * omega * (state.velocity[0] - vx)) * dt;
+  acceleration[1] += (-2 * omega * acceleration[1] - omega * omega * (state.velocity[1] - vz)) * dt;
+  state.velocity[0] += acceleration[0] * dt;
+  state.velocity[1] += acceleration[1] * dt;
 }
 
 export function stepWalking(state, environment, input, delta) {
@@ -103,8 +116,7 @@ export function stepWalking(state, environment, input, delta) {
     state.yaw += clamp(input.turn ?? 0, -1, 1) * 1.6 * dt;
     const vx = (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) * speed / norm;
     const vz = (-Math.cos(state.yaw) * forward - Math.sin(state.yaw) * strafe) * speed / norm;
-    state.velocity[0] += (vx - state.velocity[0]) * (1 - Math.exp(-12 * dt));
-    state.velocity[1] += (vz - state.velocity[1]) * (1 - Math.exp(-12 * dt));
+    trackVelocity(state, vx, vz, dt);
     const [x, y, z] = state.position;
     let nextX = x, nextZ = z;
     const canStep = (px, pz) => environment.isFree(px, pz) && Math.abs(environment.groundAt(px, pz) + EYE_HEIGHT - y) < 0.4;
@@ -124,7 +136,7 @@ export function steerWalkingToward(state, point, delta) {
   state.yaw += Math.max(-delta * 1.6, Math.min(delta * 1.6, difference));
   state.pitch *= Math.exp(-4 * delta);
   // Turn in place at corners so inertia cannot cut through fixture clearance.
-  if (Math.abs(difference) > 0.08) { state.velocity = [0, 0]; return { forward: 0 }; }
+  if (Math.abs(difference) > 0.08) { state.velocity = [0, 0]; state.acceleration = [0, 0]; return { forward: 0 }; }
   const distance = Math.hypot(state.position[0] - point[0], state.position[2] + point[1]);
   return { forward: Math.min(1, distance / 0.4) };
 }

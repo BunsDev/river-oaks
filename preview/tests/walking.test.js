@@ -63,3 +63,18 @@ test('placed-obstacle checks use one fresh ground height per position query',()=
   objects.push({contains(){return true;}},{contains(){throw new Error('Must stop after the first blocker');}});
   assert.equal(environment.isFree(2,3),false);assert.equal(reads,1);
 });
+
+test('acceleration builds over several frames instead of peaking on the first one', () => {
+  const environment = createWalkingEnvironment({ bounds_m: [-50, -50, 50, 50], buildings: [], collisionPolygons: [] });
+  const profile = fps => {
+    const state = createWalkingState(environment, [0, 0, 0], 0), accelerations = [];
+    let previous = 0;
+    for (let i = 0; i < fps; i++) { stepWalking(state, environment, { forward: 1 }, 1 / fps); accelerations.push((state.speed - previous) * fps); previous = state.speed; }
+    return { accelerations, speed: state.speed };
+  };
+  const sixty = profile(60), thirty = profile(30), peak = Math.max(...sixty.accelerations), peakFrame = sixty.accelerations.indexOf(peak);
+  assert.ok(peakFrame >= 2 && sixty.accelerations[0] < peak * 0.6, `peak ${peak.toFixed(2)} m/s² lands on frame ${peakFrame}; the first frame carries ${sixty.accelerations[0].toFixed(2)}`);
+  assert.ok(peak < 12 && peak > 4, `peak acceleration ${peak.toFixed(2)} m/s² is outside a human walk start`);
+  assert.ok(sixty.speed > 1.6 && thirty.speed > 1.6, 'full walking speed is reached within a second');
+  assert.ok(Math.abs(sixty.speed - thirty.speed) < 0.01, 'the ramp is the same at 30 and 60 Hz');
+});

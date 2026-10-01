@@ -104,6 +104,16 @@ test('he keeps pace, settles at the slot and never enters walls or her personal 
   assert.ok(Math.hypot(...guarded.position)>=.6);
 });
 
+test('his pace changes build over several frames and settle without a jolt',()=>{
+  const body=createCompanionBody([0,-6]),accelerations=[];let previous=0;
+  for(let i=0;i<60;i++){stepCompanion(body,[0,0],open,1/60,{playerSpeed:1.1});accelerations.push((body.speed-previous)*60);previous=body.speed;}
+  const peak=Math.max(...accelerations),peakFrame=accelerations.indexOf(peak);
+  assert.ok(peakFrame>=2&&accelerations[0]<peak*.6,`peak ${peak.toFixed(2)} m/s² lands on frame ${peakFrame}; first frame ${accelerations[0].toFixed(2)}`);
+  assert.ok(peak<16,`a catch-up start of ${peak.toFixed(2)} m/s² is a jolt`);
+  const settled=walk(createCompanionBody([0,-6]),[0,0],open,6,{});
+  assert.ok(Math.hypot(...settled.position)<.15&&settled.speed<.3,'he still arrives and settles at the slot');
+});
+
 test('while standing he turns to face Jevica and while walking he faces travel',()=>{
   const body=walk(createCompanionBody([0,0],0),null,open,2,{face:Math.PI/2});
   assert.ok(Math.abs(body.heading-Math.PI/2)<.01);

@@ -4,6 +4,15 @@ import { createFootRoll } from './foot-roll.js';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = t => t*t*(3-2*t);
+// Swing fraction at which body height starts transferring toward the landing.
+const TRANSFER_START = .25, REACH_KNEE = .01;
+// Pelvis release: critically damped return (1/s) and its speed cap (m/s).
+const RISE_RESPONSE = 20, RISE_CAP = .5;
+// Decay rate (1/s) of the body height offset after an abrupt navigation step.
+const STEP_TRANSFER = 8;
+// A hinge with a C1 onset: zero below -knee, the identity above +knee, and a
+// quadratic blend between, never less than the hard limit it softens.
+const softLimit = (want, knee) => want <= -knee ? 0 : want >= knee ? want : (want+knee)*(want+knee)/(4*knee);
 
 // Analytic two-bone solve. A forward knee pole prevents the leg from flipping
 // when the hip, knee and ankle start almost collinear in a neutral rig.
@@ -61,7 +70,7 @@ export function createFootPlacement(model, root) {
     const roll=createFootRoll(foot,model.getObjectByName(`ball_${side}`),sole,toeWeights);
     return {side, index, thigh, calf, foot, sole, soleSources, roll, bindScale:foot.getWorldScale(new THREE.Vector3()).y, baseUpperLength:hip.distanceTo(knee), baseLowerLength:knee.distanceTo(ankle), upperLength:hip.distanceTo(knee), lowerLength:knee.distanceTo(ankle), rest, target:null, swing:null, lastPhase:0, contact:true};
   }).filter(Boolean);
-  let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyRootHeight = null;
+  let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null;
   const swingTravel = 0.38, reach = 0.25;
   return {
     legs,
@@ -84,7 +93,7 @@ export function createFootPlacement(model, root) {
       // and leave shoe targets on the actual terrain below.
       const heightStep=reset?0:origin.y-lastPosition.y;
       const abruptStep=Math.abs(heightStep)>1.2*delta;
-      bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-12*delta);
+      bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-STEP_TRANSFER*delta);
       const heightLag=bodyRootHeight-origin.y;
       model.position.y+=heightLag/scale;
       root.updateWorldMatrix(true,true);
@@ -188,7 +197,10 @@ export function createFootPlacement(model, root) {
         // A 3 mm reserve keeps the stance knee near-straight (about 10°) without IK snapping.
         const reach = leg.upperLength+leg.lowerLength-0.003;
         const vertical = Math.sqrt(Math.max(0,reach*reach-horizontal));
-        lower = Math.max(lower,hip.y-leg.ikTarget.y-vertical);
+        // The reach limit yields through a 1 cm soft knee rather than binding
+        // at once: the stance leg nearing full extension on a downhill used to
+        // take over from the landing forecast with a step in descent rate.
+        lower = Math.max(lower,softLimit(hip.y-leg.ikTarget.y-vertical,REACH_KNEE));
         if(leg.swing&&!leg.swing.settling) {
           descent=Math.max(descent,navigationHeight-groundAt(leg.swing.end.x,leg.swing.end.z));
           // Begin transferring body height before the descending foot reaches
@@ -202,7 +214,9 @@ export function createFootPlacement(model, root) {
           landing.target.y=supportHeight(landing.target,leg,landing.orientation);
           const separation=(futureHip.x-landing.target.x)**2+(futureHip.z-landing.target.z)**2;
           const landingLower=futureHip.y-landing.target.y-Math.sqrt(Math.max(0,reach*reach-separation));
-          lower=Math.max(lower,landingLower*smooth(clamp((leg.swing.progress-.4)/.55,0,1)));
+          // Spread the transfer over the swing's last three quarters: a 7 cm
+          // downhill drop squeezed into the final tenth of a second read as a dive.
+          lower=Math.max(lower,landingLower*smooth(clamp((leg.swing.progress-TRANSFER_START)/(.95-TRANSFER_START),0,1)));
         }
       }
       // A leading foot can reach the road while the navigation root is still
@@ -213,7 +227,27 @@ export function createFootPlacement(model, root) {
       // The body may still be transferring down from the upper surface. Its
       // temporary height offset must not consume the leg's compression budget.
       lower=Math.min(.18+Math.min(.2,descent)+Math.max(0,heightLag),lower);
-      pelvisLower=Math.max(lower,pelvisLower*Math.exp(-16*delta));
+      // Leg reach sets a hard ceiling on the body's world height, and the body
+      // drops to it at once so no planted foot is left out of reach. Rising
+      // back is a motion the body makes, so it eases toward the ceiling as a
+      // critically damped return with a speed cap. The state is world height:
+      // continuous terrain carries the body with it, an abrupt step is already
+      // transferred by heightLag, and a ceiling that merely re-expresses that
+      // transfer (the root dropped, the planted foot did not) is not a release.
+      // The old exp(-16 t) release let a 9 cm uphill crouch spring back at
+      // 1.4 m/s the instant the trailing foot lifted.
+      const ceiling = origin.y + heightLag - lower;
+      if (reset) { bodyHeight = ceiling; bodyRise = 0; }
+      else {
+        if (!abruptStep) bodyHeight += heightStep;
+        if (ceiling <= bodyHeight) { bodyHeight = ceiling; bodyRise = 0; }
+        else {
+          bodyRise += (-2*RISE_RESPONSE*bodyRise + RISE_RESPONSE*RISE_RESPONSE*(ceiling-bodyHeight))*delta;
+          bodyRise = clamp(bodyRise, 0, RISE_CAP);
+          bodyHeight = Math.min(ceiling, bodyHeight + bodyRise*delta);
+        }
+      }
+      pelvisLower = origin.y + heightLag - bodyHeight;
       model.position.y -= pelvisLower/scale;
       root.updateWorldMatrix(true,true);
       for (const leg of legs) {
