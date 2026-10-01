@@ -12,7 +12,7 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
   check(await page.locator('#player-appearance').isVisible(),'Solo character picker is available');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
-  for(const [profile,role] of [['woman-casual','Fox charmer'],['man-casual','Wolf wanderer'],['woman-tailored','Velvet confidante'],['man-tailored','Midnight host · human'],['midnight-host-hybrid','Midnight host · wolf-eared'],['midnight-host-wolf','Midnight host · wolf'],['man-workwear','Starlight maker · celestial formal'],['kai-explorer','Starlight maker · explorer casual'],['kai-noir','Starlight maker · starlit noir'],['woman-daywear','Lynx muse']]){
+  for(const [profile,role] of [['woman-casual','Fox charmer'],['man-casual','Wolf wanderer'],['woman-tailored','Velvet confidante'],['man-tailored','Midnight host · human'],['midnight-host-hybrid','Midnight host · wolf-eared'],['midnight-host-wolf','Midnight host · wolf'],['man-workwear','Starlight maker · celestial formal'],['kai-explorer','Starlight maker · explorer casual'],['kai-noir','Starlight maker · starlit noir'],['forest-aristocrat','Forest aristocrat · masculine'],['forest-aristocrat-feminine','Forest aristocrat · feminine'],['woman-daywear','Lynx muse']]){
     await page.locator('#player-appearance').selectOption(profile);
     await page.waitForFunction(id=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance===id;},profile);
     check(await page.locator('#player-role').textContent()===role,`${profile}: identity and 3D appearance update`);
@@ -22,6 +22,7 @@ async page => {
       check(await page.locator('#player-reference').getAttribute('href')===`/assets/characters/references/${({
         'woman-casual':'sable-fox-turnaround','man-casual':'rowan-wolf-turnaround','woman-tailored':'vesper-velvet-turnaround',
         'man-tailored':'aurel-human','midnight-host-hybrid':'aurel-hybrid','midnight-host-wolf':'aurel-wolf',
+        'forest-aristocrat':'forest-aristocrat-masculine','forest-aristocrat-feminine':'forest-aristocrat-feminine',
         'man-workwear':'kai-three-celestial-styles','kai-explorer':'kai-three-celestial-styles','kai-noir':'kai-three-celestial-styles',
       })[profile]}.png`,`${profile}: full reference is linked`);
     }
