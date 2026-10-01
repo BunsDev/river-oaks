@@ -132,6 +132,8 @@ test('build commands reject road, invalid position, and forged checkpoint record
     {type:'build',action:'place',kind:'lamp',finish:'teal',position:[12,3],yaw:0},
     {type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3,0],yaw:0},
   ])assert.equal(world.command('a',command).ok,false);
+  const far=world.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position:[12,3],yaw:0});
+  assert.equal(far.error,'build_out_of_reach');assert.match(far.message,/outside.*ground.*nearby/);
   assert.deepEqual(world.snapshot().builds,before.builds);
   assert.equal(world.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position:[-12,3],yaw:0}).ok,true);
   const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));

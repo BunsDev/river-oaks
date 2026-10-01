@@ -10,6 +10,8 @@ function load(url, context, nextLoad) {
     import * as THREE from 'three';
     export const AVATAR_PROFILES=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear'];
     export async function loadResidentAvatar(_index, _id, profile, options) {
+      globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);
+      if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId;
       return { object, update(_now, _action, _speaking, motion) { object.userData.frames.push(motion); }, dispose() {} };
     }` };
@@ -61,6 +63,26 @@ test('remote ascent and descent retain hover; climbing forward uses horizontal f
       assert.deepEqual(climb.map(frame => frame.flightSpeed), level.map(frame => frame.flightSpeed));
     }
   } finally { globalThis.document = previousDocument; }
+});
+
+test('failed remote look keeps the loaded rig and retries after a bounded delay',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  globalThis.__remoteAvatarAttempts=[];globalThis.__remoteFailOnce='kai-noir';
+  try{
+    let time=1000;const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element(),{now:()=>time});
+    const peer={id:'peer',name:'Alex',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'};
+    players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));
+    players.sync([{...peer,appearance:'kai-noir'}],'self');await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(players.stats()[0].appearance,'jevica','failed request does not claim a loaded look');
+    assert.equal(scene.children[0].children[0].userData.appearance,'jevica','previous rig stays visible');
+    players.sync([{...peer,appearance:'kai-noir'}],'self');
+    assert.equal(globalThis.__remoteAvatarAttempts.filter(id=>id==='kai-noir').length,1,'snapshots do not spin on failure');
+    time+=2000;players.sync([{...peer,appearance:'kai-noir'}],'self');await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(players.stats()[0].appearance,'kai-noir');
+    assert.equal(scene.children[0].children[0].userData.appearance,'kai-noir');
+    assert.equal(scene.children[0].children.length,2);
+    players.dispose();
+  }finally{globalThis.document=previousDocument;delete globalThis.__remoteAvatarAttempts;delete globalThis.__remoteFailOnce;}
 });
 
 test('remote player swaps to the authoritative appearance without leaving an old rig in the scene',async()=>{

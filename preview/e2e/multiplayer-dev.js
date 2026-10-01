@@ -20,6 +20,7 @@ async page => {
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
   check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
+  check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });

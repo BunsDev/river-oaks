@@ -60,7 +60,7 @@ export function stepWishes(state, delta) {
     const phase = wish.age >= definition.pleaAfter ? 'pleading' : wish.age >= definition.twistAfter ? 'trouble' : 'gift';
     if (wish.phase !== phase) {
       wish.phase = phase;
-      wish.message = phase === 'pleading' ? definition.plea.replace('Jevica',wish.ownerName??'Jevica') : definition.twist;
+      wish.message = phase === 'pleading' ? definition.plea.replace('Jevica',()=>wish.ownerName??'Jevica') : definition.twist;
       record(state, local, wish.message);
     }
   }

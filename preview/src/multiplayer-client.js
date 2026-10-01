@@ -67,7 +67,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       }
     }
   };
-  const chatRows=new Map();
+  const chatRows=new Map();let chatInitialized=false;
   const displayChat=messages=>{
     const atEnd=chatHistory.scrollHeight-chatHistory.scrollTop-chatHistory.clientHeight<24;
     const ids=new Set(messages.map(message=>message.id));
@@ -79,6 +79,8 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       row.append(author,document.createTextNode(`: ${message.text}`));chatRows.set(message.id,row);chatHistory.append(row);
     }
     if(atEnd)chatHistory.scrollTop=chatHistory.scrollHeight;
+    // Avoid announcing restored history on join, then announce each new row.
+    if(!chatInitialized){chatInitialized=true;chatHistory.setAttribute('aria-live','polite');}
   };
   const clearPending=()=>{for(const request of pending.values()){clearTimeout(request.timer);request.reject(new Error('Disconnected. Your action was not confirmed.'));}pending.clear();};
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5)));};

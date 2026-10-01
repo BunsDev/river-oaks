@@ -22,7 +22,7 @@ Development identities only exist on a loopback `http` origin, outside
 the standalone server (`server/dev-auth.js`). The Vercel function and the Redis
 backend always require WorkOS and fail closed with `503` without it.
 
-While the town runs, the character panel offers seven shipped human appearances.
+While the town runs, the character panel offers 11 selectable looks built on seven shipped rigs, including fox, wolf, lynx, human, and hybrid styles.
 The selection belongs to the signed-in account, is visible to other players, and
 survives reconnects, logout, and server replacement through the town checkpoint.
 The town retains up to 4,096 account selections; older inactive selections are

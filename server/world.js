@@ -275,8 +275,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if(editing&&!previous)return reject('unknown_build');
       if(previous&&previous.ownerId!==userId)return reject('not_build_owner');
       const kind=buildKind(placing?message.kind:previous.kind),finish=placing?buildFinish(message.finish):buildFinish(previous.finish);
-      if(!kind || !finish || player.altitude>.1 || environment.roomAt(player.position[0],-player.position[1])
-        || distance(player.position,message.position)>3.6 || editing&&distance(player.position,previous.position)>4.5)return reject('invalid_build');
+      if(!kind || !finish)return reject('invalid_build');
+      if(player.altitude>.1 || environment.roomAt(player.position[0],-player.position[1])
+        || distance(player.position,message.position)>3.6 || editing&&distance(player.position,previous.position)>4.5)
+        return reject('build_out_of_reach',placing?'Stand outside on the ground and place nearby.':'Stand outside on the ground near this creation to move or turn it.');
       if(placing&&(builds.size>=MAX_BUILDS || [...builds.values()].filter(item=>item.ownerId===userId).length>=MAX_BUILDS_PER_USER))return reject('build_limit');
       const ground=buildSite(message.position,kind,builds,previous?.id);
       if(ground===null)return reject('blocked_build_site','Find open, level ground away from roads and other creations.');
