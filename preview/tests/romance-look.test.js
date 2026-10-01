@@ -98,10 +98,37 @@ test('Sable replaces the human face without changing the shared template or a se
   look.update(1300,{reducedMotion:true});assert.ok(tail.quaternion.angleTo(rest)<1e-6,'reduced motion restores the rest pose');
   const eye=root.getObjectByName('Sable eyelid opening');
   look.update(1400,{blink:{left:1,right:1},gaze:[{yaw:.2,pitch:.1}]});
-  assert.equal(eye.scale.y,.04);assert.ok(eye.position.x>0);
+  assert.equal(eye.scale.y,.04);assert.equal(eye.position.x,0,'gaze does not move the eyelids');
+  assert.ok(eye.getObjectByName('Sable iris gaze').position.x>0);
+  assert.ok(eye.userData.irisMap.offset.x<0,'the iris follows gaze within the fixed eye opening');
   look.update(1500,{reducedMotion:true,blink:{left:1,right:1}});assert.equal(eye.scale.y,1);
   let released=0;skin.geometry.addEventListener('dispose',()=>released++);
   const texture=tail.children[0].material.bumpMap;texture.addEventListener('dispose',()=>released++);
   look.dispose();assert.equal(released,2);assert.equal(skin.geometry,original);assert.equal(avatar.model.getObjectByName('Jevicalong01').visible,true);
   avatar.dispose();neighbor.dispose();
+});
+
+
+test('Sable detailed face has finite textured contours and independently owned eye maps',async()=>{
+  const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
+  const root=new THREE.Group();root.add(avatar.model);
+  const look=createRomanceLook(avatar,root,sharedAppearance('woman-casual'));
+  const face=root.getObjectByName('Sable sculpted face'),{position,normal,uv}=face.geometry.attributes;
+  assert.ok(uv,'fur relief has texture coordinates');
+  for(const attribute of [position,normal,uv])assert.ok(Array.from(attribute.array).every(Number.isFinite));
+  let front=0;for(let i=0;i<position.count;i++){
+    if(Math.abs(position.getX(i))<.001&&position.getZ(i)>.05&&position.getY(i)>.01&&position.getY(i)<.10){
+      assert.ok(normal.getZ(i)>0,'front-facing facial surface has outward normals');front++;
+    }
+  }
+  assert.ok(front>0);
+  const eyes=[];root.traverse(item=>{if(item.name==='Sable eyelid opening')eyes.push(item);});
+  assert.equal(eyes.length,2);assert.notEqual(eyes[0].userData.irisMap,eyes[1].userData.irisMap);
+  look.update(1000,{gaze:[{yaw:10,pitch:-10},{yaw:-10,pitch:10}],blink:{left:.5,right:0}});
+  assert.notEqual(eyes[0].userData.irisMap.offset.x,eyes[1].userData.irisMap.offset.x);
+  for(const eye of eyes){const gaze=eye.getObjectByName('Sable iris gaze');assert.ok(Math.abs(gaze.position.x)<=.003&&Math.abs(gaze.position.y)<=.002);}
+  assert.equal(eyes[0].scale.y,1);assert.equal(eyes[1].scale.y,.5,'independent blink moves its own lid');
+  const owned=new Set([face.material.bumpMap,...eyes.map(eye=>eye.userData.irisMap)]);let released=0;
+  for(const texture of owned)texture.addEventListener('dispose',()=>released++);
+  look.dispose();assert.equal(released,owned.size,'new face and eye textures are released');avatar.dispose();
 });

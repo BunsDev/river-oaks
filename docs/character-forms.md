@@ -249,3 +249,21 @@ back, portrait, walking and mobile views and exercises both local and remote
 avatar construction. Shared-town acceptance checks the selected Sable appearance
 reaching a second browser's rendered remote avatar. These checks establish
 functional behavior, not visual equivalence or production deployment.
+
+### Sable facial detail pass
+
+`preview/src/sable-face.js` authors a smoothly sampled fox face with recessed eye
+sockets, an integrated short muzzle, feathered cream cheek markings, directional
+fur relief, a rounded triangular nose and a surface-following smile. Chestnut
+iris fibres and pupils are painted into each curved eye opening. Independent
+gaze moves each iris texture and catchlights inside fixed eyelids; blink folds
+the eyelids and lashes together. Eye maps belong to the individual avatar and
+are disposed with the look. Reduced-motion behavior is unchanged.
+
+Short cheek and inner-ear fibres, tapered brows, and wrapping temple locks add
+close-up detail. The character selector portrait is regenerated from this same
+playable model with `node preview/e2e/sable-portrait.js`. This remains a procedural
+interpretation: it is not a pixel-identical reconstruction of the supplied art.
+Unit coverage checks finite UVs/normals, independent bounded gaze/blink, shared
+rig isolation and texture disposal; `npm run test:experience -- sable` checks the
+real local/remote loader and playable character journey.
