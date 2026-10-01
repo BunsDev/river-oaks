@@ -285,3 +285,20 @@ body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-conso
 :root[data-theme] #walking-controls-toggle:hover, :root[data-theme] #walking-meet-nearby.walking-secondary:hover { background: #ffffff0f; }
 @media (prefers-reduced-motion: reduce) { #viewport > .auto-controls { transition: none; } }
 .walking-pad button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+/* A refused action says so just above the walking console, where the player is looking. */
+.walking-notice {
+  /* Anchored to the console, so it clears it whatever the console holds. */
+  position: absolute; z-index: 7; left: 50%; bottom: calc(100% + 10px); translate: -50% 0; margin: 0;
+  width: max-content; max-width: min(440px, calc(100vw - 32px)); padding: 9px 16px; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(145deg, var(--edge-light), transparent 38%), var(--glass);
+  border: 1px solid var(--edge-light);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent), var(--surface-shadow);
+  backdrop-filter: blur(28px) saturate(1.15); -webkit-backdrop-filter: blur(28px) saturate(1.15);
+  color: var(--ink); font: 500 12px/1.4 system-ui, sans-serif; text-align: center;
+}
+.walking-notice[hidden] { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .walking-notice { transition: opacity 180ms cubic-bezier(.2, 0, 0, 1), translate 180ms cubic-bezier(.2, 0, 0, 1), display 180ms allow-discrete; }
+  @starting-style { .walking-notice:not([hidden]) { opacity: 0; translate: -50% 6px; } }
+}
