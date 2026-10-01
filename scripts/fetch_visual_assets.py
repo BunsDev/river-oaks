@@ -14,6 +14,7 @@ ASSETS = {
     "grass": "grass_path_2",
     "asphalt": "asphalt_02",
     "pavement": "pavement_03",
+    "paver": "brick_floor",
     "stone": "large_sandstone_blocks_01",
     "bark": "bark_brown_02",
 }

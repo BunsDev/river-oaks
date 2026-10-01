@@ -12,7 +12,7 @@ import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
-import { configureMaterials, physicalSurface, loadEnvironment } from './materials.js';
+import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
 import { renderPixelRatio } from './viewport.js';
@@ -259,10 +259,10 @@ function buildGround(data) {
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    surface = new THREE.Mesh(geometry, physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), variation: 0.22 }));
+    surface = new THREE.Mesh(geometry, paverSurface());
     surface.position.y = 0.15;
   } else {
-    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), physicalSurface('pavement', { tileSize: 2, normalScale: new THREE.Vector2(0.4, 0.4), variation: 0.22 }));
+    surface = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), paverSurface());
     surface.rotation.x = -Math.PI / 2;
     surface.position.set(center[0], 0, -center[1]);
   }
