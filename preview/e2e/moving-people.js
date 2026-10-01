@@ -34,19 +34,41 @@ async page => {
     await page.locator('#community-dialogue').waitFor({state:'visible'});await page.locator('#community-close').click();
     await page.locator('#panel-toggle').click();await page.waitForTimeout(500);
     await leaveCourtesyRadius(id);
-    await page.waitForFunction(id=>{
+    // Residents keep walking, so follow this one as a player would: turn toward
+    // them with the arrow keys and run to them, until they are walking, on screen
+    // and comfortably inside the 4.5 m talking reach. Then click straight away.
+    const ready=()=>page.evaluate(id=>{
       const p=JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(p=>p.id===id);
-      return p.speed>0.2&&p.status==='walking';
-    },id,{timeout:20000});
+      const v=JSON.parse(document.querySelector('#walking-hud').dataset.position);
+      const mesh=window.__riverPeople('spine_03').find(person=>person.id===id);
+      const distance=Math.hypot(v[0]-p.position[0],v[2]+p.position[1]),[x,y]=mesh?.screen??[-1,-1];
+      return {walking:p.speed>0.2&&p.status==='walking',distance,x,onScreen:Boolean(mesh)&&mesh.depth>-1&&mesh.depth<1&&x>200&&x<1240&&y>100&&y<900,inReach:Boolean(mesh?.visible&&mesh.reachable)&&distance<=4};
+    },id);
+    const hold=async(keys,ms)=>{await page.locator('#canvas-host').focus();for(const key of keys)await page.keyboard.down(key);await page.waitForTimeout(ms);for(const key of [...keys].reverse())await page.keyboard.up(key);};
+    for(const started=Date.now();;) {
+      const r=await ready();
+      if(r.walking&&r.inReach&&r.onScreen) {
+        // Let the visitor come to rest from the run, then confirm they still qualify.
+        await page.waitForTimeout(500);const settled=await ready();
+        if(settled.walking&&settled.inReach&&settled.onScreen)break;
+        continue;
+      }
+      if(Date.now()-started>30000)throw new Error(`${id}: never walking on screen within comfortable reach (${JSON.stringify(r)})`);
+      if(!r.onScreen)await hold([r.x>720?'ArrowRight':'ArrowLeft'],120);
+      else if(r.distance>3.5)await hold(['ShiftLeft','KeyW'],Math.min(1200,r.distance*180));
+      else await page.waitForTimeout(80);
+    }
     const before=await read(id);
     check(before.person.visible&&before.person.reachable,`${id}: walking mesh is visible and in reach`);
     check(before.person.depth>-1&&before.person.depth<1&&before.person.screen[0]>0&&before.person.screen[0]<1440&&before.person.screen[1]>0&&before.person.screen[1]<1000,`${id}: walking mesh projects inside the viewport`);
+    // Measure from the moment of the click: the visitor may still be slowing from the run.
+    const atClick=await page.evaluate(()=>JSON.parse(document.querySelector('#walking-hud').dataset.position));
     await page.mouse.click(...before.person.screen);
     await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
     check(await page.locator('#community-local').inputValue()===id,`${id}: real pointer selects the walking person`);
     await page.waitForTimeout(350);
     const held=await read(id);
-    check(Math.hypot(...held.visitor.map((value,index)=>value-before.visitor[index]))<0.02,`${id}: pointer conversation does not relocate the visitor`);
+    check(Math.hypot(...held.visitor.map((value,index)=>value-atClick[index]))<0.02,`${id}: pointer conversation does not relocate the visitor`);
     await page.waitForTimeout(500);
     const still=await read(id);
     check(still.motion.status==='chatting'&&Math.hypot(...still.motion.position.map((value,index)=>value-held.motion.position[index]))<0.001,`${id}: clicked walker holds position during conversation`);
