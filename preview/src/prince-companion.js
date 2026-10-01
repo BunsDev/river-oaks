@@ -10,7 +10,7 @@ export const COMPANION_STANCES = {
   greet: { label: 'Offer Jevica a courtly bow', hold: true },
   return: { label: 'Return to the driver seat' },
 };
-const STEP = 0.4, PERSONAL = 0.62;
+const STEP = 0.4, PERSONAL = 0.62, PACE_RESPONSE = 10;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -60,7 +60,7 @@ export function freeSpotNear(center, isFree, { start = 0.8, heading = 0 } = {}) 
 }
 
 export function createCompanionBody(position, heading = 0) {
-  return { position: [...position], heading, speed: 0, distance: 0 };
+  return { position: [...position], heading, speed: 0, acceleration: 0, distance: 0 };
 }
 
 // One bounded locomotion step toward target. Collision, step height and
@@ -78,8 +78,16 @@ export function stepCompanion(body, target, environment, delta, { player = null,
       desired = Math.min(desired, gap / dt);
     }
   }
-  body.speed += (desired - body.speed) * (1 - Math.exp(-7 * dt));
-  if (body.speed < 0.02 && desired === 0) body.speed = 0;
+  // Pace follows the wanted speed as a critically damped spring on a fixed
+  // substep: acceleration builds and fades over a few frames, so a start,
+  // a catch-up or a stop never jolts, and the response is frame-rate stable.
+  const substeps = Math.ceil(dt * 120), sub = dt / substeps;
+  body.acceleration ??= 0;
+  for (let i = 0; i < substeps; i++) {
+    body.acceleration += (-2 * PACE_RESPONSE * body.acceleration - PACE_RESPONSE * PACE_RESPONSE * (body.speed - desired)) * sub;
+    body.speed = Math.max(0, body.speed + body.acceleration * sub);
+  }
+  if (body.speed < 0.02 && desired === 0) { body.speed = 0; body.acceleration = 0; }
   const step = body.speed * dt, ground = environment.groundAt(x, z);
   const canStand = (px, pz) => environment.isFree(px, pz) && Math.abs(environment.groundAt(px, pz) - ground) < STEP
     && (!player || Math.hypot(px - player[0], pz - player[1]) >= PERSONAL || Math.hypot(px - player[0], pz - player[1]) > Math.hypot(x - player[0], z - player[1]));
@@ -92,7 +100,7 @@ export function stepCompanion(body, target, environment, delta, { player = null,
   }
   const moved = Math.hypot(nx - x, nz - z);
   body.position = [nx, nz]; body.distance += moved;
-  if (moved < step * 0.25) body.speed *= 0.5;
+  if (moved < step * 0.25) { body.speed *= 0.5; body.acceleration = 0; }
   const facing = moved / dt > 0.15 ? Math.atan2(nx - x, nz - z) : face ?? body.heading;
   body.heading = wrap(body.heading + clamp(wrap(facing - body.heading), -5 * dt, 5 * dt));
   return body;

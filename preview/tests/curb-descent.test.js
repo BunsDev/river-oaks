@@ -66,3 +66,28 @@ test('relocating a walker clears the rendered body height transfer',async()=>{
   assert.ok(Math.abs(relocated-standing)<1e-6,'A teleport starts at the new standing height, without stale vertical lag');
   avatar.dispose();
 });
+
+// A sharp 16 cm curb used to move the hip at up to 1.5 m/s: the step offset
+// decayed at 12/s and the pelvis sprang back the instant leg reach freed.
+test('a sharp curb descent moves the hip no faster than a person steps down',async()=>{
+  for(const profile of ['woman-casual','man-tailored']) {
+    const source=await loadCharacterRig(profile);
+    for(const hz of [30,60,120])for(const edge of [.7,.8,1.1]) {
+      const avatar=instantiateAvatar(source,{targetHeight:profile.startsWith('woman')?1.66:1.78}),root=new THREE.Group();root.add(avatar.model);
+      const placement=createFootPlacement(avatar.model,root),baseY=avatar.model.position.y,ground=(_x,z)=>1.5+(z< -81+edge?.16:0);
+      let distance=0,previous=null,peak=0;
+      for(let frame=0;frame<3*hz;frame++) {
+        distance+=1.05/hz;root.position.set(40,ground(40,-81+distance),-81+distance);
+        avatar.model.position.y=baseY-.018+Math.cos(distance/1.1*Math.PI*4)*.008;
+        for(const [bone,rest]of avatar.rest)bone.quaternion.copy(rest);
+        placement.update(1/hz,{speed:1.05,distance},ground);
+        const height=placement.legs[0].thigh.getWorldPosition(new THREE.Vector3()).y;
+        if(previous!==null)peak=Math.max(peak,Math.abs(height-previous)*hz);
+        previous=height;
+        for(const leg of placement.legs)assert.ok(leg.error<.005,`${profile} ${hz} Hz: a foot is left out of reach`);
+      }
+      assert.ok(peak<1.4,`${profile} at ${hz} Hz, edge ${edge}: hip moved at ${peak.toFixed(2)} m/s`);
+      avatar.dispose();
+    }
+  }
+});
