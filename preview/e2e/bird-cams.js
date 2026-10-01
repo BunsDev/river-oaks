@@ -19,6 +19,7 @@ async page => {
   let state = await birds();
   const dove = state.birds.find(bird => bird.id === 'dove');
   check(state.riding?.id === 'dove' && await page.locator('.bird-ride').isVisible(), 'Ride along shows the ride bar');
+  check(await page.locator('.visit-tools').isHidden(), 'The play dock steps aside while riding');
   check(Math.hypot(state.camera[0] - dove.position[0], state.camera[1] - dove.position[1], state.camera[2] - dove.position[2]) < 1.5, 'The camera is at the bird’s eyes');
   check(state.camera[1] - footCamera[1] > 4, `The view is from the air (${(state.camera[1] - footCamera[1]).toFixed(1)} m above the walking view)`);
   await page.screenshot({ path: 'output/playwright/bird-cam-jev.png' });
@@ -42,6 +43,7 @@ async page => {
   await page.waitForTimeout(600);
   state = await birds();
   check(!state.riding && await page.locator('.bird-ride').isHidden(), 'Esc lands and hides the ride bar');
+  check(await page.locator('.visit-tools').isVisible(), 'Landing brings the play dock back');
   check(Math.abs(state.camera[1] - footCamera[1]) < 1, 'Landing returns to the walking view');
   check(!errors.length, errors.length ? errors.join('; ') : 'No page errors');
   return { checks };

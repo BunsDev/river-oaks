@@ -2,18 +2,21 @@
 :root { --ui-ease:cubic-bezier(.2,0,0,1); }
 .app-shell { transition:none; }
 .visit-tools-content { overscroll-behavior:contain; }
-:is(.visit-tools,#control-panel,#community-dialogue) :is(button,select,summary) { touch-action:manipulation; }
-:is(.visit-tools,#control-panel,#community-dialogue) button { -webkit-tap-highlight-color:transparent; }
-:is(.visit-tools,#control-panel,#community-dialogue) button:not(:disabled) { cursor:pointer; }
+:is(.visit-tools,#control-panel,#community-dialogue,.bird-ride) :is(button,select,summary) { touch-action:manipulation; }
+:is(.visit-tools,#control-panel,#community-dialogue,.bird-ride) button { -webkit-tap-highlight-color:transparent; }
+:is(.visit-tools,#control-panel,#community-dialogue,.bird-ride) button:not(:disabled) { cursor:pointer; }
 :root[data-theme] :is(button,select,input,summary,a):focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 @media (hover:hover) and (pointer:fine) {
   :is(.force-controls,.walking-console,#community-dialogue) button:hover:not(:disabled) { box-shadow:inset 0 0 0 1px var(--accent); }
 }
 @media (prefers-reduced-motion:no-preference) {
-  :root[data-ui-ready=true][data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls) button {
+  :root[data-ui-ready=true][data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls,.bird-ride) button {
     transition:scale 120ms var(--ui-ease),box-shadow 120ms var(--ui-ease),opacity 120ms var(--ui-ease);
   }
-  :root[data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls) button:active:not(:disabled) { transform:none; scale:.96; }
+  :root[data-ui-input=pointer] :is(.visit-tools,#control-panel,#community-dialogue,.walking-console,.auto-controls,.bird-ride) button:active:not(:disabled) { transform:none; scale:.96; }
+  /* The ride bar arrives the way a conversation does: a short rise and fade. */
+  :root[data-ui-ready=true] .bird-ride { transition:opacity 180ms var(--ui-ease),translate 180ms var(--ui-ease),display 180ms allow-discrete; }
+  @starting-style { .bird-ride:not([hidden]) { opacity:0; translate:-50% -6px; } }
   :root[data-ui-ready=true][data-ui-input=pointer] #control-panel { transition:opacity 180ms var(--ui-ease),translate 180ms var(--ui-ease),visibility 0s; }
   :root[data-ui-ready=true][data-ui-input=pointer] .panel-collapsed #control-panel { transition-delay:0s,0s,180ms; }
   .panel-collapsed #control-panel { opacity:0; translate:-12px 0; }
