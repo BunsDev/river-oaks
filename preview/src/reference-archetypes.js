@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
-  if(!['woman-casual','man-casual','woman-tailored'].includes(appearance?.id)&&!['midnight-host','starlight-maker'].includes(appearance?.identity))return {dispose(){}};
+  if(!['woman-casual','man-casual','woman-tailored'].includes(appearance?.id)&&!['midnight-host','starlight-maker','forest-aristocrat'].includes(appearance?.identity))return {dispose(){}};
   const resources=new Set(),materials=new Set(),attachments=new Set(),model=avatar.model;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
@@ -123,7 +123,141 @@ export function createReferenceStyle(avatar,appearance){
       ball(piece,gold,[.08,.09,0],[.009,.009,.006]);
     }
   }
-  if(appearance.id==='woman-casual'){
+  // A limb-aligned frame from a bone toward its child, for sleeves, bracers and boot shafts.
+  function along(name,child){
+    const bone=model.getObjectByName(name),next=model.getObjectByName(child);if(!bone||!next)return null;
+    model.updateMatrixWorld(true);
+    const target=bone.worldToLocal(next.getWorldPosition(new THREE.Vector3()));
+    const piece=new THREE.Group();piece.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),target.clone().normalize());piece.userData.length=target.length();
+    bone.add(piece);attachments.add(piece);return piece;
+  }
+  // Leaves are flattened ellipsoids; tilt turns them off the surface they sit on.
+  function leaf(parent,surface,position,length=.026,tilt=0,turn=0){
+    const item=ball(parent,surface,position,[length*.42,length,length*.12]);item.rotation.set(turn,0,tilt);return item;
+  }
+  function blossom(parent,position,size=.011){
+    const petal=material('#f5efe0',{roughness:.55}),heart=material('#d9b25a',{roughness:.4,metalness:.3});
+    for(let i=0;i<5;i++){const a=i/5*Math.PI*2;ball(parent,petal,[position[0]+Math.cos(a)*size*.8,position[1]+Math.sin(a)*size*.8,position[2]],[size*.62,size*.62,size*.22]);}
+    ball(parent,heart,position,[size*.42,size*.42,size*.3]);
+  }
+  // A vine spirals around a limb frame's axis with leaves on alternate turns.
+  function spiralVine(piece,radius,from,to,{turns=2.5,stem,foliage,leaves=8,flowers=0}={}){
+    const length=piece.userData.length,points=[];
+    for(let i=0;i<=40;i++){const t=i/40,a=t*turns*Math.PI*2;points.push([Math.cos(a)*radius,length*(from+(to-from)*t),Math.sin(a)*radius]);}
+    tube(piece,stem,points,.0042);
+    for(let i=0;i<leaves;i++){const t=(i+.5)/leaves,a=t*turns*Math.PI*2;leaf(piece,foliage,[Math.cos(a)*(radius+.008),length*(from+(to-from)*t),Math.sin(a)*(radius+.008)],.022,a,.6);}
+    for(let i=0;i<flowers;i++){const t=(i+.3)/flowers,a=t*turns*Math.PI*2+1;blossom(piece,[Math.cos(a)*(radius+.012),length*(from+(to-from)*t),Math.sin(a)*(radius+.012)],.009);}
+  }
+  // An open drape around the hips with a handkerchief hem: angles run from the
+  // front (0) around the body, radii widen as it falls.
+  function drape(parent,surface,{from,to,top=.09,length=.8,rx=.19,rz=.14,flare=.08,jag=.16,lobes=5,name}){
+    const columns=36,rows=8,vertices=[],uv=[],indices=[];
+    for(let r=0;r<=rows;r++)for(let c=0;c<=columns;c++){
+      const u=c/columns,a=from+(to-from)*u,depth=r/rows,hem=1-jag*Math.abs(Math.sin(u*Math.PI*lobes));
+      const y=top-length*depth*hem,spread=1+flare*depth/.19;
+      vertices.push(Math.sin(a)*rx*spread,y,Math.cos(a)*rz*spread);uv.push(u,depth);
+      if(r<rows&&c<columns){const n=r*(columns+1)+c;indices.push(n,n+columns+1,n+1,n+1,n+columns+1,n+columns+2);}
+    }
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+    const item=mesh(parent,geometry,surface);if(name)item.name=name;return item;
+  }
+  function forestAristocrat(){
+    const masculine=appearance.variant==='masculine';
+    const olive=material('#6b6f3e',{roughness:.82,sheen:.6,sheenColor:new THREE.Color('#a8ab72'),side:THREE.DoubleSide});
+    const linen=material('#efe6d2',{roughness:.82,sheen:.5,sheenColor:new THREE.Color('#fff6e2'),side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false});
+    const trousers=material('#e7dcc4',{roughness:.85,sheen:.4,sheenColor:new THREE.Color('#fff4dc')});
+    const bark=material('#6a4a31',{roughness:.88}),foliage=material('#5f7a3c',{roughness:.7,side:THREE.DoubleSide}),stem=material('#55602f',{roughness:.8});
+    const leafGold=material('#cfa557',{metalness:.85,roughness:.26,side:THREE.DoubleSide}),bootLeather=material('#5b4c33',{roughness:.58});
+    // Measured on both rigs: the scalp crown sits ~.145 above the head bone and the skull is ~.09 deep.
+    const scalp=.135,centre=[0,.06,.008],skull=.1;
+    // Antler-twig crown: branching tines rising from a leafy circlet with white blossoms.
+    for(const side of [-1,1]){
+      const base=[side*.05,scalp-.005,-.005];
+      tube(face,bark,[base,[side*.068,scalp+.07,-.018],[side*.098,scalp+.15,-.032],[side*.112,scalp+.21,-.04]],.0072);
+      tube(face,bark,[[side*.071,scalp+.08,-.02],[side*.05,scalp+.14,-.01],[side*.046,scalp+.18,-.006]],.0048);
+      tube(face,bark,[[side*.093,scalp+.135,-.03],[side*.14,scalp+.165,-.042],[side*.16,scalp+.19,-.048]],.0043);
+      tube(face,bark,[[side*.107,scalp+.185,-.036],[side*.093,scalp+.23,-.04]],.0034);
+    }
+    const ring=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;ring.push([Math.sin(a)*.099,scalp-.035+Math.cos(a)*.022,Math.cos(a)*.1-.005]);}
+    tube(face,stem,ring,.005);
+    for(let i=0;i<16;i++){const a=i/16*Math.PI*2;leaf(face,foliage,[Math.sin(a)*.104,scalp-.03+Math.cos(a)*.022+(i%2)*.008,Math.cos(a)*.105-.005],.022,a+.4,.35);}
+    for(const a of [-.8,.65,2.0,-2.2])blossom(face,[Math.sin(a)*.106,scalp-.02+Math.cos(a)*.02,Math.cos(a)*.108-.005],.01);
+    // Long hair: wavy strands rooted on the skull, falling down the back past the
+    // shoulder blades, a few over each shoulder, laced with vines and blossoms.
+    const hairTones=[material('#7a5638',{roughness:.78,sheen:1,sheenColor:new THREE.Color('#b08a62')}),material('#946b45',{roughness:.78,sheen:1,sheenColor:new THREE.Color('#c79f72')})];
+    const root=(azimuth,elevation)=>[centre[0]+Math.sin(azimuth)*Math.cos(elevation)*skull*.97,centre[1]+Math.sin(elevation)*skull*.97,centre[2]+Math.cos(azimuth)*Math.cos(elevation)*skull*.97];
+    for(let i=0;i<34;i++){
+      const azimuth=Math.PI*(.42+1.16*((i*.618)%1)),elevation=.15+.95*((i*.381)%1),start=root(azimuth,elevation);
+      const side=Math.sin(azimuth),drop=.48+.2*((i*.27)%1)+(masculine?0:.06),wave=(i%2?1:-1)*.012;
+      const out=[side*.115,-.02,Math.cos(azimuth)*.11-.012];
+      tube(face,hairTones[i%2],[start,[start[0]*1.06,start[1]-.03,start[2]*1.06],[out[0]+wave,-.04,Math.min(out[2],-.095)],[side*.11-wave,-.2,-.125],[side*.1+wave,-.2-drop*.5,-.14],[side*.09,-.08-drop,-.15]],.0068+(i%3)*.0012);
+    }
+    for(const sideSign of [-1,1])for(let i=0;i<2;i++){
+      const start=root(sideSign*(1.3+i*.15),.4+i*.18),wave=(i?.01:-.01);
+      tube(face,hairTones[i%2],[start,[sideSign*.106,.02,.0],[sideSign*(.122+wave),-.1,.035],[sideSign*(.135-wave),-.2,.055],[sideSign*(.14+i*.01),-.3-i*.03,.065]],.0055);
+    }
+    for(const [x,flowers] of [[-.03,2],[.035,3]]){
+      tube(face,stem,[[x,scalp-.02,-.085],[x+.01,-.04,-.13],[x-.012,-.28,-.14],[x+.008,-.55,-.15]],.0036);
+      for(let i=0;i<9;i++){const t=i/9;leaf(face,foliage,[x+(i%2?.017:-.017),scalp-.04-t*.66,-.115-t*.04],.022,(i%2?-1:1)*.7,.2);}
+      for(let i=0;i<flowers;i++)blossom(face,[x+(i%2?.012:-.012),.05-i*.19,-.13-i*.008],.01);
+    }
+    // Gold leaf pendant and earrings.
+    tube(face,leafGold,[[-.045,-.03,.05],[0,-.09,.098],[.045,-.03,.05]],.0021);
+    leaf(face,leafGold,[0,-.105,.102],.02,0,-.2);
+    for(const side of [-1,1]){ball(face,leafGold,[side*.09,-.012,.01],[.004,.004,.004]);leaf(face,leafGold,[side*.092,-.034,.012],.014,0,.2);}
+    // Tunic: an olive V over the chest, open ivory drapes around the hips with a
+    // handkerchief hem, and olive panels down the front and back.
+    for(const side of [-1,1]){
+      if(masculine){const lapel=box(torso,olive,[side*.07,.15,.135],[.045,.3,.016],.007);lapel.rotation.z=side*.34;}
+      // A wrap strap over each shoulder, crossing to the waist like the reference.
+      else tube(torso,olive,[[side*.12,.3,-.02],[side*.13,.33,.06],[side*.09,.2,.15],[-side*.02,.0,.155],[-side*.08,-.1,.14]],.016);
+      for(let i=0;i<(masculine?5:3);i++)leaf(torso,leafGold,[side*(.13+i*.006),.25-i*.07,.15],.015,side*.4,0);
+    }
+    box(torso,olive,[0,-.03,.13],[.12,.26,.014],.006);
+    if(!masculine){const seat=mesh(pelvis,new THREE.CylinderGeometry(.176,.168,.3,24),trousers,[0,-.07,0]);seat.scale.z=.78;}
+    drape(pelvis,linen,{from:.55,to:Math.PI*2-.55,length:.84,name:'Forest aristocrat drape'});
+    drape(pelvis,olive,{from:-.24,to:.24,length:.7,rx:.2,rz:.152,jag:.08,lobes:1});
+    drape(pelvis,olive,{from:Math.PI-.3,to:Math.PI+.3,length:.8,rx:.2,rz:.152,jag:.1,lobes:2});
+    for(let i=0;i<6;i++){const a=(i%2?.12:-.12),y=-.06-i*.1;leaf(pelvis,leafGold,[Math.sin(a)*.2,y,Math.cos(a)*.16+.004],.018,(i%2?.6:-.6),0);}
+    for(let i=0;i<10;i++){const a=(i%2?1:-1)*(.8+(i>>1)*.14),y=-.1-(i>>1)*.13;leaf(pelvis,leafGold,[Math.sin(a)*(.2+(i>>1)*.01),y,Math.cos(a)*(.15+(i>>1)*.008)],.017,(i%2?1:-1)*.5,0);}
+    // Gold-leaf sash with hanging leaf chains.
+    const sash=[];for(let i=0;i<=32;i++){const a=i/32*Math.PI*2;sash.push([Math.sin(a)*.18,.09,Math.cos(a)*.135]);}
+    tube(pelvis,olive,sash,.019);
+    for(let i=0;i<7;i++){const a=(i-3)*.2;leaf(pelvis,leafGold,[Math.sin(a)*.185,.095+(i%2)*.012,Math.cos(a)*.14+.012],.028,a*1.5+(i%2?.5:-.5),0);}
+    for(const [x,drop] of [[-.07,.26],[.0,.34],[.06,.22],[.11,.3]]){
+      tube(pelvis,leafGold,[[x,.08,.148],[x+.01,.08-drop*.5,.156],[x,.08-drop,.154]],.0021);
+      leaf(pelvis,leafGold,[x,.065-drop,.156],.019,0,0);
+    }
+    for(const side of ['l','r']){
+      // Vine-wrapped bracers on the forearms; vines climb bare upper arms.
+      const forearm=along(`lowerarm_${side}`,`hand_${side}`);
+      if(forearm){
+        const length=forearm.userData.length,shaft=mesh(forearm,new THREE.CylinderGeometry(.042,.036,length*.6,14,1,true),material('#7b5a3a',{roughness:.7,side:THREE.DoubleSide}),[0,length*.66,0]);shaft.scale.z=.9;
+        spiralVine(forearm,.045,.36,.96,{turns:2,stem:leafGold,foliage:leafGold,leaves:7});
+        spiralVine(forearm,.049,.32,.92,{turns:1.6,stem,foliage,leaves:5});
+      }
+      if(!masculine){
+        const upper=along(`upperarm_${side}`,`lowerarm_${side}`);
+        if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1});
+        // Cream linen trousers under the drape.
+        const thigh=along(`thigh_${side}`,`calf_${side}`);
+        if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.078,.112,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=.95;}
+      }
+      // Tall vine-bound boots: a fitted shaft to the knee and a block heel.
+      const shin=along(`calf_${side}`,`foot_${side}`);
+      if(shin){
+        const length=shin.userData.length,shaft=mesh(shin,new THREE.CylinderGeometry(.062,.05,length*.92,16),bootLeather,[0,length*.5,0]);shaft.scale.z=.92;
+        if(!masculine)mesh(shin,new THREE.CylinderGeometry(.066,.068,length*.12,16),trousers,[0,length*.02,0]);
+        spiralVine(shin,.066,.1,.92,{turns:2.6,stem:leafGold,foliage:leafGold,leaves:9});
+        spiralVine(shin,.07,.16,.86,{turns:2,stem,foliage,leaves:6});
+      }
+      const foot=aligned(`foot_${side}`);
+      if(foot){box(foot,bootLeather,[0,-.05,-.06],[.055,.065,.05],.008);for(let i=0;i<3;i++)leaf(foot,leafGold,[0,.035+i*.03,.07-i*.026],.016,0,-.9);}
+    }
+  }
+  if(appearance.identity==='forest-aristocrat'){
+    forestAristocrat();
+  }else if(appearance.id==='woman-casual'){
     dressSkirt('#f1e7dd',{slit:true});shoulderBag({color:'#f0e4d9'});sandals();
     tube(torso,gold,[[-.063,.292,.052],[-.044,.235,.113],[0,.194,.141],[.044,.235,.113],[.063,.292,.052]],.0018);
     ball(torso,gold,[0,.183,.143],[.009,.012,.003]);

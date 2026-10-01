@@ -15,6 +15,8 @@ const WARDROBE = {
   'man-workwear': {cloth:'#ded0bb',trim:'#c9a760'},
   'kai-explorer': {cloth:'#292e39',trim:'#c9a760'},
   'kai-noir': {cloth:'#201c22',trim:'#c9a760'},
+  'forest-aristocrat': {cloth:'#eae0cb',trim:'#c9a35c'},
+  'forest-aristocrat-feminine': {cloth:'#eae0cb',trim:'#c9a35c'},
 };
 const ANIMALS = {
   fox:{fur:'#bc8055',light:'#f1e5d4',dark:'#483330',iris:'#ad7850',tail:1.02,tip:'#f6e9d4'},
@@ -27,7 +29,7 @@ let furBump;
 const hairMaps=new Map();
 function hairTexture(name){
   if(hairMaps.has(name))return hairMaps.get(name);
-  const base=name==='sable'?[194,160,133]:[77,48,44],size=256,data=new Uint8Array(size*size*4);
+  const base=name==='sable'?[194,160,133]:name==='forest'?[122,88,58]:[77,48,44],size=256,data=new Uint8Array(size*size*4);
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const glint=12*Math.sin(x*.35+y*.025)+7*Math.sin(x*1.7-y*.04)+5*Math.sin(x*.08+y*.12);
     const index=(y*size+x)*4;
@@ -138,8 +140,15 @@ export function createRomanceLook(avatar,root,appearance) {
       if(/short0[14]/i.test(name)){material.map=null;material.color.set('#80644e');material.roughness=.88;material.needsUpdate=true;}
       if(/shoes0[13]/i.test(name)){material.map=null;material.color.set(appearance.variant==='formal'?'#a99b89':'#242226');material.roughness=.72;material.needsUpdate=true;}
     }
+    if(appearance.identity==='forest-aristocrat'){
+      // Ivory linen and a warm brown head of hair; the outfit pieces carry the forest.
+      if(/male_(elegant|casual)suit|jevica_silk/i.test(name)){material.map=null;material.normalMap=null;material.color.set('#eae0cb');material.roughness=.82;material.metalness=0;material.needsUpdate=true;}
+      if(name==='long01'){material.map=hairTexture('forest');material.color.set('#ffffff');material.roughness=.8;material.needsUpdate=true;}
+      if(/shoes0[13]/i.test(name)){material.map=null;material.normalMap=null;material.color.set('#5b4c33');material.roughness=.6;material.needsUpdate=true;}
+      if(/short0\d/i.test(name)){material.map=null;material.color.set('#7a5638');material.roughness=.8;material.needsUpdate=true;}
+    }
     if(/suit|dress|shirt|jacket|jeans|trouser|pants|skirt|vest|blouse|workwear/i.test(name)){
-      if(!['woman-casual','woman-tailored','man-casual'].includes(appearance.id)&&!['midnight-host','starlight-maker'].includes(appearance.identity)){
+      if(!['woman-casual','woman-tailored','man-casual'].includes(appearance.id)&&!['midnight-host','starlight-maker','forest-aristocrat'].includes(appearance.identity)){
         material.color.lerp(cloth,.76);material.roughness=.61;material.metalness=.04;material.needsUpdate=true;
       }
     }

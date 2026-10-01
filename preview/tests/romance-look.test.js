@@ -18,6 +18,7 @@ test('every selectable character has a stable ID, shipped rig, and reference for
   }
   assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='midnight-host').map(character=>character.variant),['human','hybrid','wolf']);
   assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='starlight-maker').map(character=>character.variant),['formal','explorer','noir']);
+  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='forest-aristocrat').map(character=>[character.variant,character.rig]),[['masculine','man-casual'],['feminine','jevica']]);
   assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.kind==='fox'||character.kind==='lynx').map(character=>character.kind),['fox','lynx']);
 });
 
@@ -58,6 +59,8 @@ test('reference outfits and both midnight host identities attach to moving bones
     'man-workwear':[],
     'kai-explorer':[],
     'kai-noir':[],
+    'forest-aristocrat':['Forest aristocrat drape'],
+    'forest-aristocrat-feminine':['Forest aristocrat drape'],
   };
   for(const [profile,names] of Object.entries(expected)){
     const appearance=sharedAppearance(profile),source=await loadCharacterRig(appearance.rig??profile);
