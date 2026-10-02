@@ -46,8 +46,8 @@ export function composeFrame(render) {
 
 // Visit only visible branches so new props and room visibility changes apply
 // immediately; excluded groups and hidden rooms prune their entire subtree.
-export function createRenderPipeline(renderer, scene, camera) {
-  const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(4, renderer.capabilities.maxSamples) });
+export function createRenderPipeline(renderer, scene, camera, { samples = 4 } = {}) {
+  const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(samples, renderer.capabilities.maxSamples) });
   const composer = new EffectComposer(renderer, target);
   const render = new RenderPass(scene, camera);
   const occlusion = new GTAOPass(scene, camera, 1, 1, {}, {
@@ -117,7 +117,7 @@ export function createRenderPipeline(renderer, scene, camera) {
       renderScale = next; applySize();
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
-    get stats() { return { ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
+    get stats() { return { samples: target.samples, ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };

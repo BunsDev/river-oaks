@@ -68,6 +68,10 @@ setupSidebar();
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Shared browser acceptance on CPU-only runners still draws the real scene,
+// but leaves expensive lighting passes to the dedicated WebGL smoke test.
+// Never enable this profile in a production build.
+const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
@@ -115,18 +119,18 @@ function initializeRenderer() {
   renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.info.autoReset = false;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !softwareAcceptance;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
   configureMaterials(renderer);
-  pipeline = createRenderPipeline(renderer, scene, camera);
+  pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4 });
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
   // The storefront probe renders fixed-size cube faces outside the composer,
   // so quality changes never invalidate it.
   quality = createQualityControl({ apply({ scale, occlusion }) {
-    pipeline.setRenderScale(scale);
-    if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
+    pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
+    if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
@@ -607,7 +611,7 @@ function render(now) {
   liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
-  if (storefrontReflections && environmentAssets) {
+  if (!softwareAcceptance && storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
     else {
