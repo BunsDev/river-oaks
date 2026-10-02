@@ -76,14 +76,27 @@ npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --file
 npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --filename preview/e2e/moving-people.js
 ```
 
-`pointer-gestures.js` rejects secondary clicks and camera drags that return to
-their starting point, then verifies primary selection. `moving-people.js` uses
+`pointer-gestures.js` meets whichever resident is reachable, rejects secondary
+clicks and camera drags that return to their starting point, then steps back
+within reach of that resident and verifies primary selection. `moving-people.js` uses
 the directory and keyboard to approach six rigs, clicks them while walking, and
 checks conversation holds, resumed motion, and unchanged visitor positions.
 The district simulation remains active. Read-only development diagnostics supply
 screen coordinates; no simulation state is injected. Both scripts save images
 under `output/playwright/` and work with the optional bridge offline. They don't
 verify live Jev responses or native Unreal behavior.
+
+`preview/e2e/resident-faces.js` checks each resident's baked face
+(`resident-face.js`) on all six rigs through the Jevica fixture, which takes
+`&face=none` to keep a rig's authored face. Per rig it renders the same resident
+with and without their face and compares portrait pixels: the bake must be
+visible (over 0.3% of the portrait), confined above the clavicles (the throat may
+move with the chin; the chest and clothes never), and pixel-identical when baked
+again. It then confirms the face morphs are stripped, the eyelids still close over
+the baked eyes (ray probes through both eye centres), and the gaze pivots moved
+with the eyeballs (the pivot-to-eye offset is unchanged, to 0.3 mm). A strip per
+rig (neutral, baked, changed pixels with the shoulder line) is saved under
+`output/playwright/resident-faces-<rig>.png`.
 
 `preview/e2e/reaction-transitions.js` runs all six shipped rigs through resting,
 reaction, greeting and interrupted gestures. It measures actual bone rotations and
