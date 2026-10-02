@@ -5,6 +5,7 @@ import { createFacialMotion } from './facial-motion.js';
 import { SuspendedStationGroup } from './suspended-station-group.js';
 import { createWishVisual } from './wish-effects.js';
 import { applyResidentStyle } from './resident-style.js';
+import { applyResidentHairstyle } from './resident-hairstyle.js';
 import { staffWorkPose, blendStationPose } from './store-work.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { createWorkerTask } from './work-props.js';
@@ -95,12 +96,16 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
     room.people.forEach((spot, spotIndex) => {
       const seed = (spot.seed ?? (room.index * 3 + spotIndex)) >>> 0;
       const profile = profileFor(spot, room.theme, seed);
-      loads.push(loadAvatarTemplate(profile).then(source => {
+      loads.push(loadAvatarTemplate(profile).then(async source => {
         if (disposed) return;
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
         const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
         dress(avatar, spot, room.theme, seed);
-        if(spot.role!=='mannequin')applyResidentStyle(avatar,storePersonId(room,spotIndex),{staff:spot.role==='staff'});
+        if(spot.role!=='mannequin') {
+          await applyResidentHairstyle(avatar,storePersonId(room,spotIndex),profile,loadAvatarTemplate);
+          if (disposed) { avatar.dispose(); return; }
+          applyResidentStyle(avatar,storePersonId(room,spotIndex),{staff:spot.role==='staff'});
+        }
         const holder = new THREE.Group();
         const [east, north] = room.toWorld(spot.a, spot.d);
         const seated = spot.pose === 'seated';
