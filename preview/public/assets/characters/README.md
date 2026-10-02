@@ -141,6 +141,37 @@ mesh bind transforms stay independent. The shipped GLBs are unchanged.
 models and measures duplicate/shared/shared/duplicate runs at normal and Retina
 density. Results are in `data/reports/browser-avatar-skeletons.json`.
 
+## Face shapes
+
+The six resident models also carry 25 of MPFB's own CC0 face-shape targets as
+sparse morphs (`sources.json` → `face_shapes`): head square/triangular, nose
+hump, width, height and tip, mouth width and lip volume, chin prominence, width
+and height, cheekbones and cheek volume, eye size and spacing, and brow height.
+Left/right pairs are listed separately and driven together. Each resident gets
+a stable recipe of a few traits (`resident-face.js`), baked once at load into
+that resident's copy of the moved positions; the normals of moved vertices are
+re-derived there, so the targets ship position deltas only. The face morphs are
+then stripped from every instance, so the vertex shader still sees only the
+blink pair. The shipped neutral geometry is unchanged, and Jevica and Prince Jev
+keep their authored faces.
+
+Rebuild with the facial build environment, then merge position-only targets:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 \
+BLENDER_USER_RESOURCES="$PWD/data/raw/characters/blender-user" \
+  data/raw/characters/jevica-build/bin/python \
+  scripts/build_facial_candidates.py --faces woman-casual
+node scripts/add-facial-targets.mjs \
+  preview/public/assets/characters/woman-casual.glb \
+  data/raw/characters/face-variety-candidates/woman-casual.glb \
+  data/raw/characters/face-variety-merged/woman-casual.glb \
+  "$(python3 -c 'from scripts.build_facial_candidates import FACE_SHAPES; print(",".join(FACE_SHAPES))')" --no-normals
+```
+
+The speech variants under `speech/` are merged from the shipped base, so they
+carry the same face morphs; rebuild them after the base changes.
+
 ## Speech candidates
 
 Speech variants are bundled separately under `speech/` and load only for a voiced

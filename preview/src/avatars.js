@@ -7,6 +7,7 @@ import { createEyeTracking } from './eye-tracking.js';
 import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
+import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
@@ -69,7 +70,7 @@ export function shareSkeletons(model) { return [...shareAvatarSkeletons(model)];
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
-export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
+export function instantiateAvatar(source, { targetHeight, id, armSpread, face }) {
   const model = clone(source.scene), materials = new Map(), skeletons = shareAvatarSkeletons(model);
   const scale = targetHeight/source.height;
   model.scale.setScalar(scale); model.position.y=-source.floor*scale;
@@ -101,11 +102,14 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
     return [bone,{x:new THREE.Vector3(1,0,0).applyQuaternion(inverse),y:new THREE.Vector3(0,1,0).applyQuaternion(inverse),z:new THREE.Vector3(0,0,1).applyQuaternion(inverse)}];
   }));
   const hipHeight=model.getObjectByName('thigh_l')?.getWorldPosition(new THREE.Vector3()).y ?? targetHeight*0.52;
+  // A resident's face is baked (and every instance's idle face morphs stripped)
+  // before eye tracking measures the eye pivots.
+  const faceGeometries=bakeResidentFace(model,face);
   const eyes=createEyeTracking(model);
   const avatar = {
     model, bones, rest, axes, materials, skeletons, hipHeight, source, eyes,
     get speechPose() { return speechAvatarPose(id); },
-    dispose() { unregisterSpeech(); eyes.dispose(); for (const geometry of footwear) geometry.dispose(); for (const skeleton of skeletons) skeleton.dispose(); for (const material of materials.values()) material.dispose(); },
+    dispose() { unregisterSpeech(); eyes.dispose(); for (const geometry of faceGeometries) geometry.dispose(); for (const geometry of footwear) geometry.dispose(); for (const skeleton of skeletons) skeleton.dispose(); for (const material of materials.values()) material.dispose(); },
   };
   const unregisterSpeech=registerSpeechAvatar(id,avatar);
   return avatar;
@@ -114,7 +118,7 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread }) {
 export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined });
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:folk&&id!=='player'?residentFaceFor(id):undefined });
   const { model, bones, rest } = avatar;
   if(id !== 'player' && folk) { await applyResidentHairstyle(avatar,id,profile,template); applyResidentStyle(avatar,id); }
   const root = new THREE.Group();
