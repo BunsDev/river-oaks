@@ -41,7 +41,7 @@ import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { storefrontSpot } from './arrival.js';
 import { createMultiplayer } from './multiplayer-client.js';
-import { probeTown, resolveMultiplayerMode } from './multiplayer-mode.js';
+import { waitForTown, resolveMultiplayerMode } from './multiplayer-mode.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
@@ -197,7 +197,7 @@ function initializeRenderer() {
   $('#viewport').append(playDock.element);
   createClearView({ viewport: $('#viewport') });
   if (multiplayerMode === 'required') startMultiplayer();
-  else if (multiplayerMode === 'auto') probeTown().then(town => {
+  else if (multiplayerMode === 'auto') waitForTown().then(town => {
     host.dataset.multiplayer = town.reason;
     if (town.join) startMultiplayer();
     else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
