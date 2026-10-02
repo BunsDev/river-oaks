@@ -25,3 +25,15 @@ export async function probeTown({ fetch = globalThis.fetch, timeout = 2500 } = {
     return { join: false, signIn: false, reason: 'unavailable' };
   }
 }
+
+// Vite begins listening before its in-process town finishes starting. Retry
+// only an unavailable probe, so a valid signed-out session still plays solo.
+export async function waitForTown({ attempts = 6, interval = 500, ...probeOptions } = {}) {
+  let town;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    town = await probeTown(probeOptions);
+    if (town.reason !== 'unavailable') return town;
+    if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, interval));
+  }
+  return town;
+}
