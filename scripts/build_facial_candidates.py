@@ -171,7 +171,9 @@ def main():
     profile = sys.argv[-1]
     if profile not in [p[0] for p in PROFILES] + ["jevica"]:
         raise ValueError("Pass one character profile, including jevica")
-    output = SOURCE / ("speech-candidates" if speech else "face-variety-candidates" if faces else "face-candidates")
+    output = SOURCE / (
+        "speech-candidates" if speech else "face-variety-candidates" if faces else "face-candidates"
+    )
     output.mkdir(exist_ok=True)
 
     def prepare(base):
