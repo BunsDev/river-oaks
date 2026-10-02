@@ -302,3 +302,37 @@ body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-conso
   .walking-notice { transition: opacity 180ms cubic-bezier(.2, 0, 0, 1), translate 180ms cubic-bezier(.2, 0, 0, 1), display 180ms allow-discrete; }
   @starting-style { .walking-notice:not([hidden]) { opacity: 0; translate: -50% 6px; } }
 }
+
+/* Rendered resident portraits replace the drawn placeholder and initials once
+   they are ready (resident-portraits.js); the placeholder remains the fallback. */
+#control-panel .nearby-person.has-portrait::before {
+  width: 40px;
+  height: 40px;
+  top: 12px;
+  background: var(--portrait) center 30% / cover no-repeat, var(--people-soft);
+  border-color: color-mix(in srgb, var(--people) 40%, var(--line));
+  box-shadow: 0 0 0 2px var(--panel), 0 3px 8px #18251e1f;
+}
+#community-dialogue .community-avatar.has-portrait {
+  color: transparent;
+  background: var(--portrait) center 30% / cover no-repeat, var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--panel), 0 4px 10px #18251e24;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #control-panel .nearby-person.has-portrait::before, #community-dialogue .community-avatar.has-portrait { animation: portrait-in .32s ease-out; }
+  @keyframes portrait-in { from { opacity: .35; filter: blur(2px); } to { opacity: 1; filter: none; } }
+}
+
+/* The play rail scrolls when its cards outgrow the window. Fade its bottom edge
+   while more remains below, so a card is never simply sliced off; the fade
+   clears at the end of the scroll and never appears when nothing overflows. */
+@property --rail-fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@supports (animation-timeline: scroll()) {
+  .visit-tools-content {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rail-fade)), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rail-fade)), transparent);
+    animation: rail-fade linear both;
+    animation-timeline: scroll(self);
+  }
+  @keyframes rail-fade { 0%, 92% { --rail-fade: 36px; } 100% { --rail-fade: 0px; } }
+}

@@ -31,7 +31,19 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, getPortrait = null, reducedMotion = false }) {
+  // Show a resident's rendered portrait on an element once it is ready; the
+  // element keeps its drawn placeholder (or initials) until then.
+  const showPortrait = (element, id) => {
+    if (!getPortrait || element.dataset.portraitFor === id) return;
+    element.dataset.portraitFor = id;
+    element.classList.remove('has-portrait');element.style.removeProperty('--portrait');
+    Promise.resolve(getPortrait(id)).then(url => {
+      if (element.dataset.portraitFor !== id) return;
+      if (!url) { delete element.dataset.portraitFor; return; }
+      element.style.setProperty('--portrait', `url("${url}")`);element.classList.add('has-portrait');
+    });
+  };
   let state = null, request = null, requestEpoch = 0, tick = 0, lastPaint = -Infinity, previousFocus = null;
   let life=null,navigationService=null,lifeEnabled=!reducedMotion,lifeRequest=null,lifeEpoch=0,nextLifeRequest=0;
   let message = '', attribution = 'Authored dialogue · local reaction', currentTopic = null;
@@ -329,6 +341,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       text(row.children[0], local.name);
       text(row.children[1], `${local.role} · ${Math.round(distance)} m away`);
       text(row.children[2], 'Say hello →');
+      showPortrait(row, local.id);
       if (nearbyList.children[index] !== row) nearbyList.insertBefore(row, nearbyList.children[index] ?? null);
     }
     if (focusedNearby && document.activeElement !== focusedNearby) {
@@ -366,6 +379,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
     text(avatar, local.name.split(/\s+/).map(part => part[0]).slice(0, 2).join(''));
+    showPortrait(avatar, local.id);
     text(about, local.persona?.work ? 'About your work' : 'What brings you here?');
     text(story, local.persona?.work ? 'A detail from your work' : 'A local perspective');
     for (const [topic, control] of [['about', about], ['district', district], ['story', story]]) {

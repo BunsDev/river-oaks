@@ -4,6 +4,7 @@ import { createBreakableGlass } from './breakable-glass.js';
 import { createForceControls } from './force-controls.js';
 import { createLiftSparkles } from './lift-sparkles.js';
 import { pickPerson, withinTalkingReach } from './people-picking.js';
+import { createResidentPortraits } from './resident-portraits.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
@@ -127,7 +128,9 @@ function initializeRenderer() {
     event.preventDefault();
     showError('The browser lost its graphics context. Reload this page to rebuild the scene.');
   });
-  community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion,
+  const portraits = createResidentPortraits({ renderer, getHolder: id => [...(localsGroup?.userData.models ?? []), playerAvatar?.carriage.driver].find(person => person?.userData.localId === id && person.userData.avatar)
+    ?? storePeople?.userData.figures?.find(figure => figure.id === id)?.holder });
+  community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion, getPortrait: id => portraits.portrait(id),
     getVisitor: () => walking?.active ? walking.getPosition() : null,
     getVisitorPose: () => walking?.getPose() ?? null,
     getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
