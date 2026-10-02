@@ -19,6 +19,7 @@ export const residentStyleFor = id => RESIDENT_STYLES[hashFor(id)%RESIDENT_STYLE
 // it to the target instead. null keeps the rig's authored colour.
 export const HAIR_COLORS = [null, '#2b1d16', '#5a3423', null, '#5e2c20', '#b5834f', '#bba78a', null, '#b9b7b3', '#7c4128', '#1c1e26'];
 const HAIR_TEXTURE_MEANS = { bob01:[38,32,33], short01:[27,27,27], bob02:[159,152,136], short04:[36,36,36], ponytail01:[86,58,41], short02:[75,60,49] };
+const MAX_HAIR_GAIN = 48;
 const linear = value => { const c = value / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
 // Neighbouring ids hash to neighbouring values; mix the bits before choosing.
 const mixed = id => { let h = hashFor(`hair:${id}`); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b); return (h ^ (h >>> 16)) >>> 0; };
@@ -32,8 +33,12 @@ export function applyResidentHair(avatar, id) {
     const mean = HAIR_TEXTURE_MEANS[(original.name ?? '').replace(/\.\d+$/, '')];
     if (!mean) continue;
     // Per channel, so the texture's average lands on the target whatever its own
-    // cast. Colour channels are linear here; cap the gain so noise never blows out.
-    material.color.setRGB(...[color.r, color.g, color.b].map((channel, index) => Math.min(8, channel / Math.max(linear(mean[index]), 1e-3))));
+    // cast. Colour channels are linear here. A near-black texture needs a large
+    // gain to reach blonde; limit it as a whole, never per channel, or the hue
+    // flattens and the texture's own cast shows through (olive blondes).
+    const gains = [color.r, color.g, color.b].map((channel, index) => channel / Math.max(linear(mean[index]), 1e-3));
+    const limit = Math.min(1, MAX_HAIR_GAIN / Math.max(...gains));
+    material.color.setRGB(...gains.map(gain => gain * limit));
     material.needsUpdate = true;
   }
   avatar.model.userData.residentHair = target;

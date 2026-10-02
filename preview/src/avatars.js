@@ -6,6 +6,7 @@ import { createFacialMotion } from './facial-motion.js';
 import { createEyeTracking } from './eye-tracking.js';
 import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
+import { applyResidentHairstyle } from './resident-hairstyle.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
@@ -115,7 +116,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
   const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined });
   const { model, bones, rest } = avatar;
-  if(id !== 'player' && folk) applyResidentStyle(avatar,id);
+  if(id !== 'player' && folk) { await applyResidentHairstyle(avatar,id,profile,template); applyResidentStyle(avatar,id); }
   const root = new THREE.Group();
   root.add(model);
   const look=(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'

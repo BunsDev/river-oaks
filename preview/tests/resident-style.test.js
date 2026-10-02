@@ -62,9 +62,9 @@ test('hair recolouring maps a dark texture to its target and touches only hair',
   for(const [original,material] of avatar.materials) {
     if(original.name==='bob01') {
       assert.notEqual(material.color.getHex(),before.get('bob01'));
-      // bob01's texture is near-black, so reaching the target needs a gain above 1, capped at 8.
+      // bob01's texture is near-black, so reaching the target needs a gain above 1, limited as a whole.
       assert.ok(Math.max(material.color.r,material.color.g,material.color.b)>1);
-      assert.ok([material.color.r,material.color.g,material.color.b].every(channel=>channel<=8));
+      assert.ok([material.color.r,material.color.g,material.color.b].every(channel=>channel<=48));
     } else assert.equal(material.color.getHex(),before.get(original.name));
   }
   const authored=Array.from({length:40},(_,i)=>`local-${i}`).find(candidate=>residentHairFor(candidate)===null),plain=fixture();
