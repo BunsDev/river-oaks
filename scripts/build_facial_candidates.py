@@ -38,8 +38,40 @@ VISEMES = tuple(
     )
 )
 
+# Face-shape targets from MPFB's own catalogue (CC0), giving residents on a shared
+# rig different faces at runtime. Left/right pairs are driven together.
+FACE_SHAPES = (
+    # head-round, head-oval and forehead-temple-incr touch most of the head
+    # (120-220 KB each) and are left out.
+    "head-square",
+    "head-triangular",
+    "nose-hump-incr",
+    "nose-scale-horiz-incr",
+    "nose-scale-horiz-decr",
+    "nose-scale-vert-incr",
+    "nose-point-up",
+    "mouth-scale-horiz-incr",
+    "mouth-scale-horiz-decr",
+    "mouth-upperlip-volume-incr",
+    "mouth-lowerlip-volume-incr",
+    "chin-prominent-incr",
+    "chin-width-incr",
+    "chin-width-decr",
+    "chin-height-incr",
+    "l-cheek-bones-incr",
+    "r-cheek-bones-incr",
+    "l-cheek-volume-incr",
+    "r-cheek-volume-incr",
+    "l-eye-scale-incr",
+    "r-eye-scale-incr",
+    "l-eye-trans-out",
+    "r-eye-trans-out",
+    "eyebrows-trans-up",
+    "eyebrows-trans-down",
+)
 
-def prepare_export(base, *, speech=False):
+
+def prepare_export(base, *, speech=False, faces=False):
     from bl_ext.river_oaks.mpfb.entities.clothes.mhclo import Mhclo
     from bl_ext.river_oaks.mpfb.entities.objectproperties import GeneralObjectProperties
     from bl_ext.river_oaks.mpfb.services.exportservice import ExportService
@@ -47,7 +79,7 @@ def prepare_export(base, *, speech=False):
     from bl_ext.river_oaks.mpfb.services.targetservice import TargetService
     from mathutils import Vector
 
-    targets = TARGETS + VISEMES if speech else TARGETS
+    targets = TARGETS + (VISEMES if speech else ()) + (FACE_SHAPES if faces else ())
     if speech:
         from bl_ext.river_oaks.mpfb.services.humanservice import HumanService
 
@@ -65,6 +97,9 @@ def prepare_export(base, *, speech=False):
         if obj.type == "MESH" and obj.data.shape_keys:
             TargetService.bake_targets(obj)
     for name in targets:
+        if name in FACE_SHAPES:
+            TargetService.load_target(base, str(TargetService.target_full_path(name)), name=name)
+            continue
         folder = "visemes02/targets/visemes" if name in VISEMES else "faceunits/targets/faceunits"
         TargetService.load_target(base, str(SOURCE / folder / f"{name}.target"), name=name)
     # Resolve the cached assets explicitly. The headless build does not install
@@ -109,6 +144,7 @@ def prepare_export(base, *, speech=False):
 
 def main():
     speech = "--speech" in sys.argv
+    faces = "--faces" in sys.argv
     archive = SOURCE / "faceunits01.zip"
     if (
         hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -135,11 +171,13 @@ def main():
     profile = sys.argv[-1]
     if profile not in [p[0] for p in PROFILES] + ["jevica"]:
         raise ValueError("Pass one character profile, including jevica")
-    output = SOURCE / ("speech-candidates" if speech else "face-candidates")
+    output = SOURCE / (
+        "speech-candidates" if speech else "face-variety-candidates" if faces else "face-candidates"
+    )
     output.mkdir(exist_ok=True)
 
     def prepare(base):
-        return prepare_export(base, speech=speech)
+        return prepare_export(base, speech=speech, faces=faces)
 
     if profile == "jevica":
         from build_jevica import main as build_jevica

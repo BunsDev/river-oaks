@@ -17,44 +17,44 @@
     {
       "profile": "man-casual",
       "path": "/assets/characters/speech/man-casual.glb",
-      "bytes": 3964288,
-      "sha256": "533bbd47b84de5e1753e0fce88ed4893e0b7acd6d9aa1a431b6d5eed73a610f5",
-      "baseSha256": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25"
+      "bytes": 4178892,
+      "sha256": "398589ed1587fc31df8c8383884e05926210fe430e39e25bf014cfbf857a5930",
+      "baseSha256": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684"
     },
     {
       "profile": "man-tailored",
       "path": "/assets/characters/speech/man-tailored.glb",
-      "bytes": 3769536,
-      "sha256": "04419e356a19bfd0415cc9c121039d9aca6ae5c80478f8cb9487ae849fd1a0d4",
-      "baseSha256": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7"
+      "bytes": 3931496,
+      "sha256": "4d32553e1f86b7677bea01fd7fa8818af451904da6812bacb4b7a0f1f19cddd8",
+      "baseSha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f"
     },
     {
       "profile": "man-workwear",
       "path": "/assets/characters/speech/man-workwear.glb",
-      "bytes": 3847792,
-      "sha256": "334db3b20f385e485b83ea0a3adf05d472861dc3ed79f8005389ba74a7f9a123",
-      "baseSha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09"
+      "bytes": 4030304,
+      "sha256": "1576023d1507a7abd5bf1b24428de7d5611b37bc0af70d2b42cab84224a868cc",
+      "baseSha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd"
     },
     {
       "profile": "woman-casual",
       "path": "/assets/characters/speech/woman-casual.glb",
-      "bytes": 3703172,
-      "sha256": "306970d50a71cd207ce267842e20a87c35b8d0cf64821681c331fa22e1608c03",
-      "baseSha256": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe"
+      "bytes": 3922320,
+      "sha256": "d0c674575875c99cfc6cdf91a9c2dcdf2efd455965cf5a6ad24145bbb7a7ece3",
+      "baseSha256": "51fa4cda6fd5f76c2657a350a2bfd800eb25b3da28a41d4001330cd174a8d3d1"
     },
     {
       "profile": "woman-daywear",
       "path": "/assets/characters/speech/woman-daywear.glb",
-      "bytes": 4258308,
-      "sha256": "428b6d909933b682dfc81f5c9ae3f0f41c55a14a03862f8884f2eff4c1cdd853",
-      "baseSha256": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639"
+      "bytes": 4415456,
+      "sha256": "eca580b73a32a801d56a0ff9f03c560443aa3a132d09554231fd3626b17921d8",
+      "baseSha256": "7d2db64730455d55d207773850de760c4046db71c0e095d4006da8d549a148d9"
     },
     {
       "profile": "woman-tailored",
       "path": "/assets/characters/speech/woman-tailored.glb",
-      "bytes": 3785244,
-      "sha256": "33337860af141287a59f206a1db71beb6cd5ed2fc73deceb2390bf16ceec1a4a",
-      "baseSha256": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4"
+      "bytes": 3984208,
+      "sha256": "dea914661c3f31ea01aba966f956ff47b39b16cdd33c6e9e17168bf8e80c0b66",
+      "baseSha256": "c4fbe6b7c069ed2236d16774190893222f5dc8459a09e2cd68b73dbd4ca1e19c"
     }
   ]
 }
