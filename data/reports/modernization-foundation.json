@@ -1,0 +1,174 @@
+{
+  "observedAt": "2026-10-02T22:38:13.428833+00:00",
+  "base": "d6b0f5e9ecb7c307d586a1e940ec5b566b23a65d",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/modernization-foundation",
+  "scope": "Foundation reconciliation; local browsers only. No live WorkOS, hosted WebSocket, Redis provider, or native acceptance.",
+  "required": {
+    "createdAt": "2026-10-02T22:35:03.030Z",
+    "status": "passed",
+    "modes": [
+      "required"
+    ],
+    "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+    "results": [
+      {
+        "name": "multiplayer",
+        "status": "passed",
+        "seconds": 66.618,
+        "result": {
+          "passed": true,
+          "checks": [
+            "Shared appearance picker is available",
+            "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
+            "Shared diagnostics and town exclude the solo coachman",
+            "Force shortcut cannot bypass shared-mode gating",
+            "Two accounts share the roster and rendered avatars",
+            "A peer sees the selected avatar",
+            "Appearance survives reconnect",
+            "Confirmed grant moves keyboard focus to undo",
+            "Second player sees server-owned dragon wish",
+            "Egg hatches into a visible dragon",
+            "The same wish disrupts town residents for both players",
+            "Confirmed undo restores keyboard focus",
+            "Invisible resident keeps visible clothing in shared play",
+            "Reload rejoins the existing town and keeps its active wishes",
+            "Walking is validated and visible to the other player",
+            "Shared town has no mobile horizontal overflow",
+            "Sign-out revokes play and returns to the sign-in gate",
+            "No uncaught errors: "
+          ],
+          "errors": [],
+          "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
+        }
+      },
+      {
+        "name": "multiplayer-gate",
+        "status": "passed",
+        "seconds": 55.299,
+        "result": {
+          "passed": true,
+          "checks": [
+            "Disconnected game is locked",
+            "Disconnect focuses the recovery dialog title",
+            "Authenticated recovery hides the sign-in link",
+            "Forward Tab reaches the first available recovery action",
+            "Shift+Tab reaches sign-out without entering the inert game",
+            "Tab wraps to the first recovery action",
+            "Successful retry restores movement focus",
+            "Mobile recovery dialog fits the viewport",
+            "Signed-out gate starts with accessible title focus",
+            "Sign-in link is reachable by keyboard",
+            "Anonymous gate keeps keyboard focus on its available action"
+          ],
+          "errors": []
+        }
+      }
+    ]
+  },
+  "development": {
+    "status": "passed",
+    "ports": [
+      5181,
+      8791
+    ],
+    "reason": "Normal development backend port 8787 belongs to an existing service; preserved. Same multiplayer-dev.js journey and sharedTownDevServer plugin run on isolated ports.",
+    "command": "node output/playwright/dev-isolated.mjs",
+    "result": {
+      "checks": [
+        "each browser is its own development player",
+        "both players share one town",
+        "no sign-in gate blocks development",
+        "Players start with an appearance picker and a default look",
+        "Sable selection reaches the other browser and its rendered remote avatar",
+        "New town chat rows are announced after initial history loads",
+        "Shared play exposes player-owned building",
+        "shared play hides the local invasion",
+        "players arrive on separate spots (1.60 m apart)",
+        "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+        "a landmark teleport is a server-checked position travel the other browser sees",
+        "Builder mode can be switched on",
+        "The preview appears where the pointer meets the ground",
+        "An open spot is marked ready (Ready to place.)",
+        "A click places the creation exactly where the preview stood",
+        "The preview turns red on the spot just taken (Too close to another creation.)",
+        "R turns the preview",
+        "Escape leaves builder mode and removes the preview",
+        "Escape in builder mode leaves the dock open",
+        "Shared mobile play starts with a compact dock",
+        "Flight remains discoverable in shared mobile play",
+        "Shared mobile play hides solo companion and vehicle actions",
+        "Shared mobile play hides local-only scenarios",
+        "Shared mobile controls stay within the viewport",
+        "No browser page errors"
+      ],
+      "a": {
+        "self": "dev-03a3ac90406b",
+        "players": [
+          "dev-03a3ac90406b",
+          "dev-7583b1704957"
+        ],
+        "gate": true,
+        "appearance": "jevica",
+        "appearancePicker": true,
+        "invasion": true,
+        "roster": "2 players in town"
+      },
+      "b": {
+        "self": "dev-7583b1704957",
+        "players": [
+          "dev-03a3ac90406b",
+          "dev-7583b1704957"
+        ],
+        "gate": true,
+        "appearance": "jevica",
+        "appearancePicker": true,
+        "invasion": true,
+        "roster": "2 players in town"
+      },
+      "errors": []
+    }
+  },
+  "avatarFinding": "Historical PR91 timeout not reproduced. Sable selected and rendered for both players. No avatar product change justified.",
+  "checks": [
+    {
+      "command": "npm test",
+      "exit": 0,
+      "result": "616 passed"
+    },
+    {
+      "command": "npm run test:desktop",
+      "exit": 0,
+      "result": "6 passed"
+    },
+    {
+      "command": "npm run test:server",
+      "exit": 0,
+      "result": "78 passed, 27 Redis-dependent skipped"
+    },
+    {
+      "command": "node --test preview/tests/multiplayer-mode.test.js",
+      "exit": 0,
+      "result": "5 passed"
+    },
+    {
+      "command": "npm run build",
+      "exit": 0,
+      "result": "passed; existing bundle-size warning"
+    },
+    {
+      "command": "actionlint .github/workflows/verify.yml",
+      "exit": 0,
+      "result": "passed"
+    },
+    {
+      "command": "python3 scripts/check_secrets.py --all",
+      "exit": 0,
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0,
+      "result": "passed"
+    }
+  ]
+}

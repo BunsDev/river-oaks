@@ -19,8 +19,11 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:server
+      - run: npm run test:desktop
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reflections:webgl
+      - name: Shared town journeys (local identities and authenticated fixtures)
+        run: npm run test:shared
       - run: npm run build
   verify:
     runs-on: ubuntu-latest

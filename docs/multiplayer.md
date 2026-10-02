@@ -81,7 +81,7 @@ After configuring the private environment and WorkOS URLs below, run from the re
 
 ```sh
 npm ci
-npm run build
+VITE_MULTIPLAYER=required npm run build
 npm start
 ```
 
@@ -142,6 +142,10 @@ Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previou
 
 The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
 
+The current Dockerfile runs the default choice frontend build. The commands below
+start in single player; a shared-town image can build with
+`VITE_MULTIPLAYER=required` after configuring WorkOS and Redis for its environment.
+
 ```sh
 docker build -t river-oaks:local .
 docker volume create river-oaks-moderation
@@ -189,4 +193,4 @@ npm run dev
 
 Open `http://localhost:5173` consistently. Vite proxies authentication, multiplayer API requests, moderation requests, and WebSocket connections to Node on port `8787`. Don't substitute `127.0.0.1` in the browser because the origin and cookies must match. Vite's `/health` route belongs to the optional sidecar; check Node health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`, but development still requires WorkOS authentication. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+Local HTTP cookies omit `Secure`. This explicitly configured standalone server uses WorkOS; the default `npm run dev` flow described above uses loopback development identities instead. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
