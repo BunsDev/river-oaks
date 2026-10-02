@@ -6,7 +6,9 @@ import { measureHead } from './head-fit.js';
 // move between rigs: the donor's hair is resolved through its bind pose into a
 // world-aligned frame on the head joint (the frame head-fit.js measures in),
 // refitted from the donor's skull to the recipient's by their measured width,
-// depth and height, and attached rigidly to the recipient's head joint.
+// depth and height, and skinned to the recipient's skeleton with the donor's own
+// weights (matched by bone name). Like the authored hair, it bends with the head,
+// neck and upper back, so a ponytail stays on the back when the head nods.
 export const HAIRSTYLES = { 'woman-casual': 'bob01', 'man-casual': 'short01', 'woman-tailored': 'bob02', 'man-tailored': 'short04', 'woman-daywear': 'ponytail01', 'man-workwear': 'short02' };
 const isHair = name => /^(bob|short|ponytail|long|afro|curly)/.test(name);
 // Hair sits a little proud of the scalp it is refitted to, so no skin shows through.
@@ -30,7 +32,7 @@ function bake(source) {
       vertex.fromBufferAttribute(position, i);
       mesh.applyBoneTransform(i, vertex).applyMatrix4(mesh.matrixWorld).sub(origin).toArray(points, i * 3);
     }
-    parts.push({ points, geometry: mesh.geometry, material: mesh.material });
+    parts.push({ points, geometry: mesh.geometry, material: mesh.material, bones: mesh.skeleton.bones.map(bone => bone.name) });
   });
   const result = parts.length ? { parts, fit } : null;
   baked.set(source, result);
@@ -46,16 +48,40 @@ export function transplantHairstyle(avatar, donor) {
   const target = measureHead(avatar), from = style.fit.skull, to = target.skull;
   // Width, depth and height ratios between the two skulls, measured the same way.
   const sx = to.radius / from.radius * CLEARANCE, sz = (to.front - to.back) / (from.front - from.back) * CLEARANCE, sy = to.top / from.top * CLEARANCE;
-  const origin = head.getWorldPosition(new THREE.Vector3()), toLocal = head.matrixWorld.clone().invert(), point = new THREE.Vector3();
+  // The recipient's own hair (or any skinned part) supplies the skeleton, bind
+  // matrix and parent the fitted hair is bound with.
+  let anchor = null, fallback = null;
+  avatar.model.traverse(mesh => { if (!mesh.isSkinnedMesh) return; if (isHair(mesh.material?.name ?? '')) anchor ??= mesh; else fallback ??= mesh; });
+  anchor ??= fallback;
+  if (!anchor) return null;
+  const skeleton = anchor.skeleton, boneIndex = new Map(skeleton.bones.map((bone, index) => [bone.name, index])), headIndex = boneIndex.get('head');
+  skeleton.update();
+  const origin = head.getWorldPosition(new THREE.Vector3()), point = new THREE.Vector3();
+  const boneMatrices = skeleton.bones.map((bone, index) => new THREE.Matrix4().multiplyMatrices(bone.matrixWorld, skeleton.boneInverses[index]));
+  const unbind = anchor.bindMatrix.clone().invert(), blend = new THREE.Matrix4(), weighted = new THREE.Matrix4();
   const owned = [], added = [];
   for (const part of style.parts) {
     const count = part.points.length / 3, positions = new Float32Array(count * 3);
+    const donorIndex = part.geometry.attributes.skinIndex, donorWeight = part.geometry.attributes.skinWeight;
+    const skinIndex = new Uint16Array(count * 4), skinWeight = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
+      // Weights carry over by bone name; a bone the recipient lacks falls to the head.
+      blend.elements.fill(0);
+      for (let k = 0; k < 4; k++) {
+        const weight = donorWeight.getComponent(i, k), index = boneIndex.get(part.bones[donorIndex.getComponent(i, k)]) ?? headIndex;
+        skinIndex[i * 4 + k] = index; skinWeight[i * 4 + k] = weight;
+        if (weight) { weighted.copy(boneMatrices[index]).multiplyScalar(weight); for (let e = 0; e < 16; e++) blend.elements[e] += weighted.elements[e]; }
+      }
       const x = part.points[i * 3], y = part.points[i * 3 + 1], z = part.points[i * 3 + 2];
-      point.set((x - from.centre[0]) * sx + to.centre[0], y * sy, (z - from.centre[1]) * sz + to.centre[1]).add(origin).applyMatrix4(toLocal).toArray(positions, i * 3);
+      // Skinning maps bind space to world as blend * bindMatrix; invert it so the
+      // vertex lands on its refitted position in the current (rest) pose.
+      point.set((x - from.centre[0]) * sx + to.centre[0], y * sy, (z - from.centre[1]) * sz + to.centre[1]).add(origin)
+        .applyMatrix4(blend.invert()).applyMatrix4(unbind).toArray(positions, i * 3);
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('skinIndex', new THREE.BufferAttribute(skinIndex, 4));
+    geometry.setAttribute('skinWeight', new THREE.BufferAttribute(skinWeight, 4));
     for (const name of ['uv', 'normal']) if (part.geometry.attributes[name]) geometry.setAttribute(name, part.geometry.attributes[name].clone());
     if (part.geometry.index) geometry.setIndex(part.geometry.index.clone());
     // Normals follow the refitted surface, not the donor's.
@@ -64,12 +90,14 @@ export function transplantHairstyle(avatar, donor) {
     const material = part.material.clone();
     material.envMapIntensity = 0.8;
     if (material.transparent) { material.alphaTest = 0.4; material.transparent = false; material.depthWrite = true; material.side = THREE.DoubleSide; }
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.SkinnedMesh(geometry, material);
     mesh.name = `${part.material.name} (fitted)`;
     mesh.castShadow = mesh.receiveShadow = true;
     mesh.frustumCulled = false;
     mesh.userData.localId = avatar.model.userData.localId;
-    head.add(mesh);
+    mesh.position.copy(anchor.position); mesh.quaternion.copy(anchor.quaternion); mesh.scale.copy(anchor.scale);
+    anchor.parent.add(mesh);
+    mesh.bind(skeleton, anchor.bindMatrix);
     avatar.materials.set(part.material, material);
     owned.push(geometry); added.push(mesh);
   }
