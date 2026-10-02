@@ -41,14 +41,33 @@ VISEMES = tuple(
 # Face-shape targets from MPFB's own catalogue (CC0), giving residents on a shared
 # rig different faces at runtime. Left/right pairs are driven together.
 FACE_SHAPES = (
-    # (head-round, head-oval and forehead-temple-incr touch most of the head: 120-220 KB each, left out.)
-    "head-square", "head-triangular",
-    "nose-hump-incr", "nose-scale-horiz-incr", "nose-scale-horiz-decr", "nose-scale-vert-incr", "nose-point-up",
-    "mouth-scale-horiz-incr", "mouth-scale-horiz-decr", "mouth-upperlip-volume-incr", "mouth-lowerlip-volume-incr",
-    "chin-prominent-incr", "chin-width-incr", "chin-width-decr", "chin-height-incr",
-    "l-cheek-bones-incr", "r-cheek-bones-incr", "l-cheek-volume-incr", "r-cheek-volume-incr",
-    "l-eye-scale-incr", "r-eye-scale-incr", "l-eye-trans-out", "r-eye-trans-out",
-    "eyebrows-trans-up", "eyebrows-trans-down",
+    # head-round, head-oval and forehead-temple-incr touch most of the head
+    # (120-220 KB each) and are left out.
+    "head-square",
+    "head-triangular",
+    "nose-hump-incr",
+    "nose-scale-horiz-incr",
+    "nose-scale-horiz-decr",
+    "nose-scale-vert-incr",
+    "nose-point-up",
+    "mouth-scale-horiz-incr",
+    "mouth-scale-horiz-decr",
+    "mouth-upperlip-volume-incr",
+    "mouth-lowerlip-volume-incr",
+    "chin-prominent-incr",
+    "chin-width-incr",
+    "chin-width-decr",
+    "chin-height-incr",
+    "l-cheek-bones-incr",
+    "r-cheek-bones-incr",
+    "l-cheek-volume-incr",
+    "r-cheek-volume-incr",
+    "l-eye-scale-incr",
+    "r-eye-scale-incr",
+    "l-eye-trans-out",
+    "r-eye-trans-out",
+    "eyebrows-trans-up",
+    "eyebrows-trans-down",
 )
 
 
