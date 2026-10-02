@@ -115,10 +115,11 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread, face })
   return avatar;
 }
 
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride } = {}) {
+// faceRecipe: undefined picks residentFaceFor(id); {} keeps the rig's authored face.
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   const targetHeight = profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025;
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:folk&&id!=='player'?residentFaceFor(id):undefined });
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
   if(id !== 'player' && folk) { await applyResidentHairstyle(avatar,id,profile,template); applyResidentStyle(avatar,id); }
   const root = new THREE.Group();

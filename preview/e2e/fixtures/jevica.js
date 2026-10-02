@@ -24,9 +24,10 @@ const camera = new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.01,100);
 const form='jevica';
 const params=new URLSearchParams(location.search), resident=params.get('resident');
 const identity=VISITOR_FORMS[0];
-// ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig.
+// ?resident=local-07&rig=2 inspects a dressed resident (human fashion styling included) on a given shared rig;
+// &face=none keeps the rig's authored face for that resident.
 const appearance=sharedAppearance(params.get('appearance'));
-const avatar = appearance ? await loadResidentAvatar(4,params.get('remote')?'remote-studio':'player',appearance.rig??appearance.id,{folk:false,appearanceId:appearance.id}) : resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
+const avatar = appearance ? await loadResidentAvatar(4,params.get('remote')?'remote-studio':'player',appearance.rig??appearance.id,{folk:false,appearanceId:appearance.id}) : resident ? await loadResidentAvatar(Number(params.get('rig') ?? 0),resident,undefined,{faceRecipe:params.get('face')==='none'?{}:undefined}) : await loadResidentAvatar(identity.avatar,'player',identity.profile);
 const outfit = resident||appearance ? {update(){}} : createPlayerCostume(avatar,form); const holder=new THREE.Group();scene.add(holder);holder.add(avatar.object);
 function render(view='full',time=0,speed=0,pose={}) {
   avatar.object.rotation.y = view === 'back' ? Math.PI : view === 'profile' ? -Math.PI/2 : 0;
