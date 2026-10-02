@@ -30,3 +30,25 @@ test('auto mode joins when the town starts after the first session probe', async
   assert.deepEqual(town, { join: true, signIn: false, reason: 'development' });
   assert.equal(requests, 2);
 });
+
+test('auto mode leaves signed-out players in solo play without retrying', async () => {
+  let requests = 0;
+  const town = await waitForTown({
+    fetch: async () => { requests += 1; return reply(200, { authenticated: false })(); },
+    interval: 0,
+    attempts: 3,
+  });
+  assert.deepEqual(town, { join: false, signIn: true, reason: 'signed-out' });
+  assert.equal(requests, 1);
+});
+
+test('auto mode stops probing after persistent town unavailability', async () => {
+  let requests = 0;
+  const town = await waitForTown({
+    fetch: async () => { requests += 1; return reply(503, { error: 'town_starting' })(); },
+    interval: 0,
+    attempts: 3,
+  });
+  assert.deepEqual(town, { join: false, signIn: false, reason: 'unavailable' });
+  assert.equal(requests, 3);
+});
