@@ -46,7 +46,7 @@
     "id": "local-11",
     "name": "Owen",
     "profile": "man-workwear",
-    "sha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
+    "sha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd",
     "macro": {
       "gender": 1,
       "age": 0.55,
@@ -56,7 +56,8 @@
     },
     "head_scale": 1.0504223219945692,
     "transfer": "Shared MPFB head vertices, uniform sizing about the head joint, head-weighted neck blend; athletic body retained",
-    "hair": "short02, surface-fitted from Owen's source body"
+    "hair": "short02, surface-fitted from Owen's source body",
+    "note": "man-workwear.glb has since gained sparse face-shape morphs (sources.json face_shapes); its neutral geometry, the head this reference was taken from, is unchanged."
   },
   "transfer": "Surface deform from donor MPFB bodies; original skin weights kept",
   "costume": "Runtime dress uniform: tunic, coronet, epaulettes, sash, belt, buttons, star"

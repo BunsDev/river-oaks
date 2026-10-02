@@ -3,6 +3,8 @@ import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 
 const blinkNames=['eyeBlinkLeft','eyeBlinkRight'];
+// Blender suffixes duplicate material names (brown, brown.001); match on the base name.
+const baseName=name=>String(name??'').replace(/\.\d{3}$/,'');
 const formats={5121:['readUInt8',1],5123:['readUInt16LE',2],5125:['readUInt32LE',4],5126:['readFloatLE',4]};
 const widths={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16};
 function parse(bytes) {
@@ -31,7 +33,9 @@ export function packGlb(json,payload) {
 
 // Append only shape deltas. Existing geometry, skins, textures, materials and
 // binary payload stay intact; an incompatible donor is rejected, not remeshed.
-export function appendFacialTargets(originalBytes,candidateBytes,{names=blinkNames,skipMaterials=[]}={}) {
+// normals:false appends POSITION deltas only, for targets whose consumer recomputes
+// normals itself (resident-face.js bakes face shapes and re-derives moved normals).
+export function appendFacialTargets(originalBytes,candidateBytes,{names=blinkNames,skipMaterials=[],normals=true}={}) {
  if(!names.length||new Set(names).size!==names.length||names.some(name=>typeof name!=='string'||!name))throw new Error('Invalid facial target names');
  const original=parse(originalBytes),candidate=parse(candidateBytes),json=original.json,chunks=[original.bin],changes=[];
  const foundNames=new Set();
@@ -56,11 +60,11 @@ export function appendFacialTargets(originalBytes,candidateBytes,{names=blinkNam
  for(const mesh of candidate.json.meshes)for(const donor of mesh.primitives){
   if(!donor.targets?.length)continue;
   const targetNames=mesh.extras?.targetNames;
-  const material=candidate.json.materials[donor.material].name;
+  const material=baseName(candidate.json.materials[donor.material].name);
   if(skipMaterials.includes(material))continue;
   const selected=names.filter(name=>targetNames?.includes(name));
   if(!selected.length)continue;
-  const matches=json.meshes.flatMap(mesh=>mesh.primitives.filter(p=>json.materials[p.material]?.name===material).map(primitive=>({mesh,primitive})));
+  const matches=json.meshes.flatMap(mesh=>mesh.primitives.filter(p=>baseName(json.materials[p.material]?.name)===material).map(primitive=>({mesh,primitive})));
   if(matches.length!==1)throw new Error(`Ambiguous facial mesh: ${material}`);
   const {mesh:destination,primitive}=matches[0];
   if(destination.primitives.length!==1)throw new Error(`Multiple facial primitives are unsupported: ${material}`);
@@ -103,7 +107,7 @@ export function appendFacialTargets(originalBytes,candidateBytes,{names=blinkNam
   }));
   primitive.targets=[...(primitive.targets??[]),...selected.map(name=>{
    const source=donor.targets[targetNames.indexOf(name)],target={};
-   for(const attribute of ['POSITION','NORMAL'])if(source[attribute]!==undefined){
+   for(const attribute of normals?['POSITION','NORMAL']:['POSITION'])if(source[attribute]!==undefined){
     const delta=values(candidate,source[attribute]);
     if(delta.length!==newKeys.length*3||!delta.every(Number.isFinite))throw new Error('Invalid facial target values');
     if(attribute==='POSITION')for(const indices of vertices.values())for(const i of indices)for(let c=0;c<3;c++)if(delta[i*3+c]!==delta[indices[0]*3+c])throw new Error('Ambiguous facial displacement at a split vertex');
@@ -129,8 +133,8 @@ export function appendFacialTargets(originalBytes,candidateBytes,{names=blinkNam
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
- const [original,candidate,output]=process.argv.slice(2);
- if(!output||resolve(original)===resolve(output))throw new Error('Usage: node scripts/add-facial-targets.mjs original.glb candidate.glb separate-output.glb');
- const result=appendFacialTargets(await readFile(original),await readFile(candidate));await writeFile(output,result.bytes);
+ const flags=process.argv.slice(2).filter(a=>a.startsWith('--')),[original,candidate,output,targetNames]=process.argv.slice(2).filter(a=>!a.startsWith('--'));
+ if(!output||resolve(original)===resolve(output))throw new Error('Usage: node scripts/add-facial-targets.mjs original.glb candidate.glb separate-output.glb [name,name,...] [--no-normals]');
+ const result=appendFacialTargets(await readFile(original),await readFile(candidate),{...(targetNames?{names:targetNames.split(',')}:{}),normals:!flags.includes('--no-normals')});await writeFile(output,result.bytes);
  console.log(JSON.stringify({output,changes:result.changes,addedBytes:result.addedBytes}));
 }

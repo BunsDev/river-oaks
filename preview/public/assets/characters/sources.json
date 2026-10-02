@@ -7,8 +7,8 @@
     {
       "id": "woman-casual",
       "path": "/assets/characters/woman-casual.glb",
-      "bytes": 1670532,
-      "sha256": "3069eaf62c2736f4b0174b19076e58308dc6c67ba83b29ae1546f2b7f9326bbe",
+      "bytes": 1889592,
+      "sha256": "51fa4cda6fd5f76c2657a350a2bfd800eb25b3da28a41d4001330cd174a8d3d1",
       "skin": "young_african_female",
       "outfit": "female_casualsuit01",
       "hair": "bob01",
@@ -19,8 +19,8 @@
     {
       "id": "man-casual",
       "path": "/assets/characters/man-casual.glb",
-      "bytes": 1809968,
-      "sha256": "dc1b9736d469edd613e9764d971455c95393b6e42d2731175d5222f1c8a43a25",
+      "bytes": 2024532,
+      "sha256": "e7ac712585ba2d4558092b67ccf30e67d29843a9a81c4ca00384200f69588684",
       "skin": "young_caucasian_male",
       "outfit": "male_casualsuit02",
       "hair": "short01",
@@ -31,8 +31,8 @@
     {
       "id": "woman-tailored",
       "path": "/assets/characters/woman-tailored.glb",
-      "bytes": 1549580,
-      "sha256": "bb9a7dd638302dfa42a5d3af762889bcf19c9c07aa12728ab9ed8177ce1b2bd4",
+      "bytes": 1748448,
+      "sha256": "c4fbe6b7c069ed2236d16774190893222f5dc8459a09e2cd68b73dbd4ca1e19c",
       "skin": "middleage_caucasian_female",
       "outfit": "female_elegantsuit01",
       "hair": "bob02",
@@ -43,8 +43,8 @@
     {
       "id": "man-tailored",
       "path": "/assets/characters/man-tailored.glb",
-      "bytes": 1687016,
-      "sha256": "aa7cd89cf24ecd3c1134e3781ff0f2d6f9195eb15dc1030206f0cdc2057fd4a7",
+      "bytes": 1848936,
+      "sha256": "ae3834fbc9d96c3588f330a80280a2dfd5d69830ad18ca2f51d5e1003f7e042f",
       "skin": "middleage_african_male",
       "outfit": "male_elegantsuit01",
       "hair": "short04",
@@ -55,8 +55,8 @@
     {
       "id": "woman-daywear",
       "path": "/assets/characters/woman-daywear.glb",
-      "bytes": 2007824,
-      "sha256": "657c45926a47fe2f75698c029d2feb75370603eb7ac46bfa4c5f36d58bd69639",
+      "bytes": 2164940,
+      "sha256": "7d2db64730455d55d207773850de760c4046db71c0e095d4006da8d549a148d9",
       "skin": "young_asian_female",
       "outfit": "female_casualsuit02",
       "hair": "ponytail01",
@@ -67,8 +67,8 @@
     {
       "id": "man-workwear",
       "path": "/assets/characters/man-workwear.glb",
-      "bytes": 1710928,
-      "sha256": "765a0efbfe3885591ca2c346d4781dffe877f55b31a2726b575e3ff2105d2f09",
+      "bytes": 1893396,
+      "sha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd",
       "skin": "middleage_asian_male",
       "outfit": "male_worksuit01",
       "hair": "short02",
@@ -87,5 +87,46 @@
     "license": "CC0-1.0",
     "archive_sha256": "d113107bd7eb59f3af4df6fc0ec29bfcc593f496d0b336aec14f086a80ce7146",
     "generator": "MPFB 2.0.17 / Blender 4.5.3 LTS; sparse target append preserves the original binary payload"
+  },
+  "face_shapes": {
+    "targets": [
+      "head-square",
+      "head-triangular",
+      "nose-hump-incr",
+      "nose-scale-horiz-incr",
+      "nose-scale-horiz-decr",
+      "nose-scale-vert-incr",
+      "nose-point-up",
+      "mouth-scale-horiz-incr",
+      "mouth-scale-horiz-decr",
+      "mouth-upperlip-volume-incr",
+      "mouth-lowerlip-volume-incr",
+      "chin-prominent-incr",
+      "chin-width-incr",
+      "chin-width-decr",
+      "chin-height-incr",
+      "l-cheek-bones-incr",
+      "r-cheek-bones-incr",
+      "l-cheek-volume-incr",
+      "r-cheek-volume-incr",
+      "l-eye-scale-incr",
+      "r-eye-scale-incr",
+      "l-eye-trans-out",
+      "r-eye-trans-out",
+      "eyebrows-trans-up",
+      "eyebrows-trans-down"
+    ],
+    "source": "MPFB 2.0.17 bundled targets (data/targets)",
+    "license": "CC0-1.0",
+    "generator": "build_facial_candidates.py --faces; add-facial-targets.mjs --no-normals (position deltas only; normals are re-derived at bake)",
+    "applies_to": [
+      "woman-casual",
+      "man-casual",
+      "woman-tailored",
+      "man-tailored",
+      "woman-daywear",
+      "man-workwear"
+    ],
+    "note": "Baked per resident at load (resident-face.js); the shipped neutral geometry is unchanged."
   }
 }
