@@ -10,7 +10,12 @@ in a second browser profile to see another player. No `.env` is needed.
 - The default is `choice`: players begin in single player and can select
   Multiplayer from the control in the viewport. The choice is remembered in
   local storage across the WorkOS sign-in redirect. Multiplayer's sign-in
-  screen and People panel both offer a return to single player.
+  screen and People panel both offer a return to single player. Each tab keeps
+  the mode it loaded with, so choosing the other mode always switches that tab,
+  even after another tab changed the remembered choice. If the browser refuses
+  to store a choice, the reload carries it in the address bar as `?play=solo`
+  or `?play=multiplayer` for that visit only; a choice carried this way doesn't
+  survive the WorkOS sign-in redirect.
 - `VITE_MULTIPLAYER=auto` joins when the town answers with a session, otherwise
   plays solo without blocking. `off` disables the shared town. `required`
   always shows the sign-in gate.
