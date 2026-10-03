@@ -3,12 +3,14 @@ import { WorkOS } from '@workos-inc/node';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
-const STATE_TTL = 10 * 60_000;
+const STATE_TTL = 20 * 60_000;
 const SESSION_TTL = 7 * 24 * 60 * 60_000;
 const MAX_STATES = 1_000;
 const MAX_SESSIONS = 10_000;
 const token = () => randomBytes(32).toString('base64url');
 const digest = (value) => createHash('sha256').update(value).digest('base64url');
+const validIssuer = (issuer) => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
+  || /^https:\/\/api\.workos\.com\/user_management\/client_[A-Za-z0-9]+\/?$/.test(issuer);
 
 function equal(a, b) {
   return typeof a === 'string' && typeof b === 'string'
@@ -69,7 +71,8 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       || result.sessionId !== record.sessionId || sessions.get(record.sessionId) !== record) return null;
     const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
     if (!Number.isFinite(claims.exp) || claims.sub !== result.user.id || claims.sid !== result.sessionId
-      || claims.iss !== `https://api.workos.com/user_management/${clientId}`) return null;
+      || !validIssuer(claims.iss)
+      || claims.client_id !== clientId) return null;
     const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
     if (expiresAt <= now()) return null;
     const name = [result.user.firstName, result.user.lastName].filter((part) => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
