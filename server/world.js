@@ -426,7 +426,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         for (const local of removed) {
           if (recovered.state.jobs.some(job=>job.localId===local.id || job.helperId===local.id)) throw new Error('Active visit on retired resident');
           if (!local.wish) continue;
-          const recipient=kept.find(other=>other.storeId===local.storeId && !other.wish);
+          // Keep the wish in its shop when possible. A crowded shop may have
+          // no free retained host; another resident can still carry the wish
+          // so migration does not strand the entire persistent town.
+          const recipient=kept.find(other=>other.storeId===local.storeId && !other.wish)??kept.find(other=>!other.wish);
           if (!recipient) throw new Error('No resident for active wish');
           recipient.wish=local.wish;
           for (const event of recovered.state.wishes.events) if(event.localId===local.id)event.localId=recipient.id;

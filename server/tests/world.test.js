@@ -442,6 +442,16 @@ test('a legacy full-population checkpoint migrates without losing an active indo
   assert.equal(recipient.storeId,wished.storeId);
   assert.equal(recipient.wish.kind,'dragon');
   assert.deepEqual(createSharedWorld(district,{now}).restore(restored.checkpoint()),{ok:true},'the migrated roster checkpoints normally');
+  for(const [index,local] of shared.snapshot().locals.filter(local=>local.storeId===wished.storeId).entries()){
+    const userId=`owner-${index}`;
+    assert.equal(legacy.join({userId,name:userId}).ok,true);
+    time+=5000;
+    assert.equal(legacy.command(userId,{type:'travel',localId:local.id}).ok,true);
+    assert.equal(cast(legacy,userId,local.id).ok,true);
+  }
+  const crowded=createSharedWorld(district,{now});
+  assert.deepEqual(crowded.restore(legacy.checkpoint()),{ok:true},'full shops still migrate without losing a wish');
+  assert.notEqual(crowded.snapshot().locals.find(local=>local.wish?.ownerId==='a').storeId,wished.storeId);
   const forged=structuredClone(checkpoint);
   forged.payload.state.locals.find(local=>local.id===wished.id).persona.memory=null;
   assert.equal(createSharedWorld(district,{now}).restore(resign(forged)).error,'invalid_checkpoint','legacy records are validated before removal');

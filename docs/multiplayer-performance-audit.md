@@ -83,7 +83,8 @@ performance. Room state and public view are compressed before Redis storage.
   Client GPU/frame costs were not measured at 32 rendered avatars.
 - The population migration validates the old checkpoint before filtering,
   transfers an active wish from a removed shop resident to an available
-  retained resident in the same shop, and rejects an incompatible checkpoint
+  retained resident in the same shop when possible, then another free resident,
+  and rejects an incompatible checkpoint
   instead of silently discarding state.
 - Authenticated user IDs gate building, saved designs, and wish granting on
   the server. UI hiding is a convenience, not the permission boundary.
