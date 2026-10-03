@@ -12,8 +12,9 @@ const data=JSON.parse(await readFile(new URL('../../preview/public/data/district
 data.vegetation=JSON.parse(await readFile(new URL('../../preview/public/data/district-vegetation.json',import.meta.url)));
 let app;
 const identity=req=>{
-  const userId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob)/)?.[1];
-  return userId?{userId,name:userId==='alice'?'Alice':'Bob',sessionId:userId,csrfToken:'fixture-'+userId,expiresAt:Date.now()+3600000}:null;
+  const fixtureId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob|guest|owner)/)?.[1];
+  const userId=fixtureId==='owner'?'user_01M40Y914S1H4EJCEHH91DKTAY':fixtureId;
+  return userId?{userId,name:fixtureId==='owner'?'Jevica':fixtureId==='alice'?'Alice':fixtureId==='bob'?'Bob':'Guest',sessionId:userId,csrfToken:'fixture-'+fixtureId,expiresAt:Date.now()+3600000}:null;
 };
 const auth={authenticate:async req=>identity(req),async handle(req,res){
   if(!req.url.startsWith('/auth/'))return false;

@@ -159,7 +159,7 @@ test('appearance change is visible to peers and restored when the account rejoin
   assert.equal(changed.ok,true);
   f.advance();
   const seen=await bob.waitFor(message=>message.type==='snapshot'&&message.players.some(player=>player.id==='alice'&&player.appearance==='woman-tailored'));
-  assert.equal(seen.players.find(player=>player.id==='bob').appearance,'jevica');
+  assert.equal(seen.players.find(player=>player.id==='bob').appearance,'sable-human');
   alice.ws.close();
   await closed(alice.ws);
   const rejoined=await connect(f,'alice-session');

@@ -2,14 +2,14 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
-import { DEFAULT_SHARED_APPEARANCE, sharedAppearance } from './shared-appearances.js';
+import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
 export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   let disposed=false,previous=null;
   const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
   const loadAppearance=(entry,player)=>{
-    const appearance=sharedAppearance(player.appearance)?.id??DEFAULT_SHARED_APPEARANCE;
+    const appearance=permittedAppearance(player.id,player.appearance);
     if(entry.requestedAppearance!==appearance){
       entry.requestedAppearance=appearance;entry.failures=0;entry.retryAt=0;
       if(entry.pendingAppearance&&entry.pendingAppearance!==appearance){entry.pendingAppearance=null;entry.version++;}

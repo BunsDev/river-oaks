@@ -2,25 +2,35 @@ import { createPlayerAttention } from './player-attention.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
 import { createParkedCarriage } from './parked-carriage.js';
+import { createCarriageEncounter } from './carriage-encounter.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
 import { VISITOR_FORMS, createVisitorReactions } from './visitor-persona.js';
-import { APPEARANCE_COOLDOWN_MS, CHARACTERS, DEFAULT_SHARED_APPEARANCE, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, CHARACTERS, JEVICA_OWNER_USER_ID, appearanceFor, canUseAppearance, defaultAppearanceFor, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 
-export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
+export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
-  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,reducedMotion});
+  const owner=userId===JEVICA_OWNER_USER_ID;
+  let sharedMode=false,crewLocal=null;
+  const crewLocals=()=>{
+    const locals=getLocals()??[];
+    const current=locals.find(local=>local.id==='carriage-driver');
+    if(current)crewLocal=current;
+    if(sharedMode&&owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
+    return sharedMode&&owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
+  };
+  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,reducedMotion});
   const panel = document.createElement('section');panel.className = 'player-controls';panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
-    <div class="player-portrait"><img src="/assets/characters/jevica-portrait.png" alt="" width="72" height="88"><span class="player-monogram" hidden aria-hidden="true">J</span></div>
-    <div><div class="player-controls-title">Your character</div><h2 id="player-name">Jevica</h2><span id="player-role">Rose enchantress</span></div>
+    <div class="player-portrait"><img src="/assets/characters/jevica-portrait.png" alt="" width="72" height="88" ${owner?'':'hidden'}><span class="player-monogram" ${owner?'hidden':''} aria-hidden="true">${owner?'J':'S'}</span></div>
+    <div><div class="player-controls-title">Your character</div><h2 id="player-name">${owner?'Jevica':'Sable'}</h2><span id="player-role">${owner?'Rose enchantress':'Fox charmer'}</span></div>
     <span id="player-mode" class="player-mode">On foot</span>
   </header>
   <fieldset class="character-picker">
     <legend>Character</legend>
-    <div class="character-roster">${CHARACTERS.map(character=>`<label class="character-chip" style="--character-accent:${character.accent}" title="${character.name} · ${character.title}"><input type="radio" name="player-character" value="${character.id}"><span class="character-chip-mark" aria-hidden="true">${character.name[0]}</span><span class="character-chip-name">${character.name}</span></label>`).join('')}</div>
+    <div class="character-roster">${CHARACTERS.map(character=>`<label class="character-chip" ${character.id==='jevica'&&!owner?'hidden':''} style="--character-accent:${character.accent}" title="${character.name} · ${character.title}"><input type="radio" name="player-character" value="${character.id}"><span class="character-chip-mark" aria-hidden="true">${character.name[0]}</span><span class="character-chip-name">${character.name}</span></label>`).join('')}</div>
     <fieldset class="character-option" data-option="variant" hidden><legend>Style</legend><div class="character-segments" data-variants></div></fieldset>
     <fieldset class="character-option" data-option="form"><legend>Form</legend><div class="character-segments">
       <label><input type="radio" name="player-form" value="human"><span>Humanoid</span></label>
@@ -68,7 +78,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Jev, with a clear space beside the vehicle.';
   };
   companionButton.addEventListener('click',toggleCompanion);
-  host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&!sharedMode){event.preventDefault();toggleCompanion();}});
+  host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&(!sharedMode||owner)){event.preventDefault();toggleCompanion();}});
   carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
     companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to your ride':'Walk with Jev';
@@ -77,12 +87,12 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null, sharedMode = false;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null;
   // Solo choices stay on this device; in the shared town the account owns both
   // the appearance and whether a beast form moves like its animal.
-  let soloAppearance=DEFAULT_SHARED_APPEARANCE,soloMovement=false;
+  let soloAppearance=defaultAppearanceFor(userId),soloMovement=false;
   try{
-    soloAppearance=sharedAppearance(localStorage.getItem('river-oaks-character'))?.id??DEFAULT_SHARED_APPEARANCE;
+    soloAppearance=permittedAppearance(userId,localStorage.getItem('river-oaks-character'));
     soloMovement=localStorage.getItem('river-oaks-beast-movement')==='beast';
   }catch{}
   let appearance=soloAppearance,sharedName=null,sharedMovement='upright',movement='upright',loadedAppearance=null,portraitWanted=null;
@@ -113,7 +123,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   };
   const applySharedPlayer=player=>{
     sharedMovement=player.movement==='beast'?'beast':'upright';
-    const confirmed=sharedAppearance(player.appearance)?.id??DEFAULT_SHARED_APPEARANCE;
+    const confirmed=permittedAppearance(userId,player.appearance);
     if(confirmed!==appearance){appearance=confirmed;syncPicker();load();return true;}
     syncPicker();return false;
   };
@@ -147,7 +157,7 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   };
   const choose=id=>{
     const next=sharedAppearance(id)?.id;
-    if(!next){syncPicker();return;}
+    if(!next||!canUseAppearance(userId,next)){syncPicker();return;}
     if(!sharedMode){
       if(next!==appearance){appearance=soloAppearance=next;try{localStorage.setItem('river-oaks-character',next);}catch{}load();}
       syncPicker();return;
@@ -267,9 +277,11 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
     get form() {return form;},
     setSharedMode(value){
       if(sharedMode===value)return;
-      sharedMode=value;carriage.setEnabled(!value);panel.querySelector('.vehicle-garage').hidden=value;companionButton.hidden=value;companionStatus.hidden=value;
+      if(value&&owner)crewLocals();
+      sharedMode=value;const crewAllowed=!value||owner;
+      carriage.setEnabled(crewAllowed);panel.querySelector('.vehicle-garage').hidden=!crewAllowed;companionButton.hidden=!crewAllowed;companionStatus.hidden=!crewAllowed;
       clearTimeout(flushTimer);wanted=null;picker.removeAttribute('aria-busy');
-      appearance=value?DEFAULT_SHARED_APPEARANCE:soloAppearance;sharedName=null;sharedMovement='upright';syncPicker();load();
+      appearance=value?defaultAppearanceFor(userId):soloAppearance;sharedName=null;sharedMovement='upright';syncPicker();load();
     },
     setSharedIdentity(player){
       if(!player)return;
@@ -297,11 +309,11 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
       const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       carriage.update(now);carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
-      carriageButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
-      companionButton.disabled=sharedMode||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=sharedMode||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement||away;
+      carriageButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
+      companionButton.disabled=sharedMode&&!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
+      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement||away;
       rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
-      vehicleSelect.disabled=sharedMode||carriage.riding||away;driveButton.disabled=sharedMode||!carriage.riding||away;
+      vehicleSelect.disabled=sharedMode&&!owner||carriage.riding||away;driveButton.disabled=sharedMode&&!owner||!carriage.riding||away;
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
       if(driveStatus.textContent!==carriage.chauffeur.label)driveStatus.textContent=carriage.chauffeur.label;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);

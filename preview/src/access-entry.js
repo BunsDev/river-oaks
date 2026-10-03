@@ -43,6 +43,7 @@ async function checkAccess() {
     }
     if (!entered) {
       entered = true;
+      document.body.dataset.accountId = session.user.id;
       document.body.classList.add('access-granted');
       gate.hidden = true;
       await import('./main.js');

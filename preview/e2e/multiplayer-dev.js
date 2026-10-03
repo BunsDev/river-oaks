@@ -18,14 +18,14 @@ async page => {
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length >= 2, null, { timeout: 30000 });
   for (const tab of [page, second]) await tab.waitForFunction(() => {
     const town = window.__riverMultiplayer?.();
-    return town?.snapshot?.players.find(player => player.id === town.selfId)?.appearance === 'jevica';
+    return town?.snapshot?.players.find(player => player.id === town.selfId)?.appearance === 'sable-human';
   }, null, { timeout: 30000 });
   const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
-  check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
+  check(a.appearance === 'sable-human' && b.appearance === 'sable-human' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
   await page.locator('input[name=player-character][value=sable]').check();
   await page.locator('input[name=player-form][value=beast]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');

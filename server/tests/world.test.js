@@ -27,6 +27,39 @@ function setup() {
 const cast = (world,userId='a',localId='local-00') => world.command(userId,{type:'wish',localId,kind:'dragon'});
 const travel = (world,id,userId='a') => world.command(userId,{type:'travel',localId:id});
 
+test('only the named account can enter shared play as either Jevica form',()=>{
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data);
+  assert.equal(world.join({userId:owner,name:'Owner'}).player.appearance,'jevica');
+  assert.equal(world.join({userId:'guest',name:'Guest'}).player.appearance,'sable-human');
+  for(const appearance of ['jevica','jevica-beast']) {
+    assert.equal(world.command('guest',{type:'appearance',appearance}).error,'exclusive_appearance');
+    assert.equal(world.snapshot().players.find(player=>player.id==='guest').appearance,'sable-human');
+  }
+  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica-beast'}).ok,true);
+  assert.equal(world.command('guest',{type:'appearance',appearance:'woman-tailored'}).ok,true);
+});
+
+test('only the Jevica owner can submit a vehicle pose in shared play',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const ownerPosition=world.join({userId:owner,name:'Owner'}).player.position;
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=position=>({type:'pose',position:[position[0],position[1]+5.5,position[2]],yaw:0,altitude:0,vehicle:'rolls'});
+  assert.equal(world.command('guest',pose(guestPosition)).error,'exclusive_vehicle');
+  assert.equal(world.command(owner,pose(ownerPosition)).ok,true);
+  assert.equal(world.snapshot().players.find(player=>player.id===owner).vehicle,'rolls');
+  assert.equal(world.command(owner,{...pose(ownerPosition),vehicle:'unknown'}).error,'invalid_pose');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id===owner).vehicle,'rolls');
+  checkpoint.payload.players.find(player=>player.id==='guest').vehicle='rolls';
+  assert.equal(restored.restore(resign(checkpoint)).error,'invalid_checkpoint');
+});
+
 test('town chat is attributed, bounded, rate limited and survives checkpoint recovery',()=>{
   const {world,advance,now}=setup();
   assert.equal(world.command('a',{type:'chat',text:'  Hello   Bob!  '}).ok,true);
@@ -54,10 +87,10 @@ test('town chat is attributed, bounded, rate limited and survives checkpoint rec
 
 test('appearance belongs to the authenticated account and survives departure and checkpoint recovery',()=>{
   const {world,advance,now}=setup();
-  assert.equal(world.snapshot().players[0].appearance,'jevica');
+  assert.equal(world.snapshot().players[0].appearance,'sable-human');
   assert.equal(world.command('a',{type:'appearance',appearance:'woman-tailored'}).ok,true);
   assert.equal(world.snapshot().players.find(player=>player.id==='a').appearance,'woman-tailored');
-  assert.equal(world.snapshot().players.find(player=>player.id==='b').appearance,'jevica');
+  assert.equal(world.snapshot().players.find(player=>player.id==='b').appearance,'sable-human');
   assert.equal(world.command('b',{type:'appearance',appearance:'man-casual',userId:'a'}).error,'invalid_appearance');
   assert.equal(world.command('b',{type:'appearance',appearance:'unknown'}).error,'invalid_appearance');
   assert.equal(world.command('a',{type:'appearance',appearance:'man-workwear'}).error,'appearance_cooldown');
@@ -72,8 +105,21 @@ test('appearance belongs to the authenticated account and survives departure and
 
 const resign=checkpoint=>{checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');return checkpoint;};
 
+test('older checkpoints cannot restore Jevica to another account',()=>{
+  const {world,now}=setup();
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  for(const player of checkpoint.payload.players)player.appearance='jevica';
+  checkpoint.payload.appearances=checkpoint.payload.appearances.map(([id])=>[id,'jevica']);
+  checkpoint.payload.appearances.push(['departed-guest','jevica']);
+  resign(checkpoint);
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.ok(restored.snapshot().players.every(player=>player.appearance==='sable-human'));
+  assert.equal(restored.join({userId:'departed-guest',name:'Returned'}).player.appearance,'sable-human');
+});
+
 test('every character form and style is selectable and durable',()=>{
-  const {world,advance,now}=setup(),ids=SHARED_APPEARANCES.map(appearance=>appearance.id).filter(id=>id!=='jevica');
+  const {world,advance,now}=setup(),ids=SHARED_APPEARANCES.filter(appearance=>appearance.character!=='jevica').map(appearance=>appearance.id);
   for(const appearance of ids){
     advance(2100);
     assert.equal(world.command('a',{type:'appearance',appearance}).ok,true,appearance);
@@ -135,7 +181,7 @@ test('appearance migration restores a town checkpoint written before player look
   checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(checkpoint),{ok:true});
-  assert.ok(restored.snapshot().players.every(player=>player.appearance==='jevica'));
+  assert.ok(restored.snapshot().players.every(player=>player.appearance==='sable-human'));
   assert.equal(restored.command('a',{type:'appearance',appearance:'woman-daywear'}).ok,true);
   assert.deepEqual(restored.snapshot().builds,[]);
 });

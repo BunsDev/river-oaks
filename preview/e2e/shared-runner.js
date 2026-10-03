@@ -9,6 +9,7 @@ import { chromium } from 'playwright';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const modes = process.argv.slice(2);
+const selectedJourney = process.env.RIVER_OAKS_SHARED_JOURNEY;
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
 if (modes.some(mode => !['development', 'required'].includes(mode))) throw new Error('Choose development or required shared play.');
@@ -97,7 +98,8 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    for (const name of mode === 'development' ? ['multiplayer-dev'] : ['access-gate', 'multiplayer', 'multiplayer-gate']) {
+    for (const name of mode === 'development' ? ['multiplayer-dev'] : ['access-gate', 'multiplayer', 'multiplayer-exclusivity', 'multiplayer-gate']) {
+      if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);

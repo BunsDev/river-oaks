@@ -4,7 +4,8 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { APPEARANCE_COOLDOWN_MS, DEFAULT_SHARED_APPEARANCE, MOVEMENTS, isBeastAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, JEVICA_OWNER_USER_ID, MOVEMENTS, canUseAppearance, isBeastAppearance, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
@@ -61,7 +62,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   // Beast movement is an account preference that only shows in a beast form,
   // so switching to a humanoid form and back keeps it.
   const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
-  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,vehicle:player.vehicle??null});
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
     if (appearanceByUser.size>MAX_APPEARANCES) {
@@ -96,7 +97,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,chatAt:-Infinity,appearanceAt:-Infinity,tokens:12,tokenAt:time,seen:time});
     }
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
-    const appearance=appearanceByUser.get(identity.userId)??DEFAULT_SHARED_APPEARANCE;
+    const appearance=permittedAppearance(identity.userId,appearanceByUser.get(identity.userId));
     const player = {id:identity.userId,name:identity.name.slice(0,80),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
       poseAt:time,moveBudget:0.1,liftBudget:0.1};
     players.set(player.id,player);
@@ -124,15 +125,18 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
     const {position,yaw,altitude} = message;
-    if (!fields(message,['type','position','yaw','altitude']) || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
+    if (!fields(message,['type','position','yaw','altitude','vehicle']) || (message.vehicle != null && !vehicleKind(message.vehicle))
+      || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
       || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > environment.flightCeiling) return correction('invalid_pose');
+    if (message.vehicle && player.id!==JEVICA_OWNER_USER_ID) return correction('exclusive_vehicle');
+    if (message.vehicle && altitude>0.1) return correction('invalid_pose');
     const ground = environment.groundAt(position[0],-position[1]);
     if (Math.abs(position[2]-ground) > 0.2) return correction('invalid_ground');
     const dt = Math.max(0,Math.min(1,(time-player.poseAt)/1000));
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const cost = distance(position,player.position) / (Math.max(player.altitude,altitude)>0.1 ? 7.2 : 3.4);
+    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : 3.4);
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
     const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));
@@ -143,7 +147,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     }
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
-    Object.assign(player,{position:[position[0],position[1],ground],yaw:Math.atan2(Math.sin(yaw),Math.cos(yaw)),altitude});
+    Object.assign(player,{position:[position[0],position[1],ground],yaw:Math.atan2(Math.sin(yaw),Math.cos(yaw)),altitude,vehicle:message.vehicle??null});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -226,7 +230,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     const target=local?.position ?? place?.position ?? (point ? null : mode==='enter' && room ? room.toWorld(room.center,room.depth-1) : store.facade);
     // A bare position keeps the traveller's own facing; a place faces its spot.
     const yaw=target && !(target[0]===destination[0] && target[1]===destination[1]) ? Math.atan2(destination[0]-target[0],target[1]-destination[1]) : player.yaw;
-    Object.assign(player,{position:destination,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1});
+    Object.assign(player,{position:destination,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1,vehicle:null});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -246,6 +250,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       // A retired ID resolves to its replacement, which is what the town keeps.
       const chosen=fields(message,['type','appearance']) ? sharedAppearance(message.appearance) : null;
       if (!chosen) return reject('invalid_appearance');
+      if (!canUseAppearance(userId,chosen.id)) return reject('exclusive_appearance','Jevica is reserved for her account.');
       if (player.appearance===chosen.id) return {ok:true,player:publicPlayer(player)};
       if (time-ledger.appearanceAt<APPEARANCE_COOLDOWN_MS) return reject('appearance_cooldown','Wait a moment before changing appearance again.');
       player.appearance=chosen.id;ledger.appearanceAt=time;
@@ -420,7 +425,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       for (const ledger of nextLedgers.values()) {ledger.chatAt??=-Infinity;ledger.appearanceAt??=-Infinity;}
       const nextAppearances=restoreMap(recovered.appearances??[],MAX_APPEARANCES,appearance=>Boolean(sharedAppearance(appearance)));
       // Checkpoints written before an appearance was retired keep its replacement.
-      for (const [id,appearance] of nextAppearances) nextAppearances.set(id,sharedAppearance(appearance).id);
+      for (const [id,appearance] of nextAppearances) nextAppearances.set(id,permittedAppearance(id,appearance));
       const nextMovements=restoreMap(recovered.movements??[],MAX_APPEARANCES,movement=>movement==='beast');
       if(!Array.isArray(recovered.builds??[]) || (recovered.builds??[]).length>MAX_BUILDS)throw new Error('Invalid builds');
       const nextBuilds=new Map(),ownerCounts=new Map();
@@ -441,11 +446,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       const nextPlayers=restoreMap(recovered.players.map(player=>[player?.id,player]),maxPlayers,player=>record(player)
         && typeof player.name==='string' && player.name.length<=80 && (player.appearance===undefined || Boolean(sharedAppearance(player.appearance)))
         && point(player.position,3) && Number.isFinite(player.yaw)
+        && (player.vehicle == null || player.id===JEVICA_OWNER_USER_ID && vehicleKind(player.vehicle) && player.altitude<=0.1)
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       for (const player of nextPlayers.values()) {
-        if (player.appearance!==undefined) player.appearance=sharedAppearance(player.appearance).id;
-        player.appearance??=nextAppearances.get(player.id)??DEFAULT_SHARED_APPEARANCE;
+        player.appearance=permittedAppearance(player.id,player.appearance??nextAppearances.get(player.id));
         if(nextAppearances.has(player.id) && nextAppearances.get(player.id)!==player.appearance) throw new Error('Invalid player appearance');
         if(!nextAppearances.has(player.id))nextAppearances.set(player.id,player.appearance);
         const [east,north,ground]=player.position;

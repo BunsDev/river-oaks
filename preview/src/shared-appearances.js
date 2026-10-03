@@ -65,10 +65,18 @@ export const SHARED_APPEARANCES = [
 export const LEGACY_APPEARANCES = {'midnight-host-hybrid':'midnight-host-wolf'};
 
 export const DEFAULT_SHARED_APPEARANCE='jevica';
+export const DEFAULT_GUEST_APPEARANCE='sable-human';
+export const JEVICA_OWNER_USER_ID='user_01M40Y914S1H4EJCEHH91DKTAY';
 const appearanceById=new Map(SHARED_APPEARANCES.map(appearance=>[appearance.id,appearance]));
 export const sharedAppearance=id=>appearanceById.get(id)??(Object.hasOwn(LEGACY_APPEARANCES,id)?appearanceById.get(LEGACY_APPEARANCES[id]):null)??null;
 export const sharedCharacter=id=>characterById.get(id)??null;
 export const isBeastAppearance=id=>sharedAppearance(id)?.form==='beast';
+export const canUseAppearance=(userId,id)=>{
+  const appearance=sharedAppearance(id);
+  return Boolean(appearance) && (appearance.character!=='jevica' || userId===JEVICA_OWNER_USER_ID);
+};
+export const defaultAppearanceFor=userId=>userId===JEVICA_OWNER_USER_ID?DEFAULT_SHARED_APPEARANCE:DEFAULT_GUEST_APPEARANCE;
+export const permittedAppearance=(userId,id)=>canUseAppearance(userId,id)?sharedAppearance(id).id:defaultAppearanceFor(userId);
 
 // The one appearance for a character in a style and form. A missing or unknown
 // style falls back to the character's first, so switching person keeps form.
