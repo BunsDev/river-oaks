@@ -107,3 +107,19 @@ client, and concurrent build/wish/chat/movement commands. Set a target from
 those measurements and address the cold route-planning pause before expanding
 capacity. No such hosted soak or multi-region client run was available in
 this audit, so global readiness remains unverified.
+
+## Navigation follow-up — 3 October 2026
+
+The profiler traced much of the cold route cost to scanning all 30 boutique
+rooms for every collision sample. Room lookups now reject points outside the
+room's footprint and doorway bounds, then search only rooms in the relevant
+16 m spatial bucket. The full 635-test preview suite, including a comparison
+against an unindexed room scan across doorway and district samples, passed.
+
+In sequential local runs of `node server/performance-audit.js` without Redis,
+the shared-world initial-step p95 fell from 108–113 ms to 64–66 ms across
+1, 8, and 32 synthetic players; steps over 50 ms fell from 9–11 to 6 of 80.
+The same 160-step single-player reproduction's worst step fell from 872 ms to
+464 ms. These are machine-specific observations, and transport gaps vary with
+host load. The cold route pause still exceeds the 200 ms room tick target;
+this optimization does not satisfy the hosted, multi-region release gate above.

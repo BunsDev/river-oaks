@@ -33,7 +33,22 @@ export function createWalkingEnvironment(world, placedObjects = []) {
   const obstacles = polygons.map((ring) => ({ ring, minX: Math.min(...ring.map(p => p[0])) - RADIUS, maxX: Math.max(...ring.map(p => p[0])) + RADIUS, minZ: Math.min(...ring.map(p => p[1])) - RADIUS, maxZ: Math.max(...ring.map(p => p[1])) + RADIUS }));
   // Boutique interiors are free pockets inside footprints, entered through the mapped door.
   const rooms = storeRoomsFor(world);
-  const roomFor = (x, z, shrink) => rooms.length ? roomAt(rooms, x, -z, shrink) : null;
+  const roomBuckets = new Map(), roomBucketSize = 16;
+  for (const room of rooms) {
+    const [minX, minY, maxX, maxY] = room.lookupBounds;
+    for (let x = Math.floor(minX / roomBucketSize); x <= Math.floor(maxX / roomBucketSize); x++)
+      for (let y = Math.floor(minY / roomBucketSize); y <= Math.floor(maxY / roomBucketSize); y++) {
+        const key = `${x},${y}`;
+        if (!roomBuckets.has(key)) roomBuckets.set(key, []);
+        roomBuckets.get(key).push(room);
+      }
+  }
+  const roomFor = (x, z, shrink) => {
+    if (!rooms.length) return null;
+    if (shrink < 0) return roomAt(rooms, x, -z, shrink);
+    const key = `${Math.floor(x / roomBucketSize)},${Math.floor(-z / roomBucketSize)}`;
+    return roomAt(roomBuckets.get(key) ?? [], x, -z, shrink);
+  };
   const groundAt = (x, z) => roomFor(x, z, 0)?.floor ?? groundSurfaceHeight(world,x,z);
   // Match the rendered roof outline, including mapped nonrectangular buildings.
   // The 3.1m margin clears the 2.6m roof bulkhead plus the bubble's lower arc.

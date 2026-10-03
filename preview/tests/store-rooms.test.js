@@ -56,6 +56,28 @@ test('the walking model enters through the doorway, is stopped by the glass, and
   assert.equal(environment.isFree(...at((blocked.a0 + blocked.a1) / 2, (blocked.d0 + blocked.d1) / 2)), false, 'fixtures block walking');
 });
 
+test('indexed room lookup matches the full room scan across doors and the district', () => {
+  const environment = createWalkingEnvironment(world);
+  const fullScan = (east, north, shrink = 0) => {
+    for (const room of environment.rooms) {
+      const [a, d] = room.toLocal(east, north);
+      if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) continue;
+      if (d > shrink + 0.02 || d > -1.4 && Math.abs(a) < DOOR_HALF_WIDTH - shrink) return room;
+    }
+    return null;
+  };
+  const points = [];
+  for (const room of environment.rooms) for (const d of [-1.39, -1, -0.02, 0.03, room.depth / 2, room.depth - 0.01])
+    for (const a of [room.aMin + 0.01, -DOOR_HALF_WIDTH + 0.01, 0, DOOR_HALF_WIDTH - 0.01, room.aMax - 0.01]) points.push(room.toWorld(a, d));
+  const [west, south, east, north] = world.bounds_m;
+  for (let i = 0; i < 1000; i++) points.push([west + (east - west) * ((i * 0.61803398875) % 1), south + (north - south) * ((i * 0.41421356237) % 1)]);
+  for (const [x, y] of points) for (const shrink of [-2, 0, 0.35]) {
+    const expected = fullScan(x, y, shrink);
+    assert.equal(roomAt(environment.rooms, x, y, shrink), expected);
+    assert.equal(environment.roomAt(x, -y), fullScan(x, y), `room mismatch at ${x},${y}`);
+  }
+});
+
 test('worlds without stores plan no rooms and keep the original collision model', () => {
   const plain = { bounds_m: [-50, -50, 50, 50], buildings: [{ center: [0, 0, 0], size: [10, 10, 8], yaw_deg: 0 }] };
   assert.deepEqual(planStoreRooms(plain), []);
