@@ -271,7 +271,7 @@ function startMultiplayer() {
     getPose: () => walking?.getPose(),
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
-    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);playerAvatar?.setSharedIdentity(players.find(player=>player.id===selfId));buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],selfId);},
+    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);playerAvatar?.setSharedIdentity(players.find(player=>player.id===selfId));buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],selfId);buildControls?.loadInventory(players.length?selfId:null);},
     onPlaySolo: multiplayerMode === 'choice' ? () => switchPlayMode(playModeStorage, 'solo') : null,
   });
   host.dataset.multiplayer = 'joined';

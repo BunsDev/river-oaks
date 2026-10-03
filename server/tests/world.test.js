@@ -164,6 +164,57 @@ test('player creations are owned, spatially checked, shared, and durable',()=>{
   world.reset();assert.deepEqual(world.snapshot().builds,[]);
 });
 
+test('saved designs remain private, survive recovery, and place copies through the town rules',()=>{
+  const {world,now}=setup();
+  const position=[-12,3],placement={type:'build',action:'place',kind:'seat',finish:'rose',position,yaw:0};
+  const build=world.command('a',placement).item;
+  assert.equal(world.command('b',{type:'inventory',action:'save',buildId:build.id}).error,'not_build_owner');
+  const saved=world.command('a',{type:'inventory',action:'save',buildId:build.id});
+  assert.equal(saved.ok,true);
+  assert.deepEqual(saved.items,[saved.item]);
+  assert.deepEqual(world.command('b',{type:'inventory',action:'list'}).items,[]);
+  assert.equal(world.command('b',{type:'build',action:'place',templateId:saved.item.id,position,yaw:0}).error,'unknown_design');
+  assert.equal(world.command('a',{type:'build',action:'place',templateId:saved.item.id,position,yaw:0}).error,'blocked_build_site');
+  assert.equal(JSON.stringify(world.snapshot()).includes(saved.item.id),false,'public snapshots omit inventory');
+  assert.equal(world.command('a',{type:'build',action:'remove',id:build.id}).ok,true);
+  const copy=world.command('a',{type:'build',action:'place',templateId:saved.item.id,position,yaw:Math.PI/4});
+  assert.equal(copy.ok,true);assert.equal(copy.item.kind,'seat');assert.equal(copy.item.finish,'rose');
+  assert.notEqual(copy.item.id,build.id);
+  assert.deepEqual(world.command('a',{type:'inventory',action:'list'}).items,[saved.item],'placing does not consume a design');
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(world.checkpoint()),{ok:true});
+  assert.deepEqual(restored.command('a',{type:'inventory',action:'list'}).items,[saved.item]);
+  restored.reset();
+  assert.deepEqual(restored.command('a',{type:'inventory',action:'list'}).items,[saved.item],'inventory survives a town reset');
+  assert.equal(restored.command('b',{type:'inventory',action:'remove',id:saved.item.id}).error,'unknown_design');
+  assert.deepEqual(restored.command('a',{type:'inventory',action:'remove',id:saved.item.id}).items,[]);
+  assert.equal(restored.command('a',{type:'build',action:'place',templateId:saved.item.id,position,yaw:0}).error,'unknown_design');
+});
+
+test('invalid saved designs reject checkpoint recovery without changing the town',()=>{
+  const {world,now}=setup(),position=[-12,3];
+  const build=world.command('a',{type:'build',action:'place',kind:'lamp',finish:'teal',position,yaw:0}).item;
+  const design=world.command('a',{type:'inventory',action:'save',buildId:build.id}).item;
+  for(const invalid of [
+    {type:'inventory',action:'save',buildId:build.id,userId:'b'},
+    {type:'inventory',action:'remove',id:design.id,userId:'b'},
+    {type:'build',action:'place',templateId:design.id,kind:'lamp',position,yaw:0},
+  ])assert.equal(world.command('a',invalid).ok,false);
+  const original=world.checkpoint(),restored=createSharedWorld(data,{now});
+  for(const change of [
+    checkpoint=>{checkpoint.payload.inventory[0][1][0].kind='unknown';},
+    checkpoint=>{checkpoint.payload.inventory.push(['b',[{...checkpoint.payload.inventory[0][1][0]}]]);},
+    checkpoint=>{checkpoint.payload.inventory[0][1][0].id='design-999999';},
+  ]){
+    const forged=structuredClone(original);change(forged);
+    assert.equal(restored.restore(resign(forged)).error,'invalid_checkpoint');
+    assert.deepEqual(restored.snapshot().builds,[]);
+  }
+  const legacy=structuredClone(original);delete legacy.payload.inventory;
+  assert.deepEqual(restored.restore(resign(legacy)),{ok:true});
+  assert.deepEqual(restored.command('a',{type:'inventory',action:'list'}).items,[]);
+});
+
 test('build commands reject road, invalid position, and forged checkpoint records without mutation',()=>{
   const roads=[{points:[[-12,2],[-12,8]],width_m:3}];
   const blocked=createSharedWorld({...data,roads});blocked.join({userId:'a',name:'Alice'});
