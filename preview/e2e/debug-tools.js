@@ -36,6 +36,11 @@ async page => {
   const cursor = await debug(() => window.__riverDebug().cursor);
   check(Number.isFinite(cursor.ground) && typeof cursor.free === 'boolean', `The cursor reads ground height and walkability (${cursor.ground.toFixed(2)} m, ${cursor.free ? 'free' : 'blocked'})`);
   check((await page.locator('[data-debug-cursor]').textContent()).includes('Ground'), 'The cursor readout is shown in the panel');
+  await page.locator('[data-debug-copy]').click();
+  await page.waitForFunction(()=>document.querySelector('[data-debug-copy-status]').textContent.includes('position'));
+  const copied=await page.locator('[data-debug-copy-status]').textContent();
+  const coordinates=JSON.parse(copied.replace(/^Copied /,''));
+  check(Math.abs(coordinates.position[0]-cursor.x)<.001&&Math.abs(coordinates.position[1]+cursor.z)<.001,'Placement receipt uses world east/north coordinates');
 
   await page.locator('[data-debug-layer="inspector"]').check();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.8);
@@ -67,6 +72,25 @@ async page => {
   check(await page.locator('.debug-panel').isHidden() && await debug(() => !window.__riverDebug().root.visible), 'F3 closes the panel and hides the overlays');
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('river-oaks:debug', { detail: { open: true } })));
   check(await page.locator('.debug-panel').isVisible(), 'The desktop menu event opens the panel');
+  await page.locator('[data-debug-heavy] summary').click();
+  await page.keyboard.press('F3');
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.locator('#destination').selectOption({label:'Dior'});await page.locator('#visit-destination').click();
+  await page.locator('#enter-destination').click();
+  await page.locator('#panel-toggle').click();await page.keyboard.press('F3');
+  const indoorBox=await page.locator('#canvas-host canvas').boundingBox();
+  let indoor=null;
+  for(const [fx,fy] of [[.5,.8],[.6,.75],[.5,.65],[.65,.65]]){
+    await page.mouse.move(indoorBox.x+indoorBox.width*fx,indoorBox.y+indoorBox.height*fy);
+    indoor=await page.evaluate(()=>window.__riverDebug().cursor);if(indoor?.room)break;
+  }
+  check(Boolean(indoor?.room),'The placement cursor finds the boutique floor');
+  await page.locator('[data-debug-copy]').click();
+  await page.waitForFunction(()=>document.querySelector('[data-debug-copy-status]').textContent.includes('storeId'));
+  const roomReceipt=JSON.parse((await page.locator('[data-debug-copy-status]').textContent()).replace(/^Copied /,''));
+  check(roomReceipt.storeId&&roomReceipt.local.length===2&&roomReceipt.local.every(Number.isFinite),'Indoor coordinate receipt includes the room ID and local fixture coordinates');
+  await page.screenshot({path:'output/playwright/indoor-placement-coordinates.png'});
   check(errors.length === 0, `No page errors: ${errors.join(' | ')}`);
   return { checks, counts, cursor, selection };
 }

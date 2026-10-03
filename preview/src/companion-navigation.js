@@ -5,7 +5,8 @@ import {createWalkingEnvironment} from './walking.js';
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
 export function createCompanionNavigation(world,{placement=null}={}) {
-  let routeWorld=world;
+  // Match the renderer's fallback tree source when no observed stems exist.
+  let routeWorld=world.vegetation?.branch_supports?.length ? world : {...world,vegetation:{...world.vegetation,branch_supports:world.trees??[]}};
   if(placement) {
     const {position,yaw,scale=1,team=false}=placement,c=Math.cos(yaw),s=Math.sin(yaw);
     const spec=VEHICLES[placement.vehicle],halfLength=spec?.length/2,halfWidth=spec?.width/2;
@@ -19,7 +20,7 @@ export function createCompanionNavigation(world,{placement=null}={}) {
       const a=(b.yaw_deg??0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
       return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>[b.center[0]+x*b.size[0]/2*c-y*b.size[1]/2*s,b.center[1]+x*b.size[0]/2*s+y*b.size[1]/2*c]);
     })());
-    routeWorld={...world,collisionPolygons:[...buildings,...rings]};
+    routeWorld={...routeWorld,collisionPolygons:[...buildings,...rings]};
   }
   const nav=createResidentNavigation(routeWorld,{allowRoads:true});if(!nav)return null;
   const environment=createWalkingEnvironment(routeWorld);
@@ -73,8 +74,8 @@ export function createCompanionRouteService(world,placement) {
             worker=new Worker(new URL('./companion-navigation-worker.js',import.meta.url),{type:'module'});
             worker.onmessage=({data})=>{if(data.id===pending?.id)settle(data.route);};
             worker.onerror=()=>{stop();settle(null);};
-            const {scene,bounds_m,site_ring,roads,collisionPolygons,terrain,walkSurfaceOffset,stores,buildings,vegetation}=world;
-            worker.postMessage({type:'init',world:{scene,bounds_m,site_ring,roads,collisionPolygons,terrain,walkSurfaceOffset,stores,buildings,vegetation:{branch_supports:vegetation?.branch_supports??[]}},placement});
+            const {scene,bounds_m,site_ring,roads,collisionPolygons,terrain,walkSurfaceOffset,stores,buildings,vegetation,trees}=world;
+            worker.postMessage({type:'init',world:{scene,bounds_m,site_ring,roads,collisionPolygons,terrain,walkSurfaceOffset,stores,buildings,trees,vegetation:{branch_supports:vegetation?.branch_supports??[]}},placement});
           }
           worker.postMessage({type:'route',id,start,end});
         }catch{stop();settle(null);}
@@ -87,14 +88,15 @@ export function createCompanionRouteService(world,placement) {
 // Convert scene X/Z to the planner's east/north coordinates at this boundary.
 // Pending routes are fenced on manual holds, return commands and world resets.
 export function createCompanionRouteFollower(navigation,service) {
-  let path=[],target=null,pending=false,epoch=0,cooldown=0,waiting=false;
-  const reset=()=>{epoch++;pending=false;path=[];target=null;cooldown=0;waiting=false;};
+  let path=[],target=null,pending=false,epoch=0,cooldown=0,waiting=false,destinationPoint=null;
+  const reset=()=>{epoch++;pending=false;path=[];target=null;cooldown=0;waiting=false;destinationPoint=null;};
   return {
     reset,
     get waiting(){return waiting;},
+    get debug(){return {path:path.map(p=>[...p]),target:destinationPoint&&[...destinationPoint],pending,waiting};},
     update(position,destination,delta) {
       if(!destination){if(path.length||pending||target)reset();return null;}
-      const start=[position[0],-position[1]],end=[destination[0],-destination[1]];
+      const start=[position[0],-position[1]],end=[destination[0],-destination[1]];destinationPoint=end;
       cooldown=Math.max(0,cooldown-Math.min(.08,Math.max(0,delta)));
       if(distance(start,end)<.14){path=[];waiting=false;return null;}
       // Local adjustments stay responsive. Jev may follow her across roads and plazas,

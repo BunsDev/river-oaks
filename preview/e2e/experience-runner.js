@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['sable', 'experience', 'sidebar', 'ui-polish', 'hud-and-quality', 'auto-mode', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
+const suite = ['bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'ui-polish', 'hud-and-quality', 'auto-mode', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
 const names = process.argv.slice(2);
 if (names.some(name => !suite.includes(name))) throw new Error(`Choose harnesses from: ${suite.join(', ')}`);
 process.env.VITE_SINGLE_PLAYER = 'true';
@@ -42,7 +42,7 @@ try {
       process.exitCode = 1;
     } finally {
       await context.close();
-      await writeFile(join(root, 'data/reports/experience.json'), JSON.stringify({ createdAt: new Date().toISOString(), results }, null, 2) + '\n');
+      await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_E2E_REPORT ?? 'experience.json'), JSON.stringify({ createdAt: new Date().toISOString(), results }, null, 2) + '\n');
     }
   }
 } finally {

@@ -15,8 +15,9 @@ export const poseFeet = pose => [pose.position[0], -pose.position[2]];
 // Where the preview sits: under the pointer when it points at the ground
 // within reach (clamped to reach along the same line otherwise), else a few
 // steps ahead. ray: { origin: [x, y, z], direction: [x, y, z] } in scene space.
-export function builderTarget(pose, ray = null) {
-  const feet = poseFeet(pose), reach = BUILD_REACH - REACH_MARGIN;
+export function builderTarget(pose, ray = null, {grid = .1} = {}) {
+  grid = [.1, .5, 1].includes(grid) ? grid : .1;
+  const feet = poseFeet(pose), reach = BUILD_REACH - Math.max(REACH_MARGIN, grid / Math.SQRT2);
   let east = feet[0] - Math.sin(pose.yaw) * BUILD_AHEAD, north = feet[1] + Math.cos(pose.yaw) * BUILD_AHEAD;
   if (ray && ray.direction[1] < -1e-3) {
     const t = (pose.ground - ray.origin[1]) / ray.direction[1];
@@ -26,7 +27,7 @@ export function builderTarget(pose, ray = null) {
       if (away > reach) { east = feet[0] + (east - feet[0]) * reach / away; north = feet[1] + (north - feet[1]) * reach / away; }
     }
   }
-  return [snap(east), snap(north)];
+  return [east, north].map(value => snap(Math.round(value / grid) * grid));
 }
 
 // Everything the town checks for a place or a move, as one verdict.

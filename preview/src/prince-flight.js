@@ -26,14 +26,17 @@ export function stepPrinceFlight(state,target,environment,delta,{landing=false,p
     state.avoidAge=.12;state.avoidance=null;
     const horizon=Math.min(gap,Math.max(1.2,Math.min(5,speed*.85)));
     const direction=desired.map(v=>v/(speed||1));
-    const clearDirection=dir=>{
+    state.sensing={origin:[...state.position],target:[...destination],rays:[]};
+    const clearDirection=(dir,kind='candidate')=>{
       const steps=Math.ceil(horizon/.22);
       for(let i=1;i<=steps;i++){
         const p=state.position.map((v,k)=>v+dir[k]*horizon*i/steps);
-        if(!environment.canFly(p[0],p[1],p[2]))return false;
-      }return true;
+        if(!environment.canFly(p[0],p[1],p[2])){state.sensing.rays.push({kind,end:p,clear:false});return false;}
+      }state.sensing.rays.push({kind,end:state.position.map((v,k)=>v+dir[k]*horizon),clear:true});return true;
     };
-    if(!clearDirection(direction)) {
+    const targetClear=clearDirection(direction,'target'),momentum=Math.hypot(...state.velocity);
+    const momentumClear=momentum<.5||clearDirection(state.velocity.map(v=>v/momentum),'momentum');
+    if(!targetClear||!momentumClear) {
       let best=-Infinity;
       for(const turn of [0,-.55,.55,-1.05,1.05])for(const lift of [.5,0,1]) {
         const c=Math.cos(turn),s=Math.sin(turn),candidate=[direction[0]*c+direction[2]*s,Math.max(direction[1],lift),direction[2]*c-direction[0]*s];
