@@ -13,7 +13,7 @@ async page => {
    await page.bringToFront();
    check(await page.locator('.app-shell').evaluate(node=>node.inert),'Disconnected game is locked');
    check(await page.locator('#multiplayer-title').evaluate(node=>node===document.activeElement),'Disconnect focuses the recovery dialog title');
-   check(!await page.getByRole('link',{name:'Sign in with Google',includeHidden:true}).isVisible(),'Authenticated recovery hides the sign-in link');
+   check(!await page.getByRole('link',{name:'Sign in with GitHub',includeHidden:true}).isVisible(),'Authenticated recovery hides the sign-in link');
    await page.keyboard.press('Tab');
    check(await page.getByRole('button',{name:'Try again',exact:true}).evaluate(node=>node===document.activeElement),'Forward Tab reaches the first available recovery action');
    await page.keyboard.press('Shift+Tab');
@@ -29,12 +29,11 @@ async page => {
    check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile recovery dialog fits the viewport');
    await page.screenshot({path:'output/playwright/multiplayer-recovery-mobile.png'});
    await page.keyboard.press('Shift+Tab');await page.keyboard.press('Enter');
-   await page.getByRole('link',{name:'Continue with Google'}).waitFor({state:'visible'});
+   await page.getByRole('link',{name:'Continue with GitHub'}).waitFor({state:'visible'});
    check(await page.locator('#access-title').evaluate(node=>node===document.activeElement),'Signed-out gate starts with accessible title focus');
    await page.keyboard.press('Tab');
-   check(await page.getByRole('link',{name:'Continue with Google'}).evaluate(node=>node===document.activeElement),'Sign-in link is reachable by keyboard');
-   await page.keyboard.press('Tab');
-   check(await page.getByRole('link',{name:'Continue with GitHub'}).evaluate(node=>node===document.activeElement),'Anonymous gate exposes both social sign-in actions');
+   check(await page.getByRole('link',{name:'Continue with GitHub'}).evaluate(node=>node===document.activeElement),'GitHub sign-in link is reachable by keyboard');
+   check(!await page.getByRole('link',{name:'Continue with Google'}).count(),'Anonymous gate exposes only GitHub sign-in');
    await page.screenshot({path:'output/playwright/multiplayer-sign-in-mobile.png'});
    if(errors.length)throw new Error(errors.join('; '));
    return {passed:true,checks,errors};

@@ -7,7 +7,7 @@ const STATE_TTL = 20 * 60_000;
 const SESSION_TTL = 7 * 24 * 60 * 60_000;
 const MAX_STATES = 1_000;
 const MAX_SESSIONS = 10_000;
-const PROVIDERS = { google: 'GoogleOAuth', github: 'GitHubOAuth' };
+const PROVIDERS = { github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = (value) => createHash('sha256').update(value).digest('base64url');
 const validIssuer = (issuer) => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
@@ -125,7 +125,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     cleanup();
     try {
       if (path === '/auth/login') {
-        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'google';
+        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
         const provider = PROVIDERS[choice];
         if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
         if (states.size >= MAX_STATES) { json(res, 503, { error: 'auth_busy' }); return true; }

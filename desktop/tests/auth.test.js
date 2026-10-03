@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deviceSignIn, exchangeDesktopSession } from '../auth.js';
 
-test('desktop device flow opens the system browser and accepts only Google or GitHub', async () => {
+test('desktop device flow opens the system browser and accepts only GitHub', async () => {
   const calls = [], replies = [
     Response.json({ device_code: 'private-code', user_code: 'ABCD-EFGH', verification_uri_complete: 'https://signin.workos.com/device?code=ABCD-EFGH', expires_in: 300, interval: 5 }),
     Response.json({ error: 'authorization_pending' }, { status: 400 }),
@@ -18,7 +18,11 @@ test('desktop device flow opens the system browser and accepts only Google or Gi
   const emailOnly = [replies[0] = Response.json({ device_code: 'private-code', user_code: 'ABCD-EFGH', verification_uri_complete: 'https://signin.workos.com/device', expires_in: 300, interval: 5 }),
     Response.json({ authentication_method: 'MagicAuth', refresh_token: 'refresh-token' })];
   await assert.rejects(deviceSignIn({ clientId: 'client_test', fetcher: async () => emailOnly.shift(),
-    openBrowser: async () => true, sleep: async () => {}, now: () => 0 }), /Google or GitHub/);
+    openBrowser: async () => true, sleep: async () => {}, now: () => 0 }), /GitHub/);
+  const google = [Response.json({ device_code: 'private-code', user_code: 'ABCD-EFGH', verification_uri_complete: 'https://signin.workos.com/device', expires_in: 300, interval: 5 }),
+    Response.json({ authentication_method: 'GoogleOAuth', refresh_token: 'refresh-token' })];
+  await assert.rejects(deviceSignIn({ clientId: 'client_test', fetcher: async () => google.shift(),
+    openBrowser: async () => true, sleep: async () => {}, now: () => 0 }), /GitHub/);
 });
 
 test('desktop exchange sends the refresh credential only to its own origin', async () => {

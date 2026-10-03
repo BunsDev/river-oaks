@@ -3,8 +3,8 @@ async page => {
   const checks = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   await page.goto(origin, { waitUntil: 'commit' });
-  await page.getByRole('link', { name: 'Continue with Google' }).waitFor({ state: 'visible' });
-  check(await page.getByRole('link', { name: 'Continue with GitHub' }).isVisible(), 'Anonymous players see only Google and GitHub sign-in');
+  await page.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
+  check(!await page.getByRole('link', { name: 'Continue with Google' }).count(), 'Anonymous players see only GitHub sign-in');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Anonymous players cannot start either play mode');
   await page.route('**/auth/session', route => route.fulfill({ json: {
     authenticated: true, user: { id: 'pending', name: 'Pending' }, csrfToken: 'fixture-csrf',

@@ -23,7 +23,7 @@ async function checkAccess() {
     if (!session.authenticated) {
       if (entered) location.reload();
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false;
-      message.textContent = 'Sign in with Google or GitHub to request a place.';
+      message.textContent = 'Sign in with GitHub to request a place.';
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
       gateState = 'signed-out';
       return;

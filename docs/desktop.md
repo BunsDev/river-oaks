@@ -1,6 +1,6 @@
 # River Oaks desktop
 
-The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through Google or GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://sim.jev.works/`; its browser profile retains the approved session until sign-out or expiry.
+The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://sim.jev.works/`; its browser profile retains the approved session until sign-out or expiry.
 
 ## Live development
 
@@ -53,6 +53,6 @@ npm run build
 RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
-The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS Google or GitHub account after Production providers are configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS GitHub account after the Production provider is configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
 
 Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.

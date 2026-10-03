@@ -1,6 +1,6 @@
 const DEVICE_URL = 'https://api.workos.com/user_management/authorize/device';
 const TOKEN_URL = 'https://api.workos.com/user_management/authenticate';
-const METHODS = new Set(['GoogleOAuth', 'GitHubOAuth']);
+const METHODS = new Set(['GitHubOAuth']);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /** Public-client device flow: credentials stay in the system browser. */
@@ -23,7 +23,7 @@ export async function deviceSignIn({ clientId, openBrowser, fetcher = fetch, sle
     const data = await response.json();
     if (response.ok) {
       if (!METHODS.has(data.authentication_method) || typeof data.refresh_token !== 'string')
-        throw new Error('Sign in with Google or GitHub to play.');
+        throw new Error('Sign in with GitHub to play.');
       return data.refresh_token;
     }
     if (data.error === 'slow_down') interval++;

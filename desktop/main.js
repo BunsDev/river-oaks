@@ -33,7 +33,7 @@ async function loadGame() {
     if (!current?.authenticated) {
       const refreshToken = await deviceSignIn({ clientId, openBrowser: async (url, code) => {
         const { response } = await dialog.showMessageBox({ type: 'info', message: 'Sign in to River Oaks',
-          detail: `A browser will open for Google or GitHub sign-in. Confirm code ${code} there to continue.`,
+          detail: `A browser will open for GitHub sign-in. Confirm code ${code} there to continue.`,
           buttons: ['Open browser', 'Quit'], defaultId: 0, cancelId: 1 });
         if (response !== 0) return false;
         await shell.openExternal(url); return true;

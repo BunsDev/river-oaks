@@ -5,7 +5,7 @@ import { WorkOS } from '@workos-inc/node';
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
-const PROVIDERS = { google: 'GoogleOAuth', github: 'GitHubOAuth' };
+const PROVIDERS = { github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
 const validIssuer = issuer => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
@@ -217,7 +217,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     let phase = path;
     try {
       if (path === '/auth/login') {
-        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'google';
+        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
         const provider = PROVIDERS[choice];
         if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
         const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider, clientId, redirectUri: `${base}/auth/callback` });

@@ -6,12 +6,11 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
   const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
-  const login=element('a','Sign in with Google','multiplayer-primary');login.href='/auth/login?provider=google';login.hidden=true;
-  const githubLogin=element('a','Sign in with GitHub','multiplayer-primary');githubLogin.href='/auth/login?provider=github';githubLogin.hidden=true;
+  const login=element('a','Sign in with GitHub','multiplayer-primary');login.href='/auth/login?provider=github';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
   const playSolo=element('button','Play single player');playSolo.type='button';playSolo.hidden=!onPlaySolo;
   const gateLogout=element('button','Sign out');gateLogout.type='button';gateLogout.hidden=true;
-  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,githubLogin,retry,playSolo,gateLogout);gate.append(card);document.body.append(gate);
+  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,playSolo,gateLogout);gate.append(card);document.body.append(gate);
   const panel=element('section',null,'multiplayer-roster');panel.setAttribute('aria-label','Players in town');
   const summary=element('strong','Connecting'),list=element('div'),notice=element('p');notice.setAttribute('role','status');
   const logout=element('button','Sign out');logout.type='button';
@@ -40,7 +39,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   };
   gate.addEventListener('keydown',event=>{
     if(event.key!=='Tab')return;
-    const actions=[login,githubLogin,retry,playSolo,gateLogout].filter(node=>!node.hidden&&!node.disabled);
+    const actions=[login,retry,playSolo,gateLogout].filter(node=>!node.hidden&&!node.disabled);
     const first=actions[0],last=actions.at(-1);
     if(!first){event.preventDefault();title.focus({preventScroll:true});}
     else if(event.shiftKey&&[title,first].includes(document.activeElement)){event.preventDefault();last.focus();}
@@ -88,11 +87,11 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   const clearPending=()=>{for(const request of pending.values()){clearTimeout(request.timer);request.reject(new Error('Disconnected. Your action was not confirmed.'));}pending.clear();};
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5)));};
   async function connect(){
-    if(stopped||connecting||connected)return;connecting=true;retry.hidden=true;login.hidden=githubLogin.hidden=true;
+    if(stopped||connecting||connected)return;connecting=true;retry.hidden=true;login.hidden=true;
     setStatus('Connecting to the town…');
     try{
       const session=await api('/auth/session');
-      if(!session.authenticated){identity=null;login.hidden=githubLogin.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
+      if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
       identity=session.user;csrfToken=session.csrfToken;
       const access=await api('/api/multiplayer/ticket',{method:'POST'});moderator=access.moderator;
       const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
