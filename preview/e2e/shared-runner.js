@@ -115,7 +115,12 @@ try {
         console.log(`Passed ${name}`);
       } catch (error) {
         interruption.signal.throwIfAborted();
-        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, result });
+        const diagnostics = await page.evaluate(() => ({
+          town: document.querySelector('#multiplayer-status')?.textContent,
+          player: document.querySelector('#player-status')?.textContent,
+          connected: window.__riverMultiplayer?.().connected,
+        })).catch(() => null);
+        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, diagnostics, result });
         await page.screenshot({ path: join(root, `output/playwright/shared-${name}-failure.png`) }).catch(() => {});
         console.error(`Failed ${name}: ${error.stack}`);
         if (pageErrors.length) console.error('Browser errors:', pageErrors);

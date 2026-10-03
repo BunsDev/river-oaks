@@ -89,6 +89,7 @@ if (!playModeStorage) try { playModeStorage = window.sessionStorage; } catch { /
 const playMode = activePlayMode(playModeStorage, location.search);
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
+let lastSoftwareDraw = -Infinity;
 
 const scene = new THREE.Scene();
 // Keep geometry, skinning and simulation intact without compiling every PBR
@@ -624,8 +625,13 @@ function render(now) {
     storefrontReflections.update(now, reflectionPosition);
   }
   debugTools?.update(now);
-  renderer.info.reset();
-  pipeline.render(delta);
+  // llvmpipe draws both browser clients on CPU. Keep simulation and transport
+  // updating every frame while capping only acceptance-profile draw work.
+  if (!softwareAcceptance || now - lastSoftwareDraw >= 100) {
+    lastSoftwareDraw = now;
+    renderer.info.reset();
+    pipeline.render(delta);
+  }
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);

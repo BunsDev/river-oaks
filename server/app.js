@@ -139,13 +139,15 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
       if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,snapshot,{snapshot:true});
     }
   },50);loop.unref();
+  // A busy renderer can delay browser pongs; allow a full 30 seconds before
+  // treating a missing response as a dead connection.
   const heartbeat=setInterval(()=>{
     for(const connection of connections.values()) {
       if(!connection.alive){connection.ws.terminate();continue;}
       connection.alive=false;connection.ws.ping();
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
-  },15000);heartbeat.unref();
+  },30000);heartbeat.unref();
   return {server,disconnectUser,async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);
     for(const timer of departures.values())clearTimeout(timer);

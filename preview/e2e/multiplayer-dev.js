@@ -10,6 +10,8 @@ async page => {
     await tab.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});
     await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined', null, { timeout: 60000 });
     await tab.waitForFunction(() => window.__riverMultiplayer?.().connected, null, { timeout: 60000 });
+    await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true'
+      && document.querySelector('.character-picker')?.checkVisibility(), null, { timeout: 60000 });
   };
   try {
   await join(page); await join(second);
