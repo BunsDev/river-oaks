@@ -19,8 +19,27 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:server
+      - run: npm run test:desktop
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reflections:webgl
+      - name: Shared town journeys (local identities and authenticated fixtures)
+        id: shared
+        # Mesa under Xvfb avoids Chromium headless-shell's SwiftShader stalls.
+        # Keep real scene/transport assertions with the explicit CPU render budget.
+        env:
+          RIVER_OAKS_SHARED_SOFTWARE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
+        run: xvfb-run -a npm run test:shared
+      - name: Shared town failure evidence
+        if: ${{ failure() && steps.shared.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: shared-town-failure
+          retention-days: 7
+          path: |
+            data/reports/shared-experience.json
+            output/playwright/shared-*-failure.png
       - run: npm run build
   verify:
     runs-on: ubuntu-latest

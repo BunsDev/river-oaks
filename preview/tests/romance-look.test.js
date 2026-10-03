@@ -16,14 +16,17 @@ test('every selectable character has a stable ID, shipped rig, and reference for
     assert.ok(existsSync(new URL(`../public/assets/characters/${character.rig??character.id}.glb`,import.meta.url))||character.id==='jevica');
     if(character.reference)assert.ok(existsSync(new URL(`../public${character.reference}`,import.meta.url)),character.reference);
   }
-  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='midnight-host').map(character=>character.variant),['human','hybrid','wolf']);
-  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='starlight-maker').map(character=>character.variant),['formal','explorer','noir']);
-  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.identity==='forest-aristocrat').map(character=>[character.variant,character.rig]),[['masculine','man-casual'],['feminine','jevica']]);
-  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.kind==='fox'||character.kind==='lynx').map(character=>character.kind),['fox','lynx']);
+  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.character==='aurel').map(character=>[character.id,character.form]),[['man-tailored','human'],['midnight-host-wolf','beast']]);
+  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.character==='kai').map(character=>[character.variant,character.form]),
+    [['formal','human'],['formal','beast'],['explorer','human'],['explorer','beast'],['noir','human'],['noir','beast']]);
+  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.character==='silvan').map(character=>[character.variant,character.form,character.rig]),
+    [['masculine','human','man-casual'],['masculine','beast','man-casual'],['feminine','human','jevica'],['feminine','beast','jevica']]);
+  assert.deepEqual(SHARED_APPEARANCES.filter(character=>character.form==='beast').map(character=>character.kind),
+    ['fox','fox','wolf','panther','wolf','lynx','snow-leopard','snow-leopard','snow-leopard','deer','deer']);
 });
 
 test('anthropomorphic details attach to owned bones, animate, and release their resources',async()=>{
-  for(const profile of ['woman-casual','man-casual','woman-daywear','midnight-host-wolf']){
+  for(const profile of SHARED_APPEARANCES.filter(character=>character.form==='beast').map(character=>character.id)){
     const appearance=sharedAppearance(profile),source=await loadCharacterRig(appearance.rig??profile),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
     const root=new THREE.Group();root.add(avatar.model);
     const originalColors=[...source.scene.getObjectsByProperty('isMesh',true)].map(mesh=>mesh.material.color?.getHex());
@@ -49,25 +52,32 @@ test('anthropomorphic details attach to owned bones, animate, and release their 
   }
 });
 
-test('reference outfits and both midnight host identities attach to moving bones and dispose',async()=>{
+test('reference outfits attach to moving bones in both forms and dispose',async()=>{
   const expected={
     'woman-casual':['Sable ivory mini dress'],
+    'sable-human':['Sable ivory mini dress'],
     'man-casual':[],
+    'rowan-human':[],
     'woman-tailored':['Vesper velvet wrap skirt'],
+    'vesper-beast':['Vesper velvet wrap skirt'],
     'man-tailored':[],
-    'midnight-host-hybrid':['wolf ears'],
+    'midnight-host-wolf':[],
     'man-workwear':[],
+    'kai-formal-beast':[],
     'kai-explorer':[],
+    'kai-explorer-beast':[],
     'kai-noir':[],
+    'kai-noir-beast':[],
     'forest-aristocrat':['Forest aristocrat drape'],
+    'forest-aristocrat-beast':['Forest aristocrat drape'],
     'forest-aristocrat-feminine':['Forest aristocrat drape'],
+    'forest-aristocrat-feminine-beast':['Forest aristocrat drape'],
   };
   for(const [profile,names] of Object.entries(expected)){
     const appearance=sharedAppearance(profile),source=await loadCharacterRig(appearance.rig??profile);
     const avatar=instantiateAvatar(source,{targetHeight:source.height,id:`test-${profile}`}),root=new THREE.Group();root.add(avatar.model);
     const look=createRomanceLook(avatar,root,appearance);
     for(const name of names)assert.ok(root.getObjectByName(name),`${profile}: ${name}`);
-    if(appearance.identity==='midnight-host'&&appearance.variant==='hybrid')assert.ok(root.getObjectByName('wolf tail'));
     const attachments=[];for(const boneName of ['head','spine_03','pelvis']){
       const bone=avatar.model.getObjectByName(boneName);
       attachments.push(...bone.children.filter(child=>child.isGroup));

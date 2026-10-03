@@ -1,9 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { WorkOS } from '@workos-inc/node';
+import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
-const STATE_TTL = 10 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
+const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
@@ -150,7 +151,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       // SDK authentication has verified the seal and JWT signature before decode.
       const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
       if (!Number.isFinite(claims.exp) || claims.sub !== record.userId || claims.sid !== record.sessionId
-        || claims.iss !== `https://api.workos.com/user_management/${clientId}`) return null;
+        || !validWorkOSIssuer(claims.iss)
+        || claims.client_id !== clientId) return null;
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
       const name = [result.user.firstName, result.user.lastName].filter(part => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
@@ -208,6 +210,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
     const method = path === '/auth/logout' ? 'POST' : 'GET';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
+    let phase = path;
     try {
       if (path === '/auth/login') {
         const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider: 'authkit', clientId, redirectUri: `${base}/auth/callback` });
@@ -226,15 +229,24 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         }
         const pending = decode(await transaction({ op: 'state-take', id: digest(state) }));
         if (!pending || pending.expiresAt <= now()) { json(res, 400, { error: 'invalid_auth_callback' }); return true; }
+        phase = 'callback.exchange';
         const result = await sdk.userManagement.authenticateWithCode({ clientId, code, codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
         if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return true; }
+        phase = 'callback.session';
         const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
         const verified = await session.authenticate();
-        if (!validId(verified.sessionId) || !validId(verified.user?.id)) { json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!validId(verified.sessionId) || !validId(verified.user?.id)) {
+          logSessionRejection(verified, {}, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         const record = { sessionId: verified.sessionId, userId: verified.user.id, generation: token(), csrfToken: token(),
           cookieHash: digest(result.sealedSession), sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
-        if (!identity(verified, record)) { json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!identity(verified, record)) {
+          logSessionRejection(verified, record, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         if (!enabled) throw new Error('Auth closed');
+        phase = 'callback.store';
         const stored = await transaction({ op: 'session-put', record, ttl: SESSION_TTL });
         if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
@@ -257,7 +269,12 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const url = sdk.userManagement.getLogoutUrl({ sessionId: record.sessionId, returnTo: `${base}/` });
         json(res, 200, { url });
       }
-    } catch { json(res, 503, { error: 'auth_unavailable' }); }
+    } catch (error) {
+      console.error('Authentication unavailable', {
+        phase, name: error?.name, status: error?.status ?? error?.statusCode ?? error?.response?.status,
+      });
+      json(res, 503, { error: 'auth_unavailable' });
+    }
     return true;
   }
   return {

@@ -181,3 +181,4 @@ unreal/**/Content/Data/district.json
 .env.*
 !.env.example
 .vercel
+.env*

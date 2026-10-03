@@ -1,33 +1,44 @@
 async page => {
   const origin='http://127.0.0.1:5180',checks=[],errors=[];
-  page.setDefaultTimeout(45000);
+  page.setDefaultTimeout(45000);page.setDefaultNavigationTimeout(60000);
   const check=(condition,label)=>{if(!condition)throw new Error(label);checks.push(label);};
   const ready=async p=>{await p.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host').dataset.playerReady==='true',null,{timeout:60000});};
   page.on('pageerror',error=>errors.push('Alice: '+error.message));
   await page.context().addCookies([{name:'fixture_session',value:'alice',url:origin}]);
   await page.setViewportSize({width:1440,height:1000});
-  await page.goto(origin+'/?motion-debug=1');await ready(page);
+  await page.goto(origin+'/?motion-debug=1',{waitUntil:'commit'});await ready(page);
   const otherContext=await page.context().browser().newContext({viewport:{width:1440,height:1000}});
   await otherContext.addCookies([{name:'fixture_session',value:'bob',url:origin}]);
-  const other=await otherContext.newPage();other.setDefaultTimeout(45000);other.on('pageerror',error=>errors.push('Bob: '+error.message));
+  const other=await otherContext.newPage();other.setDefaultTimeout(45000);other.setDefaultNavigationTimeout(60000);other.on('pageerror',error=>errors.push('Bob: '+error.message));
   try {
-    await other.goto(origin+'/?motion-debug=1');await ready(other);
+    await other.goto(origin+'/?motion-debug=1',{waitUntil:'commit'});await ready(other);
     await page.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='bob'&&player.ready),null,{timeout:60000});
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready),null,{timeout:60000});
     await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
-    check(await page.locator('#player-appearance').isVisible(),'Shared appearance picker is available');
+    check(await page.locator('.character-picker').isVisible(),'Shared appearance picker is available');
     check(await page.evaluate(()=>document.querySelector('.force-controls').hidden&&document.querySelector('.vehicle-garage').hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
     check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the solo coachman');
     await page.locator('#canvas-host').focus();await page.keyboard.press('KeyT');
     check(await page.evaluate(()=>!window.__riverForce().enabled),'Force shortcut cannot bypass shared-mode gating');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.length===2),'Two accounts share the roster and rendered avatars');
-    await page.locator('#player-appearance').selectOption('woman-tailored');
+    await page.locator('input[name=player-character][value=vesper]').check();
+    await page.locator('input[name=player-form][value=human]').check();
     await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='woman-tailored');
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready&&player.appearance==='woman-tailored'));
     check(await other.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice').appearance==='woman-tailored'),'A peer sees the selected avatar');
-    await page.reload();await ready(page);
-    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-tailored');
-    check(await page.locator('#player-appearance').inputValue()==='woman-tailored','Appearance survives reconnect');
+    // Person and form chosen in quick succession reach the town as the final look.
+    await page.locator('input[name=player-character][value=kai]').check();
+    await page.locator('input[name=player-form][value=beast]').check();
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='kai-formal-beast',null,{timeout:15000});
+    check(!/wait a moment/i.test(await page.locator('#player-status').textContent()),'Quick person-then-form choices settle without a cooldown error');
+    await page.locator('#player-beast-movement').click();
+    await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.movement==='beast');
+    await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready&&player.appearance==='kai-formal-beast'&&player.movement==='beast'&&player.beastMotion>.9));
+    check(true,'A peer sees beast movement on the shared beast form');
+    await page.reload({waitUntil:'commit'});await ready(page);
+    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='kai-formal-beast');
+    check(await page.locator('input[name=player-character][value=kai]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Appearance survives reconnect');
+    check(await page.locator('#player-beast-movement').getAttribute('aria-pressed')==='true','Beast movement belongs to the account and survives reconnect');
     await page.bringToFront();
     const openPanel=page.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await openPanel.isVisible())await openPanel.click();
@@ -56,7 +67,7 @@ async page => {
     await page.locator('#wish-choice').selectOption('invisibility');await page.locator('#wish-grant').click();
     await page.waitForFunction(()=>document.querySelector('.wish-card').dataset.phase==='trouble',null,{timeout:30000});
     check(await page.evaluate(()=>window.__riverWishes().some(person=>person.wish?.kind==='invisibility'&&person.skin===0&&person.clothes>0)),'Invisible resident keeps visible clothing in shared play');
-    await other.reload();await ready(other);
+    await other.reload({waitUntil:'commit'});await ready(other);
     await other.waitForFunction(id=>window.__riverMultiplayer().snapshot.locals.find(local=>local.id===id)?.wish?.kind==='invisibility',resident);
     check(true,'Reload rejoins the existing town and keeps its active wishes');
     await page.locator('#wish-undo').click();
@@ -84,5 +95,5 @@ async page => {
     check(await other.getByRole('link',{name:'Sign in with WorkOS'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
     check(!errors.length,'No uncaught errors: '+errors.join('; '));
     return {passed:true,checks,errors,scope:'Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance.'};
-  } catch(error) {return {passed:false,checks,errors,failure:error.message};} finally {await otherContext.close();await page.goto('about:blank');}
+  } catch(error) {return {passed:false,checks,errors,failure:error.stack};} finally {await otherContext.close();}
 }

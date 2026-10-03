@@ -6,7 +6,7 @@ import { measureHead } from './head-fit.js';
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
-  if(!['woman-casual','man-casual','woman-tailored'].includes(appearance?.id)&&!['midnight-host','starlight-maker','forest-aristocrat'].includes(appearance?.identity))return {dispose(){}};
+  if(!['sable','rowan','vesper','aurel','kai','silvan'].includes(appearance?.character))return {dispose(){}};
   const resources=new Set(),materials=new Set(),attachments=new Set(),model=avatar.model;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
@@ -24,7 +24,7 @@ export function createReferenceStyle(avatar,appearance){
     bone.add(group);attachments.add(group);return group;
   };
   const gold=material('#d4ad70',{metalness:.83,roughness:.23}),darkGold=material('#9d794b',{metalness:.68,roughness:.34});
-  const leather=material(appearance.id==='man-casual'?'#574237':appearance.id==='woman-tailored'?'#48232c':appearance.identity==='midnight-host'?'#211d20':appearance.variant==='explorer'?'#513e32':'#ede1d1',{roughness:.62});
+  const leather=material(appearance.character==='rowan'?'#574237':appearance.character==='vesper'?'#48232c':appearance.character==='aurel'?'#211d20':appearance.variant==='explorer'?'#513e32':'#ede1d1',{roughness:.62});
   const face=aligned('head'),torso=aligned('spine_03'),pelvis=aligned('pelvis');
   function wavyHair(color,number){
     const hair=material(color,{roughness:.78,sheen:1,sheenColor:new THREE.Color(color)});
@@ -44,8 +44,8 @@ export function createReferenceStyle(avatar,appearance){
     box(holder,bag,[x,y,z],large?[.22,.19,.095]:[.17,.16,.075],.018);
     box(holder,bag,[x,y+.047,z+.05],large?[.20,.084,.015]:[.16,.07,.014],.01);
     box(holder,gold,[x,y+.018,z+.061],[.028,.024,.009],.004);
-    tube(holder,gold,appearance.id==='woman-casual'?[[side*.10,.30,.012],[side*.16,.22,.093],[side*.21,.04,.11],[x,y+.075,z]]:[[side*.10,.28,-.025],[side*.15,.17,.025],[side*.21,.04,.07],[x,y+.075,z]],.004);
-    tube(holder,leather,appearance.id==='woman-casual'?[[side*.10,.30,.002],[side*.16,.22,.080],[side*.21,.04,.098]]:[[side*.10,.28,-.04],[side*.15,.17,.015],[side*.21,.04,.055]],.009);
+    tube(holder,gold,appearance.character==='sable'?[[side*.10,.30,.012],[side*.16,.22,.093],[side*.21,.04,.11],[x,y+.075,z]]:[[side*.10,.28,-.025],[side*.15,.17,.025],[side*.21,.04,.07],[x,y+.075,z]],.004);
+    tube(holder,leather,appearance.character==='sable'?[[side*.10,.30,.002],[side*.16,.22,.080],[side*.21,.04,.098]]:[[side*.10,.28,-.04],[side*.15,.17,.015],[side*.21,.04,.055]],.009);
   }
   function dressSkirt(color,{wrap=false,slit=false}={}){
     const surface=material(color,wrap?{roughness:.9,sheen:1,sheenColor:new THREE.Color('#a94d68'),side:THREE.DoubleSide}:{roughness:.46,sheen:.32,side:THREE.DoubleSide});
@@ -98,7 +98,7 @@ export function createReferenceStyle(avatar,appearance){
     }
   }
   function boots(color,{rugged=false}={}){
-    const upper=material(color,{roughness:.74}),sole=material(['midnight-host','starlight-maker'].includes(appearance.identity)?'#171618':rugged?'#332f2b':'#3b2028',{roughness:.86});
+    const upper=material(color,{roughness:.74}),sole=material(['aurel','kai'].includes(appearance.character)?'#171618':rugged?'#332f2b':'#3b2028',{roughness:.86});
     for(const side of ['l','r']){
       const foot=aligned(`foot_${side}`);if(!foot)continue;
       box(foot,sole,[0,-.056,.06],rugged?[.142,.04,.30]:[.107,.024,.27],.012);
@@ -260,18 +260,22 @@ export function createReferenceStyle(avatar,appearance){
       if(foot){box(foot,bootLeather,[0,-.05,-.06],[.055,.065,.05],.008);for(let i=0;i<3;i++)leaf(foot,leafGold,[0,.035+i*.03,.07-i*.026],.016,0,-.9);}
     }
   }
-  if(appearance.identity==='forest-aristocrat'){
+  if(appearance.character==='silvan'){
     forestAristocrat();
-  }else if(appearance.id==='woman-casual'){
+  }else if(appearance.character==='sable'){
     dressSkirt('#f1e7dd',{slit:true});shoulderBag({color:'#f0e4d9'});sandals();
     tube(torso,gold,[[-.063,.292,.052],[-.044,.235,.113],[0,.194,.141],[.044,.235,.113],[.063,.292,.052]],.0018);
     ball(torso,gold,[0,.183,.143],[.009,.012,.003]);
-  }else if(appearance.id==='woman-tailored'){
+  }else if(appearance.character==='vesper'){
     dressSkirt('#541a30',{wrap:true});pendant();shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
+    // The panther wears her hoops through the base of her ears. Authored on the
+    // 0.20 skull like the scalp pieces, so the fit below lowers them with it.
+    const panther=appearance.form==='beast';
     for(const side of [-1,1]){
-      const hoop=mesh(face,new THREE.TorusGeometry(.013,.0025,7,20),gold,[side*.091,-.045,.02]);hoop.rotation.y=side*.25;
+      const hoop=mesh(face,new THREE.TorusGeometry(.013,.0025,7,20),gold,panther?[side*.09,.166,-.018]:[side*.091,-.045,.02]);
+      if(panther)hoop.rotation.set(0,side*.35,side*.3);else hoop.rotation.y=side*.25;
     }
-  }else if(appearance.id==='man-casual'){
+  }else if(appearance.character==='rowan'){
     const jacket=material('#453b39',{roughness:.91}),shirt=material('#ece6dc',{roughness:.86}),fur=material('#a9a49f',{roughness:.98});
     box(torso,shirt,[0,.1,.128],[.15,.26,.014],.007);
     for(const side of [-1,1]){
@@ -279,9 +283,11 @@ export function createReferenceStyle(avatar,appearance){
       box(torso,jacket,[side*.17,-.06,.133],[.1,.09,.018],.008);
     }
     for(let i=0;i<3;i++)ball(torso,darkGold,[0,.21-i*.07,.152],[.006,.006,.004]);
-    shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});pendant();
+    shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});
+    // The wolf's pendant rests under the muzzle; on a man it would sit on his throat.
+    if(appearance.form==='beast')pendant();
     // The sculpted wolf head (animal-face.js) carries the fur; no tuft cones over it.
-  }else if(appearance.identity==='starlight-maker'){
+  }else if(appearance.character==='kai'){
     const formal=appearance.variant==='formal',explorer=appearance.variant==='explorer',base=formal?'#dfd1bd':explorer?'#282e38':'#1e1b20';
     const cloth=material(base,{roughness:formal?.67:.86,sheen:.42,sheenColor:new THREE.Color(formal?'#fff1d7':'#6c5b5d')}),
       secondary=material(formal?'#302c35':explorer?'#817766':'#302b31',{roughness:.8}),
@@ -333,7 +339,7 @@ export function createReferenceStyle(avatar,appearance){
   // Hair and headwear above were authored for a 0.20 skull top; the shipped
   // rigs measure 0.149-0.160, which left them floating. Lower everything rooted
   // on the scalp to the measured skull, leaving neck pieces where they are.
-  if(face&&appearance.identity!=='forest-aristocrat'){
+  if(face&&appearance.character!=='silvan'){
     const lift=(measureHead(avatar)?.skull.top??.2)-.2;
     for(const child of face.children){
       child.geometry?.computeBoundingBox?.();

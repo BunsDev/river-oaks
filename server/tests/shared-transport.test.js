@@ -145,11 +145,22 @@ test('player creations reach peers through snapshots and only the owner can remo
   f.advance();
   const seen=await bob.waitFor(message=>message.type==='snapshot'&&message.builds?.some(item=>item.id===placed.item.id));
   assert.equal(seen.builds[0].finish,'teal');
+  const saved=await alice.command({type:'inventory',action:'save',buildId:placed.item.id});
+  assert.equal(saved.ok,true);
+  assert.deepEqual((await alice.command({type:'inventory',action:'list'})).items,[saved.item]);
+  assert.deepEqual((await bob.command({type:'inventory',action:'list'})).items,[]);
+  assert.equal((await bob.command({type:'build',action:'place',templateId:saved.item.id,position:[-12,3],yaw:0})).error,'unknown_design');
+  assert.equal(bob.messages.some(message=>JSON.stringify(message).includes(saved.item.id)),false,'private inventory never reaches a peer');
   assert.equal((await bob.command({type:'build',action:'remove',id:placed.item.id})).error,'not_build_owner');
   const before=bob.messages.length;
   assert.equal((await alice.command({type:'build',action:'remove',id:placed.item.id})).ok,true);
   f.advance();
   assert.deepEqual((await bob.waitFor(message=>message.type==='snapshot'&&message.builds?.length===0,before)).builds,[]);
+  const copied=await alice.command({type:'build',action:'place',templateId:saved.item.id,position:[-12,3],yaw:0});
+  assert.equal(copied.ok,true);
+  f.advance();
+  assert.equal((await bob.waitFor(message=>message.type==='snapshot'&&message.builds?.some(item=>item.id===copied.item.id))).builds[0].finish,'teal');
+  assert.equal(bob.messages.some(message=>JSON.stringify(message).includes(saved.item.id)),false,'later public snapshots still omit private inventory');
 });
 
 test('appearance change is visible to peers and restored when the account rejoins',async t=>{

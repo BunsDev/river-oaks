@@ -5,6 +5,7 @@ import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import test from 'node:test';
 import Redis from 'ioredis';
 import { WorkOS } from '@workos-inc/node';
+import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { createAuthAdapter } from './redis-auth-fixture.js';
 
 const { createRedisAuth } = await import('../redis-auth.js').catch(() => ({}));
@@ -70,17 +71,31 @@ integration('state is browser-bound, expires, and cannot be replayed across node
   const f = await fixture(t), start = await f.begin();
   assert.equal((await f.b.request(start.path, { headers: { cookie: 'river_oaks_auth_state=wrong' } })).status, 400);
   f.advance(11 * 60_000);
-  assert.equal((await f.b.request(start.path, { headers: start.headers })).status, 400);
-  assert.equal(f.workos.calls.codes, 0);
+  assert.equal((await f.b.request(start.path, { headers: start.headers })).status, 302);
+  assert.equal(f.workos.calls.codes, 1);
+  const expired = await f.begin();
+  f.advance(21 * 60_000);
+  assert.equal((await f.b.request(expired.path, { headers: expired.headers })).status, 400);
+  assert.equal(f.workos.calls.codes, 1);
 });
 
 integration('unverified accounts and incorrect token issuer never enter the durable registry', async t => {
   const f = await fixture(t);
   f.workos.setVerified(false);
   assert.equal((await f.login()).response.status, 403);
-  f.workos.setVerified(true); f.workos.setIssuer('https://api.workos.com/user_management/client_wrong');
+  f.workos.setVerified(true); f.workos.setTokenClientId('client_wrong');
+  assert.equal((await f.login()).response.status, 403);
+  f.workos.setTokenClientId('client_test'); f.workos.setIssuer('https://wrong.example');
   assert.equal((await f.login()).response.status, 403);
   assert.equal(await f.redis.hlen(f.keys[2]), 0);
+});
+
+integration('dedicated application accepts the environment issuer across nodes', async t => {
+  const f = await fixture(t);
+  f.workos.setIssuer('https://api.workos.com/user_management/client_environment');
+  const { response, sessionCookie } = await f.login();
+  assert.equal(response.status, 302);
+  assert.equal((await f.b.auth.authenticate({ headers: { cookie: sessionCookie } })).userId, 'user_1');
 });
 
 integration('arbitrary forged cookies create no Redis keys or registry fields', async t => {
@@ -199,7 +214,7 @@ integration('expired refresh lease fences the previous owner from overwriting a 
 integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on another instance', async t => {
   const {publicKey,privateKey}=generateKeyPairSync('rsa',{modulusLength:2048});
   const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
-  const payload=`${encode({alg:'RS256',typ:'JWT'})}.${encode({iss:`https://api.workos.com/user_management/${config.clientId}`,sub:'user_sdk',sid:'session_sdk',exp:Math.floor(Date.now()/1000)+300})}`;
+  const payload=`${encode({alg:'RS256',typ:'JWT'})}.${encode({iss:'https://api.workos.com',client_id:config.clientId,sub:'user_sdk',sid:'session_sdk',exp:Math.floor(Date.now()/1000)+300})}`;
   const accessToken=`${payload}.${sign('RSA-SHA256',Buffer.from(payload),privateKey).toString('base64url')}`;
   const sdk=new WorkOS(config.apiKey,{clientId:config.clientId});
   sdk.post=async(path,body)=>{
@@ -215,3 +230,23 @@ integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on ano
   assert.equal(await f.b.auth.authenticate({headers:{cookie:`river_oaks_session=${encodeURIComponent(tampered)}`}}),null);
   assert.equal((await sdk.userManagement.loadSealedSession({sessionData:tampered,cookiePassword:config.cookiePassword}).authenticate()).authenticated,false);
 });
+
+for (const scenario of boundaryCases) {
+  integration(`real SDK cross-node application key boundary: ${scenario.name}`, async t => {
+    const { sdk, requests } = await workosSdkFixture(t, config, scenario);
+    const log = t.mock.method(console, 'error', () => {});
+    const f = await fixture(t, { workos: sdk });
+    const { response, sessionCookie } = await f.login();
+    assert.equal(response.status, scenario.status);
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    if (scenario.status === 302) {
+      assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).userId, 'user_sdk');
+    } else {
+      assert.equal(sessionCookie, undefined);
+      assert.deepEqual(await response.json(), { error: 'invalid_session' });
+      assert.equal(await f.redis.hlen(f.keys[2]), 0);
+      assert.equal(await f.redis.hlen(f.keys[4]), 0);
+      assert.equal(log.mock.calls[0].arguments[0], 'Authentication session rejected');
+    }
+  });
+}

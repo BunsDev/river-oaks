@@ -15,9 +15,9 @@ and [street geometry](docs/street-standards.md).
 
 ## Run the live showcase
 
-The default game uses WorkOS sign-in and one shared town server. Players see each other as their selected human appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production requires authenticated, verified accounts.
+Players can choose single player or the shared town from the play-mode control. `npm run dev` lets multiplayer use local development identities without WorkOS. Production shared play uses WorkOS sign-in; signed-in players see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production multiplayer requires authenticated, verified accounts.
 
-For the standalone development showcase described below, start Vite with `VITE_SINGLE_PLAYER=true npm run dev`. This explicit development-only mode supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. It is unavailable in production builds. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
+For the standalone showcase described below, start Vite with `VITE_MULTIPLAYER=off npm run dev`. Solo play supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. `VITE_SINGLE_PLAYER=true` also selects solo play when `VITE_MULTIPLAYER` is unset. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -26,7 +26,7 @@ uv run river-oaks serve
 
 ```sh
 npm ci
-VITE_SINGLE_PLAYER=true npm run dev
+VITE_MULTIPLAYER=off npm run dev
 ```
 
 Open **http://127.0.0.1:5173/**. The default is a walkable retrofuturistic River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
@@ -63,8 +63,6 @@ In **People & place → Spoken dialogue**, choose **Kokoro · local neural voice
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
-
-**Shared town (in development).** `npm run dev` also runs a multiplayer town where every browser joins as its own Jevica, with no account or WorkOS setup. The live site stays single player until the town launches. See [docs/multiplayer.md](docs/multiplayer.md).
 
 ## Optional source-data tooling
 

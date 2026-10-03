@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-09-29T19:50:05.427Z",
+  "createdAt": "2026-10-03T07:04:32.331Z",
   "status": "passed",
   "modes": [
     "development",
@@ -10,15 +10,31 @@
     {
       "name": "multiplayer-dev",
       "status": "passed",
-      "seconds": 9.682,
+      "seconds": 43.967,
       "result": {
         "checks": [
           "each browser is its own development player",
           "both players share one town",
           "no sign-in gate blocks development",
-          "Jevica is the sole playable shared character",
+          "Players start with an appearance picker and a default look",
+          "Sable selection reaches the other browser and its rendered remote avatar",
+          "New town chat rows are announced after initial history loads",
+          "A sent town message appears once for both players",
+          "Chat history returns once after reconnect",
+          "A reply reaches the reconnected player through the live chat UI",
+          "Shared play exposes player-owned building",
           "shared play hides the local invasion",
           "players arrive on separate spots (1.60 m apart)",
+          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
+          "a landmark teleport is a server-checked position travel the other browser sees",
+          "Builder mode can be switched on",
+          "The preview appears where the pointer meets the ground",
+          "An open spot is marked ready (Ready to place.)",
+          "A click places the creation exactly where the preview stood",
+          "The preview turns red on the spot just taken (Too close to another creation.)",
+          "R turns the preview",
+          "Escape leaves builder mode and removes the preview",
+          "Escape in builder mode leaves the dock open",
           "Shared mobile play starts with a compact dock",
           "Flight remains discoverable in shared mobile play",
           "Shared mobile play hides solo companion and vehicle actions",
@@ -27,28 +43,28 @@
           "No browser page errors"
         ],
         "a": {
-          "self": "dev-45f6aad58e47",
+          "self": "dev-fc6245d4de42",
           "players": [
-            "dev-45f6aad58e47",
-            "dev-ac917982e640"
+            "dev-fc6245d4de42",
+            "dev-9831decd5683"
           ],
           "gate": true,
-          "form": "jevica",
-          "formSelector": false,
+          "appearance": "jevica",
+          "appearancePicker": true,
           "invasion": true,
-          "roster": "2 Jevicas in town"
+          "roster": "2 players in town"
         },
         "b": {
-          "self": "dev-ac917982e640",
+          "self": "dev-9831decd5683",
           "players": [
-            "dev-45f6aad58e47",
-            "dev-ac917982e640"
+            "dev-fc6245d4de42",
+            "dev-9831decd5683"
           ],
           "gate": true,
-          "form": "jevica",
-          "formSelector": false,
+          "appearance": "jevica",
+          "appearancePicker": true,
           "invasion": true,
-          "roster": "2 Jevicas in town"
+          "roster": "2 players in town"
         },
         "errors": []
       }
@@ -56,15 +72,20 @@
     {
       "name": "multiplayer",
       "status": "passed",
-      "seconds": 56.202,
+      "seconds": 84.857,
       "result": {
         "passed": true,
         "checks": [
-          "Jevica is the only playable form",
+          "Shared appearance picker is available",
           "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
           "Shared diagnostics and town exclude the solo coachman",
           "Force shortcut cannot bypass shared-mode gating",
-          "Two accounts share the roster and rendered Jevica avatars",
+          "Two accounts share the roster and rendered avatars",
+          "A peer sees the selected avatar",
+          "Quick person-then-form choices settle without a cooldown error",
+          "A peer sees beast movement on the shared beast form",
+          "Appearance survives reconnect",
+          "Beast movement belongs to the account and survives reconnect",
           "Confirmed grant moves keyboard focus to undo",
           "Second player sees server-owned dragon wish",
           "Egg hatches into a visible dragon",
@@ -84,7 +105,7 @@
     {
       "name": "multiplayer-gate",
       "status": "passed",
-      "seconds": 40.808,
+      "seconds": 51.02,
       "result": {
         "passed": true,
         "checks": [

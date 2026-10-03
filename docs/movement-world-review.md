@@ -2,7 +2,7 @@
 
 This patch improves the existing Three.js game, its debug tools, and decoration authoring. The district geometry and engine stay in place.
 
-Reviewed and resumed on October 3, 2026 by Cody. Worktree: `/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/movement-world-review`, branch `cody/movement-world-review`, base `d6b0f5e9ecb7c307d586a1e940ec5b566b23a65d`. Most implementation was recovered as uncommitted work from the previous attempt. This retry added thin/grazing stem recovery, reachable close hints, finite tree metadata defaults, and completed validation. No commit, push, or deployment is part of this delivery. The primary checkout has advanced to `544b631`; integration onto that newer base needs its own verification.
+Reviewed and resumed on October 3, 2026. The movement patch was recovered from the `cody/movement-world-review` worktree, committed as `fb22345`, and integrated with `main` at `43717da`. This retry added thin/grazing stem recovery, reachable close hints, and finite tree metadata defaults. The integrated branch was verified again as described below.
 
 ## Phased plan and scope
 
@@ -70,7 +70,7 @@ For indoor decoration, enter a boutique, open F3, point at its floor, and copy t
 
 ## Verification evidence
 
-The final receipts and completion classifications are recorded in `../data/reports/movement-retry/completion.json`. Test harnesses changed in `preview/tests/movement-review.test.js`, `limb-fit.test.js`, `prince-flight.test.js`, and `preview/e2e/{movement-review,bird-cams,debug-tools,multiplayer-dev,experience-runner}.js`.
+The original review receipts are retained locally in `../data/reports/movement-retry/completion.json`; generated reports are not committed. Test harnesses changed in `preview/tests/movement-review.test.js`, `limb-fit.test.js`, `prince-flight.test.js`, and `preview/e2e/{movement-review,bird-cams,debug-tools,multiplayer-dev,experience-runner}.js`.
 
 | Deliverable | Classification | Exact evidence under this worktree |
 | --- | --- | --- |
@@ -83,10 +83,11 @@ The final receipts and completion classifications are recorded in `../data/repor
 
 Final checks:
 
-- `npm test`: **629/629 passed** (`data/reports/movement-retry/unit-final.log`).
-- `node --test server/tests/world.test.js`: **31/31 passed** (`server-world.log`). This is the focused world suite, not the full server suite.
-- `npm run build`: **exit 0** (`build.log`).
+- `npm test`: **645/645 passed** after integration; the earlier patch passed 629/629 on its original base.
+- `node --test server/tests/world.test.js`: **35/35 passed** after integration. This is the focused world suite, not the full server suite.
+- `npm run build`: **exit 0** after integration.
 - Five browser journeys passed: movement review (6 checks), bird cameras (15), debug tools (24), carriage/companion (11), and two-player development (28). `browser.json` contains the first four; `browser-verified.json` supersedes bird/debug results; `shared.json` contains the final two-player run.
+- After integration, `npm run test:experience -- movement-review bird-cams debug-tools carriage-companion` passed all four journeys, and `npm run test:shared -- development` passed the two-browser journey with the current character picker and saved designs.
 - `python3 scripts/check_secrets.py --all`: **exit 0**, no leaks found (`secrets-final.log`). An earlier scan flagged the disposable Node compile cache created by the test runner's temporary directory. That generated cache was removed; no source allowlist or scanner rule was weakened. The final scan includes tracked and unignored source/artifact files.
 - `git diff --check`: **exit 0** (`diff-check.log`).
 
@@ -98,4 +99,4 @@ Final checks:
 - The reload-heavy debug journey logged texture requests aborted during navigation and unavailable loopback service requests. Rendered captures were inspected; this is not a claim of a warning-free console or live provider availability.
 - The build emits the existing warning about chunks above 500 kB. Large-world GPU capacity and multiplayer load capacity remain unmeasured.
 
-The worktree must be retained while its changes remain uncommitted. Archive or remove it only after the patch is retained through an approved integration step.
+The branch retains the patch. Keep the worktree until the pull request has been reviewed and its local evidence is no longer needed.

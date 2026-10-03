@@ -1,9 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { WorkOS } from '@workos-inc/node';
+import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
-const STATE_TTL = 10 * 60_000;
+const STATE_TTL = 20 * 60_000;
 const SESSION_TTL = 7 * 24 * 60 * 60_000;
 const MAX_STATES = 1_000;
 const MAX_SESSIONS = 10_000;
@@ -69,7 +70,8 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       || result.sessionId !== record.sessionId || sessions.get(record.sessionId) !== record) return null;
     const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
     if (!Number.isFinite(claims.exp) || claims.sub !== result.user.id || claims.sid !== result.sessionId
-      || claims.iss !== `https://api.workos.com/user_management/${clientId}`) return null;
+      || !validWorkOSIssuer(claims.iss)
+      || claims.client_id !== clientId) return null;
     const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
     if (expiresAt <= now()) return null;
     const name = [result.user.firstName, result.user.lastName].filter((part) => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
@@ -118,6 +120,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     const method = path === '/auth/logout' ? 'POST' : 'GET';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     cleanup();
+    let phase = path;
     try {
       if (path === '/auth/login') {
         if (states.size >= MAX_STATES) { json(res, 503, { error: 'auth_busy' }); return true; }
@@ -149,18 +152,27 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
           || !query.get('code') || query.get('error')) { json(res, 400, { error: 'invalid_auth_callback' }); return true; }
         states.delete(state); // Consume before the code exchange, including failed exchanges.
         if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
+        phase = 'callback.exchange';
         const result = await sdk.userManagement.authenticateWithCode({ clientId, code: query.get('code'), codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
         if (!result.sealedSession || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return true; }
+        phase = 'callback.session';
         const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
         const verified = await session.authenticate();
-        if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true) { json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true) {
+          logSessionRejection(verified, {}, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         if (!enabled || sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
         const previous = sessions.get(verified.sessionId);
         if (previous) removeSession(previous);
         const record = { sessionId: verified.sessionId, userId: verified.user.id, csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL };
         sessions.set(record.sessionId, record);
         cookies.set(record.cookieHash, record.sessionId);
-        if (!identity(verified, record)) { removeSession(record); json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!identity(verified, record)) {
+          removeSession(record);
+          logSessionRejection(verified, record, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         res.writeHead(302, { Location: '/' }); res.end();
       } else if (path === '/auth/session') {
@@ -177,7 +189,12 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         const url = sdk.userManagement.getLogoutUrl({ sessionId: user.sessionId, returnTo: `${base}/` });
         json(res, 200, { url });
       }
-    } catch { json(res, 503, { error: 'auth_unavailable' }); }
+    } catch (error) {
+      console.error('Authentication unavailable', {
+        phase, name: error?.name, status: error?.status ?? error?.statusCode ?? error?.response?.status,
+      });
+      json(res, 503, { error: 'auth_unavailable' });
+    }
     return true;
   }
 

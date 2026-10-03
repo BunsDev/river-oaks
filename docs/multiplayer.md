@@ -3,14 +3,26 @@
 ## Develop locally without WorkOS
 
 `npm run dev` starts the shared town inside the Vite dev server. With no WorkOS
-credentials, every browser that opens the preview gets its own development
-resident (for example "Wren (dev)") and joins the town without a sign-in step.
-Open a second browser profile to see a second player. No `.env` is needed.
+credentials, choosing Multiplayer gives each browser its own development
+resident (for example "Wren (dev)") without a sign-in step. Choose Multiplayer
+in a second browser profile to see another player. No `.env` is needed.
+For a separate checkout while the default ports are in use, run
+`RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
+auth and multiplayer traffic to that checkout's own town on the chosen loopback
+port.
 
-- `VITE_MULTIPLAYER` chooses how the preview joins. `auto` is the development
-  default: join when the town answers with a session, otherwise play solo
-  without blocking. `off` is the production default, so the live site stays
-  single player. `required` shows the sign-in gate and is for the launched town.
+- The default is `choice`: players begin in single player and can select
+  Multiplayer from the control in the viewport. The choice is remembered in
+  local storage across the WorkOS sign-in redirect. Multiplayer's sign-in
+  screen and People panel both offer a return to single player. Each tab keeps
+  the mode it loaded with, so choosing the other mode always switches that tab,
+  even after another tab changed the remembered choice. If the browser refuses
+  to store a choice, the reload carries it in the address bar as `?play=solo`
+  or `?play=multiplayer` for that visit only; a choice carried this way doesn't
+  survive the WorkOS sign-in redirect.
+- `VITE_MULTIPLAYER=auto` joins when the town answers with a session, otherwise
+  plays solo without blocking. `off` disables the shared town. `required`
+  always shows the sign-in gate.
 - `VITE_MULTIPLAYER=off npm run dev` plays solo with the invasion and auto visits.
 - `RIVER_OAKS_DEV_AUTH=workos npm run dev` uses real WorkOS sign-in instead;
   register `http://127.0.0.1:5173/auth/callback` in that WorkOS environment.
@@ -33,6 +45,14 @@ the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
 
+Build & decorate lets a player place, move, turn, and remove up to 24 owned
+creations in the shared town. A placed creation can be saved as a design, then
+placed again from **Saved designs**. Each account can keep 48 designs. The
+inventory is returned only to its owner; placed copies are visible to everyone.
+Designs survive reconnects and town resets through the private checkpoint.
+Each new placement still passes the server's reach, ground, road, collision,
+and capacity checks. Deleting a design does not remove copies already placed.
+
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
 Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
@@ -51,11 +71,11 @@ Production defaults to Redis namespace `river-oaks:production:v1`. Preview and l
 
 ## Deployment readiness
 
-Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. Authenticated hosted WebSocket routing and live WorkOS sign-in still need acceptance.
+Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. On the protected acceptance alias, two real WorkOS accounts signed in through the dedicated TypeSafe application, joined the same hosted roster, and each rejoined after a reload. Signing out the second account removed it from the first account's roster. A later hosted run kept a wish active while the alias moved to a new deployment: the first account rejoined there with the wish intact, and a temporary ban disconnected the second account and denied a new ticket. Unban restored its access; the wish was undone and both accounts signed out.
 
-Production WorkOS credentials are still required. `PUBLIC_ORIGIN` and `WORKOS_COOKIE_PASSWORD` are configured in Production. Set `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` privately in that environment. Register the exact URLs below in that WorkOS environment. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
+The TypeSafe WorkOS project now has a dedicated **River Oaks District** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M3ZHFZ8AHWXXRJNYM5WYKRPP`). Their callback and logout URLs below are registered. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Production AuthKit offers verified email sign-in through Magic Auth. A protected server-side check confirmed the Production key can retrieve the verified acceptance user. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
 
-Before enabling the site, verify two real WorkOS accounts on the deployed endpoint, reconnect during instance replacement with an active wish, and cross-instance logout/ban enforcement. A Production-targeted candidate is staged with `--skip-domain` at the URL in the receipt. `sim.jev.works` still points to the previous deployment. The original single-process acceptance report is not Vercel acceptance evidence.
+The local Redis tests exercise cross-instance logout and ban enforcement; the hosted run confirms the ban and unban behavior, but does not identify which Vercel worker handled each browser. The candidate was staged with `--skip-domain` on the protected `river-oaks-acceptance-0xbuns.vercel.app` alias. After promoting a deployment, smoke-check sign-in, session, and anonymous ticket rejection on `sim.jev.works`. The original single-process acceptance report is not Vercel acceptance evidence.
 
 ## Run the Redis API locally
 
@@ -69,11 +89,65 @@ After configuring the private environment and WorkOS URLs below, run from the re
 
 ```sh
 npm ci
-npm run build
+VITE_MULTIPLAYER=required npm run build
 npm start
 ```
 
 `npm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
+
+## Session verification boundary
+
+Both auth stores use `server/workos-session.js` for issuer syntax and rejection
+logging. With the locked WorkOS Node SDK 10.14.0, `Session.authenticate()`
+unseals the cookie and verifies the JWT against the remote JWKS selected from
+the **configured** application client ID (`/sso/jwks/<clientId>`). It does not
+select a key endpoint from the token's `iss` or `client_id`. The SDK does not
+check issuer equality unless an issuer option is configured; River Oaks checks
+WorkOS issuer syntax and requires the signed `client_id` to equal its configured
+application after SDK authentication, alongside subject, session, email and
+expiry checks. A matching claim cannot make a foreign signing key trusted.
+
+Keep both `https://api.workos.com` and `https://api.workos.com/`: WorkOS documents
+them in its [session token reference](https://workos.com/docs/reference/authkit/session-tokens)
+and [session guide](https://workos.com/docs/authkit/sessions). Dedicated application
+tokens can instead name the environment in the issuer path, so that path must
+not be compared to the dedicated application's client ID. These formats are
+compatibility checks, not independent proof of environment membership. The
+application-specific key lookup and signed client claim are both required.
+Deployments using a custom auth domain need an explicitly reviewed issuer policy.
+Preview isolation requires separate client IDs, cookie secrets and Redis namespaces;
+sharing production credentials does not create an isolated preview.
+
+`server/tests/workos-sdk-fixture.js` serves a local JWKS and code-exchange endpoint.
+The tests keep SDK key selection, HTTP key retrieval, sealing and signature
+verification real. Both stores reject a token with a valid foreign-environment
+issuer and the correct application claim when a different key signs it (even
+with the same key ID). They also reject trusted-key tokens with another client
+or an invalid issuer host. Redis cases exercise callback on a second node and
+verify rejected tokens leave no durable session or cookie records. Run:
+
+```bash
+node --test server/tests/auth.test.js server/tests/workos-session.test.js
+REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test.js
+```
+
+These are local cryptographic boundary tests, not proof of WorkOS's hosted key
+provisioning or a live sign-in. Repeat the custom-domain smoke checks above after
+promotion. On 2026-10-03, the current `sim.jev.works` deployment passed a
+native-browser smoke check: Continue with GitHub returned to the game and the
+same browser's `/auth/session` reported `authenticated: true`. Separate requests
+without cookies returned `{ authenticated: false }` from `/auth/session` (200)
+and rejected `POST /api/multiplayer/ticket` (401). This checks the existing live
+deployment; it does not attest deployment of this follow-up patch.
+
+Callback rejection logs contain fixed booleans, never token claims, cookies,
+authorization codes or user identities.
+
+The 20-minute one-use state lifetime accommodates email-code redirects. The
+1,000-entry cap is unchanged; abandoned attempts occupy slots until expiry,
+so longer retention reduces capacity during sustained abandoned-login traffic.
+Successful callbacks consume their state immediately. Capacity remains bounded
+and returns after expiry; this change does not add a login rate limiter.
 
 ## Configure WorkOS and private settings
 
@@ -130,6 +204,12 @@ Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previou
 
 The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
 
+The current Dockerfile builds the production default, which starts in single
+player. A shell variable passed to `docker build` does not change that frontend
+bundle. For a shared-town container, build the frontend with
+`VITE_MULTIPLAYER=required` in the build stage and configure WorkOS and Redis
+for the runtime environment.
+
 ```sh
 docker build -t river-oaks:local .
 docker volume create river-oaks-moderation
@@ -157,7 +237,7 @@ At the public edge, overwrite incoming `X-Forwarded-For` with the actual client 
 
 With an empty trust list, forwarded headers are ignored. Behind a proxy this shares one request-limit bucket across all visitors, so configure and test the trusted proxy addresses before production traffic. Never trust a forwarding header supplied directly by a public client.
 
-Check the Node listener with `curl http://127.0.0.1:8787/health`. Before opening the deployment to players, verify with two real WorkOS accounts that sign-in returns to the town, both clients see the same changes, logout closes the connection, and a persisted ban survives a restart. Live WorkOS sign-in and the production proxy still require deployment acceptance testing.
+Check the Node listener with `curl http://127.0.0.1:8787/health`. Before opening the deployment to players, verify with two real WorkOS accounts that sign-in returns to the town, both clients see the same changes, logout closes the connection, and a persisted ban survives a restart. Live WorkOS sign-in, shared presence, replacement recovery, and ban/unban passed on the protected Vercel alias; repeat the sign-in and API smoke checks after each custom-domain promotion.
 
 ## Develop with Vite and the Node server
 
@@ -177,4 +257,6 @@ npm run dev
 
 Open `http://localhost:5173` consistently. Vite proxies authentication, multiplayer API requests, moderation requests, and WebSocket connections to Node on port `8787`. Don't substitute `127.0.0.1` in the browser because the origin and cookies must match. Vite's `/health` route belongs to the optional sidecar; check Node health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`, but development still requires WorkOS authentication. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+Local HTTP cookies omit `Secure`. This explicitly configured standalone server uses WorkOS; the default `npm run dev` flow described above uses loopback development identities instead. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+
+On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.

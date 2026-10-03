@@ -4,6 +4,7 @@ import { once } from 'node:events';
 import { generateKeyPairSync, randomBytes, sign } from 'node:crypto';
 import test from 'node:test';
 import { WorkOS } from '@workos-inc/node';
+import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 
 const module = await import('../auth.js').catch(() => ({}));
 const { createAuth } = module;
@@ -14,9 +15,9 @@ function adapter(clock) {
   const sealed = new Map();
   const calls = { codes: [], refresh: 0 };
   let user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: true };
-  let issuer = `https://api.workos.com/user_management/${config.clientId}`;
+  let issuer = 'https://api.workos.com', tokenClientId = config.clientId;
   function mint(sessionId = 'session_1') {
-    const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, sid: sessionId, sub: user.id, exp: Math.floor(clock() / 1000) + 300 })).toString('base64url')}.signature`;
+    const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, client_id: tokenClientId, sid: sessionId, sub: user.id, exp: Math.floor(clock() / 1000) + 300 })).toString('base64url')}.signature`;
     const sealedSession = randomBytes(32).toString('base64url');
     sealed.set(sealedSession, { authenticated: true, user: { ...user }, sessionId, accessToken });
     return { user: { ...user }, accessToken, refreshToken: 'private-refresh-token', sealedSession };
@@ -25,6 +26,7 @@ function adapter(clock) {
     calls,
     setUser(value) { user = { ...user, ...value }; },
     setIssuer(value) { issuer = value; },
+    setTokenClientId(value) { tokenClientId = value; },
     userManagement: {
       async getAuthorizationUrlWithPKCE(options) {
         const url = new URL('https://api.workos.com/user_management/authorize');
@@ -134,12 +136,17 @@ test('rejects missing, mismatched, expired, and replayed callback state before c
   const state = new URL(login.headers.get('location')).searchParams.get('state');
   assert.equal((await app.request(`/auth/callback?code=x&state=${state}`, { headers: { cookie: 'river_oaks_auth_state=forged' } })).status, 400);
   app.advance(11 * 60_000);
-  assert.equal((await app.request(`/auth/callback?code=x&state=${state}`, { headers: { cookie: cookie(login, 'river_oaks_auth_state') } })).status, 400);
-  assert.equal(app.workos.calls.codes.length, 0);
+  assert.equal((await app.request(`/auth/callback?code=x&state=${state}`, { headers: { cookie: cookie(login, 'river_oaks_auth_state') } })).status, 302);
+  assert.equal(app.workos.calls.codes.length, 1);
+  const expired = await app.request('/auth/login');
+  const expiredState = new URL(expired.headers.get('location')).searchParams.get('state');
+  app.advance(21 * 60_000);
+  assert.equal((await app.request(`/auth/callback?code=x&state=${expiredState}`, { headers: { cookie: cookie(expired, 'river_oaks_auth_state') } })).status, 400);
+  assert.equal(app.workos.calls.codes.length, 1);
   const valid = await app.login();
   assert.equal(valid.callback.status, 302);
   assert.equal((await app.request(`/auth/callback?code=x&state=${valid.state}`, { headers: { cookie: valid.stateCookie } })).status, 400);
-  assert.equal(app.workos.calls.codes.length, 1);
+  assert.equal(app.workos.calls.codes.length, 2);
 });
 
 test('rejects unverified accounts and forged session cookies', async (t) => {
@@ -192,15 +199,27 @@ test('official WorkOS SDK rejects a forged sealed cookie without network access'
 
 test('rejects a verified token issued for a different WorkOS application', async (t) => {
   const app = await fixture(t);
-  app.workos.setIssuer('https://api.workos.com/user_management/client_other');
+  app.workos.setTokenClientId('client_other');
   assert.equal((await app.login()).callback.status, 403);
+  app.workos.setTokenClientId(config.clientId);
+  app.workos.setIssuer('https://wrong.example');
+  assert.equal((await app.login()).callback.status, 403);
+});
+
+test('accepts a dedicated application token with the environment issuer', async (t) => {
+  const app = await fixture(t);
+  app.workos.setIssuer('https://api.workos.com/user_management/client_environment');
+  const { callback, sessionCookie } = await app.login();
+  assert.equal(callback.status, 302);
+  assert.deepEqual((await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user,
+    { id: 'user_1', name: 'Val Dev' });
 });
 
 test('bounded login state expires and frees capacity', async (t) => {
   const app = await fixture(t);
   for (let i = 0; i < 1_000; i++) assert.equal((await app.request('/auth/login')).status, 302);
   assert.equal((await app.request('/auth/login')).status, 503);
-  app.advance(11 * 60_000);
+  app.advance(21 * 60_000);
   assert.equal((await app.request('/auth/login')).status, 302);
 });
 
@@ -226,7 +245,7 @@ test('official SDK seals and verifies a signed session through the real HTTP cal
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
   const payload = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({
-    iss: `https://api.workos.com/user_management/${config.clientId}`,
+    iss: 'https://api.workos.com', client_id: config.clientId,
     sub: 'user_real_sdk', sid: 'session_real_sdk', exp: Math.floor(Date.now() / 1000) + 300,
   })}`;
   const accessToken = `${payload}.${sign('RSA-SHA256', Buffer.from(payload), privateKey).toString('base64url')}`;
@@ -255,3 +274,24 @@ test('official SDK seals and verifies a signed session through the real HTTP cal
   const tampered = `${sealed.slice(0, midpoint)}${sealed[midpoint] === 'a' ? 'b' : 'a'}${sealed.slice(midpoint + 1)}`;
   assert.equal((await sdk.userManagement.loadSealedSession({ sessionData: tampered, cookiePassword: config.cookiePassword }).authenticate()).authenticated, false);
 });
+
+for (const scenario of boundaryCases) {
+  test(`real SDK application key boundary: ${scenario.name}`, async t => {
+    const { sdk, requests } = await workosSdkFixture(t, config, scenario);
+    const log = t.mock.method(console, 'error', () => {});
+    const app = await fixture(t, { workos: sdk });
+    const { callback, sessionCookie } = await app.login();
+    assert.equal(callback.status, scenario.status);
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    if (scenario.status === 302) {
+      assert.ok(sessionCookie);
+      const session = await app.request('/auth/session', { headers: { cookie: sessionCookie } });
+      assert.equal((await session.json()).authenticated, true);
+    } else {
+      assert.equal(sessionCookie, undefined);
+      assert.deepEqual(await callback.json(), { error: 'invalid_session' });
+      assert.equal((await (await app.request('/auth/session')).json()).authenticated, false);
+      assert.equal(log.mock.calls[0].arguments[0], 'Authentication session rejected');
+    }
+  });
+}

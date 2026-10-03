@@ -6,30 +6,64 @@ async page => {
   await page.emulateMedia({reducedMotion:'reduce'});
   const current=await page.evaluate(()=>location.origin);
   await page.goto(current.startsWith('http')?current:'http://127.0.0.1:5173/');
-  await page.evaluate(()=>localStorage.removeItem('river-oaks-character'));
+  await page.evaluate(()=>{localStorage.removeItem('river-oaks-character');localStorage.removeItem('river-oaks-beast-movement');});
   await page.reload();
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('#player-appearance').isVisible(),'Solo character picker is available');
+  check(await page.locator('.character-picker').isVisible(),'Solo character picker is available');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
-  for(const [profile,role] of [['woman-casual','Fox charmer'],['man-casual','Wolf wanderer'],['woman-tailored','Velvet confidante'],['man-tailored','Midnight host · human'],['midnight-host-hybrid','Midnight host · wolf-eared'],['midnight-host-wolf','Midnight host · wolf'],['man-workwear','Starlight maker · celestial formal'],['kai-explorer','Starlight maker · explorer casual'],['kai-noir','Starlight maker · starlit noir'],['forest-aristocrat','Forest aristocrat · masculine'],['forest-aristocrat-feminine','Forest aristocrat · feminine'],['woman-daywear','Lynx muse']]){
-    await page.locator('#player-appearance').selectOption(profile);
+  check(await page.locator('.character-option[data-option=variant]').isHidden(),'A person with one style shows no style switch');
+  check(await page.locator('#player-beast-movement').isHidden(),'The humanoid default offers no beast movement');
+  // Person, then style (where there is more than one), then form: each triple is one look.
+  const choose=async (character,variant,form)=>{
+    await page.locator(`input[name=player-character][value=${character}]`).check();
+    if(await page.locator('.character-option[data-option=variant]').isVisible())await page.locator(`input[name=player-variant][value=${variant}]`).check();
+    await page.locator(`input[name=player-form][value=${form}]`).check();
+  };
+  const looks=[
+    ['jevica-beast','jevica','signature','beast','Rose enchantress · beast',null],
+    ['sable-human','sable','signature','human','Fox charmer · humanoid',null],
+    ['woman-casual','sable','signature','beast','Fox charmer · beast','sable-fox-turnaround'],
+    ['rowan-human','rowan','signature','human','Wolf wanderer · humanoid',null],
+    ['man-casual','rowan','signature','beast','Wolf wanderer · beast','rowan-wolf-turnaround'],
+    ['woman-tailored','vesper','signature','human','Velvet confidante · humanoid','vesper-velvet-turnaround'],
+    ['vesper-beast','vesper','signature','beast','Velvet confidante · beast',null],
+    ['man-tailored','aurel','signature','human','Midnight host · humanoid','aurel-human'],
+    ['midnight-host-wolf','aurel','signature','beast','Midnight host · beast','aurel-wolf'],
+    ['lyra-human','lyra','signature','human','Lynx muse · humanoid',null],
+    ['woman-daywear','lyra','signature','beast','Lynx muse · beast',null],
+    ['man-workwear','kai','formal','human','Starlight maker · celestial formal · humanoid','kai-three-celestial-styles'],
+    ['kai-formal-beast','kai','formal','beast','Starlight maker · celestial formal · beast',null],
+    ['kai-explorer','kai','explorer','human','Starlight maker · explorer casual · humanoid','kai-three-celestial-styles'],
+    ['kai-explorer-beast','kai','explorer','beast','Starlight maker · explorer casual · beast',null],
+    ['kai-noir','kai','noir','human','Starlight maker · starlit noir · humanoid','kai-three-celestial-styles'],
+    ['kai-noir-beast','kai','noir','beast','Starlight maker · starlit noir · beast',null],
+    ['forest-aristocrat','silvan','masculine','human','Forest aristocrat · masculine · humanoid','forest-aristocrat-masculine'],
+    ['forest-aristocrat-beast','silvan','masculine','beast','Forest aristocrat · masculine · beast',null],
+    ['forest-aristocrat-feminine','silvan','feminine','human','Forest aristocrat · feminine · humanoid','forest-aristocrat-feminine'],
+    ['forest-aristocrat-feminine-beast','silvan','feminine','beast','Forest aristocrat · feminine · beast',null],
+  ];
+  for(const [profile,character,variant,form,role,reference] of looks){
+    await choose(character,variant,form);
     await page.waitForFunction(id=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance===id;},profile);
     check(await page.locator('#player-role').textContent()===role,`${profile}: identity and 3D appearance update`);
-    if(profile==='woman-daywear')check(await page.locator('.player-monogram').isVisible(),`${profile}: portrait fallback shows the current character`);
-    else {
+    check(await page.locator(`input[name=player-character][value=${character}]`).isChecked()&&await page.locator(`input[name=player-form][value=${form}]`).isChecked(),`${profile}: the picker shows the person and form`);
+    check(await page.locator('#player-beast-movement').isVisible()===(form==='beast'),`${profile}: beast movement is offered only in a beast form`);
+    if(reference){
       check(await page.locator('.player-portrait img').isVisible(),`${profile}: reference portrait is visible`);
-      check(await page.locator('#player-reference').getAttribute('href')===`/assets/characters/references/${({
-        'woman-casual':'sable-fox-turnaround','man-casual':'rowan-wolf-turnaround','woman-tailored':'vesper-velvet-turnaround',
-        'man-tailored':'aurel-human','midnight-host-hybrid':'aurel-hybrid','midnight-host-wolf':'aurel-wolf',
-        'forest-aristocrat':'forest-aristocrat-masculine','forest-aristocrat-feminine':'forest-aristocrat-feminine',
-        'man-workwear':'kai-three-celestial-styles','kai-explorer':'kai-three-celestial-styles','kai-noir':'kai-three-celestial-styles',
-      })[profile]}.png`,`${profile}: full reference is linked`);
+      check(await page.locator('#player-reference').getAttribute('href')===`/assets/characters/references/${reference}.png`,`${profile}: full reference is linked`);
+    }else{
+      await page.waitForFunction(()=>document.querySelector('.player-portrait img.live-portrait')?.src.startsWith('data:image/'),null,{timeout:15000});
+      check(await page.locator('.player-portrait img').isVisible()&&await page.locator('#player-reference').isHidden(),`${profile}: a studio portrait of the 3D form stands in for reference art`);
     }
   }
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('#player-appearance').inputValue()==='woman-daywear','Solo character persists on this device');
-  await page.locator('#player-appearance').selectOption('jevica');
+  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-variant][value=feminine]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Solo person, style and form persist on this device');
+  await page.evaluate(()=>localStorage.setItem('river-oaks-character','midnight-host-hybrid'));
+  await page.reload();
+  await page.waitForFunction(()=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance==='midnight-host-wolf';});
+  check(await page.locator('input[name=player-character][value=aurel]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'A saved wolf-eared host returns as his wolf form');
+  await choose('jevica','signature','human');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='jevica');
   for(const form of ['jevica']) {
     await page.waitForFunction(form=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.playerForm===form;},form);

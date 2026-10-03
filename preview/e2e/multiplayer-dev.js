@@ -5,29 +5,34 @@ async page => {
   const check = (condition, message) => { if (!condition) throw new Error(message);checks.push(message); };
   const errors = [];
   const second = await (await page.context().browser().newContext()).newPage();
-  for (const tab of [page, second]) { tab.on('pageerror', error => errors.push(error.message)); await tab.setViewportSize({ width: 1280, height: 800 }); }
+  for (const tab of [page, second]) { tab.setDefaultNavigationTimeout(60000); tab.on('pageerror', error => errors.push(error.message)); await tab.setViewportSize({ width: 1280, height: 800 }); }
   const join = async tab => {
-    await tab.goto('http://127.0.0.1:5173/?motion-debug=1');
+    await tab.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});
     await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined', null, { timeout: 60000 });
     await tab.waitForFunction(() => window.__riverMultiplayer?.().connected, null, { timeout: 60000 });
+    await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true'
+      && document.querySelector('.character-picker')?.checkVisibility(), null, { timeout: 60000 });
   };
   try {
   await join(page); await join(second);
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length >= 2, null, { timeout: 30000 });
-  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: !document.querySelector('.player-appearance')?.hidden, invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
+  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
   check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
-  await page.locator('#player-appearance').selectOption('woman-casual');
+  await page.locator('input[name=player-character][value=sable]').check();
+  await page.locator('input[name=player-form][value=beast]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
   await second.waitForFunction(id=>window.__riverMultiplayer().snapshot?.players.find(p=>p.id===id)?.appearance==='woman-casual',a.self);
   await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='woman-casual'),a.self);
   check(true,'Sable selection reaches the other browser and its rendered remote avatar');
   // The authoritative town permits one appearance change every two seconds.
   await page.waitForTimeout(2100);
-  await page.locator('#player-appearance').selectOption('forest-aristocrat-feminine');
+  await page.locator('input[name=player-character][value=silvan]').check();
+  await page.locator('input[name=player-variant][value=feminine]').check();
+  await page.locator('input[name=player-form][value=human]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='forest-aristocrat-feminine'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
   await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='forest-aristocrat-feminine'),a.self);
   await page.keyboard.press('F3');
@@ -38,6 +43,24 @@ async page => {
   await page.screenshot({path:'output/playwright/silvan-shared-district.png'});
 
   check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
+  const openPeople = async tab => {
+    const control=tab.locator('#panel-toggle');
+    if (await control.getAttribute('aria-expanded') === 'false') await control.click();
+    await tab.locator('[data-section=community-section]').click();
+  };
+  await openPeople(page);
+  await page.locator('.multiplayer-chat-form input').fill('Hello from the town');
+  await page.locator('.multiplayer-chat-form button').click();
+  await second.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
+  check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'A sent town message appears once for both players');
+  await page.reload();
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
+  check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'Chat history returns once after reconnect');
+  await openPeople(second);
+  await second.locator('.multiplayer-chat-form input').fill('Hello back');
+  await second.locator('.multiplayer-chat-form button').click();
+  await page.locator('.multiplayer-chat-message').filter({hasText:'Hello back'}).waitFor({state:'attached'});
+  check(await page.locator('.multiplayer-chat-message').count()===2,'A reply reaches the reconnected player through the live chat UI');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
@@ -83,8 +106,8 @@ async page => {
   const half=await aimAt(.5,.72);
   check([half.ghost.position[0],half.ghost.position[2]].every(v=>Math.abs(v*2-Math.round(v*2))<1e-6),'Builder preview uses the selected half-metre grid');
   await page.locator('#build-grid').selectOption('0.1');
-  let aim = null;
-  for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') break; }
+  let aim = null, acceptedAim = null;
+  for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') { acceptedAim = [fx, fy]; break; } }
   check(aim?.ghost?.visible, 'The preview appears where the pointer meets the ground');
   check(aim.valid === 'true' && /Ready/.test(aim.hint), `An open spot is marked ready (${aim.hint})`);
   await page.screenshot({ path: 'output/playwright/builder-mode.png' });
@@ -94,6 +117,21 @@ async page => {
   await page.waitForFunction(n => window.__riverMultiplayer().snapshot.builds.length > n, before, { timeout: 15000 });
   const placed = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds.at(-1));
   check(Math.hypot(placed.position[0] - aimed[0], placed.position[1] + aimed[2]) < .11, 'A click places the creation exactly where the preview stood');
+  await page.locator('#build-list button', {hasText:'Save design'}).click();
+  await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '1/48');
+  check((await second.locator('#design-count').textContent()) === '0/48', 'A saved design stays in its owner’s inventory');
+  await page.locator('#build-list button', {hasText:'Remove'}).click();
+  await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 0);
+  await page.locator('#design-list button', {hasText:'Place a copy'}).click();
+  await aimAt(...acceptedAim);
+  await page.waitForFunction(() => document.querySelector('#build-hint')?.dataset.valid === 'true');
+  await page.locator('#build-place').click();
+  await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 1);
+  const copy = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]);
+  check(copy.id !== placed.id && copy.kind === placed.kind && copy.finish === placed.finish, 'The owner places a fresh copy from a saved design');
+  await page.locator('#design-list button', {hasText:'Delete design'}).click();
+  await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '0/48');
+  check((await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]?.id)) === copy.id, 'Deleting a saved design leaves its placed copy intact');
   await page.waitForFunction(() => /creation|standing/.test(document.querySelector('#build-hint')?.textContent ?? ''), null, { timeout: 5000 }).catch(() => {});
   const blocked = await builder();
   check(blocked.valid === 'false', `The preview turns red on the spot just taken (${blocked.hint})`);
