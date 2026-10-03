@@ -32,7 +32,7 @@ Guided visits reconsider support as soon as they reach a moving neighbor. This a
 Run native window and renderer recovery checks with:
 
 ```sh
-VITE_SINGLE_PLAYER=true npm run test:desktop:e2e -- --dev
+RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
 For native vehicle checks, start `VITE_SINGLE_PLAYER=true npm run desktop:dev`, then run `node desktop/vehicles-e2e.js` in a second terminal. If Vite selected a port other than 5174, set `RIVER_OAKS_DEV_URL` to that URL with `?motion-debug=1`. The test covers both vehicles, immediate keyboard and movement-pad takeover, companion flight, and landing.

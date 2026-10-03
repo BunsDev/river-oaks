@@ -50,11 +50,9 @@ npm test
 npm run test:server
 npm run test:desktop
 npm run build
-npm run test:desktop:e2e
-npm run test:desktop:e2e -- --dev
-RIVER_OAKS_DESKTOP_EXECUTABLE="$PWD/dist/desktop/River Oaks-darwin-arm64/River Oaks.app/Contents/MacOS/River Oaks" npm run test:desktop:e2e
+RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
-Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS Google or GitHub account after Production providers are configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
 
 Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.
