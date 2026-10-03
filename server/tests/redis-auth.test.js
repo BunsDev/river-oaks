@@ -5,6 +5,7 @@ import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import test from 'node:test';
 import Redis from 'ioredis';
 import { WorkOS } from '@workos-inc/node';
+import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { createAuthAdapter } from './redis-auth-fixture.js';
 
 const { createRedisAuth } = await import('../redis-auth.js').catch(() => ({}));
@@ -264,3 +265,23 @@ integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on ano
   assert.equal(await f.b.auth.authenticate({headers:{cookie:`river_oaks_session=${encodeURIComponent(tampered)}`}}),null);
   assert.equal((await sdk.userManagement.loadSealedSession({sessionData:tampered,cookiePassword:config.cookiePassword}).authenticate()).authenticated,false);
 });
+
+for (const scenario of boundaryCases) {
+  integration(`real SDK cross-node application key boundary: ${scenario.name}`, async t => {
+    const { sdk, requests } = await workosSdkFixture(t, config, scenario);
+    const log = t.mock.method(console, 'error', () => {});
+    const f = await fixture(t, { workos: sdk });
+    const { response, sessionCookie } = await f.login();
+    assert.equal(response.status, scenario.status);
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    if (scenario.status === 302) {
+      assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).userId, 'user_sdk');
+    } else {
+      assert.equal(sessionCookie, undefined);
+      assert.deepEqual(await response.json(), { error: 'invalid_session' });
+      assert.equal(await f.redis.hlen(f.keys[2]), 0);
+      assert.equal(await f.redis.hlen(f.keys[4]), 0);
+      assert.equal(log.mock.calls[0].arguments[0], 'Authentication session rejected');
+    }
+  });
+}

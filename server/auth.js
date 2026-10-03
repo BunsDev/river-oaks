@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
+import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
@@ -11,8 +12,6 @@ const MAX_SESSIONS = 10_000;
 const PROVIDERS = { github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = (value) => createHash('sha256').update(value).digest('base64url');
-const validIssuer = (issuer) => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
-  || /^https:\/\/api\.workos\.com\/user_management\/client_[A-Za-z0-9]+\/?$/.test(issuer);
 
 function equal(a, b) {
   return typeof a === 'string' && typeof b === 'string'
@@ -75,7 +74,10 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
     const verified = await session.authenticate();
     if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true
-      || verified.authenticationMethod !== provider) { json(res, 403, { error: 'invalid_session' }); return; }
+      || verified.authenticationMethod !== provider) {
+      logSessionRejection(verified, {}, clientId, now());
+      json(res, 403, { error: 'invalid_session' }); return;
+    }
     if (!enabled || sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return; }
     const previous = sessions.get(verified.sessionId);
     if (previous) removeSession(previous);
@@ -83,7 +85,11 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL };
     sessions.set(record.sessionId, record);
     cookies.set(record.cookieHash, record.sessionId);
-    if (!identity(verified, record)) { removeSession(record); json(res, 403, { error: 'invalid_session' }); return; }
+    if (!identity(verified, record)) {
+      removeSession(record);
+      logSessionRejection(verified, record, clientId, now());
+      json(res, 403, { error: 'invalid_session' }); return;
+    }
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
     res.writeHead(302, { Location: '/' }); res.end();
   }
@@ -95,7 +101,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       || result.sessionId !== record.sessionId || sessions.get(record.sessionId) !== record) return null;
     const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
     if (!Number.isFinite(claims.exp) || claims.sub !== result.user.id || claims.sid !== result.sessionId
-      || !validIssuer(claims.iss)
+      || !validWorkOSIssuer(claims.iss)
       || claims.client_id !== clientId) return null;
     const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
     if (expiresAt <= now()) return null;
@@ -145,6 +151,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange'].includes(path) ? 'POST' : 'GET';
     if (!method.split(', ').includes(req.method)) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     cleanup();
+    let phase = path;
     try {
       if (path === '/auth/login') {
         const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
@@ -181,6 +188,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         states.delete(state); // Consume before the code exchange, including failed exchanges.
         if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
         let result;
+        phase = 'callback.exchange';
         try {
           result = await sdk.userManagement.authenticateWithCode({ clientId, code: query.get('code'), codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
         } catch (error) {
@@ -192,6 +200,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
           setCookie(res, VERIFY_COOKIE, verifyState, STATE_TTL / 1000);
           res.writeHead(303, { Location: '/auth/verify' }); res.end(); return true;
         }
+        phase = 'callback.session';
         await finishSignIn(result, pending.provider, res);
       } else if (path === '/auth/verify') {
         const verifyState = readCookie(req, VERIFY_COOKIE), pending = verifications.get(verifyState);
@@ -205,6 +214,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
           json(res, 429, { error: 'verification_attempts_exceeded' }); return true;
         }
         let result;
+        phase = 'verify.exchange';
         try {
           result = await sdk.userManagement.authenticateWithEmailVerification({ clientId, code,
             pendingAuthenticationToken: pending.pendingAuthenticationToken,
@@ -216,6 +226,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
           throw error;
         }
         verifications.delete(verifyState); setCookie(res, VERIFY_COOKIE, '', 0);
+        phase = 'verify.session';
         await finishSignIn(result, pending.provider, res);
       } else if (path === '/auth/desktop/exchange') {
         if (req.headers.origin !== base || req.headers['content-type'] !== 'application/json') {
@@ -228,20 +239,28 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         if (typeof refreshToken !== 'string' || refreshToken.length < 20 || refreshToken.length > 2048) {
           json(res, 400, { error: 'invalid_token' }); return true;
         }
+        phase = 'desktop.exchange';
         const result = await sdk.userManagement.authenticateWithRefreshToken({ clientId, refreshToken,
           session: { sealSession: true, cookiePassword } });
         if (!Object.values(PROVIDERS).includes(result.authenticationMethod) || result.user?.emailVerified !== true
           || typeof result.sealedSession !== 'string') { json(res, 403, { error: 'unsupported_provider' }); return true; }
         const verified = await sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword }).authenticate();
         if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true
-          || verified.authenticationMethod !== result.authenticationMethod) { json(res, 403, { error: 'invalid_session' }); return true; }
+          || verified.authenticationMethod !== result.authenticationMethod) {
+          logSessionRejection(verified, {}, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
         const previous = sessions.get(verified.sessionId);
         if (previous) removeSession(previous);
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
           csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL };
         sessions.set(record.sessionId, record); cookies.set(record.cookieHash, record.sessionId);
-        if (!identity(verified, record)) { removeSession(record); json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!identity(verified, record)) {
+          removeSession(record);
+          logSessionRejection(verified, record, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
@@ -259,11 +278,8 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         json(res, 200, { url });
       }
     } catch (error) {
-      console.error('WorkOS authentication failed', {
-        route: path,
-        type: error?.name,
-        status: error?.status ?? error?.statusCode,
-        code: error?.code,
+      console.error('Authentication unavailable', {
+        phase, name: error?.name, status: error?.status ?? error?.statusCode ?? error?.response?.status,
       });
       json(res, 503, { error: 'auth_unavailable' });
     }
