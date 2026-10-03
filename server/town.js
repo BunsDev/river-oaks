@@ -33,7 +33,6 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   validateOrigin(origin);
   const data = JSON.parse(await readFile(new URL('../preview/public/data/district.json', import.meta.url), 'utf8'));
   data.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
-  const world = createSharedWorld(data);
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   let game;
@@ -41,6 +40,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const auth = mode === 'local'
     ? createDevAuth({ origin, onLogout })
     : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
+  const world = createSharedWorld(data,mode === 'local' ? {isAdmin:auth.isAdmin} : {});
   game = createGameServer({
     auth, world, moderation, origin, staticRoot,
     moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),

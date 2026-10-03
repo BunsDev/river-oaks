@@ -24,7 +24,7 @@ const auth={authenticate:async req=>identity(req),async handle(req,res){
   }
   res.statusCode=404;res.end('{}');return true;
 }};
-app=createGameServer({auth,world:createSharedWorld(data),origin});
+app=createGameServer({auth,world:createSharedWorld(data,{isAdmin:id=>id==='alice'}),origin});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
 const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});

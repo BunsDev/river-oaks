@@ -45,13 +45,30 @@ the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
 
-Build & decorate lets a player place, move, turn, and remove up to 24 owned
+In shared play, only Jevica's two configured WorkOS owner accounts can grant
+wishes or use Build & decorate, including saved designs. The server checks the
+authenticated user ID for every command; a selected Jevica appearance does not
+grant authority. Other visitors can see creations and wish effects, meet
+residents, chat, travel, and participate in community scenarios. On loopback
+development auth, the first issued development identity is the owner fixture.
+Jevica can move or remove creations made before the restriction; their previous
+owners cannot keep building. Earlier guest design records remain private in the
+checkpoint but cannot be used while the restriction is active.
+Solo play remains a separate local sandbox without an authenticated account.
+
+Build & decorate lets the owner place, move, turn, and remove up to 24 owned
 creations in the shared town. A placed creation can be saved as a design, then
-placed again from **Saved designs**. Each account can keep 48 designs. The
+placed again from **Saved designs**. The owner can keep 48 designs. The
 inventory is returned only to its owner; placed copies are visible to everyone.
 Designs survive reconnects and town resets through the private checkpoint.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
+
+Shared play uses 98 simulated residents, down from 193 in solo play (49%).
+Every outdoor scenario resident and at least one staff member per shop remains.
+The same roster drives the server, browser, room counts, and rendered people.
+Old full-population checkpoints migrate into this roster and preserve active
+indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 

@@ -33,7 +33,7 @@ function dom() {
 const world = { communityLocations: [{ id: 'a', name: 'Plaza', position: [0, 0, 0] }, { id: 'b', name: 'Café', position: [2, 0, 0] }] };
 function setup(options = {}) {
   const elements = dom(), commands = [];
-  const client = { async command(command) { commands.push(command); return { ok: true, message: 'Confirmed by town' }; } };
+  const client = {identity:{id:'alice'},snapshot:{players:[{id:'alice',canGrantWishes:true}]},async command(command) { commands.push(command); return { ok: true, message: 'Confirmed by town' }; } };
   const panel = createCommunityPanel({ host: elements.host, getVisitor: () => [0,0,0], getPersona: () => 'jevica', getMultiplayer: () => client, ...options });
   panel.setWorld(world);
   return { panel, commands, client, ...elements };
@@ -88,6 +88,19 @@ test('shared controls send intentions without changing shared state and show rej
   assert.equal(byId('community-reset').disabled, true);
   assert.equal(byId('community-scenario').disabled, true);
   assert.equal(byId('community-life').disabled, true);
+});
+
+test('shared guest sees wishes but cannot grant one through the panel', async () => {
+  const {panel,client,byId,commands}=setup();
+  client.snapshot.players[0].canGrantWishes=false;
+  assert.equal(await panel.selectLocal(panel.state.locals[0].id),true);
+  commands.length=0;
+  assert.equal(byId('wish-grant').hidden,true);
+  assert.equal(byId('wish-grant').disabled,true);
+  assert.equal(byId('wish-choice').hidden,true);
+  assert.match(byId('wish-status').textContent,/Only Jevica/);
+  await byId('wish-grant').click();
+  assert.deepEqual(commands,[]);
 });
 
 test('wish actions stay busy until confirmation and restore focus after success', async () => {

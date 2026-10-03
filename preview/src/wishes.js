@@ -15,7 +15,7 @@ function record(state, local, message) {
   state.wishes.events.push({ localId: local.id, message: `${local.name}: ${message}` });
   state.wishes.events = state.wishes.events.slice(-12);
 }
-function refreshTrouble(state) {
+export function refreshWishTrouble(state) {
   for (const local of state.locals) delete local.wishDisruption;
   const incidents = state.locals.filter(local => local.wish && local.wish.phase !== 'gift' && !local.abducted);
   for (const owner of incidents) {
@@ -45,7 +45,7 @@ export function undoWish(state, localId, caster) {
   const ownerName=local.wish.ownerName??'Jevica';
   delete local.wish;
   state.wishes.resolved++;
-  refreshTrouble(state);
+  refreshWishTrouble(state);
   const message = `Thank you, ${ownerName}. I am myself again. Some wishes are better left as wishes.`;
   record(state, local, message);
   return { ok: true, message };
@@ -64,5 +64,5 @@ export function stepWishes(state, delta) {
       record(state, local, wish.message);
     }
   }
-  refreshTrouble(state);
+  refreshWishTrouble(state);
 }

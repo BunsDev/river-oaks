@@ -10,6 +10,7 @@ import { staffWorkPose, blendStationPose } from './store-work.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { createWorkerTask } from './work-props.js';
 import { storePersonId } from './store-encounters.js';
+import { includeSharedStorePerson } from './shared-population.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadAvatarTemplate, instantiateAvatar } from './avatars.js';
 
@@ -54,7 +55,7 @@ function dress(avatar, spot, theme, seed) {
   if (spot.role === 'mannequin') avatar.model.traverse(item => { if (item.isMesh && isHair(item.material?.name ?? '')) item.visible = false; });
 }
 
-export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
+export function buildStorePeople(rooms, { reducedMotion = false, sharedPopulation = false } = {}) {
   const group = new THREE.Group(); group.name = 'Boutique staff and guests';
   const figures = [], loads = [];
   let disposed = false, ready = 0, previousTime = null;
@@ -94,6 +95,7 @@ export function buildStorePeople(rooms, { reducedMotion = false } = {}) {
     roomGroup.userData.room = room;
     group.add(roomGroup);
     room.people.forEach((spot, spotIndex) => {
+      if (sharedPopulation && !includeSharedStorePerson(room, spot, spotIndex)) return;
       const seed = (spot.seed ?? (room.index * 3 + spotIndex)) >>> 0;
       const profile = profileFor(spot, room.theme, seed);
       loads.push(loadAvatarTemplate(profile).then(async source => {

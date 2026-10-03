@@ -24,7 +24,7 @@ const identity = req => {
 };
 for (const port of [8788, 8789]) {
   const security = createRedisSecurity({ redis, prefix });
-  const room = createRedisRoom({ redis, prefix, worldData, authorize: async user => !revoked.has(user.userId) && !(await security.isBanned(user.userId)) });
+  const room = createRedisRoom({ redis, prefix, worldData, isAdmin:id=>id==='alice', authorize: async user => !revoked.has(user.userId) && !(await security.isBanned(user.userId)) });
   let app;
   const auth = { authenticate: async req => identity(req), async handle(req, res) {
     if (!req.url.startsWith('/auth/')) return false;

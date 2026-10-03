@@ -55,7 +55,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize}) {
+export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize,isAdmin}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
@@ -76,7 +76,7 @@ export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize})
     // A fresh lease always reloads durable state, even for this process's token.
     // A tentative mutation is reusable only after its fenced commit succeeds.
     if(ownership===2)cached=null;
-    const world=cached?.world??createSharedWorld(worldData,{now});
+    const world=cached?.world??createSharedWorld(worldData,{now,isAdmin});
     const time=now();
     let previous=cached?.previous??null,connections=cached?.connections??new Map();
     if(!cached && stored) {

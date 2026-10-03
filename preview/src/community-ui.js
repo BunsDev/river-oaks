@@ -374,7 +374,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     text(outcome, state.result ?? mode);
     outcome.dataset.state = state.status;
     const local = state.locals.find((item) => item.id === state.selectedId);
-    wishPanel.update(state, local, getPersona());
+    const sharedPlayer=getMultiplayer()?.snapshot?.players?.find(player=>player.id===getMultiplayer()?.identity?.id);
+    wishPanel.update(state, local, getPersona(), !getMultiplayer() || Boolean(sharedPlayer?.canGrantWishes));
     if (!local || dialogue.hidden) return;
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
@@ -673,7 +674,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       selectionEpoch++;
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
-      state = createCommunity(world, rooms, {carriage:!getMultiplayer()});
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer(),sharedPopulation:Boolean(getMultiplayer())});
       life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();

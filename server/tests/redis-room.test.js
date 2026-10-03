@@ -14,7 +14,7 @@ async function setup(t,{authorize=async()=>true}={}) {
   redis.on('error',()=>{});await redis.connect();
   const prefix=`{river-oaks:test:${randomUUID()}}`,rooms=[];
   let time=100000;
-  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData,authorize,now:()=>time});rooms.push(room);return room;};
+  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData,authorize,now:()=>time,isAdmin:id=>id==='alice'});rooms.push(room);return room;};
   t.after(async()=>{
     await Promise.all(rooms.map(room=>room.close()));
     const keys=await redis.keys(`${prefix}:*`);
@@ -182,12 +182,12 @@ testRedis('owned ticks use two Redis round trips and throttled ticks do not refe
 testRedis('a previous leader reloads state after another instance committed during its lease loss',async t=>{
   const f=await setup(t),a=f.create(),b=f.create();await f.join(a,'alice');
   await f.redis.del(`${f.prefix}:lease`);
-  await f.join(b,'bob');await f.command(b,'bob',{type:'travel',localId:'local-00'});
-  await f.command(b,'bob',{type:'wish',localId:'local-00',kind:'dragon'});
+  await f.join(b,'bob');await f.command(b,'alice',{type:'travel',localId:'local-00'});
+  await f.command(b,'alice',{type:'wish',localId:'local-00',kind:'dragon'});
   await f.redis.del(`${f.prefix}:lease`);await delay(210);await a.tick();
   const view=await a.read();
   assert.equal(view.snapshot.players.length,2);
-  assert.equal(view.snapshot.locals[0].wish.ownerId,'bob');
+  assert.equal(view.snapshot.locals[0].wish.ownerId,'alice');
   assert.equal(view.snapshot.wishes.granted,1);
 });
 

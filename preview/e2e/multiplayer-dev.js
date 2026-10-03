@@ -48,6 +48,8 @@ async page => {
   await page.locator('.multiplayer-chat-message').filter({hasText:'Hello back'}).waitFor({state:'attached'});
   check(await page.locator('.multiplayer-chat-message').count()===2,'A reply reaches the reconnected player through the live chat UI');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
+  check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
+  check(await second.locator('#wish-grant').evaluate(button=>button.hidden),'A guest cannot access wish granting');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
   check(spacing >= 1.2, `players arrive on separate spots (${spacing.toFixed(2)} m apart)`);
@@ -94,7 +96,7 @@ async page => {
   check(Math.hypot(placed.position[0] - aimed[0], placed.position[1] + aimed[2]) < .11, 'A click places the creation exactly where the preview stood');
   await page.locator('#build-list button', {hasText:'Save design'}).click();
   await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '1/48');
-  check((await second.locator('#design-count').textContent()) === '0/48', 'A saved design stays in its owner’s inventory');
+  check(!(await second.locator('.shared-build-controls').isVisible()), 'A guest cannot access saved building designs');
   await page.locator('#build-list button', {hasText:'Remove'}).click();
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 0);
   await page.locator('#design-list button', {hasText:'Place a copy'}).click();
