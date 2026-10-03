@@ -1,6 +1,7 @@
 # Visible birds
 
-Date: 2026-10-03. Status: approved design, not yet implemented.
+Date: 2026-10-03. Status: approved, then revised during implementation (see
+*Revisions after measurement*); implemented on `feat/visible-birds`.
 
 ## Problem
 
@@ -93,6 +94,36 @@ still climbs over buildings.
   passes; `render-budget` is unchanged.
 - **Docs**: `docs/bird-cams.md` gets the new heights and the companion rule;
   `docs/testing.md` describes `birds-visible`.
+
+## Revisions after measurement
+
+The design above was approved, then changed where measurement showed it fell
+short. What shipped:
+
+1. **The companion circles ahead of the player.** Weighting scenes near the
+   player (×3 within 35 m) put a bird in view only 4% of the time: the
+   companion circled scenes off to the side or behind. The companion's only
+   scene is now the spot the player is looking toward, 20 m ahead
+   (`COMPANION.ahead`), on a tight 8 m lap (`COMPANION.orbit`), stepped back
+   toward the player until the lap is clear (`lapClear`), else a lap around the
+   player, else the player's own scene. The role sticks with one bird until
+   someone flies it by hand. The interest gains a `view` (where the player is
+   looking) and an optional per-scene `radius`.
+2. **Circling uses pursuit steering.** The old law (fly the tangent, corrected
+   by radius error) swung through the middle of a tight lap. A bird now aims at
+   the point on the lap 0.9 rad ahead of its own angle, and slows so its tightest
+   turn is 70% of the lap radius.
+3. **A circling bird looks 5 m ahead, not 10** (`watchLookahead`), and is
+   lifted only by a real obstruction. `lapClear` checks the same things the
+   flight rules do: open air at the centre and on rings at half the radius, the
+   radius, and radius plus look-ahead, and the lap clear of the 18 m district-edge
+   turn-back (`edgeMargin`). An earlier lap check tested less than the flight
+   rules probed, so "clear" laps were still lifted out of shape.
+
+The ride-along harness (`bird-cams`) waits for the 0.8 s glide on frame time
+rather than a fixed 1.2 s (it failed on `main` under load), and its "view from
+the air" threshold is 1 m above the walking view: birds never fly below 3 m and
+the walking eye is at 1.68 m.
 
 ## Out of scope
 
