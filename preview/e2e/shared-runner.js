@@ -30,6 +30,13 @@ async function unused(port) {
   } catch (error) { throw new Error(`Shared acceptance needs unused loopback port ${port}; existing services are left running.`, { cause: error }); }
   finally { if (socket.listening) await new Promise(resolve => socket.close(resolve)); }
 }
+async function freePort(excluded) {
+  const socket = createServer();
+  await new Promise((resolve, reject) => { socket.once('error', reject); socket.listen(0, '127.0.0.1', resolve); });
+  const port = socket.address().port;
+  await new Promise(resolve => socket.close(resolve));
+  return excluded.has(port) ? freePort(excluded) : port;
+}
 async function stop() {
   if (!child?.pid || child.exitCode !== null || child.signalCode !== null) { child = null; return; }
   const owned = child, exited = once(owned, 'exit');
@@ -37,12 +44,12 @@ async function stop() {
   owned.kill('SIGTERM');
   try { await exited; } finally { clearTimeout(deadline); child = null; }
 }
-async function start(mode) {
+async function start(mode, ports) {
   const development = mode === 'development';
-  for (const port of development ? [5179, 8787] : [5180, 8788]) await unused(port);
-  const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', '5179'] : ['server/tests/browser-fixture.js'];
+  for (const port of Object.values(ports)) await unused(port);
+  const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', String(ports.web)] : ['server/tests/browser-fixture.js'];
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
-  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', MODERATION_FILE: join(temporary, 'moderation.json') };
+  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json') };
   interruption.signal.throwIfAborted();
   child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {
@@ -69,7 +76,11 @@ try {
   browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, ...(process.platform === 'darwin' ? { args: ['--use-angle=metal'] } : {}) });
   for (const mode of modes.length ? modes : ['development', 'required']) {
     interruption.signal.throwIfAborted();
-    await start(mode);
+    const used = new Set();
+    const web = await freePort(used); used.add(web);
+    const town = await freePort(used);
+    const ports = { web, town };
+    await start(mode, ports);
     for (const name of mode === 'development' ? ['multiplayer-dev'] : ['multiplayer', 'multiplayer-gate']) {
       interruption.signal.throwIfAborted();
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
@@ -78,7 +89,7 @@ try {
       await context.route('**/v1/**', route => route.fulfill({ status: 503, json: { source: 'unavailable', reason: 'acceptance_fixture' } }));
       try {
         console.log(`Running ${name}`);
-        const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replaceAll('http://127.0.0.1:5173', 'http://127.0.0.1:5179');
+        const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replaceAll(/http:\/\/127\.0\.0\.1:(?:5173|5180)/g, `http://127.0.0.1:${web}`);
         const result = await eval(`(${source})`)(page);
         if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
         report.results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });

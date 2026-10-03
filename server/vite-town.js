@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 // `npm run dev` also runs the shared town in-process, so multiplayer works
 // locally with one command and no WorkOS account. The Vite proxy already sends
 // /auth, /api and /multiplayer to port 8787. If a town is already listening
-// there (for example `npm run server`), that one is used instead.
+// there (for example `npm run server`), that one is used instead. Set
+// RIVER_OAKS_DEV_TOWN_PORT to isolate a second development checkout.
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 export function sharedTownDevServer({ port = 8787 } = {}) {
