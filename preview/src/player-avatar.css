@@ -13,6 +13,26 @@
 :root[data-theme] .player-controls :is(button,select):disabled { opacity:.45; cursor:default; }
 :root[data-theme] .player-controls .vehicle-garage #player-drive-status { font:11px/1.55 system-ui; color:var(--muted); margin:10px 0 0; }
 .player-controls button[hidden] { display:none; }
-.player-appearance { display:block; margin-top:10px; color:var(--muted,#6b6470); font-size:11px; }
-.player-appearance[hidden] { display:none; }
-.player-appearance select { box-sizing:border-box; display:block; width:100%; min-height:40px; margin-top:4px; padding:6px; border:1px solid #bca8c855; border-radius:9px; background:#3b2d45; color:#fff; font:inherit; }
+/* Character picker: person, then style when there is more than one, then form. */
+.character-picker { min-width:0; margin:0; padding:0; border:0; }
+.character-picker legend, .character-option legend { margin:0 0 6px; padding:0; color:var(--muted,#d6c8de); font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+.character-picker[aria-busy=true] { opacity:.7; }
+.character-roster { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+.character-chip { position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; min-height:44px; padding:5px 2px 4px; border-radius:12px; color:var(--muted,#d6c8de); cursor:pointer; }
+.character-chip input, .character-segments input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
+.character-chip-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:linear-gradient(145deg,var(--character-accent),#272436); color:#fff; font:500 17px/1 var(--font-display,Georgia,serif); text-shadow:0 1px 6px #20152780; box-shadow:inset 0 0 0 1px #ffffff40; transition:box-shadow .16s ease; }
+.character-chip-name { max-width:100%; overflow:hidden; font-size:10px; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
+.character-chip:hover .character-chip-mark { box-shadow:inset 0 0 0 1px #ffffff40,0 0 0 2px var(--line,#bca8c855); }
+.character-chip:has(input:checked) { color:var(--ink,#fff); font-weight:600; }
+.character-chip:has(input:checked) .character-chip-mark { box-shadow:0 0 0 2px var(--panel,#211d2a),0 0 0 4px var(--character-accent); }
+.character-chip:has(input:focus-visible), .character-segments label:has(input:focus-visible) { outline:3px solid var(--accent,#e6a8ed); outline-offset:1px; }
+.character-option { min-width:0; margin:10px 0 0; padding:0; border:0; }
+.character-option[hidden] { display:none; }
+.character-segments { display:grid; grid-auto-columns:minmax(0,1fr); grid-auto-flow:column; gap:3px; padding:3px; border:1px solid var(--line,#bca8c855); border-radius:11px; background:var(--soft,#2b2335); }
+.character-segments label { position:relative; display:grid; place-items:center; min-height:38px; padding:4px 6px; border-radius:8px; color:var(--muted,#d6c8de); font-size:11px; line-height:1.2; text-align:center; cursor:pointer; }
+.character-segments label span { display:flex; flex-direction:column; align-items:center; gap:1px; }
+.character-segments small { font-size:9px; font-weight:400; opacity:.85; }
+.character-segments label:has(input:checked) { background:var(--panel,#3b2d45); color:var(--accent,#f5d2ed); font-weight:600; box-shadow:0 1px 2px #0002,inset 0 0 0 1px var(--accent,#e6a8ed); }
+.player-portrait img.live-portrait { object-fit:cover; object-position:50% 35%; }
+/* The movement mode sits at the header's lower right; keep the role clear of it. */
+.player-identity #player-role { padding-right:50px; }
