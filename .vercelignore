@@ -1,0 +1,8 @@
+data/raw/
+data/models/
+data/generated/
+output/
+dist/
+node_modules/
+.playwright-cli/
+unreal/
