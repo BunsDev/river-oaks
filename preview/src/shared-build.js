@@ -19,6 +19,7 @@ export const buildFinish = id => BUILD_FINISHES.find(item=>item.id===id)??null;
 // builder mode shows exactly what the server will accept. Positions are
 // [east, north]; environment is a walking environment (z = -north).
 export const BUILD_REACH = 3.6, BUILD_EDIT_REACH = 4.5, BUILD_PLAYER_GAP = .65;
+export const MAX_SAVED_DESIGNS = 48;
 export const BUILD_REASONS = {
   ground: 'Find solid ground to build on.',
   indoors: 'Creations go outdoors, not inside shops.',

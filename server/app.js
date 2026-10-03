@@ -115,7 +115,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
             const {requestId,...command}=message;
             if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
-            if(result.ok && command.type!=='pose')send(ws,world.snapshot());
+            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,world.snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
         });
