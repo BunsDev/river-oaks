@@ -25,9 +25,9 @@
         <button id="access-gate-signout" type="button" hidden>Sign out</button>
       </div>
     </section>
-    <section class="access-review" id="access-review" aria-labelledby="access-review-title" hidden>
+    <section class="access-review" id="access-review" role="dialog" aria-modal="true" aria-labelledby="access-review-title" hidden>
       <div class="access-review-card">
-        <h2 id="access-review-title">Waitlist requests</h2>
+        <h2 id="access-review-title" tabindex="-1">Waitlist requests</h2>
         <p id="access-review-status" role="status"></p>
         <div id="access-review-list"></div>
         <button id="access-review-close" type="button">Close</button>

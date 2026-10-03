@@ -56,17 +56,21 @@ async function checkAccess() {
 
 async function loadRequests() {
   review.hidden = false;
+  $('.app-shell').inert = true;
+  $('#access-review-title').focus({ preventScroll: true });
   reviewStatus.textContent = 'Loading requests…';
   reviewList.replaceChildren();
   try {
     const { requests } = await api('/api/waitlist/requests');
-    const pending = requests.filter(request => request.status === 'pending');
-    reviewStatus.textContent = pending.length ? `${pending.length} awaiting approval` : 'No requests are waiting.';
-    for (const request of pending) {
+    const pending = requests.filter(request => request.status === 'pending').length;
+    reviewStatus.textContent = requests.length ? `${pending} awaiting approval · ${requests.length} total` : 'No requests yet.';
+    for (const request of [...requests].sort((a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'))) {
       const row = document.createElement('div'); row.className = 'access-request';
-      const person = document.createElement('span'); person.textContent = `${request.name}${request.email ? ` · ${request.email}` : ''} · ${request.userId}`;
+      const person = document.createElement('span'); person.textContent = `${request.name}${request.email ? ` · ${request.email}` : ''} · ${request.userId} · ${request.status}`;
       row.append(person);
-      for (const [label, approved] of [['Approve', true], ['Decline', false]]) {
+      const actions = request.status === 'pending' ? [['Approve', true], ['Decline', false]]
+        : request.status === 'approved' ? [['Revoke', false]] : [['Approve', true]];
+      for (const [label, approved] of actions) {
         const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
         button.addEventListener('click', async () => {
           button.disabled = true;
@@ -84,7 +88,9 @@ async function loadRequests() {
 
 retry.addEventListener('click', checkAccess);
 adminButton.addEventListener('click', loadRequests);
-$('#access-review-close').addEventListener('click', () => { review.hidden = true; adminButton.focus(); });
+function closeReview() { review.hidden = true; $('.app-shell').inert = false; adminButton.focus(); }
+$('#access-review-close').addEventListener('click', closeReview);
+review.addEventListener('keydown', event => { if (event.key === 'Escape') closeReview(); });
 async function signout() {
   try {
     const { url } = await api('/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': session.csrfToken } });
