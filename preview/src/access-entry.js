@@ -28,6 +28,10 @@ async function checkAccess() {
       gateState = 'signed-out';
       return;
     }
+    if (entered && session.user.id !== document.body.dataset.accountId) {
+      location.reload();
+      return;
+    }
     tools.hidden = false; gateSignout.hidden = false;
     const access = await api('/api/waitlist/status');
     adminButton.hidden = !access.admin;
@@ -67,8 +71,32 @@ async function loadRequests() {
     reviewStatus.textContent = requests.length ? `${pending} awaiting approval · ${requests.length} total` : 'No requests yet.';
     for (const request of [...requests].sort((a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'))) {
       const row = document.createElement('div'); row.className = 'access-request';
-      const person = document.createElement('span'); person.textContent = `${request.name}${request.email ? ` · ${request.email}` : ''} · ${request.userId} · ${request.status}`;
+      const person = document.createElement('span'); person.textContent = `${request.name}${request.email ? ` · ${request.email}` : ''} · ${request.status}`;
       row.append(person);
+      const identifier = document.createElement('code');
+      identifier.className = 'access-request-id';
+      identifier.textContent = 'User ID hidden';
+      row.append(identifier);
+      const reveal = document.createElement('button'); reveal.type = 'button'; reveal.textContent = 'Reveal ID';
+      reveal.setAttribute('aria-label', `Reveal user ID for ${request.name}`);
+      reveal.setAttribute('aria-pressed', 'false');
+      reveal.addEventListener('click', () => {
+        const visible = reveal.getAttribute('aria-pressed') !== 'true';
+        identifier.textContent = visible ? request.userId : 'User ID hidden';
+        reveal.textContent = visible ? 'Hide ID' : 'Reveal ID';
+        reveal.setAttribute('aria-label', `${visible ? 'Hide' : 'Reveal'} user ID for ${request.name}`);
+        reveal.setAttribute('aria-pressed', String(visible));
+      });
+      row.append(reveal);
+      const copy = document.createElement('button'); copy.type = 'button'; copy.textContent = 'Copy ID';
+      copy.setAttribute('aria-label', `Copy user ID for ${request.name}`);
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(request.userId);
+          reviewStatus.textContent = `User ID copied for ${request.name}.`;
+        } catch { reviewStatus.textContent = 'Could not copy the user ID. Reveal it to copy manually.'; }
+      });
+      row.append(copy);
       const actions = request.status === 'pending' ? [['Approve', true], ['Decline', false]]
         : request.status === 'approved' ? [['Revoke', false]] : [['Approve', true]];
       for (const [label, approved] of actions) {
