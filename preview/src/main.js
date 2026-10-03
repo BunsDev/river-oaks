@@ -627,7 +627,7 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (!softwareAcceptance || now - lastSoftwareDraw >= 250) {
+  if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     pipeline.render(delta);
