@@ -13,6 +13,7 @@ const cookie = (response, name) => response.headers.getSetCookie().find((value) 
 function adapter(clock) {
   const sealed = new Map();
   const calls = { codes: [], refresh: 0 };
+  let verificationRequired = false;
   let user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: true };
   let issuer = 'https://api.workos.com', tokenClientId = config.clientId, authenticationMethod = 'GitHubOAuth';
   function mint(sessionId = 'session_1') {
@@ -27,6 +28,7 @@ function adapter(clock) {
     setIssuer(value) { issuer = value; },
     setTokenClientId(value) { tokenClientId = value; },
     setAuthenticationMethod(value) { authenticationMethod = value; },
+    requireEmailVerification() { verificationRequired = true; },
     userManagement: {
       async getAuthorizationUrlWithPKCE(options) {
         const url = new URL('https://api.workos.com/user_management/authorize');
@@ -40,6 +42,18 @@ function adapter(clock) {
         calls.codes.push(options);
         assert.equal(options.codeVerifier, 'private-pkce-verifier');
         assert.deepEqual(options.session, { sealSession: true, cookiePassword: config.cookiePassword });
+        if (verificationRequired) {
+          verificationRequired = false;
+          throw Object.assign(new Error('Email verification required'), {
+            code: 'email_verification_required', status: 403, pendingAuthenticationToken: 'private-pending-token',
+          });
+        }
+        return mint();
+      },
+      async authenticateWithEmailVerification(options) {
+        assert.equal(options.pendingAuthenticationToken, 'private-pending-token');
+        assert.deepEqual(options.session, { sealSession: true, cookiePassword: config.cookiePassword });
+        if (options.code !== '123456') throw Object.assign(new Error('Invalid code'), { status: 400, code: 'invalid_code' });
         return mint();
       },
       async authenticateWithRefreshToken(options) {
@@ -125,6 +139,35 @@ test('completes state-bound PKCE callback and exposes only safe identity and CSR
   assert.equal(identity.sessionId, 'session_1');
   assert.equal(identity.userId, 'user_1');
   assert.ok(identity.expiresAt > Date.now());
+});
+
+test('GitHub sign-in completes WorkOS email verification before issuing a session', async t => {
+  const app = await fixture(t);
+  app.workos.requireEmailVerification();
+  const { callback } = await app.login();
+  assert.equal(callback.status, 303);
+  assert.equal(callback.headers.get('location'), '/auth/verify');
+  const verifyCookie = cookie(callback, 'river_oaks_verify_state');
+  assert.ok(verifyCookie);
+  assert.deepEqual(await (await app.request('/auth/session', { headers: { cookie: verifyCookie } })).json(), { authenticated: false });
+  assert.equal((await app.request('/auth/verify')).status, 400);
+  const page = await app.request('/auth/verify', { headers: { cookie: verifyCookie } });
+  assert.equal(page.status, 200);
+  assert.equal(page.headers.get('referrer-policy'), 'same-origin');
+  assert.match(await page.text(), /Verification code/);
+  const post = (code, origin = config.origin) => app.request('/auth/verify', { method: 'POST', headers: {
+    cookie: verifyCookie, origin, 'content-type': 'application/x-www-form-urlencoded',
+  }, body: `code=${code}` });
+  assert.equal((await post('123456', 'https://attacker.example')).status, 403);
+  assert.equal((await post('123456', 'null')).status, 403);
+  assert.match(await (await post('000000')).text(), /could not be confirmed/);
+  const verified = await post('123456');
+  assert.equal(verified.status, 302);
+  assert.equal(verified.headers.get('location'), '/');
+  const sessionCookie = cookie(verified, 'river_oaks_session');
+  assert.ok(sessionCookie);
+  assert.equal((await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).authenticated, true);
+  assert.equal((await post('123456')).status, 400);
 });
 
 test('desktop device credentials exchange only for GitHub sessions', async t => {

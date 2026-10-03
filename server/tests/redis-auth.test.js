@@ -66,6 +66,32 @@ integration('cross-instance callback consumes PKCE once and survives closing the
   assert.equal(await f.redis.ping(), 'PONG', 'close must not quit caller Redis');
 });
 
+integration('email verification after GitHub OAuth survives another server instance', async t => {
+  const f = await fixture(t);
+  f.workos.requireEmailVerification();
+  const start = await f.begin();
+  const callback = await f.b.request(start.path, { headers: start.headers });
+  assert.equal(callback.status, 303);
+  assert.equal(callback.headers.get('location'), '/auth/verify');
+  const verifyCookie = cookie(callback, 'river_oaks_verify_state');
+  assert.ok(verifyCookie);
+  const c = await f.app();
+  assert.equal((await c.request('/auth/verify', { headers: { cookie: verifyCookie } })).status, 200);
+  const post = code => c.request('/auth/verify', { method: 'POST', headers: {
+    cookie: verifyCookie, origin: config.origin, 'content-type': 'application/x-www-form-urlencoded',
+  }, body: `code=${code}` });
+  assert.equal((await c.request('/auth/verify', { method: 'POST', headers: {
+    cookie: verifyCookie, origin: 'null', 'content-type': 'application/x-www-form-urlencoded',
+  }, body: 'code=123456' })).status, 403);
+  assert.match(await (await post('000000')).text(), /could not be confirmed/);
+  const verified = await post('123456');
+  assert.equal(verified.status, 302);
+  const sessionCookie = cookie(verified);
+  assert.ok(sessionCookie);
+  assert.equal((await (await f.a.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).authenticated, true);
+  assert.equal((await post('123456')).status, 400);
+});
+
 integration('state is browser-bound, expires, and cannot be replayed across nodes', async t => {
   const f = await fixture(t), start = await f.begin();
   assert.equal((await f.b.request(start.path, { headers: { cookie: 'river_oaks_auth_state=wrong' } })).status, 400);

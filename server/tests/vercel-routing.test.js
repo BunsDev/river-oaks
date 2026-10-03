@@ -4,6 +4,7 @@ import { normalizeVercelRoute, vercelClientAddress } from '../vercel-routing.js'
 
 test('rewritten routes retain OAuth/socket parameters without accepting arbitrary paths', () => {
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/callback&code=abc&state=xyz'), '/auth/callback?code=abc&state=xyz');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/verify'), '/auth/verify');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/desktop/exchange'), '/auth/desktop/exchange');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/multiplayer&ticket=xyz'), '/multiplayer?ticket=xyz');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/../../.env'), '/not-found');

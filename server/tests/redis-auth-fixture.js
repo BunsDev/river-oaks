@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 // WorkOS boundary fixture; HTTP state/cookies and all Redis transactions stay real.
 export function createAuthAdapter(now = Date.now) {
   const sealed = new Map(), calls = { codes: 0, refresh: 0 };
-  let verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null, authenticationMethod = 'GitHubOAuth';
+  let verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null, authenticationMethod = 'GitHubOAuth', verificationRequired = false;
   function mint(sessionId) {
     const user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: verified };
     const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, client_id: tokenClientId, sub: user.id, sid: sessionId, exp: Math.floor(now() / 1000) + 300 })).toString('base64url')}.signature`;
@@ -17,6 +17,7 @@ export function createAuthAdapter(now = Date.now) {
     setIssuer(value) { issuer = value; },
     setTokenClientId(value) { tokenClientId = value; },
     setAuthenticationMethod(value) { authenticationMethod = value; },
+    requireEmailVerification() { verificationRequired = true; },
     blockRefresh() {
       let release, entered;
       const started = new Promise(resolve => { entered = resolve; });
@@ -30,6 +31,17 @@ export function createAuthAdapter(now = Date.now) {
       },
       async authenticateWithCode(options) {
         if (options.codeVerifier !== 'private-pkce-verifier') throw new Error('Invalid verifier');
+        if (verificationRequired) {
+          verificationRequired = false;
+          throw Object.assign(new Error('Email verification required'), {
+            code: 'email_verification_required', status: 403, pendingAuthenticationToken: 'private-pending-token',
+          });
+        }
+        return mint(`session_${++calls.codes}`);
+      },
+      async authenticateWithEmailVerification(options) {
+        if (options.pendingAuthenticationToken !== 'private-pending-token') throw new Error('Invalid verification token');
+        if (options.code !== '123456') throw Object.assign(new Error('Invalid code'), { status: 400, code: 'invalid_code' });
         return mint(`session_${++calls.codes}`);
       },
       async authenticateWithRefreshToken(options) {

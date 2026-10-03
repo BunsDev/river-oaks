@@ -43,6 +43,10 @@
       "destination": "/api/server?_river_path=/auth/callback"
     },
     {
+      "source": "/auth/verify",
+      "destination": "/api/server?_river_path=/auth/verify"
+    },
+    {
       "source": "/auth/session",
       "destination": "/api/server?_river_path=/auth/session"
     },
