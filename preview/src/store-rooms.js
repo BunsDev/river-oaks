@@ -95,6 +95,14 @@ export function planStoreRooms(world) {
       footprint: [[best.aMin, 0], [best.aMax, 0], [best.aMax, best.depth], [best.aMin, best.depth]].map(([a, d]) => toWorld(a, d)),
       fixtures: [], obstacles: [], people: [], lights: [],
     };
+    // The entrance throat extends 1.4 m outside the room footprint. Include
+    // it so the broad phase never excludes a point accepted by roomAt().
+    const entrance = [toWorld(-DOOR_HALF_WIDTH, -1.4), toWorld(DOOR_HALF_WIDTH, -1.4)];
+    const bounds = [...room.footprint, ...entrance];
+    room.lookupBounds = [
+      Math.min(...bounds.map(point => point[0])), Math.min(...bounds.map(point => point[1])),
+      Math.max(...bounds.map(point => point[0])), Math.max(...bounds.map(point => point[1])),
+    ];
     layoutRoom(room);
     rooms.push(room);
   });
@@ -320,6 +328,8 @@ const LAYOUTS = {
 // Walking support: rooms are free zones inside otherwise solid footprints.
 export function roomAt(rooms, east, north, shrink = 0) {
   for (const room of rooms) {
+    const bounds = room.lookupBounds;
+    if (shrink >= 0 && bounds && (east < bounds[0] || north < bounds[1] || east > bounds[2] || north > bounds[3])) continue;
     const [a, d] = room.toLocal(east, north);
     if (a <= room.aMin + shrink || a >= room.aMax - shrink || d >= room.depth - shrink) continue;
     if (d > shrink + 0.02) return room;
