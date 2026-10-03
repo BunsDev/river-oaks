@@ -208,6 +208,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
     const method = path === '/auth/logout' ? 'POST' : 'GET';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
+    let phase = path;
     try {
       if (path === '/auth/login') {
         const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider: 'authkit', clientId, redirectUri: `${base}/auth/callback` });
@@ -226,8 +227,10 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         }
         const pending = decode(await transaction({ op: 'state-take', id: digest(state) }));
         if (!pending || pending.expiresAt <= now()) { json(res, 400, { error: 'invalid_auth_callback' }); return true; }
+        phase = 'callback.exchange';
         const result = await sdk.userManagement.authenticateWithCode({ clientId, code, codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
         if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return true; }
+        phase = 'callback.session';
         const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
         const verified = await session.authenticate();
         if (!validId(verified.sessionId) || !validId(verified.user?.id)) { json(res, 403, { error: 'invalid_session' }); return true; }
@@ -235,6 +238,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           cookieHash: digest(result.sealedSession), sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
         if (!identity(verified, record)) { json(res, 403, { error: 'invalid_session' }); return true; }
         if (!enabled) throw new Error('Auth closed');
+        phase = 'callback.store';
         const stored = await transaction({ op: 'session-put', record, ttl: SESSION_TTL });
         if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
@@ -257,7 +261,12 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const url = sdk.userManagement.getLogoutUrl({ sessionId: record.sessionId, returnTo: `${base}/` });
         json(res, 200, { url });
       }
-    } catch { json(res, 503, { error: 'auth_unavailable' }); }
+    } catch (error) {
+      console.error('Authentication unavailable', {
+        phase, name: error?.name, status: error?.status ?? error?.statusCode ?? error?.response?.status,
+      });
+      json(res, 503, { error: 'auth_unavailable' });
+    }
     return true;
   }
   return {
