@@ -5,6 +5,7 @@ import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld } from './world.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
+import { createMemoryLandmarks } from './landmarks.js';
 
 export function workosConfigured(env) {
   return Boolean(env.WORKOS_API_KEY && env.WORKOS_CLIENT_ID && env.WORKOS_COOKIE_PASSWORD?.length >= 32);
@@ -42,7 +43,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
   const world = createSharedWorld(data,mode === 'local' ? {isAdmin:auth.isAdmin} : {});
   game = createGameServer({
-    auth, world, moderation, origin, staticRoot,
+    auth, world, landmarks:createMemoryLandmarks(), moderation, origin, staticRoot,
     moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
     trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
   });

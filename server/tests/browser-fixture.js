@@ -5,6 +5,7 @@ process.env.VITE_MULTIPLAYER='required';process.env.RIVER_OAKS_DEV_TOWN='off';
 import { createServer as createViteServer } from 'vite';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
+import { createMemoryLandmarks } from '../landmarks.js';
 const webPort=Number(process.env.RIVER_OAKS_TEST_WEB_PORT??5180),townPort=Number(process.env.RIVER_OAKS_DEV_TOWN_PORT??8788);
 const origin=`http://127.0.0.1:${webPort}`;
 const data=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url)));
@@ -24,10 +25,10 @@ const auth={authenticate:async req=>identity(req),async handle(req,res){
   }
   res.statusCode=404;res.end('{}');return true;
 }};
-app=createGameServer({auth,world:createSharedWorld(data,{isAdmin:id=>id==='alice'}),origin});
+app=createGameServer({auth,world:createSharedWorld(data,{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),origin});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
-const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
+const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
 await vite.listen();
 console.log('Multiplayer browser fixture: '+origin+' (test identities only; no live WorkOS acceptance)');
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();await vite.close();process.exit(0);});

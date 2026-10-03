@@ -11,7 +11,7 @@ import { createClientAddress } from './client-address.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, landmarks, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
   const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000);
@@ -52,6 +52,21 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
         const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+15000});
         return json(res,200,{ticket,moderator:moderatorIds.has(identity.userId)});
+      }
+      if (pathname.startsWith('/api/landmarks/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!landmarks)return json(res,503,{error:'Landmarks are unavailable.'});
+        const action=pathname.slice('/api/landmarks/'.length);
+        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId)});
+        const data=await body(req);
+        if(action==='add'){
+          if(connections.get(identity.userId)?.identity.sessionId!==identity.sessionId)return json(res,409,{error:'Join the town before saving a landmark.'});
+          const player=world.snapshot().players.find(item=>item.id===identity.userId);
+          if(!player)return json(res,409,{error:'Join the town before saving a landmark.'});
+          const result=await landmarks.add(identity.userId,{name:data?.name,position:player.position.slice(0,2),yaw:player.yaw});
+          return json(res,result.ok?200:400,result.ok?result:{error:result.reason});
+        }
+        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id)});
       }
       if (pathname==='/api/moderation/ban' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;

@@ -2,18 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
+import { createMemoryLandmarks } from '../landmarks.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t){
+async function fixture(t,{landmarks=createMemoryLandmarks()}={}){
   const players=new Map();let commands=0;
-  const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
-  const app=createGameServer({auth,world,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
+  const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
+  const app=createGameServer({auth,world,landmarks,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
-  return {app,world,origin,commands:()=>commands};
+  return {app,world,landmarks,origin,commands:()=>commands};
 }
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
@@ -42,4 +43,24 @@ test('oversized and flooding frames cannot generate unbounded world commands',as
  for(let i=0;i<200;i++)ws.send(JSON.stringify({type:'pose',position:[0,0,0]}));
  await new Promise(resolve=>setTimeout(resolve,100));
  assert.ok(commands()<=40);
+});
+test('landmark API saves the authenticated player pose privately and checks origin and CSRF',async t=>{
+  const {origin}=await fixture(t);
+  const request=(user,action,data={},headers={})=>fetch(origin+`/api/landmarks/${action}`,{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json',...headers},body:JSON.stringify(data)});
+  assert.equal((await request('alice','list',{}, {Origin:'https://evil.example'})).status,403);
+  assert.equal((await request('alice','list',{}, {'X-CSRF-Token':'wrong'})).status,403);
+  assert.equal((await request('','list')).status,401);
+  assert.deepEqual((await (await request('alice','list')).json()).landmarks,[]);
+  assert.equal((await request('alice','add',{name:'Before joining'})).status,409);
+  const token=(await (await ticket(origin,'alice')).json()).ticket;
+  const {ws}=await connect(origin,token,'alice');t.after(()=>ws.terminate());
+  const saved=await (await request('alice','add',{name:'  Garden   gate ',position:[99,99],yaw:2})).json();
+  assert.equal(saved.ok,true);
+  assert.equal(saved.landmark.name,'Garden gate');
+  assert.deepEqual(saved.landmark.position,[5,7]);
+  assert.equal(saved.landmark.yaw,.3);
+  assert.deepEqual((await (await request('bob','list')).json()).landmarks,[]);
+  assert.equal((await (await request('bob','remove',{id:saved.landmark.id})).json()).removed,false);
+  assert.deepEqual((await (await request('alice','list')).json()).landmarks,[saved.landmark]);
+  assert.equal((await (await request('alice','remove',{id:saved.landmark.id})).json()).removed,true);
 });

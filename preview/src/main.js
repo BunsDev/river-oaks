@@ -16,7 +16,7 @@ import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
-import { createLandmarks, destinationFromSearch, openSpotNear, placesOf } from './places.js';
+import { createAccountLandmarks, createLandmarks, destinationFromSearch, openSpotNear, placesOf } from './places.js';
 import { setupPlacesUI } from './places-ui.js';
 import { renderPixelRatio } from './viewport.js';
 import { createWalkingControls } from './walking-ui.js';
@@ -76,6 +76,7 @@ const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SO
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
+let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers, buildLayer, buildControls;
@@ -217,6 +218,9 @@ function initializeRenderer() {
   visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
   $('#viewport').append(playDock.element);
   createClearView({ viewport: $('#viewport') });
+  let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
+  landmarks = createLandmarks({ storage });
+  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0 });
   if (multiplayerMode === 'choice') {
     createPlayMode({ viewport: $('#viewport'), storage: playModeStorage, active: playMode.mode, remembered: playMode.remembered });
     if (playMode.mode === 'multiplayer') startMultiplayer();
@@ -230,9 +234,6 @@ function initializeRenderer() {
   });
   else host.dataset.multiplayer = 'off';
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
-  let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
-  landmarks = createLandmarks({ storage });
-  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0 });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
@@ -261,6 +262,9 @@ function initializeRenderer() {
 // player's appearance; solo character choices stay on this device.
 function startMultiplayer() {
   if (multiplayer) return;
+  landmarkAccountId = null;
+  landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+  placesUI?.setLandmarks(landmarks);
   autoControls?.stop(); invasion?.reset();
   $('.auto-controls').hidden = true;
   invasion.panel.hidden = true;
@@ -273,7 +277,27 @@ function startMultiplayer() {
     getPose: () => walking?.getPose(),
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
-    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);const self=players.find(player=>player.id===selfId);playerAvatar?.setSharedIdentity(self);if(self?.canBuild)buildControls?.show();else buildControls?.hide();buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],self?.canBuild?selfId:null);if(self?.canBuild)buildControls?.loadInventory(selfId);},
+    onPlayers: (players, selfId) => {
+      remotePlayers.sync(players, selfId);
+      if (!players.length) buildLayer?.sync([]);
+      const self = players.find(player => player.id === selfId);
+      playerAvatar?.setSharedIdentity(self);
+      if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
+      buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
+      if (self?.canBuild) buildControls?.loadInventory(selfId);
+      if (self && landmarkAccountId !== selfId) {
+        landmarkAccountId = selfId;
+        const store = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        landmarks = store;
+        placesUI?.setLandmarks(store);
+        store.load().then(() => { if (landmarks === store) placesUI?.refresh(); })
+          .catch(error => { if (landmarks === store) placesUI?.say(error.message, 'error'); });
+      } else if (!self && landmarkAccountId !== null) {
+        landmarkAccountId = null;
+        landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        placesUI?.setLandmarks(landmarks);
+      }
+    },
     onPlaySolo: multiplayerMode === 'choice' ? () => switchPlayMode(playModeStorage, 'solo') : null,
   });
   host.dataset.multiplayer = 'joined';

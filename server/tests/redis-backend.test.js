@@ -8,6 +8,7 @@ test('shared backend requires an isolated namespace outside production and valid
   await assert.rejects(createRedisBackend({ PUBLIC_ORIGIN: 'https://sim.jev.works/path', REDIS_URL: 'redis://localhost' }), /origin/);
   await assert.rejects(createRedisBackend({ PUBLIC_ORIGIN: 'https://sim.jev.works', REDIS_URL: 'redis://localhost' }), /namespace/);
   await assert.rejects(createRedisBackend({ PUBLIC_ORIGIN: 'https://sim.jev.works', REDIS_URL: 'redis://localhost', VERCEL_ENV: 'preview', REDIS_NAMESPACE: 'river-oaks:production:v1' }), /Preview/);
+  await assert.rejects(createRedisBackend({ PUBLIC_ORIGIN: 'https://sim.jev.works', REDIS_URL: 'redis://localhost', VERCEL_ENV: 'preview', REDIS_NAMESPACE: 'river-oaks:production:v2' }), /Preview/);
 });
 
 test('real backend fails closed without WorkOS and never exposes Redis configuration', { skip: !process.env.REDIS_URL, timeout: 10_000 }, async t => {

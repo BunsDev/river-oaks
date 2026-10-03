@@ -59,6 +59,18 @@
       "destination": "/api/server?_river_path=/api/moderation/ban"
     },
     {
+      "source": "/api/landmarks/list",
+      "destination": "/api/server?_river_path=/api/landmarks/list"
+    },
+    {
+      "source": "/api/landmarks/add",
+      "destination": "/api/server?_river_path=/api/landmarks/add"
+    },
+    {
+      "source": "/api/landmarks/remove",
+      "destination": "/api/server?_river_path=/api/landmarks/remove"
+    },
+    {
       "source": "/multiplayer",
       "destination": "/api/server?_river_path=/multiplayer"
     }

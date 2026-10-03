@@ -68,6 +68,44 @@ test('landmarks persist on the device, validate their names and positions, and a
   assert.equal(createLandmarks({}).add({ name: 'no storage', position: [0, 0] }).ok, true);
 });
 
+test('account landmarks load and use server-returned positions without writing device storage', async () => {
+  const { createAccountLandmarks } = await import('../src/places.js');
+  assert.equal(typeof createAccountLandmarks, 'function');
+  const calls = [], saved = { id: 'lm-server', name: 'Garden gate', position: [9, 8], yaw: .4, createdAt: 12 };
+  const account = createAccountLandmarks({ request: async (action, data) => {
+    calls.push([action, data]);
+    if (action === 'list') return { ok: true, landmarks: [saved] };
+    if (action === 'add') return { ok: true, landmark: saved };
+    if (action === 'remove') return { ok: true, removed: true };
+  } });
+  assert.deepEqual(account.list(), []);
+  await account.load();
+  assert.deepEqual(account.list(), [{ ...saved, kind: 'landmark' }]);
+  assert.equal((await account.add({ name: 'Garden gate', position: [1, 2], yaw: 1 })).landmark.position[0], 9);
+  assert.deepEqual(calls.at(-1), ['add', { name: 'Garden gate' }]);
+  assert.equal(await account.remove(saved.id), true);
+  assert.deepEqual(account.list(), []);
+  assert.deepEqual(calls.at(-1), ['remove', { id: saved.id }]);
+});
+
+test('account landmark writes wait for the initial list so a late response cannot hide a save', async () => {
+  const { createAccountLandmarks } = await import('../src/places.js');
+  let finishLoad;
+  const calls = [];
+  const account = createAccountLandmarks({ request: (action) => {
+    calls.push(action);
+    if (action === 'list') return new Promise(resolve => { finishLoad = resolve; });
+    return Promise.resolve({ ok: true, landmark: { id: 'lm-new', name: 'New', position: [3, 4], yaw: 0, createdAt: 2 } });
+  } });
+  const load = account.load();
+  const save = account.add({ name: 'New' });
+  assert.deepEqual(calls, ['list']);
+  finishLoad({ ok: true, landmarks: [{ id: 'lm-old', name: 'Old', position: [1, 2], yaw: 0, createdAt: 1 }] });
+  await Promise.all([load, save]);
+  assert.deepEqual(calls, ['list', 'add']);
+  assert.deepEqual(account.list().map(item => item.name), ['Old', 'New']);
+});
+
 test('an open spot is the position itself, a near ring, or nothing within reach', () => {
   const blockedDisc = (x, north) => Math.hypot(x, north) > 1;
   assert.deepEqual(openSpotNear(blockedDisc, [5, 5]), [5, 5]);

@@ -150,6 +150,10 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   connect();
   return {
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},command,
+    landmarkRequest(action,data={}){
+      if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
+      return api(`/api/landmarks/${action}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    },
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
