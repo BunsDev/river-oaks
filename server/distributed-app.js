@@ -13,7 +13,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, origin, moderators = [],
+export function createDistributedServer({ auth, room, security, landmarks, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   const connections = new Map(), moderatorIds = new Set(moderators);
@@ -71,6 +71,23 @@ export function createDistributedServer({ auth, room, security, origin, moderato
         const ticket = await security.issueTicket(identity);
         return ticket ? json(res, 200, { ticket, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
+      }
+      if (path.startsWith('/api/landmarks/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!landmarks) return json(res, 503, { error: 'Landmarks are unavailable.' });
+        const action = path.slice('/api/landmarks/'.length);
+        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId) });
+        let data;
+        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid landmark request.' }); }
+        if (action === 'add') {
+          const view = await room.read();
+          const joined = view?.connections.some(item => item.userId === identity.userId && item.sessionId === identity.sessionId);
+          const player = joined && view.snapshot.players.find(item => item.id === identity.userId);
+          if (!player) return json(res, 409, { error: 'Join the town before saving a landmark.' });
+          const result = await landmarks.add(identity.userId, { name: data?.name, position: player.position.slice(0, 2), yaw: player.yaw });
+          return json(res, result.ok ? 200 : 400, result.ok ? result : { error: result.reason });
+        }
+        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id) });
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;

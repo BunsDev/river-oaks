@@ -10,7 +10,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   const host = $('#places'), here = $('#places-here'), list = $('#places-list'), marks = $('#landmarks-list'), status = $('#places-status');
   const nameInput = $('#landmark-name'), addButton = $('#landmark-add');
   if (!host) return null;
-  let current = places;
+  let current = places, currentLandmarks = landmarks;
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
 
@@ -26,7 +26,16 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
     item.append(name, kind, go, share);
     if (removable) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove landmark ${place.name}`);
-      remove.addEventListener('click', () => { landmarks.remove(place.id); renderLandmarks(); say(`Removed ${place.name}`); });
+      remove.addEventListener('click', async () => {
+        const store=currentLandmarks;remove.disabled=true;
+        try {
+          const removed=await store.remove(place.id);
+          if(store!==currentLandmarks)return;
+          if(!removed)return say('That landmark is no longer available.','error');
+          renderLandmarks();say(`Removed ${place.name}`);
+        } catch(error) {if(store===currentLandmarks)say(error.message,'error');}
+        finally {remove.disabled=false;}
+      });
       item.append(remove);
     }
     return item;
@@ -36,16 +45,21 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
     $('#places-count').textContent = String(current.length);
   }
   function renderLandmarks() {
-    const items = landmarks.list();
+    const items = currentLandmarks.list();
     marks.replaceChildren(...items.map(place => row(place, { removable: true })));
     $('#landmarks-empty').hidden = items.length > 0;
   }
-  addButton.addEventListener('click', () => {
+  addButton.addEventListener('click', async () => {
     const position = getPosition();
     if (!position) return say('Stand somewhere first.', 'error');
-    const result = landmarks.add({ name: nameInput.value, position: [position[0], position[1]], yaw: getYaw?.() ?? 0 });
-    if (!result.ok) return say(result.reason === 'name' ? 'Give the landmark a name.' : result.reason === 'limit' ? 'That is as many landmarks as this device keeps.' : 'Could not save that landmark.', 'error');
-    nameInput.value = ''; renderLandmarks(); say(`Saved ${result.landmark.name}`, 'ok');
+    const store=currentLandmarks;addButton.disabled=true;
+    try {
+      const result = await store.add({ name: nameInput.value, position: [position[0], position[1]], yaw: getYaw?.() ?? 0 });
+      if(store!==currentLandmarks)return;
+      if (!result.ok) return say(result.reason === 'name' ? 'Give the landmark a name.' : result.reason === 'limit' ? 'You have reached the 50-landmark limit.' : 'Could not save that landmark.', 'error');
+      nameInput.value = ''; renderLandmarks(); say(`Saved ${result.landmark.name}`, 'ok');
+    } catch(error) {if(store===currentLandmarks)say(error.message==='name'?'Give the landmark a name.':error.message==='limit'?'You have reached the 50-landmark limit.':error.message,'error');}
+    finally {addButton.disabled=false;}
   });
   nameInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); addButton.click(); } });
 
@@ -62,6 +76,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   const timer = setInterval(refreshHere, 500);
   return {
     setPlaces(next) { current = next; renderPlaces(); refreshHere(); },
+    setLandmarks(next) { currentLandmarks = next; renderLandmarks(); },
     refresh() { renderLandmarks(); refreshHere(); },
     say,
     dispose() { clearInterval(timer); },

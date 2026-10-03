@@ -7,6 +7,7 @@ import { WebSocket } from 'ws';
 import { createDistributedServer } from '../distributed-app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
+import { createRedisLandmarks } from '../landmarks.js';
 
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
@@ -34,7 +35,7 @@ async function fixture(t) {
     };
     const room = createRedisRoom({ redis, prefix, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
-    const app = createDistributedServer({ auth, security, room, origin, moderators: ['moderator'] });
+    const app = createDistributedServer({ auth, security, room, landmarks:createRedisLandmarks({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     nodes.push({ app, room, security, url: `http://127.0.0.1:${app.server.address().port}` });
   }
@@ -83,6 +84,28 @@ test('distributed HTTP authentication and CSRF gates reject invalid tickets', li
   assert.equal((await f.post(a, 'nobody', '/api/multiplayer/ticket')).status, 401);
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { Origin: 'https://evil.example' })).status, 403);
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { 'X-CSRF-Token': 'wrong' })).status, 403);
+});
+
+test('landmarks stay private and durable across distributed edge instances', live, async t => {
+  const f=await fixture(t),[a,b]=f.nodes;
+  assert.equal((await f.post(a,'alice','/api/landmarks/list',{}, {Origin:'https://evil.example'})).status,403);
+  assert.equal((await f.post(a,'alice','/api/landmarks/list',{}, {'X-CSRF-Token':'wrong'})).status,403);
+  assert.equal((await f.post(a,'nobody','/api/landmarks/list')).status,401);
+  assert.deepEqual((await (await f.post(a,'alice','/api/landmarks/list')).json()).landmarks,[]);
+  assert.equal((await f.post(a,'alice','/api/landmarks/add',{name:'Before joining'})).status,409);
+  const alice=client(a,'alice',await f.ticket(a,'alice'));
+  const joined=await alice.waitFor(message=>message.selfId==='alice');
+  t.after(()=>alice.ws.terminate());
+  const saved=await (await f.post(b,'alice','/api/landmarks/add',{name:'Cross-device gate',position:[0,0],yaw:9})).json();
+  assert.equal(saved.ok,true);
+  assert.deepEqual(saved.landmark.position,joined.players.find(player=>player.id==='alice').position.slice(0,2));
+  assert.equal(saved.landmark.yaw,joined.players.find(player=>player.id==='alice').yaw);
+  assert.deepEqual((await (await f.post(a,'alice','/api/landmarks/list')).json()).landmarks,[saved.landmark]);
+  assert.deepEqual((await (await f.post(b,'bob','/api/landmarks/list')).json()).landmarks,[]);
+  assert.equal(JSON.stringify((await b.room.read()).snapshot).includes('Cross-device gate'),false);
+  assert.equal((await (await f.post(a,'bob','/api/landmarks/remove',{id:saved.landmark.id})).json()).removed,false);
+  assert.equal((await (await f.post(b,'alice','/api/landmarks/remove',{id:saved.landmark.id})).json()).removed,true);
+  assert.deepEqual((await (await f.post(a,'alice','/api/landmarks/list')).json()).landmarks,[]);
 });
 
 test('different server instances share tickets, players, wishes, and durable acknowledgments', live, async t => {

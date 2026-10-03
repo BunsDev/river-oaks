@@ -66,7 +66,17 @@ async page => {
   check(await seen(page, a.self) && await seen(second, a.self), `a shared teleport lands beside ${spot.name} in both browsers' snapshots`);
   await page.waitForTimeout(1100);
   await page.locator('#landmark-name').fill('Town bench'); await page.locator('#landmark-add').click();
-  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'));
+  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'), null, {timeout:15000})
+    .catch(async () => { throw new Error(`Landmark save failed: ${await page.locator('#places-status').textContent()}`); });
+  await second.locator('[data-section=explore-section]').click();
+  check(await second.locator('#landmarks-list li').count()===0,'A different account cannot see a private landmark');
+  await page.evaluate(()=>localStorage.removeItem('river-oaks-landmarks'));
+  await page.reload({waitUntil:'commit'});
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
+  const placesToggle=page.locator('#panel-toggle');if(await placesToggle.getAttribute('aria-expanded')==='false')await placesToggle.click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Town bench');
+  check(true,'An account landmark survives reload without device storage');
   await page.keyboard.down('KeyW'); await page.waitForTimeout(900); await page.keyboard.up('KeyW');
   await page.waitForTimeout(1100);
   await page.locator('#landmarks-list li button[aria-label^="Go to"]').click();

@@ -124,6 +124,8 @@ try {
             assets: document.querySelector('#viewport')?.dataset.assetProgress,
             town: document.querySelector('#multiplayer-status')?.textContent,
             player: document.querySelector('#player-status')?.textContent,
+            places: document.querySelector('#places-status')?.textContent,
+            landmarkCount: document.querySelectorAll('#landmarks-list li').length,
             connected: window.__riverMultiplayer?.().connected,
           })).catch(() => null)));
         report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, diagnostics, result });

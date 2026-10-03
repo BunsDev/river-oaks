@@ -16,9 +16,11 @@ its own places without code changes.
   so the list is 31 long. **Go** teleports beside the place; **Link** copies a
   URL that brings someone else there.
 - **Your landmarks.** Stand somewhere, name it, **Save here**. A landmark keeps
-  the exact position and the way you were facing. Landmarks live in the
-  browser (`river-oaks-landmarks`), so they belong to this device until
-  accounts carry them. Up to 50 per device.
+  the exact position and the way you were facing. In shared play, landmarks
+  belong to the signed-in account and remain private across devices and server
+  instances. The server saves the player's current position and facing. Solo
+  play keeps landmarks in browser storage (`river-oaks-landmarks`). Up to 50
+  per account or solo device.
 - **Shared links.** `?place=spot:<id>` or `?place=shop:<id>` lands a visitor
   beside a named place after the district loads; `?at=<x>,<north>[,<yaw>]`
   restores an exact position inside the district. A link outside the district
@@ -42,8 +44,9 @@ own facing for a bare position.
 - `preview/src/places-ui.js`: the tab's DOM and the status line.
 - `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
 - `server/world.js`: `travel` destinations `placeId` and `position`.
+- `server/landmarks.js`: account landmark storage; Redis persists shared play
+  across edge instances, and the standalone town keeps an in-memory store.
 
 ## Next
 
-Regions (more than one district, loaded at runtime), parcels with owners, and
-landmarks that follow an account rather than a device.
+Regions (more than one district, loaded at runtime) and parcels with owners.

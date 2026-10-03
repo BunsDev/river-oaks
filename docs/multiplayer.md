@@ -8,8 +8,8 @@ resident (for example "Wren (dev)") without a sign-in step. Choose Multiplayer
 in a second browser profile to see another player. No `.env` is needed.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
-auth and multiplayer traffic to that checkout's own town on the chosen loopback
-port.
+auth, multiplayer, and landmark traffic to that checkout's own town on the
+chosen loopback port.
 
 - The default is `choice`: players begin in single player and can select
   Multiplayer from the control in the viewport. The choice is remembered in
@@ -44,6 +44,10 @@ The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
+The Places panel keeps up to 50 private landmarks per account in shared play.
+Their positions come from the server's current player pose, and Redis stores
+them outside the town checkpoint so reconnects and new server instances retain
+them. Solo landmarks remain in browser storage.
 
 In shared play, only Jevica's two configured WorkOS owner accounts can grant
 wishes or use Build & decorate, including saved designs. The server checks the
