@@ -4,6 +4,7 @@ import { once } from 'node:events';
 import { generateKeyPairSync, randomBytes, sign } from 'node:crypto';
 import test from 'node:test';
 import { WorkOS } from '@workos-inc/node';
+import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 
 const module = await import('../auth.js').catch(() => ({}));
 const { createAuth } = module;
@@ -273,3 +274,24 @@ test('official SDK seals and verifies a signed session through the real HTTP cal
   const tampered = `${sealed.slice(0, midpoint)}${sealed[midpoint] === 'a' ? 'b' : 'a'}${sealed.slice(midpoint + 1)}`;
   assert.equal((await sdk.userManagement.loadSealedSession({ sessionData: tampered, cookiePassword: config.cookiePassword }).authenticate()).authenticated, false);
 });
+
+for (const scenario of boundaryCases) {
+  test(`real SDK application key boundary: ${scenario.name}`, async t => {
+    const { sdk, requests } = await workosSdkFixture(t, config, scenario);
+    const log = t.mock.method(console, 'error', () => {});
+    const app = await fixture(t, { workos: sdk });
+    const { callback, sessionCookie } = await app.login();
+    assert.equal(callback.status, scenario.status);
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    if (scenario.status === 302) {
+      assert.ok(sessionCookie);
+      const session = await app.request('/auth/session', { headers: { cookie: sessionCookie } });
+      assert.equal((await session.json()).authenticated, true);
+    } else {
+      assert.equal(sessionCookie, undefined);
+      assert.deepEqual(await callback.json(), { error: 'invalid_session' });
+      assert.equal((await (await app.request('/auth/session')).json()).authenticated, false);
+      assert.equal(log.mock.calls[0].arguments[0], 'Authentication session rejected');
+    }
+  });
+}

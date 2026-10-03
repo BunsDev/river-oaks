@@ -1,14 +1,13 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { WorkOS } from '@workos-inc/node';
+import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
-const validIssuer = issuer => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
-  || /^https:\/\/api\.workos\.com\/user_management\/client_[A-Za-z0-9]+\/?$/.test(issuer);
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -152,7 +151,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       // SDK authentication has verified the seal and JWT signature before decode.
       const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
       if (!Number.isFinite(claims.exp) || claims.sub !== record.userId || claims.sid !== record.sessionId
-        || !validIssuer(claims.iss)
+        || !validWorkOSIssuer(claims.iss)
         || claims.client_id !== clientId) return null;
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
@@ -236,18 +235,14 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         phase = 'callback.session';
         const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
         const verified = await session.authenticate();
-        if (!validId(verified.sessionId) || !validId(verified.user?.id)) { json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!validId(verified.sessionId) || !validId(verified.user?.id)) {
+          logSessionRejection(verified, {}, clientId, now());
+          json(res, 403, { error: 'invalid_session' }); return true;
+        }
         const record = { sessionId: verified.sessionId, userId: verified.user.id, generation: token(), csrfToken: token(),
           cookieHash: digest(result.sealedSession), sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
         if (!identity(verified, record)) {
-          let claims;
-          try { claims = JSON.parse(Buffer.from(verified.accessToken.split('.')[1], 'base64url').toString()); } catch {}
-          console.error('Authentication session rejected', {
-            authenticated: verified.authenticated, emailVerified: verified.user?.emailVerified === true,
-            subjectMatches: claims?.sub === record.userId, sessionMatches: claims?.sid === record.sessionId,
-            issuer: claims?.iss, clientMatches: claims?.client_id === clientId,
-            expiryValid: Number.isFinite(claims?.exp) && claims.exp * 1000 > now(),
-          });
+          logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
         if (!enabled) throw new Error('Auth closed');
