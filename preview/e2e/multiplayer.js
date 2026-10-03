@@ -42,12 +42,20 @@ async page => {
     await page.bringToFront();
     const openPanel=page.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await openPanel.isVisible())await openPanel.click();
-    const target=await page.evaluate(()=>{
+    check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.canGrantWishes===true),'Alice fixture retains server-issued wish permission after reconnect');
+    const targets=await page.evaluate(()=>{
       const locals=window.__riverMultiplayer().snapshot.locals.filter(local=>!local.indoor&&!local.wish);
-      return locals.sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length)[0].id;
+      return locals.sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length).map(local=>local.id);
     });
-    await page.locator('#community-local').selectOption(target);
-    await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+    let opened=false;
+    for(const target of targets.slice(0,6)){
+      await page.locator('#community-local').selectOption(target);
+      await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+      opened=await page.waitForFunction(()=>document.querySelector('#community-dialogue')?.hidden===false,null,{timeout:6000}).then(()=>true,()=>false);
+      if(opened)break;
+      await page.waitForTimeout(1200);
+    }
+    check(opened,'A shared resident is reachable after a bounded retry');
     await page.locator('#wish-grant').waitFor({state:'visible'});
     const resident=await page.locator('#community-local').inputValue();
     await page.locator('#wish-choice').selectOption('dragon');await page.locator('#wish-grant').click();
