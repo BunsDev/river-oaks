@@ -1,12 +1,77 @@
 # Playable character forms
 
-**Jevica is the standalone playable character.** The shared town lets each player
-choose from Jevica and six shipped clothed human rigs. The Witch and Alien forms were removed
+**Jevica is the default playable character.** Players can also choose seven
+other characters, and every character comes in a humanoid and a beast form; see
+[characters, styles and forms](#characters-styles-and-forms). The Witch and Alien forms were removed
 on September 23, 2026, together with their portraits, costumes, broom and personal
 UFO. Her bubble flight, celebrity reactions, camera controls and magic remain.
 Residents are humans with six coordinated fashion palettes; see
 [world direction](world-direction.md). Alien enemies belong to the separate
 invasion scenario.
+
+## Characters, styles and forms
+
+The character picker chooses a person, then a style when that person has more
+than one, then a form. Every style comes in a humanoid form and a beast form, so
+each person, style and form names exactly one look.
+
+| Character | Styles | Beast form |
+|---|---|---|
+| Jevica, rose enchantress | Rose silk | White fox |
+| Sable, fox charmer | Ivory city dress | Fox |
+| Rowan, wolf wanderer | Field jacket | Wolf |
+| Vesper, velvet confidante | Wine velvet | Panther |
+| Aurel, midnight host | Black brocade | Wolf |
+| Lyra, lynx muse | Sunlit daywear | Lynx |
+| Kai, starlight maker | Celestial formal, explorer casual, starlit noir | Snow leopard |
+| Silvan, forest aristocrat | Masculine, feminine | Deer: a stag or a doe |
+
+Changing person keeps the current form, and keeps the style when the new person
+has it. `preview/src/shared-appearances.js` lists the characters and derives each
+look's label and role. Devices, accounts and town checkpoints store appearance
+IDs, so every ID that existed before forms keeps its meaning: `woman-casual` is
+still Sable's fox and `man-tailored` is still the human Aurel. New looks have new
+IDs, such as `sable-human` and `kai-noir-beast`.
+
+The wolf-eared Aurel (`midnight-host-hybrid`) was removed on October 2, 2026. A
+device, account or checkpoint that saved him loads his wolf form instead, and the
+town stores the replacement ID.
+
+A beast form wears the same clothes as its humanoid form. It replaces the head
+with a sculpted animal head from `preview/src/animal-face.js`, furs the skin and
+adds a tail. Sable's fox keeps her bespoke look in `sable-look.js`. Looks without
+reference art show a studio portrait captured from the 3D model.
+
+### Beast movement
+
+A beast form can also move like its animal. Turn it on with **Beast movement** in
+the character controls, or press **P** (prowl) while the scene has focus.
+Humanoid forms walk upright and don't offer it.
+
+- **Standing:** the character settles into a low crouch, arms held ready and
+  tail lifted.
+- **Walking:** the chest leans forward over bent knees in a prowl.
+- **Running:** the gait opens into a lope with longer strides, a rise through
+  each step, and the tail streaming behind and swinging against turns.
+
+The posture eases in and out over a fraction of a second, and the legs keep their
+planted-foot solve. Flying and riding keep their usual poses. Beast movement
+changes how the body moves, not how fast: walking and running speeds stay the
+same, inside the shared town's movement limit.
+
+In solo play the choice is stored on the device. In the shared town it belongs to
+the account, like the appearance. The town remembers it, applies it only while
+the account wears a beast form, and peers see the posture on the remote avatar.
+The client sends the `movement` command with `upright` or `beast`. A town server
+from before beast movement answers `invalid_command`, and the client reports that
+the town doesn't support beast movement yet. Quick person, style and form clicks
+reach the town as one change, sent as soon as its two-second appearance cooldown
+allows.
+
+To verify, run `node --test preview/tests/beast-forms.test.js
+preview/tests/romance-look.test.js preview/tests/foot-placement.test.js`,
+`npm run test:server`, `npm run test:experience -- player-forms beast-movement`
+and `npm run test:shared -- required`.
 
 ## Reference direction
 
@@ -52,7 +117,8 @@ detail targets, asset size, and hash so you can reproduce the appearance.
 ## Controls and rendering
 
 Third person is the default. **V** switches cameras. **B** takes off or lands,
-**Space** rises and **C** lowers altitude. Jevica flies in a bubble. Character controls also expose these
+**Space** rises and **C** lowers altitude. **P** turns beast movement on or off
+in a beast form. Jevica flies in a bubble. Character controls also expose these
 actions, with a collapsed mobile panel and portraits of the actual models.
 
 Accessories following the same bone are batched by material. In the same studio

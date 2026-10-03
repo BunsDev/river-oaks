@@ -82,6 +82,9 @@ export function createFootPlacement(model, root) {
       const forward = new THREE.Vector3(0,0,1).applyQuaternion(rotation);
       const travelForward = Number.isFinite(locomotion?.heading) ? new THREE.Vector3(Math.sin(locomotion.heading),0,Math.cos(locomotion.heading)) : forward;
       const distance = locomotion?.distance ?? 0, speed = locomotion?.speed ?? 0;
+      // Beast movement lengthens the stride into a lope; everyone else keeps 1.
+      const stride = Number.isFinite(locomotion?.stride) ? clamp(locomotion.stride, 1, 1.6) : 1;
+      const strideTravel = swingTravel*stride, strideReach = reach*stride;
       const reset = lastDistance === null || distance < lastDistance || lastPosition.distanceTo(origin) > 1;
       if(reset)pelvisLower=0;
       if(speed<=.03&&!legs.some(leg=>leg.swing))hasStepped=false;
@@ -128,12 +131,12 @@ export function createFootPlacement(model, root) {
         if (reset) {leg.roll?.reset();leg.target=sample.clone();leg.swing=null;leg.orientation=shoe.clone();hasStepped=false;}
         const makeSwing = (end,settling,travel=swingTravel,turning=false) => ({turning,start:leg.target.clone(), end, progress:0, settling, travel, fromRotation:leg.orientation.clone(), toRotation:poseAt(end,leg,base)});
         const moving = speed > 0.03;
-        const trailing = leg.target.clone().sub(sample).dot(travelForward) < -reach;
+        const trailing = leg.target.clone().sub(sample).dot(travelForward) < -strideReach;
         if (moving && !legs.some(other=>other.swing) && (trailing || !hasStepped && leg.index===1)) {
           // From standing, the support foot starts under the hip rather than
           // ahead of it. A half-length first swing avoids leaving it far behind.
-          const travel=hasStepped?swingTravel:swingTravel/2;
-          const end = sample.clone().addScaledVector(travelForward, travel+reach);
+          const travel=hasStepped?strideTravel:strideTravel/2;
+          const end = sample.clone().addScaledVector(travelForward, travel+strideReach);
           leg.swing = makeSwing(end,false,travel);hasStepped=true;
         }
         // Finish an interrupted step, then bring the trailing foot under the body.
@@ -158,7 +161,7 @@ export function createFootPlacement(model, root) {
           // the already-planned endpoint at touchdown rather than moving it
           // past the curb with the remaining body travel in that frame.
           if (!swing.settling && swing.progress < 1) {
-            swing.end.copy(sample).addScaledVector(travelForward,swing.travel*(1-swing.progress)+reach);
+            swing.end.copy(sample).addScaledVector(travelForward,swing.travel*(1-swing.progress)+strideReach);
             swing.toRotation.copy(poseAt(swing.end,leg,base));
           }
           leg.target.copy(swing.start).lerp(swing.end,smooth(swing.progress));

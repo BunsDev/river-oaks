@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createReferenceStyle } from './reference-archetypes.js';
 import { createSableFace } from './sable-face.js';
+import { createTailMotion } from './tail-motion.js';
 
 // Sable owns her geometry. The shared Jevica template, skeleton and other looks
 // remain untouched. Coordinates below are metres in each bone's rest frame.
@@ -176,11 +177,13 @@ export function createSableLook(avatar, root, appearance) {
   const fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.Float32BufferAttribute(fibres,3));fg.setAttribute('color',new THREE.Float32BufferAttribute(fibreColors,3));fg.computeVertexNormals();
   add(tail,fg,material('#ffffff',{vertexColors:true,roughness:1,side:THREE.DoubleSide}),[0,0,0],[1,1,1],'Sable tail fibres');
   const reference=createReferenceStyle(avatar,appearance);
-  const tailRest=tail.quaternion.clone();
+  const tailRest=tail.quaternion.clone(),carriage=createTailMotion({sway:.085,pitch:0});
   return {
-    update(now,{reducedMotion=false,blink={left:0,right:0},gaze=[]}={}){
+    beast:true,
+    update(now,{reducedMotion=false,blink={left:0,right:0},gaze=[],motion=null}={}){
       tail.quaternion.copy(tailRest);
-      if(!reducedMotion)tail.rotateY(Math.sin(now*.0015)*.085);
+      const pose=carriage.pose(now,{reducedMotion,motion});
+      if(!reducedMotion){tail.rotateY(pose.yaw);if(pose.pitch)tail.rotateX(pose.pitch);}
       eyes.forEach((eye,i)=>{
         eye.scale.y=Math.max(.04,1-(reducedMotion?0:i?blink.left:blink.right));
         const pose=gaze[i],iris=eye.getObjectByName('Sable iris gaze');
