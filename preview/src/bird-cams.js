@@ -11,7 +11,14 @@ export const BIRDS = [
   { id: 'jay', name: 'Blue jay', body: '#4d7fb6', wing: '#3d6797', accent: '#eef1f4', beak: '#1f2328' },
   { id: 'cardinal', name: 'Cardinal', body: '#b8352f', wing: '#9b2b27', accent: '#2a1b1a', beak: '#e09a3b' },
 ];
-export const BIRD_FLIGHT = { cruise: 9, minSpeed: 4, maxSpeed: 16, turnRate: 1.1, climbRate: 4, cruiseClearance: 15, watchClearance: 9, minClearance: 3, orbitRadius: 13, lookahead: 10 };
+// Circling height and radius keep a watching bird inside a walker's view: the
+// walking camera's frame tops out about 12 degrees above eye level.
+export const BIRD_FLIGHT = { cruise: 9, minSpeed: 4, maxSpeed: 16, turnRate: 1.1, climbRate: 4, cruiseClearance: 10, watchClearance: 4, minClearance: 3, orbitRadius: 14, lookahead: 10, watchLookahead: 5, edgeMargin: 18 };
+// Drawn a little larger than life so a bird reads at a distance.
+export const BIRD_SCALE = 1.3, BIRD_WINGSPAN = 0.8 * BIRD_SCALE;
+// One bird keeps the player company: it circles the spot the player is looking
+// toward (`ahead` metres on, at a tight `orbit`), so its whole lap is in view.
+export const COMPANION = { ahead: 20, orbit: 8 };
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 export const forwardOf = heading => [-Math.sin(heading), -Math.cos(heading)];
@@ -28,6 +35,48 @@ export function chooseInterest(bird, interests, { random = Math.random, recent =
     if (score > bestScore) { best = item; bestScore = score; }
   }
   return best;
+}
+
+// Which bird keeps the player company: the current one until someone flies it by
+// hand, otherwise the nearest. player: { position: [east, north] }.
+export function companionOf(flock, player, current = null) {
+  if (!player) return null;
+  if (current && current.mode !== 'manual' && flock.includes(current)) return current;
+  const distance = bird => Math.hypot(bird.position[0] - player.position[0], bird.position[2] + player.position[1]);
+  let nearest = null;
+  for (const bird of flock) if (bird.mode !== 'manual' && (!nearest || distance(bird) < distance(nearest))) nearest = bird;
+  return nearest;
+}
+
+// The companion's only scene: the spot the player is looking toward, stepped back
+// toward the player until a whole lap there is clear (canPlace(east, north,
+// radius)); failing that, a lap around the player; failing that, the player's own
+// scene unchanged. The input list is not changed.
+export function companionInterests(interests, player, { canPlace = () => true } = {}) {
+  if (!player) return interests;
+  const scene = interests.find(item => item.id === 'player') ?? player;
+  if (player.view) for (let ahead = COMPANION.ahead; ahead >= 8; ahead -= 3) {
+    const spot = [player.position[0] + player.view[0] * ahead, player.position[1] + player.view[1] * ahead];
+    if (canPlace(spot[0], spot[1], COMPANION.orbit)) return [{ ...scene, position: spot, radius: COMPANION.orbit }];
+  }
+  if (canPlace(player.position[0], player.position[1], COMPANION.orbit)) return [{ ...scene, radius: COMPANION.orbit }];
+  return [scene];
+}
+
+// Whether a bird can circle (east, north) at `radius` and watch height without
+// its flight rules interfering: the lap, out to where those rules look ahead
+// while circling (radius + watchLookahead), stays clear of the district-edge turn-back, and the air
+// is open at the centre and on three rings of 16 points.
+export function lapClear(environment, east, north, radius) {
+  const outer = Math.hypot(radius, BIRD_FLIGHT.watchLookahead), reach = outer + BIRD_FLIGHT.edgeMargin, [west, z0, eastEdge, z1] = environment.bounds ?? [-Infinity, -Infinity, Infinity, Infinity];
+  if (east - reach < west || east + reach > eastEdge || -north - reach < Math.min(z0, z1) || -north + reach > Math.max(z0, z1)) return false;
+  const y = environment.groundAt(east, -north) + BIRD_FLIGHT.watchClearance;
+  if (!environment.canFly(east, y, -north)) return false;
+  for (const ring of [radius * .5, radius, outer]) for (let k = 0; k < 16; k++) {
+    const a = k * Math.PI / 8;
+    if (!environment.canFly(east + Math.cos(a) * ring, y, -north + Math.sin(a) * ring)) return false;
+  }
+  return true;
 }
 
 // The lowest height at (x, z) that clears every rooftop, from a floor up.
@@ -59,31 +108,38 @@ export function stepBird(bird, delta, { environment, interests = [], control = n
     if (bird.target) {
       const live = interests.find(item => item.id === bird.target.id);
       if (live) bird.target = live;
-      const [east, north] = bird.target.position, distance = Math.hypot(east - x, -north - z);
-      if (bird.phase === 'transit' && distance < F.orbitRadius * 1.4) { bird.phase = 'watch'; bird.until = now + 12000 + random() * 8000; }
+      const [east, north] = bird.target.position, distance = Math.hypot(east - x, -north - z), radius = bird.target.radius ?? F.orbitRadius;
+      if (bird.phase === 'transit' && distance < radius * 1.4) { bird.phase = 'watch'; bird.until = now + 12000 + random() * 8000; }
       if (bird.phase === 'watch') {
-        // Circle the scene: fly along the tangent, steering in or out by how far
-        // the bird is from the orbit radius.
-        const rx = (x - east) / Math.max(distance, 1e-3), rz = (z + north) / Math.max(distance, 1e-3), correction = clamp((distance - F.orbitRadius) / F.orbitRadius, -1, 1);
-        const dx = -rz - rx * correction, dz = rx - rz * correction;
-        desiredHeading = Math.atan2(-dx, -dz);
-        desiredAltitude = environment.groundAt(east, -north) + F.watchClearance; desiredSpeed = F.cruise * .8;
+        // Circle the scene by pursuit: aim at the point on the lap 0.9 rad ahead of
+        // the bird's own angle around it. This converges onto the lap from inside or
+        // out, where blending tangent and radius error swings through the middle.
+        const around = Math.atan2(z + north, x - east) + .9;
+        desiredHeading = headingTo(bird.position, [east + Math.cos(around) * radius, 0, -north + Math.sin(around) * radius]);
+        // Slow enough that the tightest turn (speed / turn rate) is well inside the
+        // lap; at cruise a bird cannot hold a tight lap and spirals outward.
+        desiredAltitude = environment.groundAt(east, -north) + F.watchClearance; desiredSpeed = Math.min(F.cruise * .8, radius * F.turnRate * .7);
       } else desiredHeading = headingTo(bird.position, [east, 0, -north]);
     }
     // Stay inside the district: turn back toward the middle near its edge.
     const [west, southZ, east, northZ] = environment.bounds ?? [-Infinity, -Infinity, Infinity, Infinity];
-    const margin = 18;
+    const margin = F.edgeMargin;
     if (x < west + margin || x > east - margin || z < Math.min(southZ, northZ) + margin || z > Math.max(southZ, northZ) - margin) desiredHeading = headingTo(bird.position, [(west + east) / 2, 0, (southZ + northZ) / 2]);
   }
   // Jev rises ahead of the buildings on its path, so the view clears the
   // rooftops instead of scraping across them.
   if (bird.mode !== 'manual' && environment.canFly) {
     const [ax, az] = forwardOf(bird.heading);
-    for (const reach of [0, 6, 15, 25]) desiredAltitude = Math.max(desiredAltitude, clearAltitude(environment, x + ax * reach, z + az * reach, ground + F.minClearance, ceiling) + 3);
+    // Only an obstruction lifts the bird: over open street it keeps its chosen height.
+    const floor = ground + F.minClearance;
+    // A circling bird only needs its short lap ahead; a travelling one looks further.
+    for (const reach of bird.phase === 'watch' ? [0, F.watchLookahead] : [0, 6, 15, 25]) { const clear = clearAltitude(environment, x + ax * reach, z + az * reach, floor, ceiling); if (clear > floor) desiredAltitude = Math.max(desiredAltitude, clear + 3); }
   }
   // Rooftops ahead: climb over them rather than through.
   const [fx, fz] = forwardOf(bird.heading);
-  for (const reach of [F.lookahead * .5, F.lookahead]) {
+  // A slow, circling bird looks less far ahead than one crossing the district.
+  const lookahead = bird.phase === 'watch' && bird.mode !== 'manual' ? F.watchLookahead : F.lookahead;
+  for (const reach of [lookahead * .5, lookahead]) {
     if (environment.canFly && !environment.canFly(x + fx * reach, y, z + fz * reach)) { desiredAltitude = Math.max(desiredAltitude, y + 6); if (bird.mode !== 'manual') desiredSpeed = Math.min(desiredSpeed, F.cruise * .7); }
   }
   desiredAltitude = clamp(desiredAltitude, ground + F.minClearance, ceiling);
@@ -122,12 +178,13 @@ function birdModel(spec) {
     return pivot;
   });
   group.userData.wings = wings;
+  group.scale.setScalar(BIRD_SCALE);
   return group;
 }
 
 export function createBirdCams({ scene, camera, host, getEnvironment, getInterests, now = () => performance.now(), random = Math.random }) {
   const flock = [], models = [];
-  let riding = null, transition = 0, control = { turn: 0, climb: 0, throttle: 0 }, keys = new Set(), started = false;
+  let riding = null, companion = null, transition = 0, control = { turn: 0, climb: 0, throttle: 0 }, keys = new Set(), started = false;
   const from = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
   const listeners = new Set(), emit = () => { for (const listener of listeners) listener(api.state); };
   function start(environment) {
@@ -175,7 +232,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
   const api = {
     get birds() { return flock; },
     get riding() { return riding; },
-    get state() { return { started, riding: riding ? { id: riding.id, name: riding.name, mode: riding.mode, watching: riding.target?.label ?? null, phase: riding.phase } : null, birds: flock.map(bird => ({ id: bird.id, name: bird.name, mode: bird.mode, watching: bird.target?.label ?? null, position: bird.position.map(v => +v.toFixed(2)), speed: +bird.speed.toFixed(2) })) }; },
+    get state() { return { started, companion: companion?.id ?? null, riding: riding ? { id: riding.id, name: riding.name, mode: riding.mode, watching: riding.target?.label ?? null, phase: riding.phase } : null, birds: flock.map(bird => ({ id: bird.id, name: bird.name, mode: bird.mode, watching: bird.target?.label ?? null, position: bird.position.map(v => +v.toFixed(2)), speed: +bird.speed.toFixed(2) })) }; },
     onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     ride(id) {
       const bird = flock.find(item => item.id === id) ?? flock[0];
@@ -193,10 +250,14 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       if (!started) return false;
       const interests = getInterests(), time = now();
       readControl();
+      const player = interests.find(item => item.id === 'player') ?? null;
+      companion = companionOf(flock, player, companion);
+      const canPlace = (east, north, radius) => lapClear(environment, east, north, radius);
+      const nearby = companion ? companionInterests(interests, player, { canPlace }) : interests;
       let changed = false;
       for (const bird of flock) {
         const before = `${bird.mode}:${bird.target?.id}:${bird.phase}`;
-        stepBird(bird, delta, { environment, interests, control: bird === riding && bird.mode === 'manual' ? control : null, now: time, random });
+        stepBird(bird, delta, { environment, interests: bird === companion ? nearby : interests, control: bird === riding && bird.mode === 'manual' ? control : null, now: time, random });
         if (`${bird.mode}:${bird.target?.id}:${bird.phase}` !== before) changed = true;
       }
       flock.forEach((bird, index) => {
@@ -210,7 +271,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       if (!riding) return false;
       // Through the bird's eyes: just ahead of the beak, gazing slightly down.
       const [fx, fz] = forwardOf(riding.heading);
-      eye.set(riding.position[0] + fx * .3, riding.position[1] + .07, riding.position[2] + fz * .3);
+      eye.set(riding.position[0] + fx * .3 * BIRD_SCALE, riding.position[1] + .07 * BIRD_SCALE, riding.position[2] + fz * .3 * BIRD_SCALE);
       look.set(clamp(riding.pitch * .6 - .2 + riding.lookPitch, -1.4, .9), riding.heading + riding.lookYaw, riding.bank * .35);
       target.setFromEuler(look);
       transition = Math.min(1, transition + delta / .8);
