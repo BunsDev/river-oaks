@@ -4,10 +4,10 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { DEFAULT_SHARED_APPEARANCE, MOVEMENTS, isBeastAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, DEFAULT_SHARED_APPEARANCE, MOVEMENTS, isBeastAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
-const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, APPEARANCE_COOLDOWN_MS = 2000, FOCUS_MS = 30000;
+const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
 const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;

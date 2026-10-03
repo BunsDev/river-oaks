@@ -6,6 +6,8 @@
 // triple character × variant × form, and each triple has exactly one ID.
 export const FORMS = ['human','beast'];
 export const MOVEMENTS = ['upright','beast'];
+// The shared town accepts one appearance change per account in this interval.
+export const APPEARANCE_COOLDOWN_MS = 2000;
 
 export const CHARACTERS = [
   {id:'jevica',name:'Jevica',title:'Rose enchantress',species:'White fox',accent:'#d784a6',variants:[{id:'signature',label:'Rose silk'}]},

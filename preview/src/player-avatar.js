@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
 import { VISITOR_FORMS, createVisitorReactions } from './visitor-persona.js';
-import { CHARACTERS, DEFAULT_SHARED_APPEARANCE, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, CHARACTERS, DEFAULT_SHARED_APPEARANCE, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 
 export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
@@ -120,7 +120,8 @@ export function createPlayerAvatar({ scene, host, walking, getLocals, getWorld, 
   // The town takes one appearance change every two seconds. Picking a person
   // and then a form is two quick choices, so keep only the latest and send it
   // as soon as the town will accept it rather than surfacing a cooldown.
-  const APPEARANCE_PACE=2100;
+  // A little over the town's cooldown, so a paced change never arrives early.
+  const APPEARANCE_PACE=APPEARANCE_COOLDOWN_MS+100;
   const flushAppearance=async()=>{
     clearTimeout(flushTimer);
     if(sending||!wanted||!sharedMode)return;
