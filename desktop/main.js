@@ -32,11 +32,15 @@ async function loadGame() {
     const current = await net.fetch(`${gameOrigin}/auth/session`, { credentials: 'include' }).then(response => response.json()).catch(() => null);
     if (!current?.authenticated) {
       const refreshToken = await deviceSignIn({ clientId, openBrowser: async (url, code) => {
+        const verification = new URL(url);
+        verification.search = '';
+        verification.hash = '';
         const { response } = await dialog.showMessageBox({ type: 'info', message: 'Sign in to River Oaks',
-          detail: `A browser will open for GitHub sign-in. Confirm code ${code} there to continue.`,
-          buttons: ['Open browser', 'Quit'], defaultId: 0, cancelId: 1 });
-        if (response !== 0) return false;
-        await shell.openExternal(url); return true;
+          detail: `Choose GitHub and confirm code ${code}. To avoid an existing Google session, open ${verification} in a private window and enter the code there.`,
+          buttons: ['Open browser', 'Use private window', 'Quit'], defaultId: 0, cancelId: 2 });
+        if (response === 2) return false;
+        if (response === 0) await shell.openExternal(url);
+        return true;
       } });
       if (!refreshToken) { app.quit(); return; }
       const cookie = await exchangeDesktopSession({ origin: gameOrigin, refreshToken });
