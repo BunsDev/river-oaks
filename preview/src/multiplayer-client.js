@@ -1,18 +1,20 @@
 import './multiplayer.css';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers }) {
+export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
   const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
   const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
   const login=element('a','Sign in with WorkOS','multiplayer-primary');login.href='/auth/login';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
+  const playSolo=element('button','Play single player');playSolo.type='button';playSolo.hidden=!onPlaySolo;
   const gateLogout=element('button','Sign out');gateLogout.type='button';gateLogout.hidden=true;
-  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,gateLogout);gate.append(card);document.body.append(gate);
+  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,playSolo,gateLogout);gate.append(card);document.body.append(gate);
   const panel=element('section',null,'multiplayer-roster');panel.setAttribute('aria-label','Players in town');
   const summary=element('strong','Connecting'),list=element('div'),notice=element('p');notice.setAttribute('role','status');
   const logout=element('button','Sign out');logout.type='button';
+  const leaveTown=element('button','Play single player');leaveTown.type='button';leaveTown.hidden=!onPlaySolo;
   const chatSection=element('section',null,'multiplayer-chat');chatSection.setAttribute('aria-label','Town chat');
   const chatTitle=element('h3','Town chat'),chatHistory=element('div',null,'multiplayer-chat-history');
   chatHistory.setAttribute('role','log');chatHistory.setAttribute('aria-label','Town messages');chatHistory.setAttribute('aria-live','off');
@@ -21,7 +23,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   chatSend.type='submit';chatInput.disabled=chatSend.disabled=true;chatForm.append(chatInput,chatSend);
   const chatStatus=element('p',null,'multiplayer-chat-status');chatStatus.setAttribute('role','status');
   chatSection.append(chatTitle,chatHistory,chatForm,chatStatus);
-  panel.append(summary,list,notice,chatSection,logout);document.querySelector('#community-section')?.prepend(panel);
+  panel.append(summary,list,notice,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false;
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
@@ -37,7 +39,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   };
   gate.addEventListener('keydown',event=>{
     if(event.key!=='Tab')return;
-    const actions=[login,retry,gateLogout].filter(node=>!node.hidden&&!node.disabled);
+    const actions=[login,retry,playSolo,gateLogout].filter(node=>!node.hidden&&!node.disabled);
     const first=actions[0],last=actions.at(-1);
     if(!first){event.preventDefault();title.focus({preventScroll:true});}
     else if(event.shiftKey&&[title,first].includes(document.activeElement)){event.preventDefault();last.focus();}
@@ -137,6 +139,8 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     finally{chatSend.disabled=!connected;if(connected)chatInput.focus();}
   });
   retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
+  playSolo.addEventListener('click',()=>onPlaySolo?.());
+  leaveTown.addEventListener('click',()=>onPlaySolo?.());
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
     try{const result=await api('/auth/logout',{method:'POST'});stopped=true;clearTimeout(retryTimer);socket?.close();location.assign(result.url??'/');}

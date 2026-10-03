@@ -3,14 +3,17 @@
 ## Develop locally without WorkOS
 
 `npm run dev` starts the shared town inside the Vite dev server. With no WorkOS
-credentials, every browser that opens the preview gets its own development
-resident (for example "Wren (dev)") and joins the town without a sign-in step.
-Open a second browser profile to see a second player. No `.env` is needed.
+credentials, choosing Multiplayer gives each browser its own development
+resident (for example "Wren (dev)") without a sign-in step. Choose Multiplayer
+in a second browser profile to see another player. No `.env` is needed.
 
-- `VITE_MULTIPLAYER` chooses how the preview joins. `auto` is the development
-  default: join when the town answers with a session, otherwise play solo
-  without blocking. `off` is the production default, so the live site stays
-  single player. `required` shows the sign-in gate and is for the launched town.
+- The default is `choice`: players begin in single player and can select
+  Multiplayer from the control in the viewport. The choice is remembered in
+  local storage across the WorkOS sign-in redirect. Multiplayer's sign-in
+  screen and People panel both offer a return to single player.
+- `VITE_MULTIPLAYER=auto` joins when the town answers with a session, otherwise
+  plays solo without blocking. `off` disables the shared town. `required`
+  always shows the sign-in gate.
 - `VITE_MULTIPLAYER=off npm run dev` plays solo with the invasion and auto visits.
 - `RIVER_OAKS_DEV_AUTH=workos npm run dev` uses real WorkOS sign-in instead;
   register `http://127.0.0.1:5173/auth/callback` in that WorkOS environment.
@@ -53,7 +56,7 @@ Production defaults to Redis namespace `river-oaks:production:v1`. Preview and l
 
 Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. Authenticated hosted WebSocket routing and live WorkOS sign-in still need acceptance.
 
-Production WorkOS credentials are still required. `PUBLIC_ORIGIN` and `WORKOS_COOKIE_PASSWORD` are configured in Production. Set `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` privately in that environment. Register the exact URLs below in that WorkOS environment. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
+The TypeSafe WorkOS project now has a dedicated **River Oaks District** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M3ZHFZ8AHWXXRJNYM5WYKRPP`). Their callback and logout URLs below are registered. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, and `WORKOS_CLIENT_ID` are configured in Vercel Production. A Production `WORKOS_API_KEY` for the matching WorkOS environment is still required; enter it only in Vercel's private Production environment. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
 
 Before enabling the site, verify two real WorkOS accounts on the deployed endpoint, reconnect during instance replacement with an active wish, and cross-instance logout/ban enforcement. A Production-targeted candidate is staged with `--skip-domain` at the URL in the receipt. `sim.jev.works` still points to the previous deployment. The original single-process acceptance report is not Vercel acceptance evidence.
 

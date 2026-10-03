@@ -1,13 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { probeTown, resolveMultiplayerMode, waitForTown } from '../src/multiplayer-mode.js';
+import { PLAY_MODE_KEY, probeTown, resolveMultiplayerMode, savePlayMode, selectedPlayMode, waitForTown } from '../src/multiplayer-mode.js';
 
-test('production stays single player until the town is explicitly enabled', () => {
-  assert.equal(resolveMultiplayerMode({ DEV: false }), 'off');
-  assert.equal(resolveMultiplayerMode({ DEV: true }), 'auto');
+test('players choose their mode unless an operator explicitly overrides it', () => {
+  assert.equal(resolveMultiplayerMode({ DEV: false }), 'choice');
+  assert.equal(resolveMultiplayerMode({ DEV: true }), 'choice');
   assert.equal(resolveMultiplayerMode({ DEV: false, VITE_MULTIPLAYER: 'required' }), 'required');
+  assert.equal(resolveMultiplayerMode({ DEV: true, VITE_MULTIPLAYER: 'auto' }), 'auto');
   assert.equal(resolveMultiplayerMode({ DEV: true, VITE_SINGLE_PLAYER: 'true' }), 'off');
-  assert.equal(resolveMultiplayerMode({ DEV: true, VITE_MULTIPLAYER: 'nonsense' }), 'auto');
+  assert.equal(resolveMultiplayerMode({ DEV: true, VITE_MULTIPLAYER: 'nonsense' }), 'choice');
+});
+
+test('play mode defaults to solo and remembers an explicit multiplayer choice', () => {
+  const values = new Map();
+  const storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+  assert.equal(selectedPlayMode(storage), 'solo');
+  assert.equal(savePlayMode(storage, 'multiplayer'), true);
+  assert.equal(values.get(PLAY_MODE_KEY), 'multiplayer');
+  assert.equal(selectedPlayMode(storage), 'multiplayer');
+  assert.equal(savePlayMode(storage, 'invalid'), false);
+  assert.equal(selectedPlayMode({ getItem: () => { throw new Error('denied'); } }), 'solo');
 });
 
 const reply = (status, body, type = 'application/json') => async () => ({ ok: status < 400, status, headers: new Map([['content-type', type]]), json: async () => body });

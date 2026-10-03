@@ -1,15 +1,28 @@
 // How the preview joins the shared town:
-//  off      single player only; the production default until the town launches.
-//  auto     development default: join when the town server answers with a
+//  off      single player only.
+//  choice   players choose single player or the shared town.
+//  auto     join when the town server answers with a
 //           session (local development identities need no WorkOS), otherwise
 //           keep playing solo without blocking anything.
 //  required the town's sign-in gate locks the app until the player joins.
-export const MULTIPLAYER_MODES = ['off', 'auto', 'required'];
+export const MULTIPLAYER_MODES = ['off', 'choice', 'auto', 'required'];
+export const PLAY_MODE_KEY = 'river-oaks-play-mode';
 
 export function resolveMultiplayerMode(env = {}) {
   if (MULTIPLAYER_MODES.includes(env.VITE_MULTIPLAYER)) return env.VITE_MULTIPLAYER;
   if (env.VITE_SINGLE_PLAYER === 'true') return 'off';
-  return env.DEV ? 'auto' : 'off';
+  return 'choice';
+}
+
+export function selectedPlayMode(storage) {
+  try { return storage?.getItem(PLAY_MODE_KEY) === 'multiplayer' ? 'multiplayer' : 'solo'; }
+  catch { return 'solo'; }
+}
+
+export function savePlayMode(storage, mode) {
+  if (!['solo', 'multiplayer'].includes(mode)) return false;
+  try { storage?.setItem(PLAY_MODE_KEY, mode); return Boolean(storage); }
+  catch { return false; }
 }
 
 // Asks the town for a session. Resolves { join, signIn, reason } and never

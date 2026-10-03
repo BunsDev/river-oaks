@@ -41,7 +41,8 @@ import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { storefrontSpot } from './arrival.js';
 import { createMultiplayer } from './multiplayer-client.js';
-import { waitForTown, resolveMultiplayerMode } from './multiplayer-mode.js';
+import { waitForTown, resolveMultiplayerMode, selectedPlayMode, savePlayMode } from './multiplayer-mode.js';
+import { createPlayMode } from './play-mode.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
@@ -75,6 +76,9 @@ let multiplayer, remotePlayers, buildLayer, buildControls;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
+let playModeStorage = null;
+try { playModeStorage = window.localStorage; } catch { /* The current visit still plays solo. */ }
+if (!playModeStorage) try { playModeStorage = window.sessionStorage; } catch { /* Stay in single player. */ }
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
@@ -196,7 +200,12 @@ function initializeRenderer() {
   visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
   $('#viewport').append(playDock.element);
   createClearView({ viewport: $('#viewport') });
-  if (multiplayerMode === 'required') startMultiplayer();
+  if (multiplayerMode === 'choice') {
+    createPlayMode({ viewport: $('#viewport'), storage: playModeStorage });
+    if (selectedPlayMode(playModeStorage) === 'multiplayer') startMultiplayer();
+    else host.dataset.multiplayer = 'solo';
+  }
+  else if (multiplayerMode === 'required') startMultiplayer();
   else if (multiplayerMode === 'auto') waitForTown().then(town => {
     host.dataset.multiplayer = town.reason;
     if (town.join) startMultiplayer();
@@ -248,6 +257,7 @@ function startMultiplayer() {
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
     onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);playerAvatar?.setSharedIdentity(players.find(player=>player.id===selfId));buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],selfId);},
+    onPlaySolo: multiplayerMode === 'choice' ? () => { savePlayMode(playModeStorage, 'solo'); location.reload(); } : null,
   });
   host.dataset.multiplayer = 'joined';
 }
