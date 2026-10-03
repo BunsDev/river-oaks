@@ -69,7 +69,7 @@ const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Shared browser acceptance on CPU-only runners still draws the real scene,
-// but leaves expensive lighting passes to the dedicated WebGL smoke test.
+// but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
@@ -91,6 +91,9 @@ let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 
 const scene = new THREE.Scene();
+// Keep geometry, skinning and simulation intact without compiling every PBR
+// material variant on two CPU-bound browser clients.
+if (softwareAcceptance) scene.overrideMaterial = new THREE.MeshNormalMaterial();
 // Street level only: the range reaches the fogged context ground while keeping
 // depth precision for the 6 cm walking near plane.
 const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 6000);
@@ -134,7 +137,7 @@ function initializeRenderer() {
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
-  loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
+  if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();

@@ -12,7 +12,7 @@ const modes = process.argv.slice(2);
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
 if (modes.some(mode => !['development', 'required'].includes(mode))) throw new Error('Choose development or required shared play.');
-const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, no MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
+const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
 let browser, child;
 const interruption = new AbortController();
@@ -105,16 +105,17 @@ try {
       page.on('pageerror', error => pageErrors.push(error.message));
       // These journeys exercise shared transport, never optional paid providers.
       await context.route('**/v1/**', route => route.fulfill({ status: 503, json: { source: 'unavailable', reason: 'acceptance_fixture' } }));
+      let result;
       try {
         console.log(`Running ${name}`);
         const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replaceAll(/http:\/\/127\.0\.0\.1:(?:5173|5180)/g, `http://127.0.0.1:${web}`);
-        const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page);
+        result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page);
         if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
         report.results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
         console.log(`Passed ${name}`);
       } catch (error) {
         interruption.signal.throwIfAborted();
-        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors });
+        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, result });
         await page.screenshot({ path: join(root, `output/playwright/shared-${name}-failure.png`) }).catch(() => {});
         console.error(`Failed ${name}: ${error.stack}`);
         if (pageErrors.length) console.error('Browser errors:', pageErrors);

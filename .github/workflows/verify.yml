@@ -29,6 +29,7 @@ jobs:
         env:
           RIVER_OAKS_SHARED_SOFTWARE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
         run: xvfb-run -a npm run test:shared
       - name: Shared town failure evidence
         if: ${{ failure() && steps.shared.outcome == 'failure' }}

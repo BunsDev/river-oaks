@@ -2,9 +2,10 @@
 
 Observed October 2, 2026 against `d6b0f5e9ecb7c307d586a1e940ec5b566b23a65d`.
 The primary checkout and freshly fetched `origin/main` matched and were clean.
-This patch lives on `cody/modernization-foundation`, isolated from the active
-movement/world review worktree. No commits, publication, deployment, or issues
-were requested or created.
+The assessment began on `cody/modernization-foundation`, isolated from the active
+movement/world review worktree. The observations below are a dated baseline;
+the later hosted WorkOS acceptance is recorded in [multiplayer deployment
+readiness](multiplayer.md#deployment-readiness).
 
 ## Assessment
 
@@ -38,7 +39,7 @@ RO IDs below are planning labels from the shared conversation, not GitHub number
 | --- | --- | --- |
 | RO-001 baseline | Partial program baseline; this scoped receipt verified | Current source, local checks and proof gaps recorded here and in the JSON evidence below. Full draft reconciliation requires the unavailable pack. |
 | RO-002 avatar readiness | Historical failure not reproduced | PR #91 reported a `woman-casual` timeout. The existing development journey passed all 25 checks, including Sable selection and remote rendering. Direct `loadResidentAvatar` also succeeded. No avatar repair is justified by this run; intermittent failure remains possible. |
-| RO-003 CI coverage | Confirmed omission; changed locally | `.github/workflows/verify.yml` now runs the existing desktop unit suite and all shared journeys after Chromium installation. Local results passed; the edited workflow has not run on GitHub. |
+| RO-003 CI coverage | Confirmed omission; addressed in this branch | `.github/workflows/verify.yml` runs the existing desktop unit suite and all shared journeys after Chromium installation. The hosted workflow passed on the original PR head; merge qualification uses checks on the final head. |
 | RO-004 mode docs | Confirmed stale statements; changed locally | README claimed the default needed WorkOS and solo was unavailable in production. `resolveMultiplayerMode` says development `auto`, production `off`, explicit `required` gates shared play. README and standalone build instructions now agree. |
 | RO-005 contributor workflow | Requires scoped design | No tracked `AGENTS.md`/`CLAUDE.md` was found in the repository file lookup. Existing `docs/superpowers` records are not a reviewed contributor policy; no policy was installed from unavailable drafts. |
 | RO-006 rights decisions | Maintainer decision remains | Tracked `*LICENSE*`, `*COPYING*`, `*NOTICE*` inventory returned character CC0 text only. Data README separately records ODbL and material provenance. Asset attribution does not establish a repository source or creator-content license; none was selected here. |
@@ -60,13 +61,12 @@ RO IDs below are planning labels from the shared conversation, not GitHub number
   the checkpoint/view, trimming consumed operations, publishing replies, and
   renewing the lease. `runTick` discards tentative state on a failed fenced
   commit. This was source-inspected, not requalified against live Redis.
-- `docs/multiplayer.md:Deployment readiness` explicitly retains real WorkOS,
-  hosted authenticated sockets, instance replacement, logout and ban acceptance
-  gaps. Historical provisioning/deployment receipts are not fresh production
-  evidence. No credentials or production service state were changed or probed.
-- The Dockerfile currently makes a default solo frontend. The documentation now
-  identifies that limitation; changing a runtime variable alone cannot enable
-  multiplayer in an already built client.
+- At the October 2 assessment, `docs/multiplayer.md:Deployment readiness`
+  retained real WorkOS and hosted replacement, logout, and ban acceptance gaps.
+  Those hosted checks were subsequently completed and are recorded there. This
+  baseline did not change credentials or production service state.
+- The Dockerfile makes a default solo frontend. Changing a runtime variable
+  alone cannot enable multiplayer in an already built client.
 
 ## Fresh verification
 
