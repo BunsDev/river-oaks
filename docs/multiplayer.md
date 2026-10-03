@@ -48,6 +48,14 @@ the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
 
+Build & decorate lets a player place, move, turn, and remove up to 24 owned
+creations in the shared town. A placed creation can be saved as a design, then
+placed again from **Saved designs**. Each account can keep 48 designs. The
+inventory is returned only to its owner; placed copies are visible to everyone.
+Designs survive reconnects and town resets through the private checkpoint.
+Each new placement still passes the server's reach, ground, road, collision,
+and capacity checks. Deleting a design does not remove copies already placed.
+
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
 Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.

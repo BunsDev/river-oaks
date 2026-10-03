@@ -7,12 +7,13 @@ import { storefrontSpot } from '../preview/src/arrival.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
-import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
+import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
 const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
+const MAX_DESIGNS = 4096;
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
 const copy = value => structuredClone(value);
 const fields = (message, allowed) => Object.keys(message).every(key => allowed.includes(key));
@@ -51,7 +52,7 @@ function decodeCheckpoint(json) {
 // client messages contain player intent, never resident state or elapsed time.
 export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 } = {}) {
   const environment = createWalkingEnvironment(worldData);
-  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map();
+  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map();
   const state = createCommunity(worldData, environment.rooms, {carriage:false});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
   const localById = new Map(state.locals.map(local => [local.id,local]));
@@ -269,6 +270,26 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       revision++;
       return {ok:true,player:publicPlayer(player)};
     }
+    if (message.type==='inventory') {
+      if (message.action==='list' && fields(message,['type','action'])) return {ok:true,items:copy(inventory.get(userId)??[])};
+      if (message.action==='save' && fields(message,['type','action','buildId']) && typeof message.buildId==='string') {
+        const build=builds.get(message.buildId);
+        if (!build) return reject('unknown_build');
+        if (build.ownerId!==userId) return reject('not_build_owner');
+        const own=inventory.get(userId)??[];
+        if (own.length>=MAX_SAVED_DESIGNS || [...inventory.values()].reduce((total,items)=>total+items.length,0)>=MAX_DESIGNS) return reject('inventory_limit','Your design inventory is full.');
+        const item={id:`design-${revision+1}`,kind:build.kind,finish:build.finish,createdAt:time};
+        inventory.set(userId,[...own,item]);revision++;
+        return {ok:true,item:copy(item),items:copy(inventory.get(userId))};
+      }
+      if (message.action==='remove' && fields(message,['type','action','id']) && typeof message.id==='string') {
+        const own=inventory.get(userId)??[],next=own.filter(item=>item.id!==message.id);
+        if (next.length===own.length) return reject('unknown_design');
+        if (next.length) inventory.set(userId,next); else inventory.delete(userId);
+        revision++;return {ok:true,items:copy(next)};
+      }
+      return reject('invalid_inventory');
+    }
     if (message.type==='build') {
       if(message.action==='remove'){
         if(!fields(message,['type','action','id']) || typeof message.id!=='string')return reject('invalid_build');
@@ -278,12 +299,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         builds.delete(item.id);revision++;return {ok:true,id:item.id};
       }
       const placing=message.action==='place',editing=message.action==='edit';
-      if(!placing&&!editing || !fields(message,placing?['type','action','kind','finish','position','yaw']:['type','action','id','position','yaw'])
+      const saved=placing && Object.hasOwn(message,'templateId');
+      if(!placing&&!editing || !fields(message,placing?(saved?['type','action','templateId','position','yaw']:['type','action','kind','finish','position','yaw']):['type','action','id','position','yaw'])
         || !point(message.position,2) || !Number.isFinite(message.yaw))return reject('invalid_build');
       const previous=editing?builds.get(message.id):null;
       if(editing&&!previous)return reject('unknown_build');
       if(previous&&previous.ownerId!==userId)return reject('not_build_owner');
-      const kind=buildKind(placing?message.kind:previous.kind),finish=placing?buildFinish(message.finish):buildFinish(previous.finish);
+      const template=saved?(inventory.get(userId)??[]).find(item=>item.id===message.templateId):null;
+      if(saved&&!template)return reject('unknown_design');
+      const kind=buildKind(placing?(saved?template.kind:message.kind):previous.kind),finish=buildFinish(placing?(saved?template.finish:message.finish):previous.finish);
       if(!kind || !finish)return reject('invalid_build');
       if(player.altitude>.1 || environment.roomAt(player.position[0],-player.position[1])
         || distance(player.position,message.position)>BUILD_REACH || editing&&distance(player.position,previous.position)>BUILD_EDIT_REACH)
@@ -380,7 +404,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   // Store and restore only through the trusted persistence owner, never clients.
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
-    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],
+    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],
       life:life?Object.fromEntries(LIFE_FIELDS.map(key=>[key,life[key]])):null}));
     const envelope={version:CHECKPOINT_VERSION,worldFingerprint,payload};
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
@@ -445,6 +469,16 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         const count=(ownerCounts.get(item.ownerId)??0)+1;
         if(count>MAX_BUILDS_PER_USER)throw new Error('Invalid build owner limit');
         ownerCounts.set(item.ownerId,count);nextBuilds.set(item.id,item);
+      }
+      const designIds=new Set();let designCount=0;
+      const nextInventory=restoreMap(recovered.inventory??[],MAX_DESIGNS,items=>Array.isArray(items)
+        && items.length>0 && items.length<=MAX_SAVED_DESIGNS && items.every(item=>record(item)
+          && fields(item,['id','kind','finish','createdAt']) && typeof item.id==='string'
+          && /^design-[1-9]\d*$/.test(item.id) && Number(item.id.slice(7))<=recovered.revision
+          && buildKind(item.kind) && buildFinish(item.finish) && Number.isFinite(item.createdAt)));
+      for(const items of nextInventory.values())for(const item of items){
+        if(designIds.has(item.id) || ++designCount>MAX_DESIGNS)throw new Error('Invalid inventory');
+        designIds.add(item.id);
       }
       if (!Array.isArray(recovered.players)) throw new Error('Invalid players');
       const nextPlayers=restoreMap(recovered.players.map(player=>[player?.id,player]),maxPlayers,player=>record(player)
@@ -513,6 +547,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       appearanceByUser.clear();for(const [id,appearance] of nextAppearances) appearanceByUser.set(id,appearance);
       movementByUser.clear();for(const [id,movement] of nextMovements) movementByUser.set(id,movement);
       builds.clear();for(const [id,item] of nextBuilds)builds.set(id,item);
+      inventory.clear();for(const [id,items] of nextInventory)inventory.set(id,items);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
       return {ok:true};

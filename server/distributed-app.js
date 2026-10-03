@@ -168,7 +168,7 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
             }
             const result = await room.request({ type: 'command', userId: identity.userId, connectionId, message: command });
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
-            if (result.ok && command.type !== 'pose') publish(await room.read());
+            if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read());
             if (requestId !== undefined || !result.ok) send(ws, { type: 'result', requestId, ...result });
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });

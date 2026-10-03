@@ -85,8 +85,8 @@ async page => {
   check((await page.locator('#build-mode').getAttribute('aria-pressed')) === 'true', 'Builder mode can be switched on');
   const canvas = await page.locator('#canvas-host').boundingBox();
   const aimAt = async (fx, fy) => { await page.mouse.move(canvas.x + canvas.width * fx, canvas.y + canvas.height * fy); await page.waitForTimeout(250); return builder(); };
-  let aim = null;
-  for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') break; }
+  let aim = null, acceptedAim = null;
+  for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') { acceptedAim = [fx, fy]; break; } }
   check(aim?.ghost?.visible, 'The preview appears where the pointer meets the ground');
   check(aim.valid === 'true' && /Ready/.test(aim.hint), `An open spot is marked ready (${aim.hint})`);
   await page.screenshot({ path: 'output/playwright/builder-mode.png' });
@@ -96,6 +96,21 @@ async page => {
   await page.waitForFunction(n => window.__riverMultiplayer().snapshot.builds.length > n, before, { timeout: 15000 });
   const placed = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds.at(-1));
   check(Math.hypot(placed.position[0] - aimed[0], placed.position[1] + aimed[2]) < .11, 'A click places the creation exactly where the preview stood');
+  await page.locator('#build-list button', {hasText:'Save design'}).click();
+  await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '1/48');
+  check((await second.locator('#design-count').textContent()) === '0/48', 'A saved design stays in its owner’s inventory');
+  await page.locator('#build-list button', {hasText:'Remove'}).click();
+  await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 0);
+  await page.locator('#design-list button', {hasText:'Place a copy'}).click();
+  await aimAt(...acceptedAim);
+  await page.waitForFunction(() => document.querySelector('#build-hint')?.dataset.valid === 'true');
+  await page.locator('#build-place').click();
+  await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 1);
+  const copy = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]);
+  check(copy.id !== placed.id && copy.kind === placed.kind && copy.finish === placed.finish, 'The owner places a fresh copy from a saved design');
+  await page.locator('#design-list button', {hasText:'Delete design'}).click();
+  await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '0/48');
+  check((await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]?.id)) === copy.id, 'Deleting a saved design leaves its placed copy intact');
   await page.waitForFunction(() => /creation|standing/.test(document.querySelector('#build-hint')?.textContent ?? ''), null, { timeout: 5000 }).catch(() => {});
   const blocked = await builder();
   check(blocked.valid === 'false', `The preview turns red on the spot just taken (${blocked.hint})`);
