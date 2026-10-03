@@ -40,6 +40,15 @@ test('only the named account can enter shared play as either Jevica form',()=>{
   assert.equal(world.command('guest',{type:'appearance',appearance:'woman-tailored'}).ok,true);
 });
 
+test('the same WorkOS account has Jevica and vehicle access under its Production ID',()=>{
+  const owner='user_01M402HKJYDTH1QJM5NAQDZ4HH';
+  const world=createSharedWorld(data);
+  const joined=world.join({userId:owner,name:'Owner'});
+  assert.equal(joined.player.appearance,'jevica');
+  assert.equal(world.command(owner,{type:'appearance',appearance:'jevica-beast'}).ok,true);
+  assert.equal(world.command(owner,{type:'pose',position:joined.player.position,yaw:0,altitude:0,vehicle:'rolls'}).ok,true);
+});
+
 test('only the Jevica owner can submit a vehicle pose in shared play',()=>{
   let time=1000;
   const owner='user_01M40Y914S1H4EJCEHH91DKTAY';

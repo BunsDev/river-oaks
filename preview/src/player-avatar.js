@@ -7,12 +7,12 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
 import { VISITOR_FORMS, createVisitorReactions } from './visitor-persona.js';
-import { APPEARANCE_COOLDOWN_MS, CHARACTERS, JEVICA_OWNER_USER_ID, appearanceFor, canUseAppearance, defaultAppearanceFor, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canUseAppearance, defaultAppearanceFor, isJevicaOwner, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
-  const owner=userId===JEVICA_OWNER_USER_ID;
+  const owner=isJevicaOwner(userId);
   let sharedMode=false,crewLocal=null;
   const crewLocals=()=>{
     const locals=getLocals()??[];

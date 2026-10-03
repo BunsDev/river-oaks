@@ -1,7 +1,7 @@
 # Playable character forms
 
 **Jevica belongs to the approved waitlist administrator account**
-(`user_01M40Y914S1H4EJCEHH91DKTAY`). Other accounts start as Sable and cannot
+(`user_01M40Y914S1H4EJCEHH91DKTAY` in Staging; `user_01M402HKJYDTH1QJM5NAQDZ4HH` in Production). Other accounts start as Sable and cannot
 select either Jevica form in single player or multiplayer. Only that account
 can call Jev and her vehicle in multiplayer. Players can choose the seven other
 characters, and every character comes in a humanoid and a beast form; see

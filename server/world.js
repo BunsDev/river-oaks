@@ -4,7 +4,7 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { APPEARANCE_COOLDOWN_MS, JEVICA_OWNER_USER_ID, MOVEMENTS, canUseAppearance, isBeastAppearance, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
@@ -128,7 +128,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     if (!fields(message,['type','position','yaw','altitude','vehicle']) || (message.vehicle != null && !vehicleKind(message.vehicle))
       || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
       || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > environment.flightCeiling) return correction('invalid_pose');
-    if (message.vehicle && player.id!==JEVICA_OWNER_USER_ID) return correction('exclusive_vehicle');
+    if (message.vehicle && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
     const ground = environment.groundAt(position[0],-position[1]);
     if (Math.abs(position[2]-ground) > 0.2) return correction('invalid_ground');
@@ -446,7 +446,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       const nextPlayers=restoreMap(recovered.players.map(player=>[player?.id,player]),maxPlayers,player=>record(player)
         && typeof player.name==='string' && player.name.length<=80 && (player.appearance===undefined || Boolean(sharedAppearance(player.appearance)))
         && point(player.position,3) && Number.isFinite(player.yaw)
-        && (player.vehicle == null || player.id===JEVICA_OWNER_USER_ID && vehicleKind(player.vehicle) && player.altitude<=0.1)
+        && (player.vehicle == null || isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       for (const player of nextPlayers.values()) {
