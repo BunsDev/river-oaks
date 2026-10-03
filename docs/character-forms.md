@@ -3,7 +3,7 @@
 **Jevica belongs to the approved waitlist administrator account**
 (`user_01M40Y914S1H4EJCEHH91DKTAY` in Staging; `user_01M402HKJYDTH1QJM5NAQDZ4HH` in Production). Other accounts start as Sable and cannot
 select either Jevica form in single player or multiplayer. Only that account
-can call Jev and her vehicle in multiplayer. Players can choose the seven other
+can call Jev and her vehicle in multiplayer. Among playable characters, only Jevica can fly. Players can choose the seven other
 characters, and every character comes in a humanoid and a beast form; see
 [characters, styles and forms](#characters-styles-and-forms). The Witch and Alien forms were removed
 on September 23, 2026, together with their portraits, costumes, broom and personal
@@ -58,9 +58,14 @@ Humanoid forms walk upright and don't offer it.
   each step, and the tail streaming behind and swinging against turns.
 
 The posture eases in and out over a fraction of a second, and the legs keep their
-planted-foot solve. Flying and riding keep their usual poses. Beast movement
-changes how the body moves, not how fast: walking and running speeds stay the
-same, inside the shared town's movement limit.
+planted-foot solve. **Shift** opens a fast ground sprint, with a touch **Hold to sprint**
+control. Foxes turn sharply; wolves and cats lope; deer cover more ground in a
+straight line and slow more through tight turns. Each beast has its own pace and
+turning feel. Walls, terrain steps and world bounds still stop movement. The
+shared town derives its speed limit from the account's confirmed beast form and
+movement choice, so an upright player cannot claim beast speed. Riding keeps its
+usual pose. Only Jevica's humanoid and fox forms can use bubble flight; changing
+character or form in the air requires landing first.
 
 In solo play the choice is stored on the device. In the shared town it belongs to
 the account, like the appearance. The town remembers it, applies it only while
@@ -119,7 +124,7 @@ detail targets, asset size, and hash so you can reproduce the appearance.
 
 ## Controls and rendering
 
-Third person is the default. **V** switches cameras. **B** takes off or lands,
+Third person is the default. **V** switches cameras. For Jevica, **B** takes off or lands,
 **Space** rises and **C** lowers altitude. **P** turns beast movement on or off
 in a beast form. Jevica flies in a bubble. Character controls also expose these
 actions, with a collapsed mobile panel and portraits of the actual models.
@@ -189,7 +194,7 @@ resource ownership, ground clearance and low-energy contact.
 ## Royal vehicles and Prince Jev
 
 Choose the **Pink Rolls-Royce** or **Rose motorcycle**, then **Call vehicle** and
-**Ride with Jev**. The six-wheel glass-canopy car follows the supplied reference,
+**Ride with Jev**. The compact four-wheel glass-canopy car follows the supplied reference,
 with a continuous pink shell, slim lighting, gold aero wheel spinners and quiet
 jewel glints. Both vehicles use gold rather than silver brightwork. The original
 procedural models are artistic interpretations, not licensed scans or photorealism

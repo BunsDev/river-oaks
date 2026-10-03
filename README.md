@@ -7,7 +7,7 @@ An inhabited science-fantasy interpretation of Houston’s River Oaks District: 
 Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
 
 
-Jev's garage offers a pink six-wheel glass-canopy car and rose motorcycle, with
+Jev's garage offers a compact pink four-wheel glass-canopy car and rose motorcycle, with
 gold spinners, fitted passenger clothing and optional **Jev smart drive** through
 the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
 curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)

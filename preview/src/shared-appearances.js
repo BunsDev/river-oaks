@@ -15,7 +15,7 @@ export const CHARACTERS = [
   {id:'rowan',name:'Rowan',title:'Wolf wanderer',species:'Wolf',accent:'#807a78',variants:[{id:'signature',label:'Field jacket'}]},
   {id:'vesper',name:'Vesper',title:'Velvet confidante',species:'Panther',accent:'#693042',variants:[{id:'signature',label:'Wine velvet'}]},
   {id:'aurel',name:'Aurel',title:'Midnight host',species:'Wolf',accent:'#5d4b4a',variants:[{id:'signature',label:'Black brocade'}]},
-  {id:'lyra',name:'Lyra',title:'Lynx muse',species:'Lynx',accent:'#c69a68',variants:[{id:'signature',label:'Sunlit daywear'}]},
+  {id:'lyra',name:'Lyra',title:'Lynx muse',species:'Lynx',accent:'#986879',variants:[{id:'signature',label:'Mauve velvet'}]},
   {id:'kai',name:'Kai',title:'Starlight maker',species:'Snow leopard',accent:'#c2aa80',variants:[{id:'formal',label:'Celestial formal',short:'Formal'},{id:'explorer',label:'Explorer casual',short:'Explorer'},{id:'noir',label:'Starlit noir',short:'Noir'}]},
   {id:'silvan',name:'Silvan',title:'Forest aristocrat',species:'Deer',accent:'#6f7748',variants:[{id:'masculine',label:'Masculine',short:'Masculine'},{id:'feminine',label:'Feminine',short:'Feminine'}]},
 ];
@@ -45,8 +45,8 @@ export const SHARED_APPEARANCES = [
   entry({id:'vesper-beast',character:'vesper',variant:'signature',form:'beast',rig:'jevica',kind:'panther',description:'A black panther in wine velvet: a glossy midnight coat, molten gold eyes, gold hoops, and a long tail that curls when she is amused. She still remembers your favorite song.'}),
   entry({id:'man-tailored',character:'aurel',variant:'signature',form:'human',rig:'man-casual',kind:'human',reference:'/assets/characters/references/aurel-human.png',portraitStyle:'tall',portraitLeft:'-58px',description:'The human midnight host: tousled dark hair, a charcoal brocade waistcoat, long black coat, layered silver jewelry, and an easy, mysterious smile. He knows every gallery opening and always saves the last dance.'}),
   entry({id:'midnight-host-wolf',character:'aurel',variant:'signature',form:'beast',rig:'man-casual',kind:'wolf',palette:'host-wolf',reference:'/assets/characters/references/aurel-wolf.png',portraitStyle:'tall',portraitLeft:'-58px',description:'The fully anthropomorphic midnight host has charcoal and cream wolf fur, amber eyes, tousled dark hair, a sweeping cream-tipped tail, and the same ornate black coat and silver chains.'}),
-  entry({id:'lyra-human',character:'lyra',variant:'signature',form:'human',rig:'woman-daywear',kind:'human',description:'Lyra as a woman: an auburn ponytail, a bold blue tee with a gold emblem, denim shorts, and an easy grin. Bold in color, shy about compliments, and endlessly inventive on a date.'}),
-  entry({id:'woman-daywear',character:'lyra',variant:'signature',form:'beast',kind:'lynx',description:'A tuft-eared lynx with amber eyes and sun-warm fur. Bold in color, shy about compliments, and endlessly inventive on a date.'}),
+  entry({id:'lyra-human',character:'lyra',variant:'signature',form:'human',rig:'jevica',kind:'human',portrait:'/assets/characters/references/lyra-human.png',reference:'/assets/characters/references/lyra-human.png',description:'Lyra as a woman: long chestnut waves, a draped mauve velvet dress with a sheer spotted train, a gold pendant, a chain-strap bag and rose ankle boots.'}),
+  entry({id:'woman-daywear',character:'lyra',variant:'signature',form:'beast',rig:'jevica',kind:'lynx',portrait:'/assets/characters/references/lyra-lynx.png',reference:'/assets/characters/references/lyra-lynx.png',movementReference:'/assets/characters/references/lyra-beast.png',description:'Lyra as an upright lynx: tufted ears, amber eyes and a spotted golden coat, wearing the same mauve velvet, pendant, bag and boots. Prowl to take her lynx form.'}),
   entry({id:'man-workwear',character:'kai',variant:'formal',form:'human',rig:'man-casual',kind:'human',reference:'/assets/characters/references/kai-three-celestial-styles.png',portraitStyle:'collage',portraitLeft:'-26px',description:'Celestial formal Kai wears an ivory long coat and trousers over a midnight waistcoat, with fine gold star embroidery, a star pendant, and tousled light brown hair.'}),
   entry({id:'kai-formal-beast',character:'kai',variant:'formal',form:'beast',rig:'man-casual',kind:'snow-leopard',description:'Kai as a snow leopard in celestial formal: smoke-pale fur scattered with rosettes like constellations, sea-glass eyes, an ivory long coat with gold stars, and a thick ringed tail.'}),
   entry({id:'kai-explorer',character:'kai',variant:'explorer',form:'human',rig:'man-casual',kind:'human',reference:'/assets/characters/references/kai-three-celestial-styles.png',portraitStyle:'collage',portraitLeft:'-132px',description:'Explorer Kai wears a rolled-sleeve navy shirt with tiny gold constellations, sand cargo trousers, rugged black boots, and a worn leather crossbody satchel.'}),
@@ -76,6 +76,7 @@ const appearanceById=new Map(SHARED_APPEARANCES.map(appearance=>[appearance.id,a
 export const sharedAppearance=id=>appearanceById.get(id)??(Object.hasOwn(LEGACY_APPEARANCES,id)?appearanceById.get(LEGACY_APPEARANCES[id]):null)??null;
 export const sharedCharacter=id=>characterById.get(id)??null;
 export const isBeastAppearance=id=>sharedAppearance(id)?.form==='beast';
+export const canFlyAs=(userId,id)=>isJevicaOwner(userId)&&sharedAppearance(id)?.character==='jevica';
 export const canUseAppearance=(userId,id)=>{
   const appearance=sharedAppearance(id);
   return Boolean(appearance) && (appearance.character!=='jevica' || isJevicaOwner(userId));

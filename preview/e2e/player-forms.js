@@ -30,8 +30,8 @@ async page => {
     ['vesper-beast','vesper','signature','beast','Velvet confidante · beast',null],
     ['man-tailored','aurel','signature','human','Midnight host · humanoid','aurel-human'],
     ['midnight-host-wolf','aurel','signature','beast','Midnight host · beast','aurel-wolf'],
-    ['lyra-human','lyra','signature','human','Lynx muse · humanoid',null],
-    ['woman-daywear','lyra','signature','beast','Lynx muse · beast',null],
+    ['lyra-human','lyra','signature','human','Lynx muse · humanoid','lyra-human'],
+    ['woman-daywear','lyra','signature','beast','Lynx muse · beast','lyra-lynx'],
     ['man-workwear','kai','formal','human','Starlight maker · celestial formal · humanoid','kai-three-celestial-styles'],
     ['kai-formal-beast','kai','formal','beast','Starlight maker · celestial formal · beast',null],
     ['kai-explorer','kai','explorer','human','Starlight maker · explorer casual · humanoid','kai-three-celestial-styles'],
@@ -49,6 +49,7 @@ async page => {
     check(await page.locator('#player-role').textContent()===role,`${profile}: identity and 3D appearance update`);
     check(await page.locator(`input[name=player-character][value=${character}]`).isChecked()&&await page.locator(`input[name=player-form][value=${form}]`).isChecked(),`${profile}: the picker shows the person and form`);
     check(await page.locator('#player-beast-movement').isVisible()===(form==='beast'),`${profile}: beast movement is offered only in a beast form`);
+    check(await page.locator('#player-flight').isVisible()===(character==='jevica'),`${profile}: only Jevica is offered flight`);
     if(reference){
       check(await page.locator('.player-portrait img').isVisible(),`${profile}: reference portrait is visible`);
       check(await page.locator('#player-reference').getAttribute('href')===`/assets/characters/references/${reference}.png`,`${profile}: full reference is linked`);

@@ -159,7 +159,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     },
     update(now){
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},

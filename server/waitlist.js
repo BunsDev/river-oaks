@@ -14,19 +14,28 @@ const compare = (a, b) => a.requestedAt.localeCompare(b.requestedAt);
 /** Approval is independent of the town checkpoint and survives process restarts. */
 export async function createFileWaitlist(path, { admins = [], now = Date.now, autoApprove = false } = {}) {
   const adminIds = new Set(admins);
-  let records = new Map(), queue = Promise.resolve();
+  let records = new Map(), audit = [], queue = Promise.resolve();
   try {
     const data = JSON.parse(await readFile(path, 'utf8'));
-    if (!Array.isArray(data) || data.some(record => !validId(record.userId)
+    const rows = Array.isArray(data) ? data : data.records;
+    if (!Array.isArray(rows) || rows.some(record => !validId(record.userId)
       || !['pending', 'approved', 'rejected'].includes(record.status))) throw new Error('Invalid waitlist store');
-    records = new Map(data.map(record => [record.userId, record]));
+    records = new Map(rows.map(record => [record.userId, record]));
+    if (Array.isArray(data)) {
+      // Migrate the old separate journal into the atomic store on the next write.
+      try { audit = (await readFile(`${path}.audit.jsonl`, 'utf8')).trim().split('\n').filter(Boolean).map(line => JSON.parse(line)); }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+    } else {
+      if (!Array.isArray(data.audit)) throw new Error('Invalid waitlist audit');
+      audit = data.audit;
+    }
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const serialize = task => { const next = queue.then(task); queue = next.catch(() => {}); return next; };
-  const persist = async next => {
-    await writeFile(`${path}.tmp`, JSON.stringify([...next.values()]) + '\n', { mode: 0o600 });
+  const persist = async (next, nextAudit = audit) => {
+    await writeFile(`${path}.tmp`, JSON.stringify({ records: [...next.values()], audit: nextAudit }) + '\n', { mode: 0o600 });
     await rename(`${path}.tmp`, path);
-    records = next;
+    records = next; audit = nextAudit;
   };
   return {
     request(identity) {
@@ -49,8 +58,10 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         if (!previous) return null;
         const record = { ...previous, status: approved ? 'approved' : 'rejected', decidedAt: new Date(now()).toISOString(), decidedBy: actorId };
         const next = new Map(records); next.set(userId, record);
-        await persist(next);
-        await appendFile(`${path}.audit.jsonl`, JSON.stringify({ userId, approved, actorId, at: record.decidedAt }) + '\n', { mode: 0o600 });
+        const entry = { userId, approved, actorId, at: record.decidedAt };
+        await persist(next, [...audit, entry]);
+        // Preserve the legacy JSONL mirror, but the atomic store is authoritative.
+        await appendFile(`${path}.audit.jsonl`, JSON.stringify(entry) + '\n', { mode: 0o600 }).catch(() => {});
         return record;
       });
     },

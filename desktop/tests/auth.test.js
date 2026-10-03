@@ -27,10 +27,22 @@ test('desktop device flow opens the system browser and accepts only GitHub', asy
 
 test('desktop exchange sends the refresh credential only to its own origin', async () => {
   let target, options;
-  const cookie = await exchangeDesktopSession({ origin: 'https://sim.jev.works', refreshToken: 'private-refresh',
+  const cookie = await exchangeDesktopSession({ origin: 'https://sim.jev.works', refreshToken: 'private-refresh', now: () => 1_000_000,
     fetcher: async (url, request) => { target = url; options = request;
-      return new Response('{"authenticated":true}', { headers: { 'Set-Cookie': 'river_oaks_session=sealed-value; Path=/; Secure; HttpOnly' } }); } });
+      return new Response('{"authenticated":true}', { headers: { 'Set-Cookie': 'river_oaks_session=sealed-value; Path=/; Secure; HttpOnly; Max-Age=604800' } }); } });
   assert.equal(target, 'https://sim.jev.works/auth/desktop/exchange');
   assert.equal(options.headers.Origin, 'https://sim.jev.works');
-  assert.equal(cookie, 'sealed-value');
+  assert.deepEqual(cookie, { value: 'sealed-value', expirationDate: 605_800 });
+});
+
+test('WorkOS slow_down adds five seconds to device polling', async () => {
+  const waits = [];
+  const replies = [
+    Response.json({ device_code: 'private-code', user_code: 'ABCD-EFGH', verification_uri_complete: 'https://signin.workos.com/device', expires_in: 300, interval: 5 }),
+    Response.json({ error: 'slow_down' }, { status: 400 }),
+    Response.json({ authentication_method: 'GitHubOAuth', refresh_token: 'refresh-token' }),
+  ];
+  await deviceSignIn({ clientId: 'client_test', fetcher: async () => replies.shift(), openBrowser: async () => true,
+    sleep: async ms => { waits.push(ms); }, now: () => 0 });
+  assert.deepEqual(waits, [5_000, 10_000]);
 });

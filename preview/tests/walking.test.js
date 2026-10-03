@@ -47,6 +47,25 @@ test('speed is stable across refresh rates and diagonal input is normalized', ()
   assert.ok(Math.abs(run(60, { forward: 1 }) - run(60, { forward: 1, strafe: 1 })) < 0.001);
 });
 
+test('beast sprint covers ground quickly while keeping turns and walls under control', () => {
+  const open = createWalkingEnvironment({ bounds_m: [-200, -200, 200, 200], buildings: [] });
+  const run = (fps, input) => {
+    const state=createWalkingState(open,[0,0,0]);
+    for(let i=0;i<fps*3;i++)stepWalking(state,open,input,1/fps);
+    return state;
+  };
+  const upright=run(60,{forward:1,fast:true});
+  const wolf=run(60,{forward:1,fast:true,beastKind:'wolf'});
+  assert.ok(Math.hypot(...[wolf.position[0],wolf.position[2]])>Math.hypot(upright.position[0],upright.position[2])+6);
+  assert.ok(wolf.speed>5 && wolf.speed<7);
+  assert.ok(Math.abs(run(30,{forward:1,fast:true,beastKind:'wolf'}).distance-run(120,{forward:1,fast:true,beastKind:'wolf'}).distance)<0.05);
+  const turning=run(60,{forward:1,turn:1,fast:true,beastKind:'wolf'});
+  assert.ok(turning.distance<wolf.distance && turning.distance>wolf.distance*.55,'a sprint eases through a sharp turn');
+  const blocked=createWalkingEnvironment(world),state=createWalkingState(blocked,[0,-8,0]);
+  for(let i=0;i<600;i++)stepWalking(state,blocked,{forward:1,fast:true,beastKind:'wolf'},1/60);
+  assert.ok(state.position[2]>=5.35,'fast beasts cannot cross a storefront wall');
+});
+
 test('placed-obstacle checks use one fresh ground height per position query',()=>{
   let reads=0,height=.2;
   const terrain={bounds_m:[-50,-50,50,50],buildings:[],get walkSurfaceOffset(){reads++;return height;}};

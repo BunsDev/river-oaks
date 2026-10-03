@@ -15,7 +15,7 @@ const WARDROBE = {
   rowan: {cloth:'#453b39',trim:'#9c7956',jewelry:false},
   vesper: {cloth:'#541a30',trim:'#d6ad6d',gem:'#a38ab4'},
   aurel: {cloth:'#343045',trim:'#d2ae89',gem:'#d5b47b'},
-  lyra: {cloth:'#657f72',trim:'#d9b874',jewelry:false},
+  lyra: {cloth:'#754759',trim:'#d4ad70',jewelry:false},
   'kai:formal': {cloth:'#ded0bb',trim:'#c9a760'},
   'kai:explorer': {cloth:'#292e39',trim:'#c9a760'},
   'kai:noir': {cloth:'#201c22',trim:'#c9a760'},
@@ -26,7 +26,7 @@ const WARDROBE = {
 const BEASTS = {
   wolf:{fur:'#827f7c',dark:'#383333',tail:{style:'wolf',length:.98,tip:'#e4ddd4'},skin:{color:'#8c8782',bump:.003,roughness:.95}},
   'host-wolf':{fur:'#383332',dark:'#201b1b',tail:{style:'wolf',length:1.02,tip:'#d8cdc4'},skin:{color:'#4c4542',bump:.003,roughness:.96}},
-  lynx:{fur:'#ba9367',dark:'#4d3b35',tail:{style:'lynx',length:.25,tip:'#3a312f'},skin:{lerp:.45,roughness:.9}},
+  lynx:{fur:'#bd9367',dark:'#443027',tail:{style:'lynx',length:.25,tip:'#322923'},skin:{pattern:'lynx',roughness:.94}},
   'rose-fox':{fur:'#f2ebe6',dark:'#b98a96',tail:{style:'fox',length:1.02,tip:'#e6a2b7'},skin:{color:'#efe6e1',bump:.002,roughness:.93}},
   panther:{fur:'#221d22',dark:'#0f0d10',tail:{style:'cat',length:.94,tip:'#141114'},skin:{color:'#262027',bump:.002,roughness:.86}},
   'snow-leopard':{fur:'#bdb5a9',dark:'#3b3632',tail:{style:'plush-cat',length:1,tip:'#36312d',rings:true},skin:{color:'#bfb7ab',bump:.003,roughness:.95}},
@@ -34,11 +34,11 @@ const BEASTS = {
 };
 const SKIN=/^(young|middleage|old)_.*(male|female)$/i;
 
-let furBump;
+let furBump,lynxCoat;
 const hairMaps=new Map();
 function hairTexture(name){
   if(hairMaps.has(name))return hairMaps.get(name);
-  const base=name==='sable'?[194,160,133]:name==='forest'?[122,88,58]:[77,48,44],size=256,data=new Uint8Array(size*size*4);
+  const base=name==='sable'?[194,160,133]:name==='forest'?[122,88,58]:name==='lyra'?[115,68,49]:[77,48,44],size=256,data=new Uint8Array(size*size*4);
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const glint=12*Math.sin(x*.35+y*.025)+7*Math.sin(x*1.7-y*.04)+5*Math.sin(x*.08+y*.12);
     const index=(y*size+x)*4;
@@ -62,6 +62,30 @@ function furTexture() {
   furBump.wrapS=furBump.wrapT=THREE.RepeatWrapping;
   furBump.needsUpdate=true;
   return furBump;
+}
+function lynxCoatTexture() {
+  if(lynxCoat)return lynxCoat;
+  const size=512,cell=48,data=new Uint8Array(size*size*4);
+  const hash=(x,y)=>((Math.imul(x+17,73856093)^Math.imul(y+37,19349663))>>>0)/4294967296;
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    let spot=0;
+    const gx=Math.floor(x/cell),gy=Math.floor(y/cell);
+    for(let cy=gy-1;cy<=gy+1;cy++)for(let cx=gx-1;cx<=gx+1;cx++){
+      const px=(cx+.18+.64*hash(cx,cy))*cell,py=(cy+.18+.64*hash(cy,cx))*cell;
+      const rx=5+9*hash(cx+9,cy),ry=7+10*hash(cx,cy+11);
+      const distance=Math.hypot((x-px)/rx,(y-py)/ry);
+      spot=Math.max(spot,THREE.MathUtils.smoothstep(1.18-distance,0,.38));
+    }
+    const grain=(hash(x,y)-.5)*13,strand=Math.sin(x*.85+y*.12)*5;
+    const i=(y*size+x)*4;
+    data[i]=Math.max(0,190+grain+strand-120*spot);
+    data[i+1]=Math.max(0,148+grain+strand-103*spot);
+    data[i+2]=Math.max(0,103+grain+strand-78*spot);
+    data[i+3]=255;
+  }
+  lynxCoat=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);
+  lynxCoat.colorSpace=THREE.SRGBColorSpace;lynxCoat.wrapS=lynxCoat.wrapT=THREE.RepeatWrapping;lynxCoat.needsUpdate=true;
+  return lynxCoat;
 }
 
 // Tail silhouettes in metres along -z from the pelvis. Canid brushes droop and
@@ -143,7 +167,8 @@ export function createRomanceLook(avatar,root,appearance) {
     const name=original.name??'';
     if(beast&&SKIN.test(name)){
       const skin=beast.skin;
-      if(skin.lerp)material.color.lerp(new THREE.Color(beast.fur),skin.lerp);
+      if(skin.pattern==='lynx'){material.map=lynxCoatTexture();material.color.set('#ffffff');material.bumpMap=furTexture();material.bumpScale=.002;}
+      else if(skin.lerp)material.color.lerp(new THREE.Color(beast.fur),skin.lerp);
       else{material.map=null;material.color.set(skin.color);material.bumpMap=furTexture();material.bumpScale=skin.bump;}
       material.roughness=skin.roughness;material.needsUpdate=true;
     }
@@ -181,8 +206,14 @@ export function createRomanceLook(avatar,root,appearance) {
       if(/shoes0[13]/i.test(name)){material.map=null;material.normalMap=null;material.color.set('#5b4c33');material.roughness=.6;material.needsUpdate=true;}
       if(/short0\d/i.test(name)){material.map=null;material.color.set('#7a5638');material.roughness=.8;material.needsUpdate=true;}
     }
-    if(character==='lyra'&&/^ponytail/.test(name)){material.color.set('#e2b98a');material.roughness=.8;material.needsUpdate=true;}
-    if(/suit|dress|shirt|jacket|jeans|trouser|pants|skirt|vest|blouse|workwear/i.test(name)&&!['jevica','sable','vesper','rowan','aurel','kai','silvan'].includes(character)){
+    if(character==='lyra'){
+      if(/^ponytail/.test(name)){material.map=hairTexture('lyra');material.color.set('#ffffff');material.roughness=.78;material.needsUpdate=true;}
+      if(name==='long01'){material.map=hairTexture('lyra');material.color.set('#ffffff');material.roughness=.78;material.needsUpdate=true;}
+      if(name==='jevica_silk'){material.map=null;material.normalMap=null;material.color.set(style.cloth);material.roughness=.78;material.metalness=0;material.needsUpdate=true;}
+      if(name==='female_casualsuit02'){material.map=null;material.normalMap=null;material.color.set(style.cloth);material.roughness=.8;material.needsUpdate=true;}
+      if(/^shoes01/.test(name)){material.map=null;material.color.set('#704752');material.roughness=.6;material.needsUpdate=true;}
+    }
+    if(/suit|dress|shirt|jacket|jeans|trouser|pants|skirt|vest|blouse|workwear/i.test(name)&&!['jevica','sable','vesper','rowan','aurel','kai','silvan','lyra'].includes(character)){
       material.color.lerp(cloth,.76);material.roughness=.61;material.metalness=.04;material.needsUpdate=true;
     }
   }
@@ -220,7 +251,7 @@ export function createRomanceLook(avatar,root,appearance) {
     const carriage=createTailMotion();
     return {
       beast:true,
-      update(now,{reducedMotion=false,motion=null}={}){const pose=carriage.pose(now,{reducedMotion,motion});if(!reducedMotion){tail.rotation.y=pose.yaw;tail.rotation.x=pose.pitch;}},
+      update(now,{reducedMotion=false,motion=null}={}){const pose=carriage.pose(now,{reducedMotion,motion});reference.update?.(motion);if(!reducedMotion){tail.rotation.y=pose.yaw;tail.rotation.x=pose.pitch;}},
       dispose(){reference.dispose();restoreHead();face.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();},
     };
   }

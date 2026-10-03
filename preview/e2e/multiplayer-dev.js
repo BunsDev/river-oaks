@@ -109,7 +109,7 @@ async page => {
   await page.waitForFunction(()=>!document.querySelector('.visit-tools').open);
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
   await page.locator('.visit-tools-toggle').click();
-  check(await page.locator('#player-flight').isVisible(),'Flight remains discoverable in shared mobile play');
+  check(!await page.locator('#player-flight').isVisible()&&await page.locator('#player-beast-movement').isVisible(),'Shared mobile guests get beast movement without flight');
   check(!await page.locator('#player-companion').isVisible()&&!await page.locator('.vehicle-garage').isVisible(),'Shared mobile play hides solo companion and vehicle actions');
   check(!await page.locator('.force-controls').isVisible()&&!await page.locator('.auto-controls').isVisible(),'Shared mobile play hides local-only scenarios');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Shared mobile controls stay within the viewport');

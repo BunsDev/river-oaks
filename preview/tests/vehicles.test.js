@@ -10,6 +10,17 @@ test('chauffeur inputs accept only finite bounded controls and known commands',(
  assert.equal(chauffeurCommand({mode:'teleport',position:[1,2,3]}),null);
  assert.equal(chauffeurCommand({mode:'tour'}),'tour');
 });
+test('Pink Rolls-Royce has a compact four-wheel footprint and full-height cabin',()=>{
+ const spec=VEHICLES.rolls,model=createRoadVehicle('rolls');
+ try {
+  assert.equal(model.wheels.length,4);
+  assert.equal(spec.steeredWheels,2);
+  assert.ok(Math.abs(spec.length-6.6*.7)<1e-9);
+  assert.ok(Math.abs(spec.wheelbase-4.25*.7)<1e-9);
+  const size=new THREE.Box3().setFromObject(model.object).getSize(new THREE.Vector3());
+  assert.ok(size.x<4.9&&size.z<1.7&&size.y>1.8,`compact dimensions ${size.toArray()}`);
+ } finally { model.dispose(); }
+});
 for(const kind of ['rolls','motorcycle'])test(`${kind}: model, wheels and seats use real-scale vehicle dimensions with bounded rendering`,()=>{
  const model=createRoadVehicle(kind),spec=VEHICLES[kind];
  assert.equal(model.wheels.length,spec.wheels.length);
@@ -49,7 +60,7 @@ for(const kind of ['rolls','motorcycle'])test(`${kind}: parking, swept driving, 
 
 test('gold wheel spinners coast independently after braking and stop animating with reduced motion',()=>{
  const model=createRoadVehicle('rolls');try{
- assert.equal(model.spinners.length,6);model.animate(0,4);for(let now=16;now<=1600;now+=16)model.animate(now,4);
+ assert.equal(model.spinners.length,4);model.animate(0,4);for(let now=16;now<=1600;now+=16)model.animate(now,4);
  const before=model.spinners[0].rotation.z;model.animate(1680,0);assert.ok(model.spinners[0].rotation.z>before,'bearing inertia continues after vehicle stops');
  const stopped=model.spinners[0].rotation.z;model.animate(1760,0,true);assert.equal(model.spinners[0].rotation.z,stopped);
  assert.ok(model.object.getObjectByName('Royal gold jewel glints'));

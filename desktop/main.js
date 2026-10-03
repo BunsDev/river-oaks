@@ -17,7 +17,7 @@ const clientId = dev ? process.env.WORKOS_CLIENT_ID : 'client_01M3ZHFZDKDSTJ2RNS
 if (dev) {
   const url = new URL(entry);
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
-  if (!clientId) throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
+  if (!clientId && process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE !== '1') throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
 }
 
 async function saveWindow() {
@@ -44,7 +44,7 @@ async function loadGame() {
       } });
       if (!refreshToken) { app.quit(); return; }
       const cookie = await exchangeDesktopSession({ origin: gameOrigin, refreshToken });
-      await session.defaultSession.cookies.set({ url: gameOrigin, name: 'river_oaks_session', value: cookie,
+      await session.defaultSession.cookies.set({ url: gameOrigin, name: 'river_oaks_session', ...cookie,
         httpOnly: true, secure: !dev, sameSite: 'lax' });
     }
     await window.loadURL(entry);

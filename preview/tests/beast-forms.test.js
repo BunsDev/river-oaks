@@ -6,7 +6,8 @@ import { instantiateAvatar } from '../src/avatars.js';
 import { createRomanceLook } from '../src/romance-look.js';
 import { createBeastGait } from '../src/beast-gait.js';
 import { createTailMotion } from '../src/tail-motion.js';
-import { CHARACTERS, FORMS, LEGACY_APPEARANCES, SHARED_APPEARANCES, appearanceFor, isBeastAppearance, sharedAppearance, sharedCharacter } from '../src/shared-appearances.js';
+import { traversalForAppearance } from '../src/beast-traversal.js';
+import { CHARACTERS, FORMS, JEVICA_OWNER_USER_IDS, LEGACY_APPEARANCES, SHARED_APPEARANCES, appearanceFor, canFlyAs, isBeastAppearance, sharedAppearance, sharedCharacter } from '../src/shared-appearances.js';
 
 test('every playable character offers a humanoid and a beast form in each of their styles',()=>{
   for(const character of CHARACTERS){
@@ -26,6 +27,19 @@ test('every playable character offers a humanoid and a beast form in each of the
   for(const appearance of SHARED_APPEARANCES){
     assert.ok(sharedCharacter(appearance.character)?.variants.some(variant=>variant.id===appearance.variant),appearance.id);
     assert.equal(appearance.kind==='human',appearance.form==='human',appearance.id);
+  }
+});
+
+test('every beast form has ground traversal, while only Jevica can fly',()=>{
+  for(const look of SHARED_APPEARANCES){
+    const profile=traversalForAppearance(look.id);
+    if(look.form==='beast'){
+      assert.ok(profile,`${look.id} needs a traversal profile`);
+      assert.ok(profile.walk>1.65&&profile.sprint>3.4&&profile.sprint>profile.walk,look.id);
+      assert.ok(profile.turn>1.6&&profile.turnSlowdown>0,look.id);
+    }else assert.equal(profile,null,look.id);
+    for(const owner of JEVICA_OWNER_USER_IDS)assert.equal(canFlyAs(owner,look.id),look.character==='jevica',look.id);
+    assert.equal(canFlyAs('guest',look.id),false,look.id);
   }
 });
 

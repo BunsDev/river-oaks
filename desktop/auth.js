@@ -27,18 +27,22 @@ export async function deviceSignIn({ clientId, openBrowser, fetcher = fetch, sle
       if (typeof data.refresh_token !== 'string') throw new Error('WorkOS did not return a desktop session.');
       return data.refresh_token;
     }
-    if (data.error === 'slow_down') interval++;
+    if (data.error === 'slow_down') interval += 5;
     else if (data.error !== 'authorization_pending') throw new Error('WorkOS sign-in was not completed.');
   }
   throw new Error('WorkOS sign-in timed out.');
 }
 
-export async function exchangeDesktopSession({ origin, refreshToken, fetcher = fetch }) {
+export async function exchangeDesktopSession({ origin, refreshToken, fetcher = fetch, now = Date.now }) {
   const response = await fetcher(`${origin}/auth/desktop/exchange`, { method: 'POST',
     headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken }),
     signal: AbortSignal.timeout(15_000) });
   if (!response.ok) throw new Error('River Oaks could not finish sign-in.');
-  const cookie = response.headers.get('set-cookie')?.match(/(?:^|,\s*)river_oaks_session=([^;]+)/)?.[1];
-  if (!cookie) throw new Error('River Oaks did not return a session.');
-  return cookie;
+  const header = response.headers.get('set-cookie');
+  const value = header?.match(/(?:^|,\s*)river_oaks_session=([^;]+)/)?.[1];
+  const maxAge = Number(header?.match(/(?:^|;)\s*Max-Age=(\d+)(?:;|$)/i)?.[1]);
+  if (!value || !Number.isSafeInteger(maxAge) || maxAge < 1 || maxAge > 30 * 24 * 60 * 60) {
+    throw new Error('River Oaks did not return a valid session.');
+  }
+  return { value, expirationDate: now() / 1000 + maxAge };
 }

@@ -2,6 +2,7 @@ import { terrainHeight } from './geometry.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
+import { beastTraversal } from './beast-traversal.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -111,9 +112,11 @@ export function stepWalking(state, environment, input, delta) {
   if (!Number.isFinite(delta) || delta <= 0) return state;
   const duration = Math.min(delta, 0.08), steps = Math.ceil(duration * 120), dt = duration / steps;
   const forward = clamp(input.forward ?? 0, -1, 1), strafe = clamp(input.strafe ?? 0, -1, 1), norm = Math.max(1, Math.hypot(forward, strafe));
-  const speed = input.fast ? 3.2 : 1.65;
+  const beast=beastTraversal(input.beastKind);
+  const turning=Math.abs(clamp(input.turn??0,-1,1));
+  const speed=(beast?(input.fast?beast.sprint:beast.walk):(input.fast?3.2:1.65))*(beast&&input.fast?1-beast.turnSlowdown*turning:1);
   for (let i = 0; i < steps; i++) {
-    state.yaw += clamp(input.turn ?? 0, -1, 1) * 1.6 * dt;
+    state.yaw += clamp(input.turn ?? 0, -1, 1) * (beast?.turn??1.6) * dt;
     const vx = (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) * speed / norm;
     const vz = (-Math.cos(state.yaw) * forward - Math.sin(state.yaw) * strafe) * speed / norm;
     trackVelocity(state, vx, vz, dt);

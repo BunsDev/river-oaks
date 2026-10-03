@@ -10,6 +10,7 @@ const names = process.argv.slice(2);
 if (names.some(name => !suite.includes(name))) throw new Error(`Choose harnesses from: ${suite.join(', ')}`);
 process.env.VITE_SINGLE_PLAYER = 'true';
 process.env.VITE_MULTIPLAYER = 'off';
+process.env.RIVER_OAKS_DEV_TOWN = 'off';
 const vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), server: { port: 0 } });
 const results = [];
 let browser;
@@ -20,6 +21,10 @@ try {
   browser = await chromium.launch({ headless: true, ...(process.platform === 'darwin' ? { args: ['--use-angle=metal'] } : {}) });
   for (const name of names.length ? names : suite) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    // Solo journeys still pass through the access gate. Give this isolated
+    // browser the approved Jevica fixture without using a live WorkOS session.
+    await context.route('**/auth/session',route=>route.fulfill({json:{authenticated:true,user:{id:'user_01M40Y914S1H4EJCEHH91DKTAY',name:'Jevica'},csrfToken:'solo-fixture'}}));
+    await context.route('**/api/waitlist/status',route=>route.fulfill({json:{status:'approved',admin:false}}));
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
     const started = Date.now();

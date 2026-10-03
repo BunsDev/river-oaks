@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
@@ -50,7 +50,21 @@ test('pending users cannot enter; a named approver can approve, revoke, and audi
   assert.equal((await reopened.request(visitor)).status, 'rejected');
   const audit = await readFile(`${file}.audit.jsonl`, 'utf8');
   assert.equal(audit.trim().split('\n').length, 2);
+  assert.equal(JSON.parse(await readFile(file, 'utf8')).audit.length, 2);
   assert.equal((await reopened.request(admin)).status, 'approved');
+});
+
+test('a failed legacy audit mirror cannot leave a decision applied but reported as failed', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'river-oaks-waitlist-audit-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const file = join(directory, 'waitlist.json');
+  const waitlist = await createFileWaitlist(file, { admins: ['admin'] });
+  await waitlist.request({ userId: 'visitor', name: 'Visitor' });
+  await mkdir(`${file}.audit.jsonl`);
+  assert.equal((await waitlist.decide({ userId: 'visitor', approved: true, actorId: 'admin' })).status, 'approved');
+  const stored = JSON.parse(await readFile(file, 'utf8'));
+  assert.equal(stored.audit.length, 1);
+  assert.equal(await (await createFileWaitlist(file)).isApproved('visitor'), true);
 });
 
 test('Redis waitlist decisions survive instances and concurrent requests', { skip: !process.env.REDIS_URL }, async t => {

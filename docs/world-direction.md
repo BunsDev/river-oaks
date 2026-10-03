@@ -54,7 +54,7 @@ interpretations, not evidence of historical or surveyed Houston architecture.
 
 Houston street centerlines, buildings and store entrances stay in place. Human
 residents and existing worker roles remain the population standard. Jev chauffeurs
-Jevica in a pink six-wheel glass-canopy car or a rose motorcycle, with fitted seats,
+Jevica in a compact pink four-wheel glass-canopy car or a rose motorcycle, with fitted seats,
 gold spinners and restrained jewel glints; see [character controls](character-forms.md).
 
 ## Streets and planting

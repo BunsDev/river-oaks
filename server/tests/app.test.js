@@ -1,21 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createGameServer } from '../app.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t, waitlist = approvedWaitlist){
+async function fixture(t, waitlist = approvedWaitlist, staticRoot = '/nonexistent'){
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
-  const app=createGameServer({auth,world,waitlist,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
+  const app=createGameServer({auth,world,waitlist,origin:'http://127.0.0.1',staticRoot});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
   return {app,world,origin,commands:()=>commands};
 }
+test('standalone server protects every game chunk and world data after approval',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
+  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
+    await writeFile(join(root,file),'fixture');
+  const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
+  const {origin}=await fixture(t,waitlist,root);
+  const get=(path,id)=>fetch(origin+path,{headers:id?{Cookie:`session=${id}`}:{}});
+  for(const path of ['/','/assets/index-entry.js','/assets/preload-helper-entry.js'])assert.equal((await get(path)).status,200,path);
+  for(const path of ['/assets/main-game.js','/assets/walking-game.js','/assets/three-game.js','/data/district.json']){
+    assert.equal((await get(path)).status,403,path);
+    assert.equal((await get(path,'guest')).status,403,path);
+    const response=await get(path,'owner');
+    assert.equal(response.status,200,path);
+    assert.equal(response.headers.get('cache-control'),'private, no-store');
+    assert.equal(response.headers.get('vary'),'Cookie');
+  }
+});
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
  const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?ticket='+token,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});

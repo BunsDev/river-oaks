@@ -24,6 +24,7 @@
     "test:desktop:e2e": "node desktop/e2e.js"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.11",
     "@workos-inc/node": "^10.14.0",
     "ioredis": "^6.0.0",
     "three": "0.186.0",

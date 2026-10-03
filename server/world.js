@@ -4,7 +4,8 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
@@ -130,13 +131,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > environment.flightCeiling) return correction('invalid_pose');
     if (message.vehicle && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
+    if (altitude>0 && !canFlyAs(player.id,player.appearance)) return correction('flight_not_allowed');
     const ground = environment.groundAt(position[0],-position[1]);
     if (Math.abs(position[2]-ground) > 0.2) return correction('invalid_ground');
     const dt = Math.max(0,Math.min(1,(time-player.poseAt)/1000));
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : 3.4);
+    const beast=movementOf(player)==='beast'?traversalForAppearance(player.appearance):null;
+    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? 7.2 : beast ? beast.sprint+.2 : 3.4);
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
     const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));
@@ -252,6 +255,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       if (!chosen) return reject('invalid_appearance');
       if (!canUseAppearance(userId,chosen.id)) return reject('exclusive_appearance','Jevica is reserved for her account.');
       if (player.appearance===chosen.id) return {ok:true,player:publicPlayer(player)};
+      if (player.altitude>0) return reject('land_before_appearance','Land before changing character or form.');
       if (time-ledger.appearanceAt<APPEARANCE_COOLDOWN_MS) return reject('appearance_cooldown','Wait a moment before changing appearance again.');
       player.appearance=chosen.id;ledger.appearanceAt=time;
       rememberAppearance(userId,player.appearance);revision++;
@@ -456,6 +460,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         const [east,north,ground]=player.position;
         if (!nextLedgers.has(player.id) || Math.abs(ground-environment.groundAt(east,-north))>0.2
           || (player.altitude>0.1?!environment.canFly(east,ground+player.altitude,-north):!environment.isFree(east,-north))) throw new Error('Invalid player position');
+        // Older signed checkpoints allowed every player to fly. Keep their
+        // account and appearance, but restore non-Jevica players on safe ground.
+        if(player.altitude>0&&!canFlyAs(player.id,player.appearance)){
+          const grounded=createWalkingState(environment,[east,north]).position;
+          player.position=[grounded[0],-grounded[2],environment.groundAt(grounded[0],grounded[2])];
+          player.altitude=0;
+        }
       }
       if(nextAppearances.size>MAX_APPEARANCES) throw new Error('Invalid appearances');
       // A preference without a remembered appearance has nothing to apply to.

@@ -8,6 +8,7 @@ import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
+import { protectedGameAsset } from './game-assets.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -71,13 +72,21 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
       if (!['GET','HEAD'].includes(req.method)) return json(res,405,{error:'Method not allowed'});
       if (!staticRoot) return json(res,404,{error:'Run the frontend development server.'});
+      const protectedAsset = protectedGameAsset(pathname);
+      if (protectedAsset) {
+        const identity = await auth.authenticate(req);
+        if (!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))) {
+          return json(res,403,{error:'waitlist_approval_required'});
+        }
+      }
       let path=resolve(staticRoot,'.'+decodeURIComponent(pathname==='/'?'/index.html':pathname));
       const root=await realpath(staticRoot);
       path=await realpath(path);
       if (!path.startsWith(root+sep)) return json(res,404,{error:'Not found'});
       const info=await stat(path);if(!info.isFile())return json(res,404,{error:'Not found'});
       res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
-      res.setHeader('Cache-Control',extname(path)==='.html'?'no-cache':'public, max-age=300');
+      res.setHeader('Cache-Control',protectedAsset?'private, no-store':extname(path)==='.html'?'no-cache':'public, max-age=300');
+      if(protectedAsset)res.setHeader('Vary','Cookie');
       res.setHeader('Content-Length',info.size);
       if(req.method==='HEAD')return res.end();
       createReadStream(path).on('error',()=>res.destroy()).pipe(res);
@@ -94,9 +103,10 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     try {
       const url=new URL(req.url,'http://localhost');
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
-      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
-      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))
-        || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
+      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket');
+      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
+      const ticket=tickets.get(key);
+      if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
@@ -116,6 +126,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
+          if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           try {
             const message=JSON.parse(raw.toString());
