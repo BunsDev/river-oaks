@@ -42,3 +42,12 @@ test('landing routes around a parked obstruction instead of freezing against it'
  for(let i=0;i<1800&&!state.landed;i++){stepPrinceFlight(state,[8,0,0],env,1/60,{landing:true});assert.ok(env.canFly(...state.position));}
  assert.equal(state.landed,true);assert.ok(Math.hypot(state.position[0]-8,state.position[2])<.1);
 });
+
+test('sensing includes the current momentum, even when the target turns away from a wall',()=>{
+ const state=createPrinceFlight([0,4,0]);state.velocity=[5,0,0];
+ const env={...environment,canFly:(x)=>x<1};
+ stepPrinceFlight(state,[0,4,8],env,1/60);
+ assert.ok(state.sensing?.rays.some(ray=>ray.kind==='momentum'&&!ray.clear),'reports the wall ahead of current velocity');
+ assert.ok(state.sensing.rays.some(ray=>ray.kind==='target'&&ray.clear));
+ assert.deepEqual(state.sensing.target,[0,4,8]);
+});

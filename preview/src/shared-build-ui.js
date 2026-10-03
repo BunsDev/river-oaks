@@ -13,6 +13,7 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
     <div class="shared-build-fields"><label for="build-kind">Object<select id="build-kind"></select></label><label for="build-finish">Finish<select id="build-finish"></select></label></div>
     <button type="button" id="build-mode" aria-pressed="false">Builder mode</button>
     <div class="shared-build-aim" id="build-aim" hidden>
+      <label>Grid <select id="build-grid"><option value="0.1">0.1 m</option><option value="0.5">0.5 m</option><option value="1">1 m</option></select></label>
       <p id="build-hint" aria-live="polite"></p>
       <div class="shared-build-turn"><button type="button" id="build-turn-left" aria-label="Turn left (Shift+R)">↺ Turn</button><button type="button" id="build-turn-right" aria-label="Turn right (R)">Turn ↻</button></div>
       <p class="shared-build-keys">Point at the ground and click, or press Enter. R turns, Esc leaves builder mode.</p>
@@ -68,7 +69,7 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
   placeButton.addEventListener('click',()=>void place());
   $('#build-turn-left').addEventListener('click',()=>rotate(-1));
   $('#build-turn-right').addEventListener('click',()=>rotate(1));
-  for(const select of [kindSelect,finishSelect])select.addEventListener('change',changed);
+  for(const select of [kindSelect,finishSelect,$('#build-grid')])select.addEventListener('change',changed);
   function render(){
     count.textContent=`${own.length}/24`;
     if(!own.length){const empty=document.createElement('p');empty.textContent='Nothing placed yet.';list.replaceChildren(empty);return;}
@@ -88,7 +89,7 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
     panel,
     show(){panel.hidden=false;},
     hide(){if(active)setBuilder(false);panel.hidden=true;},
-    get builder(){return {active,kind:kindSelect.value,finish:finishSelect.value,yaw,moving};},
+    get builder(){return {active,grid:Number($('#build-grid').value),kind:kindSelect.value,finish:finishSelect.value,yaw,moving};},
     setBuilder,place,rotate,
     // The frame loop reports the aimed spot and the town's verdict on it.
     aimAt(position,result){target=position;verdict=result;hint.textContent=result?.message??'';hint.dataset.valid=String(Boolean(result?.valid));refreshPlace();},

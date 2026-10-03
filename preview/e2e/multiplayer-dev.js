@@ -25,6 +25,18 @@ async page => {
   await second.waitForFunction(id=>window.__riverMultiplayer().snapshot?.players.find(p=>p.id===id)?.appearance==='woman-casual',a.self);
   await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='woman-casual'),a.self);
   check(true,'Sable selection reaches the other browser and its rendered remote avatar');
+  // The authoritative town permits one appearance change every two seconds.
+  await page.waitForTimeout(2100);
+  await page.locator('#player-appearance').selectOption('forest-aristocrat-feminine');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='forest-aristocrat-feminine'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+  await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='forest-aristocrat-feminine'),a.self);
+  await page.keyboard.press('F3');
+  await page.locator('.debug-panel').waitFor({state:'visible'});
+  const vines=await page.evaluate(()=>{let count=0;window.__riverDebug().root.parent.traverse(o=>{if(o.userData.vineFit==='skin-profile')count++;});return count;});
+  check(vines===2,'The production shared player has both fitted Silvan arm vines');
+  await page.keyboard.press('F3');
+  await page.screenshot({path:'output/playwright/silvan-shared-district.png'});
+
   check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
@@ -58,8 +70,19 @@ async page => {
   if (!dockOpen) await page.locator('.visit-tools-toggle').click();
   await page.locator('#build-mode').click();
   check((await page.locator('#build-mode').getAttribute('aria-pressed')) === 'true', 'Builder mode can be switched on');
+
   const canvas = await page.locator('#canvas-host').boundingBox();
   const aimAt = async (fx, fy) => { await page.mouse.move(canvas.x + canvas.width * fx, canvas.y + canvas.height * fy); await page.waitForTimeout(250); return builder(); };
+  await page.locator('#build-grid').selectOption('1');
+  await page.waitForFunction(()=>window.__riverMultiplayer().builder.grid===1);
+  const coarse=await aimAt(.5,.72);
+  check([coarse.ghost.position[0],coarse.ghost.position[2]].every(v=>Math.abs(v-Math.round(v))<1e-6),'Builder preview uses the selected one-metre grid');
+  await page.locator('#build-grid').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'output/playwright/builder-coarse-grid.png'});
+  await page.locator('#build-grid').selectOption('0.5');
+  const half=await aimAt(.5,.72);
+  check([half.ghost.position[0],half.ghost.position[2]].every(v=>Math.abs(v*2-Math.round(v*2))<1e-6),'Builder preview uses the selected half-metre grid');
+  await page.locator('#build-grid').selectOption('0.1');
   let aim = null;
   for (const [fx, fy] of [[.5, .72], [.42, .74], [.58, .74], [.5, .8], [.35, .7], [.65, .7]]) { aim = await aimAt(fx, fy); if (aim?.valid === 'true') break; }
   check(aim?.ghost?.visible, 'The preview appears where the pointer meets the ground');

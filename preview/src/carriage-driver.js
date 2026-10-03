@@ -1,3 +1,4 @@
+import {treeFlightEnvironment} from './tree-flight.js';
 import {createFlightHands} from './flight-hands.js';
 import {createPrinceFlight,flightSlot,glideAmount,stepPrinceFlight} from './prince-flight.js';
 import {createAngelWings} from './angel-wings.js';
@@ -17,7 +18,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
   const object=new THREE.Group();object.name='Prince Jev';object.userData.localId='carriage-driver';object.visible=false;scene.add(object);
   const up=new THREE.Vector3(0,1,0),seat=new THREE.Vector3(),orientation=new THREE.Quaternion(),turn=new THREE.Quaternion().setFromAxisAngle(up,-Math.PI/2);
   let avatar=null,costume=null,disposed=false,wanted=false,body=null,mode='seat',side=1,lastHeading=0,previous=null;
-  let returnStall=0,returnFrom=null;
+  let returnStall=0,returnFrom=null,flightEnvironment=null;
   let world=null,placement=null,navigation=null,service=null,follower=null,exit=null,transition=null,identity=null,lastPose=null,lastCoach=null;
   const listeners=new Set();let drivingHands=null,flight=null,wings=null,flightHands=null;
   const vehicle=()=>VEHICLES[placement?.vehicle];
@@ -29,7 +30,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
   };
   const person=()=>getLocals()?.find(p=>p.id==='carriage-driver');
   const reset=()=>{
-    wanted=false;mode='seat';body=null;flight=null;
+    wanted=false;mode='seat';body=null;flight=null;flightEnvironment=null;
     if(avatar){avatar.object.position.set(0,0,0);avatar.object.rotation.set(0,0,0);}exit=null;transition=null;previous=null;
     avatar?.suspend();
     brain.reset();follower?.reset();service?.dispose();service=null;follower=null;navigation=null;costume?.update({carrying:false});
@@ -63,6 +64,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
   return {
     object,ready,
     get avatar(){return avatar;},
+    get navigationDebug(){return {mode,position:object.position.toArray(),route:follower?.debug??null,sensing:mode==='flying'?flight?.sensing??null:null};},
     get canDrive(){return Boolean(avatar&&object.visible&&!person()?.abducted&&mode==='seat'&&!wanted);},
     get companion(){return {...status,mode,position:mode==='seat'?null:[object.position.x,object.position.z]};},
     onCompanion(listener){listeners.add(listener);return ()=>listeners.delete(listener);},
@@ -112,7 +114,8 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
           target=spot??[flight.position[0],flight.position[1],flight.position[2]];
         }
         const previousFlight=[...flight.position];
-        stepPrinceFlight(flight,target,environment,dt,{landing,playerSpeed:pose?.speed??0});
+        if(flightEnvironment?.base!==environment)flightEnvironment={base:environment,value:treeFlightEnvironment(environment,world)};
+        stepPrinceFlight(flight,target,flightEnvironment.value,dt,{landing,playerSpeed:pose?.speed??0});
         body.position=[flight.position[0],flight.position[2]];body.heading=flight.heading;
         body.speed=Math.hypot(flight.velocity[0],flight.velocity[2]);body.distance+=Math.hypot(...flight.position.map((v,i)=>v-previousFlight[i]));
         object.position.fromArray(flight.position);object.rotation.set(0,flight.heading,0);

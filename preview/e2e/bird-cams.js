@@ -15,7 +15,7 @@ async page => {
   check(true, 'Jev sends every bird to watch something');
   const footCamera = (await birds()).camera;
   await page.locator('.bird-cams-row[data-bird=dove] button').click();
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(()=>{const s=window.__riverBirds(),b=s?.birds.find(b=>b.id==='dove');return s?.riding?.id==='dove'&&b&&Math.hypot(...s.camera.map((v,i)=>v-b.position[i]))<1.5;});
   let state = await birds();
   const dove = state.birds.find(bird => bird.id === 'dove');
   check(state.riding?.id === 'dove' && await page.locator('.bird-ride').isVisible(), 'Ride along shows the ride bar');
