@@ -6,6 +6,7 @@ import { createSharedWorld } from '../world.js';
 import { createCommunity } from '../../preview/src/community.js';
 import { storeRoomsFor } from '../../preview/src/store-rooms.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
+import { SHARED_APPEARANCES } from '../../preview/src/shared-appearances.js';
 
 const data = { scene: 'district', bounds_m: [-30,-30,30,30], walkSpawn: [-12,0,0],
   collisionPolygons: [[[-3,-8],[3,-8],[3,8],[-3,8]]], stores: [], buildings: [],
@@ -69,18 +70,60 @@ test('appearance belongs to the authenticated account and survives departure and
   assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'woman-tailored');
 });
 
-test('midnight host and starlight maker variants remain selectable and durable',()=>{
-  const {world,advance,now}=setup();
-  for(const appearance of ['man-tailored','midnight-host-hybrid','midnight-host-wolf','man-workwear','kai-explorer','kai-noir']){
+const resign=checkpoint=>{checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');return checkpoint;};
+
+test('every character form and style is selectable and durable',()=>{
+  const {world,advance,now}=setup(),ids=SHARED_APPEARANCES.map(appearance=>appearance.id).filter(id=>id!=='jevica');
+  for(const appearance of ids){
     advance(2100);
     assert.equal(world.command('a',{type:'appearance',appearance}).ok,true,appearance);
     assert.equal(world.snapshot().players.find(player=>player.id==='a').appearance,appearance);
   }
+  const last=ids.at(-1),restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,last);
+  restored.leave('a');
+  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,last);
+});
+
+test('the retired wolf-eared host becomes his wolf form, live and in an older checkpoint',()=>{
+  const {world,now}=setup();
+  const chosen=world.command('a',{type:'appearance',appearance:'midnight-host-hybrid'});
+  assert.equal(chosen.ok,true);assert.equal(chosen.player.appearance,'midnight-host-wolf');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  for(const player of checkpoint.payload.players)if(player.id==='a')player.appearance='midnight-host-hybrid';
+  checkpoint.payload.appearances=checkpoint.payload.appearances.map(([id,appearance])=>[id,id==='a'?'midnight-host-hybrid':appearance]);
+  const restored=createSharedWorld(data,{now});
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'midnight-host-wolf');
+  assert.doesNotMatch(JSON.stringify(restored.checkpoint().payload),/midnight-host-hybrid/);
+  restored.leave('a');
+  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'midnight-host-wolf');
+});
+
+test('beast movement is an account preference that only shows in a beast form',()=>{
+  const {world,advance,now}=setup(),alice=(town=world)=>town.snapshot().players.find(player=>player.id==='a');
+  assert.equal(alice().movement,'upright');
+  assert.equal(world.command('a',{type:'movement',movement:'beast'}).error,'beast_form_required');
+  assert.equal(world.command('a',{type:'appearance',appearance:'kai-noir-beast'}).ok,true);
+  const moved=world.command('a',{type:'movement',movement:'beast'});
+  assert.equal(moved.ok,true);assert.equal(moved.player.movement,'beast');assert.equal(alice().movement,'beast');
+  assert.equal(world.snapshot().players.find(player=>player.id==='b').movement,'upright','only the owner moves like a beast');
+  for(const movement of ['prowl',1,null,undefined])assert.equal(world.command('a',{type:'movement',movement}).error,'invalid_movement',String(movement));
+  assert.equal(world.command('a',{type:'movement',movement:'beast',userId:'b'}).error,'invalid_movement');
+  advance(2100);assert.equal(world.command('a',{type:'appearance',appearance:'kai-noir'}).ok,true);
+  assert.equal(alice().movement,'upright','a humanoid form walks upright');
+  advance(2100);assert.equal(world.command('a',{type:'appearance',appearance:'kai-explorer-beast'}).ok,true);
+  assert.equal(alice().movement,'beast','the preference returns with a beast form');
+  world.leave('a');advance(61000);world.step(0.05);
+  assert.equal(world.join({userId:'a',name:'Alice'}).player.movement,'beast','it survives leaving town');
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))),{ok:true});
-  assert.equal(restored.snapshot().players.find(player=>player.id==='a').appearance,'kai-noir');
-  restored.leave('a');
-  assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'kai-noir');
+  assert.equal(alice(restored).movement,'beast','it survives checkpoint recovery');
+  assert.equal(restored.command('a',{type:'movement',movement:'upright'}).player.movement,'upright');
+  assert.equal(alice(restored).movement,'upright');
+  const stale=JSON.parse(JSON.stringify(world.checkpoint()));stale.payload.movements=[['a','sideways']];
+  assert.equal(restored.restore(resign(stale)).error,'invalid_checkpoint');
 });
 
 test('appearance migration restores a town checkpoint written before player looks existed',()=>{

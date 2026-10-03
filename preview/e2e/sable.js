@@ -47,7 +47,8 @@ async page => {
   await page.goto(origin);
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  await page.locator('#player-appearance').selectOption('woman-casual');
+  await page.locator('input[name=player-character][value=sable]').check();
+  await page.locator('input[name=player-form][value=beast]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual');
   check(await page.locator('#player-name').textContent()==='Sable','Selector presents Sable');
   check(await page.locator('.player-portrait img').evaluate(img=>new URL(img.src).pathname)==='/assets/characters/sable-portrait.png','Character card shows the actual rendered model');
@@ -60,10 +61,10 @@ async page => {
   check(true,'Sable walks through the real district controls');
   await page.screenshot({path:'output/playwright/sable-district.png'});
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('#player-appearance').inputValue()==='woman-casual','Sable selection persists across reload');
+  check(await page.locator('input[name=player-character][value=sable]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked()&&await page.locator('#canvas-host').getAttribute('data-player-appearance')==='woman-casual','Sable selection persists across reload');
   await page.setViewportSize({width:390,height:844});await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
   await page.locator('.visit-tools-toggle').focus();await page.keyboard.press('Enter');
-  check(await page.locator('#player-appearance').isVisible(),'Keyboard exposes the mobile character selector');
+  check(await page.locator('.character-picker').isVisible(),'Keyboard exposes the mobile character selector');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Character card fits the mobile viewport');
   await page.screenshot({path:'output/playwright/sable-mobile.png'});
   await page.emulateMedia({reducedMotion:'reduce'});

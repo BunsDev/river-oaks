@@ -128,7 +128,8 @@ function initializeRenderer() {
     event.preventDefault();
     showError('The browser lost its graphics context. Reload this page to rebuild the scene.');
   });
-  const portraits = createResidentPortraits({ renderer, getHolder: id => [...(localsGroup?.userData.models ?? []), playerAvatar?.carriage.driver].find(person => person?.userData.localId === id && person.userData.avatar)
+  const portraits = createResidentPortraits({ renderer, getHolder: id => (String(id).startsWith('player-look:') ? playerAvatar?.portraitSubject(id.slice(12)) : null)
+    ?? [...(localsGroup?.userData.models ?? []), playerAvatar?.carriage.driver].find(person => person?.userData.localId === id && person.userData.avatar)
     ?? storePeople?.userData.figures?.find(figure => figure.id === id)?.holder });
   community = createCommunityPanel({ host: $('.panel-scroll'), reducedMotion, getPortrait: id => portraits.portrait(id),
     getVisitor: () => walking?.active ? walking.getPosition() : null,
@@ -166,7 +167,9 @@ function initializeRenderer() {
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
-    requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}) });
+    requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
+    requestMovement: movement => multiplayer?.command({type:'movement',movement}),
+    getPortrait: id => portraits.portrait(id) });
   breakableGlass=createBreakableGlass({reducedMotion,
     groundAt:(x,z)=>world?groundSurfaceHeight(world,x,z):0,
     onChange:()=>storefrontReflections?.invalidate(),

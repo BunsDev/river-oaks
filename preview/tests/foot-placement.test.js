@@ -116,3 +116,27 @@ test('standing turn steps follow the current facing without excessive knee-to-sh
     assert.ok(Math.max(...Object.values(lag))<1.1,`shoe facing stays within 63 degrees of the turning body: ${JSON.stringify(lag)}`);
   }
 });
+
+test('a beast lope takes fewer, longer steps over the same ground; stride 1 is the ordinary gait',()=>{
+  const walk=stride=>{
+    const {root,model}=rig(),placement=createFootPlacement(model,root),swinging=[false,false];
+    let distance=0,started=0,planted=0;
+    for(let frame=0;frame<240;frame++){
+      const before=placement.legs.map(leg=>({target:leg.target?.clone(),contact:leg.contact}));
+      distance+=3.2/60;root.position.z=distance;model.position.y=-0.08;
+      model.traverse(bone=>{if(bone.isBone)bone.quaternion.identity();});
+      placement.update(1/60,stride===undefined?{speed:3.2,distance}:{speed:3.2,distance,stride},()=>0);
+      placement.legs.forEach((leg,i)=>{
+        if(leg.swing&&!swinging[i])started++;
+        swinging[i]=Boolean(leg.swing);
+        if(before[i].contact&&leg.contact&&before[i].target){assert.ok(leg.target.distanceTo(before[i].target)<1e-10,'a planted foot stays planted');planted++;}
+      });
+      assert.ok(placement.legs.some(leg=>leg.contact),'a supporting foot remains');
+    }
+    return {started,planted,targets:placement.legs.map(leg=>leg.target.toArray())};
+  };
+  const ordinary=walk(undefined),lope=walk(1.35);
+  assert.deepEqual(walk(1),ordinary,'stride 1 leaves the ordinary gait untouched');
+  assert.ok(lope.started<ordinary.started*.85,`fewer steps: ${lope.started} vs ${ordinary.started}`);
+  assert.ok(lope.planted>100);
+});

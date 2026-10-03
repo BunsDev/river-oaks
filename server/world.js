@@ -4,7 +4,7 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
-import { DEFAULT_SHARED_APPEARANCE, sharedAppearance } from '../preview/src/shared-appearances.js';
+import { DEFAULT_SHARED_APPEARANCE, MOVEMENTS, isBeastAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP } from '../preview/src/shared-build.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, APPEARANCE_COOLDOWN_MS = 2000, FOCUS_MS = 30000;
@@ -49,7 +49,7 @@ function decodeCheckpoint(json) {
 // client messages contain player intent, never resident state or elapsed time.
 export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 } = {}) {
   const environment = createWalkingEnvironment(worldData);
-  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), builds = new Map();
+  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map();
   const state = createCommunity(worldData, environment.rooms, {carriage:false});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
   const localById = new Map(state.locals.map(local => [local.id,local]));
@@ -58,12 +58,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   const roads=buildRoads(worldData);
   // The same rule the browser's builder mode previews (shared-build.js).
   const buildSite=(position,kind,occupied=builds,ignoreId=null)=>checkBuildSite({environment,roads,position,kind,builds:[...occupied.values()],ignoreId}).ground ?? null;
-  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  // Beast movement is an account preference that only shows in a beast form,
+  // so switching to a humanoid form and back keeps it.
+  const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
+  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
     if (appearanceByUser.size>MAX_APPEARANCES) {
       const oldest=[...appearanceByUser.keys()].find(key=>!players.has(key));
-      if(oldest)appearanceByUser.delete(oldest);
+      if(oldest){appearanceByUser.delete(oldest);movementByUser.delete(oldest);}
     }
   };
   const clearExpiredLedgers = time => {
@@ -240,11 +243,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
     ledger.tokens--;
     if (message.type==='travel') return travel(player,message,ledger,time);
     if (message.type==='appearance') {
-      if (!fields(message,['type','appearance']) || !sharedAppearance(message.appearance)) return reject('invalid_appearance');
-      if (player.appearance===message.appearance) return {ok:true,player:publicPlayer(player)};
+      // A retired ID resolves to its replacement, which is what the town keeps.
+      const chosen=fields(message,['type','appearance']) ? sharedAppearance(message.appearance) : null;
+      if (!chosen) return reject('invalid_appearance');
+      if (player.appearance===chosen.id) return {ok:true,player:publicPlayer(player)};
       if (time-ledger.appearanceAt<APPEARANCE_COOLDOWN_MS) return reject('appearance_cooldown','Wait a moment before changing appearance again.');
-      player.appearance=message.appearance;ledger.appearanceAt=time;
+      player.appearance=chosen.id;ledger.appearanceAt=time;
       rememberAppearance(userId,player.appearance);revision++;
+      return {ok:true,player:publicPlayer(player)};
+    }
+    if (message.type==='movement') {
+      if (!fields(message,['type','movement']) || !MOVEMENTS.includes(message.movement)) return reject('invalid_movement');
+      if (message.movement==='beast' && !isBeastAppearance(player.appearance)) return reject('beast_form_required','Choose a beast form before moving like one.');
+      if ((movementByUser.get(userId)??'upright')===message.movement) return {ok:true,player:publicPlayer(player)};
+      if (message.movement==='beast') movementByUser.set(userId,'beast'); else movementByUser.delete(userId);
+      revision++;
       return {ok:true,player:publicPlayer(player)};
     }
     if (message.type==='build') {
@@ -358,7 +371,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
   // Store and restore only through the trusted persistence owner, never clients.
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
-    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],builds:[...builds.values()],
+    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],
       life:life?Object.fromEntries(LIFE_FIELDS.map(key=>[key,life[key]])):null}));
     const envelope={version:CHECKPOINT_VERSION,worldFingerprint,payload};
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
@@ -406,6 +419,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         && ['tokenAt','seen'].every(key=>Number.isFinite(ledger[key])) && nonnegative(ledger.tokens) && ledger.tokens<=12);
       for (const ledger of nextLedgers.values()) {ledger.chatAt??=-Infinity;ledger.appearanceAt??=-Infinity;}
       const nextAppearances=restoreMap(recovered.appearances??[],MAX_APPEARANCES,appearance=>Boolean(sharedAppearance(appearance)));
+      // Checkpoints written before an appearance was retired keep its replacement.
+      for (const [id,appearance] of nextAppearances) nextAppearances.set(id,sharedAppearance(appearance).id);
+      const nextMovements=restoreMap(recovered.movements??[],MAX_APPEARANCES,movement=>movement==='beast');
       if(!Array.isArray(recovered.builds??[]) || (recovered.builds??[]).length>MAX_BUILDS)throw new Error('Invalid builds');
       const nextBuilds=new Map(),ownerCounts=new Map();
       for(const item of recovered.builds??[]){
@@ -428,6 +444,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       for (const player of nextPlayers.values()) {
+        if (player.appearance!==undefined) player.appearance=sharedAppearance(player.appearance).id;
         player.appearance??=nextAppearances.get(player.id)??DEFAULT_SHARED_APPEARANCE;
         if(nextAppearances.has(player.id) && nextAppearances.get(player.id)!==player.appearance) throw new Error('Invalid player appearance');
         if(!nextAppearances.has(player.id))nextAppearances.set(player.id,player.appearance);
@@ -436,6 +453,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
           || (player.altitude>0.1?!environment.canFly(east,ground+player.altitude,-north):!environment.isFree(east,-north))) throw new Error('Invalid player position');
       }
       if(nextAppearances.size>MAX_APPEARANCES) throw new Error('Invalid appearances');
+      // A preference without a remembered appearance has nothing to apply to.
+      for (const id of nextMovements.keys()) if (!nextAppearances.has(id)) nextMovements.delete(id);
       const nextFocus=restoreMap(recovered.focus,maxPlayers,hold=>record(hold) && textId(hold.localId) && Number.isFinite(hold.until));
       for (const [id,hold] of nextFocus) if (!nextPlayers.has(id) || !localById.has(hold.localId)) throw new Error('Invalid focus');
       for (let index=0;index<nextState.locals.length;index++) {
@@ -476,6 +495,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32 }
       focus.clear();for (const [id,hold] of nextFocus) focus.set(id,hold);
       chat.splice(0,chat.length,...nextChat);
       appearanceByUser.clear();for(const [id,appearance] of nextAppearances) appearanceByUser.set(id,appearance);
+      movementByUser.clear();for(const [id,movement] of nextMovements) movementByUser.set(id,movement);
       builds.clear();for(const [id,item] of nextBuilds)builds.set(id,item);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
