@@ -76,11 +76,19 @@ async page => {
     await page.locator('#community-dialogue').waitFor({state:'hidden'});
     const closePanel=page.getByRole('button',{name:'Close exploration panel',exact:true});
     if(await closePanel.isVisible())await closePanel.click();
-    const before=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
-    await page.bringToFront();await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');
-    await page.waitForTimeout(1200);await page.keyboard.up('KeyS');
-    await other.waitForFunction(({id,before})=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id===id);return Math.hypot(p.position[0]-before[0],p.position[1]-before[1])>0.25;},{id:'alice',before});
-    check(true,'Walking is validated and visible to the other player');
+    // A nearby shop or tree can block one direction after the wish journey.
+    // Try each walking direction and require the peer to observe real travel.
+    let walked=false;
+    await page.bringToFront();await page.locator('#canvas-host').focus();
+    for(const key of ['KeyS','KeyW','KeyA','KeyD']){
+      const before=await other.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
+      await page.keyboard.down(key);
+      await page.waitForTimeout(1200);
+      await page.keyboard.up(key);
+      walked=await other.waitForFunction(({id,before})=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id===id);return Math.hypot(p.position[0]-before[0],p.position[1]-before[1])>0.25;},{id:'alice',before},{timeout:5000}).then(()=>true,()=>false);
+      if(walked)break;
+    }
+    check(walked,'Walking is validated and visible to the other player');
     await page.setViewportSize({width:390,height:844});
     check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'Shared town has no mobile horizontal overflow');
     await page.screenshot({path:'output/playwright/multiplayer-mobile.png'});
