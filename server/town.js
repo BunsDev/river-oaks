@@ -5,18 +5,17 @@ import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld } from './world.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
+import { createFileWaitlist } from './waitlist.js';
 
 export function workosConfigured(env) {
   return Boolean(env.WORKOS_API_KEY && env.WORKOS_CLIENT_ID && env.WORKOS_COOKIE_PASSWORD?.length >= 32);
 }
 
-// Which sign-in the standalone town uses. `devAuth` is 'local' (development
-// identities), 'workos', or 'auto': WorkOS when configured, otherwise local
-// identities where that is allowed, otherwise WorkOS failing closed with 503.
+// Normal development and production both use WorkOS. Explicit fixture mode
+// retains isolated loopback identities for browser acceptance only.
 export function chooseAuth({ env, origin, devAuth = 'auto' }) {
   if (devAuth === 'workos' || env.RIVER_OAKS_DEV_AUTH === 'workos') return 'workos';
   if (devAuth === 'local' && devAuthAllowed({ origin, env })) return 'local';
-  if (devAuth === 'auto' && !workosConfigured(env) && devAuthAllowed({ origin, env })) return 'local';
   return 'workos';
 }
 
@@ -36,13 +35,17 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const world = createSharedWorld(data);
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
+  const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
+  const waitlist = await createFileWaitlist(resolve(env.WAITLIST_FILE ?? '.runtime/waitlist.json'), {
+    admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
+  });
   let game;
   const onLogout = userId => game?.disconnectUser(userId);
   const auth = mode === 'local'
-    ? createDevAuth({ origin, onLogout })
+    ? createDevAuth({ origin, env, onLogout })
     : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
   game = createGameServer({
-    auth, world, moderation, origin, staticRoot,
+    auth, world, moderation, waitlist, waitlistAdmins: admins, origin, staticRoot,
     moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
     trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
   });

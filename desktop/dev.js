@@ -42,7 +42,7 @@ function launch() {
   });
 }
 const watcher = watch(fileURLToPath(new URL('.', import.meta.url)), (_event, filename) => {
-  if (!['main.js', 'runtime.js'].includes(filename) || stopping) return;
+  if (!['main.js', 'auth.js', 'runtime.js'].includes(filename) || stopping) return;
   clearTimeout(timer);
   timer = setTimeout(() => { if (child && !restarting) { restarting = true; child.kill('SIGTERM'); } }, 200);
 });

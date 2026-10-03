@@ -5,6 +5,7 @@ import { WorkOS } from '@workos-inc/node';
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
+const PROVIDERS = { google: 'GoogleOAuth', github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
 const validIssuer = issuer => issuer === 'https://api.workos.com' || issuer === 'https://api.workos.com/'
@@ -147,7 +148,9 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     res.setHeader('Set-Cookie', [...(Array.isArray(previous) ? previous : previous ? [previous] : []), serialized]);
   }
   function identity(result, record) {
-    if (!result.authenticated || result.user?.emailVerified !== true || result.user.id !== record.userId || result.sessionId !== record.sessionId) return null;
+    if (!result.authenticated || !Object.values(PROVIDERS).includes(result.authenticationMethod)
+      || result.authenticationMethod !== record.authMethod || result.user?.emailVerified !== true
+      || result.user.id !== record.userId || result.sessionId !== record.sessionId) return null;
     try {
       // SDK authentication has verified the seal and JWT signature before decode.
       const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
@@ -157,7 +160,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
       const name = [result.user.firstName, result.user.lastName].filter(part => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
-      return { userId: record.userId, sessionId: record.sessionId, name, expiresAt, csrfToken: record.csrfToken };
+      return { userId: record.userId, sessionId: record.sessionId, name, email: result.user.email, expiresAt, csrfToken: record.csrfToken };
     } catch { return null; }
   }
 
@@ -206,19 +209,22 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
 
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;
-    if (!['/auth/login', '/auth/callback', '/auth/session', '/auth/logout'].includes(path)) return false;
+    if (!['/auth/login', '/auth/callback', '/auth/session', '/auth/logout', '/auth/desktop/exchange'].includes(path)) return false;
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Referrer-Policy', 'no-referrer');
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
-    const method = path === '/auth/logout' ? 'POST' : 'GET';
+    const method = ['/auth/logout', '/auth/desktop/exchange'].includes(path) ? 'POST' : 'GET';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     let phase = path;
     try {
       if (path === '/auth/login') {
-        const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider: 'authkit', clientId, redirectUri: `${base}/auth/callback` });
+        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'google';
+        const provider = PROVIDERS[choice];
+        if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
+        const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider, clientId, redirectUri: `${base}/auth/callback` });
         if (!enabled || typeof authorization.state !== 'string' || authorization.state.length < 32 || authorization.state.length > 200
           || typeof authorization.codeVerifier !== 'string') throw new Error('Invalid authorization');
         const stored = await transaction({ op: 'state-put', id: digest(authorization.state), ttl: STATE_TTL,
-          record: { codeVerifier: authorization.codeVerifier, expiresAt: now() + STATE_TTL } });
+          record: { codeVerifier: authorization.codeVerifier, provider, expiresAt: now() + STATE_TTL } });
         if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, STATE_COOKIE, authorization.state, STATE_TTL / 1000);
         res.writeHead(302, { Location: authorization.url }); res.end();
@@ -233,11 +239,14 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         phase = 'callback.exchange';
         const result = await sdk.userManagement.authenticateWithCode({ clientId, code, codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
         if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return true; }
+        if (result.authenticationMethod !== pending.provider) { json(res, 403, { error: 'unsupported_provider' }); return true; }
         phase = 'callback.session';
         const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
         const verified = await session.authenticate();
         if (!validId(verified.sessionId) || !validId(verified.user?.id)) { json(res, 403, { error: 'invalid_session' }); return true; }
-        const record = { sessionId: verified.sessionId, userId: verified.user.id, generation: token(), csrfToken: token(),
+        if (verified.authenticationMethod !== pending.provider) { json(res, 403, { error: 'unsupported_provider' }); return true; }
+        const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: pending.provider,
+          generation: token(), csrfToken: token(),
           cookieHash: digest(result.sealedSession), sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
         if (!identity(verified, record)) {
           let claims;
@@ -256,6 +265,32 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         res.writeHead(302, { Location: '/' }); res.end();
+      } else if (path === '/auth/desktop/exchange') {
+        if (req.headers.origin !== base || req.headers['content-type'] !== 'application/json') {
+          json(res, 403, { error: 'invalid_origin' }); return true;
+        }
+        let size = 0, chunks = [];
+        for await (const chunk of req) { size += chunk.length; if (size > 4096) { json(res, 413, { error: 'invalid_token' }); return true; } chunks.push(chunk); }
+        let refreshToken;
+        try { refreshToken = JSON.parse(Buffer.concat(chunks).toString()).refreshToken; } catch {}
+        if (typeof refreshToken !== 'string' || refreshToken.length < 20 || refreshToken.length > 2048) {
+          json(res, 400, { error: 'invalid_token' }); return true;
+        }
+        phase = 'desktop.exchange';
+        const result = await sdk.userManagement.authenticateWithRefreshToken({ clientId, refreshToken,
+          session: { sealSession: true, cookiePassword } });
+        if (!Object.values(PROVIDERS).includes(result.authenticationMethod) || result.user?.emailVerified !== true
+          || typeof result.sealedSession !== 'string') { json(res, 403, { error: 'unsupported_provider' }); return true; }
+        const verified = await sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword }).authenticate();
+        if (!validId(verified.sessionId) || !validId(verified.user?.id)
+          || verified.authenticationMethod !== result.authenticationMethod) { json(res, 403, { error: 'invalid_session' }); return true; }
+        const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
+          generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
+          sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
+        if (!identity(verified, record)) { json(res, 403, { error: 'invalid_session' }); return true; }
+        if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
+        setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
+        json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
         const user = await authenticateRequest(req, res);
         json(res, 200, user ? { authenticated: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken } : { authenticated: false });

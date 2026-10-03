@@ -8,6 +8,7 @@ import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
 import { createModeration } from '../moderation.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 const district = JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
 const publicOrigin = 'https://sim.jev.works';
@@ -40,7 +41,7 @@ async function fixture(t, { moderation, worldData=district } = {}) {
     },
   };
   const world=createSharedWorld(worldData,{now:()=>time});
-  app=createGameServer({auth,world,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
+  app=createGameServer({auth,world,waitlist:approvedWaitlist,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   t.after(()=>app.close());
   const origin=`http://127.0.0.1:${app.server.address().port}`;

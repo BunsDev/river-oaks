@@ -19,7 +19,7 @@
     "server:redis": "node --env-file-if-exists=.env server/redis-start.js",
     "desktop:dev": "node --env-file-if-exists=.env desktop/dev.js",
     "desktop:start": "electron .",
-    "desktop:package": "npm run build && node desktop/package.js",
+    "desktop:package": "node desktop/package.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
     "test:desktop:e2e": "node desktop/e2e.js"
   },

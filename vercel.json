@@ -51,12 +51,28 @@
       "destination": "/api/server?_river_path=/auth/logout"
     },
     {
+      "source": "/auth/desktop/exchange",
+      "destination": "/api/server?_river_path=/auth/desktop/exchange"
+    },
+    {
       "source": "/api/multiplayer/ticket",
       "destination": "/api/server?_river_path=/api/multiplayer/ticket"
     },
     {
       "source": "/api/moderation/ban",
       "destination": "/api/server?_river_path=/api/moderation/ban"
+    },
+    {
+      "source": "/api/waitlist/status",
+      "destination": "/api/server?_river_path=/api/waitlist/status"
+    },
+    {
+      "source": "/api/waitlist/requests",
+      "destination": "/api/server?_river_path=/api/waitlist/requests"
+    },
+    {
+      "source": "/api/waitlist/decision",
+      "destination": "/api/server?_river_path=/api/waitlist/decision"
     },
     {
       "source": "/multiplayer",

@@ -88,11 +88,10 @@ async page => {
     await other.bringToFront();
     const showControls=other.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await showControls.isVisible())await showControls.click();
-    await other.getByRole('button',{name:'Sign out',exact:true}).click();
-    await other.waitForFunction(()=>document.querySelector('.multiplayer-gate')?.hidden===false);
+    await other.locator('#access-signout').click();
+    await other.getByRole('link',{name:'Continue with Google'}).waitFor({state:'visible'});
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===1);
-    await other.getByRole('link',{name:'Sign in with WorkOS'}).waitFor({state:'visible'});
-    check(await other.getByRole('link',{name:'Sign in with WorkOS'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
+    check(await other.getByRole('link',{name:'Continue with Google'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
     check(!errors.length,'No uncaught errors: '+errors.join('; '));
     return {passed:true,checks,errors,scope:'Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance.'};
   } catch(error) {return {passed:false,checks,errors,failure:error.stack};} finally {await otherContext.close();}

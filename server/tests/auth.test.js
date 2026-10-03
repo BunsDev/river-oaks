@@ -14,18 +14,19 @@ function adapter(clock) {
   const sealed = new Map();
   const calls = { codes: [], refresh: 0 };
   let user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: true };
-  let issuer = 'https://api.workos.com', tokenClientId = config.clientId;
+  let issuer = 'https://api.workos.com', tokenClientId = config.clientId, authenticationMethod = 'GoogleOAuth';
   function mint(sessionId = 'session_1') {
     const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, client_id: tokenClientId, sid: sessionId, sub: user.id, exp: Math.floor(clock() / 1000) + 300 })).toString('base64url')}.signature`;
     const sealedSession = randomBytes(32).toString('base64url');
-    sealed.set(sealedSession, { authenticated: true, user: { ...user }, sessionId, accessToken });
-    return { user: { ...user }, accessToken, refreshToken: 'private-refresh-token', sealedSession };
+    sealed.set(sealedSession, { authenticated: true, user: { ...user }, sessionId, accessToken, authenticationMethod });
+    return { user: { ...user }, accessToken, refreshToken: 'private-refresh-token', sealedSession, authenticationMethod };
   }
   return {
     calls,
     setUser(value) { user = { ...user, ...value }; },
     setIssuer(value) { issuer = value; },
     setTokenClientId(value) { tokenClientId = value; },
+    setAuthenticationMethod(value) { authenticationMethod = value; },
     userManagement: {
       async getAuthorizationUrlWithPKCE(options) {
         const url = new URL('https://api.workos.com/user_management/authorize');
@@ -38,6 +39,11 @@ function adapter(clock) {
       async authenticateWithCode(options) {
         calls.codes.push(options);
         assert.equal(options.codeVerifier, 'private-pkce-verifier');
+        assert.deepEqual(options.session, { sealSession: true, cookiePassword: config.cookiePassword });
+        return mint();
+      },
+      async authenticateWithRefreshToken(options) {
+        assert.equal(options.refreshToken, 'private-desktop-refresh');
         assert.deepEqual(options.session, { sealSession: true, cookiePassword: config.cookiePassword });
         return mint();
       },
@@ -78,8 +84,8 @@ async function fixture(t, overrides = {}) {
   await once(server, 'listening');
   t.after(() => { auth.close(); server.closeAllConnections(); server.close(); });
   const request = (path, options = {}) => fetch(`http://127.0.0.1:${server.address().port}${path}`, { redirect: 'manual', ...options });
-  async function login() {
-    const response = await request('/auth/login');
+  async function login(provider = 'google') {
+    const response = await request(`/auth/login?provider=${provider}`);
     const state = new URL(response.headers.get('location')).searchParams.get('state');
     const stateCookie = cookie(response, 'river_oaks_auth_state');
     const callback = await request(`/auth/callback?code=code_1&state=${state}`, { headers: { cookie: stateCookie } });
@@ -121,6 +127,22 @@ test('completes state-bound PKCE callback and exposes only safe identity and CSR
   assert.ok(identity.expiresAt > Date.now());
 });
 
+test('desktop device credentials exchange only for Google or GitHub sessions', async t => {
+  const app = await fixture(t);
+  const exchange = () => app.request('/auth/desktop/exchange', { method: 'POST', headers: {
+    origin: config.origin, 'content-type': 'application/json',
+  }, body: JSON.stringify({ refreshToken: 'private-desktop-refresh' }) });
+  assert.equal((await app.request('/auth/desktop/exchange', { method: 'POST', headers: {
+    origin: 'https://evil.example', 'content-type': 'application/json',
+  }, body: JSON.stringify({ refreshToken: 'private-desktop-refresh' }) })).status, 403);
+  const accepted = await exchange();
+  assert.equal(accepted.status, 200);
+  const session = await app.request('/auth/session', { headers: { cookie: cookie(accepted, 'river_oaks_session') } });
+  assert.equal((await session.json()).authenticated, true);
+  app.workos.setAuthenticationMethod('MagicAuth');
+  assert.equal((await exchange()).status, 403);
+});
+
 test('sets Secure cookies on HTTPS', async (t) => {
   const app = await fixture(t, { origin: 'https://river.example' });
   const { response, callback } = await app.login();
@@ -155,6 +177,21 @@ test('rejects unverified accounts and forged session cookies', async (t) => {
   const response = await app.request('/auth/session', { headers: { cookie: 'river_oaks_session=forged' } });
   assert.deepEqual(await response.json(), { authenticated: false });
   assert.equal(await app.auth.authenticate({ headers: { cookie: 'river_oaks_session=forged' } }), null);
+});
+
+test('only Google and GitHub OAuth methods can create or retain a session', async t => {
+  const app = await fixture(t);
+  assert.equal((await app.request('/auth/login?provider=password')).status, 400);
+  const google = await app.login();
+  assert.equal(new URL(google.response.headers.get('location')).searchParams.get('provider'), 'GoogleOAuth');
+  assert.equal(google.callback.status, 302);
+  app.workos.setAuthenticationMethod('Password');
+  const denied = await app.login();
+  assert.equal(denied.callback.status, 403);
+  app.workos.setAuthenticationMethod('GitHubOAuth');
+  const github = await app.login('github');
+  assert.equal(new URL(github.response.headers.get('location')).searchParams.get('provider'), 'GitHubOAuth');
+  assert.equal(github.callback.status, 302);
 });
 
 test('expires WS identity without refresh but refreshes HTTP sessions with a new cookie', async (t) => {
@@ -258,7 +295,7 @@ test('official SDK seals and verifies a signed session through the real HTTP cal
     return { data: {
       user: { object: 'user', id: 'user_real_sdk', email: 'secret@example.com', email_verified: true,
         first_name: 'Val', last_name: null, profile_picture_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      access_token: accessToken, refresh_token: 'secret-refresh', authentication_method: 'Password',
+      access_token: accessToken, refresh_token: 'secret-refresh', authentication_method: 'GoogleOAuth',
     } };
   };
   sdk.userManagement.getJWKS = async () => async () => publicKey;

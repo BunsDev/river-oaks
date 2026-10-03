@@ -89,6 +89,15 @@ integration('unverified accounts and incorrect token issuer never enter the dura
   assert.equal(await f.redis.hlen(f.keys[2]), 0);
 });
 
+integration('email-only and password authentication cannot enter the distributed session registry', async t => {
+  const f = await fixture(t);
+  for (const method of ['MagicAuth', 'Password']) {
+    f.workos.setAuthenticationMethod(method);
+    assert.equal((await f.login()).response.status, 403);
+  }
+  assert.equal(await f.redis.hlen(f.keys[2]), 0);
+});
+
 integration('dedicated application accepts the environment issuer across nodes', async t => {
   const f = await fixture(t);
   f.workos.setIssuer('https://api.workos.com/user_management/client_environment');
@@ -218,7 +227,7 @@ integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on ano
   const sdk=new WorkOS(config.apiKey,{clientId:config.clientId});
   sdk.post=async(path,body)=>{
     assert.equal(path,'/user_management/authenticate');assert.ok(body.code_verifier.length>=43);
-    return {data:{user:{object:'user',id:'user_sdk',email:'private@example.com',email_verified:true,first_name:'Val',last_name:null,profile_picture_url:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},access_token:accessToken,refresh_token:'private-refresh',authentication_method:'Password'}};
+    return {data:{user:{object:'user',id:'user_sdk',email:'private@example.com',email_verified:true,first_name:'Val',last_name:null,profile_picture_url:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},access_token:accessToken,refresh_token:'private-refresh',authentication_method:'GoogleOAuth'}};
   };
   sdk.userManagement.getJWKS=async()=>async()=>publicKey;
   const f=await fixture(t,{workos:sdk}),{response,sessionCookie}=await f.login();

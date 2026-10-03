@@ -7,11 +7,13 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { createWaitlistRoutes } from './waitlist-routes.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+  if (!waitlist) throw new Error('Waitlist is required');
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
   const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000);
@@ -32,6 +34,8 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     const connection=connections.get(id);connections.delete(id);
     connection?.ws.close(code,reason);world.leave(id);
   };
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+    onRevoke: userId => disconnectUser(userId, 4003, 'Waitlist approval ended') });
   async function body(req) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>4096)throw new Error('Request too large');chunks.push(chunk);}
@@ -45,8 +49,10 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
       if (await auth.handle(req,res)) return;
+      if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
+        if (!(await waitlist.isApproved(identity.userId))) return json(res,403,{error:'waitlist_approval_required'});
         if (!issuing(identity.userId)) return json(res,429,{error:'Please wait before reconnecting.'});
         for(const [key,value] of tickets)if(value.until<=now())tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
@@ -89,7 +95,8 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
       const url=new URL(req.url,'http://localhost');
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
       const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
-      if(!identity || isBanned(identity.userId) || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
+      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))
+        || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
@@ -101,10 +108,15 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
         const connection={ws,identity,alive:true};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
+        let messageQueue = Promise.resolve();
         ws.on('message',(raw,isBinary)=>{
           if(connections.get(identity.userId)!==connection)return;
           if(isBinary || !frames(identity.userId))return ws.close(4008,'Too many or invalid messages.');
-          if(identity.expiresAt<=now() || isBanned(identity.userId))return disconnectUser(identity.userId,4001,'Please sign in again.');
+          messageQueue = messageQueue.then(async()=>{
+          if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
+          let approved = false;
+          try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
+          if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           try {
             const message=JSON.parse(raw.toString());
             if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string')throw new Error('Invalid');
@@ -118,6 +130,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
             if(result.ok && command.type!=='pose')send(ws,world.snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
+          }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
         });
         ws.on('close',()=>{
           if(connections.get(identity.userId)!==connection)return;

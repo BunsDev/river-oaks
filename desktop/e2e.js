@@ -20,7 +20,7 @@ const started = performance.now();
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];
-const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'bundled', checks: [] };
+const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
@@ -41,7 +41,7 @@ try {
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
   assert.deepEqual(failedAssets, []);
-  check('all bundled assets and playable character loaded');
+  check('game assets and playable character loaded');
   const voiceSettings=await page.evaluate(async()=>{try{const r=await fetch('/v1/settings/elevenlabs');return r.ok?await r.json():null;}catch{return null;}});
   if(voiceSettings?.configured) {
     report.voice=await page.evaluate(async()=>{

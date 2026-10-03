@@ -10,6 +10,7 @@ import { createServer as createViteServer } from 'vite';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { createDistributedServer } from '../distributed-app.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 if (!process.env.REDIS_URL) throw new Error('Redis browser verification requires REDIS_URL');
 const origin = 'http://127.0.0.1:5180', prefix = `{river-oaks:test:${randomUUID()}}`;
 const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1, autoResendUnfulfilledCommands: false });
@@ -37,7 +38,7 @@ for (const port of [8788, 8789]) {
     }
     res.statusCode = 404; res.end('{}'); return true;
   } };
-  app = createDistributedServer({ auth, room, security, origin });
+  app = createDistributedServer({ auth, room, security, waitlist: approvedWaitlist, origin });
   await new Promise(resolve => app.server.listen(port, '127.0.0.1', resolve));
   nodes.push({ app, room });
 }
@@ -67,7 +68,7 @@ gateway.on('upgrade', (req, socket, head) => {
 });
 await new Promise(resolve => gateway.listen(8790, '127.0.0.1', resolve));
 const vite = await createViteServer({ configFile: 'preview/vite.config.js', server: { host: '127.0.0.1', port: 5180, strictPort: true,
-  proxy: { '/auth': 'http://127.0.0.1:8790', '/api/multiplayer': 'http://127.0.0.1:8790', '/api/moderation': 'http://127.0.0.1:8790', '/multiplayer': { target: 'ws://127.0.0.1:8790', ws: true } } } });
+  proxy: { '/auth': 'http://127.0.0.1:8790', '/api/multiplayer': 'http://127.0.0.1:8790', '/api/moderation': 'http://127.0.0.1:8790', '/api/waitlist': 'http://127.0.0.1:8790', '/multiplayer': { target: 'ws://127.0.0.1:8790', ws: true } } } });
 await vite.listen();
 console.log('Redis browser fixture ready: Alice and Bob use separate backends, private test namespace.');
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, async () => {

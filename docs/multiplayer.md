@@ -1,11 +1,16 @@
 # Deploy the shared town
 
-## Develop locally without WorkOS
+## Develop locally with WorkOS
 
-`npm run dev` starts the shared town inside the Vite dev server. With no WorkOS
-credentials, choosing Multiplayer gives each browser its own development
-resident (for example "Wren (dev)") without a sign-in step. Choose Multiplayer
-in a second browser profile to see another player. No `.env` is needed.
+`npm run dev` starts WorkOS authentication and the shared town inside the Vite
+dev server. Configure the Staging WorkOS application, enable Google and GitHub
+social login in its dashboard, and register
+`http://127.0.0.1:5173/auth/callback`. Both play modes require sign-in and
+waitlist approval. Set `WAITLIST_ADMIN_USER_IDS` to the WorkOS user ID of the
+first approver. That account is automatically approved and can review requests
+from the Waitlist requests control. Each player must use a separate WorkOS
+account. The automated acceptance runner uses isolated temporary local
+identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
 auth and multiplayer traffic to that checkout's own town on the chosen loopback
@@ -21,18 +26,16 @@ port.
   or `?play=multiplayer` for that visit only; a choice carried this way doesn't
   survive the WorkOS sign-in redirect.
 - `VITE_MULTIPLAYER=auto` joins when the town answers with a session, otherwise
-  plays solo without blocking. `off` disables the shared town. `required`
-  always shows the sign-in gate.
+  plays solo after approval. `off` disables the shared town. `required`
+  requires the shared town after approval.
 - `VITE_MULTIPLAYER=off npm run dev` plays solo with the invasion and auto visits.
-- `RIVER_OAKS_DEV_AUTH=workos npm run dev` uses real WorkOS sign-in instead;
-  register `http://127.0.0.1:5173/auth/callback` in that WorkOS environment.
 - `npm run server -- --dev` runs the town as its own process for a separate
   `npm run dev`; the dev server then uses it instead of starting its own.
 
-Development identities only exist on a loopback `http` origin, outside
-`NODE_ENV=production`, and never on Vercel (`VERCEL` set). They live only in
-the standalone server (`server/dev-auth.js`). The Vercel function and the Redis
-backend always require WorkOS and fail closed with `503` without it.
+Development identities exist only for the explicit acceptance fixture on a
+loopback `http` origin, outside `NODE_ENV=production`, and never on Vercel.
+The Vercel function and Redis backend always require WorkOS and fail closed
+without it.
 
 While the town runs, the character panel offers 11 selectable looks built on seven shipped rigs, including fox, wolf, lynx, human, and hybrid styles.
 The selection belongs to the signed-in account, is visible to other players, and
@@ -65,7 +68,7 @@ Production defaults to Redis namespace `river-oaks:production:v1`. Preview and l
 
 Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. On the protected acceptance alias, two real WorkOS accounts signed in through the dedicated TypeSafe application, joined the same hosted roster, and each rejoined after a reload. Signing out the second account removed it from the first account's roster. A later hosted run kept a wish active while the alias moved to a new deployment: the first account rejoined there with the wish intact, and a temporary ban disconnected the second account and denied a new ticket. Unban restored its access; the wish was undone and both accounts signed out.
 
-The TypeSafe WorkOS project now has a dedicated **River Oaks District** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M3ZHFZ8AHWXXRJNYM5WYKRPP`). Their callback and logout URLs below are registered. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Production AuthKit offers verified email sign-in through Magic Auth. A protected server-side check confirmed the Production key can retrieve the verified acceptance user. Preview deployments need their own authorized origin, cookie secret, and Redis namespace. Do not copy production state into previews.
+The TypeSafe WorkOS project has a dedicated **River Oaks District** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M3ZHFZ8AHWXXRJNYM5WYKRPP`). Their callback and logout URLs below are registered. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Configure Google and GitHub social login and device authorization in both environments; disable Magic Auth and email/password sign-in. The server accepts only `GoogleOAuth` and `GitHubOAuth` sessions, including sessions exchanged from the desktop device flow. Preview deployments need their own authorized origin, cookie secret, and Redis namespaces. Do not copy production state into previews.
 
 The local Redis tests exercise cross-instance logout and ban enforcement; the hosted run confirms the ban and unban behavior, but does not identify which Vercel worker handled each browser. The candidate was staged with `--skip-domain` on the protected `river-oaks-acceptance-0xbuns.vercel.app` alias. After promoting a deployment, smoke-check sign-in, session, and anonymous ticket rejection on `sim.jev.works`. The original single-process acceptance report is not Vercel acceptance evidence.
 
@@ -114,6 +117,9 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `REDIS_NAMESPACE` | Explicit isolated namespace for preview/local Redis; Production defaults to `river-oaks:production:v1` |
 | `MODERATION_FILE` | Standalone server only: path on a private writable volume |
 | `MODERATOR_USER_IDS` | Comma-separated WorkOS user IDs, or empty for no moderators |
+| `WAITLIST_ADMIN_USER_IDS` | Comma-separated WorkOS user IDs that may approve requests; approvers are automatically approved |
+| `WAITLIST_FILE` | Standalone server only: private persistent waitlist store |
+| `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |
 | `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none |
 
 Generate a cookie secret locally:
@@ -124,7 +130,7 @@ node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.
 
 Store that output privately. Keep WorkOS credentials and the cookie secret out of Git, build arguments, browser bundles, and `VITE_` variables. HTTPS sessions use `Secure`, `HttpOnly`, and `SameSite=Lax` cookies.
 
-Production multiplayer requires WorkOS authentication and a verified email. There is no anonymous bypass, and development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
+Both play modes require WorkOS authentication through Google or GitHub, a verified email, and waitlist approval. A signed-in account creates a pending request; an approver uses the in-game Waitlist requests control to approve or decline it. Decisions persist separately from the town checkpoint, and revocation closes active multiplayer connections. Development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
 
 ## Standalone mode: one instance and file moderation
 
@@ -195,6 +201,6 @@ npm run dev
 
 Open `http://localhost:5173` consistently. Vite proxies authentication, multiplayer API requests, moderation requests, and WebSocket connections to Node on port `8787`. Don't substitute `127.0.0.1` in the browser because the origin and cookies must match. Vite's `/health` route belongs to the optional sidecar; check Node health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`. This explicitly configured standalone server uses WorkOS; the default `npm run dev` flow described above uses loopback development identities instead. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+Local HTTP cookies omit `Secure`. Both the standalone server and the default `npm run dev` flow use WorkOS. Run the automated server tests with `npm run test:server`; they don't replace a live Google and GitHub sign-in check.
 
 On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.

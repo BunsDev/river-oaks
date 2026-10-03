@@ -16,6 +16,10 @@ async page => {
   try {
   await join(page); await join(second);
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length >= 2, null, { timeout: 30000 });
+  for (const tab of [page, second]) await tab.waitForFunction(() => {
+    const town = window.__riverMultiplayer?.();
+    return town?.snapshot?.players.find(player => player.id === town.selfId)?.appearance === 'jevica';
+  }, null, { timeout: 30000 });
   const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');

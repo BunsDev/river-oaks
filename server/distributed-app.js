@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { createWaitlistRoutes } from './waitlist-routes.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -13,9 +14,10 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, origin, moderators = [],
+export function createDistributedServer({ auth, room, security, waitlist, waitlistAdmins = [], origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
+  if (!waitlist) throw new Error('Waitlist is required');
   const connections = new Map(), moderatorIds = new Set(moderators);
   const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
@@ -46,6 +48,7 @@ export function createDistributedServer({ auth, room, security, origin, moderato
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, onRevoke: disconnectUser });
   function publish(view) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
@@ -66,8 +69,10 @@ export function createDistributedServer({ auth, room, security, origin, moderato
       const path = new URL(req.url, 'http://localhost').pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
+      if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
+        if (!(await waitlist.isApproved(identity.userId))) return json(res, 403, { error: 'waitlist_approval_required' });
         const ticket = await security.issueTicket(identity);
         return ticket ? json(res, 200, { ticket, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
@@ -107,7 +112,7 @@ export function createDistributedServer({ auth, room, security, origin, moderato
       const url = new URL(req.url, 'http://localhost');
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
       const identity = await auth.authenticate(req);
-      if (!identity || identity.expiresAt <= now() || await security.isBanned(identity.userId)
+      if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity))) return reject(401);
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});

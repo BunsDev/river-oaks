@@ -1,7 +1,8 @@
 import { isIP } from 'node:net';
 
-const paths = new Set(['/auth/login', '/auth/callback', '/auth/session', '/auth/logout',
-  '/api/multiplayer/ticket', '/api/moderation/ban', '/multiplayer']);
+const paths = new Set(['/auth/login', '/auth/callback', '/auth/session', '/auth/logout', '/auth/desktop/exchange',
+  '/api/multiplayer/ticket', '/api/moderation/ban', '/api/waitlist/status',
+  '/api/waitlist/requests', '/api/waitlist/decision', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {
     const url = new URL(raw, 'http://localhost');

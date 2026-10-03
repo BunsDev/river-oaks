@@ -7,6 +7,7 @@ import { WebSocket } from 'ws';
 import { createDistributedServer } from '../distributed-app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
@@ -34,7 +35,7 @@ async function fixture(t) {
     };
     const room = createRedisRoom({ redis, prefix, worldData: data, authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
-    const app = createDistributedServer({ auth, security, room, origin, moderators: ['moderator'] });
+    const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     nodes.push({ app, room, security, url: `http://127.0.0.1:${app.server.address().port}` });
   }

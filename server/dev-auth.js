@@ -14,7 +14,7 @@ export function devAuthAllowed({ origin, env = process.env } = {}) {
   let url;
   try { url = new URL(origin); } catch { return false; }
   return url.protocol === 'http:' && LOOPBACK.has(url.hostname) && url.origin === origin
-    && env.NODE_ENV !== 'production' && !env.VERCEL && env.RIVER_OAKS_DEV_AUTH !== 'off';
+    && env.NODE_ENV !== 'production' && !env.VERCEL && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1';
 }
 
 function readCookie(req) {
@@ -29,8 +29,8 @@ function json(res, status, value) {
   res.end(JSON.stringify(value));
 }
 
-export function createDevAuth({ origin, now = Date.now, onLogout = () => {} } = {}) {
-  if (!devAuthAllowed({ origin })) throw new Error('Development sign-in only runs on a loopback http origin outside production.');
+export function createDevAuth({ origin, env = process.env, now = Date.now, onLogout = () => {} } = {}) {
+  if (!devAuthAllowed({ origin, env })) throw new Error('Development sign-in requires an explicit loopback acceptance fixture.');
   const sessions = new Map();
   const issue = res => {
     for (const [key, record] of sessions) if (record.expiresAt <= now()) sessions.delete(key);

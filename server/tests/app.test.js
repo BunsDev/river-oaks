@@ -2,14 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t){
+async function fixture(t, waitlist = approvedWaitlist){
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
-  const app=createGameServer({auth,world,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
+  const app=createGameServer({auth,world,waitlist,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
@@ -34,6 +35,20 @@ test('two authenticated accounts receive the shared roster, and tickets are sing
  const b=await connect(origin,token2,'two');t.after(()=>b.ws.terminate());
  assert.equal(b.snapshot.players.length,2);assert.equal(world.players.size,2);
  await assert.rejects(connect(origin,token1,'one'));
+});
+test('pending waitlist approval blocks tickets and revocation closes an active player',async t=>{
+ const approved=new Set();
+ const waitlist={...approvedWaitlist,async isApproved(userId){return approved.has(userId);}};
+ const {origin,app}=await fixture(t,waitlist);
+ assert.equal((await ticket(origin,'one')).status,403);
+ approved.add('one');
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ const {ws}=await connect(origin,token,'one');t.after(()=>ws.terminate());
+ approved.delete('one');
+ ws.send(JSON.stringify({type:'pose',position:[0,0,0]}));
+ const code=await new Promise(resolve=>ws.once('close',resolve));
+ assert.equal(code,4001);
+ assert.equal((await ticket(origin,'one')).status,403);
 });
 test('oversized and flooding frames cannot generate unbounded world commands',async t=>{
  const {origin,commands}=await fixture(t);
