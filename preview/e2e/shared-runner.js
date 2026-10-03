@@ -115,11 +115,17 @@ try {
         console.log(`Passed ${name}`);
       } catch (error) {
         interruption.signal.throwIfAborted();
-        const diagnostics = await page.evaluate(() => ({
-          town: document.querySelector('#multiplayer-status')?.textContent,
-          player: document.querySelector('#player-status')?.textContent,
-          connected: window.__riverMultiplayer?.().connected,
-        })).catch(() => null);
+        const diagnostics = await Promise.all(browser.contexts().flatMap(context => context.pages()).map(async active =>
+          active.evaluate(() => ({
+            url: location.href,
+            mode: document.querySelector('#canvas-host')?.dataset.multiplayer,
+            ready: document.querySelector('#canvas-host')?.dataset.playerReady,
+            appearance: document.querySelector('#canvas-host')?.dataset.playerAppearance,
+            assets: document.querySelector('#viewport')?.dataset.assetProgress,
+            town: document.querySelector('#multiplayer-status')?.textContent,
+            player: document.querySelector('#player-status')?.textContent,
+            connected: window.__riverMultiplayer?.().connected,
+          })).catch(() => null)));
         report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, diagnostics, result });
         await page.screenshot({ path: join(root, `output/playwright/shared-${name}-failure.png`) }).catch(() => {});
         console.error(`Failed ${name}: ${error.stack}`);
