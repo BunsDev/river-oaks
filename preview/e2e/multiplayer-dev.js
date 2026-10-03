@@ -27,6 +27,24 @@ async page => {
   await second.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.appearance==='woman-casual'),a.self);
   check(true,'Sable selection reaches the other browser and its rendered remote avatar');
   check(await page.locator('.multiplayer-chat-history').getAttribute('aria-live')==='polite','New town chat rows are announced after initial history loads');
+  const openPeople = async tab => {
+    const control=tab.locator('#panel-toggle');
+    if (await control.getAttribute('aria-expanded') === 'false') await control.click();
+    await tab.locator('[data-section=community-section]').click();
+  };
+  await openPeople(page);
+  await page.locator('.multiplayer-chat-form input').fill('Hello from the town');
+  await page.locator('.multiplayer-chat-form button').click();
+  await second.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
+  check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'A sent town message appears once for both players');
+  await page.reload();
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
+  check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'Chat history returns once after reconnect');
+  await openPeople(second);
+  await second.locator('.multiplayer-chat-form input').fill('Hello back');
+  await second.locator('.multiplayer-chat-form button').click();
+  await page.locator('.multiplayer-chat-message').filter({hasText:'Hello back'}).waitFor({state:'attached'});
+  check(await page.locator('.multiplayer-chat-message').count()===2,'A reply reaches the reconnected player through the live chat UI');
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });

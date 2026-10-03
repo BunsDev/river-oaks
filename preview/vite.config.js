@@ -2,18 +2,22 @@ import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { sharedTownDevServer } from '../server/vite-town.js';
 
+const townPort = Number(process.env.RIVER_OAKS_DEV_TOWN_PORT ?? 8787);
+if (!Number.isInteger(townPort) || townPort < 1 || townPort > 65535) throw new Error('RIVER_OAKS_DEV_TOWN_PORT must be a TCP port.');
+const townHttp = `http://127.0.0.1:${townPort}`;
+
 export default defineConfig({
-  plugins: [sharedTownDevServer()],
+  plugins: [sharedTownDevServer({ port: townPort })],
   root: fileURLToPath(new URL('.', import.meta.url)),
   server: {
     host: '127.0.0.1',
     port: 5173,
     strictPort: true,
     proxy: {
-      '/auth': 'http://127.0.0.1:8787',
-      '/api/multiplayer': 'http://127.0.0.1:8787',
-      '/api/moderation': 'http://127.0.0.1:8787',
-      '/multiplayer': { target: 'ws://127.0.0.1:8787', ws: true },
+      '/auth': townHttp,
+      '/api/multiplayer': townHttp,
+      '/api/moderation': townHttp,
+      '/multiplayer': { target: `ws://127.0.0.1:${townPort}`, ws: true },
       '/v1': 'http://127.0.0.1:8765',
       '/health': 'http://127.0.0.1:8765',
     },

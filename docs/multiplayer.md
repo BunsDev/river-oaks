@@ -6,6 +6,10 @@
 credentials, choosing Multiplayer gives each browser its own development
 resident (for example "Wren (dev)") without a sign-in step. Choose Multiplayer
 in a second browser profile to see another player. No `.env` is needed.
+For a separate checkout while the default ports are in use, run
+`RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
+auth and multiplayer traffic to that checkout's own town on the chosen loopback
+port.
 
 - The default is `choice`: players begin in single player and can select
   Multiplayer from the control in the viewport. The choice is remembered in
