@@ -103,6 +103,26 @@ test('shared guest sees wishes but cannot grant one through the panel', async ()
   assert.deepEqual(commands,[]);
 });
 
+test('solo wishes require an authenticated Jevica capability', async () => {
+  let allowed = false;
+  const {panel,byId} = setup({getMultiplayer:()=>null,getPersona:()=> 'another-look',getCanGrantWishes:()=>allowed});
+  const local=panel.state.locals[0];
+  assert.equal(await panel.selectLocal(local.id),true);
+  assert.equal(byId('wish-grant').hidden,true);
+  await byId('wish-grant').click();
+  assert.equal(local.wish,undefined);
+  allowed=true;panel.update(0,1000);
+  assert.equal(byId('wish-grant').hidden,false);
+  byId('wish-choice').value='dog';
+  await byId('wish-grant').click();
+  assert.equal(local.wish?.kind,'dog');
+  assert.equal(local.wish?.ownerName,'Jevica');
+  allowed=false;panel.update(0,1200);
+  assert.equal(byId('wish-undo').disabled,true);
+  await byId('wish-undo').click();
+  assert.equal(local.wish?.kind,'dog');
+});
+
 test('wish actions stay busy until confirmation and restore focus after success', async () => {
   const { byId } = dom();
   let resolve;

@@ -6,6 +6,7 @@ import { createSharedWorld } from './world.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
 import { createMemoryLandmarks } from './landmarks.js';
+import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 export function workosConfigured(env) {
   return Boolean(env.WORKOS_API_KEY && env.WORKOS_CLIENT_ID && env.WORKOS_COOKIE_PASSWORD?.length >= 32);
@@ -32,6 +33,7 @@ export function validateOrigin(origin) {
 
 export async function createTown({ env = process.env, origin, devAuth = 'auto', staticRoot = resolve('dist/preview') } = {}) {
   validateOrigin(origin);
+  const worldId=validateWorldId(env.WORLD_ID??DEFAULT_WORLD_ID);
   const data = JSON.parse(await readFile(new URL('../preview/public/data/district.json', import.meta.url), 'utf8'));
   data.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
@@ -41,11 +43,11 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const auth = mode === 'local'
     ? createDevAuth({ origin, onLogout })
     : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
-  const world = createSharedWorld(data,mode === 'local' ? {isAdmin:auth.isAdmin} : {});
+  const world = createSharedWorld(data,mode === 'local' ? {isAdmin:auth.isAdmin,worldId} : {worldId});
   game = createGameServer({
     auth, world, landmarks:createMemoryLandmarks(), moderation, origin, staticRoot,
     moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
     trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
   });
-  return { ...game, auth: mode, origin };
+  return { ...game, auth: mode, origin, worldId };
 }

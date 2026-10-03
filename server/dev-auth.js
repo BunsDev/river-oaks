@@ -61,7 +61,7 @@ export function createDevAuth({ origin, now = Date.now, onLogout = () => {} } = 
       if (path === '/auth/session') {
         // Development joins without a sign-in step: the first visit issues an identity.
         const user = current(req) ?? issue(res);
-        json(res, 200, user ? { authenticated: true, development: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken } : { authenticated: false });
+        json(res, 200, user ? { authenticated: true, development: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken, canGrantWishes: user.userId === ownerUserId } : { authenticated: false });
       } else if (path === '/auth/logout') {
         if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); json(res, 405, { error: 'method_not_allowed' }); return true; }
         const user = current(req);

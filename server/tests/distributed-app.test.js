@@ -12,7 +12,7 @@ import { createRedisLandmarks } from '../landmarks.js';
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
 const live = { skip: !process.env.REDIS_URL, timeout: 30_000 };
-async function fixture(t) {
+async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId] } = {}) {
   const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });
   redis.on('error', () => {});
   const prefix = `{river-oaks:test:${randomUUID()}}`;
@@ -23,35 +23,40 @@ async function fixture(t) {
   t.after(async () => {
     for (const node of nodes) await node.app.close();
     for (const node of nodes) await node.room.close();
-    const keys = await redis.keys(prefix + ':*');
-    if (keys.length) await redis.del(...keys);
+    for(const roomPrefix of new Set([prefix,...nodes.map(node=>node.prefix)])){
+      const keys=await redis.keys(roomPrefix+':*');if(keys.length)await redis.del(...keys);
+    }
     await redis.quit();
   });
   for (let i = 0; i < 2; i++) {
+    const nodeWorldId=worldIds[i],roomPrefix=nodeWorldId===worldIds[0]?prefix:`${prefix.slice(0,-1)}:world:${nodeWorldId}}`;
     const security = createRedisSecurity({ redis, prefix });
     const auth = {
       authenticate: async req => sessions.get(req.headers.cookie?.match(/test_session=(\w+)/)?.[1]) ?? null,
       handle: async () => false,
     };
-    const room = createRedisRoom({ redis, prefix, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
+    const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
     const app = createDistributedServer({ auth, security, room, landmarks:createRedisLandmarks({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-    nodes.push({ app, room, security, url: `http://127.0.0.1:${app.server.address().port}` });
+    nodes.push({ app, room, security, prefix:roomPrefix, url: `http://127.0.0.1:${app.server.address().port}` });
   }
   const post = (node, user, path, body, extra = {}) => fetch(node.url + path, {
     method: 'POST', headers: { Origin: origin, Cookie: `test_session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json', ...extra },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const ticket = async (node, user) => {
-    const response = await post(node, user, '/api/multiplayer/ticket');
+    const response = await post(node, user, `/api/multiplayer/ticket?world=${node.room.worldId}`);
     assert.equal(response.status, 200);
     return (await response.json()).ticket;
   };
   return { nodes, sessions, post, ticket };
 }
-function client(node, user, ticket) {
-  const ws = new WebSocket(`${node.url.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}`, {
+function client(node, user, ticket, worldId = null, protocol = null) {
+  const query = new URLSearchParams({ ticket });
+  if (worldId) query.set('world', worldId);
+  if (protocol) query.set('protocol', String(protocol));
+  const ws = new WebSocket(`${node.url.replace('http:', 'ws:')}/multiplayer?${query}`, {
     headers: { Origin: origin, Cookie: `test_session=${user}` },
   });
   const messages = [], waiters = new Set();
@@ -84,6 +89,47 @@ test('distributed HTTP authentication and CSRF gates reject invalid tickets', li
   assert.equal((await f.post(a, 'nobody', '/api/multiplayer/ticket')).status, 401);
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { Origin: 'https://evil.example' })).status, 403);
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { 'X-CSRF-Token': 'wrong' })).status, 403);
+});
+
+test('distributed tickets and sockets are admitted only to their named world and protocol', live, async t => {
+  const f=await fixture(t,{worldId:'garden-2'}),[a]=f.nodes;
+  assert.equal((await f.post(a,'alice','/api/multiplayer/ticket')).status,404);
+  assert.equal((await f.post(a,'alice','/api/multiplayer/ticket?world=river-oaks')).status,404);
+  const issued=await f.post(a,'alice','/api/multiplayer/ticket?world=garden-2');
+  assert.equal(issued.status,200);
+  const {ticket,worldId,protocolVersion}=await issued.json();
+  assert.equal(worldId,'garden-2');assert.equal(protocolVersion,1);
+  assert.equal((await f.post(a,'alice','/api/landmarks/list?world=river-oaks')).status,404);
+  assert.equal((await f.post(a,'alice','/api/landmarks/list?world=garden-2')).status,200);
+  const rejected=(world,protocol)=>new Promise(resolve=>{
+    const ws=new WebSocket(`${a.url.replace('http:','ws:')}/multiplayer?ticket=${ticket}&world=${world}&protocol=${protocol}`,{headers:{Origin:origin,Cookie:'test_session=alice'}});
+    ws.once('unexpected-response',(_request,response)=>{resolve(response.statusCode);response.resume();});
+    ws.once('error',()=>{});
+  });
+  assert.equal(await rejected('river-oaks',1),403);
+  assert.equal(await rejected('garden-2',2),426);
+  const alice=client(a,'alice',ticket,'garden-2',1);t.after(()=>alice.ws.terminate());
+  const joined=await alice.waitFor(message=>message.selfId==='alice');
+  assert.equal(joined.worldId,'garden-2');
+});
+
+test('two distributed worlds share sign-in but isolate presence and ticket admission', live, async t => {
+  const f=await fixture(t,{worldIds:['river-oaks','garden-2']}),[river,garden]=f.nodes;
+  const riverTicket=await f.ticket(river,'alice');
+  const crossed=await new Promise(resolve=>{
+    const ws=new WebSocket(`${garden.url.replace('http:','ws:')}/multiplayer?ticket=${riverTicket}&world=garden-2&protocol=1`,{headers:{Origin:origin,Cookie:'test_session=alice'}});
+    ws.once('unexpected-response',(_request,response)=>{resolve(response.statusCode);response.resume();});
+    ws.once('error',()=>{});
+  });
+  assert.equal(crossed,401);
+  const a=client(river,'alice',riverTicket,'river-oaks',1);
+  const b=client(garden,'alice',await f.ticket(garden,'alice'),'garden-2',1);
+  t.after(()=>{a.ws.terminate();b.ws.terminate();});
+  assert.equal((await a.waitFor(message=>message.selfId==='alice')).worldId,'river-oaks');
+  assert.equal((await b.waitFor(message=>message.selfId==='alice')).worldId,'garden-2');
+  assert.equal((await a.command({type:'chat',text:'Only the first world'})).ok,true);
+  assert.equal((await garden.room.read()).snapshot.chat.length,0);
+  assert.equal((await river.room.read()).snapshot.chat[0].text,'Only the first world');
 });
 
 test('landmarks stay private and durable across distributed edge instances', live, async t => {

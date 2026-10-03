@@ -7,11 +7,14 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
 export function createGameServer({ auth, world, landmarks, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+  const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
+  const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
   const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000);
@@ -47,14 +50,16 @@ export function createGameServer({ auth, world, landmarks, origin, staticRoot, m
       if (await auth.handle(req,res)) return;
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if (!issuing(identity.userId)) return json(res,429,{error:'Please wait before reconnecting.'});
         for(const [key,value] of tickets)if(value.until<=now())tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
         const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+15000});
-        return json(res,200,{ticket,moderator:moderatorIds.has(identity.userId)});
+        return json(res,200,{ticket,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,moderator:moderatorIds.has(identity.userId)});
       }
       if (pathname.startsWith('/api/landmarks/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if(!landmarks)return json(res,503,{error:'Landmarks are unavailable.'});
         const action=pathname.slice('/api/landmarks/'.length);
         if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId)});
@@ -103,6 +108,9 @@ export function createGameServer({ auth, world, landmarks, origin, staticRoot, m
     try {
       const url=new URL(req.url,'http://localhost');
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
+      if(!matchesWorld(url))return reject(403);
+      const protocol=url.searchParams.get('protocol');
+      if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
       const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
       if(!identity || isBanned(identity.userId) || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);

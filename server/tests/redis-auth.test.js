@@ -7,6 +7,7 @@ import Redis from 'ioredis';
 import { WorkOS } from '@workos-inc/node';
 import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { createAuthAdapter } from './redis-auth-fixture.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
 const { createRedisAuth } = await import('../redis-auth.js').catch(() => ({}));
 const integration = (name, run) => test(name, { skip: !process.env.REDIS_URL }, run);
@@ -61,10 +62,22 @@ integration('cross-instance callback consumes PKCE once and survives closing the
   const body = await session.json();
   assert.deepEqual(body.user, { id: 'user_1', name: 'Val Dev' });
   assert.ok(body.csrfToken);
+  assert.equal(body.canGrantWishes,false);
   assert.doesNotMatch(JSON.stringify(body), /private|email|accessToken|refreshToken/);
   assert.equal(await c.auth.isSessionActive('user_1', 'session_1'), true);
   assert.equal(await c.auth.isSessionActive('other', 'session_1'), false);
   assert.equal(await f.redis.ping(), 'PONG', 'close must not quit caller Redis');
+});
+
+integration('a verified Jevica account has solo wish permission on every Redis auth edge', async t => {
+  const f=await fixture(t);
+  f.workos.setUserId(JEVICA_ADMIN_USER_IDS[0]);
+  const {sessionCookie}=await f.login();
+  for(const edge of [f.a,f.b]) {
+    const session=await (await edge.request('/auth/session',{headers:{cookie:sessionCookie}})).json();
+    assert.equal(session.authenticated,true);
+    assert.equal(session.canGrantWishes,true);
+  }
 });
 
 integration('state is browser-bound, expires, and cannot be replayed across nodes', async t => {

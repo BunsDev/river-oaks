@@ -3,9 +3,9 @@ import { randomBytes } from 'node:crypto';
 // WorkOS boundary fixture; HTTP state/cookies and all Redis transactions stay real.
 export function createAuthAdapter(now = Date.now) {
   const sealed = new Map(), calls = { codes: 0, refresh: 0 };
-  let verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null;
+  let verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null, userId = 'user_1';
   function mint(sessionId) {
-    const user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: verified };
+    const user = { id: userId, firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: verified };
     const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, client_id: tokenClientId, sub: user.id, sid: sessionId, exp: Math.floor(now() / 1000) + 300 })).toString('base64url')}.signature`;
     const sealedSession = randomBytes(32).toString('base64url');
     sealed.set(sealedSession, { authenticated: true, user, sessionId, accessToken });
@@ -14,6 +14,7 @@ export function createAuthAdapter(now = Date.now) {
   return {
     calls,
     setVerified(value) { verified = value; },
+    setUserId(value) { userId = value; },
     setIssuer(value) { issuer = value; },
     setTokenClientId(value) { tokenClientId = value; },
     blockRefresh() {

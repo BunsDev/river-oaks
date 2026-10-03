@@ -80,6 +80,16 @@ let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers, buildLayer, buildControls;
+let soloCanGrantWishes = false;
+async function refreshSoloPrivileges() {
+  try {
+    const response = await fetch('/auth/session', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(3000) });
+    const session = response.ok && response.headers.get('content-type')?.includes('application/json') ? await response.json() : null;
+    soloCanGrantWishes = session?.authenticated === true && session.canGrantWishes === true;
+  } catch { soloCanGrantWishes = false; }
+  if (community?.state) community.refresh();
+  return soloCanGrantWishes;
+}
 let autoTownDecision = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
@@ -155,6 +165,8 @@ function initializeRenderer() {
     getVisitorPose: () => walking?.getPose() ?? null,
     getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
     getPersona: () => playerAvatar?.form ?? 'visitor',
+    getCanGrantWishes: () => soloCanGrantWishes,
+    authorizeSoloWish: refreshSoloPrivileges,
     onWish: () => playerAvatar?.cast(performance.now()),
     getMultiplayer: () => multiplayer,
     getRoomId: () => walking?.roomId ?? null,
@@ -182,6 +194,9 @@ function initializeRenderer() {
       }
       return walking.focusPerson(local);
   } });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !multiplayer && ['solo','off','unavailable','signed-out'].includes(host.dataset.multiplayer)) void refreshSoloPrivileges();
+  });
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
@@ -224,15 +239,15 @@ function initializeRenderer() {
   if (multiplayerMode === 'choice') {
     createPlayMode({ viewport: $('#viewport'), storage: playModeStorage, active: playMode.mode, remembered: playMode.remembered });
     if (playMode.mode === 'multiplayer') startMultiplayer();
-    else host.dataset.multiplayer = 'solo';
+    else {host.dataset.multiplayer = 'solo';void refreshSoloPrivileges();}
   }
   else if (multiplayerMode === 'required') startMultiplayer();
   else if (multiplayerMode === 'auto') (autoTownDecision = waitForTown()).then(town => {
     host.dataset.multiplayer = town.reason;
     if (town.join) startMultiplayer();
-    else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
+    else {if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';void refreshSoloPrivileges();}
   });
-  else host.dataset.multiplayer = 'off';
+  else {host.dataset.multiplayer = 'off';void refreshSoloPrivileges();}
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
