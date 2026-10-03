@@ -46,8 +46,10 @@ async page => {
     await saved;
     check(decision?.body.userId === 'existing-user' && decision.body.approved === false && decision.csrf === 'admin-csrf', 'Approvers can revoke a prior approval with CSRF protection');
     const reconsider = admin.locator('.access-request').filter({ hasText: 'Declined Resident' }).getByRole('button', { name: 'Approve' });
-    await reconsider.waitFor({ state: 'visible' });
-    check(await reconsider.count() === 1, 'Approvers can reconsider a declined request');
+    const reapproved = admin.waitForResponse('**/api/waitlist/decision');
+    await reconsider.click();
+    await reapproved;
+    check(decision?.body.userId === 'declined-user' && decision.body.approved === true && decision.csrf === 'admin-csrf', 'Approvers can reconsider a declined request');
     await admin.keyboard.press('Escape');
     check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert), 'Escape returns focus to the game controls');
   } finally { await adminContext.close(); }
