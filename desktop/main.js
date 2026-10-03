@@ -13,11 +13,11 @@ let window, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
 const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://sim.jev.works/';
 const gameOrigin = new URL(entry).origin;
-const clientId = dev ? (process.env.WORKOS_CLIENT_ID || 'client_01M3ZHFZ8AHWXXRJNYM5WYKRPP')
-  : 'client_01M3ZHFZDKDSTJ2RNSMP5V9SKV';
+const clientId = dev ? process.env.WORKOS_CLIENT_ID : 'client_01M3ZHFZDKDSTJ2RNSMP5V9SKV';
 if (dev) {
   const url = new URL(entry);
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
+  if (!clientId) throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
 }
 
 async function saveWindow() {
