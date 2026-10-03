@@ -1,0 +1,188 @@
+{
+  "at": "2026-10-03T21:32:17.198Z",
+  "runtime": "v24.18.1",
+  "platform": "darwin/arm64",
+  "scope": "Loopback synthetic world and real WebSocket transport plus local Redis room ticks; no WorkOS, hosted, mobile, or geographic network load.",
+  "world": [
+    {
+      "sharedPopulation": false,
+      "players": 1,
+      "npcs": 193,
+      "snapshotBytes": 112391,
+      "snapshotDeflateLevel1Bytes": 10633,
+      "checkpointBytes": 268072,
+      "stepP95Ms": 108.31,
+      "stepOver50Ms": 9,
+      "steadyStepP95Ms": 1.41,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.34,
+      "checkpointP95Ms": 3.11
+    },
+    {
+      "sharedPopulation": false,
+      "players": 8,
+      "npcs": 193,
+      "snapshotBytes": 113853,
+      "snapshotDeflateLevel1Bytes": 10827,
+      "checkpointBytes": 271130,
+      "stepP95Ms": 106.79,
+      "stepOver50Ms": 8,
+      "steadyStepP95Ms": 1.17,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.24,
+      "checkpointP95Ms": 2.96
+    },
+    {
+      "sharedPopulation": false,
+      "players": 32,
+      "npcs": 193,
+      "snapshotBytes": 118905,
+      "snapshotDeflateLevel1Bytes": 11510,
+      "checkpointBytes": 281698,
+      "stepP95Ms": 107.39,
+      "stepOver50Ms": 8,
+      "steadyStepP95Ms": 1.18,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.3,
+      "checkpointP95Ms": 3.25
+    },
+    {
+      "sharedPopulation": true,
+      "players": 1,
+      "npcs": 98,
+      "snapshotBytes": 57344,
+      "snapshotDeflateLevel1Bytes": 6908,
+      "checkpointBytes": 140066,
+      "stepP95Ms": 107.68,
+      "stepOver50Ms": 8,
+      "steadyStepP95Ms": 1.13,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.15,
+      "checkpointP95Ms": 1.73
+    },
+    {
+      "sharedPopulation": true,
+      "players": 8,
+      "npcs": 98,
+      "snapshotBytes": 58806,
+      "snapshotDeflateLevel1Bytes": 7115,
+      "checkpointBytes": 143124,
+      "stepP95Ms": 106.81,
+      "stepOver50Ms": 9,
+      "steadyStepP95Ms": 1.11,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.11,
+      "checkpointP95Ms": 1.67
+    },
+    {
+      "sharedPopulation": true,
+      "players": 32,
+      "npcs": 98,
+      "snapshotBytes": 63858,
+      "snapshotDeflateLevel1Bytes": 7808,
+      "checkpointBytes": 153692,
+      "stepP95Ms": 105.96,
+      "stepOver50Ms": 8,
+      "steadyStepP95Ms": 1.11,
+      "steadyStepOver50Ms": 0,
+      "snapshotP95Ms": 0.16,
+      "checkpointP95Ms": 1.84
+    }
+  ],
+  "transport": [
+    {
+      "players": 1,
+      "seconds": 2,
+      "admitted": 1,
+      "snapshotsPerClientMin": 10,
+      "snapshotsPerClientMax": 10,
+      "snapshotGapP95Ms": 246.32,
+      "eventLoopP95Ms": 40.01,
+      "cpuCorePercent": 36,
+      "decodedSnapshotMiBPerSec": 0.27,
+      "rssDeltaMiB": 0.17,
+      "errors": 0,
+      "totalSnapshots": 10
+    },
+    {
+      "players": 8,
+      "seconds": 2,
+      "admitted": 8,
+      "snapshotsPerClientMin": 10,
+      "snapshotsPerClientMax": 10,
+      "snapshotGapP95Ms": 280.3,
+      "eventLoopP95Ms": 41.09,
+      "cpuCorePercent": 38,
+      "decodedSnapshotMiBPerSec": 2.22,
+      "rssDeltaMiB": 0.17,
+      "errors": 0,
+      "totalSnapshots": 80
+    },
+    {
+      "players": 16,
+      "seconds": 2,
+      "admitted": 16,
+      "snapshotsPerClientMin": 10,
+      "snapshotsPerClientMax": 10,
+      "snapshotGapP95Ms": 355.57,
+      "eventLoopP95Ms": 52.49,
+      "cpuCorePercent": 41,
+      "decodedSnapshotMiBPerSec": 4.57,
+      "rssDeltaMiB": 0.8,
+      "errors": 0,
+      "totalSnapshots": 160
+    },
+    {
+      "players": 32,
+      "seconds": 2,
+      "admitted": 32,
+      "snapshotsPerClientMin": 10,
+      "snapshotsPerClientMax": 10,
+      "snapshotGapP95Ms": 279.43,
+      "eventLoopP95Ms": 50.63,
+      "cpuCorePercent": 47,
+      "decodedSnapshotMiBPerSec": 9.65,
+      "rssDeltaMiB": 1.78,
+      "errors": 0,
+      "totalSnapshots": 320
+    }
+  ],
+  "redis": [
+    {
+      "players": 1,
+      "admitted": 1,
+      "tickP95Ms": 186.19,
+      "tickMaxMs": 1080.06,
+      "ticksOver200Ms": 1,
+      "packedCheckpointBytes": 15372,
+      "packedViewBytes": 6154
+    },
+    {
+      "players": 8,
+      "admitted": 8,
+      "tickP95Ms": 30.63,
+      "tickMaxMs": 80.47,
+      "ticksOver200Ms": 0,
+      "packedCheckpointBytes": 15666,
+      "packedViewBytes": 6396
+    },
+    {
+      "players": 16,
+      "admitted": 16,
+      "tickP95Ms": 15.74,
+      "tickMaxMs": 16.22,
+      "ticksOver200Ms": 0,
+      "packedCheckpointBytes": 16208,
+      "packedViewBytes": 6729
+    },
+    {
+      "players": 32,
+      "admitted": 32,
+      "tickP95Ms": 14.78,
+      "tickMaxMs": 16.04,
+      "ticksOver200Ms": 0,
+      "packedCheckpointBytes": 16991,
+      "packedViewBytes": 7326
+    }
+  ]
+}

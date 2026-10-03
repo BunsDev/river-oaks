@@ -25,6 +25,7 @@ import { buildDistrictBuildings, buildDistrictDetail } from './district.js';
 import { buildDistrictFantasy } from './district-fantasy.js';
 import { buildLocals } from './locals.js';
 import { buildStorePeople } from './store-people.js';
+import { sharedRoomSummary } from './shared-population.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
 import { castShadowsFromProxies } from './landscape-models.js';
@@ -78,6 +79,7 @@ let placesUI = null, landmarks = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
 let multiplayer, remotePlayers, buildLayer, buildControls;
+let autoTownDecision = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
@@ -181,7 +183,7 @@ function initializeRenderer() {
   } });
   $('.panel-scroll').prepend($('#community-section'));
   setupSidebarSections({ graphics: quality.element });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop() });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -221,7 +223,7 @@ function initializeRenderer() {
     else host.dataset.multiplayer = 'solo';
   }
   else if (multiplayerMode === 'required') startMultiplayer();
-  else if (multiplayerMode === 'auto') waitForTown().then(town => {
+  else if (multiplayerMode === 'auto') (autoTownDecision = waitForTown()).then(town => {
     host.dataset.multiplayer = town.reason;
     if (town.join) startMultiplayer();
     else if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';
@@ -266,12 +268,12 @@ function startMultiplayer() {
   playerAvatar?.setSharedMode(true);
   remotePlayers = createRemotePlayers(scene, host);
   buildLayer ??= createSharedBuildLayer(scene);
-  buildControls?.show();
+  buildControls?.hide();
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
-    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);playerAvatar?.setSharedIdentity(players.find(player=>player.id===selfId));buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],selfId);buildControls?.loadInventory(players.length?selfId:null);},
+    onPlayers: (players, selfId) => {remotePlayers.sync(players, selfId);if(!players.length)buildLayer?.sync([]);const self=players.find(player=>player.id===selfId);playerAvatar?.setSharedIdentity(self);if(self?.canBuild)buildControls?.show();else buildControls?.hide();buildControls?.sync(players.length?multiplayer?.snapshot?.builds??[]:[],self?.canBuild?selfId:null);if(self?.canBuild)buildControls?.loadInventory(selfId);},
     onPlaySolo: multiplayerMode === 'choice' ? () => switchPlayMode(playModeStorage, 'solo') : null,
   });
   host.dataset.multiplayer = 'joined';
@@ -374,7 +376,7 @@ function populateWorld(data) {
   const furniture=buildStreetFurniture(data,streetSpace);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
   localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
-  storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion });
+  storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: Boolean(multiplayer) });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
   layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
@@ -444,7 +446,7 @@ function leaveStore(store) {
 function describeInterior(store) {
   const room = world ? storeRoomsFor(world).find(item => item.storeId === store.id) : null;
   if (!room) return 'Exterior viewing destination.';
-  const { label, staff, guests, mannequins, highlights } = room.summary;
+  const { label, staff, guests, mannequins, highlights } = multiplayer ? sharedRoomSummary(room) : room.summary;
   const people = [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
   return `${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Imagined interior, not a photographed store.`;
 }
@@ -522,6 +524,9 @@ async function loadWorld() {
     const [data, vegetation] = await Promise.all([jsonResponse('/data/district.json'), jsonResponse('/data/district-vegetation.json')]);
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
     data.vegetation = validateVegetation(data, vegetation);
+    // The initial resident and boutique cast depends on whether auto mode
+    // joins. Resolve that decision before constructing either set of models.
+    if (autoTownDecision) await autoTownDecision;
     populateWorld(data);
     // Reveal a finished street: stone, asphalt and sky first. Trees, people
     // and interiors keep streaming behind the progress pill. On a slow link

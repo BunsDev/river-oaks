@@ -32,11 +32,13 @@ function json(res, status, value) {
 export function createDevAuth({ origin, now = Date.now, onLogout = () => {} } = {}) {
   if (!devAuthAllowed({ origin })) throw new Error('Development sign-in only runs on a loopback http origin outside production.');
   const sessions = new Map();
+  let ownerUserId = null;
   const issue = res => {
     for (const [key, record] of sessions) if (record.expiresAt <= now()) sessions.delete(key);
     if (sessions.size >= MAX_SESSIONS) return null;
     const cookie = randomBytes(24).toString('base64url');
     const userId = `dev-${createHash('sha256').update(cookie).digest('hex').slice(0, 12)}`;
+    ownerUserId ??= userId;
     const name = `${NAMES[sessions.size % NAMES.length]} (dev)`;
     const record = { userId, name, sessionId: userId, csrfToken: randomBytes(24).toString('base64url'), expiresAt: now() + SESSION_TTL };
     sessions.set(cookie, record);
@@ -50,6 +52,7 @@ export function createDevAuth({ origin, now = Date.now, onLogout = () => {} } = 
   };
   return {
     development: true,
+    isAdmin: userId => userId === ownerUserId,
     authenticate: async req => current(req),
     async handle(req, res) {
       const path = new URL(req.url, origin).pathname;

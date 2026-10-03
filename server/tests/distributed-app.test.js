@@ -32,7 +32,7 @@ async function fixture(t) {
       authenticate: async req => sessions.get(req.headers.cookie?.match(/test_session=(\w+)/)?.[1]) ?? null,
       handle: async () => false,
     };
-    const room = createRedisRoom({ redis, prefix, worldData: data, authorize: async identity =>
+    const room = createRedisRoom({ redis, prefix, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
     const app = createDistributedServer({ auth, security, room, origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));

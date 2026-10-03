@@ -18,14 +18,14 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
       <p class="shared-build-keys">Point at the ground and click, or press Enter. R turns, Esc leaves builder mode.</p>
     </div>
     <button type="button" id="build-place">Place ahead</button><p id="build-status" role="status" aria-live="polite"></p>
-    <h3>Your creations <span id="build-count"></span></h3><div class="shared-build-list" id="build-list"></div>
+    <h3>Town creations <span id="build-count"></span></h3><div class="shared-build-list" id="build-list"></div>
     <h3>Saved designs <span id="design-count"></span></h3><div class="shared-build-list" id="design-list"></div>`;
   const $=selector=>panel.querySelector(selector);
   const kindSelect=$('#build-kind'),finishSelect=$('#build-finish'),status=$('#build-status'),modeButton=$('#build-mode'),placeButton=$('#build-place'),aim=$('#build-aim'),hint=$('#build-hint');
   for(const item of BUILD_KINDS)kindSelect.add(new Option(item.label,item.id));
   for(const item of BUILD_FINISHES)finishSelect.add(new Option(item.label,item.id));
   const list=$('#build-list'),count=$('#build-count'),designList=$('#design-list'),designCount=$('#design-count');
-  let own=[],signature='',designs=[],inventoryFor=null,inventoryVersion=0,busy=false,active=false,yaw=0,moving=null,target=null,verdict=null,selectedDesign=null;
+  let own=[],selfId=null,signature='',designs=[],inventoryFor=null,inventoryVersion=0,busy=false,active=false,yaw=0,moving=null,target=null,verdict=null,selectedDesign=null;
   const grounded=()=>{const pose=getPose();return pose&&!pose.roomId&&!pose.flying&&!pose.riding?pose:null;};
   const front=()=>{
     const pose=grounded();if(!pose)return null;
@@ -96,16 +96,16 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
     designList.replaceChildren(...rows);
   }
   function render(){
-    count.textContent=`${own.length}/24`;
+    count.textContent=`${own.filter(item=>item.ownerId===selfId).length}/24 yours · ${own.length} total`;
     if(!own.length){const empty=document.createElement('p');empty.textContent='Nothing placed yet.';list.replaceChildren(empty);return;}
     const rows=own.map(item=>{
       const row=document.createElement('div');row.className='shared-build-row';if(moving?.id===item.id)row.classList.add('moving');
-      const title=document.createElement('strong');title.textContent=buildKind(item.kind).label;
+      const title=document.createElement('strong');title.textContent=`${buildKind(item.kind).label}${item.ownerId===selfId?'':` · ${item.ownerName}`}`;
       const actions=document.createElement('div');actions.className='shared-build-actions';
       const button=(label,action)=>{const node=document.createElement('button');node.type='button';node.textContent=label;node.disabled=busy;node.addEventListener('click',action);actions.append(node);};
       button('Move',()=>setBuilder(true,{item}));
       button('Turn',()=>send({type:'build',action:'edit',id:item.id,position:item.position,yaw:item.yaw+Math.PI/4}));
-      button('Save design',()=>void send({type:'inventory',action:'save',buildId:item.id}));
+      if(item.ownerId===selfId)button('Save design',()=>void send({type:'inventory',action:'save',buildId:item.id}));
       button('Remove',()=>{if(moving?.id===item.id)setBuilder(true);send({type:'build',action:'remove',id:item.id});});
       row.append(title,actions);return row;
     });
@@ -129,11 +129,12 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
         designs=result.items;renderDesigns();
       }).catch(error=>{if(version===inventoryVersion){inventoryFor=null;status.textContent=error.message;}});
     },
-    sync(items,selfId){
-      const next=items.filter(item=>item.ownerId===selfId).sort((a,b)=>a.createdAt-b.createdAt);
+    sync(items,ownerId){
+      selfId=ownerId;
+      const next=ownerId?[...items].sort((a,b)=>a.createdAt-b.createdAt):[];
       if(moving&&!next.some(item=>item.id===moving.id))setBuilder(true);
       else if(moving)moving=next.find(item=>item.id===moving.id);
-      const key=JSON.stringify(next.map(item=>[item.id,item.kind,item.position,item.yaw]));
+      const key=JSON.stringify(next.map(item=>[item.id,item.kind,item.position,item.yaw,item.ownerId]));
       if(key!==signature){own=next;signature=key;render();}
     },
     dispose(){if(active)setBuilder(false);inventoryVersion++;panel.remove();},

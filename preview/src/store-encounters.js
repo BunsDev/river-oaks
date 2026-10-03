@@ -1,5 +1,6 @@
 import { createPersona } from './personas.js';
 import { WORKER_ROLES } from './worker-roles.js';
+import { includeSharedStorePerson } from './shared-population.js';
 
 const OCCUPATIONS = {
   fashion: ['Style adviser', 'Tailor'], leather: ['Leather goods specialist', 'Client adviser'],
@@ -15,9 +16,9 @@ export const storePersonId = (room, index) => `store-${room.storeId}-person-${in
 
 // The same stable identity is used by the rendered mesh, keyboard encounters,
 // the directory and dialogue. Display mannequins are deliberately not people.
-export function createStoreEncounters(rooms) {
+export function createStoreEncounters(rooms, { sharedPopulation = false } = {}) {
   return rooms.flatMap(room => room.people.flatMap((spot, index) => {
-    if (spot.role === 'mannequin') return [];
+    if (spot.role === 'mannequin' || sharedPopulation && !includeSharedStorePerson(room, spot, index)) return [];
     const name = NAMES[(room.index * 3 + index) % NAMES.length];
     const staffIndex = room.people.slice(0,index).filter(person=>person.role==='staff').length;
     const occupations=OCCUPATIONS[room.theme] ?? ['Client adviser'];

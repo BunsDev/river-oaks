@@ -6,9 +6,10 @@ import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
+import { sharedRoomSummary } from './shared-population.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {} }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {}, getSharedPopulation = () => false }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
@@ -287,7 +288,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       enter.textContent = room ? 'Step outside · F' : door ? `Step inside ${door.name} · F` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
-      $('#walking-place').textContent = transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${room.summary.label} · ${room.summary.staff} staff, ${room.summary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
+      const roomSummary=room && (getSharedPopulation()?sharedRoomSummary(room):room.summary);
+      $('#walking-place').textContent = transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.yaw = state.yaw.toFixed(3);
