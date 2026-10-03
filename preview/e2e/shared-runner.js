@@ -9,8 +9,10 @@ import { chromium } from 'playwright';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const modes = process.argv.slice(2);
+const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
+if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
 if (modes.some(mode => !['development', 'required'].includes(mode))) throw new Error('Choose development or required shared play.');
-const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
+const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
 let browser, child;
 const interruption = new AbortController();
@@ -49,7 +51,7 @@ async function start(mode, ports) {
   for (const port of Object.values(ports)) await unused(port);
   const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', String(ports.web)] : ['server/tests/browser-fixture.js'];
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
-  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json') };
+  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json') };
   interruption.signal.throwIfAborted();
   child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {
@@ -73,7 +75,21 @@ async function start(mode, ports) {
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
-  browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, ...(process.platform === 'darwin' ? { args: ['--use-angle=metal'] } : {}) });
+  browser = await chromium.launch({
+    headless: !softwareRendering, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false,
+    args: softwareRendering ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [],
+  });
+  const probe = await browser.newPage();
+  report.renderer = await probe.evaluate(() => {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) throw new Error('Shared acceptance requires a working WebGL2 context.');
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const renderer = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return renderer;
+  });
+  await probe.close();
+  console.log(`Shared renderer: ${report.renderer}; ${report.rendering}`);
   for (const mode of modes.length ? modes : ['development', 'required']) {
     interruption.signal.throwIfAborted();
     const used = new Set();
@@ -85,20 +101,36 @@ try {
       interruption.signal.throwIfAborted();
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
+      const pageErrors = [];
+      page.on('pageerror', error => pageErrors.push(error.message));
       // These journeys exercise shared transport, never optional paid providers.
       await context.route('**/v1/**', route => route.fulfill({ status: 503, json: { source: 'unavailable', reason: 'acceptance_fixture' } }));
+      let result;
       try {
         console.log(`Running ${name}`);
         const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replaceAll(/http:\/\/127\.0\.0\.1:(?:5173|5180)/g, `http://127.0.0.1:${web}`);
-        const result = await eval(`(${source})`)(page);
+        result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page);
         if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
         report.results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
         console.log(`Passed ${name}`);
       } catch (error) {
         interruption.signal.throwIfAborted();
-        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack });
+        const diagnostics = await Promise.all(browser.contexts().flatMap(context => context.pages()).map(async active =>
+          active.evaluate(() => ({
+            url: location.href,
+            mode: document.querySelector('#canvas-host')?.dataset.multiplayer,
+            ready: document.querySelector('#canvas-host')?.dataset.playerReady,
+            appearance: document.querySelector('#canvas-host')?.dataset.playerAppearance,
+            assets: document.querySelector('#viewport')?.dataset.assetProgress,
+            town: document.querySelector('#multiplayer-status')?.textContent,
+            player: document.querySelector('#player-status')?.textContent,
+            connected: window.__riverMultiplayer?.().connected,
+          })).catch(() => null)));
+        report.results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, diagnostics, result });
         await page.screenshot({ path: join(root, `output/playwright/shared-${name}-failure.png`) }).catch(() => {});
-        console.error(`Failed ${name}: ${error.message}`); process.exitCode = 1;
+        console.error(`Failed ${name}: ${error.stack}`);
+        if (pageErrors.length) console.error('Browser errors:', pageErrors);
+        process.exitCode = 1;
       } finally {
         // Some older page-function harnesses create extra contexts. Close every
         // context before the next journey so a failed run cannot retain a peer.

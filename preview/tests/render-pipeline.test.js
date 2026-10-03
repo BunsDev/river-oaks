@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { createRenderPipeline } from '../src/render-pipeline.js';
 
-function fixture() {
+function fixture(options) {
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),color=new THREE.Color('#123456');
   const leaf=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshStandardMaterial());leaf.userData.aoExclude=true;scene.add(leaf);
   const renderer={capabilities:{maxSamples:4},getPixelRatio:()=>1,shadowMap:{autoUpdate:true,needsUpdate:true},autoClear:true,
     getClearColor:target=>target.copy(color),getClearAlpha:()=>1,setClearAlpha:()=>{},setClearColor:()=>{},setRenderTarget:()=>{},clear:()=>{},render:()=>{}};
-  const pipeline=createRenderPipeline(renderer,scene,camera);
+  const pipeline=createRenderPipeline(renderer,scene,camera,options);
   return {scene,leaf,renderer,pipeline};
 }
 
@@ -136,4 +136,15 @@ test('graphics quality scales the scene buffers while the canvas keeps native si
 test('initial rendering waits for viewport dimensions before using bloom mip buffers',()=>{
  const {renderer,pipeline}=fixture();let rendered=0;renderer.render=()=>rendered++;
  try {pipeline.setRenderScale(.6);pipeline.render(1/60);assert.equal(rendered,0);pipeline.resize(0,0,1);pipeline.render(1/60);assert.equal(rendered,0);}finally{pipeline.dispose();}
+});
+
+
+test('software acceptance can disable MSAA without changing normal rendering',()=>{
+  const normal=fixture(),software=fixture({samples:0});
+  try {
+    assert.equal(normal.pipeline.stats.samples,4);
+    assert.equal(software.pipeline.stats.samples,0);
+  } finally {
+    for(const {pipeline,leaf} of [normal,software]){pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
+  }
 });

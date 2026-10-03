@@ -81,7 +81,7 @@ After configuring the private environment and WorkOS URLs below, run from the re
 
 ```sh
 npm ci
-npm run build
+VITE_MULTIPLAYER=required npm run build
 npm start
 ```
 
@@ -142,6 +142,12 @@ Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previou
 
 The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
 
+The current Dockerfile builds the production default, which starts in single
+player. A shell variable passed to `docker build` does not change that frontend
+bundle. For a shared-town container, build the frontend with
+`VITE_MULTIPLAYER=required` in the build stage and configure WorkOS and Redis
+for the runtime environment.
+
 ```sh
 docker build -t river-oaks:local .
 docker volume create river-oaks-moderation
@@ -189,4 +195,6 @@ npm run dev
 
 Open `http://localhost:5173` consistently. Vite proxies authentication, multiplayer API requests, moderation requests, and WebSocket connections to Node on port `8787`. Don't substitute `127.0.0.1` in the browser because the origin and cookies must match. Vite's `/health` route belongs to the optional sidecar; check Node health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`, but development still requires WorkOS authentication. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+Local HTTP cookies omit `Secure`. This explicitly configured standalone server uses WorkOS; the default `npm run dev` flow described above uses loopback development identities instead. Run the automated server tests with `npm run test:server`; they don't replace a live WorkOS sign-in check.
+
+On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.

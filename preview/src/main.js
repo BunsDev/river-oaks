@@ -68,6 +68,10 @@ setupSidebar();
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Shared browser acceptance on CPU-only runners still draws the real scene,
+// but leaves material/lighting quality to full-render and WebGL smoke runs.
+// Never enable this profile in a production build.
+const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
@@ -85,8 +89,12 @@ if (!playModeStorage) try { playModeStorage = window.sessionStorage; } catch { /
 const playMode = activePlayMode(playModeStorage, location.search);
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
+let lastSoftwareDraw = -Infinity;
 
 const scene = new THREE.Scene();
+// Keep geometry, skinning and simulation intact without compiling every PBR
+// material variant on two CPU-bound browser clients.
+if (softwareAcceptance) scene.overrideMaterial = new THREE.MeshNormalMaterial();
 // Street level only: the range reaches the fogged context ground while keeping
 // depth precision for the 6 cm walking near plane.
 const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 6000);
@@ -115,22 +123,22 @@ function initializeRenderer() {
   renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.info.autoReset = false;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !softwareAcceptance;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
   configureMaterials(renderer);
-  pipeline = createRenderPipeline(renderer, scene, camera);
+  pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4 });
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
   // The storefront probe renders fixed-size cube faces outside the composer,
   // so quality changes never invalidate it.
   quality = createQualityControl({ apply({ scale, occlusion }) {
-    pipeline.setRenderScale(scale);
-    if (debugOcclusion !== 'off') pipeline.setOcclusion(occlusion);
+    pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
+    if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
-  loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
+  if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();
@@ -607,7 +615,7 @@ function render(now) {
   liftSparkles?.update(delta,force?.spell,playerAvatar?.getWandTip(wandTip),camera,drawingSize.y);
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
-  if (storefrontReflections && environmentAssets) {
+  if (!softwareAcceptance && storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
     else {
@@ -617,8 +625,13 @@ function render(now) {
     storefrontReflections.update(now, reflectionPosition);
   }
   debugTools?.update(now);
-  renderer.info.reset();
-  pipeline.render(delta);
+  // llvmpipe draws both browser clients on CPU. Keep simulation and transport
+  // updating every frame while capping only acceptance-profile draw work.
+  if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+    lastSoftwareDraw = now;
+    renderer.info.reset();
+    pipeline.render(delta);
+  }
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);

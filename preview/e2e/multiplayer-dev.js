@@ -5,11 +5,13 @@ async page => {
   const check = (condition, message) => { if (!condition) throw new Error(message);checks.push(message); };
   const errors = [];
   const second = await (await page.context().browser().newContext()).newPage();
-  for (const tab of [page, second]) { tab.on('pageerror', error => errors.push(error.message)); await tab.setViewportSize({ width: 1280, height: 800 }); }
+  for (const tab of [page, second]) { tab.setDefaultNavigationTimeout(60000); tab.on('pageerror', error => errors.push(error.message)); await tab.setViewportSize({ width: 1280, height: 800 }); }
   const join = async tab => {
-    await tab.goto('http://127.0.0.1:5173/?motion-debug=1');
+    await tab.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});
     await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.multiplayer === 'joined', null, { timeout: 60000 });
     await tab.waitForFunction(() => window.__riverMultiplayer?.().connected, null, { timeout: 60000 });
+    await tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true'
+      && document.querySelector('.character-picker')?.checkVisibility(), null, { timeout: 60000 });
   };
   try {
   await join(page); await join(second);
