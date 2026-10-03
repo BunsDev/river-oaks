@@ -22,8 +22,9 @@ export async function deviceSignIn({ clientId, openBrowser, fetcher = fetch, sle
       signal: AbortSignal.timeout(15_000) });
     const data = await response.json();
     if (response.ok) {
-      if (!METHODS.has(data.authentication_method) || typeof data.refresh_token !== 'string')
-        throw new Error('Sign in with GitHub to play.');
+      if (!METHODS.has(data.authentication_method))
+        throw new Error('This sign-in used another provider. Choose GitHub in a private browser window, then try again.');
+      if (typeof data.refresh_token !== 'string') throw new Error('WorkOS did not return a desktop session.');
       return data.refresh_token;
     }
     if (data.error === 'slow_down') interval++;
