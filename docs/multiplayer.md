@@ -87,6 +87,60 @@ npm start
 
 `npm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
 
+## Session verification boundary
+
+Both auth stores use `server/workos-session.js` for issuer syntax and rejection
+logging. With the locked WorkOS Node SDK 10.14.0, `Session.authenticate()`
+unseals the cookie and verifies the JWT against the remote JWKS selected from
+the **configured** application client ID (`/sso/jwks/<clientId>`). It does not
+select a key endpoint from the token's `iss` or `client_id`. The SDK does not
+check issuer equality unless an issuer option is configured; River Oaks checks
+WorkOS issuer syntax and requires the signed `client_id` to equal its configured
+application after SDK authentication, alongside subject, session, email and
+expiry checks. A matching claim cannot make a foreign signing key trusted.
+
+Keep both `https://api.workos.com` and `https://api.workos.com/`: WorkOS documents
+them in its [session token reference](https://workos.com/docs/reference/authkit/session-tokens)
+and [session guide](https://workos.com/docs/authkit/sessions). Dedicated application
+tokens can instead name the environment in the issuer path, so that path must
+not be compared to the dedicated application's client ID. These formats are
+compatibility checks, not independent proof of environment membership. The
+application-specific key lookup and signed client claim are both required.
+Deployments using a custom auth domain need an explicitly reviewed issuer policy.
+Preview isolation requires separate client IDs, cookie secrets and Redis namespaces;
+sharing production credentials does not create an isolated preview.
+
+`server/tests/workos-sdk-fixture.js` serves a local JWKS and code-exchange endpoint.
+The tests keep SDK key selection, HTTP key retrieval, sealing and signature
+verification real. Both stores reject a token with a valid foreign-environment
+issuer and the correct application claim when a different key signs it (even
+with the same key ID). They also reject trusted-key tokens with another client
+or an invalid issuer host. Redis cases exercise callback on a second node and
+verify rejected tokens leave no durable session or cookie records. Run:
+
+```bash
+node --test server/tests/auth.test.js server/tests/workos-session.test.js
+REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test.js
+```
+
+These are local cryptographic boundary tests, not proof of WorkOS's hosted key
+provisioning or a live sign-in. Repeat the custom-domain smoke checks above after
+promotion. On 2026-10-03, the current `sim.jev.works` deployment passed a
+native-browser smoke check: Continue with GitHub returned to the game and the
+same browser's `/auth/session` reported `authenticated: true`. Separate requests
+without cookies returned `{ authenticated: false }` from `/auth/session` (200)
+and rejected `POST /api/multiplayer/ticket` (401). This checks the existing live
+deployment; it does not attest deployment of this follow-up patch.
+
+Callback rejection logs contain fixed booleans, never token claims, cookies,
+authorization codes or user identities.
+
+The 20-minute one-use state lifetime accommodates email-code redirects. The
+1,000-entry cap is unchanged; abandoned attempts occupy slots until expiry,
+so longer retention reduces capacity during sustained abandoned-login traffic.
+Successful callbacks consume their state immediately. Capacity remains bounded
+and returns after expiry; this change does not add a login rate limiter.
+
 ## Configure WorkOS and private settings
 
 Configure the WorkOS environment whose credentials you'll use with these exact URLs:
