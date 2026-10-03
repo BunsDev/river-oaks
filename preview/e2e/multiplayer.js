@@ -45,7 +45,10 @@ async page => {
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.canGrantWishes===true),'Alice fixture retains server-issued wish permission after reconnect');
     const targets=await page.evaluate(()=>{
       const locals=window.__riverMultiplayer().snapshot.locals.filter(local=>!local.indoor&&!local.wish);
-      return locals.sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length).map(local=>local.id);
+      const player=window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice');
+      const nearest=[...locals].sort((a,b)=>Math.hypot(a.position[0]-player.position[0],a.position[1]-player.position[1])-Math.hypot(b.position[0]-player.position[0],b.position[1]-player.position[1]));
+      const sparse=[...locals].sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length);
+      return [...new Set([...nearest.slice(0,3),...sparse].map(local=>local.id))];
     });
     let opened=false;
     for(const target of targets.slice(0,6)){
