@@ -42,6 +42,7 @@ async page => {
   await page.locator('.multiplayer-chat-form input').fill('Hello from the town');
   await page.locator('.multiplayer-chat-form button').click();
   await second.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
+  await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
   check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'A sent town message appears once for both players');
   await page.reload();
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
