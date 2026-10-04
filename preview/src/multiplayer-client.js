@@ -1,6 +1,7 @@
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
 import { createSocialUI } from './social-ui.js';
+import { createGroupsUI } from './groups-ui.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
@@ -60,9 +61,12 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     }
     return data;
   };
+  const socialRequest=(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,getMeetingPlaces,
-    request:(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
+    request:socialRequest,
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
+  const groups=createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
+    request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const displayPlayers=players=>{
     summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
     for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);}
@@ -123,7 +127,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
             if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);}
+            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups.refresh(true);}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;
           }else if(data.type==='result'){
@@ -187,6 +191,6 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();social.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();social.dispose();groups.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
   };
 }

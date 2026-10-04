@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { normalizeVercelRoute, vercelClientAddress } from '../vercel-routing.js';
 
 test('rewritten routes retain OAuth/socket parameters without accepting arbitrary paths', () => {
@@ -12,11 +13,22 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   for(const action of ['load','save','discard','apply'])assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/world-draft/${action}`),`/api/world-draft/${action}`);
   for (const action of ['list', 'add', 'remove']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/landmarks/${action}`), `/api/landmarks/${action}`);
   for (const action of ['list', 'request', 'accept', 'remove', 'messages', 'send', 'invite-world', 'invite-place']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/social/${action}&world=moon-garden`), `/api/social/${action}?world=moon-garden`);
+  for (const action of ['list','read','create','invite','accept','decline','leave','remove','send']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/groups/${action}&world=moon-garden`), `/api/groups/${action}?world=moon-garden`);
   for (const action of ['view','save']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/profile/${action}&world=moon-garden`), `/api/profile/${action}?world=moon-garden`);
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/../../.env'), '/not-found');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/login&_river_path=/auth/logout'), '/not-found');
   assert.equal(normalizeVercelRoute('/auth/session?_river_path=/auth/logout'), '/auth/session');
   assert.equal(normalizeVercelRoute('//%'), '/not-found');
+});
+
+test('Vercel rewrites every resident social and group action to the server entry',()=>{
+  const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
+  const rewrites=new Map(config.rewrites.map(item=>[item.source,item.destination]));
+  for(const scope of ['social','groups']) {
+    const actions=scope==='social'?['list','request','accept','remove','messages','send','invite-world','invite-place']
+      :['list','read','create','invite','accept','decline','leave','remove','send'];
+    for(const action of actions)assert.equal(rewrites.get(`/api/${scope}/${action}`),`/api/server?_river_path=/api/${scope}/${action}`);
+  }
 });
 
 test('only Vercel entry uses the platform-owned IP header and invalid values share a fail-closed bucket', () => {
