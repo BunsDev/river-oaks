@@ -8,6 +8,7 @@ import { createGameServer } from './app.js';
 import { createMemoryLandmarks } from './landmarks.js';
 import { createMemoryWorldCatalog } from './world-catalog.js';
 import { createWorldRouter } from './world-router.js';
+import { createMemorySocial } from './social.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 export function workosConfigured(env) {
@@ -40,7 +41,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   data.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
-  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog();
+  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog(),social=createMemorySocial();
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, onLogout })
@@ -55,7 +56,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
-      const game=createGameServer({auth:sharedAuth,world,landmarks:createMemoryLandmarks(),moderation,origin,staticRoot,
+      const game=createGameServer({auth:sharedAuth,world,landmarks:createMemoryLandmarks(),social,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
         moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),

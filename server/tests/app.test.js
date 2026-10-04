@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
 import { createMemoryLandmarks } from '../landmarks.js';
+import { createMemorySocial } from '../social.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t,{landmarks=createMemoryLandmarks(),worldId='river-oaks'}={}){
+async function fixture(t,{landmarks=createMemoryLandmarks(),social=createMemorySocial(),worldId='river-oaks'}={}){
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
   world.worldId=worldId;
-  const app=createGameServer({auth,world,landmarks,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
+  const app=createGameServer({auth,world,landmarks,social,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
@@ -79,4 +80,27 @@ test('landmark API saves the authenticated player pose privately and checks orig
   assert.equal((await (await request('bob','remove',{id:saved.landmark.id})).json()).removed,false);
   assert.deepEqual((await (await request('alice','list')).json()).landmarks,[saved.landmark]);
   assert.equal((await (await request('alice','remove',{id:saved.landmark.id})).json()).removed,true);
+});
+test('contacts require a meeting and acceptance before private messages',async t=>{
+  const {origin}=await fixture(t);
+  const post=(user,action,data={},headers={})=>fetch(origin+`/api/social/${action}`,{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json',...headers},body:JSON.stringify(data)});
+  assert.equal((await post('','list')).status,401);
+  assert.equal((await post('one','list',{}, {Origin:'https://evil.example'})).status,403);
+  assert.equal((await post('one','list',{}, {'X-CSRF-Token':'wrong'})).status,403);
+  assert.equal((await post('one','request',{peerId:'two'})).status,409);
+  const one=await connect(origin,(await (await ticket(origin,'one')).json()).ticket,'one');t.after(()=>one.ws.terminate());
+  assert.equal((await post('one','request',{peerId:'two'})).status,409);
+  const two=await connect(origin,(await (await ticket(origin,'two')).json()).ticket,'two');t.after(()=>two.ws.terminate());
+  assert.equal((await post('one','request',{peerId:'two'})).status,200);
+  assert.equal((await post('one','send',{peerId:'two',text:'Too early'})).status,409);
+  assert.equal((await post('one','accept',{peerId:'two'})).status,409);
+  const invitation=await (await post('two','list')).json();
+  assert.equal(invitation.contacts[0].direction,'incoming');
+  assert.equal((await post('two','accept',{peerId:'one'})).status,200);
+  assert.equal((await post('one','send',{peerId:'two',text:'Hello privately'})).status,200);
+  assert.equal((await post('three','messages',{peerId:'one'})).status,404);
+  const history=await (await post('two','messages',{peerId:'one'})).json();
+  assert.equal(history.messages[0].text,'Hello privately');
+  assert.equal((await post('two','remove',{peerId:'one'})).status,200);
+  assert.equal((await post('one','messages',{peerId:'two'})).status,404);
 });

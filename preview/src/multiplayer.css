@@ -17,5 +17,16 @@
 .multiplayer-chat-form { display: flex; gap: 6px; }
 .multiplayer-chat-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .multiplayer-chat-status { min-height: 1.4em; margin: 4px 0 0; }
+.multiplayer-social { margin: 16px 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.multiplayer-social h3, .multiplayer-social h4 { margin: 0 0 8px; font-size: 14px; }
+.multiplayer-social-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0; font-size: 12px; }
+.multiplayer-social-row span { flex: 1; overflow-wrap: anywhere; }
+.multiplayer-social-row small { opacity: .75; }
+.multiplayer-social-conversation { margin-top: 12px; }
+.multiplayer-social-history { min-height: 48px; max-height: 180px; overflow: auto; overflow-wrap: anywhere; }
+.multiplayer-social-history p { margin: 0 0 8px; }
+.multiplayer-social-form { display: flex; gap: 6px; }
+.multiplayer-social-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.multiplayer-social-status { min-height: 1.4em; }
 .remote-player-labels { pointer-events: none; position: absolute; inset: 0; overflow: hidden; z-index: 3; }
 .remote-player-label { position: absolute; top: 0; left: 0; padding: 4px 9px; border-radius: 20px; background: #372534d9; color: white; font-size: 12px; }

@@ -1,5 +1,6 @@
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
+import { createSocialUI } from './social-ui.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
@@ -55,6 +56,8 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     }
     return data;
   };
+  const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,
+    request:(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const displayPlayers=players=>{
     summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
     for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);}
@@ -63,6 +66,8 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       if(!row){
         row=element('div',null,'multiplayer-person');const name=element('span',player.name+(player.id===selfId?' (you)':''));row.append(name);rows.set(player.id,row);list.append(row);
         if(player.id!==selfId){
+          const invite=element('button','Add contact');invite.type='button';invite.setAttribute('aria-label',`Add ${player.name} as a contact`);
+          invite.addEventListener('click',()=>social.invite(player));row.append(invite);
           const report=element('button','Report');report.type='button';report.setAttribute('aria-label',`Report disruption by ${player.name}`);
           report.addEventListener('click',async()=>{report.disabled=true;try{const result=await command({type:'report',playerId:player.id,reason:'disruption'});notice.textContent=result.message;}catch(error){notice.textContent=error.message;}finally{report.disabled=false;}});row.append(report);
           if(moderator){const ban=element('button','Ban');ban.type='button';ban.addEventListener('click',async()=>{ban.disabled=true;try{await api('/api/moderation/ban',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:player.id,banned:true})});notice.textContent='Account removed from the town.';}catch(error){notice.textContent=error.message;ban.disabled=false;}});row.append(ban);}
@@ -110,7 +115,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
           if(data.type==='snapshot'){
             if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);}
+            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;
           }else if(data.type==='result'){
@@ -173,6 +178,6 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
       if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.yaw,altitude:pose.altitude}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();social.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
   };
 }

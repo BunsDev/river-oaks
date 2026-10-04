@@ -40,6 +40,18 @@ survives reconnects, logout, and server replacement through the town checkpoint.
 The town retains up to 4,096 account selections; older inactive selections are
 evicted as it fills. The solo-only invasion and auto visit are hidden, since
 each would diverge from the shared town.
+The People panel also has contacts and private messages. An invitation can be
+sent only to a player currently present in the same world; that player must
+accept before either can send a private message. Contacts and the latest 40
+messages per pair are stored outside world checkpoints, so they survive travel,
+reconnects, and Redis edge replacement. Removing a contact erases the message
+history and ends messaging. Contact and message writes are rate limited; each
+account can have up to 50 contact relationships, including pending invitations.
+The client checks for new invitations and messages every 10 seconds while its
+browser tab is visible and connected.
+Private messages are visible only to the two participants through authenticated,
+origin and CSRF checked requests.
+
 The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
