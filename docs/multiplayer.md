@@ -86,6 +86,11 @@ messages are bounded; writes are rate limited. Group membership never grants
 building, world publishing, or wish permissions. The client checks for group
 changes every 10 seconds while visible and connected.
 
+The People panel also offers **Wave** and **Bow**. These short gestures are
+validated by the shared world and shown on every nearby player's avatar. They
+expire after a few seconds, have a brief cooldown, and do not change building
+or wish permissions.
+
 The People panel lets each signed-in resident edit a short profile with a
 tagline, bio, pronouns, and up to eight interests. A profile is readable only
 by someone currently meeting that resident in a world or by an accepted

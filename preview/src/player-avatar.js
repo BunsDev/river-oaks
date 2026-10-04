@@ -95,7 +95,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     soloAppearance=permittedAppearance(userId,localStorage.getItem('river-oaks-character'));
     soloMovement=localStorage.getItem('river-oaks-beast-movement')==='beast';
   }catch{}
-  let appearance=soloAppearance,sharedName=null,sharedMovement='upright',movement='upright',loadedAppearance=null,portraitWanted=null;
+  let appearance=soloAppearance,sharedName=null,sharedMovement='upright',sharedGesture=null,movement='upright',loadedAppearance=null,portraitWanted=null;
   // Shared play: a choice the town has not confirmed yet, shown in the picker meanwhile.
   let wanted=null,sending=false,flushTimer=0,confirmedAt=-Infinity;
   const picker=panel.querySelector('.character-picker'),variantOption=picker.querySelector('[data-option=variant]'),variantList=picker.querySelector('[data-variants]');
@@ -291,10 +291,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       sharedMode=value;const crewAllowed=!value||owner;
       carriage.setEnabled(crewAllowed);panel.querySelector('.vehicle-garage').hidden=!crewAllowed;companionButton.hidden=!crewAllowed;companionStatus.hidden=!crewAllowed;
       clearTimeout(flushTimer);wanted=null;picker.removeAttribute('aria-busy');
-      appearance=value?defaultAppearanceFor(userId):soloAppearance;sharedName=null;sharedMovement='upright';syncPicker();load();
+      appearance=value?defaultAppearanceFor(userId):soloAppearance;sharedName=null;sharedMovement='upright';sharedGesture=null;syncPicker();load();
     },
     setSharedIdentity(player){
-      if(!player)return;
+      if(!player){sharedGesture=null;return;}
+      sharedGesture=player.gesture??null;
       sharedName=player.name;panel.querySelector('#player-name').textContent=sharedName;
       if(!applySharedPlayer(player))panel.querySelector('#player-description').textContent=sharedAppearance(appearance).description;
     },
@@ -347,7 +348,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
+        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){

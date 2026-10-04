@@ -30,7 +30,20 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   chatSend.type='submit';chatInput.disabled=chatSend.disabled=true;chatForm.append(chatInput,chatSend);
   const chatStatus=element('p',null,'multiplayer-chat-status');chatStatus.setAttribute('role','status');
   chatSection.append(chatTitle,chatHistory,chatForm,chatStatus);
-  panel.append(summary,list,notice,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
+  const gestures=element('section',null,'multiplayer-gestures');gestures.setAttribute('aria-label','Avatar gestures');
+  const gestureTitle=element('h3','Greet someone'),gestureControls=element('div',null,'multiplayer-gesture-controls'),gestureStatus=element('p');gestureStatus.setAttribute('role','status');
+  const gestureButtons=['wave','bow'].map(kind=>{
+    const button=element('button',kind==='wave'?'Wave':'Bow');button.type='button';button.disabled=true;
+    button.addEventListener('click',async()=>{
+      button.disabled=true;gestureStatus.textContent='';
+      try{const result=await command({type:'gesture',kind});gestureStatus.textContent=result.ok?`${button.textContent} shared with the town.`:result.message;}
+      catch(error){gestureStatus.textContent=error.message;}
+      finally{button.disabled=!connected;}
+    });
+    gestureControls.append(button);return button;
+  });
+  gestures.append(gestureTitle,gestureControls,gestureStatus);
+  panel.append(summary,list,notice,gestures,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID;
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
@@ -129,7 +142,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups.refresh(true);}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
-            chatInput.disabled=chatSend.disabled=false;
+            chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
             if(data.correction)onCorrection(data.correction);
             const request=pending.get(data.requestId);if(request){clearTimeout(request.timer);pending.delete(data.requestId);request.resolve(data);}
@@ -138,7 +151,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       });
       ws.addEventListener('close',event=>{
         clearTimeout(deadline);if(socket!==ws)return;
-        socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;clearPending();onPlayers([],selfId);
+        socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
         const terminal=[4000,4003,4009].includes(event.code);
