@@ -165,3 +165,19 @@ latency guarantee. The required 30-minute multi-region soak, client frame-time
 measurements, and function-recycle/writer-takeover load observations are still
 missing. Do not raise the 32-player room limit or claim global readiness from
 this result.
+
+## Command responsiveness follow-up — 4 October 2026
+
+The local WebSocket server now coalesces waiting movement poses, as the Redis
+gateway already did. A travel action remains between the newest pose sent
+before it and the newest pose sent after it. Both gateways acknowledge a
+successful travel immediately after the town accepts it, before preparing or
+reading the full snapshot for broadcast. The travel result includes the
+server-corrected player pose, so the caller can move promptly while the normal
+snapshot still reaches the room. Other commands retain their existing
+snapshot-before-result order.
+
+Transport tests hold a movement queue and a Redis broadcast read to verify
+these orderings. This addresses two avoidable sources of command delay found
+while investigating an intermittent CPU-rendered browser timeout. It does not
+establish hosted command latency or replace the multi-region soak above.

@@ -85,6 +85,40 @@ test('coalesces waiting poses without reordering them across travel', { timeout:
   assert.deepEqual(executed, [pose(0), pose(12), { type: 'travel', storeId: 'store' }, pose(24)]);
 });
 
+test('durable travel acknowledgment does not wait for the broadcast read', { timeout: 3000 }, async t => {
+  const identity = { userId: 'resident', sessionId: 'session', name: 'Resident', expiresAt: Date.now() + 60000 };
+  let active,committed=false,releaseRead;
+  const blockedRead=new Promise(resolve=>{releaseRead=resolve;});
+  const room={
+    async request(command){
+      if(command.type==='join')active={userId:identity.userId,connectionId:command.connectionId};
+      if(command.type==='command'){committed=true;return {ok:true,player:{id:identity.userId,position:[1,2,3]}};}
+      return {ok:true};
+    },
+    async read(){if(committed)await blockedRead;return {snapshot:{type:'snapshot',players:[]},connections:active?[active]:[]};},
+    async tick(){return null;},
+  };
+  const auth={authenticate:async()=>identity,handle:async()=>false};
+  const security={allow:async()=>true,isBanned:async()=>false,consumeTicket:async()=>true};
+  const app=createDistributedServer({auth,security,room,waitlist:approvedWaitlist,origin:'http://localhost'});
+  t.after(async()=>{releaseRead();await app.close();});
+  await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+  const ws=new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`,{headers:{Origin:'http://localhost'}});
+  t.after(()=>ws.terminate());
+  await once(ws,'message');
+  ws.send(JSON.stringify({type:'travel',storeId:'store',requestId:'travel'}));
+  let timeout;
+  const acknowledged=await Promise.race([
+    once(ws,'message').then(([raw])=>JSON.parse(raw)),
+    new Promise(resolve=>{timeout=setTimeout(()=>resolve(null),1000);}),
+  ]);
+  clearTimeout(timeout);
+  assert.deepEqual(acknowledged,{type:'result',requestId:'travel',ok:true,player:{id:identity.userId,position:[1,2,3]}});
+  releaseRead();
+  const [raw]=await once(ws,'message');
+  assert.equal(JSON.parse(raw).type,'snapshot');
+});
+
 test('compresses public snapshots without leaking private view fields and bounds inflated frames', { timeout: 3000 }, async t => {
   const identity = { userId: 'resident', sessionId: 'private-session', csrfToken: 'private-csrf', name: 'Resident', expiresAt: Date.now() + 60000 };
   let active;
