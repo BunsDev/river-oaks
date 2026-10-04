@@ -60,6 +60,7 @@ import './retro-finish.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
 import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
+import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
@@ -914,7 +915,15 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       return {id:person.id, position:[...local.position], renderedPosition:person.holder.getWorldPosition(new THREE.Vector3()).toArray(), role:person.role??local.role, task:person.task?{kind:person.task.kind,docked:person.task.docked,contacts:person.task.contacts}:null, seated:Boolean(person.seatedFeet), feet:person.seatedFeet?.map(leg=>({error:leg.error,target:leg.target.toArray(),actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()})), attention:person.attention, workTime:person.workTime,
         reachable:withinTalkingReach(local,walking.getPose(),(point,eyeHeight)=>walking.canSee(point,eyeHeight)), visible:visibleInScene(person.holder), screen:[rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2], depth:point.z};
     });
-  window.__riverWishes = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))]
+  // Every resident and shop figure with an id, and its model.
+  const peopleModels = () => [...(localsGroup?.userData.models ?? []).map(person => ({ id:person.userData.localId,holder:person,model:person.userData.avatar?.object })), ...(storePeople?.userData.figures ?? []).filter(person=>person.id).map(person=>({id:person.id,holder:person.holder,model:person.avatar.model}))];
+  // Each person's baked face recipe (resident-face.js) and any face morphs left unbaked.
+  window.__riverFaces = () => peopleModels().map(({ id, model }) => {
+    let idleMorphs = 0;
+    model?.traverse(item => { for (const name of Object.keys(item.morphTargetDictionary ?? {})) if (FACE_SHAPES.includes(name)) idleMorphs++; });
+    return { id, face: model?.userData.face ?? null, idleMorphs };
+  });
+  window.__riverWishes = () => peopleModels()
     .map(person => {
       const local=community.state.locals.find(local=>local.id===person.id),effect=person.holder.getObjectByName('Wish effects');
       let skin=0,clothes=0;

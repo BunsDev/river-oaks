@@ -6,6 +6,7 @@ import { SuspendedStationGroup } from './suspended-station-group.js';
 import { createWishVisual } from './wish-effects.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
+import { residentFaceFor } from './resident-face.js';
 import { staffWorkPose, blendStationPose } from './store-work.js';
 import { createFootPlacement, applyLegIK } from './foot-placement.js';
 import { createWorkerTask } from './work-props.js';
@@ -101,7 +102,9 @@ export function buildStorePeople(rooms, { reducedMotion = false, sharedPopulatio
       loads.push(loadAvatarTemplate(profile).then(async source => {
         if (disposed) return;
         const targetHeight = profile.startsWith('woman') ? 1.64 + (seed % 4) * 0.025 : 1.75 + (seed % 4) * 0.03;
-        const avatar = instantiateAvatar(source, { targetHeight, id: spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex) });
+        // Staff and guests get their own faces, like street residents; mannequins keep the rig's.
+        const id = spot.role === 'mannequin' ? undefined : storePersonId(room, spotIndex);
+        const avatar = instantiateAvatar(source, { targetHeight, id, face: id === undefined ? undefined : residentFaceFor(id) });
         dress(avatar, spot, room.theme, seed);
         if(spot.role!=='mannequin') {
           await applyResidentHairstyle(avatar,storePersonId(room,spotIndex),profile,loadAvatarTemplate);

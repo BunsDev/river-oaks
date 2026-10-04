@@ -79,6 +79,18 @@ async page=>{
   check(result.blinkMeshes.length>0&&result.states[0].hits.every(name=>/^brown(?:\.\d+)?$/.test(name))&&result.states[1].hits.every(name=>/^(young|middleage|old)_/.test(name)),`${profile}: eyelids still open and close over the baked eyes`);
   check(pivotDrift.every(drift=>drift<.0003)&&baked.pivotGap.every(gap=>gap<.01),`${profile}: gaze pivots moved with the baked eyeballs (eyes shifted ${eyeShift.map(v=>(v*1000).toFixed(1)).join(' / ')} mm, pivot offset unchanged within ${(Math.max(...pivotDrift)*1000).toFixed(2)} mm)`);
  }
+ // Shop staff and guests (store-people.js) get faces too; mannequins keep the rig's.
+ // motion-debug exposes the people hooks (window.__riverWishes) in development.
+ await page.goto('http://127.0.0.1:5173/?motion-debug=1');
+ await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:120000});
+ const shop=await page.evaluate(()=>{
+  const people=window.__riverFaces().filter(person=>String(person.id).startsWith('store-')),recipes=people.map(person=>person.face?JSON.stringify(person.face):null).filter(Boolean);
+  return {figures:people.length,withFace:recipes.length,distinct:new Set(recipes).size,idleMorphs:people.reduce((sum,person)=>sum+person.idleMorphs,0)};
+ });
+ results.push({shop});
+ check(shop.figures>100&&shop.withFace===shop.figures,`every shop staff member and guest has a face (${shop.withFace} of ${shop.figures})`);
+ check(shop.distinct>=shop.withFace*.95,`shop faces are distinct (${shop.distinct} recipes for ${shop.withFace} people)`);
+ check(shop.idleMorphs===0,'no shop figure keeps idle face morphs');
  check(!errors.length,'No uncaught resident face errors');await page.goto('about:blank');
  return {checks,results,errors,scope:'Per rig: neutral vs baked portrait pixels (head only, visible, deterministic), morph stripping, eyelid ray probes, gaze pivot vs baked eye centre.'};
 }
