@@ -21,6 +21,7 @@ export default defineConfig({
       '/api/world-data': townHttp,
       '/api/landmarks': townHttp,
       '/api/social': townHttp,
+      '/api/groups': townHttp,
       '/api/profile': townHttp,
       '/api/moderation': townHttp,
       '/api/waitlist': townHttp,

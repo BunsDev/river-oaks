@@ -23,7 +23,8 @@ Run `REDIS_URL=redis://127.0.0.1:<test-port> npm run audit:multiplayer`
 against an isolated test Redis instance to regenerate
 [`data/reports/multiplayer-performance-audit.json`](../data/reports/multiplayer-performance-audit.json).
 The probe uses the shipped district and vegetation, Node 24.18.1 on an Apple M3
-Max, synthetic accounts, real loopback WebSockets, and no Redis or WorkOS.
+Max, synthetic accounts, real loopback WebSockets, local Redis for the Redis
+tiers, and no live WorkOS.
 Each world sample has 80 initial 50 ms simulation steps followed by 80 more
 steps after routes have warmed. Transport samples 1, 8, 16, and 32 clients for
 2 seconds each after a 500 ms settling period. Redis samples 20 room ticks per
@@ -90,6 +91,17 @@ performance. Room state and public view are compressed before Redis storage.
   instead of silently discarding state.
 - Authenticated user IDs gate building, saved designs, and wish granting on
   the server. UI hiding is a convenience, not the permission boundary.
+- Cross-world groups add one group-list request per visible connected client
+  every 10 seconds, plus one selected-group read. At 32 clients with a group
+  open, this is about 6.4 requests per second before invitations and messages.
+  The existing audit did not include group traffic; include it in the hosted
+  multi-region soak before claiming global capacity.
+- The per-IP API access window allows 1,000 requests per minute. This leaves
+  room for the existing 10-second social poll and the group list/read poll from
+  32 players behind one address (about 576 requests per minute), while
+  authenticated group and contact mutations retain their tighter per-account
+  write limits. A 16-account shared-IP integration test covers the previous
+  120-request ceiling; wider NAT and hosted load remain unmeasured.
 
 ## Verification and next release gates
 

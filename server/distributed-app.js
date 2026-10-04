@@ -9,6 +9,7 @@ import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../pr
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
+import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
@@ -19,19 +20,19 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, groups = null, profiles = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
   const connections = new Map(), moderatorIds = new Set(moderators);
-  const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
+  const localAccess = createRateLimiter(1000, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
   const send = (ws, value, options) => sendFrame(ws, value, options);
   const access = req => {
     const ip = address(req);
-    return localAccess(ip) && security.allow('access', ip, 120, 60_000);
+    return localAccess(ip) && security.allow('access', ip, 1000, 60_000);
   };
   const authorized = async (req, res) => {
     const identity = await auth.authenticate(req);
@@ -179,6 +180,13 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           },
           allowWrite: id => security.allow('social', id, 12, 60_000) });
         return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/groups/') && req.method === 'POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000)});
+        return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;

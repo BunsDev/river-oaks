@@ -91,9 +91,20 @@ async page => {
     await page.waitForFunction(()=>document.querySelector('.wish-card')?.getAttribute('aria-busy')==='false' && !document.querySelector('#wish-choice')?.disabled);
     await page.locator('#wish-choice').press('Escape');
     await page.locator('#community-dialogue').waitFor({state:'hidden'});
+    // Resident travel can leave the player beside an indoor wall. Return to
+    // the outdoor arrival before checking movement in the shared town.
+    const placesToggle=page.locator('#panel-toggle');
+    if(await placesToggle.getAttribute('aria-expanded')==='false')await placesToggle.click();
+    await page.locator('[data-section=explore-section]').click();
+    await page.locator('#places-list li[data-place-id="arrival"] button[aria-label^="Go to"]').click();
+    await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Arrival"));
+    const arrival=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
+    await other.waitForFunction(position=>{
+      const player=window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice');
+      return player && Math.hypot(player.position[0]-position[0],player.position[1]-position[1])<1.5;
+    },arrival);
     const closePanel=page.getByRole('button',{name:'Close exploration panel',exact:true});
     if(await closePanel.isVisible())await closePanel.click();
-    // A nearby shop or tree can block one direction after the wish journey.
     // Try each walking direction and require the peer to observe real travel.
     let walked=false;
     await page.bringToFront();await page.locator('#canvas-host').focus();

@@ -6,6 +6,7 @@ import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
+import { createRedisGroups } from './groups.js';
 import { createRedisProfiles } from './profiles.js';
 import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
 import { createRedisPresence } from './presence.js';
@@ -15,7 +16,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),presence=createRedisPresence({redis,prefix});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
     const existing=await storedAppearance.get(userId);
@@ -51,7 +52,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,presence,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,groups,profiles,presence,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

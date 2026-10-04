@@ -73,6 +73,19 @@ The client checks for new invitations and messages every 10 seconds while its
 browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,
 origin and CSRF checked requests.
+
+Residents can also create private groups from the People panel. The owner invites
+accepted contacts, and each person accepts or declines before joining. Members
+can chat across worlds and reconnects; nonmembers and pending invitees cannot
+read the conversation. Owners can cancel invitations, remove members, or disband
+the group, and members can leave. Redis keeps group membership and the latest
+60 messages outside room checkpoints, so separate server instances see the same
+group. Each account can belong to or be invited to at most 12 groups, with up
+to 32 members and pending invitations per group. Names, descriptions, and
+messages are bounded; writes are rate limited. Group membership never grants
+building, world publishing, or wish permissions. The client checks for group
+changes every 10 seconds while visible and connected.
+
 The People panel lets each signed-in resident edit a short profile with a
 tagline, bio, pronouns, and up to eight interests. A profile is readable only
 by someone currently meeting that resident in a world or by an accepted

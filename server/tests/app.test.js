@@ -8,17 +8,18 @@ import { createGameServer } from '../app.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
+import { createMemoryGroups } from '../groups.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
 async function fixture(t,options={},staticRoot='/nonexistent'){
   const waitlist=options?.isApproved?options:options.waitlist??approvedWaitlist;
-  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),worldId='river-oaks'}=options?.isApproved?{}:options;
+  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),groups=createMemoryGroups(),worldId='river-oaks'}=options?.isApproved?{}:options;
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
   world.worldId=worldId;
-  const app=createGameServer({auth,world,landmarks,social,waitlist,origin:'http://127.0.0.1',staticRoot});
+  const app=createGameServer({auth,world,landmarks,social,groups,waitlist,origin:'http://127.0.0.1',staticRoot});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
@@ -162,4 +163,31 @@ test('contacts require a meeting and acceptance before private messages',async t
   assert.equal(history.messages[0].text,'Hello privately');
   assert.equal((await post('two','remove',{peerId:'one'})).status,200);
   assert.equal((await post('one','messages',{peerId:'two'})).status,404);
+});
+test('authenticated group routes persist across members and reject outsiders',async t=>{
+  const {origin}=await fixture(t);
+  const post=(user,scope,action,data={})=>fetch(origin+`/api/${scope}/${action}`,{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:JSON.stringify(data)});
+  const created=await post('one','groups','create',{name:'Neighborhood Circle'});
+  assert.equal(created.status,200);const {id:groupId}=(await created.json()).group;
+  assert.equal((await post('one','groups','invite',{groupId,peerId:'two'})).status,409);
+  const one=await connect(origin,(await (await ticket(origin,'one')).json()).ticket,'one');t.after(()=>one.ws.terminate());
+  const two=await connect(origin,(await (await ticket(origin,'two')).json()).ticket,'two');t.after(()=>two.ws.terminate());
+  assert.equal((await post('one','social','request',{peerId:'two'})).status,200);
+  assert.equal((await post('two','social','accept',{peerId:'one'})).status,200);
+  assert.equal((await post('one','groups','invite',{groupId,peerId:'two'})).status,200);
+  assert.equal((await post('two','groups','read',{groupId})).status,404);
+  assert.equal((await post('two','groups','accept',{groupId})).status,200);
+  assert.equal((await post('two','groups','send',{groupId,text:'Hello across the world'})).status,200);
+  assert.equal((await post('three','groups','read',{groupId})).status,404);
+  assert.equal((await post('','groups','list')).status,401);
+  assert.equal((await post('one','groups','list')).status,200);
+  assert.equal((await post('one','groups','read',{groupId})).status,200);
+});
+test('residents behind one address can poll contacts and groups without hitting the access limit',async t=>{
+  const {origin}=await fixture(t);
+  for(let cycle=0;cycle<6;cycle++)for(let account=0;account<16;account++)for(const scope of ['social','groups']) {
+    const response=await fetch(`${origin}/api/${scope}/list`,{method:'POST',headers:{Origin:'http://127.0.0.1',
+      Cookie:`session=resident${account}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:'{}'});
+    assert.equal(response.status,200,`${scope} poll for resident ${account} in cycle ${cycle}`);
+  }
 });
