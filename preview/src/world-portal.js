@@ -24,7 +24,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const publish=element('button','Publish world');publish.type='submit';
   form.append(createTitle,titleLabel,idLabel,descriptionLabel,publish);
   section.append(heading,intro,status,list,form);host.prepend(section);
-  let worlds=[];
+  let worlds=[],loaded=false,loading=null,lastAttempt=0;
   const currentId=()=>{try{return validateWorldId(new URLSearchParams(location.search).get('world')??DEFAULT_WORLD_ID);}catch{return DEFAULT_WORLD_ID;}};
   const render=()=>{
     list.replaceChildren();
@@ -40,14 +40,21 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     }
     form.hidden=!getCanPublish();
   };
-  async function load() {
-    try {
-      const response=await fetch('/api/worlds',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(5000)});
-      if(!response.ok || !response.headers.get('content-type')?.includes('application/json'))throw new Error('World directory unavailable.');
-      const data=await response.json();
-      if(!Array.isArray(data.worlds))throw new Error('World directory unavailable.');
-      worlds=data.worlds;render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
-    } catch {status.textContent='World directory unavailable right now.';}
+  function load() {
+    if(loaded)return Promise.resolve();
+    if(loading)return loading;
+    if(Date.now()-lastAttempt<5000)return Promise.resolve();
+    lastAttempt=Date.now();
+    loading=(async()=>{
+      try {
+        const response=await fetch('/api/worlds',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok || !response.headers.get('content-type')?.includes('application/json'))throw new Error('World directory unavailable.');
+        const data=await response.json();
+        if(!Array.isArray(data.worlds))throw new Error('World directory unavailable.');
+        worlds=data.worlds;loaded=true;render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
+      } catch {status.textContent='World directory unavailable right now.';}
+    })().finally(()=>{loading=null;});
+    return loading;
   }
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(!getCanPublish())return;

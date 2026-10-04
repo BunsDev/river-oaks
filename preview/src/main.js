@@ -304,6 +304,7 @@ function startMultiplayer() {
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
+      if (self) void worldPortal?.load();
       buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
       if (self?.canBuild) buildControls?.loadInventory(selfId);
       if (self && landmarkAccountId !== selfId) {

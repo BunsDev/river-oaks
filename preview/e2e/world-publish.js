@@ -26,12 +26,19 @@ async page=>{
   check(new URL(page.url()).searchParams.get('world')==='moon-garden','The published world has a shareable URL');
   const otherContext=await page.context().browser().newContext();
   try {
+    let directoryRequests=0;
+    await otherContext.route('**/api/worlds',route=>++directoryRequests===1
+      ? route.fulfill({status:503,json:{error:'temporarily_unavailable'}})
+      : route.continue());
     const guest=await otherContext.newPage();guest.on('pageerror',error=>errors.push(error.message));
     await guest.goto(`${origin}/?world=moon-garden&play=multiplayer&motion-debug=1`,{waitUntil:'commit'});
     await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:30000}).catch(async()=>{
       throw new Error(`Guest join: ${JSON.stringify(await guest.evaluate(()=>({url:location.href,multiplayer:document.querySelector('#canvas-host')?.dataset.multiplayer,ready:document.querySelector('#canvas-host')?.dataset.playerReady,connected:window.__riverMultiplayer?.().connected,status:document.querySelector('#multiplayer-status')?.textContent,assets:document.querySelector('#viewport')?.dataset.assetProgress,session:document.querySelector('.multiplayer-gate')?.textContent.slice(0,300)})))}`);
     });
-    await guest.waitForFunction(()=>document.querySelector('#view-name')?.textContent==='Moon Garden');
+    await guest.waitForFunction(()=>document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000}).catch(async()=>{
+      throw new Error(`Guest world directory: ${await guest.locator('.world-portal-status').textContent()}`);
+    });
+    check(directoryRequests>=2,'The directory recovers after a temporary failure');
     check(await guest.locator('.world-portal-form').evaluate(node=>node.hidden),'A guest has no publishing form');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
