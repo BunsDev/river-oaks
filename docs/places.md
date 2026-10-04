@@ -25,6 +25,8 @@ its own places without code changes.
   beside a named place after the district loads; `?at=<x>,<north>[,<yaw>]`
   restores an exact position inside the district. A link outside the district
   is ignored; a link into a building is refused, never nudged through a wall.
+  Copied links include the current `world` ID and `play=multiplayer`, so a place
+  in a published creator world opens that same shared world for the recipient.
 
 ## How a teleport lands
 

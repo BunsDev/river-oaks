@@ -78,6 +78,7 @@ const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SO
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
+let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
@@ -308,6 +309,7 @@ function startMultiplayer() {
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
       if (self) void worldPortal?.load();
+      if (self) void arriveAtSharedLink();
       buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
       if (self?.canBuild) buildControls?.loadInventory(selfId);
       if (self && landmarkAccountId !== selfId) {
@@ -536,6 +538,19 @@ async function goToPlace(place) {
   return { ok: true };
 }
 
+async function arriveAtSharedLink() {
+  if(!pendingSharedPlace||sharedPlaceInFlight||!world||!multiplayer?.connected)return;
+  const linked=pendingSharedPlace;sharedPlaceInFlight=true;
+  try {
+    const result=await goToPlace(linked);
+    if(result?.ok===false && (!multiplayer.connected||result.message==='Reconnect before taking an action.'))return;
+    pendingSharedPlace=null;
+    placesUI?.say(result?.ok===false?(result.message??`${linked.name} is not reachable right now.`):`You're at ${linked.name}`,result?.ok===false?'error':'ok');
+  } catch(error) {
+    pendingSharedPlace=null;placesUI?.say(error.message??'The shared place is unavailable.','error');
+  } finally {sharedPlaceInFlight=false;}
+}
+
 function arriveAtStore(store) {
   if (multiplayer) return multiplayer.travel({storeId:store.id,mode:'arrive'});
   const environment=walkingEnvironment();
@@ -618,8 +633,11 @@ async function loadWorld() {
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
     const linked = destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {
-      const result = await goToPlace(linked);
-      placesUI?.say(result?.ok === false ? (result.message ?? `${linked.name} is not reachable right now.`) : `You're at ${linked.name}`, result?.ok === false ? 'error' : 'ok');
+      if(multiplayer){pendingSharedPlace=linked;void arriveAtSharedLink();}
+      else {
+        const result = await goToPlace(linked);
+        placesUI?.say(result?.ok === false ? (result.message ?? `${linked.name} is not reachable right now.`) : `You're at ${linked.name}`, result?.ok === false ? 'error' : 'ok');
+      }
     }
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
