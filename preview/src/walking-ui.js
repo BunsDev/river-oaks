@@ -10,7 +10,7 @@ import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounte
 import { sharedRoomSummary } from './shared-population.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {}, getSharedPopulation = () => false }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {}, getSharedPopulation = () => false, canEnterStore = () => true }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
@@ -90,7 +90,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     const room = currentRoom();
     if (room) { const store = stores.find(item => item.id === room.storeId); if (store) { clear(); onLeave?.(store); } return; }
     const store = doorway();
-    if (store) { clear(); onEnter?.(store); }
+    if (store && canEnterStore(store)) { clear(); onEnter?.(store); }
   };
   $('#walking-enter').addEventListener('click', stepThrough);
   // The on-screen pad stays wherever the visitor last left it across visits.
@@ -300,7 +300,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title strong').textContent = transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = Boolean(transport)||(!room && !door);
-      enter.textContent = room ? 'Step outside · F' : door ? `Step inside ${door.name} · F` : '';
+      enter.disabled = Boolean(door && !canEnterStore(door));
+      enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Jevica only` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && (getSharedPopulation()?sharedRoomSummary(room):room.summary);

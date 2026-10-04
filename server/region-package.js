@@ -52,9 +52,10 @@ export function compileRegionPackage(region,title) {
       || !finite(building.size[0],4,80) || !finite(building.size[1],4,80) || !finite(building.size[2],5.5,50)
       || !finite(building.yaw_deg,-180,180) || !['retail','residential','parking'].includes(building.kind))fail();
     if(building.interior!==undefined && (building.size[0]<6 || building.size[1]<6
-      || !keys(building.interior,['name','category','entrance']) || !label(building.interior.name)
+      || !keys(building.interior,['name','category','entrance','access']) || !label(building.interior.name)
       || !(building.kind==='retail' && VENUE_CATEGORIES.includes(building.interior.category)
         || building.kind==='residential' && building.interior.category==='home')
+      || (building.interior.access!==undefined && (building.interior.category!=='home' || !['public','owner'].includes(building.interior.access)))
       || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)))fail();
     const [x,y]=building.center,[width,depth,height]=building.size,angle=building.yaw_deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
     const ring=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]]
@@ -73,7 +74,8 @@ export function compileRegionPackage(region,title) {
     if(!inBounds(outside,0.5))fail();
     const facade=[...door,altitude(door)],visit=[...outside,altitude(outside)];
     return [{id:`venue-${building.id}`,name:building.interior.name,category:building.interior.category,
-      position:[...building.center],facade,outward,visit,building_id:building.id}];
+      position:[...building.center],facade,outward,visit,building_id:building.id,
+      ...(building.interior.access==='owner'?{access:'owner'}:{})}];
   });
   const trees=region.trees.map(tree=>{
     if(!keys(tree,['id','position','height_m','crown_radius_m']) || !position(tree.position)

@@ -22,6 +22,7 @@ async page=>{
   await page.locator('.region-editor-fields label').filter({hasText:'Interior name'}).locator('input').press('Tab');
   await clickMap(.75,.3);
   await page.locator('.region-editor-fields label').filter({hasText:'Walk-in space'}).locator('select').selectOption('home');
+  await page.locator('.region-editor-fields label').filter({hasText:'Home access'}).locator('select').selectOption('owner');
   await page.locator('.region-editor-fields label').filter({hasText:'Interior name'}).locator('input').fill('Moon House');
   await page.locator('.region-editor-fields label').filter({hasText:'Interior name'}).locator('input').press('Tab');
   await page.locator('.region-editor-tools button[data-tool=tree]').click();
@@ -69,7 +70,7 @@ async page=>{
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===2&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
-  check(authored.world.stores.length===2&&authored.world.stores.some(store=>store.name==='Moon Gallery')&&authored.world.stores.some(store=>store.name==='Moon House'&&store.category==='home'),'The region package publishes a walk-in venue and home');
+  check(authored.world.stores.length===2&&authored.world.stores.some(store=>store.name==='Moon Gallery')&&authored.world.stores.some(store=>store.name==='Moon House'&&store.category==='home'&&store.access==='owner'),'The region package publishes a walk-in venue and Jevica-only home');
   check((await page.locator('#stores-count').textContent())==='2','Both creator interiors appear in the world directory');
   await page.locator('#enter-destination').click();
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-1');
@@ -150,10 +151,12 @@ async page=>{
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
     await guest.locator('[data-section=explore-section]').click();
     await guest.locator('#store-category').selectOption('Homes');
-    await guest.waitForTimeout(1100);
-    await guest.locator('#enter-destination').click();
-    await guest.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
-    check(true,'A guest can enter the furnished home without build authority');
+    check(await guest.locator('#enter-destination').isDisabled(),'The directory labels and disables Jevica-only home entry for guests');
+    check((await guest.locator('#enter-destination').textContent())==='Jevica-only home','A guest sees who may enter the home');
+    await guest.locator('#visit-destination').click();
+    await guest.waitForFunction(()=>document.querySelector('#walking-enter')?.textContent.includes('Jevica only'));
+    check(await guest.locator('#walking-enter').isDisabled(),'The doorway also blocks guest entry');
+    check((await guest.locator('#walking-hud').getAttribute('data-inside'))!=='venue-building-2','The guest remains outside');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
     await guest.waitForFunction(()=>[...document.querySelectorAll('.world-portal-list li')]

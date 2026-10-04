@@ -32,6 +32,8 @@ test('creator packages reject unsafe geometry, identifiers, and unbounded input'
     {...sample,buildings:[{...sample.buildings[0],kind:'parking',interior:{name:'No Room',category:'art',entrance:'south'}}]},
     {...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,interior:{name:'Wrong Kind',category:'art',entrance:'south'}}:building)},
     {...sample,buildings:[{...sample.buildings[0],interior:{name:'Wrong Kind',category:'home',entrance:'south'}}]},
+    {...sample,buildings:[{...sample.buildings[0],interior:{name:'Wrong Access',category:'art',entrance:'south',access:'owner'}}]},
+    {...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,interior:{name:'Wrong Access',category:'home',entrance:'south',access:'friends'}}:building)},
     {...sample,trees:[{...sample.trees[0],id:sample.roads[0].id}]},
     {...sample,places:[]},
     {...sample,script:'alert(1)'},
@@ -94,6 +96,37 @@ test('an authored home becomes a furnished social room without granting guests b
   const left=shared.command('guest',{type:'travel',storeId:world.stores[0].id,mode:'leave'});
   assert.equal(left.ok,true);
   assert.equal(environment.roomAt(left.player.position[0],-left.player.position[1]),null);
+});
+
+test('Jevica-only homes block guest travel and walking while preserving public homes',()=>{
+  const interior={name:'Moon House',category:'home',entrance:'south',access:'owner'};
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,interior}:building)};
+  const world=compileRegionPackage(region,'Moon Garden'),store=world.stores[0];
+  assert.equal(store.access,'owner');
+  assert.deepEqual(editableRegionFromWorld(world).buildings[2].interior,interior);
+  const environment=createWalkingEnvironment(world),room=environment.rooms[0];
+  let time=1000;
+  const shared=createSharedWorld(world,{worldId:'moon-garden',now:()=>time,isAdmin:id=>id==='jevica'});
+  shared.join({userId:'guest',name:'Guest'});
+  shared.join({userId:'jevica',name:'Jevica'});
+  const local=shared.snapshot().locals.find(person=>person.storeId===store.id);
+  assert.ok(local);
+  assert.equal(shared.command('guest',{type:'travel',localId:local.id}).error,'private_home');
+  assert.equal(shared.command('guest',{type:'travel',storeId:store.id,mode:'enter'}).error,'private_home');
+  assert.equal(shared.command('guest',{type:'travel',storeId:store.id,mode:'arrive'}).ok,true);
+  const outside=shared.snapshot().players.find(player=>player.id==='guest').position;
+  const [east,north]=room.toWorld(0,0.5);
+  time+=1000;
+  const crossed=shared.command('guest',{type:'pose',position:[east,north,environment.groundAt(east,-north)],yaw:0,altitude:0});
+  assert.equal(crossed.error,'private_home');
+  assert.deepEqual(shared.snapshot().players.find(player=>player.id==='guest').position,outside);
+  assert.equal(shared.command('jevica',{type:'travel',storeId:store.id,mode:'enter'}).ok,true);
+  const publicRegion={...region,buildings:region.buildings.map((building,index)=>index===2?{...building,interior:{...interior,access:'public'}}:building)};
+  const publicWorld=compileRegionPackage(publicRegion,'Public Moon Garden');
+  assert.equal(publicWorld.stores[0].access,undefined);
+  const publicShared=createSharedWorld(publicWorld,{worldId:'public-garden',isAdmin:()=>false});
+  publicShared.join({userId:'guest',name:'Guest'});
+  assert.equal(publicShared.command('guest',{type:'travel',storeId:publicWorld.stores[0].id,mode:'enter'}).ok,true);
 });
 
 test('a live region revision can add and later remove an authored venue',()=>{
