@@ -30,19 +30,30 @@ async page => {
     if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
     await page.locator('[data-section=community-section]').click();
     if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
-    await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
-    await page.locator('#community-dialogue').waitFor({state:'visible'});await page.locator('#community-close').click();
+    // A resident standing somewhere Jevica cannot reach is rightly declined ("There
+    // isn't a clear place to meet …"). Residents keep walking, so give them a moment
+    // and ask again; any other reason fails at once.
+    for(let attempt=1;;attempt++){
+      await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
+      if(await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000}).then(()=>true,()=>false))break;
+      const notice=(await page.locator('.encounter-notice').first().textContent().catch(()=>''))??'';
+      if(!/clear place to meet/.test(notice)||attempt>=10)throw new Error(`${id}: Meet a local did not open a conversation after ${attempt} tries (${notice||'no notice'})`);
+      await page.waitForTimeout(2000);
+    }
+    await page.locator('#community-close').click();
     await page.locator('#panel-toggle').click();await page.waitForTimeout(500);
     await leaveCourtesyRadius(id);
     // Residents keep walking, so follow this one as a player would: turn toward
     // them with the arrow keys and run to them, until they are walking, on screen
     // and comfortably inside the 4.5 m talking reach. Then click straight away.
+    // onScreen also needs the click point to land on the 3D view, not on a panel
+    // over it (the play dock covers the right side of a 1440 px window).
     const ready=()=>page.evaluate(id=>{
       const p=JSON.parse(document.querySelector('#community-life-status').dataset.residents).find(p=>p.id===id);
       const v=JSON.parse(document.querySelector('#walking-hud').dataset.position);
       const mesh=window.__riverPeople('spine_03').find(person=>person.id===id);
       const distance=Math.hypot(v[0]-p.position[0],v[2]+p.position[1]),[x,y]=mesh?.screen??[-1,-1];
-      return {walking:p.speed>0.2&&p.status==='walking',distance,x,onScreen:Boolean(mesh)&&mesh.depth>-1&&mesh.depth<1&&x>200&&x<1240&&y>100&&y<900,inReach:Boolean(mesh?.visible&&mesh.reachable)&&distance<=4};
+      return {walking:p.speed>0.2&&p.status==='walking',distance,x,onScreen:Boolean(mesh)&&mesh.depth>-1&&mesh.depth<1&&x>200&&x<1240&&y>100&&y<900&&Boolean(document.elementFromPoint(x,y)?.closest('#canvas-host')),inReach:Boolean(mesh?.visible&&mesh.reachable)&&distance<=4};
     },id);
     const hold=async(keys,ms)=>{await page.locator('#canvas-host').focus();for(const key of keys)await page.keyboard.down(key);await page.waitForTimeout(ms);for(const key of [...keys].reverse())await page.keyboard.up(key);};
     for(const started=Date.now();;) {
