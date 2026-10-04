@@ -34,6 +34,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
     if (isBanned(identity.userId)) {json(res,403,{error:'This account cannot join the town.'});return null;}
+    if (!(await waitlist.isApproved(identity.userId))) {json(res,403,{error:'waitlist_approval_required'});return null;}
     if (req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],identity.csrfToken)) {json(res,403,{error:'Invalid request origin or security token.'});return null;}
     return identity;
   };
@@ -108,7 +109,6 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
-        if (!(await waitlist.isApproved(identity.userId))) return json(res,403,{error:'waitlist_approval_required'});
         if (!issuing(identity.userId)) return json(res,429,{error:'Please wait before reconnecting.'});
         for(const [key,value] of tickets)if(value.until<=now())tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});

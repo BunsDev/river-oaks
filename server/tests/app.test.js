@@ -83,6 +83,8 @@ test('pending waitlist approval blocks tickets and revocation closes an active p
  const waitlist={...approvedWaitlist,async isApproved(userId){return approved.has(userId);}};
  const {origin,app}=await fixture(t,waitlist);
  assert.equal((await ticket(origin,'one')).status,403);
+ const pendingSocial=await fetch(origin+'/api/social/list',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:'session=one','X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:'{}'});
+ assert.equal(pendingSocial.status,403,'new world APIs also require approval');
  approved.add('one');
  const token=(await (await ticket(origin,'one')).json()).ticket;
  const {ws}=await connect(origin,token,'one');t.after(()=>ws.terminate());

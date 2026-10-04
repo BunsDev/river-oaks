@@ -37,6 +37,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
     if (await security.isBanned(identity.userId)) { json(res, 403, { error: 'This account cannot join the town.' }); return null; }
+    if (!(await waitlist.isApproved(identity.userId))) { json(res, 403, { error: 'waitlist_approval_required' }); return null; }
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'Invalid request origin or security token.' }); return null;
     }
@@ -134,7 +135,6 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
-        if (!(await waitlist.isApproved(identity.userId))) return json(res, 403, { error: 'waitlist_approval_required' });
         const ticket = await security.issueTicket(identity, worldId);
         return ticket ? json(res, 200, { ticket, worldId, protocolVersion: WORLD_PROTOCOL_VERSION, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });

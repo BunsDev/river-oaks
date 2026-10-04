@@ -14,7 +14,7 @@ import { createRedisSocial } from '../social.js';
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
 const live = { skip: !process.env.REDIS_URL, timeout: 30_000 };
-async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId] } = {}) {
+async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId], waitlist = approvedWaitlist } = {}) {
   const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });
   redis.on('error', () => {});
   const prefix = `{river-oaks:test:${randomUUID()}}`;
@@ -39,7 +39,7 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
     };
     const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
-    const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), origin, moderators: ['moderator'] });
+    const app = createDistributedServer({ auth, security, room, waitlist, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     nodes.push({ app, room, security, prefix:roomPrefix, url: `http://127.0.0.1:${app.server.address().port}` });
   }
@@ -85,6 +85,13 @@ function client(node, user, ticket, worldId = null, protocol = null) {
   } };
 }
 const closed = ws => new Promise(resolve => ws.once('close', (code) => resolve(code)));
+
+test('pending accounts cannot use distributed world APIs', live, async t => {
+  const waitlist = { ...approvedWaitlist, isApproved: async id => id === 'alice' };
+  const { nodes, post } = await fixture(t, { waitlist });
+  assert.equal((await post(nodes[0], 'bob', '/api/multiplayer/ticket?world=river-oaks')).status, 403);
+  assert.equal((await post(nodes[0], 'bob', '/api/social/list?world=river-oaks', {})).status, 403);
+});
 
 test('distributed HTTP authentication and CSRF gates reject invalid tickets', live, async t => {
   const f = await fixture(t), [a] = f.nodes;
