@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const modes = process.argv.slice(2);
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
-const supportedModes=['development','development-world','development-solo','required'];
+const supportedModes=['development','development-world','development-solo','development-publish','required'];
 if (modes.some(mode => !supportedModes.includes(mode))) throw new Error(`Choose ${supportedModes.join(', ')} shared play.`);
 const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : supportedModes, rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
@@ -98,7 +98,7 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?['multiplayer-dev']:mode==='development-world'?['world-boundary']:mode==='development-solo'?['solo-admin']:['multiplayer','multiplayer-gate'];
+    const names=mode==='development'?['multiplayer-dev']:mode==='development-world'?['world-boundary']:mode==='development-solo'?['solo-admin']:mode==='development-publish'?['world-publish']:['multiplayer','multiplayer-gate'];
     for (const name of names) {
       interruption.signal.throwIfAborted();
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();

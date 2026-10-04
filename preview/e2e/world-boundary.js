@@ -11,8 +11,11 @@ async page => {
   try {
     const other=await otherContext.newPage();other.on('pageerror',error=>errors.push(error.message));
     await other.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
+    await other.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer?.().snapshot?.worldId==='river-oaks');
+    check(true,'An unqualified link still joins the original River Oaks world');
+    await other.goto(`${origin}/?world=unknown-world&motion-debug=1`,{waitUntil:'commit'});
     await other.waitForFunction(()=>document.querySelector('#multiplayer-status')?.textContent==='World not found.');
-    check(!await other.evaluate(()=>window.__riverMultiplayer?.().connected),'A URL for another world cannot join this server');
+    check(!await other.evaluate(()=>window.__riverMultiplayer?.().connected),'An unknown world cannot join this server');
     check(await other.locator('.multiplayer-gate').isVisible(),'A missing world shows a clear connection gate');
   } finally {await otherContext.close();}
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);
