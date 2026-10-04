@@ -8,6 +8,7 @@ import { createDistributedServer } from '../distributed-app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { createRedisLandmarks } from '../landmarks.js';
+import { createRedisSocial } from '../social.js';
 
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
@@ -37,7 +38,7 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
     };
     const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
-    const app = createDistributedServer({ auth, security, room, landmarks:createRedisLandmarks({redis,prefix}), origin, moderators: ['moderator'] });
+    const app = createDistributedServer({ auth, security, room, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     nodes.push({ app, room, security, prefix:roomPrefix, url: `http://127.0.0.1:${app.server.address().port}` });
   }
@@ -152,6 +153,24 @@ test('landmarks stay private and durable across distributed edge instances', liv
   assert.equal((await (await f.post(a,'bob','/api/landmarks/remove',{id:saved.landmark.id})).json()).removed,false);
   assert.equal((await (await f.post(b,'alice','/api/landmarks/remove',{id:saved.landmark.id})).json()).removed,true);
   assert.deepEqual((await (await f.post(a,'alice','/api/landmarks/list')).json()).landmarks,[]);
+});
+test('accepted contacts and private history survive distributed edge replacement',live,async t=>{
+  const f=await fixture(t),[a,b]=f.nodes;
+  assert.equal((await f.post(a,'alice','/api/social/request',{peerId:'bob'})).status,409);
+  const alice=client(a,'alice',await f.ticket(a,'alice'));
+  const bob=client(b,'bob',await f.ticket(b,'bob'));
+  t.after(()=>{alice.ws.terminate();bob.ws.terminate();});
+  await alice.waitFor(message=>message.selfId==='alice');
+  await bob.waitFor(message=>message.selfId==='bob');
+  assert.equal((await f.post(a,'alice','/api/social/request',{peerId:'bob'})).status,200);
+  assert.equal((await f.post(b,'alice','/api/social/send',{peerId:'bob',text:'Too soon'})).status,409);
+  assert.equal((await f.post(b,'bob','/api/social/accept',{peerId:'alice'})).status,200);
+  assert.equal((await f.post(a,'alice','/api/social/send',{peerId:'bob',text:'Across instances'})).status,200);
+  assert.equal((await f.post(a,'moderator','/api/social/messages',{peerId:'alice'})).status,404);
+  const history=await (await f.post(b,'bob','/api/social/messages',{peerId:'alice'})).json();
+  assert.equal(history.messages[0].text,'Across instances');
+  assert.equal((await f.post(b,'bob','/api/social/remove',{peerId:'alice'})).status,200);
+  assert.equal((await f.post(a,'alice','/api/social/messages',{peerId:'bob'})).status,404);
 });
 
 test('different server instances share tickets, players, wishes, and durable acknowledgments', live, async t => {

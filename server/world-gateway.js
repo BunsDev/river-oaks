@@ -5,12 +5,13 @@ import { createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor } from './world-keys.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
+import { createRedisSocial } from './social.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,origin,configuredWorldId=DEFAULT_WORLD_ID,
   moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix});
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix});
   const worlds=new Map(),pending=new Map();
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   let closed=false;
@@ -27,7 +28,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,orig
         worldData:data,
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,security,landmarks,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,security,landmarks,social,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         onBan:async userId=>{
           await Promise.all([...worlds.values()].filter(world=>world.id!==id).map(world=>world.game.disconnectUser(userId)));

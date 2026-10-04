@@ -19,6 +19,7 @@ export default defineConfig({
       '/api/worlds': townHttp,
       '/api/world-data': townHttp,
       '/api/landmarks': townHttp,
+      '/api/social': townHttp,
       '/api/moderation': townHttp,
       '/multiplayer': { target: `ws://127.0.0.1:${townPort}`, ws: true },
       '/v1': 'http://127.0.0.1:8765',

@@ -78,6 +78,12 @@
       "source": "/api/landmarks/remove",
       "destination": "/api/server?_river_path=/api/landmarks/remove"
     },
+    { "source": "/api/social/list", "destination": "/api/server?_river_path=/api/social/list" },
+    { "source": "/api/social/request", "destination": "/api/server?_river_path=/api/social/request" },
+    { "source": "/api/social/accept", "destination": "/api/server?_river_path=/api/social/accept" },
+    { "source": "/api/social/remove", "destination": "/api/server?_river_path=/api/social/remove" },
+    { "source": "/api/social/messages", "destination": "/api/server?_river_path=/api/social/messages" },
+    { "source": "/api/social/send", "destination": "/api/server?_river_path=/api/social/send" },
     {
       "source": "/multiplayer",
       "destination": "/api/server?_river_path=/multiplayer"

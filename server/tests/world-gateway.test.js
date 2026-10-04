@@ -75,6 +75,11 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   const visitor=await open('moon-garden','guest');
   const visitorInRiver=await open('river-oaks','guest');
   assert.equal(visitor.snapshot.players.some(player=>player.id==='guest-user'),true);
+  assert.equal((await post('guest','/api/social/request?world=moon-garden',{peerId:admin})).status,200);
+  assert.equal((await post('admin','/api/social/accept?world=river-oaks',{peerId:'guest-user'})).status,200);
+  assert.equal((await post('guest','/api/social/send?world=moon-garden',{peerId:admin,text:'See you in River Oaks'})).status,200);
+  const crossWorldMessages=await (await post('admin','/api/social/messages?world=river-oaks',{peerId:'guest-user'})).json();
+  assert.equal(crossWorldMessages.messages[0].text,'See you in River Oaks');
   const closed=Promise.all([visitor,visitorInRiver].map(({socket})=>new Promise(resolve=>socket.once('close',resolve))));
   assert.equal((await post('admin','/api/moderation/ban',{userId:'guest-user',banned:true})).status,200);
   await closed;

@@ -2,7 +2,8 @@ import { isIP } from 'node:net';
 
 const paths = new Set(['/auth/login', '/auth/callback', '/auth/session', '/auth/logout',
   '/api/multiplayer/ticket', '/api/worlds', '/api/world-data', '/api/moderation/ban',
-  '/api/landmarks/list', '/api/landmarks/add', '/api/landmarks/remove', '/multiplayer']);
+  '/api/landmarks/list', '/api/landmarks/add', '/api/landmarks/remove',
+  '/api/social/list', '/api/social/request', '/api/social/accept', '/api/social/remove', '/api/social/messages', '/api/social/send', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {
     const url = new URL(raw, 'http://localhost');
