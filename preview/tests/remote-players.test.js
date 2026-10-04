@@ -12,8 +12,8 @@ function load(url, context, nextLoad) {
     export async function loadResidentAvatar(_index, _id, profile, options) {
       globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
-      const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId;
-      return { object, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, dispose() {} };
+      const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId; object.userData.suspends = 0;
+      return { object, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() {} };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
   if (url.endsWith('/flight-vehicles.js')) return { format: 'module', shortCircuit: true, source: "import * as THREE from 'three'; export function createFlightVehicle() { return { object: new THREE.Group(), dispose() {} }; }" };
@@ -65,6 +65,21 @@ test('remote ascent and descent retain hover; climbing forward uses horizontal f
       assert.deepEqual(climb.map(frame => frame.flightSpeed), level.map(frame => frame.flightSpeed));
     }
   } finally { globalThis.document = previousDocument; }
+});
+
+test('a culled peer suspends its avatar clock before it reappears',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  try{
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),players=createRemotePlayers(scene,new Element());
+    players.sync([{id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    const rig=scene.children[0].children[0];
+    camera.position.set(200,0,0);players.update(0,camera);
+    assert.equal(rig.userData.suspends,1);
+    camera.position.set(0,0,0);players.update(500,camera);
+    assert.equal(rig.userData.frames.length,1,'the avatar resumes from its suspended clock');
+    players.dispose();
+  }finally{globalThis.document=previousDocument;}
 });
 
 test('failed remote look keeps the loaded rig and retries after a bounded delay',async()=>{

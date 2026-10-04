@@ -181,3 +181,9 @@ Transport tests hold a movement queue and a Redis broadcast read to verify
 these orderings. This addresses two avoidable sources of command delay found
 while investigating an intermittent CPU-rendered browser timeout. It does not
 establish hosted command latency or replace the multi-region soak above.
+
+A subsequent CPU-rendered run exposed a separate Wave visibility issue:
+gesture motion froze whenever a visible frame exceeded 250 ms. Gesture updates
+now use a bounded frame step even on a slow visible frame. Avatars paused by
+distance culling explicitly suspend their gesture clocks, so reappearance
+still resumes from the last displayed pose.
