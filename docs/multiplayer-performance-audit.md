@@ -13,7 +13,9 @@ probes with no connection errors, and the full Redis-backed server suite passed
 with a local Redis container. This is **local functional readiness**, not a
 global capacity sign-off. A single Redis writer, one `iad1` region, cold
 route-planning pauses, and the absence of long-running multi-region measurements
-are the remaining capacity risks.
+are the remaining capacity risks. The 4 October navigation follow-up below
+measures the cold route pause below 200 ms locally; hosted headroom remains
+unverified.
 
 ## Repeatable measurements
 
@@ -104,8 +106,8 @@ snapshot latency, missed ticks, CPU, memory, Redis operation latency and
 checkpoint size, outbound compressed bytes, and client frame time on desktop
 and mobile. Exercise a writer lease takeover, function recycle, one slow
 client, and concurrent build/wish/chat/movement commands. Set a target from
-those measurements and address the cold route-planning pause before expanding
-capacity. No such hosted soak or multi-region client run was available in
+those measurements and confirm the cold route-planning margin under hosted
+load before expanding capacity. No such hosted soak or multi-region client run was available in
 this audit, so global readiness remains unverified.
 
 ## Navigation follow-up — 3 October 2026
@@ -123,3 +125,31 @@ The same 160-step single-player reproduction's worst step fell from 872 ms to
 464 ms. These are machine-specific observations, and transport gaps vary with
 host load. The cold route pause still exceeds the 200 ms room tick target;
 this optimization does not satisfy the hosted, multi-region release gate above.
+
+## Navigation follow-up — 4 October 2026
+
+A CPU profile showed repeated collision checks on both directions of each
+pedestrian grid edge and nine vegetation-bucket lookups for every route sample.
+The planner now reuses a checked edge when A* reaches its other endpoint, and
+each trunk is indexed into the grid cells touched by its clearance radius.
+The same 5 cm segment sampling, terrain checks, road rules, and obstacle
+clearance remain in place. Navigation and walking tests cover routes around
+walls, public-stop reachability, and trunk clearance across bucket boundaries.
+
+Three focused 160-step shared-world runs on the same M3 Max had worst cold
+steps of **121–133 ms**, down from **483 ms** before these changes and
+**240–255 ms** after edge reuse alone. The refreshed [machine-readable
+audit](../data/reports/multiplayer-performance-audit.json) used a local Redis 7
+container. With 98 shared NPCs and 1, 8, and 32 synthetic players, its worst
+measured initial steps were **131, 139, and 139 ms** respectively, with zero
+steps over 200 ms. The 32-player Redis room admitted all players; its warm
+tick p95 was **11.41 ms** and maximum **12.33 ms**, with no tick over 200 ms.
+The cold one-player Redis tier's maximum tick was **139.33 ms**. Loopback
+transport admitted 32 WebSockets without errors and had a **223 ms** p95
+snapshot receive gap over its two-second window.
+
+These are local short-window measurements on a busy workstation, not a hosted
+latency guarantee. The required 30-minute multi-region soak, client frame-time
+measurements, and function-recycle/writer-takeover load observations are still
+missing. Do not raise the 32-player room limit or claim global readiness from
+this result.

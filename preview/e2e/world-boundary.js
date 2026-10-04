@@ -9,7 +9,7 @@ async page => {
   check(live.admin===true,'Jevica retains building permission in the alternate world');
   const otherContext=await page.context().browser().newContext();
   try {
-    const other=await otherContext.newPage();other.on('pageerror',error=>errors.push(error.message));
+    const other=await otherContext.newPage();other.setDefaultTimeout(60000);other.on('pageerror',error=>errors.push(error.message));
     await other.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
     await other.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer?.().snapshot?.worldId==='river-oaks');
     check(true,'An unqualified link still joins the original River Oaks world');

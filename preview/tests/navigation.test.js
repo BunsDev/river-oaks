@@ -37,6 +37,16 @@ test('avoids interpreted trunks', () => {
   checkRoute(nav,nav.route([-4,0],[4,0]),[-4,0],[4,0]);
 });
 
+test('trunk clearance holds across negative and positive grid boundaries', () => {
+  const nav=createResidentNavigation({...world,collisionPolygons:[],vegetation:{branch_supports:[
+    {position:[-4.05,3.95,0],height_m:20},
+  ]}});
+  for(const point of [[-4.6,3.95],[-3.5,3.95],[-4.05,4.5],[-4.05,3.4]])
+    assert.equal(nav.free(point),false,`trunk clearance leaked at ${point}`);
+  assert.equal(nav.free([-5,3.95]),true);
+  assert.equal(nav.free([-4.05,5]),true);
+});
+
 test('shipped district has reachable public stops and bounded routes', () => {
   const data=JSON.parse(fs.readFileSync('preview/public/data/district.json'));
   data.vegetation=JSON.parse(fs.readFileSync('preview/public/data/district-vegetation.json'));

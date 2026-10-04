@@ -31,8 +31,8 @@ function worldProbe(sharedPopulation,players) {
   const encoded=Buffer.from(JSON.stringify(world.snapshot()));
   const durable=Buffer.from(JSON.stringify(world.checkpoint()));
   return {players,npcs:world.snapshot().locals.length,snapshotBytes:encoded.length,snapshotDeflateLevel1Bytes:deflateRawSync(encoded,{level:1}).length,
-    checkpointBytes:durable.length,stepP95Ms:quantile(step,.95),stepOver50Ms:step.filter(ms=>ms>50).length,
-    steadyStepP95Ms:quantile(steadyStep,.95),steadyStepOver50Ms:steadyStep.filter(ms=>ms>50).length,
+    checkpointBytes:durable.length,stepP95Ms:quantile(step,.95),stepMaxMs:quantile(step,1),stepOver50Ms:step.filter(ms=>ms>50).length,stepOver200Ms:step.filter(ms=>ms>200).length,
+    steadyStepP95Ms:quantile(steadyStep,.95),steadyStepMaxMs:quantile(steadyStep,1),steadyStepOver50Ms:steadyStep.filter(ms=>ms>50).length,
     snapshotP95Ms:quantile(snapshot,.95),checkpointP95Ms:quantile(checkpoint,.95)};
 }
 async function transportProbe(players,durationMs) {
