@@ -74,6 +74,11 @@ The Places panel keeps up to 50 private landmarks per account in shared play.
 Their positions come from the server's current player pose, and Redis stores
 them outside the town checkpoint so reconnects and new server instances retain
 them. Solo landmarks remain in browser storage.
+The Worlds directory shows an aggregate visitor count for each published world
+and refreshes while the directory is visible. Redis updates each count in the
+same fenced commit as the room; the count expires after 30 seconds if its room
+stops updating. Listing worlds reads only these small count keys, not room
+checkpoints or player identities.
 
 Only Jevica's two configured WorkOS owner accounts can grant wishes or use
 Build & decorate, including saved designs. In shared play, the server checks the

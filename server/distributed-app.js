@@ -19,7 +19,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -91,7 +91,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
       }
       if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
-        return json(res, 200, { worlds: await worldCatalog.list() });
+        return json(res, 200, { worlds: await worldDirectory() });
       }
       if (path === '/api/worlds' && req.method === 'POST' && worldCatalog) {
         const identity = await authorized(req, res); if (!identity) return;

@@ -2,7 +2,7 @@ import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
 import { createRedisWorldCatalog } from './world-catalog.js';
-import { roomPrefixFor, accountPrefixFor } from './world-keys.js';
+import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
@@ -16,6 +16,15 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix});
   const worlds=new Map(),pending=new Map();
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
+  const worldDirectory=async()=>{
+    const entries=await catalog.list();
+    const counts=await Promise.all(entries.map(entry=>redis.get(populationKeyFor(namespace,entry.id))));
+    return entries.map((entry,index)=>{
+      const visitors=counts[index]===null?0:Number(counts[index]);
+      if(!Number.isSafeInteger(visitors)||visitors<0||visitors>4096)throw new Error('Invalid world population');
+      return {...entry,visitors};
+    });
+  };
   let closed=false;
   async function worldFor(id) {
     if(closed)return null;
@@ -32,7 +41,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
