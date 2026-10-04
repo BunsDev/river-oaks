@@ -1,7 +1,13 @@
 /** Shared HTTP behavior for local and Redis backed resident relationships. */
-export async function socialAction({ action, identity, social, readBody, visiblePlayer, inviteWorld, allowWrite }) {
+export async function socialAction({ action, identity, social, presence, readBody, visiblePlayer, inviteWorld, allowWrite }) {
   if (!social) return { status: 503, value: { error: 'Contacts are unavailable.' } };
-  if (action === 'list') return { status: 200, value: { contacts: await social.list(identity.userId) } };
+  if (action === 'list') {
+    const contacts = await social.list(identity.userId);
+    if (!presence) return { status: 200, value: { contacts } };
+    const locations = await presence.getMany(contacts.filter(item => item.status === 'accepted').map(item => item.peer.id));
+    return { status: 200, value: { contacts: contacts.map(item => item.status === 'accepted'
+      ? { ...item, presence: locations.get(item.peer.id) ?? null } : item) } };
+  }
   let data;
   try { data = await readBody(); } catch { return { status: 400, value: { error: 'Invalid contact request.' } }; }
   if (!data || typeof data.peerId !== 'string' || !data.peerId.length || data.peerId.length > 160 || data.peerId === identity.userId) {

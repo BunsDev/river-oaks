@@ -56,6 +56,13 @@ connected. The server records the sender's room as a private message, and the
 recipient can choose its world link to travel there. The sender cannot supply
 a destination in the request. World invitations share the 40-message history
 and write limit; they do not grant building or wish permissions.
+Accepted contacts also see whether a resident is online and can follow a link
+to their current world without waiting for an invitation. The contact list
+exposes the world name and ID, never the resident's exact position. Pending
+contacts and other accounts receive no presence data. A newer connection wins
+when someone changes worlds; cleanup from an older socket cannot erase it.
+Presence is cleared on disconnect and expires after 90 seconds without a
+heartbeat, including when a server disappears without a clean disconnect.
 The client checks for new invitations and messages every 10 seconds while its
 browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,

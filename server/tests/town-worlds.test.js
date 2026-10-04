@@ -91,3 +91,57 @@ test('a configured alternate world exposes the bundled geography without a catal
   assert.equal((await fetch(origin+'/api/waitlist/status')).status,401);
   assert.equal((await fetch(origin+'/api/world-data?world=missing')).status,404);
 });
+
+test('accepted contacts see a current world across joins and old socket cleanup',async t=>{
+  const port=await freePort(),origin=`http://127.0.0.1:${port}`;
+  const temporary=await mkdtemp(join(tmpdir(),'river-oaks-contact-worlds-'));
+  const town=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',
+    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json')},devAuth:'local',staticRoot:null});
+  await new Promise(resolve=>town.server.listen(port,'127.0.0.1',resolve));
+  t.after(async()=>{await town.close();await rm(temporary,{recursive:true,force:true});});
+  const session=async()=>{
+    const response=await fetch(origin+'/auth/session');
+    return {identity:await response.json(),cookie:response.headers.get('set-cookie').split(';')[0]};
+  };
+  const owner=await session(),guest=await session();
+  const post=(account,path,data={})=>fetch(origin+path,{method:'POST',headers:{Origin:origin,Cookie:account.cookie,
+    'X-CSRF-Token':account.identity.csrfToken,'Content-Type':'application/json'},body:JSON.stringify(data)});
+  assert.equal((await post(owner,'/api/worlds',{id:'moon-garden',title:'Moon Garden',region})).status,201);
+  const sockets=[];
+  t.after(()=>{for(const socket of sockets)socket.terminate();});
+  const joinWorld=async(account,worldId)=>{
+    const ticketResponse=await post(account,`/api/multiplayer/ticket?world=${worldId}`);
+    assert.equal(ticketResponse.status,200);
+    const {ticket}=await ticketResponse.json();
+    const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,
+      {headers:{Origin:origin,Cookie:account.cookie}});
+    sockets.push(socket);
+    const snapshot=await new Promise((resolve,reject)=>{
+      socket.once('error',reject);
+      socket.on('message',raw=>{const message=JSON.parse(raw);if(message.type==='snapshot')resolve(message);});
+    });
+    assert.equal(snapshot.worldId,worldId);
+    return socket;
+  };
+  const ownerRiver=await joinWorld(owner,'river-oaks');
+  await joinWorld(guest,'river-oaks');
+  assert.equal((await post(owner,'/api/social/request?world=river-oaks',{peerId:guest.identity.user.id})).status,200);
+  assert.equal((await post(guest,'/api/social/accept?world=river-oaks',{peerId:owner.identity.user.id})).status,200);
+  const current=async()=>{
+    const response=await post(guest,'/api/social/list?world=river-oaks');
+    assert.equal(response.status,200);
+    return (await response.json()).contacts.find(item=>item.peer.id===owner.identity.user.id)?.presence;
+  };
+  assert.deepEqual(await current(),{worldId:'river-oaks',title:'River Oaks District'});
+  const ownerGarden=await joinWorld(owner,'moon-garden');
+  const olderClosed=new Promise(resolve=>ownerRiver.once('close',resolve));
+  ownerRiver.close();await olderClosed;
+  assert.deepEqual(await current(),{worldId:'moon-garden',title:'Moon Garden'});
+  const newerClosed=new Promise(resolve=>ownerGarden.once('close',resolve));
+  ownerGarden.close();await newerClosed;
+  const deadline=Date.now()+3000;
+  while(await current()){
+    if(Date.now()>deadline)assert.fail('Disconnected contact remained online');
+    await new Promise(resolve=>setTimeout(resolve,20));
+  }
+});

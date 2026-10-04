@@ -8,13 +8,14 @@ import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
 import { createRedisProfiles } from './profiles.js';
 import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
+import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
   moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix});
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),presence=createRedisPresence({redis,prefix});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
     const existing=await storedAppearance.get(userId);
@@ -50,7 +51,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,presence,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

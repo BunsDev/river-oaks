@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve, sep, extname } from 'node:path';
 import { stat, realpath } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
@@ -18,7 +18,7 @@ import { profileAction } from './profile-api.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, avatarPreferences = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -42,6 +42,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     for (const [key,ticket] of tickets) if (ticket.identity.userId===id) tickets.delete(key);
     clearTimeout(departures.get(id)); departures.delete(id);
     const connection=connections.get(id);connections.delete(id);
+    if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     connection?.ws.close(code,reason);world.leave(id);
   };
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
@@ -134,7 +135,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname.startsWith('/api/social/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
-        const result=await socialAction({action:pathname.slice('/api/social/'.length),identity,social,readBody:()=>body(req),
+        const result=await socialAction({action:pathname.slice('/api/social/'.length),identity,social,presence,readBody:()=>body(req),
           visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? snapshot().players.find(player=>player.id===peerId) : null,
           inviteWorld:async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId
@@ -204,6 +205,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         let joinedHere=false;
+        const token=randomUUID();
         void (async()=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
         if(avatarPreferences) {
@@ -215,9 +217,15 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
         }
+        if(presence)await presence.join(identity.userId,{id:worldId,title:worldTitle},token);
+        if(ws.readyState!==WebSocket.OPEN){
+          if(presence)await presence.leave(identity.userId,token);
+          if(joinedHere){world.leave(identity.userId);joinedHere=false;}
+          return;
+        }
         clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);
         const old=connections.get(identity.userId);
-        const connection={ws,identity,alive:true};connections.set(identity.userId,connection);
+        const connection={ws,identity,token,alive:true};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve();
@@ -250,10 +258,11 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         ws.on('close',()=>{
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
+          if(presence)void presence.leave(identity.userId,token).catch(()=>{});
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
-        })().catch(()=>{if(joinedHere)world.leave(identity.userId);ws.close(1013,'Town temporarily unavailable.');});
+        })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
       });
     }catch{return reject(401);}
   });
@@ -273,6 +282,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
   const heartbeat=setInterval(()=>{
     for(const connection of connections.values()) {
       if(!connection.alive){connection.ws.terminate();continue;}
+      if(presence)void presence.touch(connection.identity.userId,connection.token).catch(()=>connection.ws.close(1013,'Contact presence temporarily unavailable.'));
       connection.alive=false;connection.ws.ping();
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
@@ -289,11 +299,13 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
     for(const timer of departures.values())clearTimeout(timer);
     departures.clear();tickets.clear();
+    if(presence)for(const connection of connections.values())void presence.leave(connection.identity.userId,connection.token).catch(()=>{});
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
     connections.clear();world=next;regionSha256=hash;
   },async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
     for(const timer of departures.values())clearTimeout(timer);
+    if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));

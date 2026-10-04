@@ -54,7 +54,14 @@ async page => {
   check(await page.locator('.multiplayer-chat-message').count()===2,'A reply reaches the reconnected player through the live chat UI');
   await page.locator('.multiplayer-person button[aria-label^="Add "]').click();
   await second.locator('.multiplayer-social-row button', {hasText:'Accept'}).waitFor({state:'attached',timeout:20000});
+  check(await second.locator('.multiplayer-social-contacts').getByText('Online in River Oaks District').count()===0,
+    'A pending contact cannot see the sender\'s online world');
   await second.locator('.multiplayer-social-row button', {hasText:'Accept'}).click();
+  const contactWorld=second.locator('.multiplayer-social-row').filter({hasText:'Online in River Oaks District'}).locator('a[aria-label^="Join "]');
+  await contactWorld.waitFor({state:'attached',timeout:20000});
+  const contactUrl=new URL(await contactWorld.getAttribute('href'));
+  check(contactUrl.searchParams.get('play')==='multiplayer' && !contactUrl.searchParams.has('world'),
+    'An accepted contact can join the sender\'s current world');
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached'});
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
   await second.locator('.multiplayer-social-row button', {hasText:'Invite to world'}).click();

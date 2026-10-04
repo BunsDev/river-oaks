@@ -31,8 +31,17 @@ export function createSocialUI({ panel, request, profileRequest, connected, self
     for (const item of items) {
       const row = node('div', null, 'multiplayer-social-row');
       const label = node('span', item.peer.name);
+      if (item.status === 'accepted') label.append(node('small', item.presence ? ` · Online in ${item.presence.title}` : ' · Offline'));
       row.append(label);
       if (item.status === 'accepted') {
+        if (item.presence) {
+          try {
+            const visit = node('a', 'Join world');
+            visit.href = worldVisitUrl(item.presence.worldId);
+            visit.setAttribute('aria-label', `Join ${item.peer.name} in ${item.presence.title}`);
+            row.append(visit);
+          } catch { /* Ignore an invalid world from an old presence record. */ }
+        }
         const profile=node('button','Profile');profile.type='button';profile.setAttribute('aria-label',`View profile for ${item.peer.name}`);
         profile.addEventListener('click',()=>profiles.inspect(item.peer));row.append(profile);
         const open = node('button', 'Message'); open.type = 'button';
