@@ -132,10 +132,10 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     terrazzo: standard({ map: track.t(terrazzoTexture(3, RETRO.ivory, [RETRO.teal, RETRO.rose, RETRO.brass, RETRO.mint, '#f7f1e3'])), roughness: 0.3 }),
     carpet: standard({ map: track.t(carpetTexture(4)), roughness: 1 }),
   };
-  const themeFloor = { fashion: floors.terrazzo, leather: floors.marble, jewelry: floors.marble, perfumery: floors.marble, optician: floors.marble, gallery: floors.terrazzo, dining: floors.terrazzo, gelato: floors.terrazzo, salon: floors.terrazzo, wellness: floors.terrazzo, cinema: floors.carpet };
+  const themeFloor = { fashion: floors.terrazzo, leather: floors.marble, jewelry: floors.marble, perfumery: floors.marble, optician: floors.marble, gallery: floors.terrazzo, dining: floors.terrazzo, gelato: floors.terrazzo, salon: floors.terrazzo, wellness: floors.terrazzo, cinema: floors.carpet, home: floors.oak };
   for (const material of Object.values(floors)) { material.map.repeat.set(1, 1); material.emissiveMap = material.map; material.emissive.set('#ffffff'); material.emissiveIntensity = 0.18; }
   const plaster = track.t(plasterTexture(7));
-  const wallTint = { fashion:RETRO.ivory, leather:RETRO.mint, jewelry:RETRO.porcelain, perfumery:'#dbc2c1', optician:RETRO.mint, gallery:RETRO.porcelain, dining:RETRO.deepTeal, gelato:'#e4c7b4', salon:'#c4d5ce', wellness:RETRO.mint, cinema:RETRO.night };
+  const wallTint = { fashion:RETRO.ivory, leather:RETRO.mint, jewelry:RETRO.porcelain, perfumery:'#dbc2c1', optician:RETRO.mint, gallery:RETRO.porcelain, dining:RETRO.deepTeal, gelato:'#e4c7b4', salon:'#c4d5ce', wellness:RETRO.mint, cinema:RETRO.night, home:'#d5c6b5' };
   const walls = Object.fromEntries(Object.entries(wallTint).map(([theme, color]) => [theme, standard({ map: plaster, color, roughness: 0.92, emissive: color, emissiveIntensity: 0.3, envMapIntensity: 0.5 })]));
   const ceiling = standard({ color: '#f3efe8', roughness: 0.95, emissive: '#f3efe8', emissiveIntensity: 0.22 });
   const slat = standard({ color: '#f1ebe1', roughness: 0.8, emissive: '#f1ebe1', emissiveIntensity: 0.12 });
@@ -250,8 +250,28 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
           else if (contents === 'bottles') { add(bottle, bottleGlass, a, d, y + 0.015, [1 + (i % 3) * 0.15, 1 + (i % 2) * 0.35, 1 + (i % 3) * 0.15], 0, pick(palettes.perfume, i)); add(box, i % 2 ? brass : black, a, d, y + 0.185 + (i % 2) * 0.05, [0.04, 0.04, 0.04]); }
           else if (contents === 'cones') { add(cone, cream, a, d, y + 0.08, [1, 1, 1], 0, '#d9a866', [Math.PI, 0]); }
           else if (contents === 'towels') { add(cylinder, textile, a, d, y + 0.085, [0.07, 0.28, 0.07], 0, pick(palettes.towels, i), [0, Math.PI / 2]); }
+          else if (contents === 'books') add(box, textile, a, d, y + 0.115, [0.18, 0.23 + (i % 3) * 0.025, 0.035], 0,
+            ['#5b6e67', '#9c745f', '#b4a589', '#694c5c', '#496372'][i % 5]);
         }
       }
+    },
+    bookshelf(spec) { builders.shelves({ ...spec, contents: 'books' }); },
+    sofa({ a, d, w, l }) {
+      const upholstery = '#64766d';
+      add(box, velvet, a, d, 0.31, [w, 0.28, l], 0, upholstery);
+      add(box, velvet, a, d + l * 0.42, 0.72, [w, 0.72, 0.18], 0, upholstery);
+      for (const side of [-1, 1]) add(box, velvet, a + side * (w / 2 - 0.1), d, 0.58, [0.2, 0.44, l], 0, upholstery);
+      for (const side of [-1, 0, 1]) add(box, velvet, a + side * w * 0.26, d - 0.12, 0.48, [w * 0.25, 0.1, l * 0.58], 0,
+        side === 0 ? '#c4ab91' : '#8e9e93');
+      for (const side of [-1, 1]) for (const end of [-1, 1])
+        add(box, walnut, a + side * (w / 2 - 0.12), d + end * (l / 2 - 0.12), 0.09, [0.06, 0.18, 0.06]);
+    },
+    coffeeTable({ a, d, w, l }) {
+      add(box, walnut, a, d, 0.44, [w, 0.055, l]);
+      for (const side of [-1, 1]) for (const end of [-1, 1])
+        add(box, walnut, a + side * (w / 2 - 0.08), d + end * (l / 2 - 0.08), 0.21, [0.045, 0.4, 0.045]);
+      add(box, textile, a - 0.2, d, 0.49, [0.28, 0.025, 0.19], 0.12, '#d7c4a5');
+      add(vase, ceramic, a + 0.22, d, 0.49, [0.45, 0.45, 0.45], 0, '#eee1cf');
     },
     niche({ a, d0, d1, side }) {
       const face = a + side * 0.22;

@@ -137,28 +137,29 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
           const previous = { size: [...item.size], yaw_deg: item.yaw_deg }; mutate();
           if (!buildingFits(region, item) || !spawnClear(region) || item.interior && (item.size[0] < 6 || item.size[1] < 6)) {
             item.size = previous.size; item.yaw_deg = previous.yaw_deg;
-            say('Keep the building in bounds and at least 6 × 6 m for a walk-in venue.'); return false;
+            say('Keep the building in bounds and at least 6 × 6 m for a walk-in interior.'); return false;
           }
         };
-        field('Kind', item.kind, next => { item.kind = next; if (next !== 'retail') delete item.interior; }, { options: ['retail', 'residential', 'parking'] });
+        field('Kind', item.kind, next => { if (next !== item.kind) delete item.interior; item.kind = next; }, { options: ['retail', 'residential', 'parking'] });
         for (const [index, label, min, max] of [[0, 'Width (m)', 4, 80], [1, 'Depth (m)', 4, 80], [2, 'Height (m)', 5.5, 50]])
           field(label, item.size[index], next => changeBuilding(() => { item.size[index] = next; }), { type: 'number', min, max, step: '.1' });
         field('Rotation (°)', item.yaw_deg, next => changeBuilding(() => { item.yaw_deg = next; }), { type: 'number', min: -180, max: 180, step: '1' });
-        if (item.kind === 'retail') {
-          field('Walk-in venue', item.interior?.category ?? '', next => {
+        if (item.kind !== 'parking') {
+          field('Walk-in space', item.interior?.category ?? '', next => {
             if (!next) { delete item.interior; return; }
             if (!item.interior && region.buildings.filter(building => building.interior).length >= 8) {
-              say('A region can have up to eight walk-in venues.'); return false;
+              say('A region can have up to eight walk-in interiors.'); return false;
             }
             if (item.size[0] < 6 || item.size[1] < 6) { say('Make this building at least 6 × 6 m first.'); return false; }
-            item.interior = { name: item.interior?.name ?? `Venue ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south' };
-          }, { options: [{ value: '', label: 'Exterior only' }, { value: 'art', label: 'Gallery' },
-            { value: 'clothes', label: 'Fashion boutique' }, { value: 'restaurant', label: 'Café or dining' },
-            { value: 'wellness', label: 'Wellness studio' }] });
+            item.interior = { name: item.interior?.name ?? `${item.kind === 'residential' ? 'Home' : 'Venue'} ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south' };
+          }, { options: item.kind === 'residential' ? [{ value: '', label: 'Exterior only' }, { value: 'home', label: 'Furnished home lounge' }]
+            : [{ value: '', label: 'Exterior only' }, { value: 'art', label: 'Gallery' },
+              { value: 'clothes', label: 'Fashion boutique' }, { value: 'restaurant', label: 'Café or dining' },
+              { value: 'wellness', label: 'Wellness studio' }] });
           if (item.interior) {
-            field('Venue name', item.interior.name, next => {
+            field('Interior name', item.interior.name, next => {
               if (!next || [...next].length > 64 || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(next)) {
-                say('Venue names must contain 1–64 visible characters.'); return false;
+                say('Interior names must contain 1–64 visible characters.'); return false;
               }
               item.interior.name = next;
             });

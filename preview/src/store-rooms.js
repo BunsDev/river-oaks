@@ -4,8 +4,8 @@ import { clearStandingStations } from './store-clearance.js';
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
 // Everything here is an interpretation: real tenant layouts are not surveyed.
-const THEMES = { clothes: 'fashion', bag: 'leather', fashion_accessories: 'leather', jewelry: 'jewelry', perfumery: 'perfumery', hairdresser: 'salon', wellness: 'wellness', restaurant: 'dining', ice_cream: 'gelato', cinema: 'cinema', art: 'gallery', optician: 'optician' };
-export const THEME_LABELS = { fashion: 'Fashion boutique', leather: 'Leather goods & accessories', jewelry: 'Jewelry salon', perfumery: 'Perfumery', salon: 'Hair salon', wellness: 'Wellness club', dining: 'Dining room & bar', gelato: 'Gelato counter', cinema: 'Cinema lobby', gallery: 'Art gallery', optician: 'Eyewear studio' };
+const THEMES = { clothes: 'fashion', bag: 'leather', fashion_accessories: 'leather', jewelry: 'jewelry', perfumery: 'perfumery', hairdresser: 'salon', wellness: 'wellness', restaurant: 'dining', ice_cream: 'gelato', cinema: 'cinema', art: 'gallery', optician: 'optician', home: 'home' };
+export const THEME_LABELS = { fashion: 'Fashion boutique', leather: 'Leather goods & accessories', jewelry: 'Jewelry salon', perfumery: 'Perfumery', salon: 'Hair salon', wellness: 'Wellness club', dining: 'Dining room & bar', gelato: 'Gelato counter', cinema: 'Cinema lobby', gallery: 'Art gallery', optician: 'Eyewear studio', home: 'Furnished home lounge' };
 export const DOOR_HALF_WIDTH = 0.85;
 export const ROOM_HEIGHT = 3.9;
 
@@ -167,9 +167,21 @@ function layoutRoom(room) {
   };
 }
 
-const HIGHLIGHTS = { rail: 'garment rails', table: 'display tables', counter: 'cash wrap', vitrine: 'glass vitrines', shelves: 'lit shelving', niche: 'jewelry niches', mirror: 'mirrors', bench: 'seating', bar: 'back bar', dining: 'tables', pendant: 'pendant lamps', station: 'styling stations', basin: 'wash basins', reception: 'reception desk', gelato: 'gelato case', lightbox: 'poster light boxes', concession: 'concession counter', popcorn: 'popcorn machine', artwork: 'framed canvases', plinth: 'sculpture plinths', eyewear: 'eyewear walls', desk: 'consultation desk', plant: 'greenery', towels: 'towel shelves', rope: 'velvet ropes' };
+const HIGHLIGHTS = { rail: 'garment rails', table: 'display tables', coffeeTable: 'coffee table', counter: 'cash wrap', vitrine: 'glass vitrines', shelves: 'lit shelving', bookshelf: 'bookshelves', sofa: 'sofa', niche: 'jewelry niches', mirror: 'mirrors', bench: 'seating', bar: 'back bar', dining: 'tables', pendant: 'pendant lamps', station: 'styling stations', basin: 'wash basins', reception: 'reception desk', gelato: 'gelato case', lightbox: 'poster light boxes', concession: 'concession counter', popcorn: 'popcorn machine', artwork: 'framed canvases', plinth: 'sculpture plinths', eyewear: 'eyewear walls', desk: 'consultation desk', plant: 'greenery', towels: 'towel shelves', rope: 'velvet ropes' };
 
 const LAYOUTS = {
+  home(room, { W, D, half }) {
+    // A living room leaves a clear central path from the door to the back wall.
+    wall(room, 'bookshelf', -1, 1.5, D - 1.2);
+    block(room, 'sofa', 0, D - 0.62, Math.min(2.7, W - 1.6), 0.8);
+    block(room, 'coffeeTable', W * 0.27, D - 1.65, 0.9, 0.55);
+    block(room, 'chair', -W * 0.28, D - 1.65, 0.6, 0.6, { style: 'armchair', yaw: Math.PI });
+    block(room, 'plant', half - 0.55, D - 0.65, 0.5, 0.5);
+    room.fixtures.push({ kind: 'artwork', wall: 'back', a: 0, d: D - 0.18, w: Math.min(2.3, W - 1.4), h: 1.15, y: 2.15, seed: room.index + 29 });
+    room.fixtures.push({ kind: 'artwork', side: 1, a: half - 0.18, d: 1.65, w: 1.1, h: 0.9, y: 1.6, seed: room.index + 43 });
+    person(room, 'guest', 'seated', -0.45, D - 0.62, [0, -1], { seat: 0.46, seed: room.index * 7 });
+    person(room, 'guest', 'stand', half - 0.9, Math.max(1.7, D - 2.7), [-1, 0], { seed: room.index * 7 + 1 });
+  },
   fashion(room, { W, D, half, back }) {
     const narrow = W < 5.5;
     for (const side of [-1, 1]) wall(room, 'rail', side, 1.6, D - 2.4, { shelf: true });

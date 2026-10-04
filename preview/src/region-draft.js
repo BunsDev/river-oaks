@@ -10,7 +10,7 @@ const label = value => typeof value === 'string' && value === value.trim() && [.
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const between = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
 const interior = value => keys(value, ['name', 'category', 'entrance']) && label(value.name)
-  && ['clothes', 'art', 'restaurant', 'wellness'].includes(value.category)
+  && ['clothes', 'art', 'restaurant', 'wellness', 'home'].includes(value.category)
   && ['south', 'east', 'north', 'west'].includes(value.entrance);
 
 export function blankRegion() {
@@ -73,7 +73,8 @@ export function editableRegion(value) {
       && point(item.center) && Array.isArray(item.size) && item.size.length === 3
       && between(item.size[0], 4, 80) && between(item.size[1], 4, 80) && between(item.size[2], 5.5, 50)
       && between(item.yaw_deg, -180, 180) && ['retail', 'residential', 'parking'].includes(item.kind) && buildingFits(value, item)
-      && (item.interior === undefined || item.kind === 'retail' && item.size[0] >= 6 && item.size[1] >= 6 && interior(item.interior)))
+      && (item.interior === undefined || item.size[0] >= 6 && item.size[1] >= 6 && interior(item.interior)
+        && (item.kind === 'residential' ? item.interior.category === 'home' : item.kind === 'retail' && item.interior.category !== 'home')))
     && value.trees.every(item => keys(item, ['id', 'position', 'height_m', 'crown_radius_m']) && id(item)
       && point(item.position) && insideRegion(value, item.position) && between(item.height_m, 2, 35) && between(item.crown_radius_m, .5, 10))
     && value.places.every(item => keys(item, ['id', 'name', 'position']) && id(item) && label(item.name)

@@ -51,9 +51,10 @@ export function compileRegionPackage(region,title) {
       || !Array.isArray(building.size) || building.size.length!==3
       || !finite(building.size[0],4,80) || !finite(building.size[1],4,80) || !finite(building.size[2],5.5,50)
       || !finite(building.yaw_deg,-180,180) || !['retail','residential','parking'].includes(building.kind))fail();
-    if(building.interior!==undefined && (building.kind!=='retail' || building.size[0]<6 || building.size[1]<6
+    if(building.interior!==undefined && (building.size[0]<6 || building.size[1]<6
       || !keys(building.interior,['name','category','entrance']) || !label(building.interior.name)
-      || !VENUE_CATEGORIES.includes(building.interior.category)
+      || !(building.kind==='retail' && VENUE_CATEGORIES.includes(building.interior.category)
+        || building.kind==='residential' && building.interior.category==='home')
       || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)))fail();
     const [x,y]=building.center,[width,depth,height]=building.size,angle=building.yaw_deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
     const ring=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]]

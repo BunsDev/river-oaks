@@ -1,5 +1,5 @@
 const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-const category = store => ['restaurant', 'ice_cream'].includes(store.category) ? 'Dining' : ['jewelry', 'fashion_accessories'].includes(store.category) ? 'Jewelry & accessories' : ['beauty', 'hairdresser', 'fitness_centre', 'wellness', 'perfumery', 'optician'].includes(store.category) ? 'Beauty & wellness' : 'Shopping & culture';
+const category = store => store.category === 'home' ? 'Homes' : ['restaurant', 'ice_cream'].includes(store.category) ? 'Dining' : ['jewelry', 'fashion_accessories'].includes(store.category) ? 'Jewelry & accessories' : ['beauty', 'hairdresser', 'fitness_centre', 'wellness', 'perfumery', 'optician'].includes(store.category) ? 'Beauty & wellness' : 'Shopping & culture';
 const presets = { daylight: { hour: 13, weather: 'clear' }, pink: { hour: 17.5, weather: 'clear' }, mist: { hour: 16, weather: 'haze' } };
 
 export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore }) {
@@ -10,6 +10,7 @@ export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore
     const store = filtered.find(item => item.id === select.value);
     $('#store-name').textContent = store?.name ?? 'No matching destinations';
     $('#store-category-label').textContent = store ? category(store) : 'Try another name or category.';
+    $('#visit-destination').textContent = store?.category === 'home' ? 'Arrive outside home →' : 'Arrive at storefront →';
     $('#visit-destination').disabled = !store;
     $('#enter-destination').disabled = !store;
     $('#store-inside').textContent = store ? describeStore?.(store) ?? "" : "";
