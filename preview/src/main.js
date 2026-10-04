@@ -1,3 +1,4 @@
+import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
 import { buildDesignatedSidewalks } from './sidewalks.js';
 import { createBreakableGlass } from './breakable-glass.js';
@@ -237,7 +238,7 @@ function initializeRenderer() {
   });
   visitTools.insertBefore(force.panel,invasion.panel);
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
-  birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? walkingEnvironment() : null, getInterests: birdInterests });
+  birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
   visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
   $('#viewport').append(playDock.element);
@@ -479,7 +480,13 @@ function populateWorld(data) {
 }
 
 // One walkable-area model per loaded district, shared by arrival checks.
-let arrivalEnvironment = null;
+let arrivalEnvironment = null, birdEnvironment = null;
+function birdFlightEnvironment() {
+  const base=walking?.environment;
+  if(!base)return null;
+  if(birdEnvironment?.base!==base)birdEnvironment={base,value:treeFlightEnvironment(base,world)};
+  return birdEnvironment.value;
+}
 function walkingEnvironment() {
   if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world) };
   return arrivalEnvironment.environment;
@@ -791,7 +798,7 @@ function updateBuilder() {
     builderPointer.ray.setFromCamera(builderPointer.at, camera);
     ray = { origin: builderPointer.ray.ray.origin.toArray(), direction: builderPointer.ray.ray.direction.toArray() };
   }
-  const target = builderTarget(pose, ray), kindId = builder.moving?.kind ?? builder.kind, kind = buildKind(kindId);
+  const target = builderTarget(pose, ray, {grid:builder.grid}), kindId = builder.moving?.kind ?? builder.kind, kind = buildKind(kindId);
   if (world !== builderRoads?.world) builderRoads = { world, roads: buildSiteRoads(world) };
   const snapshot = multiplayer?.snapshot;
   const key = JSON.stringify([target, kindId, builder.finish, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
@@ -846,7 +853,7 @@ host.addEventListener('pointerup', (event) => {
 function openDebugTools(force) {
   if (debugTools) return debugTools.toggle(force);
   debugLoading ??= import('./debug-tools.js').then(({ createDebugTools }) => {
-    debugTools = createDebugTools({ scene, camera, host, renderer, getWorld: () => world, getEnvironment: () => walking?.environment ?? null,
+    debugTools = createDebugTools({ scene, camera, host, renderer, getWorld: () => world, getNavigation: () => playerAvatar?.carriage.prince.navigationDebug ?? null, getEnvironment: () => walking?.environment ?? null,
       getFocus: () => { const pose = walking?.getPose(); return pose ? [pose.position[0], pose.position[2]] : null; } });
     return debugTools;
   });
