@@ -55,6 +55,10 @@
       "destination": "/api/server?_river_path=/api/multiplayer/ticket"
     },
     {
+      "source": "/api/worlds",
+      "destination": "/api/server?_river_path=/api/worlds"
+    },
+    {
       "source": "/api/moderation/ban",
       "destination": "/api/server?_river_path=/api/moderation/ban"
     },

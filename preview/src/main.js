@@ -62,6 +62,7 @@ import { STREET } from './street-profile.js';
 import { createBirdCams } from './bird-cams.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
+import { createWorldPortal } from './world-portal.js';
 
 setupUIMotion();
 setupThemeControls();
@@ -76,6 +77,7 @@ const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SO
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
+let worldPortal = null;
 let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
@@ -88,6 +90,7 @@ async function refreshSoloPrivileges() {
     soloCanGrantWishes = session?.authenticated === true && session.canGrantWishes === true;
   } catch { soloCanGrantWishes = false; }
   if (community?.state) community.refresh();
+  worldPortal?.refreshCapability();
   return soloCanGrantWishes;
 }
 let autoTownDecision = null;
@@ -198,6 +201,8 @@ function initializeRenderer() {
     if (!document.hidden && !multiplayer && ['solo','off','unavailable','signed-out'].includes(host.dataset.multiplayer)) void refreshSoloPrivileges();
   });
   $('.panel-scroll').prepend($('#community-section'));
+  worldPortal=createWorldPortal({host:$('#explore-section'),getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
+  void worldPortal.load();
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
@@ -298,6 +303,7 @@ function startMultiplayer() {
       const self = players.find(player => player.id === selfId);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
+      worldPortal?.refreshCapability();
       buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
       if (self?.canBuild) buildControls?.loadInventory(selfId);
       if (self && landmarkAccountId !== selfId) {
@@ -443,7 +449,7 @@ function populateWorld(data) {
   $('#building-layer-label').textContent = 'Boutiques & architecture';
   districtUI.setStores(data.stores, 'Dior');
   $('#view-scale').textContent = 'Street level · meet the locals';
-  $('#connection').textContent = 'River Oaks District · ready to explore';
+  $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
   $('#terrain-state').textContent = 'Mapped district terrain';
   $('#canopy-state').textContent = data.vegetation ? '2018 LiDAR canopy' : 'District trees';

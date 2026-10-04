@@ -94,9 +94,10 @@ Disconnects have a ten-second reconnect grace. A new tab replaces the account's 
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 
-`WORLD_ID` selects one world instance for a server process. It defaults to
-`river-oaks`; other canonical IDs require `?world=<id>` in the browser URL.
-The [world boundary](world-boundary.md) documents admission, Redis keys,
+`WORLD_ID` can expose an alternate configured world and defaults to `river-oaks`.
+Jevica can publish up to 16 additional worlds on the same origin from Explore;
+the Redis world directory and rooms survive process replacement. Other worlds
+use `?world=<id>` in the browser URL. The [world boundary](world-boundary.md) documents admission, Redis keys,
 checkpoint compatibility, and the current limits of this first extraction.
 
 ## Deployment readiness

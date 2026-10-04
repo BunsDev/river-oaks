@@ -6,6 +6,8 @@ import { createSharedWorld } from './world.js';
 import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
 import { createMemoryLandmarks } from './landmarks.js';
+import { createMemoryWorldCatalog } from './world-catalog.js';
+import { createWorldRouter } from './world-router.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 export function workosConfigured(env) {
@@ -38,16 +40,31 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   data.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url), 'utf8'));
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
   const mode = chooseAuth({ env, origin, devAuth });
-  let game;
-  const onLogout = userId => game?.disconnectUser(userId);
+  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog();
+  const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, onLogout })
     : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
-  const world = createSharedWorld(data,mode === 'local' ? {isAdmin:auth.isAdmin,worldId} : {worldId});
-  game = createGameServer({
-    auth, world, landmarks:createMemoryLandmarks(), moderation, origin, staticRoot,
-    moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
-    trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
-  });
-  return { ...game, auth: mode, origin, worldId };
+  const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
+  async function worldFor(id) {
+    if(games.has(id))return games.get(id);
+    if(pending.has(id))return pending.get(id);
+    const load=(async()=>{
+      const meta=await catalog.get(id);
+      if(!meta && id!==worldId)return null;
+      const world=createSharedWorld(id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title},mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
+      const game=createGameServer({auth:sharedAuth,world,landmarks:createMemoryLandmarks(),moderation,origin,staticRoot,
+        ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
+        onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
+        moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),
+        trustedProxyIPs:(env.TRUSTED_PROXY_IPS??'').split(',').map(value=>value.trim()).filter(Boolean)});
+      const entry={game,world,meta};games.set(id,entry);return entry;
+    })().finally(()=>pending.delete(id));
+    pending.set(id,load);return load;
+  }
+  const router=createWorldRouter({worldFor,configuredWorldId:worldId});
+  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,async close(){
+    for(const {game} of games.values())await game.close();
+    await router.close();auth.close();
+  }};
 }

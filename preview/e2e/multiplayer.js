@@ -81,6 +81,12 @@ async page => {
     await other.reload({waitUntil:'commit'});await ready(other);
     await other.waitForFunction(id=>window.__riverMultiplayer().snapshot.locals.find(local=>local.id===id)?.wish?.kind==='invisibility',resident);
     check(true,'Reload rejoins the existing town and keeps its active wishes');
+    await page.waitForFunction(id=>window.__riverMultiplayer().snapshot.locals.find(local=>local.id===id)?.wish?.kind==='invisibility',resident);
+    if(await page.locator('#wish-undo').isHidden()) {
+      await page.locator('#community-local').selectOption(resident);
+      await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+      await page.locator('#wish-undo').waitFor({state:'visible',timeout:15000});
+    }
     await page.locator('#wish-undo').click();
     await page.waitForFunction(()=>document.querySelector('.wish-card')?.getAttribute('aria-busy')==='false' && !document.querySelector('#wish-choice')?.disabled);
     await page.locator('#wish-choice').press('Escape');

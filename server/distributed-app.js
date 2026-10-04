@@ -5,6 +5,7 @@ import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { isJevicaAdmin } from './admin.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -14,7 +15,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, landmarks, origin, moderators = [],
+export function createDistributedServer({ auth, room, security, landmarks, worldCatalog = null, isAdmin = isJevicaAdmin, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
@@ -69,6 +70,18 @@ export function createDistributedServer({ auth, room, security, landmarks, origi
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
+      if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
+        return json(res, 200, { worlds: await worldCatalog.list() });
+      }
+      if (path === '/api/worlds' && req.method === 'POST' && worldCatalog) {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!isAdmin(identity.userId)) return json(res, 403, { error: 'Only Jevica can publish a world.' });
+        let data;
+        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid world.' }); }
+        const result = await worldCatalog.publish(data, identity.userId);
+        const status = result.ok ? 201 : result.reason === 'invalid_world' ? 400 : 409;
+        return json(res, status, result.ok ? { world: result.world } : { error: result.reason });
+      }
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
@@ -105,7 +118,10 @@ export function createDistributedServer({ auth, room, security, landmarks, origi
           ? await security.ban({ userId: data.userId, actorId: identity.userId, reason: 'Moderator action' })
           : await security.unban({ userId: data.userId, actorId: identity.userId });
         if (!ok) return json(res, 503, { error: 'Moderation is temporarily unavailable.' });
-        if (data.banned) await disconnectUser(data.userId);
+        if (data.banned) {
+          await disconnectUser(data.userId);
+          await onBan?.(data.userId);
+        }
         return json(res, 200, { ok: true });
       }
       json(res, 404, { error: 'Not found' });

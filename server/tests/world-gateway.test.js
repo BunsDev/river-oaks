@@ -1,0 +1,73 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import Redis from 'ioredis';
+import { WebSocket } from 'ws';
+import { createWorldGateway } from '../world-gateway.js';
+import { createRedisSecurity } from '../redis-security.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+
+test('Jevica publishes a second world that survives gateway replacement', {skip:!process.env.REDIS_URL,timeout:60_000},async t=>{
+  const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
+  const namespace=`river-oaks:gateway-test:${randomUUID()}`,prefix=`{${namespace}}`,origin='https://sim.jev.works';
+  const worldData=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url)));
+  const admin=JEVICA_ADMIN_USER_IDS[0],users=new Map([['admin',admin],['guest','guest-user']]);
+  const auth={handle:async()=>false,authenticate:async req=>{
+    const userId=users.get(req.headers.cookie?.match(/test_session=(\w+)/)?.[1]);
+    return userId?{userId,name:userId,sessionId:userId+'-session',csrfToken:'test-csrf',expiresAt:Date.now()+60_000}:null;
+  },isSessionActive:async()=>true,close(){}};
+  const security=createRedisSecurity({redis,prefix});
+  const createGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,origin,moderators:[admin]});
+  let gateway=createGateway();
+  await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  let base=`http://127.0.0.1:${gateway.server.address().port}`;const sockets=[];
+  t.after(async()=>{
+    for(const socket of sockets)socket.terminate();
+    await gateway.close();security.close();
+    const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);
+    await redis.quit();
+  });
+  const post=(user,path,data)=>fetch(base+path,{method:'POST',headers:{Origin:origin,Cookie:`test_session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:JSON.stringify(data)});
+  const proposal={id:'moon-garden',title:'Moon Garden',description:'A quiet place to meet.'};
+  assert.equal((await post('guest','/api/worlds',proposal)).status,403);
+  assert.equal((await post('admin','/api/worlds',{...proposal,title:'Unauthorized shape',ownerId:'guest'})).status,400);
+  const published=await post('admin','/api/worlds',proposal);
+  assert.equal(published.status,201);
+  assert.equal((await published.json()).world.ownerId,admin);
+  assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
+  assert.equal((await post('admin','/api/multiplayer/ticket?world=missing-world',{})).status,404);
+  const open=async(worldId,user='admin')=>{
+    const ticketResponse=await post(user,`/api/multiplayer/ticket?world=${worldId}`,{});
+    assert.equal(ticketResponse.status,200);
+    const ticket=(await ticketResponse.json()).ticket;
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    sockets.push(socket);
+    const snapshot=await new Promise((resolve,reject)=>{
+      socket.once('error',reject);
+      socket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});
+    });
+    return {socket,snapshot};
+  };
+  const first=await open('river-oaks'),second=await open('moon-garden');
+  assert.equal(first.snapshot.worldId,'river-oaks');
+  assert.equal(second.snapshot.worldId,'moon-garden');
+  assert.equal(first.snapshot.players.length,1);
+  assert.equal(second.snapshot.players.length,1);
+  assert.equal((await gateway.worldFor('moon-garden')).room.worldId,'moon-garden');
+  assert.equal((await gateway.worldFor('missing-world')),null);
+  for(const socket of sockets)socket.terminate();
+  await gateway.close();
+  gateway=createGateway();
+  await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  base=`http://127.0.0.1:${gateway.server.address().port}`;
+  assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
+  assert.equal((await open('moon-garden')).snapshot.worldId,'moon-garden');
+  const visitor=await open('moon-garden','guest');
+  const visitorInRiver=await open('river-oaks','guest');
+  assert.equal(visitor.snapshot.players.some(player=>player.id==='guest-user'),true);
+  const closed=Promise.all([visitor,visitorInRiver].map(({socket})=>new Promise(resolve=>socket.once('close',resolve))));
+  assert.equal((await post('admin','/api/moderation/ban',{userId:'guest-user',banned:true})).status,200);
+  await closed;
+  assert.equal((await post('guest','/api/multiplayer/ticket?world=moon-garden',{})).status,403);
+});

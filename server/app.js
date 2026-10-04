@@ -8,11 +8,12 @@ import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { isJevicaAdmin } from './admin.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, landmarks, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, landmarks, worldCatalog = null, isAdmin = isJevicaAdmin, onBan = null, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
@@ -48,6 +49,15 @@ export function createGameServer({ auth, world, landmarks, origin, staticRoot, m
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
       if (await auth.handle(req,res)) return;
+      if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldCatalog.list()});
+      if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can publish a world.'});
+        let data;
+        try {data=await body(req);}catch{return json(res,400,{error:'Invalid world.'});}
+        const result=await worldCatalog.publish(data,identity.userId);
+        return json(res,result.ok?201:result.reason==='invalid_world'?400:409,result.ok?{world:result.world}:{error:result.reason});
+      }
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
@@ -79,7 +89,7 @@ export function createGameServer({ auth, world, landmarks, origin, staticRoot, m
         const data=await body(req);
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
-        if(data.banned)disconnectUser(data.userId,4003,'This account cannot join the town.');
+        if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await onBan?.(data.userId);}
         return json(res,200,{ok:true});
       }
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
