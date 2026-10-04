@@ -44,7 +44,7 @@ export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore
     $('#sun-hour').value = preset.hour; $('#weather').value = preset.weather; onAtmosphere();
   }));
   return {
-    setStores(next, initialName) { stores = next; search.value = ''; filter.value = ''; render(); this.select(stores.find(store => store.name === initialName)?.id); },
+    setStores(next, initialName) { stores = next; search.value = ''; filter.value = ''; render(); this.select(stores.find(store => store.name === initialName)?.id ?? stores[0]?.id); },
     select(id) { if (!filtered.some(store => store.id === id)) { search.value = ''; filter.value = ''; render(); } select.value = id; describe(); },
     syncAtmosphere() {
       for (const button of document.querySelectorAll('[data-atmosphere]')) {

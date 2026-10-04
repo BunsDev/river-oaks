@@ -63,7 +63,8 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   const field = (label, value, apply, { type = 'text', min, max, step = 'any', options } = {}) => {
     const wrapper = document.createElement('label'); wrapper.textContent = label;
     const input = document.createElement(options ? 'select' : 'input'); input.className = 'region-editor-field';
-    if (options) for (const option of options) input.add(new Option(option, option));
+    if (options) for (const option of options) input.add(new Option(typeof option === 'string' ? option : option.label,
+      typeof option === 'string' ? option : option.value));
     else { input.type = type; if (type === 'number') { input.step = step; if (min !== undefined) input.min = min; if (max !== undefined) input.max = max; } }
     input.value = String(value); wrapper.append(input);
     input.addEventListener('change', () => {
@@ -134,15 +135,40 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       if (selected.type === 'buildings') {
         const changeBuilding = mutate => {
           const previous = { size: [...item.size], yaw_deg: item.yaw_deg }; mutate();
-          if (!buildingFits(region, item) || !spawnClear(region)) {
+          if (!buildingFits(region, item) || !spawnClear(region) || item.interior && (item.size[0] < 6 || item.size[1] < 6)) {
             item.size = previous.size; item.yaw_deg = previous.yaw_deg;
-            say('Keep the whole building inside the boundary and clear of arrival.'); return false;
+            say('Keep the building in bounds and at least 6 × 6 m for a walk-in venue.'); return false;
           }
         };
-        field('Kind', item.kind, next => { item.kind = next; }, { options: ['retail', 'residential', 'parking'] });
+        field('Kind', item.kind, next => { item.kind = next; if (next !== 'retail') delete item.interior; }, { options: ['retail', 'residential', 'parking'] });
         for (const [index, label, min, max] of [[0, 'Width (m)', 4, 80], [1, 'Depth (m)', 4, 80], [2, 'Height (m)', 5.5, 50]])
           field(label, item.size[index], next => changeBuilding(() => { item.size[index] = next; }), { type: 'number', min, max, step: '.1' });
         field('Rotation (°)', item.yaw_deg, next => changeBuilding(() => { item.yaw_deg = next; }), { type: 'number', min: -180, max: 180, step: '1' });
+        if (item.kind === 'retail') {
+          field('Walk-in venue', item.interior?.category ?? '', next => {
+            if (!next) { delete item.interior; return; }
+            if (!item.interior && region.buildings.filter(building => building.interior).length >= 8) {
+              say('A region can have up to eight walk-in venues.'); return false;
+            }
+            if (item.size[0] < 6 || item.size[1] < 6) { say('Make this building at least 6 × 6 m first.'); return false; }
+            item.interior = { name: item.interior?.name ?? `Venue ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south' };
+          }, { options: [{ value: '', label: 'Exterior only' }, { value: 'art', label: 'Gallery' },
+            { value: 'clothes', label: 'Fashion boutique' }, { value: 'restaurant', label: 'Café or dining' },
+            { value: 'wellness', label: 'Wellness studio' }] });
+          if (item.interior) {
+            field('Venue name', item.interior.name, next => {
+              if (!next || [...next].length > 64 || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(next)) {
+                say('Venue names must contain 1–64 visible characters.'); return false;
+              }
+              item.interior.name = next;
+            });
+            field('Entrance face', item.interior.entrance, next => { item.interior.entrance = next; },
+              { options: [{ value: 'south', label: 'South face (rotates with building)' },
+                { value: 'east', label: 'East face (rotates with building)' },
+                { value: 'north', label: 'North face (rotates with building)' },
+                { value: 'west', label: 'West face (rotates with building)' }] });
+          }
+        }
       }
     }
     deleteButton.hidden = false;

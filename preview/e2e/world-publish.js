@@ -17,6 +17,9 @@ async page=>{
   await page.locator('.region-editor-tools button[data-tool=building]').click();
   await clickMap(.225,.225);
   await page.locator('.region-editor-fields label').filter({hasText:'Kind'}).locator('select').selectOption('retail');
+  await page.locator('.region-editor-fields label').filter({hasText:'Walk-in venue'}).locator('select').selectOption('art');
+  await page.locator('.region-editor-fields label').filter({hasText:'Venue name'}).locator('input').fill('Moon Gallery');
+  await page.locator('.region-editor-fields label').filter({hasText:'Venue name'}).locator('input').press('Tab');
   await page.locator('.region-editor-tools button[data-tool=tree]').click();
   await page.locator('.region-editor [data-coordinate=east]').fill('44.8');
   await page.locator('.region-editor [data-coordinate=north]').fill('-32');
@@ -62,6 +65,15 @@ async page=>{
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===1&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
+  check(authored.world.stores.length===1&&authored.world.stores[0].name==='Moon Gallery','The region package publishes an authored walk-in venue');
+  check((await page.locator('#stores-count').textContent())==='1','The creator venue appears in the world directory');
+  await page.locator('#enter-destination').click();
+  await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-1');
+  check(true,'Jevica can enter the creator venue in the shared world');
+  await page.waitForTimeout(1100);
+  await page.locator('#walking-enter').click();
+  await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='');
+  check(true,'Jevica can leave the creator venue');
   await page.locator('.world-portal-list button[aria-label="Edit revision draft for Moon Garden"]').click();
   await page.locator('.region-editor').waitFor({state:'visible'});
   await page.locator('.region-editor-chooser').selectOption('places:place-1');
@@ -77,7 +89,7 @@ async page=>{
   },session.csrfToken);
   check(draftResponse.status===200&&draftResponse.data.draft.region.places.some(place=>place.name==='Revised Moon Arch'),'Jevica saves a version-bound revision draft on the server');
   check(!(await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json()).world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Saving a draft leaves the live geography unchanged');
-  check((await page.locator('#stores-count').textContent())==='0','The published world renders its own layout without River Oaks stores');
+  check((await page.locator('#stores-count').textContent())==='1','The published world renders its own venue without River Oaks stores');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===true,'Jevica can build in her new world');
   check(new URL(page.url()).searchParams.get('world')==='moon-garden','The published world has a shareable URL');
   const otherContext=await page.context().browser().newContext();
