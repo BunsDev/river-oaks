@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import Redis from 'ioredis';
 import { createRedisAuth } from './redis-auth.js';
 import { createRedisSecurity } from './redis-security.js';
+import { createRedisWaitlist } from './waitlist.js';
 import { createWorldGateway } from './world-gateway.js';
 import { vercelClientAddress } from './vercel-routing.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
@@ -31,12 +32,17 @@ export async function createRedisBackend(env = process.env) {
   try { await redis.connect(); } catch { redis.disconnect(); throw new Error('Shared storage unavailable'); }
   try {
     const security = createRedisSecurity({ redis, prefix });
+    const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
+    const accessNamespace = env.WAITLIST_NAMESPACE ?? (env.VERCEL_ENV === 'production' ? 'river-oaks:production:access:v1' : `${namespace}:access`);
+    if (!/^[A-Za-z0-9:_-]{1,120}$/.test(accessNamespace)
+      || env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && accessNamespace === 'river-oaks:production:access:v1') throw new Error('Invalid waitlist namespace');
+    const waitlist = createRedisWaitlist({ redis, prefix: `{${accessNamespace}}`, admins });
     let gateway;
     const auth = createRedisAuth({ redis, prefix, origin,
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId),
     });
-    gateway = createWorldGateway({redis,namespace,worldData,auth,security,origin,configuredWorldId:worldId,
+    gateway = createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),

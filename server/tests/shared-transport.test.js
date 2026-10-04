@@ -8,6 +8,7 @@ import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
 import { createModeration } from '../moderation.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 const district = JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
 const publicOrigin = 'https://sim.jev.works';
@@ -40,7 +41,7 @@ async function fixture(t, { moderation, worldData=district } = {}) {
     },
   };
   const world=createSharedWorld(worldData,{now:()=>time,isAdmin:id=>id==='alice'});
-  app=createGameServer({auth,world,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
+  app=createGameServer({auth,world,waitlist:approvedWaitlist,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   t.after(()=>app.close());
   const origin=`http://127.0.0.1:${app.server.address().port}`;
@@ -169,7 +170,7 @@ test('appearance change is visible to peers and restored when the account rejoin
   assert.equal(changed.ok,true);
   f.advance();
   const seen=await bob.waitFor(message=>message.type==='snapshot'&&message.players.some(player=>player.id==='alice'&&player.appearance==='woman-tailored'));
-  assert.equal(seen.players.find(player=>player.id==='bob').appearance,'jevica');
+  assert.equal(seen.players.find(player=>player.id==='bob').appearance,'sable-human');
   alice.ws.close();
   await closed(alice.ws);
   const rejoined=await connect(f,'alice-session');

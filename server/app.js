@@ -7,6 +7,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { createWaitlistRoutes } from './waitlist-routes.js';
+import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
@@ -16,7 +18,8 @@ import { profileAction } from './profile-api.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+  if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
@@ -31,6 +34,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
     if (isBanned(identity.userId)) {json(res,403,{error:'This account cannot join the town.'});return null;}
+    if (!(await waitlist.isApproved(identity.userId))) {json(res,403,{error:'waitlist_approval_required'});return null;}
     if (req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],identity.csrfToken)) {json(res,403,{error:'Invalid request origin or security token.'});return null;}
     return identity;
   };
@@ -40,6 +44,11 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     const connection=connections.get(id);connections.delete(id);
     connection?.ws.close(code,reason);world.leave(id);
   };
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+    onRevoke: async userId => {
+      disconnectUser(userId, 4003, 'Waitlist approval ended');
+      await onBan?.(userId);
+    } });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -53,6 +62,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
       if (await auth.handle(req,res)) return;
+      if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
@@ -153,13 +163,21 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
       if (!['GET','HEAD'].includes(req.method)) return json(res,405,{error:'Method not allowed'});
       if (!staticRoot) return json(res,404,{error:'Run the frontend development server.'});
+      const protectedAsset = protectedGameAsset(pathname);
+      if (protectedAsset) {
+        const identity = await auth.authenticate(req);
+        if (!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))) {
+          return json(res,403,{error:'waitlist_approval_required'});
+        }
+      }
       let path=resolve(staticRoot,'.'+decodeURIComponent(pathname==='/'?'/index.html':pathname));
       const root=await realpath(staticRoot);
       path=await realpath(path);
       if (!path.startsWith(root+sep)) return json(res,404,{error:'Not found'});
       const info=await stat(path);if(!info.isFile())return json(res,404,{error:'Not found'});
       res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
-      res.setHeader('Cache-Control',extname(path)==='.html'?'no-cache':'public, max-age=300');
+      res.setHeader('Cache-Control',protectedAsset?'private, no-store':extname(path)==='.html'?'no-cache':'public, max-age=300');
+      if(protectedAsset)res.setHeader('Vary','Cookie');
       res.setHeader('Content-Length',info.size);
       if(req.method==='HEAD')return res.end();
       createReadStream(path).on('error',()=>res.destroy()).pipe(res);
@@ -179,8 +197,10 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if(!matchesWorld(url))return reject(403);
       const protocol=url.searchParams.get('protocol');
       if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
-      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
-      if(!identity || isBanned(identity.userId) || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
+      const identity=await auth.authenticate(req);
+      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
+      const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
+      if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
@@ -192,10 +212,16 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         const connection={ws,identity,alive:true};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
+        let messageQueue = Promise.resolve();
         ws.on('message',(raw,isBinary)=>{
           if(connections.get(identity.userId)!==connection)return;
           if(isBinary || !frames(identity.userId))return ws.close(4008,'Too many or invalid messages.');
-          if(identity.expiresAt<=now() || isBanned(identity.userId))return disconnectUser(identity.userId,4001,'Please sign in again.');
+          messageQueue = messageQueue.then(async()=>{
+          if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
+          let approved = false;
+          try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
+          if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
+          if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           try {
             const message=JSON.parse(raw.toString());
             if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string')throw new Error('Invalid');
@@ -209,6 +235,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
+          }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
         });
         ws.on('close',()=>{
           if(connections.get(identity.userId)!==connection)return;

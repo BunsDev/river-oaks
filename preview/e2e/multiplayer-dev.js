@@ -16,12 +16,16 @@ async page => {
   try {
   await join(page); await join(second);
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length >= 2, null, { timeout: 30000 });
+  for (const tab of [page, second]) await tab.waitForFunction(() => {
+    const town = window.__riverMultiplayer?.();
+    return town?.snapshot?.players.find(player => player.id === town.selfId)?.appearance === 'sable-human';
+  }, null, { timeout: 30000 });
   const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
   check(a.gate === true && b.gate === true, 'no sign-in gate blocks development');
-  check(a.appearance === 'jevica' && b.appearance === 'jevica' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
+  check(a.appearance === 'sable-human' && b.appearance === 'sable-human' && a.appearancePicker && b.appearancePicker, 'Players start with an appearance picker and a default look');
   await page.locator('input[name=player-character][value=sable]').check();
   await page.locator('input[name=player-form][value=beast]').check();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
@@ -38,6 +42,7 @@ async page => {
   await page.locator('.multiplayer-chat-form input').fill('Hello from the town');
   await page.locator('.multiplayer-chat-form button').click();
   await second.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
+  await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});
   check(await page.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).count()===1,'A sent town message appears once for both players');
   await page.reload();
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
@@ -165,7 +170,7 @@ async page => {
   await page.waitForFunction(()=>!document.querySelector('.visit-tools').open);
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
   await page.locator('.visit-tools-toggle').click();
-  check(await page.locator('#player-flight').isVisible(),'Flight remains discoverable in shared mobile play');
+  check(!await page.locator('#player-flight').isVisible()&&await page.locator('#player-beast-movement').isVisible(),'Shared mobile guests get beast movement without flight');
   check(!await page.locator('#player-companion').isVisible()&&!await page.locator('.vehicle-garage').isVisible(),'Shared mobile play hides solo companion and vehicle actions');
   check(!await page.locator('.force-controls').isVisible()&&!await page.locator('.auto-controls').isVisible(),'Shared mobile play hides local-only scenarios');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Shared mobile controls stay within the viewport');

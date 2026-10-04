@@ -1,6 +1,6 @@
 # River Oaks desktop
 
-The desktop application runs the existing Three.js game in Electron. The packaged game includes the district, characters, textures, and navigation workers and plays standalone without a browser tab, Vite, Python, or a network connection.
+The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://sim.jev.works/`; its browser profile retains the approved session until sign-out or expiry.
 
 ## Live development
 
@@ -9,9 +9,9 @@ npm ci
 npm run desktop:dev
 ```
 
-The command starts a loopback Vite server (port 5174, or the next available port), the existing local shared town, and the native game window. Renderer edits hot reload; changes to `desktop/main.js` or `desktop/runtime.js` restart the desktop shell. Closing the game or pressing Ctrl+C stops its owned server. An independently running town is left alone.
+The command starts a loopback Vite server (port 5174, or the next available port), WorkOS development authentication, the shared town, and the native game window. Configure the Staging WorkOS credentials and enable device authorization for its River Oaks application. Renderer edits hot reload; changes to `desktop/main.js`, `desktop/auth.js`, or `desktop/runtime.js` restart the desktop shell. Closing the game or pressing Ctrl+C stops its owned server. An independently running town is left alone.
 
-For standalone development, use `VITE_SINGLE_PLAYER=true npm run desktop:dev`. To run a second development window beside one that is already open, give it its own profile: `RIVER_OAKS_PROFILE=/tmp/river-oaks-second npm run desktop:dev` (Electron allows one window per profile). The command also starts the Python bridge (`uv run --extra voice river-oaks serve`) for Jev decisions, local Kokoro voices and Jev's ElevenLabs voice, and stops it on exit; a bridge already serving on 8765 is reused. Without `uv` the game runs with device voices and local rules. For local voices, install the extra and the pinned model once (`uv sync --locked --extra voice` and `uv run --extra voice python scripts/fetch_voice_model.py`, see the README); a stale model fails the integrity check and shows **Local voice unavailable**. The packaged game includes authored dialogue and local simulation fallbacks. It can also reach a separately running loopback bridge for Jev chauffeur, companion, auto-visit, ElevenLabs speech and key/voice settings through fixed endpoints. Python, WorkOS sign-in and hosted multiplayer are not bundled.
+For single player development, use `VITE_SINGLE_PLAYER=true npm run desktop:dev`; sign-in and approval still apply. To run a second development window beside one that is already open, give it its own profile: `RIVER_OAKS_PROFILE=/tmp/river-oaks-second npm run desktop:dev` (Electron allows one window per profile). The development command starts the optional Python bridge for Jev decisions and voices. The packaged app uses the hosted service and its features.
 
 Use **View → Toggle Developer Tools** to inspect the renderer. **Game → Reload game** (⌘R / Ctrl+R) rebuilds the scene. **View → Toggle Full Screen** gives the game the display; **Help → Game controls** lists movement and interaction keys. **View → Debug tools** (F3) shows colliders, the walkable grid, ground triangles, the source map and a polygon inspector; see [debug tools](debug-tools.md).
 
@@ -33,7 +33,7 @@ dist/desktop/River Oaks-darwin-arm64/River Oaks.app
 
 Open it in Finder. For a quick bundled run without packaging, use `npm run build && npm run desktop:start`.
 
-Packaging stages only the desktop runtime and built game. Repository files, `.env`, server code, and development dependencies are excluded. This is a local development build, not a signed/notarized distribution release. Only macOS arm64 has been exercised; the packaging command targets its host platform and architecture.
+Packaging stages the desktop runtime; the packaged window loads the hosted game after device sign-in. Repository files, `.env`, server code, development dependencies, and game assets are excluded. This is a local development build, not a signed/notarized distribution release. Only macOS arm64 has been exercised; the packaging command targets its host platform and architecture.
 
 ## Rendering and recovery
 
@@ -41,7 +41,7 @@ Hardware acceleration remains enabled. Auto graphics reduces internal scene reso
 
 A renderer crash reloads the district once automatically. Repeated crashes within a minute show a recovery choice, preventing a crash loop. Reloading preserves preferences, not the current visit or transient standalone world state.
 
-The renderer has no Node access or privileged preload API. Sandbox, context isolation, navigation restrictions, denied device permissions, and a local content policy follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security). External HTTPS references ask before opening in the default browser. Bundled assets are served from `app://game`; path traversal and symlinks outside the bundle are rejected.
+The renderer has no Node access or privileged preload API. Sandbox, context isolation, navigation restrictions, and denied device permissions follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security). WorkOS device sign-in opens in the system browser, and external HTTPS references ask before opening there. The packaged window stays on the exact River Oaks origin.
 
 ## Verification
 
@@ -50,11 +50,9 @@ npm test
 npm run test:server
 npm run test:desktop
 npm run build
-npm run test:desktop:e2e
-npm run test:desktop:e2e -- --dev
-RIVER_OAKS_DESKTOP_EXECUTABLE="$PWD/dist/desktop/River Oaks-darwin-arm64/River Oaks.app/Contents/MacOS/River Oaks" npm run test:desktop:e2e
+RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
-Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS GitHub account after the Production provider is configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
 
 Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.

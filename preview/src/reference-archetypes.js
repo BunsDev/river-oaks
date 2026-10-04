@@ -5,12 +5,13 @@ import { measureHead } from './head-fit.js';
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
 export function createReferenceStyle(avatar,appearance){
-  if(!['sable','rowan','vesper','aurel','kai','silvan'].includes(appearance?.character))return {dispose(){}};
-  const resources=new Set(),materials=new Set(),attachments=new Set(),model=avatar.model;
+  if(!['sable','rowan','vesper','aurel','kai','silvan','lyra'].includes(appearance?.character))return {dispose(){}};
+  const resources=new Set(),materials=new Set(),textures=new Set(),attachments=new Set(),lyraOutfit=[],model=avatar.model;
+  let trackLyraOutfit=false;
   const material=(color,options={})=>{const value=new THREE.MeshPhysicalMaterial({color,roughness:.6,...options});materials.add(value);return value;};
   const mesh=(parent,geometry,surface,position=[0,0,0],scale=[1,1,1])=>{
     resources.add(geometry);const item=new THREE.Mesh(geometry,surface);item.position.set(...position);item.scale.set(...scale);
-    item.castShadow=item.receiveShadow=true;parent.add(item);return item;
+    item.castShadow=item.receiveShadow=true;parent.add(item);if(trackLyraOutfit)lyraOutfit.push(item);return item;
   };
   const ball=(parent,surface,position,scale)=>mesh(parent,new THREE.SphereGeometry(1,18,12),surface,position,scale);
   const box=(parent,surface,position,size,bevel=.012)=>mesh(parent,new RoundedBoxGeometry(...size,2,bevel),surface,position);
@@ -23,7 +24,7 @@ export function createReferenceStyle(avatar,appearance){
     bone.add(group);attachments.add(group);return group;
   };
   const gold=material('#d4ad70',{metalness:.83,roughness:.23}),darkGold=material('#9d794b',{metalness:.68,roughness:.34});
-  const leather=material(appearance.character==='rowan'?'#574237':appearance.character==='vesper'?'#48232c':appearance.character==='aurel'?'#211d20':appearance.variant==='explorer'?'#513e32':'#ede1d1',{roughness:.62});
+  const leather=material(appearance.character==='rowan'?'#574237':appearance.character==='vesper'?'#48232c':appearance.character==='lyra'?'#704753':appearance.character==='aurel'?'#211d20':appearance.variant==='explorer'?'#513e32':'#ede1d1',{roughness:.62});
   const face=aligned('head'),torso=aligned('spine_03'),pelvis=aligned('pelvis');
   function wavyHair(color,number){
     const hair=material(color,{roughness:.78,sheen:1,sheenColor:new THREE.Color(color)});
@@ -163,6 +164,34 @@ export function createReferenceStyle(avatar,appearance){
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
     const item=mesh(parent,geometry,surface);if(name)item.name=name;return item;
   }
+  function lyraLook(){
+    // The supplied three views share one chestnut hairstyle and mauve outfit.
+    // Keep these attached to the rig so both the player and remote avatars move.
+    model.traverse(item=>{if(item.isMesh&&/shoes01/i.test(item.name))item.visible=false;});
+    trackLyraOutfit=true;
+    const velvet=material('#754759',{roughness:.78,sheen:1,sheenColor:new THREE.Color('#b5788d'),side:THREE.DoubleSide});
+    const fold=material('#9b6476',{roughness:.82,sheen:.8,sheenColor:new THREE.Color('#d5a0ac'),side:THREE.DoubleSide});
+    for(const side of [-1,1])tube(torso,fold,[[side*.13,.26,.06],[side*.12,.19,.13],[0,.13,.15]],.004);
+    drape(pelvis,velvet,{from:-.45,to:2.7,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
+    const pixels=new Uint8Array(256*256*4);
+    for(let y=0;y<256;y++)for(let x=0;x<256;x++){
+      const cellX=Math.floor(x/25),cellY=Math.floor(y/29),seed=(Math.imul(cellX+3,73856093)^Math.imul(cellY+7,19349663))>>>0;
+      const cx=(cellX+.2+(seed%60)/100)*25,cy=(cellY+.25+((seed>>>8)%50)/100)*29;
+      const spot=Math.hypot((x-cx)/3.2,(y-cy)/5)<1;
+      const n=(y*256+x)*4;pixels[n]=spot?108:234;pixels[n+1]=spot?67:199;pixels[n+2]=spot?76:207;pixels[n+3]=spot?210:136;
+    }
+    const sheerTexture=new THREE.DataTexture(pixels,256,256,THREE.RGBAFormat);
+    sheerTexture.colorSpace=THREE.SRGBColorSpace;sheerTexture.wrapS=THREE.RepeatWrapping;sheerTexture.needsUpdate=true;textures.add(sheerTexture);
+    const sheer=material('#d8a6b3',{map:sheerTexture,roughness:.92,transparent:true,opacity:.74,depthWrite:false,side:THREE.DoubleSide});
+    drape(pelvis,sheer,{from:.22,to:Math.PI*2-.22,top:.09,length:.86,rx:.19,rz:.14,flare:.1,jag:.26,lobes:3,name:'Lyra spotted sheer train'});
+    const jewel=mesh(pelvis,new THREE.TorusGeometry(.022,.005,9,28),gold,[.18,.075,.13]);jewel.rotation.y=.3;
+    ball(pelvis,fold,[.18,.075,.135],[.012,.016,.006]);
+    pendant();shoulderBag({color:'#704753'});boots('#704753');
+    for(const side of [-1,1]){
+      const wrist=aligned(`hand_${side}`);if(wrist){const band=mesh(wrist,new THREE.TorusGeometry(.018,.003,8,24),gold,[0,.025,0]);band.rotation.x=Math.PI/2;}
+    }
+    trackLyraOutfit=false;
+  }
   function forestAristocrat(){
     const masculine=appearance.variant==='masculine';
     const olive=material('#6b6f3e',{roughness:.82,sheen:.6,sheenColor:new THREE.Color('#a8ab72'),side:THREE.DoubleSide});
@@ -257,7 +286,9 @@ export function createReferenceStyle(avatar,appearance){
       if(foot){box(foot,bootLeather,[0,-.05,-.06],[.055,.065,.05],.008);for(let i=0;i<3;i++)leaf(foot,leafGold,[0,.035+i*.03,.07-i*.026],.016,0,-.9);}
     }
   }
-  if(appearance.character==='silvan'){
+  if(appearance.character==='lyra'){
+    lyraLook();
+  }else if(appearance.character==='silvan'){
     forestAristocrat();
   }else if(appearance.character==='sable'){
     dressSkirt('#f1e7dd',{slit:true});shoulderBag({color:'#f0e4d9'});sandals();
@@ -344,5 +375,13 @@ export function createReferenceStyle(avatar,appearance){
       if(top>.12)child.position.y+=lift;
     }
   }
-  return {dispose(){for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();}};
+  const sourceClothes=[];
+  if(appearance.character==='lyra'&&appearance.form==='beast')model.traverse(item=>{
+    if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);
+  });
+  return {
+    update(motion){if(appearance.character!=='lyra'||appearance.form!=='beast')return;const dressed=!motion?.beast;
+      for(const item of [...lyraOutfit,...sourceClothes])item.visible=dressed;},
+    dispose(){for(const item of attachments)item.removeFromParent();for(const geometry of resources)geometry.dispose();for(const surface of materials)surface.dispose();for(const texture of textures)texture.dispose();},
+  };
 }

@@ -69,6 +69,32 @@ integration('cross-instance callback consumes PKCE once and survives closing the
   assert.equal(await f.redis.ping(), 'PONG', 'close must not quit caller Redis');
 });
 
+integration('email verification after GitHub OAuth survives another server instance', async t => {
+  const f = await fixture(t);
+  f.workos.requireEmailVerification();
+  const start = await f.begin();
+  const callback = await f.b.request(start.path, { headers: start.headers });
+  assert.equal(callback.status, 303);
+  assert.equal(callback.headers.get('location'), '/auth/verify');
+  const verifyCookie = cookie(callback, 'river_oaks_verify_state');
+  assert.ok(verifyCookie);
+  const c = await f.app();
+  assert.equal((await c.request('/auth/verify', { headers: { cookie: verifyCookie } })).status, 200);
+  const post = code => c.request('/auth/verify', { method: 'POST', headers: {
+    cookie: verifyCookie, origin: config.origin, 'content-type': 'application/x-www-form-urlencoded',
+  }, body: `code=${code}` });
+  assert.equal((await c.request('/auth/verify', { method: 'POST', headers: {
+    cookie: verifyCookie, origin: 'null', 'content-type': 'application/x-www-form-urlencoded',
+  }, body: 'code=123456' })).status, 403);
+  assert.match(await (await post('000000')).text(), /could not be confirmed/);
+  const verified = await post('123456');
+  assert.equal(verified.status, 302);
+  const sessionCookie = cookie(verified);
+  assert.ok(sessionCookie);
+  assert.equal((await (await f.a.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).authenticated, true);
+  assert.equal((await post('123456')).status, 400);
+});
+
 integration('a verified Jevica account has solo wish permission on every Redis auth edge', async t => {
   const f=await fixture(t);
   f.workos.setUserId(JEVICA_ADMIN_USER_IDS[0]);
@@ -100,6 +126,15 @@ integration('unverified accounts and incorrect token issuer never enter the dura
   assert.equal((await f.login()).response.status, 403);
   f.workos.setTokenClientId('client_test'); f.workos.setIssuer('https://wrong.example');
   assert.equal((await f.login()).response.status, 403);
+  assert.equal(await f.redis.hlen(f.keys[2]), 0);
+});
+
+integration('email-only, password, and Google authentication cannot enter the distributed session registry', async t => {
+  const f = await fixture(t);
+  for (const method of ['MagicAuth', 'Password', 'GoogleOAuth']) {
+    f.workos.setAuthenticationMethod(method);
+    assert.equal((await f.login()).response.status, 403);
+  }
   assert.equal(await f.redis.hlen(f.keys[2]), 0);
 });
 
@@ -232,7 +267,7 @@ integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on ano
   const sdk=new WorkOS(config.apiKey,{clientId:config.clientId});
   sdk.post=async(path,body)=>{
     assert.equal(path,'/user_management/authenticate');assert.ok(body.code_verifier.length>=43);
-    return {data:{user:{object:'user',id:'user_sdk',email:'private@example.com',email_verified:true,first_name:'Val',last_name:null,profile_picture_url:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},access_token:accessToken,refresh_token:'private-refresh',authentication_method:'Password'}};
+    return {data:{user:{object:'user',id:'user_sdk',email:'private@example.com',email_verified:true,first_name:'Val',last_name:null,profile_picture_url:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},access_token:accessToken,refresh_token:'private-refresh',authentication_method:'GitHubOAuth'}};
   };
   sdk.userManagement.getJWKS=async()=>async()=>publicKey;
   const f=await fixture(t,{workos:sdk}),{response,sessionCookie}=await f.login();

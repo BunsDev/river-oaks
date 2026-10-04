@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { WebSocket } from 'ws';
 import { createDistributedServer } from '../distributed-app.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 for (const failure of ['snapshot-read', 'join-acknowledgment']) {
   test(`releases a committed connection after ${failure} failure`, { timeout: 3000 }, async t => {
@@ -25,7 +26,7 @@ for (const failure of ['snapshot-read', 'join-acknowledgment']) {
     };
     const auth = { authenticate: async () => identity, handle: async () => false };
     const security = { allow: async () => true, isBanned: async () => false, consumeTicket: async () => true };
-    const app = createDistributedServer({ auth, security, room, origin: 'http://localhost' });
+    const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
     t.after(() => app.close());
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });
@@ -62,7 +63,7 @@ test('coalesces waiting poses without reordering them across travel', { timeout:
   };
   const auth = { authenticate: async () => identity, handle: async () => false };
   const security = { allow: async () => true, isBanned: async () => false, consumeTicket: async () => true };
-  const app = createDistributedServer({ auth, security, room, origin: 'http://localhost' });
+  const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
   t.after(async () => { releaseFirst(); await app.close(); });
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
   const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });
@@ -100,7 +101,7 @@ test('compresses public snapshots without leaking private view fields and bounds
   };
   const auth = { authenticate: async () => identity, handle: async () => false };
   const security = { allow: async () => true, isBanned: async () => false, consumeTicket: async () => true };
-  const app = createDistributedServer({ auth, security, room, origin: 'http://localhost' });
+  const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
   t.after(() => app.close());
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
   const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });

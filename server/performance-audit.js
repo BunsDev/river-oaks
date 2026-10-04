@@ -39,7 +39,7 @@ async function transportProbe(players,durationMs) {
   const world=createSharedWorld(district);
   const auth={async authenticate(req){const userId=req.headers.cookie?.match(/(?:^|;\s*)audit=(probe-\d+)/)?.[1];
     return userId?{userId,name:userId,sessionId:userId,csrfToken:'audit-csrf',expiresAt:Date.now()+60000}:null;},async handle(){return false;}};
-  const app=createGameServer({auth,world,origin});
+  const app=createGameServer({auth,world,origin,waitlist:{isApproved:async()=>true}});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const base=`http://127.0.0.1:${app.server.address().port}`,connections=[],samples=[];
   try {

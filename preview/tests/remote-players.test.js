@@ -21,6 +21,8 @@ function load(url, context, nextLoad) {
 }
 register(new URL(`data:text/javascript,${encodeURIComponent(`export ${load.toString()}`)}`));
 const { createRemotePlayers } = await import('../src/remote-players.js');
+const { JEVICA_OWNER_USER_IDS } = await import('../src/shared-appearances.js');
+const ownerId = JEVICA_OWNER_USER_IDS[0];
 
 class Element {
   style = {};
@@ -70,7 +72,7 @@ test('failed remote look keeps the loaded rig and retries after a bounded delay'
   globalThis.__remoteAvatarAttempts=[];globalThis.__remoteFailOnce='kai-noir';
   try{
     let time=1000;const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element(),{now:()=>time});
-    const peer={id:'peer',name:'Alex',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'};
+    const peer={id:ownerId,name:'Alex',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'};
     players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));
     players.sync([{...peer,appearance:'kai-noir'}],'self');await new Promise(resolve=>setImmediate(resolve));
     assert.equal(players.stats()[0].appearance,'jevica','failed request does not claim a loaded look');
@@ -89,7 +91,7 @@ test('remote player swaps to the authoritative appearance without leaving an old
   const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
   try{
     const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
-    const peer={id:'peer',name:'Alex',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'};
+    const peer={id:ownerId,name:'Alex',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'};
     players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));
     assert.equal(scene.children[0].children[0].userData.profile,'jevica');
     players.sync([{...peer,appearance:'man-workwear'}],'self');await new Promise(resolve=>setImmediate(resolve));
@@ -97,6 +99,17 @@ test('remote player swaps to the authoritative appearance without leaving an old
     assert.equal(scene.children[0].children[0].userData.appearance,'man-workwear');
     assert.equal(scene.children[0].children.length,2,'only the current rig and its flight vehicle remain');
     assert.equal(players.stats()[0].appearance,'man-workwear');
+    players.dispose();
+  }finally{globalThis.document=previousDocument;}
+});
+
+test('a non-owner remote cannot render as Jevica',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  try{
+    const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+    players.sync([{id:'guest',name:'Guest',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'}],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(players.stats()[0].appearance,'sable-human');
     players.dispose();
   }finally{globalThis.document=previousDocument;}
 });

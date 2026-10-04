@@ -12,7 +12,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
   const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
   const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
-  const login=element('a','Sign in with WorkOS','multiplayer-primary');login.href='/auth/login';login.hidden=true;
+  const login=element('a','Sign in with GitHub','multiplayer-primary');login.href='/auth/login?provider=github';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
   const playSolo=element('button','Play single player');playSolo.type='button';playSolo.hidden=!onPlaySolo;
   const gateLogout=element('button','Sign out');gateLogout.type='button';gateLogout.hidden=true;
@@ -105,7 +105,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
     try{
       worldId=worldIdFromSearch(location.search);
       const session=await api('/auth/session');
-      if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play with others.');connecting=false;return;}
+      if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
       identity=session.user;csrfToken=session.csrfToken;
       const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});moderator=access.moderator;
       if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
@@ -184,7 +184,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
     },
     update(now){
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.yaw,altitude:pose.altitude}));}
+      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();social.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},

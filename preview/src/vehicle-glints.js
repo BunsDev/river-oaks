@@ -4,7 +4,7 @@ import * as THREE from 'three';
 // shadows, particle allocation, or full-screen bloom passes.
 export function createVehicleGlints(spec) {
  const points=[];
- if(spec.kind==='rolls')for(const side of [-1,1])for(let i=0;i<14;i++)points.push([-3.05+i*.46,1.01,side*1.074]);
+ if(spec.kind==='rolls')for(const side of [-1,1])for(let i=0;i<14;i++)points.push([(-3.05+i*.46)*.7,1.01,side*1.074*.7]);
  else for(const side of [-1,1])for(let i=0;i<9;i++)points.push([-.6+i*.16,.65+.35*Math.sin(i*.52),side*.24]);
  for(const [x,y,z] of spec.wheels)for(const side of [-1,1])points.push([x,y,z+side*(spec.kind==='rolls'?.13:.09)]);
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points.flat(),3));

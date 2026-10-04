@@ -34,8 +34,8 @@ export function createPlayMode({ viewport, storage = null, active = 'solo', reme
   });
   const note = document.createElement('p');
   note.textContent = remembered
-    ? 'Multiplayer may ask you to sign in with WorkOS. Single player stays on this device.'
-    : 'This browser did not save your choice, so it lasts for this visit. Multiplayer may ask you to sign in with WorkOS.';
+    ? 'An approved GitHub sign-in is required for either mode. Single player stays on this device.'
+    : 'This browser did not save your choice, so it lasts for this visit. An approved GitHub sign-in is required for either mode.';
   options.append(...buttons, note);
   control.append(toggle, options);
   viewport.append(control);

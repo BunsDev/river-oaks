@@ -37,6 +37,8 @@ async page => {
   // Strafing turns the body to its travel, so the camera sees the gait in profile.
   await host.focus();await page.keyboard.down('KeyD');await page.keyboard.down('ShiftLeft');
   await page.waitForFunction(()=>Number(document.querySelector('#canvas-host').dataset.beastMotion)>.95,null,{timeout:5000});
+  await page.waitForFunction(()=>Number(document.querySelector('#walking-hud').dataset.speed)>4,null,{timeout:5000});
+  check(true,'The beast sprint actually travels faster than upright running');
   check(true,'Beast movement eases fully in while moving');
   await page.waitForTimeout(500);
   await page.screenshot({path:'output/playwright/beast-movement-lope.png'});

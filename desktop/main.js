@@ -1,21 +1,23 @@
-import { app, BrowserWindow, Menu, dialog, net, protocol, screen, session, shell } from 'electron';
+import { app, BrowserWindow, Menu, dialog, net, screen, session, shell } from 'electron';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { bridgeRequest, navigationAllowed, resolveAsset, windowBounds } from './runtime.js';
+import { navigationAllowed, windowBounds } from './runtime.js';
+import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 
 app.setName('River Oaks');
 app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
-protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
 let window, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
-const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'app://game/';
+const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://sim.jev.works/';
+const gameOrigin = new URL(entry).origin;
+const clientId = dev ? process.env.WORKOS_CLIENT_ID : 'client_01M3ZHFZDKDSTJ2RNSMP5V9SKV';
 if (dev) {
   const url = new URL(entry);
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
+  if (!clientId && process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE !== '1') throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
 }
 
 async function saveWindow() {
@@ -26,10 +28,30 @@ async function saveWindow() {
 }
 
 async function loadGame() {
-  try { await window.loadURL(entry); }
+  try {
+    const current = await net.fetch(`${gameOrigin}/auth/session`, { credentials: 'include' }).then(response => response.json()).catch(() => null);
+    if (!current?.authenticated) {
+      const refreshToken = await deviceSignIn({ clientId, openBrowser: async (url, code) => {
+        const verification = new URL(url);
+        verification.search = '';
+        verification.hash = '';
+        const { response } = await dialog.showMessageBox({ type: 'info', message: 'Sign in to River Oaks',
+          detail: `Choose GitHub and confirm code ${code}. To avoid an existing Google session, open ${verification} in a private window and enter the code there.`,
+          buttons: ['Open browser', 'Use private window', 'Quit'], defaultId: 0, cancelId: 2 });
+        if (response === 2) return false;
+        if (response === 0) await shell.openExternal(url);
+        return true;
+      } });
+      if (!refreshToken) { app.quit(); return; }
+      const cookie = await exchangeDesktopSession({ origin: gameOrigin, refreshToken });
+      await session.defaultSession.cookies.set({ url: gameOrigin, name: 'river_oaks_session', ...cookie,
+        httpOnly: true, secure: !dev, sameSite: 'lax' });
+    }
+    await window.loadURL(entry);
+  }
   catch (error) {
     if (quitting || !window || window.isDestroyed()) return;
-    const { response } = await dialog.showMessageBox(window, { type: 'error', message: 'River Oaks could not open', detail: dev ? 'The development server may have stopped. Restart npm run desktop:dev to reconnect.' : 'The bundled game could not load. Try reopening the application.', buttons: ['Try again', 'Quit'], defaultId: 0, cancelId: 1 });
+    const { response } = await dialog.showMessageBox({ type: 'error', message: 'River Oaks could not open', detail: error.message, buttons: ['Try again', 'Quit'], defaultId: 0, cancelId: 1 });
     console.error('Game load failed:', error.message);
     if (response === 0) void loadGame(); else app.quit();
   }
@@ -55,7 +77,17 @@ function createWindow() {
     if (/^https:\/\//.test(url)) void dialog.showMessageBox(window, { message: 'Open this link in your browser?', detail: url, buttons: ['Cancel', 'Open browser'], defaultId: 0, cancelId: 0 }).then(({ response }) => { if (response === 1) void shell.openExternal(url); });
     return { action: 'deny' };
   });
-  for (const eventName of ['will-navigate', 'will-redirect']) contents.on(eventName, (event, url) => { if (!navigationAllowed(url, entry)) event.preventDefault(); });
+  for (const eventName of ['will-navigate', 'will-redirect']) contents.on(eventName, (event, url) => {
+    let target;
+    try { target = new URL(url); } catch { event.preventDefault(); return; }
+    if (target.origin === gameOrigin && target.pathname === '/auth/login') {
+      event.preventDefault(); void loadGame(); return;
+    }
+    if (target.hostname === 'api.workos.com' && target.pathname.includes('/logout')) {
+      event.preventDefault(); void contents.loadURL(entry); return;
+    }
+    if (!navigationAllowed(url, entry)) event.preventDefault();
+  });
   contents.on('will-attach-webview', event => event.preventDefault());
   contents.on('render-process-gone', async (_event, details) => {
     if (quitting || details.reason === 'clean-exit') return;
@@ -90,21 +122,6 @@ else {
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     session.defaultSession.setPermissionCheckHandler(() => false);
     session.defaultSession.on('will-download', event => event.preventDefault());
-    if (!dev) {
-      const root = fileURLToPath(new URL('../dist/preview/', import.meta.url));
-      protocol.handle('app', async request => {
-        const bridge=await bridgeRequest(request,net.fetch);
-        if(bridge)return bridge;
-        if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
-        const file = await resolveAsset(root, request.url);
-        if (!file) return new Response('Not found', { status: 404 });
-        const response = await net.fetch(pathToFileURL(file).href);
-        const headers = new Headers(response.headers);
-        headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob:; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-src 'none'");
-        headers.set('X-Content-Type-Options', 'nosniff');
-        return new Response(request.method === 'HEAD' ? null : response.body, { status: response.status, headers });
-      });
-    }
     try {
       const state = JSON.parse(await readFile(stateFile, 'utf8'));
       if (state && typeof state === 'object') saved = state;

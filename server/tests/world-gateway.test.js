@@ -9,6 +9,7 @@ import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 import { roomPrefixFor } from '../world-keys.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 test('Jevica publishes a second world that survives gateway replacement', {skip:!process.env.REDIS_URL,timeout:60_000},async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
@@ -21,7 +22,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
     return userId?{userId,name:userId,sessionId:userId+'-session',csrfToken:'test-csrf',expiresAt:Date.now()+60_000}:null;
   },isSessionActive:async()=>true,close(){}};
   const security=createRedisSecurity({redis,prefix});
-  const createGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,origin,moderators:[admin]});
+  const createGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,waitlist:approvedWaitlist,origin,moderators:[admin]});
   let gateway=createGateway();
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   let base=`http://127.0.0.1:${gateway.server.address().port}`;const sockets=[];

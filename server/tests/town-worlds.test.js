@@ -18,7 +18,8 @@ async function freePort(){
 test('the local owner publishes and joins a second world without restarting the town',async t=>{
   const port=await freePort(),origin=`http://127.0.0.1:${port}`;
   const temporary=await mkdtemp(join(tmpdir(),'river-oaks-worlds-'));
-  const town=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',MODERATION_FILE:join(temporary,'moderation.json')},devAuth:'local',staticRoot:null});
+  const town=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',
+    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json')},devAuth:'local',staticRoot:null});
   await new Promise(resolve=>town.server.listen(port,'127.0.0.1',resolve));
   t.after(async()=>{await town.close();await rm(temporary,{recursive:true,force:true});});
   const first=await fetch(origin+'/auth/session'),owner=await first.json(),cookie=first.headers.get('set-cookie').split(';')[0];
@@ -74,5 +75,6 @@ test('a configured alternate world exposes the bundled geography without a catal
   const response=await fetch(origin+'/api/world-data?world=private-garden');
   assert.equal(response.status,200);
   assert.deepEqual(await response.json(),{template:'river-oaks'});
+  assert.equal((await fetch(origin+'/api/waitlist/status')).status,401);
   assert.equal((await fetch(origin+'/api/world-data?world=missing')).status,404);
 });

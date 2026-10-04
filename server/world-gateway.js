@@ -9,8 +9,9 @@ import { createRedisSocial } from './social.js';
 import { createRedisProfiles } from './profiles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
-export function createWorldGateway({redis,namespace,worldData,auth,security,origin,configuredWorldId=DEFAULT_WORLD_ID,
+export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
   moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
+  if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix});
   const worlds=new Map(),pending=new Map();
@@ -37,9 +38,10 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,orig
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
         ...(isAdmin?{isAdmin}:{}),
-        authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId) && !(await security.isBanned(identity.userId))});
+        authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
+          && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,landmarks,social,profiles,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

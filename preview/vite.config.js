@@ -23,6 +23,7 @@ export default defineConfig({
       '/api/social': townHttp,
       '/api/profile': townHttp,
       '/api/moderation': townHttp,
+      '/api/waitlist': townHttp,
       '/multiplayer': { target: `ws://127.0.0.1:${townPort}`, ws: true },
       '/v1': 'http://127.0.0.1:8765',
       '/health': 'http://127.0.0.1:8765',

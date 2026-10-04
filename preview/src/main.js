@@ -208,7 +208,7 @@ function initializeRenderer() {
   void worldPortal.load();
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
-  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
+  playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
     getPortrait: id => portraits.portrait(id) });
@@ -770,7 +770,7 @@ function birdInterests() {
   const me = walking?.getPosition();
   // view: where the player is looking, so the companion bird can circle in front of them.
   const yaw = walking?.getYaw?.() ?? 0;
-  if (me) interests.push({ id: 'player', label: playerAvatar?.form === 'jevica' || !playerAvatar ? 'Jevica' : 'you', position: [me[0], me[1]], view: [-Math.sin(yaw), Math.cos(yaw)], weight: 4 });
+  if (me) interests.push({ id: 'player', label: playerAvatar?.appearance?.startsWith('jevica') ? 'Jevica' : 'you', position: [me[0], me[1]], view: [-Math.sin(yaw), Math.cos(yaw)], weight: 4 });
   for (const player of multiplayer?.snapshot?.players ?? []) if (player.id !== multiplayer.identity?.id) interests.push({ id: `player:${player.id}`, label: player.name, position: player.position, weight: 4 });
   for (const spot of world?.communityLocations ?? []) interests.push({ id: `spot:${spot.id}`, label: spot.name, position: [spot.position[0], spot.position[1]], weight: 1.5 });
   return interests;
@@ -899,7 +899,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
-  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { createWaitlistRoutes } from './waitlist-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
@@ -18,9 +19,10 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
+  if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
   const connections = new Map(), moderatorIds = new Set(moderators);
@@ -35,6 +37,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, land
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
     if (await security.isBanned(identity.userId)) { json(res, 403, { error: 'This account cannot join the town.' }); return null; }
+    if (!(await waitlist.isApproved(identity.userId))) { json(res, 403, { error: 'waitlist_approval_required' }); return null; }
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'Invalid request origin or security token.' }); return null;
     }
@@ -53,6 +56,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, land
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+    onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
   function publish(view) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
@@ -76,6 +81,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, land
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
+      if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
@@ -221,7 +227,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, land
       const protocol = url.searchParams.get('protocol');
       if (protocol !== String(WORLD_PROTOCOL_VERSION) && !(protocol === null && worldId === DEFAULT_WORLD_ID)) return reject(426);
       const identity = await auth.authenticate(req);
-      if (!identity || identity.expiresAt <= now() || await security.isBanned(identity.userId)
+      if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});

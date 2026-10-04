@@ -5,9 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#e9ece5" />
     <title>River Oaks District — Walk the district</title>
+    <style>
+      body:not(.access-granted) .app-shell { display: none !important; }
+      .access-gate [hidden], .access-gate[hidden], .access-review[hidden], .access-tools[hidden], .access-tools [hidden] { display: none !important; }
+    </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23455c4f'/%3E%3Cpath d='M9 25V8h8a5 5 0 010 10H9m7 0 8 7' stroke='%23e9ece5' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
   </head>
   <body>
+    <section class="access-gate" id="access-gate" aria-labelledby="access-title">
+      <div class="access-card">
+        <span class="access-kicker">River Oaks District</span>
+        <h1 id="access-title" tabindex="-1">Your place in the district</h1>
+        <p id="access-message" role="status">Checking your access…</p>
+        <div id="access-providers" class="access-actions" hidden>
+          <a href="/auth/login?provider=github">Continue with GitHub</a>
+        </div>
+        <button id="access-retry" type="button" hidden>Try again</button>
+        <button id="access-gate-signout" type="button" hidden>Sign out</button>
+      </div>
+    </section>
+    <section class="access-review" id="access-review" role="dialog" aria-modal="true" aria-labelledby="access-review-title" hidden>
+      <div class="access-review-card">
+        <h2 id="access-review-title" tabindex="-1">Waitlist requests</h2>
+        <p id="access-review-status" role="status"></p>
+        <div id="access-review-list"></div>
+        <button id="access-review-close" type="button">Close</button>
+      </div>
+    </section>
     <div class="app-shell">
       <aside class="field-panel" id="control-panel" aria-label="Preview controls">
         <header class="identity">
@@ -23,6 +47,10 @@
             </div>
           </div>
         </header>
+        <div class="access-tools" id="access-tools" hidden>
+          <button id="access-admin" type="button" hidden>Waitlist requests</button>
+          <button id="access-signout" type="button">Sign out</button>
+        </div>
         <nav class="experience-nav" aria-label="District experiences">
           <button data-section="community-section">People nearby</button><button data-section="explore-section">Places</button><button data-section="settings-section">Settings</button>
         </nav>
@@ -98,6 +126,6 @@
         <div id="district-source" class="district-source" hidden><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a><span> · Artistic interpretation</span></div>
       </main>
     </div>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/access-entry.js"></script>
   </body>
 </html>

@@ -4,10 +4,10 @@
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
 ## Play in the desktop app
 
-Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build a standalone app with the game assets bundled. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
+Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
 
 
-Jev's garage offers a pink six-wheel glass-canopy car and rose motorcycle, with
+Jev's garage offers a compact pink four-wheel glass-canopy car and rose motorcycle, with
 gold spinners, fitted passenger clothing and optional **Jev smart drive** through
 the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
 curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)
@@ -15,7 +15,7 @@ and [street geometry](docs/street-standards.md).
 
 ## Run the live showcase
 
-Players can choose single player or the shared town from the play-mode control. `npm run dev` lets multiplayer use local development identities without WorkOS. Production shared play uses WorkOS sign-in; signed-in players see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, and the Node server. Production multiplayer requires authenticated, verified accounts.
+Players can choose single player or the shared town from the play-mode control after signing in with GitHub through WorkOS and receiving waitlist approval. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
 
 For the standalone showcase described below, start Vite with `VITE_MULTIPLAYER=off npm run dev`. Solo play supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. `VITE_SINGLE_PLAYER=true` also selects solo play when `VITE_MULTIPLAYER` is unset. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
 
@@ -37,7 +37,7 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
-The experience starts as Jevica in third person. Shared-town players can select from 11 looks built on seven shipped rigs, including fox, wolf, lynx, human, and hybrid styles; standalone play retains Jevica's authored story and costume. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
@@ -130,7 +130,7 @@ python3 scripts/check_secrets.py --all
 gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
 ```
 
-The installed Git hook scans the **staged index**, blocks credential filenames even when force-added, and fails closed if Gitleaks is missing. CI runs the same protection plus a full-history scan, lint, Python 3.11/3.13 tests, preview behavior tests/build on Node 24, and an offline pipeline smoke test. Actions and the scanner archive are pinned. CI has not run on GitHub. New clones must run `scripts/install-hooks.sh`; require the `Verify` checks in repository branch protection before relying on CI as a merge gate.
+The installed Git hook scans the **staged index**, blocks credential filenames even when force-added, and fails closed if Gitleaks is missing. CI runs the same protection plus a full-history scan, lint, Python 3.11/3.13 tests, preview behavior tests/build on Node 24, and an offline pipeline smoke test. Actions and the scanner archive are pinned. New clones must run `scripts/install-hooks.sh`; require the `Verify` checks in repository branch protection before relying on CI as a merge gate.
 
 Tests target observable failure modes: missing ArcGIS pages, coordinate/containment corruption, mismatched canopy placement, malformed Jev answers, bounded timeouts, overloaded HTTP requests, schedule preservation, and real secret-guard rejection in temporary Git repositories. They do not substitute for Unreal compilation, visual inspection, privacy review, or GPU profiling. [Testing approach](docs/testing.md)
 

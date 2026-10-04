@@ -1,128 +1,36 @@
 {
-  "createdAt": "2026-10-03T07:04:32.331Z",
+  "createdAt": "2026-10-04T05:35:11.765Z",
   "status": "passed",
   "modes": [
-    "development",
     "required"
   ],
+  "rendering": "Full rendering",
   "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
   "results": [
     {
-      "name": "multiplayer-dev",
+      "name": "access-gate",
       "status": "passed",
-      "seconds": 43.967,
-      "result": {
-        "checks": [
-          "each browser is its own development player",
-          "both players share one town",
-          "no sign-in gate blocks development",
-          "Players start with an appearance picker and a default look",
-          "Sable selection reaches the other browser and its rendered remote avatar",
-          "New town chat rows are announced after initial history loads",
-          "A sent town message appears once for both players",
-          "Chat history returns once after reconnect",
-          "A reply reaches the reconnected player through the live chat UI",
-          "Shared play exposes player-owned building",
-          "shared play hides the local invasion",
-          "players arrive on separate spots (1.60 m apart)",
-          "a shared teleport lands beside Jo Malone London in both browsers' snapshots",
-          "a landmark teleport is a server-checked position travel the other browser sees",
-          "Builder mode can be switched on",
-          "The preview appears where the pointer meets the ground",
-          "An open spot is marked ready (Ready to place.)",
-          "A click places the creation exactly where the preview stood",
-          "The preview turns red on the spot just taken (Too close to another creation.)",
-          "R turns the preview",
-          "Escape leaves builder mode and removes the preview",
-          "Escape in builder mode leaves the dock open",
-          "Shared mobile play starts with a compact dock",
-          "Flight remains discoverable in shared mobile play",
-          "Shared mobile play hides solo companion and vehicle actions",
-          "Shared mobile play hides local-only scenarios",
-          "Shared mobile controls stay within the viewport",
-          "No browser page errors"
-        ],
-        "a": {
-          "self": "dev-fc6245d4de42",
-          "players": [
-            "dev-fc6245d4de42",
-            "dev-9831decd5683"
-          ],
-          "gate": true,
-          "appearance": "jevica",
-          "appearancePicker": true,
-          "invasion": true,
-          "roster": "2 players in town"
-        },
-        "b": {
-          "self": "dev-9831decd5683",
-          "players": [
-            "dev-fc6245d4de42",
-            "dev-9831decd5683"
-          ],
-          "gate": true,
-          "appearance": "jevica",
-          "appearancePicker": true,
-          "invasion": true,
-          "roster": "2 players in town"
-        },
-        "errors": []
-      }
-    },
-    {
-      "name": "multiplayer",
-      "status": "passed",
-      "seconds": 84.857,
+      "seconds": 0.536,
       "result": {
         "passed": true,
         "checks": [
-          "Shared appearance picker is available",
-          "Unsynchronized carriage and Force controls remain hidden in shared play after assets load",
-          "Shared diagnostics and town exclude the solo coachman",
-          "Force shortcut cannot bypass shared-mode gating",
-          "Two accounts share the roster and rendered avatars",
-          "A peer sees the selected avatar",
-          "Quick person-then-form choices settle without a cooldown error",
-          "A peer sees beast movement on the shared beast form",
-          "Appearance survives reconnect",
-          "Beast movement belongs to the account and survives reconnect",
-          "Confirmed grant moves keyboard focus to undo",
-          "Second player sees server-owned dragon wish",
-          "Egg hatches into a visible dragon",
-          "The same wish disrupts town residents for both players",
-          "Confirmed undo restores keyboard focus",
-          "Invisible resident keeps visible clothing in shared play",
-          "Reload rejoins the existing town and keeps its active wishes",
-          "Walking is validated and visible to the other player",
-          "Shared town has no mobile horizontal overflow",
-          "Sign-out revokes play and returns to the sign-in gate",
-          "No uncaught errors: "
-        ],
-        "errors": [],
-        "scope": "Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance."
-      }
-    },
-    {
-      "name": "multiplayer-gate",
-      "status": "passed",
-      "seconds": 51.02,
-      "result": {
-        "passed": true,
-        "checks": [
-          "Disconnected game is locked",
-          "Disconnect focuses the recovery dialog title",
-          "Authenticated recovery hides the sign-in link",
-          "Forward Tab reaches the first available recovery action",
-          "Shift+Tab reaches sign-out without entering the inert game",
-          "Tab wraps to the first recovery action",
-          "Successful retry restores movement focus",
-          "Mobile recovery dialog fits the viewport",
-          "Signed-out gate starts with accessible title focus",
-          "Sign-in link is reachable by keyboard",
-          "Anonymous gate keeps keyboard focus on its available action"
-        ],
-        "errors": []
+          "Anonymous players see only GitHub sign-in",
+          "Anonymous players cannot start either play mode",
+          "Signed-in pending players cannot start either play mode",
+          "Pending players can sign out",
+          "Waitlist review opens with keyboard focus in its dialog",
+          "Approvers can review pending and decided accounts",
+          "User IDs are hidden from the waitlist by default",
+          "Approvers can reveal a user ID",
+          "Approvers can hide the user ID again",
+          "Approvers can copy a hidden user ID",
+          "Copying does not reveal the user ID",
+          "Approvers can revoke a prior approval with CSRF protection",
+          "Approvers can reconsider a declined request",
+          "Escape returns focus to the game controls"
+        ]
       }
     }
-  ]
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
 }

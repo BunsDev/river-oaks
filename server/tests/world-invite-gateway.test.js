@@ -7,6 +7,7 @@ import { WebSocket } from 'ws';
 import { createWorldGateway } from '../world-gateway.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 
 test('contact world invitations use the sender room and persist across gateway replacement', {skip:!process.env.REDIS_URL,timeout:30_000},async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
@@ -19,7 +20,7 @@ test('contact world invitations use the sender room and persist across gateway r
     return userId?{userId,name:userId,sessionId:userId+'-session',csrfToken:'test-csrf',expiresAt:Date.now()+60_000}:null;
   },isSessionActive:async()=>true,close(){}};
   const security=createRedisSecurity({redis,prefix}),sockets=[];
-  const makeGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,origin});
+  const makeGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,waitlist:approvedWaitlist,origin});
   let gateway=makeGateway();await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   let base=`http://127.0.0.1:${gateway.server.address().port}`;
   t.after(async()=>{

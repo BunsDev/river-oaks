@@ -4,12 +4,20 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer as createSocket } from 'node:net';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = await mkdtemp(join(tmpdir(), 'river-oaks-e2e-'));
 const env = { ...process.env };
 let vite;
 if (process.argv.includes('--dev')) {
+  const socket=createSocket();
+  await new Promise((resolve,reject)=>{socket.once('error',reject);socket.listen(0,'127.0.0.1',resolve);});
+  const townPort=socket.address().port;
+  await new Promise(resolve=>socket.close(resolve));
+  const fixture={RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_DEV_TOWN:'on',
+    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),VITE_MULTIPLAYER:'auto',MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
+  Object.assign(process.env,fixture);Object.assign(env,fixture);
   const { createServer } = await import('vite');
   vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), server: { port: 0 } });
   await vite.listen();
@@ -20,7 +28,7 @@ const started = performance.now();
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];
-const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'bundled', checks: [] };
+const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
@@ -41,7 +49,7 @@ try {
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
   assert.deepEqual(failedAssets, []);
-  check('all bundled assets and playable character loaded');
+  check('game assets and playable character loaded');
   const voiceSettings=await page.evaluate(async()=>{try{const r=await fetch('/v1/settings/elevenlabs');return r.ok?await r.json():null;}catch{return null;}});
   if(voiceSettings?.configured) {
     report.voice=await page.evaluate(async()=>{

@@ -5,6 +5,7 @@ import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
+import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import './walking.css';
@@ -15,11 +16,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
   hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside<br>B to fly · Space to rise · C to lower · Escape closes conversations</p></div></div>`;
+  const sprintButton=document.createElement('button');
+  sprintButton.id='walking-sprint';sprintButton.dataset.walkKey='ShiftLeft';
+  sprintButton.setAttribute('aria-label','Hold to sprint');sprintButton.textContent='Hold to sprint';sprintButton.hidden=true;
+  hud.querySelector('#walking-movement').append(sprintButton);
   $('#viewport').append(hud);
   const keys = new Set();
   const placedObjects = [];
   let autoInput = null, transport = null;
   let flight = createFlightState();
+  let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
   let active = false, environment, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
@@ -143,6 +149,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) { onManual(); transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
   });
   return {
+    setTraversal({canFly=false,kind=null}={}) {
+      flightAllowed=Boolean(canFly);beastKind=beastTraversal(kind)?kind:null;
+      sprintButton.hidden=!beastKind;
+      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to ${beastKind?'sprint':'walk briskly'}<br>Arrow keys to turn · E to talk · F steps inside<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+    },
     addObstacle(object) { placedObjects.push(object); return () => { const i=placedObjects.indexOf(object);if(i>=0)placedObjects.splice(i,1); }; },
     get active() { return active; },
     get riding() { return Boolean(transport); },
@@ -174,7 +185,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       place();
     },
     toggleFlight() {
-      if (!active || currentRoom() || transport) return false;
+      if (!flightAllowed || !active || currentRoom() || transport) return false;
       onManual();autoInput=null;clear();
       if (!flight.active) return beginFlight(state,environment,flight);
       else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
@@ -272,7 +283,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
           const ride=transport.pose;state.yaw+=ride.yaw-yaw;
           state.position=[ride.seat[0],ride.seat[1]+.62,ride.seat[2]];
           state.speed=0;state.velocity=[0,0];
-        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,input,delta);
+        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,{...input,beastKind},delta);
       }
       place(delta);
       if (now - lastPaint < 150) return;
@@ -296,6 +307,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-place').textContent = transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
+      hud.dataset.speed = state.speed.toFixed(2);
       hud.dataset.yaw = state.yaw.toFixed(3);
       hud.dataset.flying=String(flight.active);hud.dataset.altitude=flight.altitude.toFixed(2);
       hud.dataset.position = JSON.stringify(state.position);

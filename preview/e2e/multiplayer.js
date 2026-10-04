@@ -93,13 +93,15 @@ async page => {
     await page.locator('#community-dialogue').waitFor({state:'hidden'});
     const closePanel=page.getByRole('button',{name:'Close exploration panel',exact:true});
     if(await closePanel.isVisible())await closePanel.click();
-    const before=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
+    // A nearby shop or tree can block one direction after the wish journey.
+    // Try each walking direction and require the peer to observe real travel.
     let walked=false;
-    for(const key of ['KeyS','KeyW','KeyA','KeyD']) {
-      await page.bringToFront();await page.locator('#canvas-host').focus();
+    await page.bringToFront();await page.locator('#canvas-host').focus();
+    for(const key of ['KeyS','KeyW','KeyA','KeyD']){
+      const before=await other.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
       await page.keyboard.down(key);
-      try {await page.waitForTimeout(1800);} finally {await page.keyboard.up(key);}
-      walked=await other.waitForFunction(({id,before})=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id===id);return Math.hypot(p.position[0]-before[0],p.position[1]-before[1])>0.25;},{id:'alice',before},{timeout:2000}).then(()=>true,()=>false);
+      try { await page.waitForTimeout(1800); } finally { await page.keyboard.up(key); }
+      walked=await other.waitForFunction(({id,before})=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id===id);return Math.hypot(p.position[0]-before[0],p.position[1]-before[1])>0.25;},{id:'alice',before},{timeout:5000}).then(()=>true,()=>false);
       if(walked)break;
     }
     check(walked,'Walking is validated and visible to the other player');
@@ -110,11 +112,10 @@ async page => {
     await other.bringToFront();
     const showControls=other.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await showControls.isVisible())await showControls.click();
-    await other.getByRole('button',{name:'Sign out',exact:true}).click();
-    await other.waitForFunction(()=>document.querySelector('.multiplayer-gate')?.hidden===false);
+    await other.locator('#access-signout').click();
+    await other.getByRole('link',{name:'Continue with GitHub'}).waitFor({state:'visible'});
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===1);
-    await other.getByRole('link',{name:'Sign in with WorkOS'}).waitFor({state:'visible'});
-    check(await other.getByRole('link',{name:'Sign in with WorkOS'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
+    check(await other.getByRole('link',{name:'Continue with GitHub'}).isVisible(),'Sign-out revokes play and returns to the sign-in gate');
     check(!errors.length,'No uncaught errors: '+errors.join('; '));
     return {passed:true,checks,errors,scope:'Two real browsers, test-only authenticated identities, real shared server; not live WorkOS or production hosting acceptance.'};
   } catch(error) {return {passed:false,checks,errors,failure:error.stack};} finally {await otherContext.close();}

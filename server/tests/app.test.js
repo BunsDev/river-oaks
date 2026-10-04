@@ -1,23 +1,48 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createGameServer } from '../app.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
 import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t,{landmarks=createMemoryLandmarks(),social=createMemorySocial(),worldId='river-oaks'}={}){
+async function fixture(t,options={},staticRoot='/nonexistent'){
+  const waitlist=options?.isApproved?options:options.waitlist??approvedWaitlist;
+  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),worldId='river-oaks'}=options?.isApproved?{}:options;
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
   world.worldId=worldId;
-  const app=createGameServer({auth,world,landmarks,social,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
+  const app=createGameServer({auth,world,landmarks,social,waitlist,origin:'http://127.0.0.1',staticRoot});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
   return {app,world,landmarks,origin,commands:()=>commands};
 }
+test('standalone server protects every game chunk and world data after approval',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
+  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
+    await writeFile(join(root,file),'fixture');
+  const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
+  const {origin}=await fixture(t,waitlist,root);
+  const get=(path,id)=>fetch(origin+path,{headers:id?{Cookie:`session=${id}`}:{}});
+  for(const path of ['/','/assets/index-entry.js','/assets/preload-helper-entry.js'])assert.equal((await get(path)).status,200,path);
+  for(const path of ['/assets/main-game.js','/assets/walking-game.js','/assets/three-game.js','/data/district.json']){
+    assert.equal((await get(path)).status,403,path);
+    assert.equal((await get(path,'guest')).status,403,path);
+    const response=await get(path,'owner');
+    assert.equal(response.status,200,path);
+    assert.equal(response.headers.get('cache-control'),'private, no-store');
+    assert.equal(response.headers.get('vary'),'Cookie');
+  }
+});
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
  const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?ticket='+token,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
@@ -52,6 +77,40 @@ test('two authenticated accounts receive the shared roster, and tickets are sing
  const b=await connect(origin,token2,'two');t.after(()=>b.ws.terminate());
  assert.equal(b.snapshot.players.length,2);assert.equal(world.players.size,2);
  await assert.rejects(connect(origin,token1,'one'));
+});
+test('concurrent upgrades cannot reuse a ticket while approval is pending',async t=>{
+ let hold=false,checking=0,release;
+ const approval=new Promise(resolve=>{release=resolve;});
+ const waitlist={...approvedWaitlist,async isApproved(){
+   if(!hold)return true;
+   if(++checking===2)release();
+   await approval;
+   return true;
+ }};
+ const {origin}=await fixture(t,waitlist);
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ hold=true;
+ const results=await Promise.allSettled([connect(origin,token,'one'),connect(origin,token,'one')]);
+ assert.equal(checking,2);
+ const admitted=results.filter(result=>result.status==='fulfilled');
+ assert.equal(admitted.length,1,'only one upgrade may consume the ticket');
+ t.after(()=>admitted[0].value.ws.terminate());
+});
+test('pending waitlist approval blocks tickets and revocation closes an active player',async t=>{
+ const approved=new Set();
+ const waitlist={...approvedWaitlist,async isApproved(userId){return approved.has(userId);}};
+ const {origin,app}=await fixture(t,waitlist);
+ assert.equal((await ticket(origin,'one')).status,403);
+ const pendingSocial=await fetch(origin+'/api/social/list',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:'session=one','X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:'{}'});
+ assert.equal(pendingSocial.status,403,'new world APIs also require approval');
+ approved.add('one');
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ const {ws}=await connect(origin,token,'one');t.after(()=>ws.terminate());
+ approved.delete('one');
+ ws.send(JSON.stringify({type:'pose',position:[0,0,0]}));
+ const code=await new Promise(resolve=>ws.once('close',resolve));
+ assert.equal(code,4001);
+ assert.equal((await ticket(origin,'one')).status,403);
 });
 test('oversized and flooding frames cannot generate unbounded world commands',async t=>{
  const {origin,commands}=await fixture(t);

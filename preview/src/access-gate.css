@@ -1,0 +1,29 @@
+.access-gate, .access-review {
+  position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center;
+  padding: 1.5rem; background: #172922; color: #f2eee4;
+}
+.access-card, .access-review-card {
+  width: min(100%, 28rem); padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px solid #aebfae; border-radius: 1.25rem;
+  background: #273e32; box-shadow: 0 1.5rem 5rem #0c1c15aa;
+  font: 1rem/1.5 system-ui, sans-serif;
+}
+.access-kicker { color: #b9d5b5; letter-spacing: .12em; text-transform: uppercase; font-size: .75rem; }
+.access-card h1 { margin: .5rem 0 1rem; font: 600 clamp(2rem, 6vw, 3rem)/1.1 Georgia, serif; }
+.access-card p { margin-bottom: 1.5rem; }
+.access-actions { display: grid; gap: .75rem; }
+.access-actions a, .access-card button, .access-tools button, .access-review button {
+  display: inline-block; padding: .7rem 1rem; border: 1px solid #d7e5d0; border-radius: .6rem;
+  background: #e7eadb; color: #172922; font: 600 1rem/1.25 system-ui, sans-serif;
+  text-align: center; text-decoration: none; cursor: pointer;
+}
+.access-actions a:hover, .access-card button:hover, .access-tools button:hover, .access-review button:hover { background: #fff6de; }
+.access-actions a:focus-visible, .access-card button:focus-visible, .access-tools button:focus-visible, .access-review button:focus-visible { outline: 3px solid #e8ba63; outline-offset: 3px; }
+.access-tools { display: flex; gap: .5rem; padding: .5rem 1rem; }
+.access-tools button { padding: .45rem .7rem; font-size: .8rem; }
+.access-review { background: #0b1915dd; }
+.access-review-card { max-height: 80vh; overflow: auto; width: min(100%, 40rem); }
+.access-review-card h2 { margin-top: 0; }
+.access-request { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 0; border-top: 1px solid #738779; }
+.access-request span { flex: 1 1 100%; overflow-wrap: anywhere; }
+.access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: #d7e5d0; }

@@ -1,12 +1,14 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { WorkOS } from '@workos-inc/node';
+import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
+const PROVIDERS = { github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -50,6 +52,21 @@ if p.op == 'state-put' then
   redis.call('PEXPIRE', KEYS[1], p.ttl)
   redis.call('PEXPIRE', KEYS[2], p.ttl)
   return 'ok'
+elseif p.op == 'state-get' then
+  return redis.call('HGET', KEYS[1], p.id)
+elseif p.op == 'verify-attempt' then
+  local raw = redis.call('HGET', KEYS[1], p.id)
+  if not raw then return false end
+  local record = cjson.decode(raw)
+  if record.kind ~= 'email-verify' or record.expiresAt <= time then return false end
+  record.attempts = record.attempts + 1
+  if record.attempts > 5 then
+    redis.call('HDEL', KEYS[1], p.id)
+    redis.call('ZREM', KEYS[2], p.id)
+    return false
+  end
+  redis.call('HSET', KEYS[1], p.id, cjson.encode(record))
+  return cjson.encode(record)
 elseif p.op == 'state-take' then
   local raw = redis.call('HGET', KEYS[1], p.id)
   redis.call('HDEL', KEYS[1], p.id)
@@ -147,7 +164,9 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     res.setHeader('Set-Cookie', [...(Array.isArray(previous) ? previous : previous ? [previous] : []), serialized]);
   }
   function identity(result, record) {
-    if (!result.authenticated || result.user?.emailVerified !== true || result.user.id !== record.userId || result.sessionId !== record.sessionId) return null;
+    if (!result.authenticated || !Object.values(PROVIDERS).includes(result.authenticationMethod)
+      || result.authenticationMethod !== record.authMethod || result.user?.emailVerified !== true
+      || result.user.id !== record.userId || result.sessionId !== record.sessionId) return null;
     try {
       // SDK authentication has verified the seal and JWT signature before decode.
       const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
@@ -157,7 +176,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
       const name = [result.user.firstName, result.user.lastName].filter(part => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
-      return { userId: record.userId, sessionId: record.sessionId, name, expiresAt, csrfToken: record.csrfToken };
+      return { userId: record.userId, sessionId: record.sessionId, name, email: result.user.email, expiresAt, csrfToken: record.csrfToken };
     } catch { return null; }
   }
 
@@ -204,21 +223,46 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     return null;
   }
 
+  async function finishSignIn(result, provider, res) {
+    if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return; }
+    if (result.authenticationMethod !== provider) { json(res, 403, { error: 'unsupported_provider' }); return; }
+    const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
+    const verified = await session.authenticate();
+    if (!validId(verified.sessionId) || !validId(verified.user?.id) || verified.authenticationMethod !== provider) {
+      logSessionRejection(verified, {}, clientId, now());
+      json(res, 403, { error: 'invalid_session' }); return;
+    }
+    const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
+      generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
+      sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
+    if (!identity(verified, record)) {
+      logSessionRejection(verified, record, clientId, now());
+      json(res, 403, { error: 'invalid_session' }); return;
+    }
+    if (!enabled) throw new Error('Auth closed');
+    if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
+    setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
+    res.writeHead(302, { Location: '/' }); res.end();
+  }
+
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;
-    if (!['/auth/login', '/auth/callback', '/auth/session', '/auth/logout'].includes(path)) return false;
+    if (!['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange'].includes(path)) return false;
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Referrer-Policy', 'no-referrer');
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
-    const method = path === '/auth/logout' ? 'POST' : 'GET';
-    if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
+    const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange'].includes(path) ? 'POST' : 'GET';
+    if (!method.split(', ').includes(req.method)) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     let phase = path;
     try {
       if (path === '/auth/login') {
-        const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider: 'authkit', clientId, redirectUri: `${base}/auth/callback` });
+        const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
+        const provider = PROVIDERS[choice];
+        if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
+        const authorization = await sdk.userManagement.getAuthorizationUrlWithPKCE({ provider, clientId, redirectUri: `${base}/auth/callback` });
         if (!enabled || typeof authorization.state !== 'string' || authorization.state.length < 32 || authorization.state.length > 200
           || typeof authorization.codeVerifier !== 'string') throw new Error('Invalid authorization');
         const stored = await transaction({ op: 'state-put', id: digest(authorization.state), ttl: STATE_TTL,
-          record: { codeVerifier: authorization.codeVerifier, expiresAt: now() + STATE_TTL } });
+          record: { codeVerifier: authorization.codeVerifier, provider, expiresAt: now() + STATE_TTL } });
         if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, STATE_COOKIE, authorization.state, STATE_TTL / 1000);
         res.writeHead(302, { Location: authorization.url }); res.end();
@@ -231,27 +275,80 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const pending = decode(await transaction({ op: 'state-take', id: digest(state) }));
         if (!pending || pending.expiresAt <= now()) { json(res, 400, { error: 'invalid_auth_callback' }); return true; }
         phase = 'callback.exchange';
-        const result = await sdk.userManagement.authenticateWithCode({ clientId, code, codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
-        if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return true; }
+        let result;
+        try {
+          result = await sdk.userManagement.authenticateWithCode({ clientId, code, codeVerifier: pending.codeVerifier, session: { sealSession: true, cookiePassword } });
+        } catch (error) {
+          if (error?.code !== 'email_verification_required' || typeof error.pendingAuthenticationToken !== 'string') throw error;
+          const verifyState = token();
+          const stored = await transaction({ op: 'state-put', id: digest(verifyState), ttl: STATE_TTL,
+            record: { kind: 'email-verify', pendingAuthenticationToken: error.pendingAuthenticationToken,
+              provider: pending.provider, attempts: 0, expiresAt: now() + STATE_TTL } });
+          if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
+          setCookie(res, VERIFY_COOKIE, verifyState, STATE_TTL / 1000);
+          res.writeHead(303, { Location: '/auth/verify' }); res.end(); return true;
+        }
         phase = 'callback.session';
-        const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
-        const verified = await session.authenticate();
-        if (!validId(verified.sessionId) || !validId(verified.user?.id)) {
+        await finishSignIn(result, pending.provider, res);
+      } else if (path === '/auth/verify') {
+        const verifyState = readCookie(req, VERIFY_COOKIE);
+        const id = verifyState && digest(verifyState);
+        let pending = id && decode(await transaction({ op: 'state-get', id }));
+        if (pending?.kind !== 'email-verify' || pending.expiresAt <= now()) { json(res, 400, { error: 'verification_expired' }); return true; }
+        if (req.method === 'GET') { verificationPage(res); return true; }
+        if (req.headers.origin !== base) { json(res, 403, { error: 'invalid_origin' }); return true; }
+        const verifyCode = await readVerificationCode(req);
+        if (!verifyCode) { verificationPage(res, 'Enter the six-digit code from your verification email.'); return true; }
+        pending = decode(await transaction({ op: 'verify-attempt', id }));
+        if (!pending) { setCookie(res, VERIFY_COOKIE, '', 0); json(res, 429, { error: 'verification_attempts_exceeded' }); return true; }
+        phase = 'verify.exchange';
+        let result;
+        try {
+          result = await sdk.userManagement.authenticateWithEmailVerification({ clientId, code: verifyCode,
+            pendingAuthenticationToken: pending.pendingAuthenticationToken,
+            session: { sealSession: true, cookiePassword } });
+        } catch (error) {
+          if (error?.status >= 400 && error.status < 500) {
+            verificationPage(res, 'That code could not be confirmed. Check the email and try again.'); return true;
+          }
+          throw error;
+        }
+        await transaction({ op: 'state-take', id });
+        setCookie(res, VERIFY_COOKIE, '', 0);
+        phase = 'verify.session';
+        await finishSignIn(result, pending.provider, res);
+      } else if (path === '/auth/desktop/exchange') {
+        if (req.headers.origin !== base || req.headers['content-type'] !== 'application/json') {
+          json(res, 403, { error: 'invalid_origin' }); return true;
+        }
+        let size = 0, chunks = [];
+        for await (const chunk of req) { size += chunk.length; if (size > 4096) { json(res, 413, { error: 'invalid_token' }); return true; } chunks.push(chunk); }
+        let refreshToken;
+        try { refreshToken = JSON.parse(Buffer.concat(chunks).toString()).refreshToken; } catch {}
+        if (typeof refreshToken !== 'string' || refreshToken.length < 20 || refreshToken.length > 2048) {
+          json(res, 400, { error: 'invalid_token' }); return true;
+        }
+        phase = 'desktop.exchange';
+        const result = await sdk.userManagement.authenticateWithRefreshToken({ clientId, refreshToken,
+          session: { sealSession: true, cookiePassword } });
+        if (!Object.values(PROVIDERS).includes(result.authenticationMethod) || result.user?.emailVerified !== true
+          || typeof result.sealedSession !== 'string') { json(res, 403, { error: 'unsupported_provider' }); return true; }
+        const verified = await sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword }).authenticate();
+        if (!validId(verified.sessionId) || !validId(verified.user?.id)
+          || verified.authenticationMethod !== result.authenticationMethod) {
           logSessionRejection(verified, {}, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
-        const record = { sessionId: verified.sessionId, userId: verified.user.id, generation: token(), csrfToken: token(),
-          cookieHash: digest(result.sealedSession), sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
+        const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
+          generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
+          sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
         if (!identity(verified, record)) {
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
-        if (!enabled) throw new Error('Auth closed');
-        phase = 'callback.store';
-        const stored = await transaction({ op: 'session-put', record, ttl: SESSION_TTL });
-        if (!stored) { json(res, 503, { error: 'auth_busy' }); return true; }
+        if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
-        res.writeHead(302, { Location: '/' }); res.end();
+        json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
         const user = await authenticateRequest(req, res);
         json(res, 200, user ? { authenticated: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken, canGrantWishes: isJevicaAdmin(user.userId) } : { authenticated: false });

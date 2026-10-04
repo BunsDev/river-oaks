@@ -68,7 +68,7 @@ export function createRoadVehicle(kind='rolls') {
  }
  let steering;
  if(kind==='rolls') {
-  // A continuous six-wheel limousine shell inspired by the supplied classic.
+  // Compact four-wheel limousine shell with the original royal finish.
   // Every deck edge meets a side skin or bulkhead; the cabin stays genuinely open.
   const surface=(nu,nv,sample,mat)=>{
    const positions=[],uv=[],indices=[];
@@ -78,7 +78,7 @@ export function createRoadVehicle(kind='rolls') {
   };
   for(const side of [-1,1]) {
    const shape=new THREE.Shape();shape.moveTo(-3.27,.35);shape.lineTo(-3.27,.91);shape.quadraticCurveTo(-3.08,1.04,-2.85,1.04);shape.lineTo(2.67,1.04);shape.quadraticCurveTo(3.23,1.01,3.27,.73);shape.lineTo(3.27,.35);
-   for(const cx of [2,-1.31,-2.25]){shape.lineTo(cx+.44,.35);for(let i=0;i<=32;i++){const a=i/32*Math.PI;shape.lineTo(cx+.44*Math.cos(a),.35+.44*Math.sin(a));}}
+   for(const cx of [2,-2.25]){shape.lineTo(cx+.63,.35);for(let i=0;i<=32;i++){const a=i/32*Math.PI;shape.lineTo(cx+.63*Math.cos(a),.35+.44*Math.sin(a));}}
    shape.lineTo(-3.27,.35);
    add(new THREE.ExtrudeGeometry(shape,{depth:.085,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:20}),pink,[0,0,side<0?-1.045:.96]);
    tube([[-3.19,.90,side*1.067],[-2.82,.94,side*1.067],[2.65,.94,side*1.067],[3.18,.79,side*1.05]],.012,chrome);
@@ -116,7 +116,7 @@ export function createRoadVehicle(kind='rolls') {
   for(const side of [0,1])tube(Array.from({length:33},(_,i)=>canopy(i/32,side)),.018,chrome);
   // Close the curved front and rear ends down to the deck (no roof slab).
   for(const u of [0,1])surface(12,48,(t,v)=>{const p=canopy(u,v);return [p[0],1.055+(p[1]-1.055)*t,p[2]];},glass);
-  for(const x of [spec.driverSeat[0],spec.passengerSeat[0]])for(const z of [-.43,.43]) {
+  for(const x of [spec.driverSeat[0]/.7,spec.passengerSeat[0]/.7])for(const z of [-.43,.43]) {
    box([x,.61,z],[.60,.12,.71],leather,.055);
    const back=box([x+.27,.96,z],[.13,.65,.68],leather,.055);back.rotation.z=-.12;
    box([x+.29,1.29,z],[.12,.20,.32],leather,.045);
@@ -182,6 +182,13 @@ export function createRoadVehicle(kind='rolls') {
   box([1.10,.51,0],[.025,.14,.17],black,.01);
  }
  batchCostumeAttachments(groups.map(group=>({group})),owned);
+ if(kind==='rolls') {
+  // Keep full-size occupants and round wheels while shortening and narrowing
+  // the coach by 30%. The chassis and cabin scale in plan; wheels stay round.
+  const coach=new THREE.Group();coach.name='Compact royal coach';
+  for(const child of [...object.children])if(!wheels.includes(child))coach.add(child);
+  coach.scale.set(.7,1,.7);object.add(coach);
+ }
  object.updateMatrixWorld(true);
  const wheelTreads=wheels.map(wheel=>{const samples=[],seen=new Set();wheel.traverse(mesh=>{if(!mesh.isMesh||mesh.material!==rubber)return;const matrix=wheel.matrixWorld.clone().invert().multiply(mesh.matrixWorld);const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){const point=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(matrix),key=point.toArray().map(v=>v.toFixed(6)).join(',');if(!seen.has(key)){seen.add(key);samples.push(point);}}});return samples;});
  const glints=createVehicleGlints(spec);object.add(glints.object);
