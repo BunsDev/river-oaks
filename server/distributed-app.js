@@ -18,7 +18,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
@@ -159,6 +159,11 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
             const view = await room.read();
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          inviteWorld: async user => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? {id:worldId,title:worldTitle} : null;
           },
           allowWrite: id => security.allow('social', id, 12, 60_000) });
         return json(res, result.status, result.value);

@@ -88,6 +88,7 @@
     { "source": "/api/social/remove", "destination": "/api/server?_river_path=/api/social/remove" },
     { "source": "/api/social/messages", "destination": "/api/server?_river_path=/api/social/messages" },
     { "source": "/api/social/send", "destination": "/api/server?_river_path=/api/social/send" },
+    { "source": "/api/social/invite-world", "destination": "/api/server?_river_path=/api/social/invite-world" },
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },
     {

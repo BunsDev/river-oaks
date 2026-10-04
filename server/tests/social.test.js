@@ -34,6 +34,24 @@ test('invalid peers and messages are rejected without creating contacts',async()
   assert.deepEqual(await social.messages('alice','bob'),[]);
 });
 
+test('accepted contacts can invite each other to a validated world',async()=>{
+  const social=createMemorySocial({now:()=>42,createId:()=> 'invite-1'});
+  const alice={userId:'alice',name:'Alice'},bob={userId:'bob',name:'Bob'};
+  const world={id:'moon-garden',title:'Moon Garden'};
+  assert.equal((await social.inviteWorld(alice,'bob',world)).reason,'missing');
+  assert.equal((await social.request(alice,bob)).ok,true);
+  assert.equal((await social.inviteWorld(alice,'bob',world)).reason,'missing');
+  assert.equal((await social.accept('bob','alice')).ok,true);
+  assert.equal((await social.inviteWorld(alice,'bob',{id:'../bad',title:'Moon Garden'})).reason,'invalid');
+  assert.equal((await social.inviteWorld(alice,'bob',{id:'moon-garden',title:'Bad\nTitle'})).reason,'invalid');
+  const result=await social.inviteWorld(alice,'bob',world);
+  assert.deepEqual(result.message,{id:'invite-1',authorId:'alice',authorName:'Alice',text:'Come meet me in Moon Garden.',at:42,kind:'world-invite',worldId:'moon-garden',worldTitle:'Moon Garden'});
+  assert.deepEqual(await social.messages('bob','alice'),[result.message]);
+  assert.equal((await social.list('bob'))[0].latest.worldId,'moon-garden');
+  assert.equal((await social.remove('bob','alice')).ok,true);
+  assert.equal(await social.messages('bob','alice'),null);
+});
+
 test('Redis contacts admit one concurrent invitation and retain an empty accepted history', {skip:!process.env.REDIS_URL}, async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
   const prefix=`{river-oaks:social-test:${randomUUID()}}`,social=createRedisSocial({redis,prefix});
@@ -48,6 +66,8 @@ test('Redis contacts admit one concurrent invitation and retain an empty accepte
   assert.equal((await social.list('bob'))[0].status,'accepted');
   assert.equal((await social.send(alice,'bob','Across Redis')).ok,true);
   assert.equal((await social.messages('bob','alice'))[0].text,'Across Redis');
+  assert.equal((await social.inviteWorld(alice,'bob',{id:'moon-garden',title:'Moon Garden'})).ok,true);
+  assert.equal((await social.messages('bob','alice'))[1].worldId,'moon-garden');
   assert.equal((await social.remove('bob','alice')).ok,true);
   assert.deepEqual(await social.list('alice'),[]);
 });
