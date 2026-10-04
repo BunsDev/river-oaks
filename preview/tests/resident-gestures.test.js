@@ -21,6 +21,12 @@ test('a wave raises the right arm and settles back into the walking pose',()=>{
   assert.ok(Object.values(pose).flat().every(angle=>Math.abs(angle)<1e-6));
 });
 
+test('a visible slow frame still advances a shared wave',()=>{
+  const motion=createResidentGestures();
+  const pose=motion.update('wave',0.32,0.32);
+  assert.ok(pose.upperarm_r[0]<-0.1,'a busy renderer must not freeze the greeting');
+});
+
 const copy=pose=>structuredClone(pose);
 test('passive acknowledgement is a small head nod that leaves walking arms free',()=>{
   const motion=createResidentGestures();let pose;
@@ -68,6 +74,7 @@ test('resuming after culling preserves the pose before continuing the transition
   const motion=createResidentGestures();
   for(let frame=0;frame<8;frame++)motion.update('startled',1/60);
   const before=copy(motion.update('startled',0));
+  motion.suspend();
   assert.deepEqual(motion.update('greet',2),before,'a hidden interval must not become a visible catch-up step');
   const resumed=motion.update('greet',1/60);
   assert.ok(Math.abs(resumed.lowerarm_r[2]-before.lowerarm_r[2])<0.15,'normal frame steps resume smoothly');

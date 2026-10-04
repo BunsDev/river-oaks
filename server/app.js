@@ -241,30 +241,44 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         const connection={ws,identity,token,alive:true};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
-        let messageQueue = Promise.resolve();
+        let messageQueue = Promise.resolve(),waitingPose=null;
         ws.on('message',(raw,isBinary)=>{
           if(connections.get(identity.userId)!==connection)return;
           if(isBinary || !frames(identity.userId))return ws.close(4008,'Too many or invalid messages.');
+          let message;
+          try{
+            message=JSON.parse(raw.toString());
+            if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string'
+              || (message.requestId!==undefined && (typeof message.requestId!=='string' || message.requestId.length>64)))throw new Error('Invalid');
+          }catch{message=null;}
+          // Supersede only unacknowledged poses. A travel command keeps its
+          // place between the latest pose before it and the latest pose after.
+          const coalescible=message?.type==='pose' && message.requestId===undefined;
+          if(coalescible && waitingPose){waitingPose.message=message;return;}
+          const slot={message};
+          if(coalescible)waitingPose=slot;else waitingPose=null;
           messageQueue = messageQueue.then(async()=>{
+          if(waitingPose===slot)waitingPose=null;
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           try {
-            const message=JSON.parse(raw.toString());
-            if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string')throw new Error('Invalid');
+            const message=slot.message;
+            if(!message)throw new Error('Invalid');
             if(message.type==='report') {
               if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
             const {requestId,...command}=message;
-            if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
             if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
+            const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
+            if(earlyAck)send(ws,{type:'result',requestId,...result});
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
-            if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
+            if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
         });

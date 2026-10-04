@@ -300,8 +300,10 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             }
             const result = await room.request({ type: 'command', userId: identity.userId, connectionId, message: command });
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
+            const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
+            if (earlyAck) send(ws, { type: 'result', requestId, ...result });
             if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read());
-            if (requestId !== undefined || !result.ok) send(ws, { type: 'result', requestId, ...result });
+            if (!earlyAck && (requestId !== undefined || !result.ok)) send(ws, { type: 'result', requestId, ...result });
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
         ws.on('close', () => {

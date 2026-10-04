@@ -146,7 +146,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   return {
     object:root, profile, rig:avatar,
     // The visibility owner explicitly suspends the clock, even for brief culls.
-    suspend() {previousTime=null;},
+    suspend() {previousTime=null;gestures.suspend();},
     get carrying() {return kit.visible;},
     get conversationPose() {return conversation.pose;},
     get facePose() {return face.pose;},

@@ -15,11 +15,14 @@ export function createResidentGestures({reducedMotion=false}={}) {
   const velocities=Object.fromEntries(joints.map(name=>[name,[0,0,0]]));
   const greeting={lowerarm_r:[0,0,0]};
   const wave={upperarm_r:[-1.05,0,-.2],lowerarm_r:[0,0,1.25]};
+  let suspended=false;
   return {
+    suspend(){suspended=true;},
     update(action,delta,time=0) {
-      // Culling suspends avatar updates. Resume from the last displayed pose;
-      // do not spend hidden time as a large first-visible catch-up step.
-      if(reducedMotion||delta>0.25)return pose;
+      if(reducedMotion || !Number.isFinite(delta) || delta<0)return pose;
+      // A visible slow frame still needs to animate. Explicit suspension keeps
+      // a culled avatar from catching up across its hidden interval.
+      if(suspended){suspended=false;return pose;}
       greeting.lowerarm_r[2]=-0.32+Math.sin(time*2)*0.025;
       wave.lowerarm_r[2]=1.25+Math.sin(time*9)*.16;
       const target=action==='force'?force:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:{};

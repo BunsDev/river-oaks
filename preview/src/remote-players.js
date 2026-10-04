@@ -77,6 +77,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
         holder.visible=holder.position.distanceTo(camera.position)<120;
         entry.riderSeated=false;
+        if(avatar&&!holder.visible)avatar.suspend();
         if(avatar&&holder.visible){
           const beast=target.movement==='beast'?traversalForAppearance(target.appearance):null;
           const ride=entry.road?.spec;
