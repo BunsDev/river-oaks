@@ -27,6 +27,11 @@ test('the nearest place is found within reach and named places link by id', () =
   assert.equal(nearestPlace(places, [spot.position[0] + 500, spot.position[1]]), null);
   assert.equal(nearestPlace(places, null), null);
   assert.equal(placeLink(spot, 'https://x.test/'), `https://x.test/?place=${encodeURIComponent(spot.id)}`);
+  const worldLink=new URL(placeLink(spot,'https://sim.jev.works/?world=moon-garden&play=multiplayer'));
+  assert.equal(worldLink.searchParams.get('world'),'moon-garden');
+  assert.equal(worldLink.searchParams.get('play'),'multiplayer');
+  assert.equal(worldLink.searchParams.get('place'),spot.id);
+  assert.equal(new URL(placeLink(spot,'https://x.test/?at=1,2')).searchParams.has('at'),false);
   assert.equal(destinationFromSearch(`?place=${encodeURIComponent(spot.id)}`, places), spot);
   assert.equal(destinationFromSearch('?place=nope', places), null);
 });
@@ -34,6 +39,9 @@ test('the nearest place is found within reach and named places link by id', () =
 test('position links round-trip and are bounded to the world', () => {
   const link = positionLink([-2765.3219, -1295.0641], 1.2345);
   assert.equal(link, '?at=-2765.32,-1295.06,1.23');
+  const worldLink=new URL(positionLink([-10.123,-20.456],1.234,'https://sim.jev.works/?world=moon-garden&play=multiplayer'));
+  assert.deepEqual([...worldLink.searchParams],[['world','moon-garden'],['play','multiplayer'],['at','-10.12,-20.46,1.23']]);
+  assert.equal(new URL(positionLink([-10,-20],0,'https://x.test/?place=arrival')).searchParams.has('place'),false);
   const to = destinationFromSearch(link, [], world.bounds_m);
   assert.deepEqual(to.position, [-2765.32, -1295.06]); assert.equal(to.yaw, 1.23); assert.equal(to.kind, 'link');
   assert.equal(destinationFromSearch('?at=0,0', [], world.bounds_m), null, 'outside the district is refused');

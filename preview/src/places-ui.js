@@ -2,11 +2,13 @@
 // landmarks, each with a button that takes you there. Rendering is plain DOM
 // so the e2e harness and screen readers see real buttons and lists.
 import { nearestPlace, placeLink, positionLink } from './places.js';
+import { worldIdFromSearch } from './world-contract.js';
+import { worldVisitUrl } from './world-portal.js';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
 
-export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, shareBase = () => `${location.origin}${location.pathname}` }) {
+export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
   const host = $('#places'), here = $('#places-here'), list = $('#places-list'), marks = $('#landmarks-list'), status = $('#places-status');
   const nameInput = $('#landmark-name'), addButton = $('#landmark-add');
   if (!host) return null;

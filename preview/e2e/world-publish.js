@@ -54,6 +54,11 @@ async page=>{
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=explore-section]').click();
   await page.locator('.world-portal-design').waitFor({state:'visible'});
+  await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedWorldPlace=text;}}}));
+  await page.locator('#places-list li').filter({hasText:'Moon Arch'}).locator('button[aria-label^="Copy a link"]').click();
+  const sharedPlace=new URL(await page.evaluate(()=>window.__copiedWorldPlace));
+  check(sharedPlace.searchParams.get('world')==='moon-garden'&&sharedPlace.searchParams.get('play')==='multiplayer'
+    &&sharedPlace.searchParams.get('place')?.startsWith('spot:'),'A published world place link keeps its world and shared play mode');
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===1&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
@@ -82,7 +87,8 @@ async page=>{
       ? route.fulfill({status:503,json:{error:'temporarily_unavailable'}})
       : route.continue());
     const guest=await otherContext.newPage();guest.on('pageerror',error=>errors.push(error.message));
-    await guest.goto(`${origin}/?world=moon-garden&play=multiplayer&motion-debug=1`,{waitUntil:'commit'});
+    sharedPlace.searchParams.set('motion-debug','1');
+    await guest.goto(sharedPlace.href,{waitUntil:'commit'});
     await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:30000}).catch(async()=>{
       throw new Error(`Guest join: ${JSON.stringify(await guest.evaluate(()=>({url:location.href,multiplayer:document.querySelector('#canvas-host')?.dataset.multiplayer,ready:document.querySelector('#canvas-host')?.dataset.playerReady,connected:window.__riverMultiplayer?.().connected,status:document.querySelector('#multiplayer-status')?.textContent,assets:document.querySelector('#viewport')?.dataset.assetProgress,session:document.querySelector('.multiplayer-gate')?.textContent.slice(0,300)})))}`);
     });
@@ -92,6 +98,15 @@ async page=>{
     await guest.waitForFunction(()=>document.querySelector('.world-portal-status')?.textContent==='2 worlds to visit',null,{timeout:60000});
     check(directoryRequests>=2,'The directory recovers after a temporary failure');
     await guest.waitForFunction(()=>document.querySelector('#terrain-state')?.textContent==='Creator-authored terrain');
+    const moonArch=authored.world.communityLocations.find(place=>place.name==='Moon Arch');
+    await guest.waitForFunction(position=>{
+      const client=window.__riverMultiplayer?.(),player=client?.snapshot?.players.find(item=>item.id===client.selfId);
+      return player&&Math.hypot(player.position[0]-position[0],player.position[1]-position[1])<5;
+    },moonArch.position,{timeout:15000}).catch(async()=>{
+      throw new Error(`Shared place arrival: ${JSON.stringify(await guest.evaluate(()=>({url:location.href,status:document.querySelector('#places-status')?.textContent,
+        self:window.__riverMultiplayer?.().selfId,players:window.__riverMultiplayer?.().snapshot?.players.map(player=>({id:player.id,position:player.position}))})))}`);
+    });
+    check(true,'A copied place link brings another resident into the same published world near its named place');
     check(await guest.locator('.world-portal-form').evaluate(node=>node.hidden),'A guest has no publishing form');
     check(await guest.locator('.world-portal-list button[aria-label^="Edit revision draft"]').count()===0,'A guest cannot open a region revision draft');
     const deniedDraft=await guest.evaluate(async()=>{
