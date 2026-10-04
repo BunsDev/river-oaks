@@ -646,6 +646,7 @@ async function loadWorld() {
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
+    placesUI?.setWorld(data);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
     const linked = destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {

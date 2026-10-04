@@ -1,15 +1,23 @@
 # Places: go anywhere, keep what you find
 
-The **Places** tab (the first tab of the side panel) is the district's map in
-list form, and the first piece of a world that people explore rather than
-tour. It is built from the district data at load, so a new district brings
-its own places without code changes.
+The **Places** tab combines a top-down world map with the destination and
+landmark lists. Roads, buildings, named places, and the current location come
+from the active world's compiled data, so a newly published region has its own
+map without hand-authored artwork.
 
 ## What is there
 
 - **Where you are.** A live label names the nearest place within 45 m
   ("You're at Toulouse", "You're near Dior (23 m)"), or says you are out on
-  the street.
+  the street. A bright marker follows the player on the map.
+- **World map.** Click a named marker or any point inside the current world to
+  preview a destination, then choose **Go here**. Arrow keys move the selected
+  point when the map has focus; Shift moves it one metre at a time. **Copy link**
+  shares the selected world and position. Roads and buildings are visual
+  context, never permission to enter a private home or pass through a wall:
+  travel still uses the server's outdoor arrival check in shared play. Saved
+  landmarks appear on the map only in their own world; the account list below
+  continues to show landmarks from every world.
 - **Go somewhere.** Every named place in the district, once each: the arrival
   point, the community meeting spots, and any storefront that is not already a
   meeting spot. In the shipped district the 30 spots *are* the 30 storefronts,
@@ -47,6 +55,8 @@ own facing for a bare position.
 - `preview/src/places.js`: the place list, nearest-place search, landmark
   store, link formatting and parsing, open-spot search. Pure, unit tested.
 - `preview/src/places-ui.js`: the tab's DOM and the status line.
+- `preview/src/world-map.js`: map projection, geometry, selection, and live
+  player marker.
 - `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
 - `server/world.js`: `travel` destinations `placeId` and `position`.
 - `server/landmarks.js`: private per-world account landmark storage; Redis
