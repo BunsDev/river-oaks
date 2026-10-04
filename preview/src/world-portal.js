@@ -1,4 +1,5 @@
 import { DEFAULT_WORLD_ID, validateWorldId } from './world-contract.js';
+import { REGION_DRAFT_STORAGE_KEY } from './region-draft.js';
 import './world-portal.css';
 
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node;};
@@ -23,10 +24,32 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const descriptionLabel=element('label','Description');const description=element('textarea');description.name='description';description.maxLength=280;description.rows=2;descriptionLabel.append(description);
   const regionLabel=element('label','Region package (optional)');const region=element('input');region.name='region';region.type='file';region.accept='.json,application/json';regionLabel.append(region);
   const example=element('a','Download a sample region package','world-portal-example');example.href='/data/sample-region.json';example.download='sample-region.json';
+  const design=element('button','Design a region','world-portal-design');design.type='button';
+  const regionSource=element('p','','world-portal-region-source');regionSource.setAttribute('role','status');
   const publish=element('button','Publish world');publish.type='submit';
-  form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,publish);
+  form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,design,regionSource,publish);
   section.append(heading,intro,status,list,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0;
+  let useDraft=false;
+  let editor=null,editorLoading=null;
+  const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
+    .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{if(useDraft)regionSource.textContent='Your region draft is ready to publish.';}}))
+    .catch(error=>{editorLoading=null;throw error;});
+  const hasDraft=()=>{try{return Boolean(editor?.hasDraft()||localStorage.getItem(REGION_DRAFT_STORAGE_KEY));}catch{return Boolean(editor?.hasDraft());}};
+  const updateRegionSource=()=>{
+    design.textContent=hasDraft()?'Edit region draft':'Design a region';
+    regionSource.textContent=region.files?.[0]?'The selected JSON file will be published.':useDraft?'Your region draft is ready to publish.'
+      :hasDraft()?'A saved draft is available. Open it to use it.':'Leave this empty to use the River Oaks layout.';
+  };
+  region.addEventListener('change',()=>{if(region.files?.length)useDraft=false;updateRegionSource();});
+  design.addEventListener('click',async()=>{
+    try {
+      const studio=await ensureEditor();
+      if(region.files?.[0]){await studio.loadFile(region.files[0]);region.value='';}
+      else studio.open();
+      useDraft=true;updateRegionSource();
+    } catch(error) {status.textContent=error.message||'Could not open the region editor.';}
+  });
   const currentId=()=>{try{return validateWorldId(new URLSearchParams(location.search).get('world')??DEFAULT_WORLD_ID);}catch{return DEFAULT_WORLD_ID;}};
   const render=()=>{
     list.replaceChildren();
@@ -70,14 +93,15 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
         if(file.size>128*1024)throw new Error('Region package must be at most 128 KB.');
         try {proposal.region=JSON.parse(await file.text());}
         catch {throw new Error('Region package must be valid JSON.');}
-      }
+      } else if(useDraft)proposal.region=editor?.getRegion();
       const response=await fetch('/api/worlds',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify(proposal)});
       const result=await response.json();
       if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.':result.error??'World could not be published.');
-      worlds=[...worlds,result.world];render();status.textContent=`${result.world.title} is published. Open it from the list.`;form.reset();
+      worlds=[...worlds,result.world];render();status.textContent=`${result.world.title} is published. Open it from the list.`;form.reset();useDraft=false;updateRegionSource();
     } catch(error) {status.textContent=error.message||'World could not be published.';}
     finally {publish.disabled=false;}
   });
+  updateRegionSource();
   render();
   return {element:section,load,refreshCapability:render};
 }
