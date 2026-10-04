@@ -648,6 +648,33 @@ test('store travel modes select known collision-free interior and exterior desti
   }
 });
 
+test('meet travel resolves a live same-room player and arrives beside them',()=>{
+  const {world,advance}=setup();
+  assert.equal(world.command('b',{type:'travel',placeId:'b'}).ok,true);
+  const bob=world.snapshot().players.find(player=>player.id==='b');
+  const met=world.command('a',{type:'travel',peerId:'b'});
+  assert.equal(met.ok,true);
+  const gap=Math.hypot(met.player.position[0]-bob.position[0],met.player.position[1]-bob.position[1]);
+  assert.ok(gap>=1.2&&gap<=3.2,'the arriving avatar stands beside rather than inside the peer');
+  assert.equal(createWalkingEnvironment(data).roomAt(met.player.position[0],-met.player.position[1]),null);
+  assert.equal(world.command('a',{type:'travel',peerId:'a'}).error,'invalid_destination');
+  assert.equal(world.command('a',{type:'travel',peerId:'missing'}).error,'unknown_destination');
+  assert.equal(world.command('a',{type:'travel',peerId:'b',position:[0,0]}).error,'invalid_destination');
+  assert.equal(world.command('a',{type:'travel',peerId:'b',mode:'enter'}).error,'invalid_destination');
+  world.leave('b');advance(1100);
+  assert.equal(world.command('a',{type:'travel',peerId:'b'}).error,'unknown_destination');
+});
+
+test('meet travel cannot follow a player inside a store',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const world=createSharedWorld(district),storeId=storeRoomsFor(district)[0].storeId;
+  world.join({userId:'a',name:'A'});world.join({userId:'b',name:'B'});
+  assert.equal(world.command('b',{type:'travel',storeId,mode:'enter'}).ok,true);
+  const before=world.snapshot().players.find(player=>player.id==='a').position;
+  assert.equal(world.command('a',{type:'travel',peerId:'b'}).error,'destination_blocked');
+  assert.deepEqual(world.snapshot().players.find(player=>player.id==='a').position,before);
+});
+
 test('store travel rejects unknown modes, remote leave and client-supplied destinations',async()=>{
   const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
   let time=1000;const world=createSharedWorld(district,{now:()=>time});

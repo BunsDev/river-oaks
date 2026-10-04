@@ -10,14 +10,14 @@ import './world-map.css';
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
 
-export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
+export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, isOutdoor = () => true, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
   const host = $('#places'), here = $('#places-here'), list = $('#places-list'), marks = $('#landmarks-list'), status = $('#places-status');
   const nameInput = $('#landmark-name'), addButton = $('#landmark-add');
   if (!host) return null;
   let current = places, currentLandmarks = landmarks;
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
-  const worldMap=createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy});
+  const worldMap=createWorldMap({host,onGo,getPosition,getYaw,isOutdoor,shareBase,say,copy});
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
@@ -93,6 +93,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   const timer = setInterval(refreshHere, 500);
   return {
     setWorld(next) { worldMap.setWorld(next); },
+    setPlayers(players,selfId) { worldMap.setPlayers(players,selfId); },
     setPlaces(next) { current = next; renderPlaces(); refreshHere(); },
     setLandmarks(next) { currentLandmarks = next; renderLandmarks(); },
     refresh() { renderLandmarks(); refreshHere(); },
