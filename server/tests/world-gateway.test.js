@@ -43,6 +43,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal((await post('guest','/api/world-draft/load',{id:'moon-garden'})).status,403);
   assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:changed})).status,200);
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
+  assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.visitors),[0,0]);
   const publishedData=await (await fetch(base+'/api/world-data?world=moon-garden')).json();
   assert.equal(publishedData.template,'region-v1');
   assert.equal(publishedData.world.buildings.length,4);
@@ -68,6 +69,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(first.snapshot.locals.length>8,true);
   assert.equal(first.snapshot.players.length,1);
   assert.equal(second.snapshot.players.length,1);
+  assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.visitors),[1,1]);
   assert.equal((await gateway.worldFor('moon-garden')).room.worldId,'moon-garden');
   assert.equal((await gateway.worldFor('missing-world')),null);
   for(const socket of sockets)socket.terminate();
@@ -82,6 +84,9 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Hidden revision');
   assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.provenance.kind,'creator');
   const visitor=await open('moon-garden','guest');
+  const visitorsAfterRestart=(await (await fetch(base+'/api/worlds')).json()).worlds;
+  assert.equal(visitorsAfterRestart.find(world=>world.id==='moon-garden').visitors,2);
+  assert.equal(visitorsAfterRestart.some(world=>Object.hasOwn(world,'connections')||Object.hasOwn(world,'players')),false);
   const visitorInRiver=await open('river-oaks','guest');
   assert.equal(visitor.snapshot.players.some(player=>player.id==='guest-user'),true);
   assert.equal((await post('guest','/api/social/request?world=moon-garden',{peerId:admin})).status,200);

@@ -35,6 +35,7 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal((await (await draftRequest(owner,cookie,'load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Private revision');
   assert.notEqual((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Private revision');
   assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
+  assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.visitors),[0,0]);
   const access=await fetch(origin+'/api/multiplayer/ticket?world=moon-garden',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   assert.equal(access.status,200);
   const ticket=(await access.json()).ticket;
@@ -44,6 +45,7 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal(snapshot.worldId,'moon-garden');
   assert.equal(snapshot.locals.length,8);
   assert.equal(snapshot.players[0].canBuild,true);
+  assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.visitors),[0,1]);
   const guest=await fetch(origin+'/auth/session');
   const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);

@@ -70,6 +70,23 @@ testRedis('separate world rooms isolate presence, commands, and snapshots for th
   }
 });
 
+testRedis('visitor counts are bounded room projections that expire without a live coordinator',async t=>{
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:population`;
+  assert.equal(await f.redis.get(key),null);
+  assert.equal((await f.join(room,'alice')).ok,true);
+  assert.equal(await f.redis.get(key),'1');
+  assert.ok((await f.redis.ttl(key))>0);
+  assert.equal((await f.join(room,'bob')).ok,true);
+  assert.equal(await f.redis.get(key),'2');
+  assert.equal((await room.request({type:'leave',userId:'bob',connectionId:'bob-socket'})).ok,true);
+  assert.equal(await f.redis.get(key),'1');
+  await f.redis.pexpire(key,50);
+  await delay(220);
+  assert.equal(await f.redis.get(key),null);
+  await room.tick();
+  assert.equal(await f.redis.get(key),'1');
+});
+
 testRedis('restart restores checkpoint and replacing an account preserves wishes while fencing stale sockets',async t=>{
   const f=await setup(t),first=f.create();
   await f.join(first,'alice');await f.command(first,'alice',{type:'travel',localId:'local-00'});

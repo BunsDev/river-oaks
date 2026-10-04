@@ -102,6 +102,9 @@ async page=>{
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
+    await guest.waitForFunction(()=>[...document.querySelectorAll('.world-portal-list li')]
+      .some(row=>row.querySelector('a')?.textContent==='Moon Garden'&&row.querySelector('small')?.textContent.includes('2 visitors online')),null,{timeout:30000});
+    check(true,'The world directory shows current visitors without exposing their identities');
   } finally {await otherContext.close();}
   await Promise.all([page.waitForNavigation({waitUntil:'commit',timeout:60000}),
     page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).click()]);

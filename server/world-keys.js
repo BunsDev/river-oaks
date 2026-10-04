@@ -10,6 +10,10 @@ export function roomPrefixFor(namespace, worldId = DEFAULT_WORLD_ID) {
   return `{${namespace}${worldId===DEFAULT_WORLD_ID?'':`:world:${worldId}`}}`;
 }
 
+export function populationKeyFor(namespace, worldId = DEFAULT_WORLD_ID) {
+  return `${roomPrefixFor(namespace,worldId)}:population`;
+}
+
 export function accountPrefixFor(namespace, worldId = DEFAULT_WORLD_ID) {
   validateNamespace(namespace);validateWorldId(worldId);
   return `{${namespace.replace(/:v\d+$/,'')}:accounts:v1${worldId===DEFAULT_WORLD_ID?'':`:world:${worldId}`}}`;
