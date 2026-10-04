@@ -247,7 +247,8 @@ function initializeRenderer() {
   createClearView({ viewport: $('#viewport') });
   let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
   landmarks = createLandmarks({ storage });
-  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0 });
+  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
+    isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
   if (multiplayerMode === 'choice') {
     createPlayMode({ viewport: $('#viewport'), storage: playModeStorage, active: playMode.mode, remembered: playMode.remembered });
     if (playMode.mode === 'multiplayer') startMultiplayer();
@@ -310,6 +311,7 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
     onPlayers: (players, selfId) => {
       remotePlayers.sync(players, selfId);
+      placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
       playerAvatar?.setSharedIdentity(self);
@@ -537,7 +539,8 @@ function describeInterior(store) {
 async function goToPlace(place) {
   if (!world || !walking) return { ok: false, message: 'The district is still loading.' };
   if (multiplayer) {
-    const target = place.kind === 'spot' ? { placeId: place.ref } : place.kind === 'shop' ? { storeId: place.ref, mode: 'arrive' } : { position: [place.position[0], place.position[1]] };
+    const target = place.kind === 'spot' ? { placeId: place.ref } : place.kind === 'shop' ? { storeId: place.ref, mode: 'arrive' }
+      : place.kind === 'peer' ? { peerId: place.ref } : { position: [place.position[0], place.position[1]] };
     const result = await multiplayer.travel(target);
     if (result?.ok && Number.isFinite(place.yaw) && ['landmark', 'link'].includes(place.kind)) walking.setYaw(place.yaw);
     return result;
@@ -647,6 +650,7 @@ async function loadWorld() {
     const places = placesOf(data);
     placesUI?.setPlaces(places);
     placesUI?.setWorld(data);
+    placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
     const linked = destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {

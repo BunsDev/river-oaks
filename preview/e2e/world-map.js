@@ -48,6 +48,34 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('.world-map-status')?.textContent.includes('Choose a nearby path or open space'),null,{timeout:15000});
   const refused=await page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(player=>player.id===m.selfId).position;});
   check(Math.hypot(refused[0]-held[0],refused[1]-held[1])<.1,'The server refuses an indoor map destination');
+  const otherContext=await page.context().browser().newContext();
+  let peerId;
+  try {
+    await otherContext.addCookies([{name:'fixture_session',value:'bob',url:origin}]);
+    const other=await otherContext.newPage();other.on('pageerror',error=>errors.push('Bob: '+error.message));
+    await other.goto(`${origin}/?world=garden-2&motion-debug=1`,{waitUntil:'commit'});
+    await other.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
+    peerId=await other.evaluate(()=>window.__riverMultiplayer().selfId);
+    await page.locator(`.world-map-peer[data-peer-id="${peerId}"]`).waitFor({state:'visible'});
+    const peer=await page.evaluate(id=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===id),peerId);
+    check(await page.locator(`.world-map-peer[data-peer-id="${peerId}"] title`).textContent()===peer.name,'A player in the same world appears as a live map marker');
+    await page.locator('.world-map-player-list>summary').click();
+    await page.locator(`.world-map-player-list button[data-peer-id="${peerId}"]`).click();
+    check((await page.locator('.world-map-hint').textContent()).includes(`${peer.name} · live player`)
+      &&await page.getByRole('button',{name:'Meet nearby'}).isEnabled()
+      &&await page.getByRole('button',{name:'Copy link'}).isDisabled(),
+    'The keyboard-accessible player list offers server-checked meeting without sharing another player position');
+    await page.locator('.world-map').screenshot({path:'output/playwright/world-map-people.png'});
+    await page.getByRole('button',{name:'Meet nearby'}).click();
+    await page.waitForFunction(name=>document.querySelector('.world-map-status')?.textContent.includes(`You're near ${name}`),peer.name,{timeout:15000});
+    const positions=await page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.map(({id,position})=>({id,position}));});
+    const selfId=await page.evaluate(()=>window.__riverMultiplayer().selfId);
+    const me=positions.find(player=>player.id===selfId),bob=positions.find(player=>player.id===peer.id);
+    const gap=Math.hypot(me.position[0]-bob.position[0],me.position[1]-bob.position[1]);
+    check(gap>=1.2&&gap<=3.3,'Meet nearby arrives beside Bob rather than on top of him');
+  } finally {await otherContext.close();}
+  await page.waitForFunction(id=>!document.querySelector(`.world-map-peer[data-peer-id="${id}"]`),peerId);
+  check((await page.locator('.world-map-status').textContent()).includes('no longer outdoors'),'A departed selected player leaves the map and clears the meeting action');
   await page.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();

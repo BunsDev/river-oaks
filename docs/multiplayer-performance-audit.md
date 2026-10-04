@@ -188,6 +188,18 @@ now use a bounded frame step even on a slow visible frame. Avatars paused by
 distance culling explicitly suspend their gesture clocks, so reappearance
 still resumes from the last displayed pose.
 
+## Live player map — 4 October 2026
+
+The Places map reuses the room snapshots already delivered every 200 ms. It
+adds no Redis reads or transport messages. At the 32-player room limit, it can
+update at most 31 peer markers per snapshot; the accessible player list is
+rebuilt only when membership or a name changes. Meeting a player is one
+server-authoritative travel command. Its arrival search is bounded to 72
+candidate positions and checks at most 31 other players at each candidate.
+The two-browser shared journey verifies joining, meeting, and departure. Client
+frame cost at the 32-player limit and hosted multi-region latency remain
+unmeasured; the release gates above still apply.
+
 ## Account design library — 4 October 2026
 
 Jevica's new saved designs live in an account-scoped Redis record rather than

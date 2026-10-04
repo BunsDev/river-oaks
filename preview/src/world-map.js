@@ -51,31 +51,34 @@ export function nearestMapPlace(places,point,projection,within=20){
   return selected;
 }
 
-export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}){
+export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,shareBase,say,copy}){
   const section=node('details',null,'world-map');section.open=true;
   const summary=node('summary','World map');
   const surface=node('div',null,'world-map-surface');surface.tabIndex=0;surface.setAttribute('role','group');
-  surface.setAttribute('aria-label','World map. Click to choose a destination, or use arrow keys to move a destination. Tab to Go here.');
+  surface.setAttribute('aria-label','World map. Click to choose a destination, or use arrow keys to move a destination. Tab to its action button.');
   const art=svg('svg',{viewBox:`0 0 ${SIZE} ${SIZE}`,'aria-hidden':'true',preserveAspectRatio:'none'});
   const ground=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-ground'});
   const roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
-  const markers=svg('g',{class:'world-map-markers'}),overlay=svg('g',{class:'world-map-overlay'});
+  const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
   const self=svg('circle',{class:'world-map-self',r:11,hidden:''});
   const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
   const north=node('span','N ↑','world-map-north');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target);art.append(ground,roads,buildings,markers,overlay);surface.append(art,north,scale);
-  const legend=node('p','● You   ◆ Saved place   • Destination','world-map-legend');
-  const instructions='Click the map or use arrow keys to choose a point. Shift moves 1 m. Go here confirms travel.';
+  overlay.append(self,target);art.append(ground,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
+  const legend=node('p','● You   ◉ Player   ◆ Saved place   • Destination','world-map-legend');
+  const peopleDetails=node('details',null,'world-map-player-list'),peopleSummary=node('summary','People here · 0'),peopleList=node('ul');
+  peopleDetails.append(peopleSummary,peopleList);peopleDetails.hidden=true;
+  const instructions='Click the map or use arrow keys to choose a point. Shift moves 1 m. People in this world can be selected from the list.';
   const hint=node('p',instructions,'world-map-hint');hint.setAttribute('aria-live','polite');
   const actions=node('div',null,'world-map-actions');
   const go=node('button','Go here'),link=node('button','Copy link'),clear=node('button','Clear');
   for(const button of [go,link,clear]){button.type='button';button.disabled=true;actions.append(button);}
   const status=node('p',null,'world-map-status');status.setAttribute('role','status');
-  section.append(summary,surface,legend,hint,actions,status);
+  section.append(summary,surface,legend,peopleDetails,hint,actions,status);
   host.querySelector('#places-here')?.after(section);
   section.hidden=true;
-  let world=null,projection=null,places=[],landmarks=[],selected=null;
+  let world=null,projection=null,places=[],landmarks=[],selected=null,peers=[];
+  const peerNodes=new Map();let peerListSignature='';
   const hereWorldId=()=>worldIdFromSearch(location.search);
   const currentMarks=()=>landmarks.filter(mark=>!mark.worldId||mark.worldId===hereWorldId());
   const mapPoint=position=>projection.toMap(position).map(value=>+value.toFixed(2));
@@ -120,9 +123,11 @@ export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}
   function select(next){
     selected=next;
     const name=next?.name??'';
-    hint.textContent=next?name==='Map point'?`Map point · ${next.position[0].toFixed(1)} east, ${next.position[1].toFixed(1)} north`:`Selected: ${name}`
+    hint.textContent=next?name==='Map point'?`Map point · ${next.position[0].toFixed(1)} east, ${next.position[1].toFixed(1)} north`
+      :next.kind==='peer'?`Selected: ${name} · live player`:`Selected: ${name}`
       :instructions;
-    go.disabled=link.disabled=clear.disabled=!next;
+    go.textContent=next?.kind==='peer'?'Meet nearby':'Go here';
+    go.disabled=clear.disabled=!next;link.disabled=!next||next.kind==='peer';
     status.textContent='';
     refresh();
     if(next&&section.open)actions.scrollIntoView({block:'nearest'});
@@ -131,7 +136,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}
     if(!projection)return;
     const position=projection.toWorld(point);
     if(!projection.contains(position)){status.textContent='Choose a point inside this world.';return;}
-    const items=[...places,...currentMarks()];
+    const items=[...places,...currentMarks(),...peers];
     const nearby=nearestMapPlace(items,point,projection);
     select(nearby??{id:'map-point',name:'Map point',kind:'link',position:position.map(value=>+value.toFixed(1)),yaw:getYaw?.()??0});
   }
@@ -162,7 +167,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}
           : result.error==='travel_cooldown'||result.message==='travel_cooldown'
             ? 'Wait a moment before travelling again.'
             : result.message??'That point is not reachable right now.'
-        :`You're at ${destination.name}.`;
+        :destination.kind==='peer'?`You're near ${destination.name}.`:`You're at ${destination.name}.`;
       say(status.textContent,result?.ok===false?'error':'ok');
     }catch(error){status.textContent=error.message??'That point is not reachable right now.';say(status.textContent,'error');}
     finally{go.disabled=!selected;}
@@ -177,6 +182,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}
   return {
     setWorld(next){
       world=next;projection=mapProjection(next?.bounds_m);section.hidden=!projection;
+      people.replaceChildren();peerNodes.clear();peers=[];peerListSignature='';peopleList.replaceChildren();peopleDetails.hidden=true;
       summary.textContent=next?.title?`${next.title} map`:'World map';
       if(projection){
         const distance=Math.max(projection.bounds[2]-projection.bounds[0],projection.bounds[3]-projection.bounds[1])>150?50:10;
@@ -186,6 +192,34 @@ export function createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy}
     },
     setPlaces(next){places=next;renderStatic();},
     setLandmarks(next){landmarks=next;renderStatic();},
+    setPlayers(next,selfId){
+      peers=projection?(next??[]).filter(player=>player.id!==selfId&&typeof player.id==='string'
+        &&typeof player.name==='string'&&finitePair(player.position)&&projection.contains(player.position)
+        &&isOutdoor(player.position)).map(player=>({id:`peer:${player.id}`,ref:player.id,name:player.name,kind:'peer',position:player.position.slice(0,2)})):[];
+      const active=new Set(peers.map(peer=>peer.ref));
+      for(const [id,marker] of peerNodes)if(!active.has(id)){marker.remove();peerNodes.delete(id);}
+      for(const peer of peers){
+        let marker=peerNodes.get(peer.ref);
+        if(!marker){marker=svg('circle',{class:'world-map-peer',r:8,'data-peer-id':peer.ref});const title=svg('title');marker.append(title);people.append(marker);peerNodes.set(peer.ref,marker);}
+        const [cx,cy]=mapPoint(peer.position);marker.setAttribute('cx',cx);marker.setAttribute('cy',cy);
+        marker.firstChild.textContent=peer.name;
+      }
+      const signature=peers.map(peer=>`${peer.ref}\u0000${peer.name}`).join('\u0001');
+      if(signature!==peerListSignature){
+        peerListSignature=signature;peopleList.replaceChildren(...peers.map(peer=>{
+          const item=node('li'),button=node('button',peer.name);button.type='button';button.dataset.peerId=peer.ref;
+          button.setAttribute('aria-label',`Select ${peer.name} on the map`);
+          button.addEventListener('click',()=>select(peers.find(current=>current.ref===peer.ref)??null));
+          item.append(button);return item;
+        }));
+        peopleSummary.textContent=`People here · ${peers.length}`;peopleDetails.hidden=!peers.length;
+      }
+      if(selected?.kind==='peer'){
+        const current=peers.find(peer=>peer.ref===selected.ref);
+        if(current){selected=current;refresh();}
+        else{select(null);status.textContent='That player is no longer outdoors in this world.';}
+      }
+    },
     refresh,
     dispose(){section.remove();},
   };

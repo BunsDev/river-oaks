@@ -18,6 +18,14 @@ map without hand-authored artwork.
   travel still uses the server's outdoor arrival check in shared play. Saved
   landmarks appear on the map only in their own world; the account list below
   continues to show landmarks from every world.
+- **People in this world.** In shared play, outdoor players in the same world
+  appear as live map markers and in a keyboard-accessible list. Choose a player
+  and **Meet nearby** to ask the server for a clear spot beside their current
+  position. The server resolves the player at the moment of travel, requires
+  that they are still in the same room and outdoors, and keeps the arrival clear
+  of other players. A peer selection cannot enter a private home or create
+  a link to that player's current position. Players who leave or enter an
+  interior disappear from this outdoor map.
 - **Go somewhere.** Every named place in the district, once each: the arrival
   point, the community meeting spots, and any storefront that is not already a
   meeting spot. In the shipped district the 30 spots *are* the 30 storefronts,
@@ -58,7 +66,7 @@ own facing for a bare position.
 - `preview/src/world-map.js`: map projection, geometry, selection, and live
   player marker.
 - `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
-- `server/world.js`: `travel` destinations `placeId` and `position`.
+- `server/world.js`: `travel` destinations `placeId`, `position`, and `peerId`.
 - `server/landmarks.js`: private per-world account landmark storage; Redis
   persists shared play across edge instances.
 - `server/world-landmarks.js`: combines the bounded per-world lists for the
