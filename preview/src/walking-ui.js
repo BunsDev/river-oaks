@@ -21,7 +21,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   let autoInput = null, transport = null;
   let flight = createFlightState();
   let thirdPerson = true, bodyVisible = true;
-  let active = false, environment, stores = [], state, nearest = null, lastPaint = 0;
+  let active = false, environment, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
   const clear = () => { keys.clear(); drag.cancel(); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
@@ -237,6 +237,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
       onManual(); autoInput = null;transport?.stop();transport=null;
+      const creatorRegion = world.provenance?.kind === 'creator';
+      $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
+      $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
+      pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
       environment = createWalkingEnvironment(world, placedObjects);
       stores = world.stores ?? [];
       flight = createFlightState();
@@ -289,7 +293,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && (getSharedPopulation()?sharedRoomSummary(room):room.summary);
-      $('#walking-place').textContent = transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · public district paths`;
+      $('#walking-place').textContent = transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests` : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.yaw = state.yaw.toFixed(3);

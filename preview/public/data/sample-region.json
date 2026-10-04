@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "bounds_m": [-96, -96, 96, 96],
+  "terrain": {
+    "width": 5,
+    "height": 5,
+    "heights_m": [
+      0, 0, 0.2, 0, 0,
+      0, 0.4, 0.7, 0.4, 0,
+      0.2, 0.7, 1.4, 0.7, 0.2,
+      0, 0.4, 0.7, 0.4, 0,
+      0, 0, 0.2, 0, 0
+    ]
+  },
+  "spawn": [0, -16],
+  "roads": [
+    {"id":"garden-ring","name":"Garden Promenade","kind":"footway","width_m":4,"points":[[-66,-66],[66,-66],[66,66],[-66,66],[-66,-66]]},
+    {"id":"moon-lane","name":"Moon Lane","kind":"residential","width_m":8.4,"points":[[-82,0],[82,0]]}
+  ],
+  "buildings": [
+    {"id":"moon-pavilion","center":[-35,-34],"size":[20,16,8],"yaw_deg":12,"kind":"retail"},
+    {"id":"star-pavilion","center":[35,-34],"size":[20,16,8],"yaw_deg":-12,"kind":"retail"},
+    {"id":"rose-hall","center":[-35,35],"size":[18,18,10],"yaw_deg":20,"kind":"residential"},
+    {"id":"silver-hall","center":[35,35],"size":[18,18,10],"yaw_deg":-20,"kind":"residential"}
+  ],
+  "trees": [
+    {"id":"tree-nw","position":[-75,75],"height_m":11,"crown_radius_m":4},
+    {"id":"tree-ne","position":[75,75],"height_m":11,"crown_radius_m":4},
+    {"id":"tree-sw","position":[-75,-75],"height_m":10,"crown_radius_m":4},
+    {"id":"tree-se","position":[75,-75],"height_m":10,"crown_radius_m":4},
+    {"id":"tree-west","position":[-76,0],"height_m":8,"crown_radius_m":3},
+    {"id":"tree-east","position":[76,0],"height_m":8,"crown_radius_m":3}
+  ],
+  "places": [
+    {"id":"moon-arch","name":"Moon Arch","position":[-35,-57]},
+    {"id":"star-arch","name":"Star Arch","position":[35,-57]},
+    {"id":"rose-walk","name":"Rose Walk","position":[-35,57]},
+    {"id":"silver-walk","name":"Silver Walk","position":[35,57]},
+    {"id":"west-garden","name":"West Garden","position":[-68,25]},
+    {"id":"east-garden","name":"East Garden","position":[68,25]},
+    {"id":"south-commons","name":"South Commons","position":[0,-69]},
+    {"id":"north-commons","name":"North Commons","position":[0,69]}
+  ]
+}

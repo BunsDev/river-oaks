@@ -9,8 +9,12 @@ identity, a valid session, origin, and CSRF token. The Redis catalog persists
 across processes; the standalone development catalog lasts for one process.
 `WORLD_ID` can still make a configured alternate world available without
 publishing it; visitors use `?world=<id>` to join that world.
-Published worlds currently use the bundled River Oaks geography and rules.
-Creator-uploaded geography and region editing remain future work.
+Jevica can publish either a copy of the bundled River Oaks geography or a
+creator region package with its own terrain, roads, buildings, trees, spawn,
+and named places. See [Creator regions](creator-regions.md) for the package
+format. Region geography is fixed at publication; live building and wishes
+remain Jevica-only. Guests can visit and interact but cannot publish, build,
+or grant wishes.
 
 The ticket request, WebSocket admission, and public snapshots carry the world
 ID. The browser checks the returned ID and protocol version before admitting a
@@ -25,7 +29,9 @@ Redis room keys use `{REDIS_NAMESPACE}` for the default world and
 same per-world suffix. This keeps room presence, chat, creations, wishes,
 commands, and private landmarks separate while a player can use the same
 account in two worlds. A socket ticket is consumed only for its issuing world.
-The catalog uses `{REDIS_NAMESPACE}:worlds:v1`. For production, use the same
+The catalog uses `{REDIS_NAMESPACE}:worlds:v1`; compiled creator regions use
+`{REDIS_NAMESPACE}:regions:v1`. Publishing writes the metadata and region in
+one Redis transaction. For production, use the same
 `REDIS_NAMESPACE` across deployments that should share authentication and
 published worlds. The gateway loads each room on demand and routes HTTP and
 WebSocket requests by world ID.
@@ -34,8 +40,11 @@ Private world checkpoints are version 2 and bind the ID in their checksum.
 Only the default world accepts a valid legacy version 1 world checkpoint or
 room wrapper. A checkpoint from another world fails recovery without changing
 the running world. The district fingerprint still guards geography
-compatibility; replacing the bundled district needs an explicit migration.
+compatibility; replacing the bundled district or a published region needs an
+explicit migration. A missing or altered region package fails room load
+instead of substituting River Oaks.
 
 Run `npm run test:server` with a test Redis instance and `npm run test:shared`
 for the isolated-room, publishing, and browser admission journeys. These tests
-cover local behavior; they do not measure global latency or creator geography.
+cover local behavior, including a creator geography browser journey; they do
+not measure global latency.

@@ -9,6 +9,7 @@ import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
+import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -36,9 +37,9 @@ export function createGameServer({ auth, world, landmarks, worldCatalog = null, 
     const connection=connections.get(id);connections.delete(id);
     connection?.ws.close(code,reason);world.leave(id);
   };
-  async function body(req) {
+  async function body(req,max=4096) {
     let size=0,chunks=[];
-    for await (const chunk of req) {size+=chunk.length;if(size>4096)throw new Error('Request too large');chunks.push(chunk);}
+    for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
     return JSON.parse(Buffer.concat(chunks).toString());
   }
   const server = createServer(async (req,res) => {
@@ -49,14 +50,22 @@ export function createGameServer({ auth, world, landmarks, worldCatalog = null, 
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
       if (await auth.handle(req,res)) return;
+      if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
+        const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
+        if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
+        const meta=await worldCatalog.get(ids[0]);
+        if(!meta && ids[0]!==world.worldId)return json(res,404,{error:'World not found.'});
+        return json(res,200,meta?.template==='region-v1'
+          ? {template:meta.template,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+      }
       if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldCatalog.list()});
       if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
         const identity=await authorized(req,res);if(!identity)return;
         if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can publish a world.'});
         let data;
-        try {data=await body(req);}catch{return json(res,400,{error:'Invalid world.'});}
+        try {data=await body(req,MAX_REGION_REQUEST_BYTES);}catch{return json(res,400,{error:'Invalid world.'});}
         const result=await worldCatalog.publish(data,identity.userId);
-        return json(res,result.ok?201:result.reason==='invalid_world'?400:409,result.ok?{world:result.world}:{error:result.reason});
+        return json(res,result.ok?201:['invalid_world','invalid_region'].includes(result.reason)?400:409,result.ok?{world:result.world}:{error:result.reason});
       }
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
