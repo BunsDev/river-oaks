@@ -139,6 +139,14 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(live.world.communityLocations[0].name,'Hidden revision');
   assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
   assert.equal((await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
+  assert.equal((await post('guest','/api/world-draft/history',{id:'moon-garden'})).status,403);
+  assert.equal((await post('guest','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:live.regionSha256})).status,403);
+  const history=await (await post('admin','/api/world-draft/history',{id:'moon-garden'})).json();
+  assert.deepEqual(history.versions.map(version=>version.revision),[1]);
+  assert.equal((await post('admin','/api/world-draft/version',{id:'moon-garden',revision:0,baseRegionSha256:live.regionSha256})).status,400);
+  assert.equal((await post('admin','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:oldHash})).status,409);
+  const original=await (await post('admin','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:live.regionSha256})).json();
+  assert.equal(original.region.places[0].name,editable.publishedRegion.places[0].name);
   await gateway.close();
   const staleRoom=createRedisRoom({redis,prefix:roomPrefixFor(namespace,'moon-garden'),worldId:'moon-garden',
     worldData:publishedData.world,regionSha256:oldHash,regionCatalog:gateway.catalog,
@@ -149,4 +157,10 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   base=`http://127.0.0.1:${gateway.server.address().port}`;
   assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
+  assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:live.regionSha256,expectedDraftVersion:0,region:original.region})).status,200);
+  const restored=await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1});
+  assert.equal(restored.status,200);
+  assert.equal((await restored.json()).world.revision,3);
+  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
+  assert.deepEqual((await (await post('admin','/api/world-draft/history',{id:'moon-garden'})).json()).versions.map(version=>version.revision),[2,1]);
 });
