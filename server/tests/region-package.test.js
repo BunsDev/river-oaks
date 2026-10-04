@@ -131,6 +131,47 @@ test('Jevica-only homes block guest travel and walking while preserving public h
   assert.equal(publicShared.command('guest',{type:'travel',storeId:publicWorld.stores[0].id,mode:'enter'}).ok,true);
 });
 
+test('Jevica can invite a guest into one private home without granting building or wishes',()=>{
+  const interior={name:'Moon House',category:'home',entrance:'south',access:'owner'};
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,interior}:building)};
+  const data=compileRegionPackage(region,'Moon Garden'),store=data.stores[0],environment=createWalkingEnvironment(data);
+  let time=1000;
+  const make=worldData=>createSharedWorld(worldData,{worldId:'moon-garden',now:()=>time,isAdmin:id=>id==='jevica'});
+  const shared=make(data);
+  for(const id of ['jevica','guest','other'])shared.join({userId:id,name:id});
+  assert.equal(shared.command('guest',{type:'travel',storeId:store.id,mode:'enter'}).error,'private_home');
+  assert.equal(shared.command('guest',{type:'homeAccess',action:'grant',storeId:store.id,peerId:'other'}).error,'admin_only');
+  const granted=shared.command('jevica',{type:'homeAccess',action:'grant',storeId:store.id,peerId:'guest'});
+  assert.equal(granted.ok,true);
+  assert.deepEqual(shared.command('guest',{type:'homeAccess',action:'list'}).homes.map(home=>home.storeId),[store.id]);
+  assert.deepEqual(shared.command('other',{type:'homeAccess',action:'list'}).homes,[]);
+  assert.deepEqual(shared.command('jevica',{type:'homeAccess',action:'list'}).homes[0].guestIds,['guest']);
+  assert.equal(shared.command('other',{type:'travel',storeId:store.id,mode:'enter'}).error,'private_home');
+  time+=1000;
+  const entered=shared.command('guest',{type:'travel',storeId:store.id,mode:'enter'});
+  assert.equal(entered.ok,true);
+  assert.equal(environment.roomAt(entered.player.position[0],-entered.player.position[1])?.storeId,store.id);
+  assert.equal(entered.player.canBuild,false);assert.equal(entered.player.canGrantWishes,false);
+  assert.equal(shared.command('guest',{type:'build',action:'remove',id:'build-1'}).error,'admin_only');
+  assert.equal(shared.command('guest',{type:'wish',localId:'local-00',kind:'dragon'}).error,'admin_only');
+  const recovered=make(data);
+  assert.deepEqual(recovered.restore(shared.checkpoint()),{ok:true});
+  assert.deepEqual(recovered.command('guest',{type:'homeAccess',action:'list'}).homes.map(home=>home.storeId),[store.id]);
+  const revised=compileRegionPackage({...region,places:region.places.map((place,index)=>index?place:{...place,name:'New Moon Arch'})},'Moon Garden');
+  const migration=migrateWorldCheckpoint({fromData:data,toData:revised,checkpoint:shared.checkpoint(),worldId:'moon-garden',now:()=>time,isAdmin:id=>id==='jevica'});
+  assert.equal(migration.ok,true);
+  const migrated=make(revised);
+  assert.deepEqual(migrated.restore(migration.checkpoint),{ok:true});
+  assert.equal(migrated.join({userId:'guest',name:'guest'}).ok,true);
+  assert.deepEqual(migrated.command('guest',{type:'homeAccess',action:'list'}).homes.map(home=>home.storeId),[store.id]);
+  const revoked=shared.command('jevica',{type:'homeAccess',action:'revoke',storeId:store.id,peerId:'guest'});
+  assert.equal(revoked.ok,true);
+  const outside=shared.snapshot().players.find(player=>player.id==='guest').position;
+  assert.equal(environment.roomAt(outside[0],-outside[1]),null,'revocation moves the guest outside');
+  assert.deepEqual(shared.command('guest',{type:'homeAccess',action:'list'}).homes,[]);
+  assert.equal(shared.command('guest',{type:'travel',storeId:store.id,mode:'enter'}).error,'private_home');
+});
+
 test('Jevica can place durable furniture inside a home without building in shops or across its doorway',()=>{
   const region={...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,
     interior:{name:'Moon House',category:'home',entrance:'south'}}:building)};

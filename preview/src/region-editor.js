@@ -160,7 +160,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
           if (item.interior) {
             if (item.interior.category === 'home') field('Home access', item.interior.access ?? 'public', next => {
               if (next === 'owner') item.interior.access = 'owner'; else delete item.interior.access;
-            }, { options: [{ value: 'public', label: 'Open to visitors' }, { value: 'owner', label: 'Jevica only' }] });
+            }, { options: [{ value: 'public', label: 'Open to visitors' }, { value: 'owner', label: 'Jevica and invited guests' }] });
             field('Interior name', item.interior.name, next => {
               if (!next || [...next].length > 64 || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(next)) {
                 say('Interior names must contain 1–64 visible characters.'); return false;

@@ -24,7 +24,7 @@ The package has `schema_version: 1` and these required fields:
 | `spawn` | `[x, north]`, a walkable arrival point |
 | `roads` | 1–64 named roads with unique slug `id`, `kind` (`residential` or `footway`), `width_m`, and 2–128 `[x, north]` points |
 | `buildings` | Up to 80 structures with unique slug `id`, `center`, `size: [width, depth, height]`, `yaw_deg`, and `kind` (`retail`, `residential`, or `parking`) |
-| `buildings[].interior` | Optional on up to eight buildings at least 6 × 6 m. `name` (1–64 characters), `category` (`art`, `clothes`, `restaurant`, or `wellness` for retail; `home` for residential), and `entrance` (`south`, `east`, `north`, or `west`) select a walk-in room and its door on that face of the building. Residential homes may set `access` to `owner` for Jevica-only entry or `public` for visitor entry. Omitted `access` is public. |
+| `buildings[].interior` | Optional on up to eight buildings at least 6 × 6 m. `name` (1–64 characters), `category` (`art`, `clothes`, `restaurant`, or `wellness` for retail; `home` for residential), and `entrance` (`south`, `east`, `north`, or `west`) select a walk-in room and its door on that face of the building. Residential homes may set `access` to `owner` for Jevica and invited visitors, or `public` for everyone. Omitted `access` is public. |
 | `trees` | Up to 256 trees with unique slug `id`, `position`, `height_m`, and `crown_radius_m` |
 | `places` | 4–64 named spots with unique slug `id` and `position` |
 
@@ -52,7 +52,11 @@ one into her private editor, save it as a new revision draft, then apply it
 through the normal compatibility checks. Retail venues and residential lounges
 use bounded built-in layouts and are entered through server-checked doors.
 Homes have a sofa, bookshelves, artwork, and residents. Jevica can reserve a
-home's entry for herself in the studio; guests may still arrive outside it.
+home's entry for herself in the studio, then invite accepted contacts from the
+People panel. Each home allows up to 16 invited accounts. Invitations survive
+reconnects and compatible region revisions; revoking one moves a guest outside.
+Entry does not grant building or wish permissions. Other visitors may still
+arrive outside the home.
 With Build & decorate, Jevica can place, move, save, and remove creations inside
 homes as well as outdoors. New lounge chairs and side tables can be placed in
 either area. The server keeps furniture clear of room walls, built-in fixtures,
@@ -63,5 +67,5 @@ worlds where the local placement rules allow them. Older designs stored in one
 world can be copied into the account library from Saved designs.
 This entry rule does not hide the home or its residents from world data.
 Region packages do not yet support custom meshes, textures, scripts, multiple
-rooms per home, visitor access lists, or parcel ownership. Live creations and
+rooms per home, or parcel ownership. Live creations and
 wishes remain scoped to the published world and to Jevica's permissions.

@@ -301,7 +301,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const enter = $('#walking-enter');
       enter.hidden = Boolean(transport)||(!room && !door);
       enter.disabled = Boolean(door && !canEnterStore(door));
-      enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Jevica only` : '';
+      enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && (getSharedPopulation()?sharedRoomSummary(room):room.summary);
