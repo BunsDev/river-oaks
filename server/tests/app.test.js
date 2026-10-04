@@ -78,6 +78,24 @@ test('two authenticated accounts receive the shared roster, and tickets are sing
  assert.equal(b.snapshot.players.length,2);assert.equal(world.players.size,2);
  await assert.rejects(connect(origin,token1,'one'));
 });
+test('concurrent upgrades cannot reuse a ticket while approval is pending',async t=>{
+ let hold=false,checking=0,release;
+ const approval=new Promise(resolve=>{release=resolve;});
+ const waitlist={...approvedWaitlist,async isApproved(){
+   if(!hold)return true;
+   if(++checking===2)release();
+   await approval;
+   return true;
+ }};
+ const {origin}=await fixture(t,waitlist);
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ hold=true;
+ const results=await Promise.allSettled([connect(origin,token,'one'),connect(origin,token,'one')]);
+ assert.equal(checking,2);
+ const admitted=results.filter(result=>result.status==='fulfilled');
+ assert.equal(admitted.length,1,'only one upgrade may consume the ticket');
+ t.after(()=>admitted[0].value.ws.terminate());
+});
 test('pending waitlist approval blocks tickets and revocation closes an active player',async t=>{
  const approved=new Set();
  const waitlist={...approvedWaitlist,async isApproved(userId){return approved.has(userId);}};

@@ -197,8 +197,10 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if(!matchesWorld(url))return reject(403);
       const protocol=url.searchParams.get('protocol');
       if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
-      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
-      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)) || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
+      const identity=await auth.authenticate(req);
+      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
+      const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
+      if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
