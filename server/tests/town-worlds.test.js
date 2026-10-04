@@ -47,6 +47,10 @@ test('the local owner publishes and joins a second world without restarting the 
   const guest=await fetch(origin+'/auth/session');
   const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
+  const profileRequest=(session,sessionCookie,action,data)=>fetch(origin+`/api/profile/${action}?world=moon-garden`,{method:'POST',headers:{Origin:origin,Cookie:sessionCookie,'X-CSRF-Token':session.csrfToken,'Content-Type':'application/json'},body:JSON.stringify(data)});
+  assert.equal((await profileRequest(owner,cookie,'save',{tagline:'Garden host',bio:'Welcome to my world.',pronouns:'she/her',interests:['Gardens'],expectedVersion:0})).status,200);
+  assert.equal((await (await profileRequest(owner,cookie,'view',{})).json()).profile.bio,'Welcome to my world.');
+  assert.equal((await profileRequest(guestSession,guestCookie,'view',{peerId:owner.user.id})).status,404);
   const denied=await fetch(origin+'/api/worlds',{method:'POST',headers:{Origin:origin,Cookie:guestCookie,'X-CSRF-Token':guestSession.csrfToken,'Content-Type':'application/json'},body:JSON.stringify({id:'guest-world',title:'Guest World'})});
   assert.equal(denied.status,403);
   assert.equal((await draftRequest(guestSession,guestCookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,403);

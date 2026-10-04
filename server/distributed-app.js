@@ -8,6 +8,7 @@ import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../pr
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
+import { profileAction } from './profile-api.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -17,7 +18,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, landmarks, social = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, security, landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
@@ -160,6 +161,18 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
               ? view.snapshot.players.find(player => player.id === peerId) : null;
           },
           allowWrite: id => security.allow('social', id, 12, 60_000) });
+        return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/profile/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const result = await profileAction({ action: path.slice('/api/profile/'.length), identity, profiles, social, readBody: () => body(req),
+          visiblePlayer: async (user, peerId) => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          allowWrite: id => security.allow('profile', id, 6, 60_000) });
         return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {

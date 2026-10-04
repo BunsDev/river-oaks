@@ -38,7 +38,12 @@ across roads, buildings, trees, and places.
 The server validates and compiles the package once, then stores the compiled
 world and its SHA-256 digest alongside its catalog entry. The browser and
 shared simulation load that same compiled geography. A damaged or missing
-region fails closed. Publishing is immutable in this version; choose a new
-world ID to publish a revision. Region packages do not yet support custom
-meshes, textures, scripts, interiors, or parcel ownership. Live creations and
+region fails closed. Jevica can open a published region in the studio, save a
+private versioned draft, and apply it to that same world ID. Applying checks
+existing creations against the revised map and refuses a layout that would
+strand them. Visitors reconnect into the revised region; active NPC wishes
+reset while chat, account preferences, inventory, and valid creations survive.
+The last eight published region versions are retained in Redis for recovery;
+there is no rollback control in the studio yet. Region packages do not yet
+support custom meshes, textures, scripts, interiors, or parcel ownership. Live creations and
 wishes remain scoped to the published world and to Jevica's permissions.

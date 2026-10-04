@@ -1,3 +1,5 @@
+import { createProfileUI } from './profile-ui.js';
+
 const node = (tag, text, className) => {
   const element = document.createElement(tag);
   if (text) element.textContent = text;
@@ -5,7 +7,7 @@ const node = (tag, text, className) => {
   return element;
 };
 
-export function createSocialUI({ panel, request, connected, selfId }) {
+export function createSocialUI({ panel, request, profileRequest, connected, selfId }) {
   const section = node('section', null, 'multiplayer-social');
   section.setAttribute('aria-label', 'Contacts and private messages');
   const title = node('h3', 'Contacts'), status = node('p', null, 'multiplayer-social-status');
@@ -14,6 +16,7 @@ export function createSocialUI({ panel, request, connected, selfId }) {
   const conversation = node('div', null, 'multiplayer-social-conversation');
   section.append(title, contacts, conversation, status);
   panel.querySelector('.multiplayer-chat')?.after(section);
+  const profiles=createProfileUI({host:section,request:profileRequest,selfId});
   let items = [], selected = null, lastItems = '', lastMessages = '', busy = false, disposed = false;
   const call = (action, data = {}) => request(action, data);
   async function run(action, data, success) {
@@ -29,6 +32,8 @@ export function createSocialUI({ panel, request, connected, selfId }) {
       const label = node('span', item.peer.name);
       row.append(label);
       if (item.status === 'accepted') {
+        const profile=node('button','Profile');profile.type='button';profile.setAttribute('aria-label',`View profile for ${item.peer.name}`);
+        profile.addEventListener('click',()=>profiles.inspect(item.peer));row.append(profile);
         const open = node('button', 'Message'); open.type = 'button';
         open.setAttribute('aria-label', `Message ${item.peer.name}`);
         open.addEventListener('click', () => { selected = item.peer.id; lastMessages = ''; renderConversation(); refreshMessages(); });
@@ -103,6 +108,7 @@ export function createSocialUI({ panel, request, connected, selfId }) {
   return {
     refresh,
     async invite(player) { await run('request', { peerId: player.id }, `Invitation sent to ${player.name}.`); },
+    inspect:profiles.inspect,
     dispose() { disposed = true; clearInterval(timer); section.remove(); },
   };
 }

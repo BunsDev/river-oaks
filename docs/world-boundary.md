@@ -12,8 +12,8 @@ publishing it; visitors use `?world=<id>` to join that world.
 Jevica can publish either a copy of the bundled River Oaks geography or a
 creator region package with its own terrain, roads, buildings, trees, spawn,
 and named places. See [Creator regions](creator-regions.md) for the package
-format. Region geography is fixed at publication; live building and wishes
-remain Jevica-only. Guests can visit and interact but cannot publish, build,
+format and live revision rules. Live building and wishes remain Jevica-only.
+Guests can visit and interact but cannot publish, build,
 or grant wishes.
 
 The ticket request, WebSocket admission, and public snapshots carry the world
@@ -40,8 +40,10 @@ Private world checkpoints are version 2 and bind the ID in their checksum.
 Only the default world accepts a valid legacy version 1 world checkpoint or
 room wrapper. A checkpoint from another world fails recovery without changing
 the running world. The district fingerprint still guards geography
-compatibility; replacing the bundled district or a published region needs an
-explicit migration. A missing or altered region package fails room load
+compatibility. Applying a creator region draft explicitly migrates its room
+checkpoint and switches the catalog and room in one fenced Redis commit.
+The bundled district still needs an explicit migration before replacement.
+A missing or altered region package fails room load
 instead of substituting River Oaks.
 
 Run `npm run test:server` with a test Redis instance and `npm run test:shared`
