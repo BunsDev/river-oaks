@@ -140,6 +140,11 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             ? snapshot().players.find(player=>player.id===peerId) : null,
           inviteWorld:async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? {id:worldId,title:worldTitle}:null,
+          invitePlace:async(user,placeId)=>{
+            if(connections.get(user.userId)?.identity.sessionId!==user.sessionId)return null;
+            const place=world.resolvePlace(placeId);
+            return place?{world:{id:worldId,title:worldTitle},place}:null;
+          },
           allowWrite:id=>socialWrites(id)});
         return json(res,result.status,result.value);
       }

@@ -171,6 +171,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? {id:worldId,title:worldTitle} : null;
           },
+          invitePlace: async (user,placeId) => {
+            const view=await room.read();
+            if(!view?.connections.some(item=>item.userId===user.userId && item.sessionId===user.sessionId))return null;
+            const place=await room.resolvePlace(placeId);
+            return place?{world:{id:worldId,title:worldTitle},place}:null;
+          },
           allowWrite: id => security.allow('social', id, 12, 60_000) });
         return json(res, result.status, result.value);
       }

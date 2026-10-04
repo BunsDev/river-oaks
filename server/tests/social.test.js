@@ -52,6 +52,23 @@ test('accepted contacts can invite each other to a validated world',async()=>{
   assert.equal(await social.messages('bob','alice'),null);
 });
 
+test('place invitations require accepted contacts and a valid named destination',async()=>{
+  const social=createMemorySocial({now:()=>42,createId:()=> 'meeting-1'});
+  const alice={userId:'alice',name:'Alice'},bob={userId:'bob',name:'Bob'};
+  const world={id:'moon-garden',title:'Moon Garden'},place={id:'spot:plaza',name:'Moonlit Plaza'};
+  assert.equal((await social.invitePlace(alice,'bob',world,place)).reason,'missing');
+  await social.request(alice,bob);await social.accept('bob','alice');
+  for(const bad of [{id:'../bad',name:'Plaza'},{id:'arrival',name:'Bad\nName'},{id:'spot:plaza',name:'\u202ePlaza'}])
+    assert.equal((await social.invitePlace(alice,'bob',world,bad)).reason,'invalid');
+  const result=await social.invitePlace(alice,'bob',world,place);
+  assert.deepEqual(result.message,{id:'meeting-1',authorId:'alice',authorName:'Alice',
+    text:'Meet me at Moonlit Plaza in Moon Garden.',at:42,kind:'place-invite',
+    worldId:'moon-garden',worldTitle:'Moon Garden',placeId:'spot:plaza',placeName:'Moonlit Plaza'});
+  assert.deepEqual(await social.messages('bob','alice'),[result.message]);
+  await social.remove('bob','alice');
+  assert.equal(await social.messages('bob','alice'),null);
+});
+
 test('Redis contacts admit one concurrent invitation and retain an empty accepted history', {skip:!process.env.REDIS_URL}, async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
   const prefix=`{river-oaks:social-test:${randomUUID()}}`,social=createRedisSocial({redis,prefix});
@@ -68,6 +85,8 @@ test('Redis contacts admit one concurrent invitation and retain an empty accepte
   assert.equal((await social.messages('bob','alice'))[0].text,'Across Redis');
   assert.equal((await social.inviteWorld(alice,'bob',{id:'moon-garden',title:'Moon Garden'})).ok,true);
   assert.equal((await social.messages('bob','alice'))[1].worldId,'moon-garden');
+  assert.equal((await social.invitePlace(alice,'bob',{id:'moon-garden',title:'Moon Garden'},{id:'arrival',name:'Arrival'})).ok,true);
+  assert.equal((await social.messages('bob','alice'))[2].placeId,'arrival');
   assert.equal((await social.remove('bob','alice')).ok,true);
   assert.deepEqual(await social.list('alice'),[]);
 });

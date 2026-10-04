@@ -4,6 +4,7 @@ import { createResidentLife, stepResidentLife } from '../preview/src/resident-li
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
+import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
@@ -617,7 +618,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (const local of state.locals) localById.set(local.id,local);
     focus.clear();chat.length=0;builds.clear();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
-  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,players,state};
+  const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
+  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

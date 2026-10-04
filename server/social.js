@@ -16,13 +16,26 @@ const view = (record, userId) => ({
   latest: history(record).at(-1) ?? null,
 });
 const invalid = { ok: false, reason: 'invalid' };
-function worldInvite(actor, peerId, world, createId, now) {
+function validWorldInvite(actor,peerId,world) {
   if (!validId(actor?.userId) || !validId(peerId) || actor.userId===peerId
     || typeof world?.title!=='string' || world.title!==world.title.trim() || !world.title
-    || [...world.title].length>64 || /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(world.title))return null;
-  try {validateWorldId(world.id);} catch {return null;}
+    || [...world.title].length>64 || /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(world.title))return false;
+  try {validateWorldId(world.id);} catch {return false;}
+  return true;
+}
+function worldInvite(actor, peerId, world, createId, now) {
+  if(!validWorldInvite(actor,peerId,world))return null;
   return {id:createId(),authorId:actor.userId,authorName:cleanName(actor.name),
     text:`Come meet me in ${world.title}.`,at:now(),kind:'world-invite',worldId:world.id,worldTitle:world.title};
+}
+function placeInvite(actor, peerId, world, place, createId, now) {
+  if (!validWorldInvite(actor,peerId,world)
+    || typeof place?.id!=='string' || !/^(arrival|(?:spot|shop):[\w.:-]{1,80})$/.test(place.id)
+    || typeof place.name!=='string' || place.name!==place.name.trim() || !place.name
+    || [...place.name].length>40 || /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(place.name))return null;
+  return {id:createId(),authorId:actor.userId,authorName:cleanName(actor.name),
+    text:`Meet me at ${place.name} in ${world.title}.`,at:now(),kind:'place-invite',
+    worldId:world.id,worldTitle:world.title,placeId:place.id,placeName:place.name};
 }
 
 export function createMemorySocial({ now = Date.now, createId = randomUUID } = {}) {
@@ -82,6 +95,15 @@ export function createMemorySocial({ now = Date.now, createId = randomUUID } = {
       record.names[record.ids.indexOf(actor.userId)]=message.authorName;
       return {ok:true,message};
     },
+    async invitePlace(actor,peerId,world,place) {
+      const message=placeInvite(actor,peerId,world,place,createId,now);
+      if(!message)return invalid;
+      const record=records.get(pairKey(actor.userId,peerId));
+      if(record?.status!=='accepted')return {ok:false,reason:'missing'};
+      record.messages.push(message);if(record.messages.length>MESSAGE_LIMIT)record.messages.shift();
+      record.names[record.ids.indexOf(actor.userId)]=message.authorName;
+      return {ok:true,message};
+    },
   };
 }
 
@@ -106,7 +128,7 @@ elseif action == 'remove' then
   redis.call('SREM', KEYS[2], ARGV[3])
   redis.call('SREM', KEYS[3], ARGV[2])
   return 'ok'
-elseif action == 'send' or action == 'invite-world' then
+elseif action == 'send' or action == 'invite-world' or action == 'invite-place' then
   if record.status ~= 'accepted' then return 'missing' end
   local message = cjson.decode(ARGV[6])
   table.insert(record.messages, message)
@@ -160,6 +182,12 @@ export function createRedisSocial({ redis, prefix, now = Date.now, createId = ra
       const message=worldInvite(actor,peerId,world,createId,now);
       if(!message)return invalid;
       const result=await change('invite-world',actor.userId,peerId,JSON.stringify(message));
+      return result.ok?{ok:true,message}:result;
+    },
+    async invitePlace(actor,peerId,world,place) {
+      const message=placeInvite(actor,peerId,world,place,createId,now);
+      if(!message)return invalid;
+      const result=await change('invite-place',actor.userId,peerId,JSON.stringify(message));
       return result.ok?{ok:true,message}:result;
     },
   };

@@ -27,6 +27,9 @@
 .multiplayer-social-history p { margin: 0 0 8px; }
 .multiplayer-social-form { display: flex; gap: 6px; }
 .multiplayer-social-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.multiplayer-social-meeting { display: flex; align-items: end; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.multiplayer-social-meeting label { display: grid; gap: 4px; font-size: 12px; }
+.multiplayer-social-meeting select { max-width: 190px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .multiplayer-social-status { min-height: 1.4em; }
 .multiplayer-profile { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
 .multiplayer-profile[hidden] { display: none; }

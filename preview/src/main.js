@@ -299,6 +299,7 @@ function startMultiplayer() {
   buildControls?.hide();
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
+    getMeetingPlaces: () => world ? placesOf(world) : [],
     getRegionSha256: () => worldRegionSha256,
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
@@ -639,7 +640,7 @@ async function loadWorld() {
         const result = await goToPlace(linked);
         placesUI?.say(result?.ok === false ? (result.message ?? `${linked.name} is not reachable right now.`) : `You're at ${linked.name}`, result?.ok === false ? 'error' : 'ok');
       }
-    }
+    } else if(new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
   } finally {

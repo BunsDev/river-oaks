@@ -56,6 +56,12 @@ connected. The server records the sender's room as a private message, and the
 recipient can choose its world link to travel there. The sender cannot supply
 a destination in the request. World invitations share the 40-message history
 and write limit; they do not grant building or wish permissions.
+An accepted contact can also choose a named public place in their current world
+and send a private meeting invitation. The server resolves the place against the
+active published region and stores its world and place IDs in the message. The
+recipient's link joins that world and travels to the place; a stale place link
+can no longer travel if a later region revision removes the place. Place
+invitations share the same history and rate limit.
 Accepted contacts also see whether a resident is online and can follow a link
 to their current world without waiting for an invitation. The contact list
 exposes the world name and ID, never the resident's exact position. Pending

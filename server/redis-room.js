@@ -3,6 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { placesOf } from '../preview/src/places.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
@@ -260,5 +261,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     closed=true;cached=null;
     await redis.eval(RELEASE,1,keys.lease,token);
   }
-  return {worldId,request,tick,read,close};
+  async function resolvePlace(placeId) {
+    const data=regionCatalog && worldId!==DEFAULT_WORLD_ID ? await regionCatalog.getRegion(worldId) : worldData;
+    return placesOf(data).find(place=>place.id===placeId)??null;
+  }
+  return {worldId,request,tick,read,resolvePlace,close};
 }
