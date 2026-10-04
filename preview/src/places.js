@@ -70,8 +70,8 @@ export function withinBounds(position, bounds) {
 }
 
 // Landmarks are the player's own bookmarks: a name, a position and the way
-// they were facing. They live in browser storage, so they belong to this
-// device until accounts carry them.
+// they were facing. Solo play keeps these in browser storage; shared play
+// uses createAccountLandmarks below.
 export function createLandmarks({ storage = null, now = () => Date.now(), random = Math.random } = {}) {
   let items = read();
   function read() {
@@ -96,6 +96,41 @@ export function createLandmarks({ storage = null, now = () => Date.now(), random
     },
     remove(id) { const before = items.length; items = items.filter(item => item.id !== id); if (items.length !== before) write(); return items.length !== before; },
     rename(id, name) { const clean = cleanName(name), item = items.find(item => item.id === id); if (!item || !clean) return false; item.name = clean; write(); return true; },
+  };
+}
+
+// Shared-play bookmarks are private account data. The server records the
+// authoritative player pose; the browser only submits a name.
+export function createAccountLandmarks({ request }) {
+  let items = [], loading = null;
+  const valid = item => item && textId(item.id) && typeof item.name === 'string' && cleanName(item.name)
+    && finitePair(item.position) && Number.isFinite(item.yaw) && Number.isFinite(item.createdAt);
+  const list = () => items.map(item => ({ ...item, position: [...item.position], kind: 'landmark' }));
+  return {
+    list,
+    async load() {
+      loading ??= request('list').then(response => {
+        if (!Array.isArray(response?.landmarks) || response.landmarks.length > LANDMARK_LIMIT || !response.landmarks.every(valid)) throw new Error('Account landmarks could not be read.');
+        items = response.landmarks.map(item => ({ ...item, position: [...item.position] }));
+        return list();
+      });
+      const pending = loading;
+      try { return await pending; }
+      finally { if (loading === pending) loading = null; }
+    },
+    async add({ name }) {
+      if (loading) await loading;
+      const response = await request('add', { name });
+      if (!response?.ok || !valid(response.landmark)) throw new Error('Landmark could not be saved.');
+      items = [...items.filter(item => item.id !== response.landmark.id), response.landmark];
+      return { ok: true, landmark: { ...response.landmark, kind: 'landmark' } };
+    },
+    async remove(id) {
+      if (loading) await loading;
+      const response = await request('remove', { id });
+      if (response?.removed) items = items.filter(item => item.id !== id);
+      return response?.removed === true;
+    },
   };
 }
 

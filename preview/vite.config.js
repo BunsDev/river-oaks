@@ -16,6 +16,12 @@ export default defineConfig({
     proxy: {
       '/auth': townHttp,
       '/api/multiplayer': townHttp,
+      '/api/worlds': townHttp,
+      '/api/world-draft': townHttp,
+      '/api/world-data': townHttp,
+      '/api/landmarks': townHttp,
+      '/api/social': townHttp,
+      '/api/profile': townHttp,
       '/api/moderation': townHttp,
       '/api/waitlist': townHttp,
       '/multiplayer': { target: `ws://127.0.0.1:${townPort}`, ws: true },

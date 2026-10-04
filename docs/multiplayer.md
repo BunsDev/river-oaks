@@ -13,8 +13,8 @@ account. The automated acceptance runner uses isolated temporary local
 identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
-auth and multiplayer traffic to that checkout's own town on the chosen loopback
-port.
+auth, multiplayer, and landmark traffic to that checkout's own town on the
+chosen loopback port.
 
 - The default is `choice`: players begin in single player and can select
   Multiplayer from the control in the viewport. The choice is remembered in
@@ -43,18 +43,75 @@ survives reconnects, logout, and server replacement through the town checkpoint.
 The town retains up to 4,096 account selections; older inactive selections are
 evicted as it fills. The solo-only invasion and auto visit are hidden, since
 each would diverge from the shared town.
+The People panel also has contacts and private messages. An invitation can be
+sent only to a player currently present in the same world; that player must
+accept before either can send a private message. Contacts and the latest 40
+messages per pair are stored outside world checkpoints, so they survive travel,
+reconnects, and Redis edge replacement. Removing a contact erases the message
+history and ends messaging. Contact and message writes are rate limited; each
+account can have up to 50 contact relationships, including pending invitations.
+An accepted contact can invite the other resident to their current world while
+connected. The server records the sender's room as a private message, and the
+recipient can choose its world link to travel there. The sender cannot supply
+a destination in the request. World invitations share the 40-message history
+and write limit; they do not grant building or wish permissions.
+The client checks for new invitations and messages every 10 seconds while its
+browser tab is visible and connected.
+Private messages are visible only to the two participants through authenticated,
+origin and CSRF checked requests.
+The People panel lets each signed-in resident edit a short profile with a
+tagline, bio, pronouns, and up to eight interests. A profile is readable only
+by someone currently meeting that resident in a world or by an accepted
+contact. Profiles are shared across worlds, versioned across devices, and
+persist in Redis outside room checkpoints. Editing a profile does not grant
+building or wish permissions.
+
 The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
+The Places panel keeps up to 50 private landmarks per account in shared play.
+Their positions come from the server's current player pose, and Redis stores
+them outside the town checkpoint so reconnects and new server instances retain
+them. Solo landmarks remain in browser storage.
 
-Build & decorate lets a player place, move, turn, and remove up to 24 owned
+Only Jevica's two configured WorkOS owner accounts can grant wishes or use
+Build & decorate, including saved designs. In shared play, the server checks the
+authenticated user ID for every command; a selected Jevica appearance does not
+grant authority. Other visitors can see creations and wish effects, meet
+residents, chat, travel, and participate in community scenarios. On loopback
+development auth, the first issued development identity is the owner fixture.
+Jevica can move or remove creations made before the restriction; their previous
+owners cannot keep building. Earlier guest design records remain private in the
+checkpoint but cannot be used while the restriction is active.
+Solo play remains a local sandbox. Its wish controls require a server-confirmed
+Jevica session and recheck that session before each wish action. An offline or
+signed-out solo player cannot grant wishes. Solo play has no building controls.
+Local simulation state is browser-owned; shared-world authority is enforced by
+the server.
+
+Build & decorate lets the owner place, move, turn, and remove up to 24 owned
 creations in the shared town. A placed creation can be saved as a design, then
-placed again from **Saved designs**. Each account can keep 48 designs. The
+placed again from **Saved designs**. The owner can keep 48 designs. The
 inventory is returned only to its owner; placed copies are visible to everyone.
 Designs survive reconnects and town resets through the private checkpoint.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
+
+Jevica can open an existing creator region in the World studio, save a private
+revision draft, and apply it to the live world. The draft is stored in shared
+Redis with the hash of the published region and is available on another
+device. Applying validates the old checkpoint, carries forward durable player
+state and creations, then atomically publishes the revised catalog and room
+checkpoint. A layout that conflicts with an existing creation is rejected.
+Connected visitors reload the revised map; active NPC wishes reset. Guests
+cannot load, save, discard, or apply drafts.
+
+Shared play uses 98 simulated residents, down from 193 in solo play (49%).
+Every outdoor scenario resident and at least one staff member per shop remains.
+The same roster drives the server, browser, room counts, and rendered people.
+Old full-population checkpoints migrate into this roster and preserve active
+indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
@@ -71,6 +128,12 @@ One renewable Redis lease controls simulation writes. A fenced transaction commi
 Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
+
+`WORLD_ID` can expose an alternate configured world and defaults to `river-oaks`.
+Jevica can publish up to 16 additional worlds on the same origin from Explore;
+the Redis world directory and rooms survive process replacement. Other worlds
+use `?world=<id>` in the browser URL. The [world boundary](world-boundary.md) documents admission, Redis keys,
+checkpoint compatibility, and the current limits of this first extraction.
 
 ## Deployment readiness
 

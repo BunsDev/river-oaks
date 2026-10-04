@@ -42,12 +42,14 @@ test('each browser gets its own development resident without a sign-in step', as
   assert.equal(first.handled, true);
   assert.equal(first.json.authenticated, true);
   assert.equal(first.json.development, true);
+  assert.equal(first.json.canGrantWishes, true, 'the local development owner has Jevica privileges');
   const cookie = cookieOf(first.res);
   assert.match(first.res.headers['set-cookie'], /HttpOnly; SameSite=Lax/);
   const again = await exchange(auth, '/auth/session', { cookie });
   assert.equal(again.json.user.id, first.json.user.id, 'the cookie keeps the same resident');
   const other = await exchange(auth, '/auth/session');
   assert.notEqual(other.json.user.id, first.json.user.id, 'a second browser is a second player');
+  assert.equal(other.json.canGrantWishes, false, 'another development browser cannot grant wishes');
   const identity = await auth.authenticate({ headers: { cookie } });
   assert.equal(identity.userId, first.json.user.id);
   assert.equal(await auth.authenticate({ headers: {} }), null);

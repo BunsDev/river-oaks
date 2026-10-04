@@ -42,12 +42,23 @@ async page => {
     await page.bringToFront();
     const openPanel=page.getByRole('button',{name:'Explore River Oaks',exact:true});
     if(await openPanel.isVisible())await openPanel.click();
-    const target=await page.evaluate(()=>{
+    check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.canGrantWishes===true),'Alice fixture retains server-issued wish permission after reconnect');
+    const targets=await page.evaluate(()=>{
       const locals=window.__riverMultiplayer().snapshot.locals.filter(local=>!local.indoor&&!local.wish);
-      return locals.sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length)[0].id;
+      const player=window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice');
+      const nearest=[...locals].sort((a,b)=>Math.hypot(a.position[0]-player.position[0],a.position[1]-player.position[1])-Math.hypot(b.position[0]-player.position[0],b.position[1]-player.position[1]));
+      const sparse=[...locals].sort((a,b)=>locals.filter(p=>Math.hypot(p.position[0]-b.position[0],p.position[1]-b.position[1])<9).length-locals.filter(p=>Math.hypot(p.position[0]-a.position[0],p.position[1]-a.position[1])<9).length);
+      return [...new Set([...nearest.slice(0,3),...sparse].map(local=>local.id))];
     });
-    await page.locator('#community-local').selectOption(target);
-    await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+    let opened=false;
+    for(const target of targets.slice(0,6)){
+      await page.locator('#community-local').selectOption(target);
+      await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+      opened=await page.waitForFunction(()=>document.querySelector('#community-dialogue')?.hidden===false,null,{timeout:6000}).then(()=>true,()=>false);
+      if(opened)break;
+      await page.waitForTimeout(1200);
+    }
+    check(opened,'A shared resident is reachable after a bounded retry');
     await page.locator('#wish-grant').waitFor({state:'visible'});
     const resident=await page.locator('#community-local').inputValue();
     await page.locator('#wish-choice').selectOption('dragon');await page.locator('#wish-grant').click();
@@ -70,6 +81,12 @@ async page => {
     await other.reload({waitUntil:'commit'});await ready(other);
     await other.waitForFunction(id=>window.__riverMultiplayer().snapshot.locals.find(local=>local.id===id)?.wish?.kind==='invisibility',resident);
     check(true,'Reload rejoins the existing town and keeps its active wishes');
+    await page.waitForFunction(id=>window.__riverMultiplayer().snapshot.locals.find(local=>local.id===id)?.wish?.kind==='invisibility',resident);
+    if(await page.locator('#wish-undo').isHidden()) {
+      await page.locator('#community-local').selectOption(resident);
+      await page.getByRole('button',{name:'Meet a local',exact:true}).click();
+      await page.locator('#wish-undo').waitFor({state:'visible',timeout:15000});
+    }
     await page.locator('#wish-undo').click();
     await page.waitForFunction(()=>document.querySelector('.wish-card')?.getAttribute('aria-busy')==='false' && !document.querySelector('#wish-choice')?.disabled);
     await page.locator('#wish-choice').press('Escape');
@@ -83,8 +100,7 @@ async page => {
     for(const key of ['KeyS','KeyW','KeyA','KeyD']){
       const before=await other.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
       await page.keyboard.down(key);
-      await page.waitForTimeout(1200);
-      await page.keyboard.up(key);
+      try { await page.waitForTimeout(1800); } finally { await page.keyboard.up(key); }
       walked=await other.waitForFunction(({id,before})=>{const p=window.__riverMultiplayer().snapshot.players.find(p=>p.id===id);return Math.hypot(p.position[0]-before[0],p.position[1]-before[1])>0.25;},{id:'alice',before},{timeout:5000}).then(()=>true,()=>false);
       if(walked)break;
     }

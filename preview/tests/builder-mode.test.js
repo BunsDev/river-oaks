@@ -40,7 +40,7 @@ test('each refusal names its reason', () => {
 
 test('the preview and the town agree on every spot they are asked about', () => {
   let time = 1000;
-  const town = createSharedWorld(world, { now: () => time });
+  const town = createSharedWorld(world, { now: () => time, isAdmin: id => id === 'u' });
   town.join({ userId: 'u', name: 'Builder' });
   const feet = town.snapshot().players[0].position;
   let agreed = 0; const outcomes = new Set();

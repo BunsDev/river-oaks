@@ -40,7 +40,7 @@ async function fixture(t, { moderation, worldData=district } = {}) {
       res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:true}));return true;
     },
   };
-  const world=createSharedWorld(worldData,{now:()=>time});
+  const world=createSharedWorld(worldData,{now:()=>time,isAdmin:id=>id==='alice'});
   app=createGameServer({auth,world,waitlist:approvedWaitlist,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   t.after(()=>app.close());
@@ -149,10 +149,10 @@ test('player creations reach peers through snapshots and only the owner can remo
   const saved=await alice.command({type:'inventory',action:'save',buildId:placed.item.id});
   assert.equal(saved.ok,true);
   assert.deepEqual((await alice.command({type:'inventory',action:'list'})).items,[saved.item]);
-  assert.deepEqual((await bob.command({type:'inventory',action:'list'})).items,[]);
-  assert.equal((await bob.command({type:'build',action:'place',templateId:saved.item.id,position:[-12,3],yaw:0})).error,'unknown_design');
+  assert.equal((await bob.command({type:'inventory',action:'list'})).error,'admin_only');
+  assert.equal((await bob.command({type:'build',action:'place',templateId:saved.item.id,position:[-12,3],yaw:0})).error,'admin_only');
   assert.equal(bob.messages.some(message=>JSON.stringify(message).includes(saved.item.id)),false,'private inventory never reaches a peer');
-  assert.equal((await bob.command({type:'build',action:'remove',id:placed.item.id})).error,'not_build_owner');
+  assert.equal((await bob.command({type:'build',action:'remove',id:placed.item.id})).error,'admin_only');
   const before=bob.messages.length;
   assert.equal((await alice.command({type:'build',action:'remove',id:placed.item.id})).ok,true);
   f.advance();

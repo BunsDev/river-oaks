@@ -5,6 +5,11 @@ import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { isJevicaAdmin } from './admin.js';
+import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
+import { socialAction } from './social-api.js';
+import { profileAction } from './profile-api.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -14,10 +19,12 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, waitlist, waitlistAdmins = [], origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
+  const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
+  const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
   const connections = new Map(), moderatorIds = new Set(moderators);
   const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
@@ -35,11 +42,11 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
     }
     return identity;
   };
-  async function body(req) {
+  async function body(req,max=4096) {
     let size = 0; const chunks = [];
     for await (const chunk of req) {
       size += chunk.length;
-      if (size > 4096) throw new Error('Invalid body');
+      if (size > max) throw new Error('Invalid body');
       chunks.push(chunk);
     }
     return JSON.parse(Buffer.concat(chunks));
@@ -48,7 +55,8 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, onRevoke: disconnectUser });
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+    onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
   function publish(view) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
@@ -56,6 +64,9 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
       if (!connection.joined) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
+      if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
+        ws.close(4000, 'World region updated.'); continue;
+      }
       if (!active) { ws.close(4003, 'Session ended or account removed from the town.'); continue; }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
       send(ws, view.snapshot, { snapshot: true });
@@ -66,16 +77,114 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
     res.setHeader('Referrer-Policy', 'same-origin');
     res.setHeader('X-Frame-Options', 'DENY');
     try {
-      const path = new URL(req.url, 'http://localhost').pathname;
+      const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
+      if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
+        const ids=url.searchParams.getAll('world');
+        if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
+        const meta=await worldCatalog.get(ids[0]);
+        if(!meta && ids[0]!==room.worldId)return json(res,404,{error:'World not found.'});
+        return json(res,200,meta?.template==='region-v1'
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+      }
+      if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
+        return json(res, 200, { worlds: await worldCatalog.list() });
+      }
+      if (path === '/api/worlds' && req.method === 'POST' && worldCatalog) {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!isAdmin(identity.userId)) return json(res, 403, { error: 'Only Jevica can publish a world.' });
+        let data;
+        try { data = await body(req,MAX_REGION_REQUEST_BYTES); } catch { return json(res, 400, { error: 'Invalid world.' }); }
+        const result = await worldCatalog.publish(data, identity.userId);
+        const status = result.ok ? 201 : ['invalid_world','invalid_region'].includes(result.reason) ? 400 : 409;
+        return json(res, status, result.ok ? { world: result.world } : { error: result.reason });
+      }
+      if (path.startsWith('/api/world-draft/') && req.method === 'POST' && worldCatalog) {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!isAdmin(identity.userId)) return json(res, 403, { error: 'Only Jevica can edit a region draft.' });
+        const action = path.slice('/api/world-draft/'.length);
+        let data;
+        try { data = await body(req, action === 'save' ? MAX_REGION_REQUEST_BYTES : 4096); }
+        catch { return json(res, 400, { error: 'Invalid region draft request.' }); }
+        if (action === 'load') {
+          const editable = await worldCatalog.editable(data?.id);
+          return editable ? json(res, 200, editable) : json(res, 404, { error: 'Editable region not found.' });
+        }
+        if (action === 'save') {
+          const result = await worldCatalog.saveDraft(data, identity.userId);
+          const status = result.ok ? 200 : result.reason === 'invalid_draft' ? 400
+            : ['missing', 'unsupported'].includes(result.reason) ? 404 : 409;
+          return json(res, status, result.ok ? result : { error: result.reason });
+        }
+        if (action === 'discard') {
+          const result = await worldCatalog.discardDraft(data?.id, data?.expectedDraftVersion);
+          return json(res, result.ok ? 200 : result.reason === 'invalid_draft' ? 400 : 409,
+            result.ok ? result : { error: result.reason });
+        }
+        if (action === 'apply' && onApplyRegion) {
+          const result = await onApplyRegion(data?.id, data?.expectedDraftVersion, identity.userId);
+          const status = result.ok ? 200 : result.error === 'invalid_draft' ? 400
+            : result.error === 'missing' ? 404 : result.error === 'room_closed' || result.error === 'request_timeout' ? 503 : 409;
+          return json(res, status, result);
+        }
+        return json(res, 404, { error: 'Not found.' });
+      }
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         if (!(await waitlist.isApproved(identity.userId))) return json(res, 403, { error: 'waitlist_approval_required' });
-        const ticket = await security.issueTicket(identity);
-        return ticket ? json(res, 200, { ticket, moderator: moderatorIds.has(identity.userId) })
+        const ticket = await security.issueTicket(identity, worldId);
+        return ticket ? json(res, 200, { ticket, worldId, protocolVersion: WORLD_PROTOCOL_VERSION, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
+      }
+      if (path.startsWith('/api/landmarks/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        if (!landmarks) return json(res, 503, { error: 'Landmarks are unavailable.' });
+        const action = path.slice('/api/landmarks/'.length);
+        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId) });
+        let data;
+        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid landmark request.' }); }
+        if (action === 'add') {
+          const view = await room.read();
+          const joined = view?.connections.some(item => item.userId === identity.userId && item.sessionId === identity.sessionId);
+          const player = joined && view.snapshot.players.find(item => item.id === identity.userId);
+          if (!player) return json(res, 409, { error: 'Join the town before saving a landmark.' });
+          const result = await landmarks.add(identity.userId, { name: data?.name, position: player.position.slice(0, 2), yaw: player.yaw });
+          return json(res, result.ok ? 200 : 400, result.ok ? result : { error: result.reason });
+        }
+        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id) });
+      }
+      if (path.startsWith('/api/social/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const result = await socialAction({ action: path.slice('/api/social/'.length), identity, social, readBody: () => body(req),
+          visiblePlayer: async (user, peerId) => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          inviteWorld: async user => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? {id:worldId,title:worldTitle} : null;
+          },
+          allowWrite: id => security.allow('social', id, 12, 60_000) });
+        return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/profile/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const result = await profileAction({ action: path.slice('/api/profile/'.length), identity, profiles, social, readBody: () => body(req),
+          visiblePlayer: async (user, peerId) => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          allowWrite: id => security.allow('profile', id, 6, 60_000) });
+        return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
@@ -88,7 +197,10 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
           ? await security.ban({ userId: data.userId, actorId: identity.userId, reason: 'Moderator action' })
           : await security.unban({ userId: data.userId, actorId: identity.userId });
         if (!ok) return json(res, 503, { error: 'Moderation is temporarily unavailable.' });
-        if (data.banned) await disconnectUser(data.userId);
+        if (data.banned) {
+          await disconnectUser(data.userId);
+          await onBan?.(data.userId);
+        }
         return json(res, 200, { ok: true });
       }
       json(res, 404, { error: 'Not found' });
@@ -111,9 +223,12 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
     try {
       const url = new URL(req.url, 'http://localhost');
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
+      if (!matchesWorld(url)) return reject(403);
+      const protocol = url.searchParams.get('protocol');
+      if (protocol !== String(WORLD_PROTOCOL_VERSION) && !(protocol === null && worldId === DEFAULT_WORLD_ID)) return reject(426);
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
-        || !(await security.consumeTicket(url.searchParams.get('ticket'), identity))) return reject(401);
+        || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});
         if (stopped) { ws.close(1012, 'Town restarting'); return; }
@@ -128,6 +243,7 @@ export function createDistributedServer({ auth, room, security, waitlist, waitli
           connection.joined = true;
           const view = await room.read();
           if (!view) throw new Error('No committed town');
+          connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;
         })().catch(() => { ws.close(1013, 'Town temporarily unavailable.'); return false; });

@@ -9,19 +9,27 @@ import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { protectedGameAsset } from './game-assets.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { isJevicaAdmin } from './admin.js';
+import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
+import { socialAction } from './social-api.js';
+import { profileAction } from './profile-api.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
+  const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
+  const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000);
   const access = createRateLimiter(120,60000,4096), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
   const send = (ws,value,options) => sendFrame(ws,value,options);
+  const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{})});
   const authorized = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -36,10 +44,13 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     connection?.ws.close(code,reason);world.leave(id);
   };
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
-    onRevoke: userId => disconnectUser(userId, 4003, 'Waitlist approval ended') });
-  async function body(req) {
+    onRevoke: async userId => {
+      disconnectUser(userId, 4003, 'Waitlist approval ended');
+      await onBan?.(userId);
+    } });
+  async function body(req,max=4096) {
     let size=0,chunks=[];
-    for await (const chunk of req) {size+=chunk.length;if(size>4096)throw new Error('Request too large');chunks.push(chunk);}
+    for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
     return JSON.parse(Buffer.concat(chunks).toString());
   }
   const server = createServer(async (req,res) => {
@@ -51,14 +62,94 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
+      if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
+        const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
+        if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
+        const meta=await worldCatalog.get(ids[0]);
+        if(!meta && ids[0]!==world.worldId)return json(res,404,{error:'World not found.'});
+        return json(res,200,meta?.template==='region-v1'
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+      }
+      if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldCatalog.list()});
+      if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can publish a world.'});
+        let data;
+        try {data=await body(req,MAX_REGION_REQUEST_BYTES);}catch{return json(res,400,{error:'Invalid world.'});}
+        const result=await worldCatalog.publish(data,identity.userId);
+        return json(res,result.ok?201:['invalid_world','invalid_region'].includes(result.reason)?400:409,result.ok?{world:result.world}:{error:result.reason});
+      }
+      if (pathname.startsWith('/api/world-draft/') && req.method==='POST' && worldCatalog) {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can edit a region draft.'});
+        const action=pathname.slice('/api/world-draft/'.length);
+        let data;
+        try {data=await body(req,action==='save'?MAX_REGION_REQUEST_BYTES:4096);}catch{return json(res,400,{error:'Invalid region draft request.'});}
+        if(action==='load') {
+          const editable=await worldCatalog.editable(data?.id);
+          return editable?json(res,200,editable):json(res,404,{error:'Editable region not found.'});
+        }
+        if(action==='save') {
+          const result=await worldCatalog.saveDraft(data,identity.userId);
+          return json(res,result.ok?200:result.reason==='invalid_draft'?400:result.reason==='missing'||result.reason==='unsupported'?404:409,
+            result.ok?result:{error:result.reason});
+        }
+        if(action==='discard') {
+          const result=await worldCatalog.discardDraft(data?.id,data?.expectedDraftVersion);
+          return json(res,result.ok?200:result.reason==='invalid_draft'?400:409,result.ok?result:{error:result.reason});
+        }
+        if(action==='apply' && onApplyRegion) {
+          const result=await onApplyRegion(data?.id,data?.expectedDraftVersion,identity.userId);
+          const status=result.ok?200:result.error==='invalid_draft'?400:result.error==='missing'?404:409;
+          return json(res,status,result);
+        }
+        return json(res,404,{error:'Not found.'});
+      }
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if (!(await waitlist.isApproved(identity.userId))) return json(res,403,{error:'waitlist_approval_required'});
         if (!issuing(identity.userId)) return json(res,429,{error:'Please wait before reconnecting.'});
         for(const [key,value] of tickets)if(value.until<=now())tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
         const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+15000});
-        return json(res,200,{ticket,moderator:moderatorIds.has(identity.userId)});
+        return json(res,200,{ticket,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,moderator:moderatorIds.has(identity.userId)});
+      }
+      if (pathname.startsWith('/api/landmarks/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        if(!landmarks)return json(res,503,{error:'Landmarks are unavailable.'});
+        const action=pathname.slice('/api/landmarks/'.length);
+        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId)});
+        const data=await body(req);
+        if(action==='add'){
+          if(connections.get(identity.userId)?.identity.sessionId!==identity.sessionId)return json(res,409,{error:'Join the town before saving a landmark.'});
+          const player=snapshot().players.find(item=>item.id===identity.userId);
+          if(!player)return json(res,409,{error:'Join the town before saving a landmark.'});
+          const result=await landmarks.add(identity.userId,{name:data?.name,position:player.position.slice(0,2),yaw:player.yaw});
+          return json(res,result.ok?200:400,result.ok?result:{error:result.reason});
+        }
+        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id)});
+      }
+      if (pathname.startsWith('/api/social/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        const result=await socialAction({action:pathname.slice('/api/social/'.length),identity,social,readBody:()=>body(req),
+          visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
+            ? snapshot().players.find(player=>player.id===peerId) : null,
+          inviteWorld:async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId
+            ? {id:worldId,title:worldTitle}:null,
+          allowWrite:id=>socialWrites(id)});
+        return json(res,result.status,result.value);
+      }
+      if (pathname.startsWith('/api/profile/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        const result=await profileAction({action:pathname.slice('/api/profile/'.length),identity,profiles,social,readBody:()=>body(req),
+          visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
+            ? snapshot().players.find(player=>player.id===peerId) : null,
+          allowWrite:id=>socialWrites(id)});
+        return json(res,result.status,result.value);
       }
       if (pathname==='/api/moderation/ban' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
@@ -66,7 +157,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
         const data=await body(req);
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
-        if(data.banned)disconnectUser(data.userId,4003,'This account cannot join the town.');
+        if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await onBan?.(data.userId);}
         return json(res,200,{ok:true});
       }
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
@@ -103,10 +194,11 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     try {
       const url=new URL(req.url,'http://localhost');
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
-      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket');
-      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
-      const ticket=tickets.get(key);
-      if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
+      if(!matchesWorld(url))return reject(403);
+      const protocol=url.searchParams.get('protocol');
+      if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
+      const identity=await auth.authenticate(req),key=url.searchParams.get('ticket'),ticket=tickets.get(key);
+      if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)) || !ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
@@ -138,7 +230,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
             const {requestId,...command}=message;
             if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
-            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,world.snapshot());
+            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
@@ -148,7 +240,7 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
           connections.delete(identity.userId);
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
-        send(ws,{...world.snapshot(),selfId:identity.userId});
+        send(ws,{...snapshot(),selfId:identity.userId});
       });
     }catch{return reject(401);}
   });
@@ -158,9 +250,9 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     if(!connections.size)return;
     world.step(delta);
     if(time-broadcastAt<200)return;broadcastAt=time;
-    const snapshot=JSON.stringify(world.snapshot());
+    const frame=JSON.stringify(snapshot());
     for(const {ws,identity} of connections.values()) {
-      if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,snapshot,{snapshot:true});
+      if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,frame,{snapshot:true});
     }
   },50);loop.unref();
   // A busy renderer can delay browser pongs; allow a full 30 seconds before
@@ -172,7 +264,13 @@ export function createGameServer({ auth, world, origin, staticRoot, moderation, 
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
   },30000);heartbeat.unref();
-  return {server,disconnectUser,async close(){
+  return {server,disconnectUser,replaceWorld(next,hash){
+    if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
+    for(const timer of departures.values())clearTimeout(timer);
+    departures.clear();tickets.clear();
+    for(const {ws} of connections.values())ws.close(4000,'World region updated.');
+    connections.clear();world=next;regionSha256=hash;
+  },async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);
     for(const timer of departures.values())clearTimeout(timer);
     for(const ws of wss.clients)ws.terminate();

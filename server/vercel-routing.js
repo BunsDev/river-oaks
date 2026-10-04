@@ -1,8 +1,10 @@
 import { isIP } from 'node:net';
 
-const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange',
-  '/api/multiplayer/ticket', '/api/moderation/ban', '/api/waitlist/status',
-  '/api/waitlist/requests', '/api/waitlist/decision', '/multiplayer']);
+const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/desktop/exchange', '/auth/session', '/auth/logout',
+  '/api/multiplayer/ticket', '/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/worlds', '/api/world-draft/load', '/api/world-draft/save', '/api/world-draft/discard', '/api/world-draft/apply', '/api/world-data', '/api/moderation/ban',
+  '/api/landmarks/list', '/api/landmarks/add', '/api/landmarks/remove',
+  '/api/social/list', '/api/social/request', '/api/social/accept', '/api/social/remove', '/api/social/messages', '/api/social/send', '/api/social/invite-world',
+  '/api/profile/view', '/api/profile/save', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {
     const url = new URL(raw, 'http://localhost');

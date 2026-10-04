@@ -31,7 +31,7 @@ function button(label, id, className = '') {
   return element;
 }
 
-export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, onWish = () => {}, getPortrait = null, reducedMotion = false }) {
+export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = () => null, getVisitor = () => null, getVisitorPose = () => null, getObstacles = () => [], getRoomId = () => null, getWeather = () => ({}), getPersona = () => null, getMultiplayer = () => null, getCanGrantWishes = () => false, authorizeSoloWish = async () => getCanGrantWishes(), onWish = () => {}, getPortrait = null, reducedMotion = false }) {
   // Show a resident's rendered portrait on an element once it is ready; the
   // element keeps its drawn placeholder (or initials) until then.
   const showPortrait = (element, id) => {
@@ -374,7 +374,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     text(outcome, state.result ?? mode);
     outcome.dataset.state = state.status;
     const local = state.locals.find((item) => item.id === state.selectedId);
-    wishPanel.update(state, local, getPersona());
+    const sharedPlayer=getMultiplayer()?.snapshot?.players?.find(player=>player.id===getMultiplayer()?.identity?.id);
+    wishPanel.update(state, local, getPersona(), getMultiplayer() ? Boolean(sharedPlayer?.canGrantWishes) : getCanGrantWishes());
     if (!local || dialogue.hidden) return;
     const job = state.jobs.find((item) => item.localId === local.id);
     text(name, local.name);
@@ -440,13 +441,15 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
   };
   const handleWish = async kind => {
     if (!state || dialogue.hidden) return { ok: false };
+    const currentState=state,selectedId=state.selectedId;
+    if (!getMultiplayer() && !(await authorizeSoloWish())) return { ok: false, message: 'Only a signed-in Jevica admin can grant wishes.' };
+    if (state!==currentState || state.selectedId!==selectedId || dialogue.hidden) return {ok:false};
     const local = state.locals.find(person => person.id === state.selectedId);
     if (!local) return { ok: false };
     invalidate();
-    const currentState = state;
     const result = getMultiplayer()
       ? await sharedCommand(kind ? {type:'wish',localId:local.id,kind} : {type:'undoWish',localId:local.id})
-      : kind ? grantWish(state, local.id, kind, getPersona()) : undoWish(state, local.id, getPersona());
+      : kind ? grantWish(state, local.id, kind, 'jevica') : undoWish(state, local.id, 'jevica');
     if (state !== currentState || state.selectedId !== local.id || dialogue.hidden) return result;
     if (result.ok) {
       message = result.message; attribution = getMultiplayer()?'Shared town magic':'Jevica’s magic'; currentTopic = null;
@@ -653,6 +656,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
 
   return {
     get state() { return state; },
+    refresh: () => paint(),
     get speakingId() { return speech.speakingId; },
     updateSpeech: speech.update,
     selectLocal,
@@ -673,7 +677,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       selectionEpoch++;
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
-      state = createCommunity(world, rooms, {carriage:!getMultiplayer()});
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer(),sharedPopulation:Boolean(getMultiplayer())});
       life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();

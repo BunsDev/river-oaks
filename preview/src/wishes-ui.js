@@ -48,13 +48,14 @@ export function createWishPanel({ onGrant, onUndo, onSelect }) {
   const rows = new Map();
   const render = () => {
       if (!latest) return;
-      const {state,local,caster} = latest;
+      const {state,local,caster,canGrant} = latest;
       const wish = local?.wish, definition = wish && wishFor(wish.kind);
       card.hidden = !local;
       card.setAttribute('aria-busy', String(busy));
-      choice.disabled = grant.disabled = busy || Boolean(wish) || caster !== 'jevica' || Boolean(local?.abducted) || Boolean(local?.force) || Boolean(local?.vehicleRole);
-      undo.hidden = !wish; undo.disabled = busy || caster !== 'jevica';
-      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (local?.vehicleRole?crewWishMessage(local):local?.force?'Lower this person before granting a wish.':wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : 'One wish at a time. You can undo it whenever you like.'));
+      label.hidden = choice.hidden = grant.hidden = !canGrant;
+      choice.disabled = grant.disabled = busy || !canGrant || Boolean(wish) || Boolean(local?.abducted) || Boolean(local?.force) || Boolean(local?.vehicleRole);
+      undo.hidden = !wish; undo.disabled = busy || !canGrant;
+      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : !canGrant ? 'Only Jevica’s signed-in admin account can grant wishes.' : local?.vehicleRole?crewWishMessage(local):local?.force?'Lower this person before granting a wish.':'One wish at a time. You can undo it whenever you like.'));
       card.dataset.phase = wish?.phase ?? 'ready'; card.dataset.kind = wish?.kind ?? '';
       const active = state.locals.filter(person => person.wish);
       journal.dataset.trouble = String(state.wishes.trouble);
@@ -83,9 +84,9 @@ export function createWishPanel({ onGrant, onUndo, onSelect }) {
   };
   return {
     card, journal,
-    update(state, local, caster) {
+    update(state, local, caster, canGrant = true) {
       if (latest?.local?.id !== local?.id) {actionMessage = '';pendingFocus = null;}
-      latest = {state,local,caster};
+      latest = {state,local,caster,canGrant};
       render();
     },
   };

@@ -16,14 +16,17 @@ Run shared-play acceptance with:
 
 ```sh
 npm run test:shared
-# Run only development onboarding or authenticated fixture journeys:
+# Run one mode while iterating:
 npm run test:shared -- development
+npm run test:shared -- development-world
+npm run test:shared -- development-publish
+npm run test:shared -- development-solo
 npm run test:shared -- required
 ```
 
 The runner owns its test servers on available loopback ports and temporary moderation state. It leaves existing services running. Ctrl+C, SIGTERM, and SIGHUP close the browser and servers, remove temporary state, and record an interrupted result. Results go to `data/reports/shared-experience.json`; screenshots go to `output/playwright/`.
 
-Shared acceptance covers two local development players, chat delivery and reconnect history, phone controls, authenticated peer actions, disconnect recovery, keyboard retry, and sign-out. A locked town now focuses its recovery title, keeps Tab within available actions, and restores game focus after reconnecting. Authenticated recovery hides the sign-in link. These use loopback identities and fixture sessions; they do not establish live WorkOS or hosted multiplayer acceptance.
+Shared acceptance covers two local development players, chat delivery and reconnect history, phone controls, authenticated peer actions, alternate-world admission, Jevica-only publishing, solo Jevica permissions, disconnect recovery, keyboard retry, and sign-out. A locked town now focuses its recovery title, keeps Tab within available actions, and restores game focus after reconnecting. Authenticated recovery hides the sign-in link. These use loopback identities and fixture sessions; they do not establish live WorkOS or hosted multiplayer acceptance.
 
 Manual driving takes over immediately on a movement key or pad press, including taps that end between animation frames. When Jev follows locally, he can choose a clear position beside or in front of you if a storefront blocks his preferred trailing position. Building and personal-space clearance still apply.
 

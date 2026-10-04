@@ -2,6 +2,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
+import { isJevicaAdmin } from './admin.js';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
@@ -265,7 +266,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
         const user = await authenticateRequest(req, res);
-        json(res, 200, user ? { authenticated: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken } : { authenticated: false });
+        json(res, 200, user ? { authenticated: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken, canGrantWishes: isJevicaAdmin(user.userId) } : { authenticated: false });
       } else {
         if (req.headers.origin !== base) { json(res, 403, { error: 'invalid_origin' }); return true; }
         const user = await authenticateRequest(req, res);

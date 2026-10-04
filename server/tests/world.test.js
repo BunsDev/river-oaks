@@ -2,11 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { createSharedWorld } from '../world.js';
+import { createSharedWorld as createWorld } from '../world.js';
 import { createCommunity } from '../../preview/src/community.js';
 import { storeRoomsFor } from '../../preview/src/store-rooms.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { SHARED_APPEARANCES } from '../../preview/src/shared-appearances.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+
+// Most world tests exercise independent mechanics with trusted fixture actors.
+// Permission boundaries are covered with the production default below.
+const createSharedWorld = (data, options = {}) => createWorld(data, {isAdmin:()=>true,...options});
 
 const data = { scene: 'district', bounds_m: [-30,-30,30,30], walkSpawn: [-12,0,0],
   collisionPolygons: [[[-3,-8],[3,-8],[3,8],[-3,8]]], stores: [], buildings: [],
@@ -112,6 +117,43 @@ test('beast movement admits a fast ground lope that upright movement cannot forg
   assert.equal(world.command('guest',{type:'pose',position:[start[0],start[1]+8,start[2]],yaw:0,altitude:0}).error,'movement_too_fast');
 });
 
+test('only authenticated Jevica admin accounts may build and grant shared wishes',()=>{
+  const world=createWorld(data);
+  const admin=JEVICA_ADMIN_USER_IDS[0],guest='guest';
+  world.join({userId:admin,name:'Jevica'});
+  world.join({userId:guest,name:'Guest'});
+  const self=world.snapshot().players.find(player=>player.id===admin);
+  const visitor=world.snapshot().players.find(player=>player.id===guest);
+  assert.equal(self.canBuild,true);assert.equal(self.canGrantWishes,true);
+  assert.equal(visitor.canBuild,false);assert.equal(visitor.canGrantWishes,false);
+  assert.equal(visitor.appearance,'sable-human','a visitor cannot claim the exclusive Jevica appearance');
+  const place={type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0};
+  assert.equal(world.command(guest,place).error,'admin_only');
+  assert.equal(world.command(admin,place).ok,true);
+  const before=world.snapshot();
+  assert.equal(world.command(guest,{type:'inventory',action:'save',buildId:before.builds[0].id}).error,'admin_only');
+  assert.equal(world.command(guest,{type:'inventory',action:'list'}).error,'admin_only');
+  assert.equal(world.command(guest,{type:'build',action:'remove',id:before.builds[0].id}).error,'admin_only');
+  assert.equal(world.command(guest,{type:'wish',localId:'local-00',kind:'dragon'}).error,'admin_only');
+  assert.equal(world.snapshot().revision,before.revision,'denied commands do not mutate the world');
+  assert.equal(world.command(admin,{type:'wish',localId:'local-00',kind:'dragon'}).ok,true);
+  assert.equal(world.snapshot().wishes.granted,1);
+});
+
+test('Jevica can remove a guest creation carried forward from the older policy',()=>{
+  const guest='guest',admin=JEVICA_ADMIN_USER_IDS[0];
+  const old=createWorld(data,{isAdmin:()=>true});
+  old.join({userId:guest,name:'Guest'});
+  const placed=old.command(guest,{type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0});
+  assert.equal(placed.ok,true);
+  old.join({userId:admin,name:'Jevica'});
+  const next=createWorld(data);
+  assert.deepEqual(next.restore(old.checkpoint()),{ok:true});
+  assert.equal(next.command(guest,{type:'build',action:'remove',id:placed.item.id}).error,'admin_only');
+  assert.equal(next.command(admin,{type:'build',action:'remove',id:placed.item.id}).ok,true);
+  assert.deepEqual(next.snapshot().builds,[]);
+});
+
 test('town chat is attributed, bounded, rate limited and survives checkpoint recovery',()=>{
   const {world,advance,now}=setup();
   assert.equal(world.command('a',{type:'chat',text:'  Hello   Bob!  '}).ok,true);
@@ -155,7 +197,7 @@ test('appearance belongs to the authenticated account and survives departure and
   assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'woman-tailored');
 });
 
-const resign=checkpoint=>{checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');return checkpoint;};
+const resign=checkpoint=>{const {checksum: _checksum,...envelope}=checkpoint;checkpoint.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');return checkpoint;};
 
 test('older checkpoints cannot restore Jevica to another account',()=>{
   const {world,now}=setup();
@@ -230,7 +272,7 @@ test('appearance migration restores a town checkpoint written before player look
   delete checkpoint.payload.builds;
   for(const player of checkpoint.payload.players)delete player.appearance;
   for(const [,ledger] of checkpoint.payload.ledgers)delete ledger.appearanceAt;
-  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  resign(checkpoint);
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(checkpoint),{ok:true});
   assert.ok(restored.snapshot().players.every(player=>player.appearance==='sable-human'));
@@ -238,13 +280,12 @@ test('appearance migration restores a town checkpoint written before player look
   assert.deepEqual(restored.snapshot().builds,[]);
 });
 
-test('player creations are owned, spatially checked, shared, and durable',()=>{
+test('admin creations are spatially checked, shared, and durable',()=>{
   const {world,advance,now}=setup();
   const place={type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0};
   const result=world.command('a',place);
   assert.equal(result.ok,true);assert.equal(result.item.ownerId,'a');assert.equal(result.item.ground,0);
   assert.deepEqual(world.snapshot().builds,[result.item]);
-  assert.equal(world.command('b',{type:'build',action:'remove',id:result.item.id}).error,'not_build_owner');
   assert.equal(world.command('b',{...place,position:[-12,3.2]}).error,'blocked_build_site');
   assert.equal(world.command('a',{type:'build',action:'edit',id:result.item.id,position:[-11,3],yaw:Math.PI/2}).ok,true);
   assert.deepEqual(world.snapshot().builds[0].position,[-11,3]);
@@ -331,7 +372,7 @@ test('build commands reject road, invalid position, and forged checkpoint record
   const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
   checkpoint.payload.builds[0].ownerId='forged';
   checkpoint.payload.builds[0].position=[0,0];
-  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  resign(checkpoint);
   const fresh=createSharedWorld(data,{now});
   assert.equal(fresh.restore(checkpoint).error,'invalid_checkpoint');
   assert.deepEqual(fresh.snapshot().builds,[]);
@@ -468,7 +509,7 @@ test('join capacity and duplicate identity preserve original player',()=>{
 
 test('district indoor resident identities match browser; server travel enables same-room wishes',async()=>{
   const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
-  const world=createSharedWorld(district), expected=createCommunity(district,storeRoomsFor(district),{carriage:false});
+  const world=createSharedWorld(district), expected=createCommunity(district,storeRoomsFor(district),{carriage:false,sharedPopulation:true});
   assert.ok(!expected.locals.some(local=>local.vehicleRole),'shared towns exclude solo vehicle encounters');
   assert.deepEqual(world.snapshot().locals.map(local=>local.id),expected.locals.map(local=>local.id));
   const indoor=expected.locals.find(local=>local.indoor);
@@ -477,6 +518,42 @@ test('district indoor resident identities match browser; server travel enables s
   assert.equal(cast(world,'a',indoor.id).ok,false,'cannot cast through shop walls');
   const result=travel(world,indoor.id);assert.equal(result.ok,true,JSON.stringify(result));
   assert.equal(cast(world,'a',indoor.id).ok,true);
+});
+
+test('a legacy full-population checkpoint migrates without losing an active indoor wish',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  let time=1000;const now=()=>time;
+  const legacy=createSharedWorld(district,{now,sharedPopulation:false}),shared=createSharedWorld(district,{now});
+  legacy.join({userId:'a',name:'Alice'});
+  const active=new Set(shared.snapshot().locals.map(local=>local.id));
+  let wished=null;
+  for(const local of legacy.snapshot().locals.filter(local=>local.indoor&&!active.has(local.id))){
+    time+=1200;
+    if(legacy.command('a',{type:'travel',localId:local.id}).ok && cast(legacy,'a',local.id).ok){wished=local;break;}
+  }
+  assert.ok(wished,'at least one retired shop resident can hold a real wish');
+  const checkpoint=legacy.checkpoint(),restored=createSharedWorld(district,{now});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  const snapshot=restored.snapshot(),recipient=snapshot.locals.find(local=>local.wish?.ownerId==='a');
+  assert.equal(snapshot.locals.length,98);
+  assert.ok(recipient);
+  assert.notEqual(recipient.id,wished.id);
+  assert.equal(recipient.storeId,wished.storeId);
+  assert.equal(recipient.wish.kind,'dragon');
+  assert.deepEqual(createSharedWorld(district,{now}).restore(restored.checkpoint()),{ok:true},'the migrated roster checkpoints normally');
+  for(const [index,local] of shared.snapshot().locals.filter(local=>local.storeId===wished.storeId).entries()){
+    const userId=`owner-${index}`;
+    assert.equal(legacy.join({userId,name:userId}).ok,true);
+    time+=5000;
+    assert.equal(legacy.command(userId,{type:'travel',localId:local.id}).ok,true);
+    assert.equal(cast(legacy,userId,local.id).ok,true);
+  }
+  const crowded=createSharedWorld(district,{now});
+  assert.deepEqual(crowded.restore(legacy.checkpoint()),{ok:true},'full shops still migrate without losing a wish');
+  assert.notEqual(crowded.snapshot().locals.find(local=>local.wish?.ownerId==='a').storeId,wished.storeId);
+  const forged=structuredClone(checkpoint);
+  forged.payload.state.locals.find(local=>local.id===wished.id).persona.memory=null;
+  assert.equal(createSharedWorld(district,{now}).restore(resign(forged)).error,'invalid_checkpoint','legacy records are validated before removal');
 });
 
 test('support resources and conversation holds are shared and expire',()=>{
@@ -679,7 +756,7 @@ test('corrupt or incompatible checkpoints fail closed without changing the live 
     assert.equal(world.restore(bad).ok,false);
     assert.deepEqual(world.snapshot(),before);
     // Schema checks remain necessary even if a storage writer recalculates integrity.
-    bad.checksum=createHash('sha256').update(JSON.stringify({version:bad.version,worldFingerprint:bad.worldFingerprint,payload:bad.payload})).digest('hex');
+    resign(bad);
     assert.equal(world.restore(bad).ok,false);
     assert.deepEqual(world.snapshot(),before);
   }

@@ -32,11 +32,13 @@ function json(res, status, value) {
 export function createDevAuth({ origin, env = process.env, now = Date.now, onLogout = () => {} } = {}) {
   if (!devAuthAllowed({ origin, env })) throw new Error('Development sign-in requires an explicit loopback acceptance fixture.');
   const sessions = new Map();
+  let ownerUserId = null;
   const issue = res => {
     for (const [key, record] of sessions) if (record.expiresAt <= now()) sessions.delete(key);
     if (sessions.size >= MAX_SESSIONS) return null;
     const cookie = randomBytes(24).toString('base64url');
     const userId = `dev-${createHash('sha256').update(cookie).digest('hex').slice(0, 12)}`;
+    ownerUserId ??= userId;
     const name = `${NAMES[sessions.size % NAMES.length]} (dev)`;
     const record = { userId, name, sessionId: userId, csrfToken: randomBytes(24).toString('base64url'), expiresAt: now() + SESSION_TTL };
     sessions.set(cookie, record);
@@ -50,6 +52,7 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
   };
   return {
     development: true,
+    isAdmin: userId => userId === ownerUserId,
     authenticate: async req => current(req),
     async handle(req, res) {
       const path = new URL(req.url, origin).pathname;
@@ -58,7 +61,7 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
       if (path === '/auth/session') {
         // Development joins without a sign-in step: the first visit issues an identity.
         const user = current(req) ?? issue(res);
-        json(res, 200, user ? { authenticated: true, development: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken } : { authenticated: false });
+        json(res, 200, user ? { authenticated: true, development: true, user: { id: user.userId, name: user.name }, csrfToken: user.csrfToken, canGrantWishes: user.userId === ownerUserId } : { authenticated: false });
       } else if (path === '/auth/logout') {
         if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); json(res, 405, { error: 'method_not_allowed' }); return true; }
         const user = current(req);

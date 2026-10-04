@@ -15,6 +15,7 @@
     "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
+    "audit:multiplayer": "node server/performance-audit.js data/reports/multiplayer-performance-audit.json",
     "start": "node --env-file-if-exists=.env server/start.js",
     "server:redis": "node --env-file-if-exists=.env server/redis-start.js",
     "desktop:dev": "node --env-file-if-exists=.env desktop/dev.js",

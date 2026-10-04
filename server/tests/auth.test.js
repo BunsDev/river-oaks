@@ -5,6 +5,7 @@ import { generateKeyPairSync, randomBytes, sign } from 'node:crypto';
 import test from 'node:test';
 import { WorkOS } from '@workos-inc/node';
 import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
 const module = await import('../auth.js').catch(() => ({}));
 const { createAuth } = module;
@@ -134,6 +135,7 @@ test('completes state-bound PKCE callback and exposes only safe identity and CSR
   const body = await session.json();
   assert.deepEqual(body.user, { id: 'user_1', name: 'Val Dev' });
   assert.equal(body.authenticated, true);
+  assert.equal(body.canGrantWishes, false, 'a verified visitor has no Jevica privileges');
   assert.match(body.csrfToken, /^[A-Za-z0-9_-]{32,}$/);
   assert.doesNotMatch(JSON.stringify(body), /private|email|accessToken|refreshToken/);
   const identity = await app.auth.authenticate({ headers: { cookie: sessionCookie } });
@@ -187,6 +189,15 @@ test('desktop device credentials exchange only for GitHub sessions', async t => 
   assert.equal((await exchange()).status, 403);
   app.workos.setAuthenticationMethod('GoogleOAuth');
   assert.equal((await exchange()).status, 403);
+});
+
+test('a verified Jevica account receives solo wish access from the server', async t => {
+  const app=await fixture(t);
+  app.workos.setUser({id:JEVICA_ADMIN_USER_IDS[0]});
+  const {sessionCookie}=await app.login();
+  const session=await (await app.request('/auth/session',{headers:{cookie:sessionCookie}})).json();
+  assert.equal(session.authenticated,true);
+  assert.equal(session.canGrantWishes,true);
 });
 
 test('sets Secure cookies on HTTPS', async (t) => {
