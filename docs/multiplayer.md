@@ -47,6 +47,11 @@ messages per pair are stored outside world checkpoints, so they survive travel,
 reconnects, and Redis edge replacement. Removing a contact erases the message
 history and ends messaging. Contact and message writes are rate limited; each
 account can have up to 50 contact relationships, including pending invitations.
+An accepted contact can invite the other resident to their current world while
+connected. The server records the sender's room as a private message, and the
+recipient can choose its world link to travel there. The sender cannot supply
+a destination in the request. World invitations share the 40-message history
+and write limit; they do not grant building or wish permissions.
 The client checks for new invitations and messages every 10 seconds while its
 browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,

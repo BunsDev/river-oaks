@@ -1,4 +1,5 @@
 import { createProfileUI } from './profile-ui.js';
+import { worldVisitUrl } from './world-portal.js';
 
 const node = (tag, text, className) => {
   const element = document.createElement(tag);
@@ -38,6 +39,10 @@ export function createSocialUI({ panel, request, profileRequest, connected, self
         open.setAttribute('aria-label', `Message ${item.peer.name}`);
         open.addEventListener('click', () => { selected = item.peer.id; lastMessages = ''; renderConversation(); refreshMessages(); });
         row.append(open);
+        const invite = node('button', 'Invite to world'); invite.type = 'button';
+        invite.setAttribute('aria-label', `Invite ${item.peer.name} to this world`);
+        invite.addEventListener('click', () => run('invite-world', { peerId: item.peer.id }, `World invitation sent to ${item.peer.name}.`));
+        row.append(invite);
       } else if (item.direction === 'incoming') {
         row.append(node('small', 'wants to connect'));
         const accept = node('button', 'Accept'); accept.type = 'button';
@@ -84,6 +89,13 @@ export function createSocialUI({ panel, request, profileRequest, connected, self
       history.replaceChildren(...messages.map(message => {
         const line = node('p');
         line.append(node('strong', message.authorId === selfId() ? 'You' : message.authorName), document.createTextNode(`: ${message.text}`));
+        if (message.kind === 'world-invite') {
+          try {
+            const link = node('a', `Visit ${message.worldTitle}`);
+            link.href = worldVisitUrl(message.worldId);
+            line.append(document.createTextNode(' '), link);
+          } catch { /* Ignore an invalid world ID from old or malformed history. */ }
+        }
         return line;
       }));
       if (atEnd) history.scrollTop = history.scrollHeight;

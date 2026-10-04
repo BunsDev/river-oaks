@@ -9,7 +9,7 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/world-data&world=moon-garden'), '/api/world-data?world=moon-garden');
   for(const action of ['load','save','discard','apply'])assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/world-draft/${action}`),`/api/world-draft/${action}`);
   for (const action of ['list', 'add', 'remove']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/landmarks/${action}`), `/api/landmarks/${action}`);
-  for (const action of ['list', 'request', 'accept', 'remove', 'messages', 'send']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/social/${action}&world=moon-garden`), `/api/social/${action}?world=moon-garden`);
+  for (const action of ['list', 'request', 'accept', 'remove', 'messages', 'send', 'invite-world']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/social/${action}&world=moon-garden`), `/api/social/${action}?world=moon-garden`);
   for (const action of ['view','save']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/profile/${action}&world=moon-garden`), `/api/profile/${action}?world=moon-garden`);
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/../../.env'), '/not-found');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/login&_river_path=/auth/logout'), '/not-found');

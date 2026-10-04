@@ -1,0 +1,61 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import Redis from 'ioredis';
+import { WebSocket } from 'ws';
+import { createWorldGateway } from '../world-gateway.js';
+import { createRedisSecurity } from '../redis-security.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+
+test('contact world invitations use the sender room and persist across gateway replacement', {skip:!process.env.REDIS_URL,timeout:30_000},async t=>{
+  const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
+  const namespace=`river-oaks:world-invite:${randomUUID()}`,prefix=`{${namespace}}`,origin='https://sim.jev.works';
+  const worldData=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url)));
+  const region=JSON.parse(await readFile(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+  const admin=JEVICA_ADMIN_USER_IDS[0],users={admin,guest:'guest-user'};
+  const auth={handle:async()=>false,authenticate:async req=>{
+    const userId=users[req.headers.cookie?.match(/test_session=(\w+)/)?.[1]];
+    return userId?{userId,name:userId,sessionId:userId+'-session',csrfToken:'test-csrf',expiresAt:Date.now()+60_000}:null;
+  },isSessionActive:async()=>true,close(){}};
+  const security=createRedisSecurity({redis,prefix}),sockets=[];
+  const makeGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,origin});
+  let gateway=makeGateway();await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  let base=`http://127.0.0.1:${gateway.server.address().port}`;
+  t.after(async()=>{
+    for(const socket of sockets)socket.terminate();
+    await gateway.close();security.close();
+    const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);
+    await redis.quit();
+  });
+  const post=(user,path,data)=>fetch(base+path,{method:'POST',headers:{Origin:origin,Cookie:`test_session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:JSON.stringify(data)});
+  assert.equal((await post('admin','/api/worlds',{id:'moon-garden',title:'Moon Garden',region})).status,201);
+  assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'})).status,409);
+  const open=async user=>{
+    const ticket=(await (await post(user,'/api/multiplayer/ticket?world=moon-garden',{})).json()).ticket;
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    sockets.push(socket);
+    await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{if(JSON.parse(raw).type==='snapshot')resolve();});});
+    return socket;
+  };
+  await open('admin');await open('guest');
+  assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'})).status,409);
+  assert.equal((await post('admin','/api/social/request?world=moon-garden',{peerId:'guest-user'})).status,200);
+  assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'})).status,409);
+  assert.equal((await post('guest','/api/social/accept?world=moon-garden',{peerId:admin})).status,200);
+  assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user',worldId:'river-oaks'})).status,400);
+  assert.equal((await post('admin','/api/social/invite-world?world=river-oaks',{peerId:'guest-user'})).status,409);
+  const sent=await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'});
+  assert.equal(sent.status,200);
+  const {message}=await sent.json();
+  assert.equal(message.worldId,'moon-garden');assert.equal(message.worldTitle,'Moon Garden');
+  const received=await post('guest','/api/social/messages?world=river-oaks',{peerId:admin});
+  assert.equal(received.status,200);
+  assert.deepEqual((await received.json()).messages,[message]);
+  assert.equal((await post('missing','/api/social/messages?world=river-oaks',{peerId:admin})).status,401);
+  for(const socket of sockets)socket.terminate();
+  await gateway.close();gateway=makeGateway();
+  await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  base=`http://127.0.0.1:${gateway.server.address().port}`;
+  assert.deepEqual((await (await post('guest','/api/social/messages?world=river-oaks',{peerId:admin})).json()).messages,[message]);
+});

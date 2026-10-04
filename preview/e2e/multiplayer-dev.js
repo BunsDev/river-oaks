@@ -52,6 +52,8 @@ async page => {
   await second.locator('.multiplayer-social-row button', {hasText:'Accept'}).click();
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached'});
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
+  await second.locator('.multiplayer-social-row button', {hasText:'Invite to world'}).click();
+  await second.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('World invitation sent'));
   await second.locator('.multiplayer-social > button', {hasText:'My profile'}).click();
   await second.locator('.multiplayer-profile-form label').filter({hasText:'Tagline'}).locator('input').fill('Stories by moonlight');
   await second.locator('.multiplayer-profile-form label').filter({hasText:'About'}).locator('textarea').fill('I love wandering through shared gardens.');
@@ -66,6 +68,10 @@ async page => {
   await page.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached',timeout:20000});
   await page.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
   await page.locator('.multiplayer-social-history').getByText('A private hello').waitFor({state:'attached'});
+  const worldInvite=page.locator('.multiplayer-social-history a', {hasText:'Visit River Oaks District'});
+  await worldInvite.waitFor({state:'attached'});
+  const inviteUrl=new URL(await worldInvite.getAttribute('href'));
+  check(inviteUrl.searchParams.get('play')==='multiplayer' && !inviteUrl.searchParams.has('world'), 'A contact invitation offers a validated link to the sender\'s world');
   check(await page.locator('.multiplayer-chat-history').getByText('A private hello').count()===0,'Private messages stay out of town chat');
   await page.reload();
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);

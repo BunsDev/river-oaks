@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { validateWorldId } from '../preview/src/world-contract.js';
 
 const LIMIT = 50;
 const MESSAGE_LIMIT = 40;
@@ -15,6 +16,14 @@ const view = (record, userId) => ({
   latest: history(record).at(-1) ?? null,
 });
 const invalid = { ok: false, reason: 'invalid' };
+function worldInvite(actor, peerId, world, createId, now) {
+  if (!validId(actor?.userId) || !validId(peerId) || actor.userId===peerId
+    || typeof world?.title!=='string' || world.title!==world.title.trim() || !world.title
+    || [...world.title].length>64 || /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(world.title))return null;
+  try {validateWorldId(world.id);} catch {return null;}
+  return {id:createId(),authorId:actor.userId,authorName:cleanName(actor.name),
+    text:`Come meet me in ${world.title}.`,at:now(),kind:'world-invite',worldId:world.id,worldTitle:world.title};
+}
 
 export function createMemorySocial({ now = Date.now, createId = randomUUID } = {}) {
   const records = new Map(), indexes = new Map();
@@ -64,6 +73,15 @@ export function createMemorySocial({ now = Date.now, createId = randomUUID } = {
       record.names[record.ids.indexOf(actor.userId)] = cleanName(actor.name);
       return { ok: true, message };
     },
+    async inviteWorld(actor, peerId, world) {
+      const message=worldInvite(actor,peerId,world,createId,now);
+      if(!message)return invalid;
+      const record=records.get(pairKey(actor.userId,peerId));
+      if(record?.status!=='accepted')return {ok:false,reason:'missing'};
+      record.messages.push(message);if(record.messages.length>MESSAGE_LIMIT)record.messages.shift();
+      record.names[record.ids.indexOf(actor.userId)]=message.authorName;
+      return {ok:true,message};
+    },
   };
 }
 
@@ -88,7 +106,7 @@ elseif action == 'remove' then
   redis.call('SREM', KEYS[2], ARGV[3])
   redis.call('SREM', KEYS[3], ARGV[2])
   return 'ok'
-elseif action == 'send' then
+elseif action == 'send' or action == 'invite-world' then
   if record.status ~= 'accepted' then return 'missing' end
   local message = cjson.decode(ARGV[6])
   table.insert(record.messages, message)
@@ -137,6 +155,12 @@ export function createRedisSocial({ redis, prefix, now = Date.now, createId = ra
       const message = { id: createId(), authorId: actor.userId, authorName: cleanName(actor.name), text: messageText, at: now() };
       const result = await change('send', actor.userId, peerId, JSON.stringify(message));
       return result.ok ? { ok: true, message } : result;
+    },
+    async inviteWorld(actor,peerId,world) {
+      const message=worldInvite(actor,peerId,world,createId,now);
+      if(!message)return invalid;
+      const result=await change('invite-world',actor.userId,peerId,JSON.stringify(message));
+      return result.ok?{ok:true,message}:result;
     },
   };
 }
