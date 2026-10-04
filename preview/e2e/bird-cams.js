@@ -15,13 +15,20 @@ async page => {
   check(true, 'Jev sends every bird to watch something');
   const footCamera = (await birds()).camera;
   await page.locator('.bird-cams-row[data-bird=dove] button').click();
-  await page.waitForTimeout(1200);
+  // The glide into the bird runs on frame time (0.8 s of frames), so under load it
+  // takes longer in wall time; wait for the camera to arrive rather than a fixed delay.
+  const eyeGap = () => page.evaluate(() => { const s = window.__riverBirds(), d = s.birds.find(bird => bird.id === 'dove'); return Math.hypot(s.camera[0] - d.position[0], s.camera[1] - d.position[1], s.camera[2] - d.position[2]); });
+  await page.waitForFunction(() => { const s = window.__riverBirds(), d = s.birds.find(bird => bird.id === 'dove'); return Math.hypot(s.camera[0] - d.position[0], s.camera[1] - d.position[1], s.camera[2] - d.position[2]) < 1.5; }, null, { timeout: 6000 }).catch(() => {});
   let state = await birds();
   const dove = state.birds.find(bird => bird.id === 'dove');
+  const gap = await eyeGap();
   check(state.riding?.id === 'dove' && await page.locator('.bird-ride').isVisible(), 'Ride along shows the ride bar');
   check(await page.locator('.visit-tools').isHidden(), 'The play dock steps aside while riding');
-  check(Math.hypot(state.camera[0] - dove.position[0], state.camera[1] - dove.position[1], state.camera[2] - dove.position[2]) < 1.5, 'The camera is at the bird’s eyes');
-  check(state.camera[1] - footCamera[1] > 4, `The view is from the air (${(state.camera[1] - footCamera[1]).toFixed(1)} m above the walking view)`);
+  check(gap < 1.5, `The camera is at the bird’s eyes (${gap.toFixed(2)} m)`);
+  // Birds never fly below 3 m above the ground and the walking eye is 1.68 m up, so
+  // a ride-along view is always more than a metre above the walking view, even
+  // while a bird circles low over a scene.
+  check(state.camera[1] - footCamera[1] > 1, `The view is from the air (${(state.camera[1] - footCamera[1]).toFixed(1)} m above the walking view)`);
   await page.screenshot({ path: 'output/playwright/bird-cam-jev.png' });
   const before = state.birds.find(bird => bird.id === 'dove').position;
   await page.waitForTimeout(1500);

@@ -59,7 +59,7 @@ import './visual-finish.css';
 import './retro-finish.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
-import { createBirdCams } from './bird-cams.js';
+import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
@@ -750,7 +750,9 @@ function birdInterests() {
     interests.push({ id: `local:${local.id}`, label: status ? `${local.name} (${status})` : local.name, position: [local.position[0], local.position[1]], weight: local.id === community.state.selectedId ? weight + 3 : weight });
   }
   const me = walking?.getPosition();
-  if (me) interests.push({ id: 'player', label: playerAvatar?.appearance?.startsWith('jevica') ? 'Jevica' : 'you', position: [me[0], me[1]], weight: 4 });
+  // view: where the player is looking, so the companion bird can circle in front of them.
+  const yaw = walking?.getYaw?.() ?? 0;
+  if (me) interests.push({ id: 'player', label: playerAvatar?.appearance?.startsWith('jevica') ? 'Jevica' : 'you', position: [me[0], me[1]], view: [-Math.sin(yaw), Math.cos(yaw)], weight: 4 });
   for (const player of multiplayer?.snapshot?.players ?? []) if (player.id !== multiplayer.identity?.id) interests.push({ id: `player:${player.id}`, label: player.name, position: player.position, weight: 4 });
   for (const spot of world?.communityLocations ?? []) interests.push({ id: `spot:${spot.id}`, label: spot.name, position: [spot.position[0], spot.position[1]], weight: 1.5 });
   return interests;
@@ -839,7 +841,20 @@ document.addEventListener('keydown', event => {
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
 // Read-only bird cam state for development and browser acceptance runs.
-if (import.meta.env.DEV) window.__riverBirds = () => birdCams ? { ...birdCams.state, camera: camera.position.toArray(), walking: walking?.active ?? false } : null;
+// Each bird also reports how it appears in the current view: inside the frame,
+// unobstructed by buildings, and its wingspan in CSS pixels.
+if (import.meta.env.DEV) window.__riverBirds = () => {
+  if (!birdCams) return null;
+  const state = birdCams.state, point = new THREE.Vector3(), ray = new THREE.Raycaster();
+  const scale = host.clientHeight / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  return { ...state, camera: camera.position.toArray(), walking: walking?.active ?? false, birds: state.birds.map(bird => {
+    point.fromArray(bird.position);
+    const distance = point.distanceTo(camera.position), ndc = point.clone().project(camera), inFrame = ndc.z < 1 && Math.abs(ndc.x) < 1 && Math.abs(ndc.y) < 1;
+    let blocked = false;
+    if (inFrame && buildingMesh) { ray.set(camera.position, point.clone().sub(camera.position).normalize()); ray.far = Math.max(0, distance - .5); blocked = ray.intersectObject(buildingMesh, true).length > 0; }
+    return { ...bird, distance: +distance.toFixed(1), inFrame, visible: inFrame && !blocked, wingspanPx: +(BIRD_WINGSPAN / distance * scale).toFixed(1), screen: [Math.round((ndc.x + 1) / 2 * host.clientWidth), Math.round((1 - ndc.y) / 2 * host.clientHeight)] };
+  }) };
+};
 try {
   if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);

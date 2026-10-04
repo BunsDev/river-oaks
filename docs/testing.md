@@ -64,6 +64,8 @@ With both development servers running, the browser CLI scripts `preview/e2e/dist
 
 `preview/e2e/bird-cams.js` rides along with a bird Jev is flying: three birds listed and watching something, the camera at the bird's eyes and in the air, Jev still flying, a flight key taking the controls without moving the walker, T handing back, N switching birds, and Esc landing back in the walking view.
 
+`preview/e2e/birds-visible.js` stands on the street at the default view for 60 s and samples Jev's birds twice a second: a companion bird is assigned throughout, and a bird is inside the frame, unobstructed by buildings, with a wingspan of at least 24 px in at least 30% of samples. `window.__riverBirds()` (dev only) reports each bird's `inFrame`, `visible`, `wingspanPx` and `screen`. A frame with a bird in view is saved as `output/playwright/birds-visible.png`.
+
 `preview/e2e/flight-refusal.js` presses B inside a shop and checks that the refusal is announced where the player is looking: a notice centred just above the walking console that names the reason (indoors, in a ride, or no room overhead), keeps Jevica on the ground, and dismisses itself.
 
 `preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `VITE_MULTIPLAYER=off npm run dev`.

@@ -14,8 +14,18 @@ Each bird ranks what is worth watching (`birdInterests` in `main.js`):
 - the community spots, as a quiet fallback.
 
 Nearer, livelier scenes win, and a scene just watched waits its turn. The bird
-flies there, circles it for 12–20 s, then moves on. On the way it rises ahead
-of buildings (`clearAltitude`), so the view clears the rooftops. It never
+flies there, circles it for 12–20 s at 4 m above the ground, then moves on,
+cruising at 10 m between scenes. On the way it rises ahead of buildings
+(`clearAltitude`), and only a real obstruction lifts it.
+
+## The companion bird
+
+While you walk, the bird nearest you keeps you company, so you see one flying
+nearby. It circles the spot you are looking toward, 20 m ahead, on a tight 8 m
+lap, stepping the spot back toward you until the lap is clear of buildings,
+trees and the district edge (`lapClear`). The role stays with that bird until
+someone flies it by hand. Birds are drawn at 1.3× so they read at a distance.
+`companionOf` and `companionInterests` in `bird-cams.js` hold the rules. It never
 enters a building (`canFly`, the same rule as Jevica's flight) and turns back
 at the district edge.
 
