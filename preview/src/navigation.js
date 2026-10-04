@@ -78,9 +78,11 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
       // Each grid edge is traversable in both directions. Reuse the reverse
       // edge when its other endpoint has already been expanded by A*.
       const previous=edges.get(next);
+      // Collision and pedestrian cost are both expensive; evaluate each once
+      // for a new edge, then reuse the cached reverse edge on later searches.
       const cost=previous
         ? previous.find(link=>link.id===id)?.cost??Infinity
-        : walkable(position(id),position(next))?travelCost(position(id),position(next)):Infinity;
+        : canTravel(position(id),position(next))?travelCost(position(id),position(next)):Infinity;
       if(Number.isFinite(cost))result.push({id:next,cost});
     }
     edges.set(id,result);return result;
@@ -96,7 +98,7 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
   };
   const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
-    if(walkable(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
+    if(canTravel(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
     const starts=connectors(start),goals=new Set(connectors(end));
     if(!starts.length || !goals.size) return null;
     const scores=new Float64Array(size).fill(Infinity),parent=new Int32Array(size).fill(-1),closed=new Uint8Array(size),heap=[];
@@ -110,7 +112,7 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
       if(heap.length) { let i=0;while(i*2+1<heap.length) {let child=i*2+1;if(child+1<heap.length && heap[child+1].priority<heap[child].priority) child++;if(heap[child].priority>=last.priority) break;heap[i]=heap[child];i=child;}heap[i]=last; }
       return first;
     };
-    for(const id of starts) {scores[id]=Number.isFinite(travelCost(start,position(id)))?travelCost(start,position(id)):distance(start,position(id))*8;push(id,scores[id]);}
+    for(const id of starts) {const cost=travelCost(start,position(id));scores[id]=Number.isFinite(cost)?cost:distance(start,position(id))*8;push(id,scores[id]);}
     let found=-1,visits=0;
     while(heap.length && visits<15000) {
       const {id,cost}=pop();if(closed[id] || cost>scores[id]) continue;
@@ -131,7 +133,7 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
     while(index<path.length) {
       let next=index;
       let retained=travelCost(previous,path[next]);
-      while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!walkable(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
+      while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!canTravel(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
       result.push(path[next]);previous=path[next];index=next+1;
     }
     return result;

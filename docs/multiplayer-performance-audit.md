@@ -187,3 +187,20 @@ gesture motion froze whenever a visible frame exceeded 250 ms. Gesture updates
 now use a bounded frame step even on a slow visible frame. Avatars paused by
 distance culling explicitly suspend their gesture clocks, so reappearance
 still resumes from the last displayed pose.
+
+## Route-cost follow-up — 4 October 2026
+
+CPU sampling of the first long resident route found repeated pedestrian segment
+cost calculations for the same grid edge, direct path, and path-smoothing
+candidate. The planner now evaluates each cost once and retains its existing
+collision and road checks. The navigation, walking, and crowd tests passed;
+the shipped district still produces the same 17-waypoint route in the focused
+reproduction.
+
+Sequential baseline and candidate runs of `node server/performance-audit.js`
+on this Mac, without Redis, measured the slowest early world step at **112–122
+ms before** and **98–107 ms after** across the full and shared casts with 1,
+8, and 32 synthetic players. Early-step p95 fell from 18–20 ms to 16–17 ms.
+Each run still had one step over 50 ms. Transport snapshot gaps varied in both
+directions, so this change is not evidence of better network delivery. The
+hosted multi-region soak and cold-start margin remain release gates.
