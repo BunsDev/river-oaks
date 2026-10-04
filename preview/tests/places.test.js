@@ -79,7 +79,7 @@ test('landmarks persist on the device, validate their names and positions, and a
 test('account landmarks load and use server-returned positions without writing device storage', async () => {
   const { createAccountLandmarks } = await import('../src/places.js');
   assert.equal(typeof createAccountLandmarks, 'function');
-  const calls = [], saved = { id: 'lm-server', name: 'Garden gate', position: [9, 8], yaw: .4, createdAt: 12 };
+  const calls = [], saved = { id: 'lm-server', name: 'Garden gate', position: [9, 8], yaw: .4, createdAt: 12, worldId: 'moon-garden', worldTitle: 'Moon Garden' };
   const account = createAccountLandmarks({ request: async (action, data) => {
     calls.push([action, data]);
     if (action === 'list') return { ok: true, landmarks: [saved] };
@@ -91,9 +91,9 @@ test('account landmarks load and use server-returned positions without writing d
   assert.deepEqual(account.list(), [{ ...saved, kind: 'landmark' }]);
   assert.equal((await account.add({ name: 'Garden gate', position: [1, 2], yaw: 1 })).landmark.position[0], 9);
   assert.deepEqual(calls.at(-1), ['add', { name: 'Garden gate' }]);
-  assert.equal(await account.remove(saved.id), true);
+  assert.equal(await account.remove(saved.id, saved.worldId), true);
   assert.deepEqual(account.list(), []);
-  assert.deepEqual(calls.at(-1), ['remove', { id: saved.id }]);
+  assert.deepEqual(calls.at(-1), ['remove', { id: saved.id, worldId: saved.worldId }]);
 });
 
 test('account landmark writes wait for the initial list so a late response cannot hide a save', async () => {

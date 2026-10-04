@@ -70,6 +70,16 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(first.snapshot.locals.length>8,true);
   assert.equal(first.snapshot.players.length,1);
   assert.equal(second.snapshot.players.length,1);
+  const riverMark=await (await post('admin','/api/landmarks/add?world=river-oaks',{name:'District arrival'})).json();
+  const moonMark=await (await post('admin','/api/landmarks/add?world=moon-garden',{name:'Garden arrival'})).json();
+  assert.equal(riverMark.landmark.worldId,'river-oaks');
+  assert.equal(moonMark.landmark.worldId,'moon-garden');
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks',{})).json()).landmarks.map(item=>item.worldId),['river-oaks']);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks&allWorlds=1',{})).json()).landmarks.map(item=>item.worldId).sort(),['moon-garden','river-oaks']);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=moon-garden&allWorlds=1',{})).json()).landmarks.map(item=>item.id).sort(),[riverMark.landmark.id,moonMark.landmark.id].sort());
+  assert.deepEqual((await (await post('guest','/api/landmarks/list?world=moon-garden',{})).json()).landmarks,[]);
+  assert.equal((await (await post('guest','/api/landmarks/remove?world=river-oaks',{id:moonMark.landmark.id,worldId:'moon-garden'})).json()).removed,false);
+  assert.equal((await (await post('admin','/api/landmarks/remove?world=river-oaks',{id:moonMark.landmark.id,worldId:'missing-world'})).json()).removed,false);
   const command=(socket,requestId,body)=>new Promise((resolve,reject)=>{
     const receive=raw=>{const value=JSON.parse(raw);if(value.type==='result'&&value.requestId===requestId){socket.off('message',receive);resolve(value);}};
     socket.on('message',receive);socket.once('error',reject);socket.send(JSON.stringify({requestId,...body}));
@@ -101,6 +111,9 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   const adminAgain=await open('moon-garden');
   assert.equal(adminAgain.snapshot.worldId,'moon-garden');
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=moon-garden&allWorlds=1',{})).json()).landmarks.map(item=>item.id).sort(),[riverMark.landmark.id,moonMark.landmark.id].sort());
+  assert.equal((await (await post('admin','/api/landmarks/remove?world=moon-garden',{id:riverMark.landmark.id,worldId:'river-oaks'})).json()).removed,true);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks&allWorlds=1',{})).json()).landmarks.map(item=>item.id),[moonMark.landmark.id]);
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');

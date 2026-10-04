@@ -3,6 +3,9 @@
 // metres, the same frame the server and the community data use.
 export const LANDMARK_KEY = 'river-oaks-landmarks';
 export const LANDMARK_LIMIT = 50;
+// The catalog has the original district and up to 16 published worlds; a local
+// fixture can configure one additional world without publishing it.
+export const ACCOUNT_LANDMARK_LIST_LIMIT = LANDMARK_LIMIT * 18;
 const NAME_LIMIT = 40;
 
 const finitePair = value => Array.isArray(value) && value.length >= 2 && Number.isFinite(value[0]) && Number.isFinite(value[1]);
@@ -108,17 +111,21 @@ export function createLandmarks({ storage = null, now = () => Date.now(), random
 
 // Shared-play bookmarks are private account data. The server records the
 // authoritative player pose; the browser only submits a name.
-export function createAccountLandmarks({ request }) {
+export function createAccountLandmarks({ request, worldId = 'river-oaks' }) {
   let items = [], loading = null;
+  const normalize = item => item && { ...item, worldId: item.worldId ?? worldId };
   const valid = item => item && textId(item.id) && typeof item.name === 'string' && cleanName(item.name)
-    && finitePair(item.position) && Number.isFinite(item.yaw) && Number.isFinite(item.createdAt);
+    && finitePair(item.position) && Number.isFinite(item.yaw) && Number.isFinite(item.createdAt)
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.worldId) && item.worldId.length <= 48;
   const list = () => items.map(item => ({ ...item, position: [...item.position], kind: 'landmark' }));
   return {
     list,
     async load() {
       loading ??= request('list').then(response => {
-        if (!Array.isArray(response?.landmarks) || response.landmarks.length > LANDMARK_LIMIT || !response.landmarks.every(valid)) throw new Error('Account landmarks could not be read.');
-        items = response.landmarks.map(item => ({ ...item, position: [...item.position] }));
+        if (!Array.isArray(response?.landmarks) || response.landmarks.length > ACCOUNT_LANDMARK_LIST_LIMIT) throw new Error('Account landmarks could not be read.');
+        const next = response.landmarks.map(normalize);
+        if (!next.every(valid)) throw new Error('Account landmarks could not be read.');
+        items = next.map(item => ({ ...item, position: [...item.position] }));
         return list();
       });
       const pending = loading;
@@ -128,14 +135,15 @@ export function createAccountLandmarks({ request }) {
     async add({ name }) {
       if (loading) await loading;
       const response = await request('add', { name });
-      if (!response?.ok || !valid(response.landmark)) throw new Error('Landmark could not be saved.');
-      items = [...items.filter(item => item.id !== response.landmark.id), response.landmark];
-      return { ok: true, landmark: { ...response.landmark, kind: 'landmark' } };
+      const landmark = normalize(response?.landmark);
+      if (!response?.ok || !valid(landmark)) throw new Error('Landmark could not be saved.');
+      items = [...items.filter(item => item.id !== landmark.id), landmark];
+      return { ok: true, landmark: { ...landmark, kind: 'landmark' } };
     },
-    async remove(id) {
+    async remove(id, targetWorldId = worldId) {
       if (loading) await loading;
-      const response = await request('remove', { id });
-      if (response?.removed) items = items.filter(item => item.id !== id);
+      const response = await request('remove', { id, worldId: targetWorldId });
+      if (response?.removed) items = items.filter(item => item.id !== id || item.worldId !== targetWorldId);
       return response?.removed === true;
     },
   };

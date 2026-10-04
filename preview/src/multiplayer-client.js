@@ -190,7 +190,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},command,
     landmarkRequest(action,data={}){
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
-      return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}${action==='list'?'&allWorlds=1':''}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     },
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};

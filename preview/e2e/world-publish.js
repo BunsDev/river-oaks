@@ -210,6 +210,35 @@ async page=>{
   const restored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(restored.world.communityLocations.some(place=>place.name==='Moon Arch'),'Saving and applying the retained version restores the live region');
   check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.locator('#landmark-name').fill('Moon arrival');
+  await page.locator('#landmark-add').click();
+  await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
+  const savedWorldLink=new URL(await page.locator('#landmarks-list li button[aria-label^="Copy a link"]').evaluate(async button=>{
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedLandmark=text;}}});
+    button.click();await new Promise(resolve=>setTimeout(resolve,0));return window.__copiedLandmark;
+  }));
+  check(savedWorldLink.searchParams.get('world')==='moon-garden'&&savedWorldLink.searchParams.has('at'),'A landmark link includes its origin world and server-saved position');
+  await page.goto(`${origin}/?motion-debug=1&play=multiplayer`,{waitUntil:'commit'});
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().snapshot.worldId==='river-oaks');
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
+  const returnLink=page.locator('#landmarks-list li a[aria-label^="Go to Moon arrival"]');
+  const destination=new URL(await returnLink.getAttribute('href'));
+  check(destination.searchParams.get('world')==='moon-garden'&&destination.searchParams.get('at')===savedWorldLink.searchParams.get('at'),'The account directory routes a saved landmark to its original world');
+  await returnLink.evaluate(link=>link.href+='&motion-debug=1');
+  await Promise.all([page.waitForNavigation({waitUntil:'commit'}),returnLink.click()]);
+  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.multiplayer==='joined'&&document.querySelector('#view-name')?.textContent==='Moon Garden');
+  await page.waitForFunction(at=>{
+    const client=window.__riverMultiplayer?.(),player=client?.snapshot?.players.find(item=>item.id===client.selfId);
+    const [x,north]=at.split(',').map(Number);
+    return player&&Math.hypot(player.position[0]-x,player.position[1]-north)<1.3;
+  },destination.searchParams.get('at'),{timeout:15000}).catch(async()=>{
+    throw new Error(`Cross-world arrival: ${JSON.stringify(await page.evaluate(()=>({url:location.href,client:window.__riverMultiplayer?.(),status:document.querySelector('#places-status')?.textContent})))}`);
+  });
+  check(true,'Go opens the saved world and arrives at its landmark');
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);
   return {passed:true,checks,errors};
 }

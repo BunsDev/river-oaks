@@ -152,7 +152,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         if (!landmarks) return json(res, 503, { error: 'Landmarks are unavailable.' });
         const action = path.slice('/api/landmarks/'.length);
-        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId) });
+        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId, url.searchParams.get('allWorlds') === '1') });
         let data;
         try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid landmark request.' }); }
         if (action === 'add') {
@@ -163,7 +163,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const result = await landmarks.add(identity.userId, { name: data?.name, position: player.position.slice(0, 2), yaw: player.yaw });
           return json(res, result.ok ? 200 : 400, result.ok ? result : { error: result.reason });
         }
-        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id) });
+        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id, data?.worldId) });
       }
       if (path.startsWith('/api/social/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;

@@ -67,8 +67,8 @@
 #control-panel .places-list li{display:flex;align-items:center;gap:6px;font-size:13px}
 #control-panel .places-list li .place-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #control-panel .places-list li .place-kind{font-size:11px;color:var(--muted,#6b7280)}
-#control-panel .places-list button{font:inherit;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;cursor:pointer}
-#control-panel .places-list button:hover{background:rgba(127,127,127,.12)}
+#control-panel .places-list button,#control-panel .places-list a{font:inherit;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;cursor:pointer;text-decoration:none}
+#control-panel .places-list button:hover,#control-panel .places-list a:hover{background:rgba(127,127,127,.12)}
 #control-panel .landmark-add{display:flex;gap:6px}
 #control-panel .landmark-add input{flex:1;min-width:0;font:inherit;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit}
 #control-panel .landmark-add button{font:inherit;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;cursor:pointer;white-space:nowrap}
