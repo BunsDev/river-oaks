@@ -7,6 +7,7 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/multiplayer&ticket=xyz'), '/multiplayer?ticket=xyz');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/worlds'), '/api/worlds');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/world-data&world=moon-garden'), '/api/world-data?world=moon-garden');
+  for(const action of ['load','save','discard'])assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/world-draft/${action}`),`/api/world-draft/${action}`);
   for (const action of ['list', 'add', 'remove']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/landmarks/${action}`), `/api/landmarks/${action}`);
   for (const action of ['list', 'request', 'accept', 'remove', 'messages', 'send']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/social/${action}&world=moon-garden`), `/api/social/${action}?world=moon-garden`);
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/../../.env'), '/not-found');

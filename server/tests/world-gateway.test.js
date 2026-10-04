@@ -36,6 +36,10 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   const published=await post('admin','/api/worlds',proposal);
   assert.equal(published.status,201);
   assert.equal((await published.json()).world.ownerId,admin);
+  const editable=await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json();
+  const changed={...editable.publishedRegion,places:editable.publishedRegion.places.map((place,index)=>index?place:{...place,name:'Hidden revision'})};
+  assert.equal((await post('guest','/api/world-draft/load',{id:'moon-garden'})).status,403);
+  assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:changed})).status,200);
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   const publishedData=await (await fetch(base+'/api/world-data?world=moon-garden')).json();
   assert.equal(publishedData.template,'region-v1');
@@ -71,6 +75,8 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   base=`http://127.0.0.1:${gateway.server.address().port}`;
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   assert.equal((await open('moon-garden')).snapshot.worldId,'moon-garden');
+  assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
+  assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Hidden revision');
   assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.provenance.kind,'creator');
   const visitor=await open('moon-garden','guest');
   const visitorInRiver=await open('river-oaks','guest');

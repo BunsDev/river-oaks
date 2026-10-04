@@ -5,6 +5,12 @@
 .world-portal-list{list-style:none;padding:0;margin:.4rem 0 .8rem;display:grid;gap:.4rem}
 .world-portal-list li{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem}
 .world-portal-list a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.world-portal-list button,.world-portal-revision button{min-height:2.3rem;padding:.45rem .65rem;border:1px solid var(--accent,#934969);border-radius:.45rem;background:transparent;color:var(--accent,#934969);font:inherit;font-size:.78rem;cursor:pointer}
+.world-portal-list button:focus-visible,.world-portal-revision button:focus-visible{outline:2px solid var(--accent,#934969);outline-offset:2px}
+.world-portal-revision{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.7rem;border:1px solid var(--line,#aeb8ad);border-radius:.6rem;margin:.5rem 0}
+.world-portal-revision[hidden]{display:none}
+.world-portal-revision h4,.world-portal-revision p{flex-basis:100%;margin:0}
+.world-portal-revision p{font-size:.8rem;line-height:1.4}
 .world-portal-example{color:var(--accent,#934969);font-size:.8rem;text-decoration:underline;text-underline-offset:3px}
 .world-portal-list small{color:var(--muted,#5a645b);text-align:right}
 .world-portal-form{display:grid;gap:.65rem;padding:.8rem;border:1px solid var(--line,#aeb8ad);border-radius:.6rem}

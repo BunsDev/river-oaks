@@ -17,6 +17,7 @@ export default defineConfig({
       '/auth': townHttp,
       '/api/multiplayer': townHttp,
       '/api/worlds': townHttp,
+      '/api/world-draft': townHttp,
       '/api/world-data': townHttp,
       '/api/landmarks': townHttp,
       '/api/social': townHttp,

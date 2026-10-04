@@ -26,6 +26,14 @@ test('the local owner publishes and joins a second world without restarting the 
   const publish=await fetch(origin+'/api/worlds',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken,'Content-Type':'application/json'},body:JSON.stringify({id:'moon-garden',title:'Moon Garden',region})});
   assert.equal(publish.status,201);
   assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.buildings.length,4);
+  const draftRequest=(session,sessionCookie,action,data)=>fetch(origin+`/api/world-draft/${action}`,{method:'POST',headers:{Origin:origin,Cookie:sessionCookie,'X-CSRF-Token':session.csrfToken,'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const editable=await (await draftRequest(owner,cookie,'load',{id:'moon-garden'})).json();
+  assert.equal(editable.publishedRegion.buildings.length,4);
+  const revised={...editable.publishedRegion,places:editable.publishedRegion.places.map((place,index)=>index?place:{...place,name:'Private revision'})};
+  assert.equal((await draftRequest(owner,cookie,'save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:revised})).status,200);
+  assert.equal((await draftRequest(owner,cookie,'save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:revised})).status,409);
+  assert.equal((await (await draftRequest(owner,cookie,'load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Private revision');
+  assert.notEqual((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Private revision');
   assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   const access=await fetch(origin+'/api/multiplayer/ticket?world=moon-garden',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   assert.equal(access.status,200);
@@ -37,7 +45,9 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal(snapshot.locals.length,8);
   assert.equal(snapshot.players[0].canBuild,true);
   const guest=await fetch(origin+'/auth/session');
-  const denied=await fetch(origin+'/api/worlds',{method:'POST',headers:{Origin:origin,Cookie:guest.headers.get('set-cookie').split(';')[0],'X-CSRF-Token':(await guest.json()).csrfToken,'Content-Type':'application/json'},body:JSON.stringify({id:'guest-world',title:'Guest World'})});
+  const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
+  assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
+  const denied=await fetch(origin+'/api/worlds',{method:'POST',headers:{Origin:origin,Cookie:guestCookie,'X-CSRF-Token':guestSession.csrfToken,'Content-Type':'application/json'},body:JSON.stringify({id:'guest-world',title:'Guest World'})});
   assert.equal(denied.status,403);
 });
 

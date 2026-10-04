@@ -77,3 +77,17 @@ export function compileRegionPackage(region,title) {
   if(!environment.isFree(region.spawn[0],-region.spawn[1]))fail();
   return world;
 }
+
+/** Recover an editable v1 package from a previously compiled creator world. */
+export function editableRegionFromWorld(world) {
+  if(world?.provenance?.kind!=='creator' || !Array.isArray(world.bounds_m) || !world.terrain)throw new Error('World is not an editable creator region');
+  const source={schema_version:1,bounds_m:[...world.bounds_m],
+    terrain:{width:world.terrain.width,height:world.terrain.height,heights_m:[...world.terrain.heights_m]},
+    spawn:world.walkSpawn.slice(0,2),
+    roads:world.roads.map(road=>({id:road.id,name:road.name,kind:road.kind,width_m:road.width_m,points:road.points.map(point=>point.slice(0,2))})),
+    buildings:world.buildings.map(building=>({id:building.id,center:building.center.slice(0,2),size:[...building.size],yaw_deg:building.yaw_deg,kind:building.kind})),
+    trees:world.trees.map(tree=>({id:tree.id,position:tree.position.slice(0,2),height_m:tree.height_m,crown_radius_m:tree.crown_radius_m})),
+    places:world.communityLocations.map(place=>({id:place.id,name:place.name,position:place.position.slice(0,2)}))};
+  compileRegionPackage(source,world.title);
+  return source;
+}

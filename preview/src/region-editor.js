@@ -32,14 +32,14 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   const hint = $('.region-editor-hint'), status = $('.region-editor-status'), coordinates = $('.region-editor-coordinates');
   const deleteButton = $('[data-action="delete"]'), chooser = $('.region-editor-chooser');
   const eastInput = $('[data-coordinate="east"]'), northInput = $('[data-coordinate="north"]');
-  let region = null, selected = null, tool = 'select', roadStart = null, roadInProgress = null;
+  let region = null, selected = null, tool = 'select', roadStart = null, roadInProgress = null, storageKey = REGION_DRAFT_STORAGE_KEY;
   const say = message => { status.textContent = message; };
-  const saved = () => {
-    try { const raw = localStorage.getItem(REGION_DRAFT_STORAGE_KEY); const value = raw && JSON.parse(raw); return editableRegion(value) ? value : null; }
+  const saved = key => {
+    try { const raw = localStorage.getItem(key); const value = raw && JSON.parse(raw); return editableRegion(value) ? value : null; }
     catch { return null; }
   };
   const persist = () => {
-    try { localStorage.setItem(REGION_DRAFT_STORAGE_KEY, JSON.stringify(region)); }
+    try { localStorage.setItem(storageKey, JSON.stringify(region)); }
     catch { say('Draft is in this tab only. Download the JSON to keep it.'); }
     onChange(copy(region));
   };
@@ -285,10 +285,12 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     const link = document.createElement('a'); link.href = url; link.download = 'creator-region.json'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000); say('Region JSON downloaded.');
   });
-  const open = () => {
-    region ??= saved() ?? blankRegion(); selected = null; selectTool('select'); render();
+  const open = (key = REGION_DRAFT_STORAGE_KEY) => {
+    if(storageKey!==key){storageKey=key;region=null;}
+    region ??= saved(storageKey) ?? blankRegion(); selected = null; selectTool('select'); render();
     if (!dialog.open) dialog.showModal(); onChange(copy(region));
-    say('Draft saved on this device. The world is fixed when published.');
+    say(storageKey===REGION_DRAFT_STORAGE_KEY?'Draft saved on this device. The world is fixed when published.'
+      :'Draft saved on this device. Save the revision to sync it across devices.');
   };
   return {
     open,
@@ -297,11 +299,20 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       let next;
       try { next = JSON.parse(await file.text()); } catch { throw new Error('Region package must be valid JSON.'); }
       if (!editableRegion(next)) throw new Error('Region package does not have an editable v1 layout.');
-      region = copy(next); selected = null; roadStart = null; roadInProgress = null; persist(); open();
+      this.loadRegion(next);
       say('Imported region ready to edit.');
     },
+    loadRegion(value, key = REGION_DRAFT_STORAGE_KEY) {
+      if (!editableRegion(value)) throw new Error('Region package does not have an editable v1 layout.');
+      storageKey=key;region=copy(value);selected=null;roadStart=null;roadInProgress=null;persist();open(key);
+    },
     getRegion() { return region ? copy(region) : null; },
-    hasDraft() { return Boolean(region || saved()); },
+    draftFor(key = REGION_DRAFT_STORAGE_KEY) { return storageKey===key&&region ? copy(region) : saved(key); },
+    hasDraft(key = REGION_DRAFT_STORAGE_KEY) { return Boolean(this.draftFor(key)); },
+    clearDraft(key) {
+      try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+      if(storageKey===key)region=null;
+    },
     dispose() { dialog.close(); dialog.remove(); },
   };
 }

@@ -68,6 +68,27 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
         const result=await worldCatalog.publish(data,identity.userId);
         return json(res,result.ok?201:['invalid_world','invalid_region'].includes(result.reason)?400:409,result.ok?{world:result.world}:{error:result.reason});
       }
+      if (pathname.startsWith('/api/world-draft/') && req.method==='POST' && worldCatalog) {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!isAdmin(identity.userId))return json(res,403,{error:'Only Jevica can edit a region draft.'});
+        const action=pathname.slice('/api/world-draft/'.length);
+        let data;
+        try {data=await body(req,action==='save'?MAX_REGION_REQUEST_BYTES:4096);}catch{return json(res,400,{error:'Invalid region draft request.'});}
+        if(action==='load') {
+          const editable=await worldCatalog.editable(data?.id);
+          return editable?json(res,200,editable):json(res,404,{error:'Editable region not found.'});
+        }
+        if(action==='save') {
+          const result=await worldCatalog.saveDraft(data,identity.userId);
+          return json(res,result.ok?200:result.reason==='invalid_draft'?400:result.reason==='missing'||result.reason==='unsupported'?404:409,
+            result.ok?result:{error:result.reason});
+        }
+        if(action==='discard') {
+          const result=await worldCatalog.discardDraft(data?.id,data?.expectedDraftVersion);
+          return json(res,result.ok?200:result.reason==='invalid_draft'?400:409,result.ok?result:{error:result.reason});
+        }
+        return json(res,404,{error:'Not found.'});
+      }
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});

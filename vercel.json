@@ -58,6 +58,9 @@
       "source": "/api/worlds",
       "destination": "/api/server?_river_path=/api/worlds"
     },
+    { "source": "/api/world-draft/load", "destination": "/api/server?_river_path=/api/world-draft/load" },
+    { "source": "/api/world-draft/save", "destination": "/api/server?_river_path=/api/world-draft/save" },
+    { "source": "/api/world-draft/discard", "destination": "/api/server?_river_path=/api/world-draft/discard" },
     {
       "source": "/api/world-data",
       "destination": "/api/server?_river_path=/api/world-data"

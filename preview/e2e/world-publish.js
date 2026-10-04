@@ -57,6 +57,21 @@ async page=>{
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===1&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
+  await page.locator('.world-portal-list button[aria-label="Edit revision draft for Moon Garden"]').click();
+  await page.locator('.region-editor').waitFor({state:'visible'});
+  await page.locator('.region-editor-chooser').selectOption('places:place-1');
+  await page.locator('.region-editor-fields label').filter({hasText:'Name'}).locator('input').fill('Revised Moon Arch');
+  await page.locator('.region-editor-fields label').filter({hasText:'Name'}).locator('input').press('Tab');
+  await page.locator('.region-editor [data-action=done]').click();
+  await page.locator('.world-portal-revision button', {hasText:'Save revision draft'}).click();
+  await page.waitForFunction(()=>document.querySelector('.world-portal-revision-status')?.textContent.includes('saved across devices'));
+  const session=await (await page.request.get(`${origin}/auth/session`)).json();
+  const draftResponse=await page.evaluate(async token=>{
+    const response=await fetch('/api/world-draft/load',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':token},body:JSON.stringify({id:'moon-garden'})});
+    return {status:response.status,data:await response.json()};
+  },session.csrfToken);
+  check(draftResponse.status===200&&draftResponse.data.draft.region.places.some(place=>place.name==='Revised Moon Arch'),'Jevica saves a version-bound revision draft on the server');
+  check(!(await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json()).world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Saving a draft leaves the live geography unchanged');
   check((await page.locator('#stores-count').textContent())==='0','The published world renders its own layout without River Oaks stores');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===true,'Jevica can build in her new world');
   check(new URL(page.url()).searchParams.get('world')==='moon-garden','The published world has a shareable URL');
@@ -78,6 +93,12 @@ async page=>{
     check(directoryRequests>=2,'The directory recovers after a temporary failure');
     await guest.waitForFunction(()=>document.querySelector('#terrain-state')?.textContent==='Creator-authored terrain');
     check(await guest.locator('.world-portal-form').evaluate(node=>node.hidden),'A guest has no publishing form');
+    check(await guest.locator('.world-portal-list button[aria-label^="Edit revision draft"]').count()===0,'A guest cannot open a region revision draft');
+    const deniedDraft=await guest.evaluate(async()=>{
+      const session=await (await fetch('/auth/session')).json();
+      return (await fetch('/api/world-draft/load',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify({id:'moon-garden'})})).status;
+    });
+    check(deniedDraft===403,'The server refuses a guest revision draft request');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
