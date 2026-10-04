@@ -152,8 +152,9 @@ a stable recipe of a few traits (`resident-face.js`), baked once at load into
 that resident's copy of the moved positions; the normals of moved vertices are
 re-derived there, so the targets ship position deltas only. The face morphs are
 then stripped from every instance, so the vertex shader still sees only the
-blink pair. The shipped neutral geometry is unchanged, and Jevica and Prince Jev
-keep their authored faces.
+blink pair. The shipped neutral geometry is unchanged. Street residents and shop
+staff and guests (`store-people.js`) each get a recipe; mannequins, Jevica and
+Prince Jev keep their authored faces.
 
 Rebuild with the facial build environment, then merge position-only targets:
 

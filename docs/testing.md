@@ -98,7 +98,10 @@ again. It then confirms the face morphs are stripped, the eyelids still close ov
 the baked eyes (ray probes through both eye centres), and the gaze pivots moved
 with the eyeballs (the pivot-to-eye offset is unchanged, to 0.3 mm). A strip per
 rig (neutral, baked, changed pixels with the shoulder line) is saved under
-`output/playwright/resident-faces-<rig>.png`.
+`output/playwright/resident-faces-<rig>.png`. Finally it loads the district with
+`?motion-debug=1` and, through the dev-only `window.__riverFaces()` hook, checks
+that every shop staff member and guest has a face recipe, that the recipes are
+distinct, and that no figure keeps unbaked face morphs.
 
 `preview/e2e/reaction-transitions.js` runs all six shipped rigs through resting,
 reaction, greeting and interrupted gestures. It measures actual bone rotations and
