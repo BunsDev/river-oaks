@@ -20,17 +20,23 @@ async page => {
   try {
     const admin = await adminContext.newPage();
     let decision = null;
+    let holdRefresh = false, releaseRefresh;
+    let refreshHeld;
+    const refreshHeldPromise = new Promise(resolve => { refreshHeld = resolve; });
     await admin.route('**/auth/session', route => route.fulfill({ json: {
       authenticated: true, user: { id: 'admin', name: 'Approver' }, csrfToken: 'admin-csrf',
     } }));
     await admin.route('**/api/waitlist/status', route => route.fulfill({ json: {
       status: 'approved', admin: true, user: { id: 'admin', name: 'Approver' },
     } }));
-    await admin.route('**/api/waitlist/requests', route => route.fulfill({ json: { requests: [
+    await admin.route('**/api/waitlist/requests', async route => {
+      if (holdRefresh) { refreshHeld(); await new Promise(resolve => { releaseRefresh = resolve; }); }
+      return route.fulfill({ json: { requests: [
       { userId: 'new-user', name: 'New Resident', status: 'pending' },
       { userId: 'existing-user', name: 'Approved Resident', status: 'approved' },
       { userId: 'declined-user', name: 'Declined Resident', status: 'rejected' },
-    ] } }));
+    ] } });
+    });
     await admin.route('**/api/waitlist/decision', route => {
       decision = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
       return route.fulfill({ json: { userId: decision.body.userId, status: 'rejected' } });
@@ -52,16 +58,24 @@ async page => {
     check(await admin.evaluate(() => navigator.clipboard.readText()) === 'new-user', 'Approvers can copy a hidden user ID');
     check(!await firstRequest.getByText('new-user').count(), 'Copying does not reveal the user ID');
     const saved = admin.waitForResponse('**/api/waitlist/decision');
+    const revokeRefresh = admin.waitForResponse('**/api/waitlist/requests');
     await admin.locator('.access-request').filter({ hasText: 'Approved Resident' }).getByRole('button', { name: 'Revoke' }).click();
     await saved;
+    await revokeRefresh;
     check(decision?.body.userId === 'existing-user' && decision.body.approved === false && decision.csrf === 'admin-csrf', 'Approvers can revoke a prior approval with CSRF protection');
     const reconsider = admin.locator('.access-request').filter({ hasText: 'Declined Resident' }).getByRole('button', { name: 'Approve' });
     const reapproved = admin.waitForResponse('**/api/waitlist/decision');
+    const finalRefresh = admin.waitForResponse('**/api/waitlist/requests');
+    holdRefresh = true;
     await reconsider.click();
     await reapproved;
     check(decision?.body.userId === 'declined-user' && decision.body.approved === true && decision.csrf === 'admin-csrf', 'Approvers can reconsider a declined request');
+    await refreshHeldPromise;
     await admin.keyboard.press('Escape');
-    check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert), 'Escape returns focus to the game controls');
+    releaseRefresh();
+    await finalRefresh;
+    await admin.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert && document.querySelector('#access-review').hidden), 'Escape keeps review closed and returns focus to the game controls');
   } finally { await adminContext.close(); }
   return { passed: true, checks };
 }

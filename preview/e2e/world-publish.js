@@ -85,6 +85,21 @@ async page=>{
   await page.locator('#enter-destination').click();
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
   check(true,'Jevica can enter the furnished home');
+  if(!(await page.locator('.visit-tools').evaluate(node=>node.open)))await page.locator('.visit-tools-toggle').click();
+  await page.locator('#build-kind').selectOption('side-table');
+  await page.locator('#build-mode').click();
+  const canvas=await page.locator('#canvas-host').boundingBox();
+  let furnitureAim=null;
+  for(const [fx,fy] of [[.5,.72],[.4,.72],[.6,.72],[.5,.8],[.35,.8],[.65,.8],[.3,.7],[.7,.7]]){
+    await page.mouse.move(canvas.x+canvas.width*fx,canvas.y+canvas.height*fy);
+    await page.waitForTimeout(250);
+    if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){furnitureAim=[fx,fy];break;}
+  }
+  check(Boolean(furnitureAim),`The home builder finds a clear floor spot (${await page.locator('#build-hint').textContent()})`);
+  await page.locator('#build-place').click();
+  await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.some(item=>item.kind==='side-table'));
+  check(true,'Jevica places a shared side table inside her home');
+  await page.locator('#build-mode').click();
   await page.screenshot({path:'output/playwright/creator-home.png'});
   await page.waitForTimeout(1100);
   await page.locator('#walking-enter').click();
@@ -148,6 +163,7 @@ async page=>{
     });
     check(deniedHistory===403,'The server keeps published version history private to Jevica');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
+    check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.builds.some(item=>item.kind==='side-table'))),'The guest sees Jevica’s home furnishing in shared state');
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
     await guest.locator('[data-section=explore-section]').click();
     await guest.locator('#store-category').selectOption('Homes');

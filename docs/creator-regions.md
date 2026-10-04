@@ -53,6 +53,11 @@ through the normal compatibility checks. Retail venues and residential lounges
 use bounded built-in layouts and are entered through server-checked doors.
 Homes have a sofa, bookshelves, artwork, and residents. Jevica can reserve a
 home's entry for herself in the studio; guests may still arrive outside it.
+With Build & decorate, Jevica can place, move, save, and remove creations inside
+homes as well as outdoors. New lounge chairs and side tables can be placed in
+either area. The server keeps furniture clear of room walls, built-in fixtures,
+other creations, visitors, and the doorway. Retail interiors remain unavailable
+for building. Home creations survive reconnects and compatible region revisions.
 This entry rule does not hide the home or its residents from world data.
 Region packages do not yet support custom meshes, textures, scripts, multiple
 rooms per home, visitor access lists, or parcel ownership. Live creations and
