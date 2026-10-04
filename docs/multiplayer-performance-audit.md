@@ -199,6 +199,15 @@ The two-owner library is bounded at 48 designs per account. Local Redis tests
 cover concurrent writes from separate world edges and a cross-world placement;
 the hosted soak has not measured these extra on-demand Redis operations.
 
+## Cross-world landmarks — 4 October 2026
+
+The Places panel loads the signed-in account's landmarks from the original
+district and up to 16 published worlds when the account connects. This is at
+most 17 small Redis list reads plus the world catalog read, outside the 200 ms
+room tick; each per-world list remains capped at 50 entries. Older browser tabs
+request only their current world's list. The hosted soak has not measured the
+combined-list latency or payload at the 17-world, 850-landmark bound.
+
 ## Route-cost follow-up — 4 October 2026
 
 CPU sampling of the first long resident route found repeated pedestrian segment

@@ -1,5 +1,6 @@
 import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
+import { createWorldLandmarks } from './world-landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
 import { createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
@@ -26,7 +27,11 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     const legacy=await legacyDefaultAppearance(redis,`${roomPrefixFor(namespace,DEFAULT_WORLD_ID)}:state`,userId);
     return storedAppearance.initialize(userId,legacy??local);
   }};
-  const worlds=new Map(),pending=new Map();
+  const worlds=new Map(),pending=new Map(),landmarkStores=new Map();
+  const landmarkStoreFor=id=>{
+    if(!landmarkStores.has(id))landmarkStores.set(id,createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)}));
+    return landmarkStores.get(id);
+  };
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   const worldDirectory=async()=>{
     const entries=await catalog.list();
@@ -53,7 +58,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
-      const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
+      const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
       const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,groups,profiles,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{

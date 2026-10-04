@@ -16,11 +16,14 @@ its own places without code changes.
   so the list is 31 long. **Go** teleports beside the place; **Link** copies a
   URL that brings someone else there.
 - **Your landmarks.** Stand somewhere, name it, **Save here**. A landmark keeps
-  the exact position and the way you were facing. In shared play, landmarks
-  belong to the signed-in account and remain private across devices and server
-  instances. The server saves the player's current position and facing. Solo
-  play keeps landmarks in browser storage (`river-oaks-landmarks`). Up to 50
-  per account or solo device.
+  the exact position, the way you were facing, and its world. In shared play,
+  the Places tab lists your private landmarks from every published world. **Go**
+  opens the saved world when needed; **Link** shares that world and position.
+  The server saves the player's current pose, and landmarks remain private
+  across devices and server instances. Existing landmarks stay in their
+  original worlds and appear in the combined list without migration. Each
+  world allows up to 50 landmarks per account. Solo play keeps up to 50
+  landmarks in browser storage (`river-oaks-landmarks`).
 - **Shared links.** `?place=spot:<id>` or `?place=shop:<id>` lands a visitor
   beside a named place after the district loads; `?at=<x>,<north>[,<yaw>]`
   restores an exact position inside the district. A link outside the district
@@ -46,8 +49,10 @@ own facing for a bare position.
 - `preview/src/places-ui.js`: the tab's DOM and the status line.
 - `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
 - `server/world.js`: `travel` destinations `placeId` and `position`.
-- `server/landmarks.js`: account landmark storage; Redis persists shared play
-  across edge instances, and the standalone town keeps an in-memory store.
+- `server/landmarks.js`: private per-world account landmark storage; Redis
+  persists shared play across edge instances.
+- `server/world-landmarks.js`: combines the bounded per-world lists for the
+  account and tags each location with its origin world.
 
 ## Next
 

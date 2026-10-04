@@ -20,18 +20,27 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
     const item = document.createElement('li');
     item.dataset.placeId = place.id;
     const name = document.createElement('span'); name.className = 'place-name'; name.textContent = place.name;
-    const kind = document.createElement('span'); kind.className = 'place-kind'; kind.textContent = KIND_LABEL[place.kind] ?? place.kind;
-    const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Go'; go.setAttribute('aria-label', `Go to ${place.name}`);
-    go.addEventListener('click', async () => { say(`Heading to ${place.name}…`); const result = await onGo(place); say(result?.ok === false ? (result.message ?? 'That place is not reachable right now.') : `You're at ${place.name}`, result?.ok === false ? 'error' : 'ok'); });
+    const kind = document.createElement('span'); kind.className = 'place-kind';
+    kind.textContent = place.kind === 'landmark' && place.worldId
+      ? `${KIND_LABEL.landmark} · ${place.worldTitle ?? place.worldId}` : KIND_LABEL[place.kind] ?? place.kind;
+    const crossWorld = place.kind === 'landmark' && place.worldId && place.worldId !== worldIdFromSearch(location.search);
+    const go = document.createElement(crossWorld ? 'a' : 'button');
+    if (crossWorld) go.href = positionLink(place.position, place.yaw ?? 0, worldVisitUrl(place.worldId));
+    else {
+      go.type = 'button';
+      go.addEventListener('click', async () => { say(`Heading to ${place.name}…`); const result = await onGo(place); say(result?.ok === false ? (result.message ?? 'That place is not reachable right now.') : `You're at ${place.name}`, result?.ok === false ? 'error' : 'ok'); });
+    }
+    go.textContent = 'Go'; go.setAttribute('aria-label', `Go to ${place.name}${crossWorld ? ` in ${place.worldTitle ?? place.worldId}` : ''}`);
     const share = document.createElement('button'); share.type = 'button'; share.textContent = 'Link'; share.setAttribute('aria-label', `Copy a link to ${place.name}`);
-    share.addEventListener('click', () => copy(place.kind === 'landmark' || place.kind === 'link' ? positionLink(place.position, place.yaw ?? 0, shareBase()) : placeLink(place, shareBase())));
+    share.addEventListener('click', () => copy(place.kind === 'landmark' || place.kind === 'link'
+      ? positionLink(place.position, place.yaw ?? 0, place.worldId ? worldVisitUrl(place.worldId) : shareBase()) : placeLink(place, shareBase())));
     item.append(name, kind, go, share);
     if (removable) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove landmark ${place.name}`);
       remove.addEventListener('click', async () => {
         const store=currentLandmarks;remove.disabled=true;
         try {
-          const removed=await store.remove(place.id);
+          const removed=await store.remove(place.id,place.worldId);
           if(store!==currentLandmarks)return;
           if(!removed)return say('That landmark is no longer available.','error');
           renderLandmarks();say(`Removed ${place.name}`);

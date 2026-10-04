@@ -290,7 +290,7 @@ function initializeRenderer() {
 function startMultiplayer() {
   if (multiplayer) return;
   landmarkAccountId = null;
-  landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+  landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
   placesUI?.setLandmarks(landmarks);
   autoControls?.stop(); invasion?.reset();
   $('.auto-controls').hidden = true;
@@ -320,14 +320,14 @@ function startMultiplayer() {
       if (self?.canBuild) buildControls?.loadInventory(selfId);
       if (self && landmarkAccountId !== selfId) {
         landmarkAccountId = selfId;
-        const store = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        const store = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
         landmarks = store;
         placesUI?.setLandmarks(store);
         store.load().then(() => { if (landmarks === store) placesUI?.refresh(); })
           .catch(error => { if (landmarks === store) placesUI?.say(error.message, 'error'); });
       } else if (!self && landmarkAccountId !== null) {
         landmarkAccountId = null;
-        landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
         placesUI?.setLandmarks(landmarks);
       }
     },

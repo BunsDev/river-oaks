@@ -128,7 +128,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if(!landmarks)return json(res,503,{error:'Landmarks are unavailable.'});
         const action=pathname.slice('/api/landmarks/'.length);
-        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId)});
+        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId,new URL(req.url,'http://localhost').searchParams.get('allWorlds')==='1')});
         const data=await body(req);
         if(action==='add'){
           if(connections.get(identity.userId)?.identity.sessionId!==identity.sessionId)return json(res,409,{error:'Join the town before saving a landmark.'});
@@ -137,7 +137,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           const result=await landmarks.add(identity.userId,{name:data?.name,position:player.position.slice(0,2),yaw:player.yaw});
           return json(res,result.ok?200:400,result.ok?result:{error:result.reason});
         }
-        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id)});
+        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id,data?.worldId)});
       }
       if (pathname.startsWith('/api/social/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;

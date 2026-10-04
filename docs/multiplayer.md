@@ -102,10 +102,13 @@ The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
-The Places panel keeps up to 50 private landmarks per account in shared play.
-Their positions come from the server's current player pose, and Redis stores
-them outside the town checkpoint so reconnects and new server instances retain
-them. Solo landmarks remain in browser storage.
+The Places panel lists private landmarks across all published worlds in shared
+play, with up to 50 per world per account. Their positions come from the
+server's current player pose, and each record is labeled with its origin world.
+Redis stores them outside town checkpoints so reconnects and new server
+instances retain them. Opening a landmark in another world follows a link to
+that world and its saved position; arrival still passes the destination
+world's outdoor travel check. Solo landmarks remain in browser storage.
 The Worlds directory shows an aggregate visitor count for each published world
 and refreshes while the directory is visible. Redis updates each count in the
 same fenced commit as the room; the count expires after 30 seconds if its room
