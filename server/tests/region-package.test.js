@@ -5,6 +5,8 @@ import { compileRegionPackage, editableRegionFromWorld } from '../region-package
 import { createSharedWorld, migrateWorldCheckpoint } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { createStoreEncounters } from '../../preview/src/store-encounters.js';
+import { buildKind, buildRoads, checkBuildSite } from '../../preview/src/shared-build.js';
+import { evaluatePlacement } from '../../preview/src/builder-mode.js';
 
 const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
 
@@ -127,6 +129,65 @@ test('Jevica-only homes block guest travel and walking while preserving public h
   const publicShared=createSharedWorld(publicWorld,{worldId:'public-garden',isAdmin:()=>false});
   publicShared.join({userId:'guest',name:'Guest'});
   assert.equal(publicShared.command('guest',{type:'travel',storeId:publicWorld.stores[0].id,mode:'enter'}).ok,true);
+});
+
+test('Jevica can place durable furniture inside a home without building in shops or across its doorway',()=>{
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,
+    interior:{name:'Moon House',category:'home',entrance:'south'}}:building)};
+  const world=compileRegionPackage(region,'Moon Garden'),environment=createWalkingEnvironment(world),room=environment.rooms[0];
+  const shared=createSharedWorld(world,{worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  shared.join({userId:'jevica',name:'Jevica'});
+  shared.join({userId:'guest',name:'Guest'});
+  assert.equal(shared.command('jevica',{type:'travel',storeId:world.stores[0].id,mode:'enter'}).ok,true);
+  const feet=shared.snapshot().players.find(player=>player.id==='jevica').position;
+  const position=room.toWorld(-2,3.5),kind=buildKind('armchair');
+  const preview=evaluatePlacement({environment,roads:buildRoads(world),kind,position,feet,players:shared.snapshot().players,selfId:'jevica'});
+  assert.equal(preview.valid,true);
+  assert.equal(checkBuildSite({environment,roads:buildRoads(world),position:room.toWorld(0,1.2),kind:buildKind('side-table')}).reason,'doorway');
+  assert.equal(shared.command('guest',{type:'build',action:'place',kind:'armchair',finish:'rose',position,yaw:0}).error,'admin_only');
+  const placed=shared.command('jevica',{type:'build',action:'place',kind:'armchair',finish:'rose',position,yaw:0});
+  assert.equal(placed.ok,true);
+  assert.equal(placed.item.ground,room.floor);
+  assert.equal(shared.command('jevica',{type:'build',action:'edit',id:placed.item.id,position:world.stores[0].visit.slice(0,2),yaw:0}).error,'build_out_of_reach');
+  const moved=shared.command('jevica',{type:'build',action:'edit',id:placed.item.id,position:room.toWorld(-2,4.5),yaw:Math.PI/4});
+  assert.equal(moved.ok,true);
+  const design=shared.command('jevica',{type:'inventory',action:'save',buildId:placed.item.id});
+  assert.equal(design.ok,true);
+  assert.equal(shared.command('jevica',{type:'build',action:'remove',id:placed.item.id}).ok,true);
+  const copy=shared.command('jevica',{type:'build',action:'place',templateId:design.item.id,position,yaw:0});
+  assert.equal(copy.ok,true);
+  assert.notEqual(copy.item.id,placed.item.id);
+  const recovered=createSharedWorld(world,{worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  assert.equal(recovered.restore(shared.checkpoint()).ok,true);
+  assert.deepEqual(recovered.snapshot().builds,[copy.item]);
+  const revised=compileRegionPackage({...region,places:region.places.map((place,index)=>index?place:{...place,name:'Revised Arch'})},'Moon Garden');
+  const migrated=migrateWorldCheckpoint({fromData:world,toData:revised,checkpoint:shared.checkpoint(),worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  assert.equal(migrated.ok,true);
+  const updated=createSharedWorld(revised,{worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  assert.equal(updated.restore(migrated.checkpoint).ok,true);
+  assert.deepEqual(updated.snapshot().builds,[copy.item]);
+  const gallery={...region,buildings:region.buildings.map((building,index)=>index===0?{...building,
+    interior:{name:'Moon Gallery',category:'art',entrance:'south'}}:building)};
+  const retailWorld=compileRegionPackage(gallery,'Moon Garden');
+  const retailEnvironment=createWalkingEnvironment(retailWorld),retailRoom=retailEnvironment.rooms.find(item=>item.category==='art');
+  assert.equal(checkBuildSite({environment:retailEnvironment,roads:buildRoads(retailWorld),position:retailRoom.toWorld(0,2.5),kind}).reason,'indoors');
+});
+
+test('the doorway throat is not a place to build in either preview or shared play',()=>{
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2?{...building,
+    interior:{name:'Moon House',category:'home',entrance:'south'}}:building)};
+  const world=compileRegionPackage(region,'Moon Garden'),environment=createWalkingEnvironment(world),room=environment.rooms[0];
+  let time=1000;
+  const shared=createSharedWorld(world,{worldId:'moon-garden',now:()=>time,isAdmin:()=>true});
+  shared.join({userId:'jevica',name:'Jevica'});
+  assert.equal(shared.command('jevica',{type:'travel',storeId:world.stores[0].id,mode:'enter'}).ok,true);
+  const feet=room.toWorld(0,-.5);
+  time+=1000;
+  assert.equal(shared.command('jevica',{type:'pose',position:[...feet,environment.groundAt(feet[0],-feet[1])],yaw:0,altitude:0}).ok,true);
+  const position=world.stores[0].visit.slice(0,2),kind=buildKind('side-table');
+  assert.equal(checkBuildSite({environment,roads:buildRoads(world),position,kind}).ground!==undefined,true);
+  assert.equal(evaluatePlacement({environment,roads:buildRoads(world),kind,position,feet}).reason,'threshold');
+  assert.equal(shared.command('jevica',{type:'build',action:'place',kind:'side-table',finish:'rose',position,yaw:0}).error,'build_out_of_reach');
 });
 
 test('a live region revision can add and later remove an authored venue',()=>{

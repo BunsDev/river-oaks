@@ -8,7 +8,7 @@ import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
-import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
+import { buildKind, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
@@ -352,9 +352,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(saved&&!template)return reject('unknown_design');
       const kind=buildKind(placing?(saved?template.kind:message.kind):previous.kind),finish=buildFinish(placing?(saved?template.finish:message.finish):previous.finish);
       if(!kind || !finish)return reject('invalid_build');
-      if(player.altitude>.1 || environment.roomAt(player.position[0],-player.position[1])
+      const playerRoom=buildRoomAt(environment,player.position)?.storeId??null;
+      const playerThreshold=environment.roomAt(player.position[0],-player.position[1]);
+      const targetRoom=buildRoomAt(environment,message.position)?.storeId??null;
+      const previousRoom=previous ? buildRoomAt(environment,previous.position)?.storeId??null : null;
+      if(player.altitude>.1 || playerThreshold && !playerThreshold.contains(player.position[0],player.position[1])
+        || playerRoom!==targetRoom || editing && playerRoom!==previousRoom
         || distance(player.position,message.position)>BUILD_REACH || editing&&distance(player.position,previous.position)>BUILD_EDIT_REACH)
-        return reject('build_out_of_reach',placing?'Stand outside on the ground and place nearby.':'Stand outside on the ground near this creation to move or turn it.');
+        return reject('build_out_of_reach',placing?'Stand outside on the ground nearby, or inside the same home.':'Stand outside on the ground near this creation, or inside the same home.');
       if(placing&&(builds.size>=MAX_BUILDS || [...builds.values()].filter(item=>item.ownerId===userId).length>=MAX_BUILDS_PER_USER))return reject('build_limit');
       const ground=buildSite(message.position,kind,builds,previous?.id);
       if(ground===null)return reject('blocked_build_site','Find open, level ground away from roads and other creations.');

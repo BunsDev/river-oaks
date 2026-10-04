@@ -51,6 +51,20 @@ export function createSharedBuildLayer(scene) {
       const points=[];for(let i=0;i<=42;i++){const t=i/42,a=t*Math.PI*3.3;points.push(new THREE.Vector3(Math.sin(a)*(.25+.08*t),.36+t*1.46,Math.cos(a)*(.25+.08*t)));}
       const curve=new THREE.CatmullRomCurve3(points),ribbon=new THREE.TubeGeometry(curve,72,.064,10,false);geometries.add(ribbon);
       place(group,ribbon,body,[0,0,0]);place(group,sphere(20,12),trim,[points.at(-1).x,points.at(-1).y,points.at(-1).z],[.12,.12,.12]);
+    }else if(kind==='armchair'){
+      const upholstery=material(finish.color,{roughness:.94,metalness:0}),piping=material(finish.accent,{roughness:.8,metalness:0});
+      const wood=material('#5b4032',{roughness:.7});
+      for(const x of [-.52,.52])for(const z of [-.43,.43])place(group,box(.1,.18,.1),wood,[x,.12,z]);
+      place(group,box(1.28,.24,1.02),upholstery,[0,.37,0]);
+      place(group,box(1.16,.13,.85),piping,[0,.53,.07]);
+      place(group,box(1.25,.66,.2),upholstery,[0,.76,-.49], [1,1,1],[-.12,0,0]);
+      for(const x of [-.58,.58])place(group,box(.14,.42,.98),upholstery,[x,.63,0]);
+    }else if(kind==='side-table'){
+      const wood=material(finish.color,{roughness:.54,metalness:0});
+      const edge=material(finish.accent,{roughness:.4,metalness:.32});
+      for(const x of [-.35,.35])for(const z of [-.3,.3])place(group,box(.075,.55,.075),wood,[x,.29,z]);
+      place(group,box(.9,.08,.8),wood,[0,.6,0]);
+      place(group,box(.94,.025,.84),edge,[0,.65,0]);
     }
     templates.set(key,group);return group;
   };

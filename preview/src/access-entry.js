@@ -6,6 +6,7 @@ const retry = $('#access-retry'), tools = $('#access-tools'), adminButton = $('#
 const gateSignout = $('#access-gate-signout');
 const review = $('#access-review'), reviewList = $('#access-review-list'), reviewStatus = $('#access-review-status');
 let session = null, entered = false, checking = false, gateState = '';
+let reviewGeneration = 0;
 
 async function api(path, options = {}) {
   const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...options });
@@ -60,6 +61,7 @@ async function checkAccess() {
 }
 
 async function loadRequests() {
+  const generation = ++reviewGeneration;
   review.hidden = false;
   $('.app-shell').inert = true;
   $('#access-review-title').focus({ preventScroll: true });
@@ -67,6 +69,7 @@ async function loadRequests() {
   reviewList.replaceChildren();
   try {
     const { requests } = await api('/api/waitlist/requests');
+    if (generation !== reviewGeneration || review.hidden) return;
     const pending = requests.filter(request => request.status === 'pending').length;
     reviewStatus.textContent = requests.length ? `${pending} awaiting approval · ${requests.length} total` : 'No requests yet.';
     for (const request of [...requests].sort((a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'))) {
@@ -105,7 +108,7 @@ async function loadRequests() {
           button.disabled = true;
           try {
             await api('/api/waitlist/decision', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken }, body: JSON.stringify({ userId: request.userId, approved }) });
-            await loadRequests();
+            if (!review.hidden) await loadRequests();
           } catch { reviewStatus.textContent = 'Could not save that decision. Try again.'; button.disabled = false; }
         });
         row.append(button);
@@ -117,7 +120,7 @@ async function loadRequests() {
 
 retry.addEventListener('click', checkAccess);
 adminButton.addEventListener('click', loadRequests);
-function closeReview() { review.hidden = true; $('.app-shell').inert = false; adminButton.focus(); }
+function closeReview() { reviewGeneration++; review.hidden = true; $('.app-shell').inert = false; adminButton.focus(); }
 $('#access-review-close').addEventListener('click', closeReview);
 review.addEventListener('keydown', event => { if (event.key === 'Escape') closeReview(); });
 async function signout() {

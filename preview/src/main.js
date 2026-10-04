@@ -224,7 +224,7 @@ function initializeRenderer() {
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
   const playDock = createPlayDock(), visitTools = playDock.content;
-  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
+  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
   visitTools.append($('.player-controls'),buildControls.panel,$('.auto-controls'), invasion.panel);
@@ -793,9 +793,9 @@ function updateBuilder() {
   const builder = buildControls?.builder;
   if (!builder?.active || !world || !walking?.active) { buildLayer?.setGhost(null); builderAim = ''; return; }
   const pose = walking.getPose();
-  if (!pose || pose.flying || pose.riding || pose.roomId) {
+  if (!pose || pose.flying || pose.riding || pose.roomId && !world.stores.some(store=>store.id===pose.roomId && store.category==='home')) {
     buildLayer?.setGhost(null);
-    if (builderAim !== 'grounded') { builderAim = 'grounded'; buildControls.aimAt(null, { valid: false, message: 'Stand outside on the ground to build.' }); }
+    if (builderAim !== 'grounded') { builderAim = 'grounded'; buildControls.aimAt(null, { valid: false, message: 'Stand outside or inside a home to build.' }); }
     return;
   }
   let ray = null;

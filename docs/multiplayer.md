@@ -134,6 +134,9 @@ inventory is returned only to its owner; placed copies are visible to everyone.
 Designs survive reconnects and town resets through the private checkpoint.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
+Jevica can also furnish residential creator homes. Placement must stay within
+the same home as her avatar and leave the doorway and built-in fixtures clear;
+retail interiors remain protected. Guests still cannot build anywhere.
 
 Jevica can open an existing creator region in the World studio, save a private
 revision draft, and apply it to the live world. The draft is stored in shared

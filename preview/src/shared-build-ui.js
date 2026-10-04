@@ -7,7 +7,7 @@ import './shared-build-ui.css';
 // it will land and whether the town will accept it there; click the ground,
 // press Enter or use Place here. Move on one of your creations picks it up
 // into the preview.
-export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{}}){
+export function createSharedBuildControls({getPose,request,isBuildableRoom=()=>false,onBuilderChange=()=>{}}){
   const panel=document.createElement('section');panel.className='shared-build-controls';panel.hidden=true;panel.setAttribute('aria-label','Build and decorate');
   panel.innerHTML=`<h2>Build & decorate</h2><p>Your creations stay in the shared town.</p>
     <div class="shared-build-fields"><label for="build-kind">Object<select id="build-kind"></select></label><label for="build-finish">Finish<select id="build-finish"></select></label></div>
@@ -26,7 +26,7 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
   for(const item of BUILD_FINISHES)finishSelect.add(new Option(item.label,item.id));
   const list=$('#build-list'),count=$('#build-count'),designList=$('#design-list'),designCount=$('#design-count');
   let own=[],selfId=null,signature='',designs=[],inventoryFor=null,inventoryVersion=0,busy=false,active=false,yaw=0,moving=null,target=null,verdict=null,selectedDesign=null;
-  const grounded=()=>{const pose=getPose();return pose&&!pose.roomId&&!pose.flying&&!pose.riding?pose:null;};
+  const grounded=()=>{const pose=getPose();return pose&&(!pose.roomId||isBuildableRoom(pose.roomId))&&!pose.flying&&!pose.riding?pose:null;};
   const front=()=>{
     const pose=grounded();if(!pose)return null;
     return [Math.round((pose.position[0]-Math.sin(pose.yaw)*BUILD_AHEAD)*10)/10,Math.round((-pose.position[2]+Math.cos(pose.yaw)*BUILD_AHEAD)*10)/10];
@@ -64,10 +64,10 @@ export function createSharedBuildControls({getPose,request,onBuilderChange=()=>{
       ? {type:'build',action:'place',templateId:selectedDesign.id,position,yaw:angle}
       : {type:'build',action:'place',kind:kindSelect.value,finish:finishSelect.value,position,yaw:angle};
     if(!active){
-      const position=front();if(!position){status.textContent='Stand outside on the ground to build.';return false;}
+      const position=front();if(!position){status.textContent='Stand outside or inside a home to build.';return false;}
       return send(placement(position,getPose().yaw));
     }
-    if(!grounded()){status.textContent='Stand outside on the ground to build.';return false;}
+    if(!grounded()){status.textContent='Stand outside or inside a home to build.';return false;}
     if(!target||!verdict?.valid){status.textContent=verdict?.message??'Point at open ground first.';return false;}
     const ok=await send(moving?{type:'build',action:'edit',id:moving.id,position:target,yaw}:placement(target,yaw));
     if(ok&&moving)setBuilder(true);
