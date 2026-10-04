@@ -113,7 +113,13 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   const visitorInRiver=await open('river-oaks','guest');
   assert.equal(visitor.snapshot.players.some(player=>player.id==='guest-user'),true);
   assert.equal((await post('guest','/api/social/request?world=moon-garden',{peerId:admin})).status,200);
+  const pendingContacts=(await (await post('guest','/api/social/list?world=moon-garden',{})).json()).contacts;
+  assert.equal(Object.hasOwn(pendingContacts[0],'presence'),false);
   assert.equal((await post('admin','/api/social/accept?world=river-oaks',{peerId:'guest-user'})).status,200);
+  const adminContacts=(await (await post('admin','/api/social/list?world=river-oaks',{})).json()).contacts;
+  const guestContacts=(await (await post('guest','/api/social/list?world=moon-garden',{})).json()).contacts;
+  assert.deepEqual(adminContacts[0].presence,{worldId:'river-oaks',title:'River Oaks District'});
+  assert.deepEqual(guestContacts[0].presence,{worldId:'moon-garden',title:'Moon Garden'});
   assert.equal((await post('guest','/api/social/send?world=moon-garden',{peerId:admin,text:'See you in River Oaks'})).status,200);
   const crossWorldMessages=await (await post('admin','/api/social/messages?world=river-oaks',{peerId:'guest-user'})).json();
   assert.equal(crossWorldMessages.messages[0].text,'See you in River Oaks');

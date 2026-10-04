@@ -19,7 +19,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -160,7 +160,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (path.startsWith('/api/social/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
-        const result = await socialAction({ action: path.slice('/api/social/'.length), identity, social, readBody: () => body(req),
+        const result = await socialAction({ action: path.slice('/api/social/'.length), identity, social, presence, readBody: () => body(req),
           visiblePlayer: async (user, peerId) => {
             const view = await room.read();
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
@@ -244,6 +244,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const view = await room.read();
           if (!view) throw new Error('No committed town');
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
+          if (presence) await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
+          if (ws.readyState !== WebSocket.OPEN) return false;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;
         })().catch(() => { ws.close(1013, 'Town temporarily unavailable.'); return false; });
@@ -290,6 +292,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         });
         ws.on('close', () => {
           clearTimeout(lifetime); connections.delete(connectionId);
+          if (presence) void presence.leave(identity.userId, connectionId).catch(() => {});
           // A join can commit before its acknowledgment or first snapshot fails.
           // The room fences leave by connectionId, so cleanup is safe even then.
           ready.then(() => room.request({ type: 'leave', userId: identity.userId, connectionId })).catch(() => {});
@@ -315,6 +318,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!connection.alive) { connection.ws.terminate(); return; }
         connection.alive = false; connection.ws.ping();
         await room.request({ type: 'heartbeat', userId: connection.identity.userId, connectionId: connection.connectionId });
+        if (presence) await presence.touch(connection.identity.userId, connection.connectionId);
       }));
     } catch { for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.'); }
     finally { heartbeatBusy = false; }
@@ -322,6 +326,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   heartbeat.unref();
   return { server, disconnectUser, async close() {
     stopped = true; clearInterval(loop); clearInterval(heartbeat);
+    if (presence) await Promise.allSettled([...connections.values()].map(connection => presence.leave(connection.identity.userId, connection.connectionId)));
     for (const { ws } of connections.values()) ws.terminate();
     wss.close(); auth.close?.();
     await new Promise(resolve => server.close(resolve));
