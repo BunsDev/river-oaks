@@ -4,6 +4,8 @@
 import { nearestPlace, placeLink, positionLink } from './places.js';
 import { worldIdFromSearch } from './world-contract.js';
 import { worldVisitUrl } from './world-portal.js';
+import { createWorldMap } from './world-map.js';
+import './world-map.css';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
@@ -15,6 +17,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   let current = places, currentLandmarks = landmarks;
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
+  const worldMap=createWorldMap({host,onGo,getPosition,getYaw,shareBase,say,copy});
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
@@ -54,11 +57,13 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   function renderPlaces() {
     list.replaceChildren(...current.map(place => row(place)));
     $('#places-count').textContent = String(current.length);
+    worldMap.setPlaces(current);
   }
   function renderLandmarks() {
     const items = currentLandmarks.list();
     marks.replaceChildren(...items.map(place => row(place, { removable: true })));
     $('#landmarks-empty').hidden = items.length > 0;
+    worldMap.setLandmarks(items);
   }
   addButton.addEventListener('click', async () => {
     const position = getPosition();
@@ -76,6 +81,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
 
   function refreshHere() {
     const position = getPosition();
+    worldMap.refresh();
     const near = position ? nearestPlace(current, position, 45) : null;
     here.replaceChildren();
     if (!near) { here.textContent = position ? 'Out on the street' : 'Not walking yet'; here.dataset.placeId = ''; return; }
@@ -86,10 +92,11 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   renderPlaces(); renderLandmarks(); refreshHere();
   const timer = setInterval(refreshHere, 500);
   return {
+    setWorld(next) { worldMap.setWorld(next); },
     setPlaces(next) { current = next; renderPlaces(); refreshHere(); },
     setLandmarks(next) { currentLandmarks = next; renderLandmarks(); },
     refresh() { renderLandmarks(); refreshHere(); },
     say,
-    dispose() { clearInterval(timer); },
+    dispose() { clearInterval(timer); worldMap.dispose(); },
   };
 }

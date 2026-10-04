@@ -70,6 +70,10 @@ async page=>{
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===2&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
+  check(await page.locator('.world-map-road').count()===authored.world.roads.length
+    &&await page.locator('.world-map-building').count()===authored.world.buildings.length
+    &&(await page.locator('.world-map-place title').allTextContents()).includes('Moon Arch'),
+  'The map renders the published region roads, buildings, and named place');
   check(authored.world.stores.length===2&&authored.world.stores.some(store=>store.name==='Moon Gallery')&&authored.world.stores.some(store=>store.name==='Moon House'&&store.category==='home'&&store.access==='owner'),'The region package publishes a walk-in venue and Jevica-only home');
   check((await page.locator('#stores-count').textContent())==='2','Both creator interiors appear in the world directory');
   await page.locator('#enter-destination').click();
@@ -209,6 +213,7 @@ async page=>{
     && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
   const live=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(live.world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Applying a saved draft updates the published region');
+  check((await page.locator('.world-map-place title').allTextContents()).includes('Revised Moon Arch'),'The map follows the applied region revision');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=explore-section]').click();
