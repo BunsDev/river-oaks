@@ -715,7 +715,7 @@ function render(now) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
     else {
-      const stop = world.stores.find(store => store.name === 'Dior').visit;
+      const stop = world.stores.find(store => store.name === 'Dior')?.visit ?? world.stores[0]?.visit ?? world.walkSpawn;
       reflectionPosition.set(stop[0], terrainHeight(world.terrain, stop[0], stop[1]) + 2.5, -stop[1]);
     }
     storefrontReflections.update(now, reflectionPosition);

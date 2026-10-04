@@ -9,6 +9,9 @@ const slug = value => typeof value === 'string' && value.length <= 48 && /^[a-z0
 const label = value => typeof value === 'string' && value === value.trim() && [...value].length > 0 && [...value].length <= 64
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const between = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
+const interior = value => keys(value, ['name', 'category', 'entrance']) && label(value.name)
+  && ['clothes', 'art', 'restaurant', 'wellness'].includes(value.category)
+  && ['south', 'east', 'north', 'west'].includes(value.entrance);
 
 export function blankRegion() {
   return {
@@ -55,6 +58,7 @@ export function editableRegion(value) {
     || !value.terrain.heights_m.every(number => between(number, -50, 500)) || !point(value.spawn) || !insideRegion(value, value.spawn)
     || !Array.isArray(value.roads) || value.roads.length < 1 || value.roads.length > 64
     || !Array.isArray(value.buildings) || value.buildings.length > 80
+    || value.buildings.filter(item => item?.interior !== undefined).length > 8
     || !Array.isArray(value.trees) || value.trees.length > 256
     || !Array.isArray(value.places) || value.places.length < 4 || value.places.length > 64) return false;
   const ids = new Set();
@@ -65,10 +69,11 @@ export function editableRegion(value) {
     && Array.isArray(item.points) && item.points.length >= 2 && item.points.length <= 128
     && item.points.every(position => point(position) && insideRegion(value, position))
     && item.points.some((position, index) => index > 0 && Math.hypot(position[0] - item.points[index - 1][0], position[1] - item.points[index - 1][1]) >= .1))
-    && value.buildings.every(item => keys(item, ['id', 'center', 'size', 'yaw_deg', 'kind']) && id(item)
+    && value.buildings.every(item => keys(item, ['id', 'center', 'size', 'yaw_deg', 'kind', 'interior']) && id(item)
       && point(item.center) && Array.isArray(item.size) && item.size.length === 3
       && between(item.size[0], 4, 80) && between(item.size[1], 4, 80) && between(item.size[2], 5.5, 50)
-      && between(item.yaw_deg, -180, 180) && ['retail', 'residential', 'parking'].includes(item.kind) && buildingFits(value, item))
+      && between(item.yaw_deg, -180, 180) && ['retail', 'residential', 'parking'].includes(item.kind) && buildingFits(value, item)
+      && (item.interior === undefined || item.kind === 'retail' && item.size[0] >= 6 && item.size[1] >= 6 && interior(item.interior)))
     && value.trees.every(item => keys(item, ['id', 'position', 'height_m', 'crown_radius_m']) && id(item)
       && point(item.position) && insideRegion(value, item.position) && between(item.height_m, 2, 35) && between(item.crown_radius_m, .5, 10))
     && value.places.every(item => keys(item, ['id', 'name', 'position']) && id(item) && label(item.name)

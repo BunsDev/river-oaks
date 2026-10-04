@@ -8,6 +8,8 @@ import { compileRegionPackage, editableRegionFromWorld } from '../region-package
 
 const integration=(name,run)=>test(name,{skip:!process.env.REDIS_URL},run);
 const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+const venueSample={...sample,buildings:sample.buildings.map((building,index)=>index?building:{...building,
+  interior:{name:'Moon Gallery',category:'art',entrance:'south'}})};
 
 integration('a published world is durable, unique, bounded, and visible across Redis clients',async t=>{
   const redis=new Redis(process.env.REDIS_URL),peer=redis.duplicate();
@@ -17,15 +19,17 @@ integration('a published world is durable, unique, bounded, and visible across R
   const catalog=createRedisWorldCatalog({redis,prefix,now:()=>1000});
   const another=createRedisWorldCatalog({redis:peer,prefix,now:()=>2000});
   assert.deepEqual((await catalog.list()).map(world=>world.id),['river-oaks']);
-  const published=await catalog.publish({id:'moon-garden',title:'Moon Garden',description:'A quiet place to meet.',region:sample},'owner-1');
+  const published=await catalog.publish({id:'moon-garden',title:'Moon Garden',description:'A quiet place to meet.',region:venueSample},'owner-1');
   assert.equal(published.ok,true);
   assert.equal(published.world.template,'region-v1');
   assert.deepEqual(await another.get('moon-garden'),published.world);
   const region=await another.getRegion('moon-garden');
   assert.equal(region.provenance.kind,'creator');
   assert.equal(region.buildings.length,4);
+  assert.equal(region.stores[0].name,'Moon Gallery');
   const editable=await another.editable('moon-garden');
   assert.equal(editable.draft,null);
+  assert.equal(editable.publishedRegion.buildings[0].interior.name,'Moon Gallery');
   assert.deepEqual(compileRegionPackage(editable.publishedRegion,'Moon Garden').buildings,region.buildings);
   const revised={...editable.publishedRegion,places:editable.publishedRegion.places.map(place=>place.id===editable.publishedRegion.places[0].id?{...place,name:'Revised Arch'}:place)};
   const saved=await catalog.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner-1');
