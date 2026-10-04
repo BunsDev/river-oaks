@@ -45,11 +45,18 @@ export function nearestPlace(places, position, within = 60) {
 }
 
 // Links: ?place=<id> for a named place, ?at=x,north[,yaw] for anywhere.
+function destinationLink(base,key,value) {
+  if(!base)return `?${key}=${key==='place'?encodeURIComponent(value):value}`;
+  const url=new URL(base);
+  url.searchParams.delete(key==='place'?'at':'place');
+  url.searchParams.set(key,value);
+  return url.href;
+}
 export function placeLink(place, base = '') {
-  return `${base}?place=${encodeURIComponent(place.id)}`;
+  return destinationLink(base,'place',place.id);
 }
 export function positionLink(position, yaw = 0, base = '') {
-  return `${base}?at=${position[0].toFixed(2)},${position[1].toFixed(2)},${(Number.isFinite(yaw) ? yaw : 0).toFixed(2)}`;
+  return destinationLink(base,'at',`${position[0].toFixed(2)},${position[1].toFixed(2)},${(Number.isFinite(yaw) ? yaw : 0).toFixed(2)}`);
 }
 export function destinationFromSearch(search, places, bounds = null) {
   const params = new URLSearchParams(search ?? '');
