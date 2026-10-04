@@ -72,7 +72,9 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       || !clean(world.title,64) || !validDescription(world.description)
       || !['river-oaks','region-v1'].includes(world.template)
       || (world.template==='region-v1' && !/^[a-f0-9]{64}$/.test(world.regionSha256))
-      || !clean(world.ownerId,200) || !Number.isSafeInteger(world.createdAt) || world.createdAt<0)throw new Error('Invalid published world');
+      || !clean(world.ownerId,200) || !Number.isSafeInteger(world.createdAt) || world.createdAt<0
+      || world.revision!==undefined && (!Number.isSafeInteger(world.revision) || world.revision<1 || world.revision>100000)
+      || world.updatedAt!==undefined && (!Number.isSafeInteger(world.updatedAt) || world.updatedAt<0))throw new Error('Invalid published world');
     return world;
   };
   return {
@@ -124,11 +126,23 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       const result=await redis.eval(DISCARD_DRAFT,1,draftKey,id,expectedDraftVersion);
       return result==='ok'?{ok:true,removed:true}:result==='missing'?{ok:true,removed:false}:{ok:false,reason:result};
     },
+    async revisionCandidate(id,expectedDraftVersion) {
+      if(!Number.isSafeInteger(expectedDraftVersion) || expectedDraftVersion<1)return {ok:false,reason:'invalid_draft'};
+      const editable=await this.editable(id);
+      if(!editable)return {ok:false,reason:'missing'};
+      const {world,draft}=editable;
+      if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
+      if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
+      const worldData=compileRegionPackage(draft.region,world.title),encoded=JSON.stringify(worldData);
+      const next={...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)};
+      return {ok:true,world:next,worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion,
+        keys:{catalog:key,region:regionKey,draft:draftKey,history:`${prefix}:region-history:${id}`}};
+    },
   };
 }
 
 export function createMemoryWorldCatalog({now=Date.now}={}) {
-  const worlds=new Map(),regions=new Map(),drafts=new Map();
+  const worlds=new Map(),regions=new Map(),drafts=new Map(),history=new Map();
   return {
     async get(id) {return id===DEFAULT_WORLD_ID?{...defaultWorld}:worlds.get(id)??null;},
     async list() {return [{...defaultWorld},...[...worlds.values()].sort((a,b)=>a.createdAt-b.createdAt || a.id.localeCompare(b.id))];},
@@ -163,6 +177,28 @@ export function createMemoryWorldCatalog({now=Date.now}={}) {
       if(!current)return {ok:true,removed:false};
       if(current.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
       drafts.delete(id);return {ok:true,removed:true};
+    },
+    async revisionCandidate(id,expectedDraftVersion) {
+      if(!Number.isSafeInteger(expectedDraftVersion) || expectedDraftVersion<1)return {ok:false,reason:'invalid_draft'};
+      const editable=await this.editable(id);
+      if(!editable)return {ok:false,reason:'missing'};
+      const {world,draft}=editable;
+      if(!draft || draft.version!==expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
+      if((world.revision??1)>=100000)return {ok:false,reason:'world_limit'};
+      const worldData=compileRegionPackage(draft.region,world.title),encoded=JSON.stringify(worldData);
+      return {ok:true,world:{...world,revision:(world.revision??1)+1,updatedAt:now(),regionSha256:digest(encoded)},
+        worldData,encoded,expectedRegionSha256:world.regionSha256,expectedDraftVersion};
+    },
+    async applyRevision(candidate) {
+      if(!candidate?.ok)return {ok:false,reason:'invalid_draft'};
+      const current=worlds.get(candidate.world.id),draft=drafts.get(candidate.world.id);
+      if(!current || current.regionSha256!==candidate.expectedRegionSha256)return {ok:false,reason:'stale'};
+      if(!draft || draft.version!==candidate.expectedDraftVersion)return {ok:false,reason:'draft_conflict'};
+      const prior=history.get(current.id)??[];
+      prior.unshift({world:structuredClone(current),region:structuredClone(regions.get(current.id))});
+      history.set(current.id,prior.slice(0,8));
+      worlds.set(current.id,structuredClone(candidate.world));regions.set(current.id,structuredClone(candidate.worldData));drafts.delete(current.id);
+      return {ok:true,world:structuredClone(candidate.world)};
     },
   };
 }

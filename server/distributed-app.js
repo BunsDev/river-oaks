@@ -17,7 +17,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, security, landmarks, social = null, worldCatalog = null, isAdmin = isJevicaAdmin, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, security, landmarks, social = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
@@ -59,6 +59,9 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
       if (!connection.joined) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
+      if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
+        ws.close(4000, 'World region updated.'); continue;
+      }
       if (!active) { ws.close(4003, 'Session ended or account removed from the town.'); continue; }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
       send(ws, view.snapshot, { snapshot: true });
@@ -78,7 +81,7 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
         const meta=await worldCatalog.get(ids[0]);
         if(!meta && ids[0]!==room.worldId)return json(res,404,{error:'World not found.'});
         return json(res,200,meta?.template==='region-v1'
-          ? {template:meta.template,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
       }
       if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
         return json(res, 200, { worlds: await worldCatalog.list() });
@@ -113,6 +116,12 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
           const result = await worldCatalog.discardDraft(data?.id, data?.expectedDraftVersion);
           return json(res, result.ok ? 200 : result.reason === 'invalid_draft' ? 400 : 409,
             result.ok ? result : { error: result.reason });
+        }
+        if (action === 'apply' && onApplyRegion) {
+          const result = await onApplyRegion(data?.id, data?.expectedDraftVersion, identity.userId);
+          const status = result.ok ? 200 : result.error === 'invalid_draft' ? 400
+            : result.error === 'missing' ? 404 : result.error === 'room_closed' || result.error === 'request_timeout' ? 503 : 409;
+          return json(res, status, result);
         }
         return json(res, 404, { error: 'Not found.' });
       }
@@ -210,6 +219,7 @@ export function createDistributedServer({ auth, room, security, landmarks, socia
           connection.joined = true;
           const view = await room.read();
           if (!view) throw new Error('No committed town');
+          connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;
         })().catch(() => { ws.close(1013, 'Town temporarily unavailable.'); return false; });

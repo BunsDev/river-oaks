@@ -15,7 +15,7 @@ import { socialAction } from './social-api.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, landmarks, social = null, worldCatalog = null, isAdmin = isJevicaAdmin, onBan = null, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, landmarks, social = null, worldCatalog = null, isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, moderators = [], trustedProxyIPs = [], now = Date.now }) {
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
@@ -25,6 +25,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
   const send = (ws,value,options) => sendFrame(ws,value,options);
+  const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{})});
   const authorized = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -57,7 +58,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
         const meta=await worldCatalog.get(ids[0]);
         if(!meta && ids[0]!==world.worldId)return json(res,404,{error:'World not found.'});
         return json(res,200,meta?.template==='region-v1'
-          ? {template:meta.template,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+          ? {template:meta.template,regionSha256:meta.regionSha256,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
       }
       if (pathname==='/api/worlds' && req.method==='GET' && worldCatalog) return json(res,200,{worlds:await worldCatalog.list()});
       if (pathname==='/api/worlds' && req.method==='POST' && worldCatalog) {
@@ -87,6 +88,11 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
           const result=await worldCatalog.discardDraft(data?.id,data?.expectedDraftVersion);
           return json(res,result.ok?200:result.reason==='invalid_draft'?400:409,result.ok?result:{error:result.reason});
         }
+        if(action==='apply' && onApplyRegion) {
+          const result=await onApplyRegion(data?.id,data?.expectedDraftVersion,identity.userId);
+          const status=result.ok?200:result.error==='invalid_draft'?400:result.error==='missing'?404:409;
+          return json(res,status,result);
+        }
         return json(res,404,{error:'Not found.'});
       }
       if (pathname==='/api/multiplayer/ticket' && req.method==='POST') {
@@ -107,7 +113,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
         const data=await body(req);
         if(action==='add'){
           if(connections.get(identity.userId)?.identity.sessionId!==identity.sessionId)return json(res,409,{error:'Join the town before saving a landmark.'});
-          const player=world.snapshot().players.find(item=>item.id===identity.userId);
+          const player=snapshot().players.find(item=>item.id===identity.userId);
           if(!player)return json(res,409,{error:'Join the town before saving a landmark.'});
           const result=await landmarks.add(identity.userId,{name:data?.name,position:player.position.slice(0,2),yaw:player.yaw});
           return json(res,result.ok?200:400,result.ok?result:{error:result.reason});
@@ -119,7 +125,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await socialAction({action:pathname.slice('/api/social/'.length),identity,social,readBody:()=>body(req),
           visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
-            ? world.snapshot().players.find(player=>player.id===peerId) : null,
+            ? snapshot().players.find(player=>player.id===peerId) : null,
           allowWrite:id=>socialWrites(id)});
         return json(res,result.status,result.value);
       }
@@ -188,7 +194,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
             const {requestId,...command}=message;
             if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
-            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,world.snapshot());
+            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
         });
@@ -197,7 +203,7 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
           connections.delete(identity.userId);
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
-        send(ws,{...world.snapshot(),selfId:identity.userId});
+        send(ws,{...snapshot(),selfId:identity.userId});
       });
     }catch{return reject(401);}
   });
@@ -207,9 +213,9 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
     if(!connections.size)return;
     world.step(delta);
     if(time-broadcastAt<200)return;broadcastAt=time;
-    const snapshot=JSON.stringify(world.snapshot());
+    const frame=JSON.stringify(snapshot());
     for(const {ws,identity} of connections.values()) {
-      if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,snapshot,{snapshot:true});
+      if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');else send(ws,frame,{snapshot:true});
     }
   },50);loop.unref();
   // A busy renderer can delay browser pongs; allow a full 30 seconds before
@@ -221,7 +227,13 @@ export function createGameServer({ auth, world, landmarks, social = null, worldC
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
   },30000);heartbeat.unref();
-  return {server,disconnectUser,async close(){
+  return {server,disconnectUser,replaceWorld(next,hash){
+    if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
+    for(const timer of departures.values())clearTimeout(timer);
+    departures.clear();tickets.clear();
+    for(const {ws} of connections.values())ws.close(4000,'World region updated.');
+    connections.clear();world=next;regionSha256=hash;
+  },async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);
     for(const timer of departures.values())clearTimeout(timer);
     for(const ws of wss.clients)ws.terminate();

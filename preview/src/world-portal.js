@@ -29,18 +29,19 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const publish=element('button','Publish world');publish.type='submit';
   form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,design,regionSource,publish);
   const revisionPanel=element('section',null,'world-portal-revision');revisionPanel.hidden=true;
-  const revisionTitle=element('h4'),revisionNote=element('p','This is a private revision draft. The published world stays as it is until a safe live migration is available.');
+  const revisionTitle=element('h4'),revisionNote=element('p','Save the draft before applying it. Applying disconnects visitors so they can reload the revised region; active NPC wishes reset. Existing creations must fit the new layout.');
   const revisionStatus=element('p',null,'world-portal-revision-status');revisionStatus.setAttribute('role','status');
   const saveRevision=element('button','Save revision draft');saveRevision.type='button';
+  const applyRevision=element('button','Apply saved draft');applyRevision.type='button';applyRevision.disabled=true;
   const discardRevision=element('button','Discard revision draft');discardRevision.type='button';
-  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,discardRevision);
+  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision);
   section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
   const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
     .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{
-      if(revisionTarget)revisionStatus.textContent='Changes on this device are ready to save.';
+      if(revisionTarget){revisionStatus.textContent='Changes on this device are ready to save.';applyRevision.disabled=true;}
       else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
     }}))
     .catch(error=>{editorLoading=null;throw error;});
@@ -72,7 +73,8 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     const result=await response.json();
     if(!response.ok)throw new Error(result.error==='stale'?'This world changed. Reload its published region before saving.'
       :result.error==='draft_conflict'?'A newer revision draft was saved elsewhere. Download your JSON before reloading it.'
-        :result.error==='invalid_draft'?'The region draft is invalid. Check its layout.':result.error??'Region draft is unavailable.');
+        :result.error==='invalid_draft'?'The region draft is invalid. Check its layout.'
+          :result.error==='incompatible_region'?'This layout conflicts with existing creations. Move or remove them before applying.':result.error??'Region draft is unavailable.');
     return result;
   };
   const editRevision=async world=>{
@@ -85,6 +87,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       const openLocal=Boolean(local)&&(!differs||window.confirm('This device has a different local draft. Open it instead of the saved server draft?'));
       if(openLocal)studio.open(key);
       else studio.loadRegion(editable.draft?.region??editable.publishedRegion,key);
+      applyRevision.disabled=!revisionTarget.draftVersion || differs && openLocal;
       revisionStatus.textContent=openLocal?'Local draft opened. Save it to sync across devices.'
         :editable.draft?'Saved server draft loaded.':'Published region copied into a private draft.';
     } catch(error) {status.textContent=error.message||'Could not load the region draft.';}
@@ -98,8 +101,24 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       revisionStatus.textContent=`Draft saved across devices. Published ${revisionTarget.world.title} is unchanged.`;
       status.textContent=`Revision draft saved for ${revisionTarget.world.title}.`;
       revisionTarget.draftVersion=result.draft.version;
+      applyRevision.disabled=false;
     } catch(error) {revisionStatus.textContent=error.message||'Could not save the region draft.';}
     finally {saveRevision.disabled=false;}
+  });
+  applyRevision.addEventListener('click',async()=>{
+    if(!revisionTarget?.draftVersion)return;
+    applyRevision.disabled=true;
+    try {
+      const result=await draftRequest('apply',{id:revisionTarget.world.id,expectedDraftVersion:revisionTarget.draftVersion});
+      worlds=worlds.map(world=>world.id===result.world.id?result.world:world);render();
+      editor?.clearDraft(revisionTarget.key);
+      revisionStatus.textContent=`${result.world.title} is live. Visitors are rejoining its revised layout.`;
+      status.textContent=`Applied revision ${result.world.revision} to ${result.world.title}.`;
+      revisionTarget=null;revisionPanel.hidden=true;
+      if(currentId()===result.world.id && !window.__riverRegionReloadScheduled){
+        window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
+      }
+    } catch(error) {revisionStatus.textContent=error.message||'Could not apply the revision.';applyRevision.disabled=false;}
   });
   discardRevision.addEventListener('click',async()=>{
     if(!revisionTarget)return;

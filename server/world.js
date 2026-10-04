@@ -582,3 +582,22 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,players,state};
 }
+
+/** Validate an old room, then transfer durable account and creation state to a new geography. */
+export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAULT_WORLD_ID,now=Date.now,isAdmin=isJevicaAdmin}={}) {
+  if(!fromData || !toData || !checkpoint)return reject('invalid_checkpoint');
+  const oldWorld=createSharedWorld(fromData,{worldId,now,isAdmin});
+  if(!oldWorld.restore(checkpoint).ok)return reject('invalid_checkpoint');
+  const old=oldWorld.checkpoint();
+  const fresh=createSharedWorld(toData,{worldId,now,isAdmin}).checkpoint();
+  const payload=fresh.payload,previous=old.payload;
+  // Simulation and NPC routes depend on geography. Account-owned state does not.
+  payload.revision=previous.revision+1;
+  for(const field of ['ledgers','chat','appearances','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint:fresh.worldFingerprint,payload};
+  const migrated={...envelope,checksum:digest(envelope)};
+  const probe=createSharedWorld(toData,{worldId,now,isAdmin});
+  if(!probe.restore(migrated).ok)return reject('incompatible_region');
+  return {ok:true,checkpoint:migrated,disconnectedPlayers:previous.players.length,
+    clearedWishes:previous.state.locals.filter(local=>Boolean(local.wish)).length};
+}
