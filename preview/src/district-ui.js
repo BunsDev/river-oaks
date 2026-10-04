@@ -13,7 +13,7 @@ export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore
     $('#visit-destination').textContent = store?.category === 'home' ? 'Arrive outside home →' : 'Arrive at storefront →';
     $('#visit-destination').disabled = !store;
     $('#enter-destination').disabled = !store || !canEnter(store);
-    $('#enter-destination').textContent = store?.access === 'owner' && !canEnter(store) ? 'Jevica-only home' : 'Step inside →';
+    $('#enter-destination').textContent = store?.access === 'owner' && !canEnter(store) ? 'Invitation required' : 'Step inside →';
     $('#store-inside').textContent = store ? describeStore?.(store) ?? "" : "";
     $('#store-previous').disabled = $('#store-next').disabled = filtered.length < 2;
     $('#store-step').textContent = store ? `${filtered.indexOf(store) + 1} of ${filtered.length}` : '0 results';

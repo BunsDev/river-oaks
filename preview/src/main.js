@@ -303,7 +303,9 @@ function startMultiplayer() {
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
     getMeetingPlaces: () => world ? placesOf(world) : [],
+    getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
+    onHomeAccess: () => districtUI?.refreshAccess(),
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
     onPlayers: (players, selfId) => {
@@ -497,11 +499,12 @@ function enterWalk(position, lookAt, pitch = 0) {
 
 function canEnterStore(store) {
   if (store?.access !== 'owner') return true;
-  return multiplayer ? Boolean(multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild) : soloCanGrantWishes;
+  return multiplayer ? Boolean(multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
+    || multiplayer.homeAccess.some(home => home.storeId === store.id)) : soloCanGrantWishes;
 }
 
 function enterStore(store) {
-  if (!canEnterStore(store)) return { ok: false, message: 'Only Jevica can enter this home.' };
+  if (!canEnterStore(store)) return { ok: false, message: 'This home is private. Jevica can invite you inside.' };
   if (multiplayer) { districtUI.select(store.id); return multiplayer.travel({storeId:store.id,mode:'enter'}); }
   const room = storeRoomsFor(world).find(item => item.storeId === store.id);
   if (!room) return arriveAtStore(store);
@@ -524,7 +527,7 @@ function describeInterior(store) {
   const { label, staff, guests, mannequins, highlights } = multiplayer ? sharedRoomSummary(room) : room.summary;
   const people = store.category === 'home' ? `${guests} resident${guests === 1 ? '' : 's'}`
     : [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
-  return `${store.access === 'owner' ? 'Jevica-only home · ' : ''}${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Fictional room layout.`;
+  return `${store.access === 'owner' ? 'Invitation-only home · ' : ''}${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Fictional room layout.`;
 }
 
 // Places: a spot teleports to a clear outdoor point beside it, a storefront

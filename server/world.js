@@ -17,6 +17,7 @@ const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
 const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
+const MAX_HOME_GUESTS = 16;
 const GESTURES = ['wave','bow'];
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
 const copy = value => structuredClone(value);
@@ -57,7 +58,7 @@ function decodeCheckpoint(json) {
 export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID } = {}) {
   validateWorldId(worldId);
   const environment = createWalkingEnvironment(worldData);
-  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map();
+  const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map(), homeGuests = new Map();
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
   const localById = new Map(state.locals.map(local => [local.id,local]));
@@ -151,6 +152,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       [local.position[0],local.position[1],local.position[2]+(local.eyeHeight ?? 1.55)]);
   }
   const ownerOnlyHomes = new Set((worldData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
+  const canEnterHome = (userId,storeId,access=homeGuests) => isAdmin(userId) || access.get(storeId)?.includes(userId);
   const restrictedRoomAt = (x,north) => {
     const room=environment.roomAt(x,-north);
     return room && ownerOnlyHomes.has(room.storeId) && room.contains(x,north) ? room : null;
@@ -178,7 +180,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (let i=1;i<=steps;i++) {
       const t=i/steps, x=player.position[0]+(position[0]-player.position[0])*t, north=player.position[1]+(position[1]-player.position[1])*t;
       const height=player.altitude+(altitude-player.altitude)*t;
-      if (height<=0.1 && !isAdmin(player.id) && restrictedRoomAt(x,north)) return correction('private_home');
+      const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
+      if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
       if (height>0.1 ? !environment.canFly(x,environment.groundAt(x,-north)+height,-north) : !environment.isFree(x,-north)) return correction('blocked');
     }
     player.moveBudget -= cost;
@@ -207,8 +210,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (point && !inBounds(point[0],point[1])) return reject('invalid_destination');
     if (!local && !store && !place && !point) return reject('unknown_destination');
     const mode = message.mode ?? 'enter';
-    if (!isAdmin(player.id) && (local && ownerOnlyHomes.has(local.storeId) || store && mode==='enter' && ownerOnlyHomes.has(store.id)))
-      return reject('private_home','Only Jevica can enter this home.');
+    if (local && ownerOnlyHomes.has(local.storeId) && !canEnterHome(player.id,local.storeId)
+      || store && mode==='enter' && ownerOnlyHomes.has(store.id) && !canEnterHome(player.id,store.id))
+      return reject('private_home','This home is private. Jevica can invite you inside.');
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
     let destination = null;
@@ -311,6 +315,38 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (message.movement==='beast') movementByUser.set(userId,'beast'); else movementByUser.delete(userId);
       revision++;
       return {ok:true,player:publicPlayer(player)};
+    }
+    if (message.type==='homeAccess') {
+      if (message.action==='list' && fields(message,['type','action'])) {
+        const homes=(worldData.stores??[]).filter(store=>ownerOnlyHomes.has(store.id)
+          && (isAdmin(userId) || homeGuests.get(store.id)?.includes(userId)))
+          .map(store=>({storeId:store.id,name:store.name,
+            ...(isAdmin(userId)?{guestIds:[...(homeGuests.get(store.id)??[])]}:{})}));
+        return {ok:true,homes};
+      }
+      if (!isAdmin(userId)) return reject('admin_only','Only Jevica can invite visitors into private homes.');
+      if (!fields(message,['type','action','storeId','peerId']) || !['grant','revoke'].includes(message.action)
+        || !ownerOnlyHomes.has(message.storeId) || !textId(message.peerId)) return reject('invalid_home_access');
+      const guests=homeGuests.get(message.storeId)??[];
+      if (message.action==='grant') {
+        if (guests.includes(message.peerId)) return {ok:true,storeId:message.storeId,peerId:message.peerId,granted:true};
+        if (guests.length>=MAX_HOME_GUESTS) return reject('home_guest_limit','This home already has 16 invited visitors.');
+        homeGuests.set(message.storeId,[...guests,message.peerId]);revision++;
+        return {ok:true,storeId:message.storeId,peerId:message.peerId,granted:true};
+      }
+      if (!guests.includes(message.peerId)) return reject('not_invited');
+      if (guests.length===1) homeGuests.delete(message.storeId);
+      else homeGuests.set(message.storeId,guests.filter(id=>id!==message.peerId));
+      const peer=players.get(message.peerId),privateRoom=peer && restrictedRoomAt(peer.position[0],peer.position[1]);
+      if (privateRoom?.storeId===message.storeId) {
+        const store=worldData.stores.find(item=>item.id===message.storeId);
+        const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
+        peer.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
+        peer.altitude=0;peer.vehicle=null;peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
+        peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
+      }
+      revision++;
+      return {ok:true,storeId:message.storeId,peerId:message.peerId,granted:false};
     }
     if (message.type==='inventory') {
       if (!isAdmin(userId)) return reject('admin_only','Only Jevica can use building designs in the shared town.');
@@ -453,7 +489,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Store and restore only through the trusted persistence owner, never clients.
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
-    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],
+    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],homeGuests:[...homeGuests],
       life:life?Object.fromEntries(LIFE_FIELDS.map(key=>[key,life[key]])):null}));
     const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint,payload};
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
@@ -560,6 +596,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         if(designIds.has(item.id) || ++designCount>MAX_DESIGNS)throw new Error('Invalid inventory');
         designIds.add(item.id);
       }
+      const nextHomeGuests=restoreMap(recovered.homeGuests??[],ownerOnlyHomes.size,ids=>Array.isArray(ids)
+        && ids.length>0 && ids.length<=MAX_HOME_GUESTS && ids.every(textId) && new Set(ids).size===ids.length);
+      for(const storeId of nextHomeGuests.keys())if(!ownerOnlyHomes.has(storeId))throw new Error('Invalid private home');
       if (!Array.isArray(recovered.players)) throw new Error('Invalid players');
       const nextPlayers=restoreMap(recovered.players.map(player=>[player?.id,player]),maxPlayers,player=>record(player)
         && typeof player.name==='string' && player.name.length<=80 && (player.appearance===undefined || Boolean(sharedAppearance(player.appearance)))
@@ -583,6 +622,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const grounded=createWalkingState(environment,[east,north]).position;
           player.position=[grounded[0],-grounded[2],environment.groundAt(grounded[0],grounded[2])];
           player.altitude=0;
+        }
+        const privateRoom=restrictedRoomAt(player.position[0],player.position[1]);
+        if(privateRoom && !canEnterHome(player.id,privateRoom.storeId,nextHomeGuests)){
+          const store=worldData.stores.find(item=>item.id===privateRoom.storeId);
+          const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
+          if(!environment.isFree(outside[0],-outside[1]) || environment.roomAt(outside[0],-outside[1]))throw new Error('Invalid private home exit');
+          player.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
+          player.altitude=0;player.vehicle=null;
         }
       }
       if(nextAppearances.size>MAX_APPEARANCES) throw new Error('Invalid appearances');
@@ -631,6 +678,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       movementByUser.clear();for(const [id,movement] of nextMovements) movementByUser.set(id,movement);
       builds.clear();for(const [id,item] of nextBuilds)builds.set(id,item);
       inventory.clear();for(const [id,items] of nextInventory)inventory.set(id,items);
+      homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
       return {ok:true};
@@ -659,6 +707,8 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   // Simulation and NPC routes depend on geography. Account-owned state does not.
   payload.revision=previous.revision+1;
   for(const field of ['ledgers','chat','appearances','movements','builds','inventory'])payload[field]=copy(previous[field]??[]);
+  const retainedHomes=new Set((toData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
+  payload.homeGuests=(previous.homeGuests??[]).filter(([storeId])=>retainedHomes.has(storeId));
   const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint:fresh.worldFingerprint,payload};
   const migrated={...envelope,checksum:digest(envelope)};
   const probe=createSharedWorld(toData,{worldId,now,isAdmin});

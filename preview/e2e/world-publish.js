@@ -167,18 +167,41 @@ async page=>{
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
     await guest.locator('[data-section=explore-section]').click();
     await guest.locator('#store-category').selectOption('Homes');
-    check(await guest.locator('#enter-destination').isDisabled(),'The directory labels and disables Jevica-only home entry for guests');
-    check((await guest.locator('#enter-destination').textContent())==='Jevica-only home','A guest sees who may enter the home');
+    check(await guest.locator('#enter-destination').isDisabled(),'The directory disables private home entry for uninvited guests');
+    check((await guest.locator('#enter-destination').textContent())==='Invitation required','A guest sees that home entry requires an invitation');
     await guest.locator('#visit-destination').click();
-    await guest.waitForFunction(()=>document.querySelector('#walking-enter')?.textContent.includes('Jevica only'));
+    await guest.waitForFunction(()=>document.querySelector('#walking-enter')?.textContent.includes('Invitation required'));
     check(await guest.locator('#walking-enter').isDisabled(),'The doorway also blocks guest entry');
     check((await guest.locator('#walking-hud').getAttribute('data-inside'))!=='venue-building-2','The guest remains outside');
+    await guest.locator('[data-section=community-section]').click();
+    await guest.locator('.multiplayer-person button[aria-label^="Add "]').first().click();
+    await page.locator('[data-section=community-section]').click();
+    await page.waitForFunction(()=>[...document.querySelectorAll('.multiplayer-social-row')].some(row=>row.textContent.includes('wants to connect')),null,{timeout:15000});
+    await page.locator('.multiplayer-social-row button', {hasText:'Accept'}).click();
+    await page.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
+    await page.locator('select[aria-label^="Private home access for"]').selectOption({label:'Moon House'});
+    await page.locator('.multiplayer-social-conversation button', {hasText:'Invite into home'}).click();
+    await page.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('can now enter this home'));
+    check(true,'Jevica invites an accepted contact into a specific private home from the People panel');
+    await guest.locator('[data-section=explore-section]').click();
+    await guest.waitForFunction(()=>!document.querySelector('#enter-destination')?.disabled);
+    await guest.locator('#enter-destination').click();
+    await guest.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
+    check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'Invited visitors can enter the home without building permission');
+    await page.locator('.multiplayer-social-contacts .multiplayer-social-row button', {hasText:'Remove'}).click();
+    await page.locator('.multiplayer-home-guests button', {hasText:'Remove access'}).click();
+    await page.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('can no longer enter Moon House'));
+    check(true,'Jevica can revoke home access after removing the visitor from contacts');
+    await guest.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside!=='venue-building-2',null,{timeout:15000});
+    await guest.waitForFunction(()=>document.querySelector('#enter-destination')?.disabled,null,{timeout:15000});
+    check(await guest.locator('#enter-destination').isDisabled(),'Revocation moves the guest outside and blocks reentry');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
     await guest.waitForFunction(()=>[...document.querySelectorAll('.world-portal-list li')]
       .some(row=>row.querySelector('a')?.textContent==='Moon Garden'&&row.querySelector('small')?.textContent.includes('2 visitors online')),null,{timeout:30000});
     check(true,'The world directory shows current visitors without exposing their identities');
   } finally {await otherContext.close();}
+  await page.locator('[data-section=explore-section]').click();
   await Promise.all([page.waitForNavigation({waitUntil:'commit',timeout:60000}),
     page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).click()]);
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected

@@ -1,21 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
 import { createRedisRoom } from '../redis-room.js';
+import { compileRegionPackage } from '../region-package.js';
 
 const enabled=Boolean(process.env.REDIS_URL);
 const testRedis=(name,fn)=>test(name,{skip:!enabled},fn);
 const worldData={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],collisionPolygons:[],stores:[],buildings:[],
   communityLocations:[{id:'a',name:'Garden',position:[-12,0,0]},{id:'b',name:'Gallery',position:[12,0,0]},{id:'c',name:'Plaza',position:[0,15,0]}]};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function setup(t,{authorize=async()=>true}={}) {
+async function setup(t,{authorize=async()=>true,world=worldData}={}) {
   const redis=new Redis(process.env.REDIS_URL,{lazyConnect:true,maxRetriesPerRequest:1,retryStrategy:null});
   redis.on('error',()=>{});await redis.connect();
   const prefix=`{river-oaks:test:${randomUUID()}}`,rooms=[];
   let time=100000;
-  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData,authorize,now:()=>time,isAdmin:id=>id==='alice'});rooms.push(room);return room;};
+  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData:world,authorize,now:()=>time,isAdmin:id=>id==='alice'});rooms.push(room);return room;};
   t.after(async()=>{
     await Promise.all(rooms.map(room=>room.close()));
     const keys=await redis.keys(`${prefix}:*`);
@@ -101,6 +103,27 @@ testRedis('restart restores checkpoint and replacing an account preserves wishes
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'})).error,'stale_connection');
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'},'alice-new')).ok,true);
   assert.equal((await f.command(replacement,'alice',{type:'wish',localId:'local-00',kind:'dog'},'alice-new')).error,'wish_cooldown');
+});
+
+testRedis('private home invitations survive coordinator replacement and revocation ejects guests',async t=>{
+  const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2
+    ? {...building,interior:{name:'Moon House',category:'home',entrance:'south',access:'owner'}}:building)};
+  const world=compileRegionPackage(region,'Moon Garden'),storeId=world.stores[0].id;
+  const f=await setup(t,{world}),first=f.create();
+  assert.equal((await f.join(first,'alice')).ok,true);
+  assert.equal((await f.join(first,'bob')).ok,true);
+  assert.equal((await f.command(first,'bob',{type:'travel',storeId,mode:'enter'})).error,'private_home');
+  assert.equal((await f.command(first,'bob',{type:'homeAccess',action:'grant',storeId,peerId:'bob'})).error,'admin_only');
+  assert.equal((await f.command(first,'alice',{type:'homeAccess',action:'grant',storeId,peerId:'bob'})).ok,true);
+  await first.close();
+  const replacement=f.create();
+  assert.deepEqual((await f.command(replacement,'bob',{type:'homeAccess',action:'list'})).homes.map(home=>home.storeId),[storeId]);
+  assert.equal((await f.command(replacement,'bob',{type:'travel',storeId,mode:'enter'})).ok,true);
+  assert.equal((await f.command(replacement,'bob',{type:'wish',localId:'local-00',kind:'dragon'})).error,'admin_only');
+  assert.equal((await f.command(replacement,'alice',{type:'homeAccess',action:'revoke',storeId,peerId:'bob'})).ok,true);
+  assert.deepEqual((await f.command(replacement,'bob',{type:'homeAccess',action:'list'})).homes,[]);
+  assert.equal((await f.command(replacement,'bob',{type:'travel',storeId,mode:'enter'})).error,'private_home');
 });
 
 testRedis('default room upgrades a stored version-one checkpoint without losing its roster',async t=>{

@@ -62,6 +62,13 @@ active published region and stores its world and place IDs in the message. The
 recipient's link joins that world and travels to the place; a stale place link
 can no longer travel if a later region revision removes the place. Place
 invitations share the same history and rate limit.
+In creator worlds, Jevica can invite an accepted contact into an owner-only
+home from that contact's People panel conversation. The invitation applies to
+one home and survives reconnects and compatible region revisions. Each home
+holds up to 16 invited accounts. A visitor may enter after the client receives
+the invitation; revoking access moves an occupant outside. Home entry never
+grants building or wish authority. Jevica can revoke any invitation from the
+private home guest list even after removing that account from contacts.
 Accepted contacts also see whether a resident is online and can follow a link
 to their current world without waiting for an invitation. The contact list
 exposes the world name and ID, never the resident's exact position. Pending

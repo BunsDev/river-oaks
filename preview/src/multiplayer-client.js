@@ -4,7 +4,7 @@ import { createSocialUI } from './social-ui.js';
 import { createGroupsUI } from './groups-ui.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
+export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, onPlaySolo = null }) {
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -44,7 +44,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   });
   gestures.append(gestureTitle,gestureControls,gestureStatus);
   panel.append(summary,list,notice,gestures,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
-  let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID;
+  let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID,homeAccess=[];
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
     const active=document.activeElement,inside=gate.contains(active);
@@ -75,7 +75,14 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     return data;
   };
   const socialRequest=(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,getMeetingPlaces,
+  const canManageHomes=()=>Boolean(latestSnapshot?.players.find(player=>player.id===selfId)?.canBuild);
+  const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,getMeetingPlaces,getOwnerHomes,
+    getHomeAccess:()=>homeAccess,canManageHomes,
+    homeAccessAction:async(action,storeId,peerId)=>{
+      const result=await command({type:'homeAccess',action,storeId,peerId});
+      if(!result.ok)throw new Error(result.message??'Home access could not be changed.');
+      await refreshHomeAccess();
+    },
     request:socialRequest,
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const groups=createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
@@ -115,6 +122,16 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     if(!chatInitialized){chatInitialized=true;chatHistory.setAttribute('aria-live','polite');}
   };
   const clearPending=()=>{for(const request of pending.values()){clearTimeout(request.timer);request.reject(new Error('Disconnected. Your action was not confirmed.'));}pending.clear();};
+  async function refreshHomeAccess(){
+    if(!connected||document.visibilityState==='hidden'||!getOwnerHomes().length)return;
+    const current=socket;
+    try{
+      const result=await command({type:'homeAccess',action:'list'});
+      if(current!==socket||!result.ok)return;
+      homeAccess=result.homes??[];onHomeAccess(homeAccess);social.refreshHomeAccess();
+    }catch{ /* Reconnect and retry on the next refresh. */ }
+  }
+  const homeAccessTimer=setInterval(refreshHomeAccess,10_000);
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5)));};
   async function connect(){
     if(stopped||connecting||connected)return;connecting=true;retry.hidden=true;login.hidden=true;
@@ -140,7 +157,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
             if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups.refresh(true);}
+            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups.refresh(true);void refreshHomeAccess();}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
@@ -151,7 +168,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       });
       ws.addEventListener('close',event=>{
         clearTimeout(deadline);if(socket!==ws)return;
-        socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+        socket=null;connected=false;connecting=false;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
         const terminal=[4000,4003,4009].includes(event.code);
@@ -187,7 +204,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
   return {
-    get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},command,
+    get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},get homeAccess(){return homeAccess;},command,
     landmarkRequest(action,data={}){
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
       return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}${action==='list'?'&allWorlds=1':''}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -204,6 +221,6 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);socket?.close();clearPending();social.dispose();groups.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){stopped=true;clearTimeout(retryTimer);clearInterval(homeAccessTimer);socket?.close();clearPending();social.dispose();groups.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
   };
 }
