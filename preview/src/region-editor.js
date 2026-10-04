@@ -151,12 +151,16 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
               say('A region can have up to eight walk-in interiors.'); return false;
             }
             if (item.size[0] < 6 || item.size[1] < 6) { say('Make this building at least 6 × 6 m first.'); return false; }
-            item.interior = { name: item.interior?.name ?? `${item.kind === 'residential' ? 'Home' : 'Venue'} ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south' };
+            item.interior = { name: item.interior?.name ?? `${item.kind === 'residential' ? 'Home' : 'Venue'} ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south',
+              ...(next === 'home' && item.interior?.access === 'owner' ? { access: 'owner' } : {}) };
           }, { options: item.kind === 'residential' ? [{ value: '', label: 'Exterior only' }, { value: 'home', label: 'Furnished home lounge' }]
             : [{ value: '', label: 'Exterior only' }, { value: 'art', label: 'Gallery' },
               { value: 'clothes', label: 'Fashion boutique' }, { value: 'restaurant', label: 'Café or dining' },
               { value: 'wellness', label: 'Wellness studio' }] });
           if (item.interior) {
+            if (item.interior.category === 'home') field('Home access', item.interior.access ?? 'public', next => {
+              if (next === 'owner') item.interior.access = 'owner'; else delete item.interior.access;
+            }, { options: [{ value: 'public', label: 'Open to visitors' }, { value: 'owner', label: 'Jevica only' }] });
             field('Interior name', item.interior.name, next => {
               if (!next || [...next].length > 64 || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(next)) {
                 say('Interior names must contain 1–64 visible characters.'); return false;

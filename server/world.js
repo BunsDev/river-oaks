@@ -150,6 +150,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     return environment.hasSightLine([player.position[0],player.position[1],player.position[2]+1.68+player.altitude],
       [local.position[0],local.position[1],local.position[2]+(local.eyeHeight ?? 1.55)]);
   }
+  const ownerOnlyHomes = new Set((worldData.stores??[]).filter(store=>store.category==='home' && store.access==='owner').map(store=>store.id));
+  const restrictedRoomAt = (x,north) => {
+    const room=environment.roomAt(x,-north);
+    return room && ownerOnlyHomes.has(room.storeId) && room.contains(x,north) ? room : null;
+  };
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
     const {position,yaw,altitude} = message;
@@ -173,6 +178,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (let i=1;i<=steps;i++) {
       const t=i/steps, x=player.position[0]+(position[0]-player.position[0])*t, north=player.position[1]+(position[1]-player.position[1])*t;
       const height=player.altitude+(altitude-player.altitude)*t;
+      if (height<=0.1 && !isAdmin(player.id) && restrictedRoomAt(x,north)) return correction('private_home');
       if (height>0.1 ? !environment.canFly(x,environment.groundAt(x,-north)+height,-north) : !environment.isFree(x,-north)) return correction('blocked');
     }
     player.moveBudget -= cost;
@@ -201,6 +207,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (point && !inBounds(point[0],point[1])) return reject('invalid_destination');
     if (!local && !store && !place && !point) return reject('unknown_destination');
     const mode = message.mode ?? 'enter';
+    if (!isAdmin(player.id) && (local && ownerOnlyHomes.has(local.storeId) || store && mode==='enter' && ownerOnlyHomes.has(store.id)))
+      return reject('private_home','Only Jevica can enter this home.');
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
     let destination = null;

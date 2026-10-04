@@ -95,6 +95,7 @@ async function refreshSoloPrivileges() {
   } catch { soloCanGrantWishes = false; }
   if (community?.state) community.refresh();
   worldPortal?.refreshCapability();
+  districtUI?.refreshAccess();
   return soloCanGrantWishes;
 }
 let autoTownDecision = null;
@@ -186,10 +187,12 @@ function initializeRenderer() {
         return result.ok;
       });
       if (local.indoor) {
+        const store = world.stores.find(store => store.id === local.storeId);
+        if (!canEnterStore(store)) return false;
         const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
         const position = walking.active ? walking.getPosition() : null;
         if (room && (!position || !room.contains(position[0], position[1]))) {
-          enterStore(world.stores.find(store => store.id === local.storeId));
+          enterStore(store);
         }
         return walking.focusPerson(local);
       }
@@ -208,7 +211,7 @@ function initializeRenderer() {
   worldPortal=createWorldPortal({host:$('#explore-section'),getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
   void worldPortal.load();
   setupSidebarSections({ graphics: quality.element });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -257,7 +260,7 @@ function initializeRenderer() {
     else {if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';void refreshSoloPrivileges();}
   });
   else {host.dataset.multiplayer = 'off';void refreshSoloPrivileges();}
-  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
+  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior, canEnter: canEnterStore });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
@@ -310,6 +313,7 @@ function startMultiplayer() {
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
+      districtUI?.refreshAccess();
       if (self) void worldPortal?.load();
       if (self) void arriveAtSharedLink();
       buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
@@ -491,7 +495,13 @@ function enterWalk(position, lookAt, pitch = 0) {
   walking.enter(world, position, lookAt, pitch);
 }
 
+function canEnterStore(store) {
+  if (store?.access !== 'owner') return true;
+  return multiplayer ? Boolean(multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild) : soloCanGrantWishes;
+}
+
 function enterStore(store) {
+  if (!canEnterStore(store)) return { ok: false, message: 'Only Jevica can enter this home.' };
   if (multiplayer) { districtUI.select(store.id); return multiplayer.travel({storeId:store.id,mode:'enter'}); }
   const room = storeRoomsFor(world).find(item => item.storeId === store.id);
   if (!room) return arriveAtStore(store);
@@ -514,7 +524,7 @@ function describeInterior(store) {
   const { label, staff, guests, mannequins, highlights } = multiplayer ? sharedRoomSummary(room) : room.summary;
   const people = store.category === 'home' ? `${guests} resident${guests === 1 ? '' : 's'}`
     : [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
-  return `${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Fictional room layout.`;
+  return `${store.access === 'owner' ? 'Jevica-only home · ' : ''}${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Fictional room layout.`;
 }
 
 // Places: a spot teleports to a clear outdoor point beside it, a storefront

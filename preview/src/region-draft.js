@@ -9,9 +9,10 @@ const slug = value => typeof value === 'string' && value.length <= 48 && /^[a-z0
 const label = value => typeof value === 'string' && value === value.trim() && [...value].length > 0 && [...value].length <= 64
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const between = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
-const interior = value => keys(value, ['name', 'category', 'entrance']) && label(value.name)
+const interior = value => keys(value, ['name', 'category', 'entrance', 'access']) && label(value.name)
   && ['clothes', 'art', 'restaurant', 'wellness', 'home'].includes(value.category)
-  && ['south', 'east', 'north', 'west'].includes(value.entrance);
+  && ['south', 'east', 'north', 'west'].includes(value.entrance)
+  && (value.access === undefined || value.category === 'home' && ['public', 'owner'].includes(value.access));
 
 export function blankRegion() {
   return {
