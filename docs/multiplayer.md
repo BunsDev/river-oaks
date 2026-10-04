@@ -128,10 +128,15 @@ Local simulation state is browser-owned; shared-world authority is enforced by
 the server.
 
 Build & decorate lets the owner place, move, turn, and remove up to 24 owned
-creations in the shared town. A placed creation can be saved as a design, then
-placed again from **Saved designs**. The owner can keep 48 designs. The
-inventory is returned only to its owner; placed copies are visible to everyone.
-Designs survive reconnects and town resets through the private checkpoint.
+creations in the shared town. A placed creation can be saved as an account
+design, then placed again from **Saved designs** in any published world. Jevica
+can keep 48 account designs. The account library is private and stored outside
+room checkpoints, so it survives travel, reconnects, world resets, and Redis
+edge replacement; placed copies remain visible to everyone in their world.
+Designs saved before the account library remain in their original world
+checkpoint. **Copy to account** makes one of these older designs available in
+every world while retaining the original. Deleting the account copy reveals
+the original again in that world.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
 Jevica can also furnish residential creator homes. Placement must stay within

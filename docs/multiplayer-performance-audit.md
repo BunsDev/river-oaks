@@ -188,6 +188,17 @@ now use a bounded frame step even on a slow visible frame. Avatars paused by
 distance culling explicitly suspend their gesture clocks, so reappearance
 still resumes from the last displayed pose.
 
+## Account design library — 4 October 2026
+
+Jevica's new saved designs live in an account-scoped Redis record rather than
+being copied into every world checkpoint. Library reads occur on builder
+open, design placement, and library mutations; saves, copies, and deletes are
+limited to 12
+per minute per account. This adds no periodic work to the 200 ms room tick.
+The two-owner library is bounded at 48 designs per account. Local Redis tests
+cover concurrent writes from separate world edges and a cross-world placement;
+the hosted soak has not measured these extra on-demand Redis operations.
+
 ## Route-cost follow-up — 4 October 2026
 
 CPU sampling of the first long resident route found repeated pedestrian segment

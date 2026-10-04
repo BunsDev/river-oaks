@@ -25,7 +25,7 @@ export function createSharedBuildControls({getPose,request,isBuildableRoom=()=>f
   for(const item of BUILD_KINDS)kindSelect.add(new Option(item.label,item.id));
   for(const item of BUILD_FINISHES)finishSelect.add(new Option(item.label,item.id));
   const list=$('#build-list'),count=$('#build-count'),designList=$('#design-list'),designCount=$('#design-count');
-  let own=[],selfId=null,signature='',designs=[],inventoryFor=null,inventoryVersion=0,busy=false,active=false,yaw=0,moving=null,target=null,verdict=null,selectedDesign=null;
+  let own=[],selfId=null,signature='',designs=[],inventoryFor=null,inventoryVersion=0,libraryMode=false,busy=false,active=false,yaw=0,moving=null,target=null,verdict=null,selectedDesign=null;
   const grounded=()=>{const pose=getPose();return pose&&(!pose.roomId||isBuildableRoom(pose.roomId))&&!pose.flying&&!pose.riding?pose:null;};
   const front=()=>{
     const pose=grounded();if(!pose)return null;
@@ -41,7 +41,7 @@ export function createSharedBuildControls({getPose,request,isBuildableRoom=()=>f
     let ok=false;
     try{const result=await request(message);ok=Boolean(result.ok);status.textContent=result.ok?'Town updated.':result.message??'Creation could not be saved.';
       if(result.ok&&Array.isArray(result.items)){
-        inventoryVersion++;designs=result.items;
+        inventoryVersion++;designs=result.items;libraryMode=Boolean(result.library);
         if(selectedDesign&&!designs.some(item=>item.id===selectedDesign.id))selectedDesign=null;
         renderDesigns();
       }}
@@ -80,18 +80,24 @@ export function createSharedBuildControls({getPose,request,isBuildableRoom=()=>f
   $('#build-turn-right').addEventListener('click',()=>rotate(1));
   for(const select of [kindSelect,finishSelect])select.addEventListener('change',()=>{selectedDesign=null;changed();});
   function renderDesigns(){
-    designCount.textContent=`${designs.length}/${MAX_SAVED_DESIGNS}`;
+    const accountCount=designs.filter(item=>item.scope==='account').length;
+    designCount.textContent=libraryMode?`${accountCount}/${MAX_SAVED_DESIGNS} account · ${designs.length-accountCount} this world`:`${designs.length}/${MAX_SAVED_DESIGNS}`;
     if(!designs.length){const empty=document.createElement('p');empty.textContent='Save a placed creation to reuse it.';designList.replaceChildren(empty);return;}
     const rows=designs.map(item=>{
       const row=document.createElement('div');row.className='shared-build-row';
       if(selectedDesign?.id===item.id)row.classList.add('moving');
-      const title=document.createElement('strong');title.textContent=`${buildKind(item.kind).label} · ${buildFinish(item.finish).label}`;
+      const title=document.createElement('strong');title.textContent=`${buildKind(item.kind).label} · ${buildFinish(item.finish).label}${libraryMode?item.scope==='account'?' · Every world':' · This world':''}`;
       const actions=document.createElement('div');actions.className='shared-build-actions';
       const use=document.createElement('button');use.type='button';use.textContent='Place a copy';use.disabled=busy;
       use.addEventListener('click',()=>{selectedDesign=item;kindSelect.value=item.kind;finishSelect.value=item.finish;setBuilder(true);status.textContent='Point at open ground to place a copy.';renderDesigns();});
       const remove=document.createElement('button');remove.type='button';remove.textContent='Delete design';remove.disabled=busy;
       remove.addEventListener('click',()=>void send({type:'inventory',action:'remove',id:item.id}));
-      actions.append(use,remove);row.append(title,actions);return row;
+      actions.append(use);
+      if(libraryMode&&item.scope==='world'){
+        const copy=document.createElement('button');copy.type='button';copy.textContent='Copy to account';copy.disabled=busy;
+        copy.addEventListener('click',()=>void send({type:'inventory',action:'copy',id:item.id}));actions.append(copy);
+      }
+      actions.append(remove);row.append(title,actions);return row;
     });
     designList.replaceChildren(...rows);
   }
@@ -114,19 +120,19 @@ export function createSharedBuildControls({getPose,request,isBuildableRoom=()=>f
   const controls={
     panel,
     show(){panel.hidden=false;},
-    hide(){if(active)setBuilder(false);inventoryFor=null;inventoryVersion++;designs=[];selectedDesign=null;renderDesigns();panel.hidden=true;},
+    hide(){if(active)setBuilder(false);inventoryFor=null;inventoryVersion++;designs=[];libraryMode=false;selectedDesign=null;renderDesigns();panel.hidden=true;},
     get builder(){return {active,kind:kindSelect.value,finish:finishSelect.value,yaw,moving};},
     setBuilder,place,rotate,
     // The frame loop reports the aimed spot and the town's verdict on it.
     aimAt(position,result){target=position;verdict=result;hint.textContent=result?.message??'';hint.dataset.valid=String(Boolean(result?.valid));refreshPlace();},
     loadInventory(selfId){
       if(selfId===inventoryFor)return;
-      inventoryFor=selfId;const version=++inventoryVersion;designs=[];selectedDesign=null;renderDesigns();
+      inventoryFor=selfId;const version=++inventoryVersion;designs=[];libraryMode=false;selectedDesign=null;renderDesigns();
       if(!selfId)return;
       request({type:'inventory',action:'list'}).then(result=>{
         if(version!==inventoryVersion||inventoryFor!==selfId)return;
         if(!result.ok){inventoryFor=null;status.textContent=result.message??'Could not load saved designs.';return;}
-        designs=result.items;renderDesigns();
+        designs=result.items;libraryMode=Boolean(result.library);renderDesigns();
       }).catch(error=>{if(version===inventoryVersion){inventoryFor=null;status.textContent=error.message;}});
     },
     sync(items,ownerId){

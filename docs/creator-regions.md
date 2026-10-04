@@ -58,6 +58,9 @@ homes as well as outdoors. New lounge chairs and side tables can be placed in
 either area. The server keeps furniture clear of room walls, built-in fixtures,
 other creations, visitors, and the doorway. Retail interiors remain unavailable
 for building. Home creations survive reconnects and compatible region revisions.
+New saved designs belong to Jevica's account and can be placed in other published
+worlds where the local placement rules allow them. Older designs stored in one
+world can be copied into the account library from Saved designs.
 This entry rule does not hide the home or its residents from world data.
 Region packages do not yet support custom meshes, textures, scripts, multiple
 rooms per home, visitor access lists, or parcel ownership. Live creations and
