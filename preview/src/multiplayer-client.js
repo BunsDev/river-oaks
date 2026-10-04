@@ -3,7 +3,7 @@ import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './w
 import { createSocialUI } from './social-ui.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
+export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -60,7 +60,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
     }
     return data;
   };
-  const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,
+  const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,getMeetingPlaces,
     request:(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const displayPlayers=players=>{

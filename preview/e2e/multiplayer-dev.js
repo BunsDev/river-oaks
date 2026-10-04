@@ -66,6 +66,12 @@ async page => {
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
   await second.locator('.multiplayer-social-row button', {hasText:'Invite to world'}).click();
   await second.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('World invitation sent'));
+  const meetingSelect=second.locator('.multiplayer-social-meeting select');
+  const meetingPlace=await meetingSelect.locator('option[value^="spot:"]').first().getAttribute('value');
+  check(Boolean(meetingPlace),'Current world exposes named meeting places');
+  await meetingSelect.selectOption(meetingPlace);
+  await second.locator('.multiplayer-social-meeting button', {hasText:'Invite to place'}).click();
+  await second.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('Place invitation sent'));
   await second.locator('.multiplayer-social > button', {hasText:'My profile'}).click();
   await second.locator('.multiplayer-profile-form label').filter({hasText:'Tagline'}).locator('input').fill('Stories by moonlight');
   await second.locator('.multiplayer-profile-form label').filter({hasText:'About'}).locator('textarea').fill('I love wandering through shared gardens.');
@@ -84,6 +90,11 @@ async page => {
   await worldInvite.waitFor({state:'attached'});
   const inviteUrl=new URL(await worldInvite.getAttribute('href'));
   check(inviteUrl.searchParams.get('play')==='multiplayer' && !inviteUrl.searchParams.has('world'), 'A contact invitation offers a validated link to the sender\'s world');
+  const placeInvite=page.locator('.multiplayer-social-history a', {hasText:'Meet at'});
+  await placeInvite.waitFor({state:'attached'});
+  const placeUrl=new URL(await placeInvite.getAttribute('href'));
+  check(placeUrl.searchParams.get('play')==='multiplayer' && placeUrl.searchParams.get('place')===meetingPlace,
+    'A named-place invitation offers a link to that place in the sender\'s world');
   check(await page.locator('.multiplayer-chat-history').getByText('A private hello').count()===0,'Private messages stay out of town chat');
   await page.reload();
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);

@@ -1,5 +1,6 @@
 import { createProfileUI } from './profile-ui.js';
 import { worldVisitUrl } from './world-portal.js';
+import { placeLink } from './places.js';
 
 const node = (tag, text, className) => {
   const element = document.createElement(tag);
@@ -8,7 +9,7 @@ const node = (tag, text, className) => {
   return element;
 };
 
-export function createSocialUI({ panel, request, profileRequest, connected, selfId }) {
+export function createSocialUI({ panel, request, profileRequest, connected, selfId, getMeetingPlaces = () => [] }) {
   const section = node('section', null, 'multiplayer-social');
   section.setAttribute('aria-label', 'Contacts and private messages');
   const title = node('h3', 'Contacts'), status = node('p', null, 'multiplayer-social-status');
@@ -83,7 +84,28 @@ export function createSocialUI({ panel, request, profileRequest, connected, self
       catch (error) { status.textContent = error.message; }
       finally { send.disabled = false; input.focus(); }
     });
-    conversation.append(heading, history, form);
+    const meetingPlaces=getMeetingPlaces();
+    if(meetingPlaces.length) {
+      const meeting=node('div',null,'multiplayer-social-meeting');
+      const label=node('label',`Meet ${contact.peer.name} at`);
+      const select=node('select');
+      select.setAttribute('aria-label',`Place to meet ${contact.peer.name}`);
+      for(const place of meetingPlaces) {
+        const option=node('option',place.name);option.value=place.id;select.append(option);
+      }
+      label.append(select);
+      const invite=node('button','Invite to place');invite.type='button';
+      invite.addEventListener('click',async()=>{
+        invite.disabled=true;status.textContent='';
+        try {
+          await call('invite-place',{peerId:contact.peer.id,placeId:select.value});
+          status.textContent=`Place invitation sent to ${contact.peer.name}.`;
+          await refreshMessages();
+        } catch(error) { status.textContent=error.message; }
+        finally { invite.disabled=false; }
+      });
+      meeting.append(label,invite);conversation.append(heading,history,form,meeting);
+    } else conversation.append(heading,history,form);
   }
   async function refreshMessages() {
     if (!selected || !connected()) return;
@@ -98,10 +120,11 @@ export function createSocialUI({ panel, request, profileRequest, connected, self
       history.replaceChildren(...messages.map(message => {
         const line = node('p');
         line.append(node('strong', message.authorId === selfId() ? 'You' : message.authorName), document.createTextNode(`: ${message.text}`));
-        if (message.kind === 'world-invite') {
+        if (message.kind === 'world-invite' || message.kind === 'place-invite') {
           try {
-            const link = node('a', `Visit ${message.worldTitle}`);
-            link.href = worldVisitUrl(message.worldId);
+            const place=message.kind==='place-invite';
+            const link = node('a', place?`Meet at ${message.placeName}`:`Visit ${message.worldTitle}`);
+            link.href = place?placeLink({id:message.placeId},worldVisitUrl(message.worldId)):worldVisitUrl(message.worldId);
             line.append(document.createTextNode(' '), link);
           } catch { /* Ignore an invalid world ID from old or malformed history. */ }
         }
