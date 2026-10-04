@@ -51,6 +51,12 @@ The client checks for new invitations and messages every 10 seconds while its
 browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,
 origin and CSRF checked requests.
+The People panel lets each signed-in resident edit a short profile with a
+tagline, bio, pronouns, and up to eight interests. A profile is readable only
+by someone currently meeting that resident in a world or by an accepted
+contact. Profiles are shared across worlds, versioned across devices, and
+persist in Redis outside room checkpoints. Editing a profile does not grant
+building or wish permissions.
 
 The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
@@ -84,13 +90,14 @@ Designs survive reconnects and town resets through the private checkpoint.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
 
-Jevica can open an existing creator region in the World studio and save a
-private revision draft. The draft is stored in shared Redis with the hash of
-the published region and is available on another device. Saving it never
-changes the live geography or room checkpoint. Only the admin can load, save,
-or discard it; guests cannot access the draft API. A live region revision still
-requires a migration of the room checkpoint, builds, inventory, and connected
-players before it can be safely published.
+Jevica can open an existing creator region in the World studio, save a private
+revision draft, and apply it to the live world. The draft is stored in shared
+Redis with the hash of the published region and is available on another
+device. Applying validates the old checkpoint, carries forward durable player
+state and creations, then atomically publishes the revised catalog and room
+checkpoint. A layout that conflicts with an existing creation is rejected.
+Connected visitors reload the revised map; active NPC wishes reset. Guests
+cannot load, save, discard, or apply drafts.
 
 Shared play uses 98 simulated residents, down from 193 in solo play (49%).
 Every outdoor scenario resident and at least one staff member per shop remains.

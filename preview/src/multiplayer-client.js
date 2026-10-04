@@ -61,7 +61,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
     return data;
   };
   const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,
-    request:(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
+    request:(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),
+    profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const displayPlayers=players=>{
     summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
     for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);}
@@ -70,6 +71,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSna
       if(!row){
         row=element('div',null,'multiplayer-person');const name=element('span',player.name+(player.id===selfId?' (you)':''));row.append(name);rows.set(player.id,row);list.append(row);
         if(player.id!==selfId){
+          const profile=element('button','Profile');profile.type='button';profile.setAttribute('aria-label',`View profile for ${player.name}`);
+          profile.addEventListener('click',()=>social.inspect(player));row.append(profile);
           const invite=element('button','Add contact');invite.type='button';invite.setAttribute('aria-label',`Add ${player.name} as a contact`);
           invite.addEventListener('click',()=>social.invite(player));row.append(invite);
           const report=element('button','Report');report.type='button';report.setAttribute('aria-label',`Report disruption by ${player.name}`);

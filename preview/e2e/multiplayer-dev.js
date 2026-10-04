@@ -52,6 +52,15 @@ async page => {
   await second.locator('.multiplayer-social-row button', {hasText:'Accept'}).click();
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached'});
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
+  await second.locator('.multiplayer-social > button', {hasText:'My profile'}).click();
+  await second.locator('.multiplayer-profile-form label').filter({hasText:'Tagline'}).locator('input').fill('Stories by moonlight');
+  await second.locator('.multiplayer-profile-form label').filter({hasText:'About'}).locator('textarea').fill('I love wandering through shared gardens.');
+  await second.locator('.multiplayer-profile-form label').filter({hasText:'Interests'}).locator('input').fill('Gardens, Stories');
+  await second.locator('.multiplayer-profile-form button', {hasText:'Save profile'}).click();
+  await second.waitForFunction(()=>document.querySelector('.multiplayer-profile-status')?.textContent.includes('saved across worlds'));
+  await page.locator('.multiplayer-person button[aria-label^="View profile for"]').click();
+  await page.locator('.multiplayer-profile-content').getByText('I love wandering through shared gardens.').waitFor({state:'attached'});
+  check(true,'A resident can publish a profile that someone in the same world can inspect');
   await second.locator('.multiplayer-social-form input').fill('A private hello');
   await second.locator('.multiplayer-social-form button').click();
   await page.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached',timeout:20000});
