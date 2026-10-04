@@ -1,6 +1,8 @@
 async page=>{
   await page.goto('about:blank');
   const context=await page.context().browser().newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'no-preference'});
+  // Since #98 every play mode passes the access gate: give this context the approved fixture account (as experience-runner.js does).
+  await context.route('**/auth/session',route=>route.fulfill({json:{authenticated:true,user:{id:'user_01M40Y914S1H4EJCEHH91DKTAY',name:'Jevica'},csrfToken:'solo-fixture'}}));await context.route('**/api/waitlist/status',route=>route.fulfill({json:{status:'approved',admin:false}}));
   const phone=await context.newPage(),checks=[],errors=[];
   let phase='load';
   phone.on('pageerror',error=>errors.push(error.message));

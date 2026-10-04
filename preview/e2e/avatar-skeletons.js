@@ -19,6 +19,8 @@ async page=>{
   await page.goto('about:blank');
   for(const deviceScaleFactor of [1,2]){
    const context=await page.context().browser().newContext({viewport:{width:1440,height:1000},deviceScaleFactor,reducedMotion:'no-preference'}),live=await context.newPage();live.on('pageerror',e=>errors.push(e.message));
+   // Since #98 every play mode passes the access gate: give this context the approved fixture account (as experience-runner.js does).
+   await context.route('**/auth/session',route=>route.fulfill({json:{authenticated:true,user:{id:'user_01M40Y914S1H4EJCEHH91DKTAY',name:'Jevica'},csrfToken:'solo-fixture'}}));await context.route('**/api/waitlist/status',route=>route.fulfill({json:{status:'approved',admin:false}}));
    try{
     await live.goto('http://127.0.0.1:5181/?motion-debug=1');await live.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});
     const result=await live.evaluate(async()=>{

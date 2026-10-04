@@ -37,12 +37,20 @@ async page => {
   await page.locator('#community-close').click();
   check(errors.length === 0, `No browser errors: ${errors.join('; ')}`);
 
+  // The desktop checks are done. Stop that page rendering the district so the phone
+  // loads alone, as a real phone would; two full scenes at once starve the phone's
+  // main thread (its controls were up but Playwright could not poll them).
+  await page.goto('about:blank');
   const touchContext = await page.context().browser().newContext({viewport:{width:320,height:568},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  // Since #98 every play mode passes the access gate: give this context the approved fixture account (as experience-runner.js does).
+  await touchContext.route('**/auth/session',route=>route.fulfill({json:{authenticated:true,user:{id:'user_01M40Y914S1H4EJCEHH91DKTAY',name:'Jevica'},csrfToken:'solo-fixture'}}));await touchContext.route('**/api/waitlist/status',route=>route.fulfill({json:{status:'approved',admin:false}}));
   const touch = await touchContext.newPage();
   await touch.goto('http://127.0.0.1:5173/');
   await touch.locator('#loading').waitFor({state:'hidden'});
-  check(await touch.locator('#walking-movement').isVisible(), 'Touch devices start with movement controls available');
-  const touchTargets = await touch.locator('[data-walk-key]').evaluateAll(nodes => nodes.every(node => { const r = node.getBoundingClientRect(); return r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= innerWidth; }));
+  // The pad appears just after the loading screen hides; wait for it rather than racing it.
+  check(await touch.locator('#walking-movement').waitFor({state:'visible',timeout:10000}).then(()=>true,()=>false), 'Touch devices start with movement controls available');
+  // Only rendered targets count: the hold-to-sprint key appears in beast form only.
+  const touchTargets = await touch.locator('[data-walk-key]').evaluateAll(nodes => { const shown = nodes.filter(node => node.getClientRects().length); return shown.length === 6 && shown.every(node => { const r = node.getBoundingClientRect(); return r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= innerWidth; }); });
   check(touchTargets, 'All six touch movement targets fit the narrow viewport at 44px or larger');
   await touchContext.close();
 
