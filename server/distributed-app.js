@@ -6,6 +6,7 @@ import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
+import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -37,11 +38,11 @@ export function createDistributedServer({ auth, room, security, landmarks, world
     }
     return identity;
   };
-  async function body(req) {
+  async function body(req,max=4096) {
     let size = 0; const chunks = [];
     for await (const chunk of req) {
       size += chunk.length;
-      if (size > 4096) throw new Error('Invalid body');
+      if (size > max) throw new Error('Invalid body');
       chunks.push(chunk);
     }
     return JSON.parse(Buffer.concat(chunks));
@@ -70,6 +71,14 @@ export function createDistributedServer({ auth, room, security, landmarks, world
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
+      if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
+        const ids=url.searchParams.getAll('world');
+        if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
+        const meta=await worldCatalog.get(ids[0]);
+        if(!meta && ids[0]!==room.worldId)return json(res,404,{error:'World not found.'});
+        return json(res,200,meta?.template==='region-v1'
+          ? {template:meta.template,world:await worldCatalog.getRegion(meta.id)}:{template:meta?.template??'river-oaks'});
+      }
       if (path === '/api/worlds' && req.method === 'GET' && worldCatalog) {
         return json(res, 200, { worlds: await worldCatalog.list() });
       }
@@ -77,9 +86,9 @@ export function createDistributedServer({ auth, room, security, landmarks, world
         const identity = await authorized(req, res); if (!identity) return;
         if (!isAdmin(identity.userId)) return json(res, 403, { error: 'Only Jevica can publish a world.' });
         let data;
-        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid world.' }); }
+        try { data = await body(req,MAX_REGION_REQUEST_BYTES); } catch { return json(res, 400, { error: 'Invalid world.' }); }
         const result = await worldCatalog.publish(data, identity.userId);
-        const status = result.ok ? 201 : result.reason === 'invalid_world' ? 400 : 409;
+        const status = result.ok ? 201 : ['invalid_world','invalid_region'].includes(result.reason) ? 400 : 409;
         return json(res, status, result.ok ? { world: result.world } : { error: result.reason });
       }
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {

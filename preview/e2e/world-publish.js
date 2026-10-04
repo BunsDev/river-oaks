@@ -10,6 +10,8 @@ async page=>{
   await page.locator('.world-portal-form input[name=title]').fill('Moon Garden');
   await page.locator('.world-portal-form input[name=id]').fill('moon-garden');
   await page.locator('.world-portal-form textarea[name=description]').fill('A quiet place to meet.');
+  const region=await (await page.request.get(`${origin}/data/sample-region.json`)).json();
+  await page.locator('.world-portal-form input[name=region]').setInputFiles({name:'moon-garden.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(region))});
   await page.locator('.world-portal-form button').click();
   await page.locator('.world-portal-list a').filter({hasText:'Moon Garden'}).waitFor({state:'visible',timeout:15000}).catch(async()=>{
     throw new Error(`Publish result: ${await page.locator('.world-portal-status').textContent()}; links: ${await page.locator('.world-portal-list a').allTextContents()}`);
@@ -22,6 +24,9 @@ async page=>{
   await page.goto(visitUrl.href,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer?.().snapshot?.worldId==='moon-garden');
   await page.waitForFunction(()=>document.querySelector('#view-name')?.textContent==='Moon Garden');
+  await page.waitForFunction(()=>document.querySelector('#terrain-state')?.textContent==='Creator-authored terrain');
+  await page.waitForFunction(()=>document.querySelector('.walking-title span')?.textContent==='Moon Garden');
+  check((await page.locator('#stores-count').textContent())==='0','The published world renders its own layout without River Oaks stores');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===true,'Jevica can build in her new world');
   check(new URL(page.url()).searchParams.get('world')==='moon-garden','The published world has a shareable URL');
   const otherContext=await page.context().browser().newContext();
@@ -38,7 +43,9 @@ async page=>{
     await guest.waitForFunction(()=>document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000}).catch(async()=>{
       throw new Error(`Guest world directory: ${await guest.locator('.world-portal-status').textContent()}`);
     });
+    await guest.waitForFunction(()=>document.querySelector('.world-portal-status')?.textContent==='2 worlds to visit',null,{timeout:60000});
     check(directoryRequests>=2,'The directory recovers after a temporary failure');
+    await guest.waitForFunction(()=>document.querySelector('#terrain-state')?.textContent==='Creator-authored terrain');
     check(await guest.locator('.world-portal-form').evaluate(node=>node.hidden),'A guest has no publishing form');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);

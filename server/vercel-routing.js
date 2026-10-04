@@ -1,7 +1,7 @@
 import { isIP } from 'node:net';
 
 const paths = new Set(['/auth/login', '/auth/callback', '/auth/session', '/auth/logout',
-  '/api/multiplayer/ticket', '/api/worlds', '/api/moderation/ban',
+  '/api/multiplayer/ticket', '/api/worlds', '/api/world-data', '/api/moderation/ban',
   '/api/landmarks/list', '/api/landmarks/add', '/api/landmarks/remove', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {

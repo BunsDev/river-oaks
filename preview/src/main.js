@@ -63,6 +63,7 @@ import { createBirdCams } from './bird-cams.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
+import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 
 setupUIMotion();
 setupThemeControls();
@@ -409,6 +410,18 @@ function populateWorld(data) {
     });
   }
   world = data;
+  const creatorRegion=data.provenance?.kind==='creator';
+  if(creatorRegion) {
+    document.title=`${data.title} — Shared worlds`;
+    $('.identity .eyebrow').textContent='Creator-authored region';
+    $('.identity h1').textContent=data.title;
+    $('.district-address').textContent='A place made by Jevica';
+    $('.viewport-kicker').textContent='A shared creator world';
+    $('#view-name').textContent=data.title;
+    $('.view-meta').textContent='Creator-authored · shared with visitors';
+    $('#viewport').setAttribute('aria-label',`Explore ${data.title}`);
+    host.setAttribute('aria-label',`Walk ${data.title}. WASD moves, drag looks around, E talks to a nearby person.`);
+  }
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
   buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
@@ -445,15 +458,15 @@ function populateWorld(data) {
   });
   updateAtmosphere();
   document.body.classList.add('district');
-  $('#district-source').hidden = false;
+  $('#district-source').hidden = creatorRegion;
   $('#district-directory').hidden = false;
-  $('#building-layer-label').textContent = 'Boutiques & architecture';
+  $('#building-layer-label').textContent = creatorRegion?'Buildings & architecture':'Boutiques & architecture';
   districtUI.setStores(data.stores, 'Dior');
-  $('#view-scale').textContent = 'Street level · meet the locals';
+  $('#view-scale').textContent = creatorRegion?'Explore a creator-built region':'Street level · meet the locals';
   $('#connection').textContent = 'World ready to explore';
   $('#stores-count').textContent = data.stores.length;
-  $('#terrain-state').textContent = 'Mapped district terrain';
-  $('#canopy-state').textContent = data.vegetation ? '2018 LiDAR canopy' : 'District trees';
+  $('#terrain-state').textContent = creatorRegion?'Creator-authored terrain':'Mapped district terrain';
+  $('#canopy-state').textContent = data.vegetation ? '2018 LiDAR canopy' : creatorRegion ? 'Creator-authored trees' : 'District trees';
   $('#canopy-source').hidden = !data.vegetation;
   if (data.vegetation) $('#canopy-source').textContent = 'Tree placement follows 2018 LiDAR. Foliage is interpreted; the independent historical canopy comparison does not pass.';
   const limitations = $('#limitations');
@@ -567,9 +580,16 @@ async function loadWorld() {
   $('#loading h2').textContent = 'Building the view';
   $('#loading p').textContent = 'Opening the boutiques and gardens…';
   try {
-    const [data, vegetation] = await Promise.all([jsonResponse('/data/district.json'), jsonResponse('/data/district-vegetation.json')]);
+    const worldId=worldIdFromSearch(location.search);
+    const manifest=worldId===DEFAULT_WORLD_ID?{template:'river-oaks'}
+      :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
+    let data;
+    if(manifest.template==='region-v1')data=manifest.world;
+    else if(manifest.template==='river-oaks') {
+      const [district,vegetation]=await Promise.all([jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json')]);
+      data=district;data.vegetation=validateVegetation(data,vegetation);
+    } else throw new Error('This region format is not supported by this client');
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
-    data.vegetation = validateVegetation(data, vegetation);
     // The initial resident and boutique cast depends on whether auto mode
     // joins. Resolve that decision before constructing either set of models.
     if (autoTownDecision) await autoTownDecision;
@@ -579,8 +599,10 @@ async function loadWorld() {
     // every download shares the bandwidth, so the wait is capped.
     $('#loading p').textContent = 'Laying the stone and lighting the sky…';
     await assetProgress?.settled(url => /\/assets\/materials\//.test(url), { timeout: 4000 });
-    $('#verification-state').textContent = 'A real district, reimagined';
-    $('#verification-detail').textContent = `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
+    $('#verification-state').textContent = data.provenance?.kind==='creator'?'A creator-authored region':'A real district, reimagined';
+    $('#verification-detail').textContent = data.provenance?.kind==='creator'
+      ? 'Terrain, paths, buildings, and places were supplied by the world creator. Residents and encounters are fictional.'
+      : `${data.stores.length} real store names on mapped streets, with imagined architecture and fictional encounters. This is an artistic interpretation.`;
     $('#verification-dot').className = 'status-dot pass';
     $('#loading').hidden = true;
     enterWalk(data.walkSpawn, data.walkLookAt);

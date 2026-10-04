@@ -13,7 +13,7 @@ export function worldVisitUrl(id,base=location.href) {
 export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const section=element('section',null,'world-portal');section.setAttribute('aria-label','Worlds');
   const heading=element('h3','Worlds');
-  const intro=element('p','Visit a shared space. New worlds begin with the River Oaks district layout and keep their own residents, creations, and chat.','quiet-note');
+  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat. Jevica can start with River Oaks or publish her own terrain and layout.','quiet-note');
   const status=element('p','Loading worlds…','world-portal-status');status.setAttribute('role','status');
   const list=element('ul',null,'world-portal-list');
   const form=element('form',null,'world-portal-form');form.hidden=true;
@@ -21,8 +21,10 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const titleLabel=element('label','World name');const title=element('input');title.name='title';title.maxLength=64;title.required=true;titleLabel.append(title);
   const idLabel=element('label','World ID');const id=element('input');id.name='id';id.maxLength=48;id.pattern='[a-z0-9]+(-[a-z0-9]+)*';id.placeholder='moon-garden';id.required=true;idLabel.append(id);
   const descriptionLabel=element('label','Description');const description=element('textarea');description.name='description';description.maxLength=280;description.rows=2;descriptionLabel.append(description);
+  const regionLabel=element('label','Region package (optional)');const region=element('input');region.name='region';region.type='file';region.accept='.json,application/json';regionLabel.append(region);
+  const example=element('a','Download a sample region package','world-portal-example');example.href='/data/sample-region.json';example.download='sample-region.json';
   const publish=element('button','Publish world');publish.type='submit';
-  form.append(createTitle,titleLabel,idLabel,descriptionLabel,publish);
+  form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,publish);
   section.append(heading,intro,status,list,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0;
   const currentId=()=>{try{return validateWorldId(new URLSearchParams(location.search).get('world')??DEFAULT_WORLD_ID);}catch{return DEFAULT_WORLD_ID;}};
@@ -35,7 +37,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     }
     const current=worlds.find(world=>world.id===currentId());
     if(current) {
-      document.title=`${current.title} — River Oaks`;
+      document.title=`${current.title} — ${current.template==='region-v1'?'Shared worlds':'River Oaks'}`;
       const view=document.querySelector('#view-name');if(view)view.textContent=current.title;
     }
     form.hidden=!getCanPublish();
@@ -62,9 +64,16 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     try {
       const session=await (await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'})).json();
       if(!session.authenticated || session.canGrantWishes!==true)throw new Error('Only Jevica can publish a world.');
-      const response=await fetch('/api/worlds',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify({id:id.value.trim(),title:title.value.trim(),description:description.value.trim()})});
+      const proposal={id:id.value.trim(),title:title.value.trim(),description:description.value.trim()};
+      const file=region.files?.[0];
+      if(file) {
+        if(file.size>128*1024)throw new Error('Region package must be at most 128 KB.');
+        try {proposal.region=JSON.parse(await file.text());}
+        catch {throw new Error('Region package must be valid JSON.');}
+      }
+      const response=await fetch('/api/worlds',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify(proposal)});
       const result=await response.json();
-      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error??'World could not be published.');
+      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.':result.error??'World could not be published.');
       worlds=[...worlds,result.world];render();status.textContent=`${result.world.title} is published. Open it from the list.`;form.reset();
     } catch(error) {status.textContent=error.message||'World could not be published.';}
     finally {publish.disabled=false;}

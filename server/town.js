@@ -52,7 +52,9 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     const load=(async()=>{
       const meta=await catalog.get(id);
       if(!meta && id!==worldId)return null;
-      const world=createSharedWorld(id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title},mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
+      const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
+        :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
+      const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
       const game=createGameServer({auth:sharedAuth,world,landmarks:createMemoryLandmarks(),moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},

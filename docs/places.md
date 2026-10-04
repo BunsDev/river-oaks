@@ -49,4 +49,5 @@ own facing for a bare position.
 
 ## Next
 
-Regions (more than one district, loaded at runtime) and parcels with owners.
+Creator regions can now be published as separate worlds with their own named
+places. Parcels with owners remain future work.

@@ -59,6 +59,10 @@
       "destination": "/api/server?_river_path=/api/worlds"
     },
     {
+      "source": "/api/world-data",
+      "destination": "/api/server?_river_path=/api/world-data"
+    },
+    {
       "source": "/api/moderation/ban",
       "destination": "/api/server?_river_path=/api/moderation/ban"
     },

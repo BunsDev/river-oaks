@@ -21,8 +21,10 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,orig
     const load=(async()=>{
       const meta=await catalog.get(id);
       if(!meta && id!==configuredWorldId)return null;
+      const data=meta?.template==='region-v1'?await catalog.getRegion(id)
+        :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
-        worldData:id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title},
+        worldData:data,
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
       const game=createDistributedServer({auth:sharedAuth,room,security,landmarks,origin,moderators,trustedProxyIPs,
