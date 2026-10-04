@@ -1,7 +1,16 @@
 # Creator region packages
 
-Jevica can publish a region from **Explore → Publish a world** by uploading a
-JSON file. The published world gets a permanent `?world=<id>` link, its own
+Jevica can publish a region from **Explore → Publish a world**. Choose
+**Design a region** to create one on a map, or upload a JSON file. The studio
+edits terrain height samples, roads, buildings, trees, arrival, and named
+places. Click a tool and the map to add an item; choose **Select** and click
+an item to edit its fields or remove it. A road takes two clicks to start and
+more clicks to extend. **Use this region** attaches the draft to the publish
+form. The draft remains on this browser device, and **Download JSON** exports
+it for backup or further editing. Choosing a JSON file and then opening the
+studio imports it into the map editor.
+
+The published world gets a permanent `?world=<id>` link, its own
 shared room, and its own terrain, roads, buildings, trees, and named places.
 Guests can visit; only Jevica can publish, build, or grant wishes. Start from
 the [sample package](../preview/public/data/sample-region.json).
