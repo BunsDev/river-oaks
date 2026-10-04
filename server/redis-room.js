@@ -75,7 +75,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -139,6 +139,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);
     let revisionUpdate=null;
+    const syncAccount=async userId=>{
+      if(!avatarPreferences)return;
+      const preference=await avatarPreferences.get(userId)
+        ?? await avatarPreferences.initialize(userId,world.accountAppearance(userId));
+      world.applyAccountAppearance(userId,preference);
+    };
     async function apply(operation) {
       if(!validOperation(operation))return rejected('invalid_operation');
       if(operation.type==='revise') {
@@ -162,6 +168,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(world.players.has(operation.identity.userId)) {
           result={ok:true,player:world.snapshot().players.find(player=>player.id===operation.identity.userId)};
         } else result=world.join(operation.identity);
+        if(result.ok && avatarPreferences) {
+          const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
+          result.player=world.applyAccountAppearance(operation.identity.userId,preference);
+        }
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
         return result;
       }
@@ -175,8 +185,16 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       if(connection.identity.expiresAt<=time)return rejected('session_expired');
       if(operation.type==='leave'){connection.leftAt=time;return {ok:true};}
       connection.lastSeen=time;
-      if(operation.type==='heartbeat')return {ok:true};
-      return world.command(operation.userId,operation.message);
+      if(operation.type==='heartbeat') {
+        await syncAccount(operation.userId);
+        return {ok:true};
+      }
+      if(avatarPreferences && ['appearance','movement'].includes(operation.message.type))
+        await syncAccount(operation.userId);
+      const result=world.command(operation.userId,operation.message);
+      if(result.ok && avatarPreferences && ['appearance','movement'].includes(operation.message.type))
+        await avatarPreferences.save(operation.userId,world.accountAppearance(operation.userId));
+      return result;
     }
     const replies=[];
     for(const raw of batch) {

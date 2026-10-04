@@ -7,6 +7,7 @@ import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
 import { createRedisProfiles } from './profiles.js';
+import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
@@ -14,6 +15,13 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix});
+  const storedAppearance=createRedisAvatarPreferences({redis,prefix});
+  const avatarPreferences={...storedAppearance,async initialize(userId,local) {
+    const existing=await storedAppearance.get(userId);
+    if(existing)return existing;
+    const legacy=await legacyDefaultAppearance(redis,`${roomPrefixFor(namespace,DEFAULT_WORLD_ID)}:state`,userId);
+    return storedAppearance.initialize(userId,legacy??local);
+  }};
   const worlds=new Map(),pending=new Map();
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   const worldDirectory=async()=>{
@@ -37,6 +45,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
+        avatarPreferences,
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});

@@ -36,6 +36,14 @@ IDs, so every ID that existed before forms keeps its meaning: `woman-casual` is
 still Sable's fox and `man-tailored` is still the human Aurel. New looks have new
 IDs, such as `sable-human` and `kai-noir-beast`.
 
+In shared play, appearance and beast-movement preference follow the signed-in
+account between worlds and server instances. The account record is authoritative
+when a resident joins or reconnects; an active world also refreshes it on
+heartbeat. The first visit after this account store was introduced seeds it
+from the previous River Oaks checkpoint when that account has a saved look.
+World checkpoints keep their own copies for room recovery, while solo choices
+remain on the device.
+
 The wolf-eared Aurel (`midnight-host-hybrid`) was removed on October 2, 2026. A
 device, account or checkpoint that saved him loads his wolf form instead, and the
 town stores the replacement ID.
