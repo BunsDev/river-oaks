@@ -18,7 +18,7 @@ import { profileAction } from './profile-api.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, avatarPreferences = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -203,9 +203,17 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if(!ticket || ticket.until<=now() || ticket.identity.sessionId!==identity.sessionId || ticket.identity.userId!==identity.userId)return reject(401);
       tickets.delete(key);
       wss.handleUpgrade(req,socket,head,ws=>{
+        let joinedHere=false;
+        void (async()=>{
         if(stopped){ws.close(1012,'Town restarting');return;}
+        if(avatarPreferences) {
+          const preference=await avatarPreferences.initialize(identity.userId,world.accountAppearance(identity.userId));
+          world.applyAccountAppearance(identity.userId,preference);
+        }
+        if(ws.readyState!==WebSocket.OPEN)return;
         if(!connections.has(identity.userId) && !departures.has(identity.userId)) {
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
+          joinedHere=true;
         }
         clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);
         const old=connections.get(identity.userId);
@@ -232,6 +240,8 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             const {requestId,...command}=message;
             if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
+            if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
+              await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
@@ -243,6 +253,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
+        })().catch(()=>{if(joinedHere)world.leave(identity.userId);ws.close(1013,'Town temporarily unavailable.');});
       });
     }catch{return reject(401);}
   });
@@ -266,6 +277,14 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     }
     for(const [key,ticket]of tickets)if(ticket.until<=now())tickets.delete(key);
   },30000);heartbeat.unref();
+  const avatarSync=avatarPreferences?setInterval(()=>{
+    for(const [userId,connection] of connections) {
+      void avatarPreferences.get(userId).then(preference=>{
+        if(preference && connections.get(userId)===connection)world.applyAccountAppearance(userId,preference);
+      }).catch(()=>connection.ws.close(1013,'Account appearance temporarily unavailable.'));
+    }
+  },5000):null;
+  avatarSync?.unref();
   return {server,disconnectUser,get playerCount(){return connections.size;},replaceWorld(next,hash){
     if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
     for(const timer of departures.values())clearTimeout(timer);
@@ -273,7 +292,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
     connections.clear();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(loop);clearInterval(heartbeat);
+    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
     for(const timer of departures.values())clearTimeout(timer);
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();

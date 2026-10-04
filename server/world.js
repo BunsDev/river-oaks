@@ -75,6 +75,27 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(oldest){appearanceByUser.delete(oldest);movementByUser.delete(oldest);}
     }
   };
+  // Trusted gateway hooks. A room checkpoint keeps its own copy, while the
+  // account preference selects the same look on arrival in another world.
+  function accountAppearance(userId) {
+    return {appearance:players.get(userId)?.appearance??appearanceByUser.get(userId)??permittedAppearance(userId),
+      movement:movementByUser.get(userId)??'upright'};
+  }
+  function applyAccountAppearance(userId,preference) {
+    if(!textId(userId) || !preference || typeof preference!=='object' || Array.isArray(preference)
+      || !MOVEMENTS.includes(preference.movement))throw new Error('Invalid account appearance');
+    const chosen=sharedAppearance(preference.appearance);
+    if(!chosen || !canUseAppearance(userId,chosen.id))throw new Error('Invalid account appearance');
+    const current=accountAppearance(userId);
+    const player=players.get(userId);
+    if(current.appearance!==chosen.id || current.movement!==preference.movement) {
+      rememberAppearance(userId,chosen.id);
+      if(preference.movement==='beast')movementByUser.set(userId,'beast');else movementByUser.delete(userId);
+      if(player)player.appearance=chosen.id;
+      revision++;
+    }
+    return player?publicPlayer(player):null;
+  }
   const clearExpiredLedgers = time => {
     for (const [id,ledger] of ledgers) if (!players.has(id) && time-ledger.seen >= LEDGER_TTL_MS) ledgers.delete(id);
   };
@@ -596,7 +617,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (const local of state.locals) localById.set(local.id,local);
     focus.clear();chat.length=0;builds.clear();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
-  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,players,state};
+  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

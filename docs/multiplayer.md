@@ -37,11 +37,12 @@ loopback `http` origin, outside `NODE_ENV=production`, and never on Vercel.
 The Vercel function and Redis backend always require WorkOS and fail closed
 without it.
 
-While the town runs, the character panel offers 11 selectable looks built on seven shipped rigs, including fox, wolf, lynx, human, and hybrid styles.
-The selection belongs to the signed-in account, is visible to other players, and
-survives reconnects, logout, and server replacement through the town checkpoint.
-The town retains up to 4,096 account selections; older inactive selections are
-evicted as it fills. The solo-only invasion and auto visit are hidden, since
+While the town runs, the character panel offers the playable characters, styles,
+and human or beast forms. Appearance and beast movement belong to the signed-in
+account and follow it between worlds and server instances. Redis retains up to
+10,000 account preferences; each town checkpoint also keeps its room copy for
+recovery. A new account preference first takes the saved River Oaks appearance
+when one exists. The solo-only invasion and auto visit are hidden, since
 each would diverge from the shared town.
 The People panel also has contacts and private messages. An invitation can be
 sent only to a player currently present in the same world; that player must

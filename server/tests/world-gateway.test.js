@@ -70,6 +70,26 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(first.snapshot.locals.length>8,true);
   assert.equal(first.snapshot.players.length,1);
   assert.equal(second.snapshot.players.length,1);
+  const command=(socket,requestId,body)=>new Promise((resolve,reject)=>{
+    const receive=raw=>{const value=JSON.parse(raw);if(value.type==='result'&&value.requestId===requestId){socket.off('message',receive);resolve(value);}};
+    socket.on('message',receive);socket.once('error',reject);socket.send(JSON.stringify({requestId,...body}));
+  });
+  assert.equal((await command(second.socket,'look',{type:'appearance',appearance:'woman-casual'})).ok,true);
+  assert.equal((await command(second.socket,'gait',{type:'movement',movement:'beast'})).ok,true);
+  const riverRoom=(await gateway.worldFor('river-oaks')).room;
+  const riverConnection=(await riverRoom.read()).connections.find(connection=>connection.userId===admin);
+  assert.equal((await riverRoom.request({type:'heartbeat',userId:admin,connectionId:riverConnection.connectionId})).ok,true);
+  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).appearance,'woman-casual');
+  assert.equal((await riverRoom.read()).snapshot.players.find(player=>player.id===admin).movement,'beast');
+  const sameAccountOtherWorld=await open('river-oaks');
+  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).appearance,'woman-casual');
+  assert.equal(sameAccountOtherWorld.snapshot.players.find(player=>player.id===admin).movement,'beast');
+  assert.equal((await command(sameAccountOtherWorld.socket,'human',{type:'appearance',appearance:'sable-human'})).ok,true);
+  const moonRoom=(await gateway.worldFor('moon-garden')).room;
+  const moonConnection=(await moonRoom.read()).connections.find(connection=>connection.userId===admin);
+  assert.equal((await moonRoom.request({type:'heartbeat',userId:admin,connectionId:moonConnection.connectionId})).ok,true);
+  assert.equal((await moonRoom.read()).snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
+  assert.equal((await moonRoom.read()).snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.visitors),[1,1]);
   assert.equal((await gateway.worldFor('moon-garden')).room.worldId,'moon-garden');
   assert.equal((await gateway.worldFor('missing-world')),null);
@@ -81,6 +101,8 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   const adminAgain=await open('moon-garden');
   assert.equal(adminAgain.snapshot.worldId,'moon-garden');
+  assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
+  assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
   assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Hidden revision');
   assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.provenance.kind,'creator');

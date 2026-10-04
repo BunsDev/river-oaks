@@ -46,7 +46,20 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal(snapshot.worldId,'moon-garden');
   assert.equal(snapshot.locals.length,8);
   assert.equal(snapshot.players[0].canBuild,true);
-  assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.visitors),[0,1]);
+  const command=(ws,requestId,body)=>new Promise((resolve,reject)=>{
+    const receive=raw=>{const value=JSON.parse(raw);if(value.type==='result'&&value.requestId===requestId){ws.off('message',receive);resolve(value);}};
+    ws.on('message',receive);ws.once('error',reject);ws.send(JSON.stringify({requestId,...body}));
+  });
+  assert.equal((await command(socket,'look',{type:'appearance',appearance:'woman-casual'})).ok,true);
+  assert.equal((await command(socket,'gait',{type:'movement',movement:'beast'})).ok,true);
+  const riverAccess=await fetch(origin+'/api/multiplayer/ticket?world=river-oaks',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
+  const riverTicket=(await riverAccess.json()).ticket;
+  const riverSocket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=river-oaks&protocol=1&ticket=${riverTicket}`,{headers:{Origin:origin,Cookie:cookie}});
+  t.after(()=>riverSocket.terminate());
+  const riverSnapshot=await new Promise((resolve,reject)=>{riverSocket.once('error',reject);riverSocket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});});
+  assert.equal(riverSnapshot.players.find(player=>player.id===owner.user.id).appearance,'woman-casual');
+  assert.equal(riverSnapshot.players.find(player=>player.id===owner.user.id).movement,'beast');
+  assert.deepEqual((await (await fetch(origin+'/api/worlds')).json()).worlds.map(world=>world.visitors),[1,1]);
   const guest=await fetch(origin+'/auth/session');
   const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
