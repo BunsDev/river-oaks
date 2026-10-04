@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
-import { createSharedWorld } from './world.js';
+import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
+import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
@@ -28,10 +29,25 @@ const RELEASE=`
 // same lease token. No result is visible until its world state is committed.
 const COMMIT=`-- COMMIT_ROOM
   if redis.call('GET',KEYS[1]) ~= ARGV[1] then return 0 end
+  local replies=tonumber(ARGV[7])
+  if ARGV[8] ~= '' then
+    local offset=4+replies
+    local oldMeta=redis.call('HGET',KEYS[offset+1],ARGV[8])
+    local oldRegion=redis.call('HGET',KEYS[offset+2],ARGV[8])
+    local draft=redis.call('HGET',KEYS[offset+3],ARGV[8])
+    if not oldMeta or not oldRegion or not draft then return 0 end
+    local meta=cjson.decode(oldMeta)
+    if meta.regionSha256 ~= ARGV[9] or cjson.decode(draft).version ~= tonumber(ARGV[10]) then return 0 end
+    redis.call('LPUSH',KEYS[offset+4],cjson.encode({world=meta,region=oldRegion}))
+    redis.call('LTRIM',KEYS[offset+4],0,7)
+    redis.call('HSET',KEYS[offset+1],ARGV[8],ARGV[11])
+    redis.call('HSET',KEYS[offset+2],ARGV[8],ARGV[12])
+    redis.call('HDEL',KEYS[offset+3],ARGV[8])
+  end
   redis.call('SET',KEYS[2],ARGV[2])
   redis.call('SET',KEYS[3],ARGV[3])
   if tonumber(ARGV[4]) > 0 then redis.call('LTRIM',KEYS[4],ARGV[4],-1) end
-  for i=5,#KEYS do redis.call('SET',KEYS[i],ARGV[i+2],'PX',ARGV[6]) end
+  for i=1,replies do redis.call('SET',KEYS[4+i],ARGV[12+i],'PX',ARGV[6]) end
   redis.call('PEXPIRE',KEYS[1],ARGV[5])
   return 1
 `;
@@ -51,12 +67,14 @@ function validOperation(operation) {
   if(!record(operation))return false;
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
+  if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
+    && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
     && (operation.type!=='command' || record(operation.message));
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -78,13 +96,23 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     // A fresh lease always reloads durable state, even for this process's token.
     // A tentative mutation is reusable only after its fenced commit succeeds.
     if(ownership===2)cached=null;
-    const world=cached?.world??createSharedWorld(worldData,{now,isAdmin,worldId});
     const time=now();
     let previous=cached?.previous??null,connections=cached?.connections??new Map();
     if(!cached && stored) {
       previous=unpack(stored);
+    }
+    let currentData=cached?.currentData??worldData;
+    let currentHash=cached?.currentHash??previous?.regionSha256??regionSha256;
+    if(!cached && previous?.regionSha256 && previous.regionSha256!==regionSha256) {
+      if(!regionCatalog || (await regionCatalog.get(worldId))?.regionSha256!==previous.regionSha256)
+        throw new Error('Invalid durable town region');
+      currentData=await regionCatalog.getRegion(worldId);
+    }
+    let world=cached?.world??createSharedWorld(currentData,{now,isAdmin,worldId});
+    if(!cached && previous) {
       if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || previous.version===2 && previous.worldId===worldId)
         || !Number.isSafeInteger(previous.revision) || previous.revision<0
+        || (previous.regionSha256!==undefined && (worldId===DEFAULT_WORLD_ID || !/^[a-f0-9]{64}$/.test(previous.regionSha256)))
         || !Number.isFinite(previous.lastTick) || !Array.isArray(previous.connections) || !world.restore(previous.checkpoint).ok) throw new Error('Invalid durable town checkpoint');
       for(const connection of previous.connections) {
         if(!record(connection) || !validIdentity(connection.identity) || !id(connection.connectionId) || !Number.isFinite(connection.lastSeen)
@@ -109,8 +137,24 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);
+    let revisionUpdate=null;
     async function apply(operation) {
       if(!validOperation(operation))return rejected('invalid_operation');
+      if(operation.type==='revise') {
+        if(!regionCatalog || !isAdmin(operation.actorId) || revisionUpdate)return rejected('admin_only');
+        const candidate=await regionCatalog.revisionCandidate(worldId,operation.expectedDraftVersion);
+        if(!candidate.ok)return rejected(candidate.reason);
+        let checkpoint;
+        try {checkpoint=world.checkpoint();} catch {return rejected('world_busy');}
+        const migrated=migrateWorldCheckpoint({fromData:currentData,toData:candidate.worldData,checkpoint,worldId,now,isAdmin});
+        if(!migrated.ok)return rejected(migrated.error);
+        const next=createSharedWorld(candidate.worldData,{now,isAdmin,worldId});
+        if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
+        world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
+        connections.clear();revisionUpdate=candidate;
+        return {ok:true,world:candidate.world,disconnectedPlayers:migrated.disconnectedPlayers,
+          clearedWishes:migrated.clearedWishes};
+      }
       if(operation.type==='join') {
         if(operation.identity.expiresAt<=time || !await allowed(operation.identity))return rejected('session_invalid');
         let result;
@@ -141,12 +185,19 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     if(closed){cached=null;return null;}
     const revision=(previous?.revision??0)+1;
-    const view={worldId,snapshot:world.snapshot(),connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
-    const checkpoint={version:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint()};
-    const committed=await redis.eval(COMMIT,4+replies.length,keys.lease,keys.state,keys.view,keys.queue,...replies.map(reply=>reply.key),
-      token,pack(checkpoint),pack(view),batch.length,LEASE_MS,REPLY_MS,...replies.map(reply=>JSON.stringify(reply.result)));
+    const snapshot=world.snapshot();if(currentHash)snapshot.regionSha256=currentHash;
+    const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
+    const checkpoint={version:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
+      ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{})};
+    const revisionKeys=revisionUpdate?['catalog','region','draft','history'].map(key=>revisionUpdate.keys[key]):[];
+    const committed=await redis.eval(COMMIT,4+replies.length+revisionKeys.length,keys.lease,keys.state,keys.view,keys.queue,
+      ...replies.map(reply=>reply.key),...revisionKeys,
+      token,pack(checkpoint),pack(view),batch.length,LEASE_MS,REPLY_MS,replies.length,
+      revisionUpdate?.world.id??'',revisionUpdate?.expectedRegionSha256??'',revisionUpdate?.expectedDraftVersion??0,
+      revisionUpdate?JSON.stringify(revisionUpdate.world):'',revisionUpdate?.encoded??'',
+      ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    cached={world,connections,previous:checkpoint};lastView=view;
+    cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
     return view;
   }
   function tick() {

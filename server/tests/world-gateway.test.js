@@ -5,8 +5,10 @@ import { readFile } from 'node:fs/promises';
 import Redis from 'ioredis';
 import { WebSocket } from 'ws';
 import { createWorldGateway } from '../world-gateway.js';
+import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+import { roomPrefixFor } from '../world-keys.js';
 
 test('Jevica publishes a second world that survives gateway replacement', {skip:!process.env.REDIS_URL,timeout:60_000},async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
@@ -74,7 +76,8 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   base=`http://127.0.0.1:${gateway.server.address().port}`;
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
-  assert.equal((await open('moon-garden')).snapshot.worldId,'moon-garden');
+  const adminAgain=await open('moon-garden');
+  assert.equal(adminAgain.snapshot.worldId,'moon-garden');
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
   assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Hidden revision');
   assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.provenance.kind,'creator');
@@ -90,4 +93,26 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal((await post('admin','/api/moderation/ban',{userId:'guest-user',banned:true})).status,200);
   await closed;
   assert.equal((await post('guest','/api/multiplayer/ticket?world=moon-garden',{})).status,403);
+  const oldHash=(await (await fetch(base+'/api/world-data?world=moon-garden')).json()).regionSha256;
+  const revisionClosed=new Promise(resolve=>adminAgain.socket.once('close',resolve));
+  assert.equal((await post('guest','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,403);
+  const applied=await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1});
+  assert.equal(applied.status,200);
+  assert.equal((await applied.json()).world.revision,2);
+  assert.equal(await revisionClosed,4000);
+  const live=await (await fetch(base+'/api/world-data?world=moon-garden')).json();
+  assert.notEqual(live.regionSha256,oldHash);
+  assert.equal(live.world.communityLocations[0].name,'Hidden revision');
+  assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
+  assert.equal((await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
+  await gateway.close();
+  const staleRoom=createRedisRoom({redis,prefix:roomPrefixFor(namespace,'moon-garden'),worldId:'moon-garden',
+    worldData:publishedData.world,regionSha256:oldHash,regionCatalog:gateway.catalog,
+    authorize:async()=>true,isAdmin:id=>id===admin});
+  assert.equal((await staleRoom.tick()).snapshot.regionSha256,live.regionSha256);
+  await staleRoom.close();
+  gateway=createGateway();
+  await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  base=`http://127.0.0.1:${gateway.server.address().port}`;
+  assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
 });

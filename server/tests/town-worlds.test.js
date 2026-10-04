@@ -49,6 +49,14 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
   const denied=await fetch(origin+'/api/worlds',{method:'POST',headers:{Origin:origin,Cookie:guestCookie,'X-CSRF-Token':guestSession.csrfToken,'Content-Type':'application/json'},body:JSON.stringify({id:'guest-world',title:'Guest World'})});
   assert.equal(denied.status,403);
+  assert.equal((await draftRequest(guestSession,guestCookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,403);
+  const oldConnectionClosed=new Promise(resolve=>socket.once('close',resolve));
+  const applied=await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1});
+  assert.equal(applied.status,200);
+  assert.equal((await applied.json()).world.revision,2);
+  assert.equal(await oldConnectionClosed,4000);
+  assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Private revision');
+  assert.equal((await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
 });
 
 test('a configured alternate world exposes the bundled geography without a catalog entry',async t=>{

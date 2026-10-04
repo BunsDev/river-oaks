@@ -79,6 +79,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
 let worldPortal = null;
+let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
@@ -296,6 +297,7 @@ function startMultiplayer() {
   buildControls?.hide();
   multiplayer = createMultiplayer({
     getPose: () => walking?.getPose(),
+    getRegionSha256: () => worldRegionSha256,
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
     onPlayers: (players, selfId) => {
@@ -583,6 +585,7 @@ async function loadWorld() {
     const worldId=worldIdFromSearch(location.search);
     const manifest=worldId===DEFAULT_WORLD_ID?{template:'river-oaks'}
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
+    worldRegionSha256=manifest.regionSha256??null;
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {

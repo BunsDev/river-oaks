@@ -25,11 +25,17 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,orig
       const data=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
-        worldData:data,
+        worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
+        ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId) && !(await security.isBanned(identity.userId))});
       const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
       const game=createDistributedServer({auth:sharedAuth,room,security,landmarks,social,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
+        ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
+          const target=await worldFor(regionId);
+          if(!target || target.meta?.template!=='region-v1')return {ok:false,error:'missing'};
+          return target.room.request({type:'revise',actorId,expectedDraftVersion});
+        }}:{}),
         onBan:async userId=>{
           await Promise.all([...worlds.values()].filter(world=>world.id!==id).map(world=>world.game.disconnectUser(userId)));
         }});

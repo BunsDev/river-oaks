@@ -103,6 +103,14 @@ async page=>{
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
   } finally {await otherContext.close();}
+  await Promise.all([page.waitForNavigation({waitUntil:'commit',timeout:60000}),
+    page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).click()]);
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected
+    && window.__riverMultiplayer().snapshot.regionSha256
+    && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
+  const live=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
+  check(live.world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Applying a saved draft updates the published region');
+  check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);
   return {passed:true,checks,errors};
 }

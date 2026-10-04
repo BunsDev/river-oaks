@@ -3,7 +3,11 @@ import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './w
 import { createSocialUI } from './social-ui.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
+export function createMultiplayer({ getPose, getRegionSha256 = () => null, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
+  const reloadRegion=()=>{
+    if(window.__riverRegionReloadScheduled)return;
+    window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
+  };
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
   const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
   const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
@@ -114,6 +118,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
           const data=JSON.parse(event.data);
           if(data.type==='snapshot'){
             if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
+            if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
@@ -128,6 +133,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
         clearTimeout(deadline);if(socket!==ws)return;
         socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;clearPending();onPlayers([],selfId);
         if(stopped)return;
+        if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
         const terminal=[4000,4003,4009].includes(event.code);
         setStatus(event.code===4000?'This world changed. Refresh the page to join.':event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=event.code===4000;
         if(!terminal)schedule();
