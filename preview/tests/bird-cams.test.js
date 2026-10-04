@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createWalkingEnvironment } from '../src/walking.js';
-import { BIRD_FLIGHT, chooseInterest, clearAltitude, createBird, forwardOf, stepBird } from '../src/bird-cams.js';
+import { BIRD_FLIGHT, COMPANION, chooseInterest, clearAltitude, companionInterests, companionOf, createBird, forwardOf, lapClear, stepBird } from '../src/bird-cams.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const environment = createWalkingEnvironment(world);
@@ -57,4 +57,55 @@ test('Jev flies above the rooftops on its way, not across them', () => {
   const clearance = trail.map(([x, y, z]) => y - clearAltitude(environment, x, z, environment.groundAt(x, z), environment.groundAt(x, z) + environment.flightCeiling));
   const skimming = clearance.filter(gap => gap < 1).length / clearance.length;
   assert.ok(skimming < .05, `skims a roof for ${(skimming * 100).toFixed(1)}% of the flight`);
+});
+
+
+test('over open street a watching bird circles low, where a walker can see it', () => {
+  // The companion's tight lap over open street (community spots sit under the arcade
+  // and trees, where low circling is rightly refused): the open point nearest the
+  // district's centre, found on a 4 m grid.
+  let open = null;
+  for (let ring = 0; ring < 60 && !open; ring++) for (let i = -ring; i <= ring && !open; i++) for (const [dx, dz] of [[i, -ring], [i, ring], [-ring, i], [ring, i]]) {
+    const east = centre[0] + dx * 4, north = -(centre[1] + dz * 4);
+    if (lapClear(environment, east, north, COMPANION.orbit)) { open = [east, north]; break; }
+  }
+  assert.ok(open, 'the district has open street for a low lap');
+  const scene = [{ id: 'player', label: 'Jevica', position: [open[0], open[1]], radius: COMPANION.orbit, weight: 4 }];
+  const bird = start(), trail = fly(bird, 90, { interests: scene });
+  assert.equal(bird.phase, 'watch');
+  const settled = trail.slice(-300), ground = environment.groundAt(open[0], -open[1]);
+  const heights = settled.map(([, y]) => y - ground), radii = settled.map(([x, , z]) => Math.hypot(x - open[0], z + open[1]));
+  assert.ok(heights.every(h => Math.abs(h - BIRD_FLIGHT.watchClearance) < .75), `circles ${BIRD_FLIGHT.watchClearance} m up (${Math.min(...heights).toFixed(1)}–${Math.max(...heights).toFixed(1)} m)`);
+  assert.ok(radii.every(r => r > COMPANION.orbit * .5 && r < COMPANION.orbit * 1.6), `on an ${COMPANION.orbit} m lap (${Math.min(...radii).toFixed(1)}–${Math.max(...radii).toFixed(1)} m)`);
+  assert.ok(trail.every(([x, y, z]) => environment.canFly(x, y, z)), 'never inside a building');
+});
+
+test('the companion is the nearest bird, keeps the role, and never one flown by hand', () => {
+  const at = (id, east, north) => ({ id, mode: 'jev', position: [east, 30, -north] });
+  const near = at('dove', 10, 0), far = at('jay', 60, 0), player = { position: [0, 0] };
+  assert.equal(companionOf([near, far], null), null, 'no companion without a walking player');
+  assert.equal(companionOf([far, near], player), near, 'the nearest bird');
+  assert.equal(companionOf([near, far], player, far), far, 'the current companion keeps the role');
+  far.mode = 'manual';
+  assert.equal(companionOf([near, far], player, far), near, 'a bird flown by hand hands the role on');
+  near.mode = 'manual';
+  assert.equal(companionOf([near, far], player), null, 'no companion when every bird is flown by hand');
+});
+
+test("the companion's scene is the spot the player is looking toward, stepped back until its lap is clear", () => {
+  const interests = [{ id: 'spot', position: [100, 100], weight: 2 }, { id: 'player', label: 'Jevica', position: [0, 0], weight: 4 }];
+  const copy = structuredClone(interests), player = { position: [0, 0], view: [1, 0] };
+  const [ahead] = companionInterests(interests, player);
+  assert.deepEqual(ahead.position, [COMPANION.ahead, 0]);
+  assert.equal(ahead.radius, COMPANION.orbit);
+  assert.equal(ahead.id, 'player', 'still reads as watching the player');
+  assert.deepEqual(interests, copy, 'the shared interest list is not changed');
+  const [closer] = companionInterests(interests, player, { canPlace: east => east <= 11 });
+  assert.deepEqual(closer.position, [11, 0], 'steps back toward the player');
+  const [around] = companionInterests(interests, player, { canPlace: east => east === 0 });
+  assert.deepEqual(around.position, [0, 0], 'falls back to a lap around the player');
+  assert.equal(around.radius, COMPANION.orbit);
+  const [plain] = companionInterests(interests, player, { canPlace: () => false });
+  assert.equal(plain.radius, undefined, "with no clear lap, the player's own scene unchanged");
+  assert.equal(companionInterests(interests, null), interests, 'no player: the list as given');
 });
