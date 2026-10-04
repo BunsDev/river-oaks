@@ -84,6 +84,14 @@ Designs survive reconnects and town resets through the private checkpoint.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
 
+Jevica can open an existing creator region in the World studio and save a
+private revision draft. The draft is stored in shared Redis with the hash of
+the published region and is available on another device. Saving it never
+changes the live geography or room checkpoint. Only the admin can load, save,
+or discard it; guests cannot access the draft API. A live region revision still
+requires a migration of the room checkpoint, builds, inventory, and connected
+players before it can be safely published.
+
 Shared play uses 98 simulated residents, down from 193 in solo play (49%).
 Every outdoor scenario resident and at least one staff member per shop remains.
 The same roster drives the server, browser, room counts, and rendered people.

@@ -14,7 +14,7 @@ export function worldVisitUrl(id,base=location.href) {
 export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const section=element('section',null,'world-portal');section.setAttribute('aria-label','Worlds');
   const heading=element('h3','Worlds');
-  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat. Jevica can start with River Oaks or publish her own terrain and layout.','quiet-note');
+  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat. Jevica can publish a region and prepare private revision drafts.','quiet-note');
   const status=element('p','Loading worlds…','world-portal-status');status.setAttribute('role','status');
   const list=element('ul',null,'world-portal-list');
   const form=element('form',null,'world-portal-form');form.hidden=true;
@@ -28,12 +28,21 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const regionSource=element('p','','world-portal-region-source');regionSource.setAttribute('role','status');
   const publish=element('button','Publish world');publish.type='submit';
   form.append(createTitle,titleLabel,idLabel,descriptionLabel,regionLabel,example,design,regionSource,publish);
-  section.append(heading,intro,status,list,form);host.prepend(section);
+  const revisionPanel=element('section',null,'world-portal-revision');revisionPanel.hidden=true;
+  const revisionTitle=element('h4'),revisionNote=element('p','This is a private revision draft. The published world stays as it is until a safe live migration is available.');
+  const revisionStatus=element('p',null,'world-portal-revision-status');revisionStatus.setAttribute('role','status');
+  const saveRevision=element('button','Save revision draft');saveRevision.type='button';
+  const discardRevision=element('button','Discard revision draft');discardRevision.type='button';
+  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,discardRevision);
+  section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0;
-  let useDraft=false;
+  let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
   const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
-    .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{if(useDraft)regionSource.textContent='Your region draft is ready to publish.';}}))
+    .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{
+      if(revisionTarget)revisionStatus.textContent='Changes on this device are ready to save.';
+      else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
+    }}))
     .catch(error=>{editorLoading=null;throw error;});
   const hasDraft=()=>{try{return Boolean(editor?.hasDraft()||localStorage.getItem(REGION_DRAFT_STORAGE_KEY));}catch{return Boolean(editor?.hasDraft());}};
   const updateRegionSource=()=>{
@@ -44,11 +53,63 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   region.addEventListener('change',()=>{if(region.files?.length)useDraft=false;updateRegionSource();});
   design.addEventListener('click',async()=>{
     try {
+      revisionTarget=null;revisionPanel.hidden=true;
       const studio=await ensureEditor();
       if(region.files?.[0]){await studio.loadFile(region.files[0]);region.value='';}
       else studio.open();
       useDraft=true;updateRegionSource();
     } catch(error) {status.textContent=error.message||'Could not open the region editor.';}
+  });
+  const revisionKey=worldId=>`${REGION_DRAFT_STORAGE_KEY}:${worldId}`;
+  const adminSession=async()=>{
+    const session=await (await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'})).json();
+    if(!session.authenticated || session.canGrantWishes!==true)throw new Error('Only Jevica can edit a region draft.');
+    return session;
+  };
+  const draftRequest=async(action,payload)=>{
+    const session=await adminSession();
+    const response=await fetch(`/api/world-draft/${action}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify(payload)});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error==='stale'?'This world changed. Reload its published region before saving.'
+      :result.error==='draft_conflict'?'A newer revision draft was saved elsewhere. Download your JSON before reloading it.'
+        :result.error==='invalid_draft'?'The region draft is invalid. Check its layout.':result.error??'Region draft is unavailable.');
+    return result;
+  };
+  const editRevision=async world=>{
+    try {
+      const editable=await draftRequest('load',{id:world.id});
+      const studio=await ensureEditor(),key=revisionKey(world.id);
+      revisionTarget={world:editable.world,key,draftVersion:editable.draft?.version??0};revisionTitle.textContent=`Revision draft for ${world.title}`;revisionPanel.hidden=false;
+      const local=studio.draftFor(key);
+      const differs=Boolean(local&&editable.draft&&JSON.stringify(local)!==JSON.stringify(editable.draft.region));
+      const openLocal=Boolean(local)&&(!differs||window.confirm('This device has a different local draft. Open it instead of the saved server draft?'));
+      if(openLocal)studio.open(key);
+      else studio.loadRegion(editable.draft?.region??editable.publishedRegion,key);
+      revisionStatus.textContent=openLocal?'Local draft opened. Save it to sync across devices.'
+        :editable.draft?'Saved server draft loaded.':'Published region copied into a private draft.';
+    } catch(error) {status.textContent=error.message||'Could not load the region draft.';}
+  };
+  saveRevision.addEventListener('click',async()=>{
+    if(!revisionTarget)return;
+    saveRevision.disabled=true;
+    try {
+      const result=await draftRequest('save',{id:revisionTarget.world.id,baseRegionSha256:revisionTarget.world.regionSha256,
+        expectedDraftVersion:revisionTarget.draftVersion,region:editor?.getRegion()});
+      revisionStatus.textContent=`Draft saved across devices. Published ${revisionTarget.world.title} is unchanged.`;
+      status.textContent=`Revision draft saved for ${revisionTarget.world.title}.`;
+      revisionTarget.draftVersion=result.draft.version;
+    } catch(error) {revisionStatus.textContent=error.message||'Could not save the region draft.';}
+    finally {saveRevision.disabled=false;}
+  });
+  discardRevision.addEventListener('click',async()=>{
+    if(!revisionTarget)return;
+    discardRevision.disabled=true;
+    try {
+      await draftRequest('discard',{id:revisionTarget.world.id,expectedDraftVersion:revisionTarget.draftVersion});
+      editor?.clearDraft(revisionTarget.key);revisionStatus.textContent='Revision draft discarded.';
+      revisionTarget=null;revisionPanel.hidden=true;
+    } catch(error) {revisionStatus.textContent=error.message||'Could not discard the revision draft.';}
+    finally {discardRevision.disabled=false;}
   });
   const currentId=()=>{try{return validateWorldId(new URLSearchParams(location.search).get('world')??DEFAULT_WORLD_ID);}catch{return DEFAULT_WORLD_ID;}};
   const render=()=>{
@@ -56,7 +117,12 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     for(const world of worlds) {
       const row=element('li');const link=element('a',world.title);link.href=worldVisitUrl(world.id);
       const detail=element('small',world.id===currentId()?'Here now':world.description||'Shared world');
-      row.append(link,detail);list.append(row);
+      row.append(link,detail);
+      if(getCanPublish() && world.template==='region-v1') {
+        const edit=element('button','Edit draft');edit.type='button';edit.setAttribute('aria-label',`Edit revision draft for ${world.title}`);
+        edit.addEventListener('click',()=>editRevision(world));row.append(edit);
+      }
+      list.append(row);
     }
     const current=worlds.find(world=>world.id===currentId());
     if(current) {

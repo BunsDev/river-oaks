@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import Redis from 'ioredis';
-import { createRedisWorldCatalog } from '../world-catalog.js';
+import { createRedisWorldCatalog, createMemoryWorldCatalog } from '../world-catalog.js';
+import { compileRegionPackage, editableRegionFromWorld } from '../region-package.js';
 
 const integration=(name,run)=>test(name,{skip:!process.env.REDIS_URL},run);
 const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
@@ -12,7 +13,7 @@ integration('a published world is durable, unique, bounded, and visible across R
   const redis=new Redis(process.env.REDIS_URL),peer=redis.duplicate();
   redis.on('error',()=>{});peer.on('error',()=>{});
   const prefix=`{river-oaks:catalog-test:${randomUUID()}}`;
-  t.after(async()=>{await redis.del(`${prefix}:worlds:v1`,`${prefix}:regions:v1`);await Promise.all([redis.quit(),peer.quit()]);});
+  t.after(async()=>{await redis.del(`${prefix}:worlds:v1`,`${prefix}:regions:v1`,`${prefix}:region-drafts:v1`);await Promise.all([redis.quit(),peer.quit()]);});
   const catalog=createRedisWorldCatalog({redis,prefix,now:()=>1000});
   const another=createRedisWorldCatalog({redis:peer,prefix,now:()=>2000});
   assert.deepEqual((await catalog.list()).map(world=>world.id),['river-oaks']);
@@ -23,6 +24,26 @@ integration('a published world is durable, unique, bounded, and visible across R
   const region=await another.getRegion('moon-garden');
   assert.equal(region.provenance.kind,'creator');
   assert.equal(region.buildings.length,4);
+  const editable=await another.editable('moon-garden');
+  assert.equal(editable.draft,null);
+  assert.deepEqual(compileRegionPackage(editable.publishedRegion,'Moon Garden').buildings,region.buildings);
+  const revised={...editable.publishedRegion,places:editable.publishedRegion.places.map(place=>place.id===editable.publishedRegion.places[0].id?{...place,name:'Revised Arch'}:place)};
+  const saved=await catalog.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner-1');
+  assert.equal(saved.ok,true);
+  assert.equal(saved.draft.version,1);
+  assert.equal((await another.editable('moon-garden')).draft.region.places[0].name,'Revised Arch');
+  assert.equal((await another.getRegion('moon-garden')).communityLocations[0].name,region.communityLocations[0].name);
+  assert.equal((await another.saveDraft({id:'moon-garden',baseRegionSha256:'0'.repeat(64),expectedDraftVersion:1,region:revised},'owner-1')).reason,'stale');
+  assert.equal((await another.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner-1')).reason,'draft_conflict');
+  assert.equal((await another.discardDraft('moon-garden',0)).reason,'draft_conflict');
+  assert.deepEqual(await another.discardDraft('moon-garden',1),{ok:true,removed:true});
+  assert.equal((await catalog.editable('moon-garden')).draft,null);
+  const competing=await Promise.all([
+    catalog.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner-1'),
+    another.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner-2'),
+  ]);
+  assert.deepEqual(competing.map(result=>result.ok).sort(),[false,true]);
+  assert.equal(competing.find(result=>!result.ok).reason,'draft_conflict');
   assert.equal((await another.list()).length,2);
   assert.equal((await another.publish({id:'moon-garden',title:'Replacement'},'owner-2')).reason,'world_exists');
   assert.equal((await catalog.get('missing-world')),null);
@@ -37,6 +58,24 @@ integration('a published world is durable, unique, bounded, and visible across R
   assert.equal((await catalog.list()).length,17);
   await redis.hset(`${prefix}:regions:v1`,'moon-garden','{}');
   await assert.rejects(()=>another.getRegion('moon-garden'),/missing or corrupt/);
+});
+
+test('a published creator world becomes an editable but unpublished revision draft',async()=>{
+  const catalog=createMemoryWorldCatalog({now:()=>1234});
+  const published=await catalog.publish({id:'garden',title:'Garden',region:sample},'owner');
+  const editable=await catalog.editable('garden');
+  assert.equal(editable.world.regionSha256,published.world.regionSha256);
+  assert.deepEqual(compileRegionPackage(editable.publishedRegion,'Garden').roads,compileRegionPackage(sample,'Garden').roads);
+  assert.deepEqual(editableRegionFromWorld(await catalog.getRegion('garden')),editable.publishedRegion);
+  const changed={...editable.publishedRegion,places:editable.publishedRegion.places.map((place,index)=>index?place:{...place,name:'New Name'})};
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:changed},'owner')).ok,true);
+  assert.equal((await catalog.editable('garden')).draft.region.places[0].name,'New Name');
+  assert.notEqual((await catalog.getRegion('garden')).communityLocations[0].name,'New Name');
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:'f'.repeat(64),expectedDraftVersion:1,region:changed},'owner')).reason,'stale');
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:changed},'owner')).reason,'draft_conflict');
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:1,region:{...changed,places:[]}},'owner')).reason,'invalid_draft');
+  assert.deepEqual(await catalog.discardDraft('garden',1),{ok:true,removed:true});
+  assert.equal((await catalog.editable('garden')).draft,null);
 });
 
 test('world metadata is validated before Redis writes',async()=>{
