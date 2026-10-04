@@ -32,4 +32,7 @@ test('the editor accepts bounded walk-in venues on retail buildings',()=>{
   assert.equal(editableRegion({...draft,buildings:[{...building,kind:'parking'}]}),false);
   assert.equal(editableRegion({...draft,buildings:[{...building,interior:{...building.interior,entrance:'roof'}}]}),false);
   assert.equal(editableRegion({...draft,buildings:[{...building,size:[5,16,8]}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential',interior:{...building.interior,category:'home'}}]}),true);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential'}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,interior:{...building.interior,category:'home'}}]}),false);
 });

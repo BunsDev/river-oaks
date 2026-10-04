@@ -12,10 +12,10 @@ import { buildStoreInteriors } from './store-interiors.js';
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
 // the canvas, so signs are opaque and never sort against the glazing.
-function sign(name, illuminated = false) {
+function sign(name, illuminated = false, home = false) {
   const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 128;
   const context = canvas.getContext('2d');
-  context.fillStyle = RETRO.deepTeal; context.fillRect(0, 0, 1024, 128);
+  context.fillStyle = home ? '#43564e' : RETRO.deepTeal; context.fillRect(0, 0, 1024, 128);
   const ink = RETRO.ivory;
   context.textAlign = 'center'; context.textBaseline = 'middle';
   context.font = `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Futura, Avenir, sans-serif`;
@@ -259,11 +259,11 @@ export function buildDistrictBuildings(world) {
     const yaw = Math.atan2(nx, -ny);
     const isDior = store.name === 'Dior', isCartier = store.name === 'Cartier', isVanCleef = store.name === 'Van Cleef & Arpels';
     const isHarry = store.name === 'Harry Winston', isSteak = store.name === 'Steak 48', isColonial = store.name === 'Le Colonial';
-    const dining = ['restaurant','ice_cream'].includes(store.category);
-    const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial); materials.add(material); textures.push(material.map);
-    const geometry = new THREE.PlaneGeometry(isColonial ? 4.5 : store.name.length > 17 ? 9 : 7, isColonial ? 0.5 : 0.85); geometries.add(geometry);
+    const dining = ['restaurant','ice_cream'].includes(store.category), home = store.category === 'home';
+    const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial, home); materials.add(material); textures.push(material.map);
+    const geometry = new THREE.PlaneGeometry(home ? 4.5 : isColonial ? 4.5 : store.name.length > 17 ? 9 : 7, home || isColonial ? 0.5 : 0.85); geometries.add(geometry);
     const label = new THREE.Mesh(geometry, material);
-    label.position.set(x+nx*(isColonial ? 1.4 : 0.3), base+(isColonial ? 3.97 : isSteak ? 5.35 : 4.72), -north-ny*(isColonial ? 1.4 : 0.3)); label.rotation.y = yaw;
+    label.position.set(x+nx*(isColonial ? 1.4 : 0.3), base+(home || isColonial ? 3.97 : isSteak ? 5.35 : 4.72), -north-ny*(isColonial ? 1.4 : 0.3)); label.rotation.y = yaw;
     label.userData.storeId = store.id; group.add(label);
     // Door hardware and source-specific frontage details provide pedestrian-scale cues.
     const entryFrame = isHarry ? stone : isCartier || isVanCleef ? gold : dark;
@@ -289,7 +289,7 @@ export function buildDistrictBuildings(world) {
     part(bulkhead, [x+nx*0.55, base+0.16, -north-ny*0.55], [1.9, 0.03, 0.9], yaw);
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
     part(spot, [x+nx*0.45, base+4.11, -north-ny*0.45], [0.13, 0.015, 0.13], yaw, -1, 0, disc);
-    if (!isDior && !isCartier && !isVanCleef && !isHarry && !isColonial && !dining) {
+    if (!isDior && !isCartier && !isVanCleef && !isHarry && !isColonial && !dining && !home) {
       // A sloped fabric awning with a valance and tie rods; not a flat slab.
       const pitch = 0.32, run = 1.45, drop = Math.sin(pitch) * run / 2;
       part(canvas, [x+nx*(0.15+run/2*Math.cos(pitch)), base+4.0-drop, -north-ny*(0.15+run/2*Math.cos(pitch))], [4.6, 0.03, run], yaw, -1, pitch);

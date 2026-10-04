@@ -28,7 +28,7 @@ The primary **Meet someone nearby** action approaches the closest person within 
 
 Open **More people & community activities** for the full cast, optional voice controls, resident-walk controls and cooperative support scenarios. Residents [walk between district stops](resident-life.md), pause for conversations and seek the modeled awnings during a thunderstorm. The economic laboratory and hover-moped interface have been removed.
 
-The **Shops & cafés** directory provides optional exterior arrivals. These keep the camera on foot. Reloading also returns to the same district at street level.
+The **Places to visit** directory provides optional exterior arrivals. These keep the camera on foot. Reloading also returns to the same district at street level.
 
 ## Validation and remaining scope
 

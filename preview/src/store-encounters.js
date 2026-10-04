@@ -10,7 +10,7 @@ const OCCUPATIONS = {
   cinema: ['Cinema host', 'Projection technician', 'Concession attendant'], salon: ['Hair stylist', 'Colorist', 'Salon host'],
   wellness: ['Fitness trainer', 'Studio host'],
 };
-const GUEST_ROLES = { dining:'Dining guest', gelato:'Café guest', salon:'Salon client', wellness:'Studio member', cinema:'Cinema guest', gallery:'Gallery visitor', optician:'Eyewear client' };
+const GUEST_ROLES = { dining:'Dining guest', gelato:'Café guest', salon:'Salon client', wellness:'Studio member', cinema:'Cinema guest', gallery:'Gallery visitor', optician:'Eyewear client', home:'Home resident' };
 const NAMES = ['Alex', 'Jordan', 'Morgan', 'Casey', 'Taylor', 'Drew', 'Robin', 'Avery', 'Quinn', 'Sasha', 'Jamie', 'Reese'];
 export const storePersonId = (room, index) => `store-${room.storeId}-person-${index}`;
 
@@ -27,8 +27,10 @@ export function createStoreEncounters(rooms, { sharedPopulation = false } = {}) 
     const persona = createPersona(24 + room.index * 10 + index, name, room.name);
     Object.assign(persona, {
       role, homeContext: `Fictional ${role.toLowerCase()} at ${room.name}`,
-      about: work ? `I’m ${name}, the ${role.toLowerCase()} at ${room.name}. ${work.about}` : `I’m ${name}, visiting ${room.name}. I’m taking some time to enjoy the district.`,
-      routine: work?.routine ?? 'visiting the shops and meeting friends',
+      about: work ? `I’m ${name}, the ${role.toLowerCase()} at ${room.name}. ${work.about}`
+        : room.theme === 'home' ? `I’m ${name}, a resident of ${room.name}. I like welcoming friends into this space.`
+          : `I’m ${name}, visiting ${room.name}. I’m taking some time to enjoy the district.`,
+      routine: work?.routine ?? (room.theme === 'home' ? 'spending time at home and meeting neighbours' : 'visiting the shops and meeting friends'),
       ...(work ? {work,story:work.story,returnGreeting:`Welcome back to ${room.name}. I’m ${name}, the ${role.toLowerCase()}. Would you like to hear a little more about my work?`} : {}),
       interest: room.summary?.label ?? room.theme,
     });
