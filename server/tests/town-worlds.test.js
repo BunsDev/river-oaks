@@ -63,6 +63,8 @@ test('the local owner publishes and joins a second world without restarting the 
   const guest=await fetch(origin+'/auth/session');
   const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
+  assert.equal((await draftRequest(guestSession,guestCookie,'history',{id:'moon-garden'})).status,403);
+  assert.equal((await draftRequest(guestSession,guestCookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:editable.world.regionSha256})).status,403);
   const profileRequest=(session,sessionCookie,action,data)=>fetch(origin+`/api/profile/${action}?world=moon-garden`,{method:'POST',headers:{Origin:origin,Cookie:sessionCookie,'X-CSRF-Token':session.csrfToken,'Content-Type':'application/json'},body:JSON.stringify(data)});
   assert.equal((await profileRequest(owner,cookie,'save',{tagline:'Garden host',bio:'Welcome to my world.',pronouns:'she/her',interests:['Gardens'],expectedVersion:0})).status,200);
   assert.equal((await (await profileRequest(owner,cookie,'view',{})).json()).profile.bio,'Welcome to my world.');
@@ -77,6 +79,14 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal(await oldConnectionClosed,4000);
   assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Private revision');
   assert.equal((await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
+  const history=await (await draftRequest(owner,cookie,'history',{id:'moon-garden'})).json();
+  assert.deepEqual(history.versions.map(version=>version.revision),[1]);
+  const original=await (await draftRequest(owner,cookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:history.world.regionSha256})).json();
+  assert.equal(original.region.places[0].name,editable.publishedRegion.places[0].name);
+  assert.equal((await draftRequest(owner,cookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:editable.world.regionSha256})).status,409);
+  assert.equal((await draftRequest(owner,cookie,'save',{id:'moon-garden',baseRegionSha256:history.world.regionSha256,expectedDraftVersion:0,region:original.region})).status,200);
+  assert.equal((await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,200);
+  assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
 });
 
 test('a configured alternate world exposes the bundled geography without a catalog entry',async t=>{

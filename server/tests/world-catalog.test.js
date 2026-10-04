@@ -60,6 +60,17 @@ integration('a published world is durable, unique, bounded, and visible across R
   await assert.rejects(()=>another.getRegion('moon-garden'),/missing or corrupt/);
 });
 
+integration('corrupt retained Redis regions are never offered for restoration',async t=>{
+  const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
+  const prefix=`{river-oaks:history-test:${randomUUID()}}`,historyKey=`${prefix}:region-history:garden`;
+  t.after(async()=>{await redis.del(`${prefix}:worlds:v1`,`${prefix}:regions:v1`,historyKey);await redis.quit();});
+  const catalog=createRedisWorldCatalog({redis,prefix});
+  const published=await catalog.publish({id:'garden',title:'Garden',region:sample},'owner');
+  await redis.lpush(historyKey,JSON.stringify({world:published.world,region:'{}'}));
+  await assert.rejects(()=>catalog.history('garden'),/corrupt/);
+  await assert.rejects(()=>catalog.version('garden',1,published.world.regionSha256),/corrupt/);
+});
+
 test('a published creator world becomes an editable but unpublished revision draft',async()=>{
   const catalog=createMemoryWorldCatalog({now:()=>1234});
   const published=await catalog.publish({id:'garden',title:'Garden',region:sample},'owner');
@@ -76,6 +87,28 @@ test('a published creator world becomes an editable but unpublished revision dra
   assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:1,region:{...changed,places:[]}},'owner')).reason,'invalid_draft');
   assert.deepEqual(await catalog.discardDraft('garden',1),{ok:true,removed:true});
   assert.equal((await catalog.editable('garden')).draft,null);
+});
+
+test('retained region versions can be copied into a new private revision draft',async()=>{
+  let time=1000;
+  const catalog=createMemoryWorldCatalog({now:()=>++time});
+  const published=await catalog.publish({id:'garden',title:'Garden',region:sample},'owner');
+  const original=(await catalog.editable('garden')).publishedRegion;
+  assert.deepEqual((await catalog.history('garden')).versions,[]);
+  const changed={...original,places:original.places.map((place,index)=>index?place:{...place,name:'New Name'})};
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:changed},'owner')).ok,true);
+  const candidate=await catalog.revisionCandidate('garden',1);
+  assert.equal((await catalog.applyRevision(candidate)).ok,true);
+  const history=await catalog.history('garden');
+  assert.deepEqual(history.versions,[{revision:1,updatedAt:published.world.createdAt,regionSha256:published.world.regionSha256}]);
+  assert.equal((await catalog.version('garden',1,candidate.world.regionSha256)).region.places[0].name,original.places[0].name);
+  assert.equal((await catalog.version('garden',1,published.world.regionSha256)).reason,'stale');
+  assert.equal((await catalog.version('garden',2,candidate.world.regionSha256)).reason,'missing_version');
+  assert.equal((await catalog.version('garden',0,candidate.world.regionSha256)).reason,'invalid_version');
+  assert.equal((await catalog.saveDraft({id:'garden',baseRegionSha256:candidate.world.regionSha256,expectedDraftVersion:0,region:original},'owner')).ok,true);
+  assert.equal((await catalog.applyRevision(await catalog.revisionCandidate('garden',1))).ok,true);
+  assert.equal((await catalog.getRegion('garden')).communityLocations[0].name,original.places[0].name);
+  assert.deepEqual((await catalog.history('garden')).versions.map(version=>version.revision),[2,1]);
 });
 
 test('world metadata is validated before Redis writes',async()=>{

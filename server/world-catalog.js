@@ -30,6 +30,16 @@ const DISCARD_DRAFT=`
   return 'ok'
 `;
 const digest=value=>createHash('sha256').update(value).digest('hex');
+const validVersionRequest=(revision,baseRegionSha256)=>Number.isSafeInteger(revision) && revision>=1 && revision<=100000
+  && /^[a-f0-9]{64}$/.test(baseRegionSha256);
+function retainedVersion(entry,id,decodeWorld=world=>world) {
+  const world=decodeWorld(entry?.world),encoded=typeof entry?.region==='string'?entry.region:JSON.stringify(entry?.region);
+  if(world?.id!==id || world.template!=='region-v1' || !Number.isSafeInteger(world.revision??1)
+    || (world.revision??1)<1 || (world.revision??1)>100000 || digest(encoded)!==world.regionSha256)
+    throw new Error('Retained region version is corrupt');
+  const region=editableRegionFromWorld(JSON.parse(encoded));
+  return {version:{revision:world.revision??1,updatedAt:world.updatedAt??world.createdAt,regionSha256:world.regionSha256},region};
+}
 const clean=(value,max)=>typeof value==='string' && value===value.trim() && [...value].length>0 && [...value].length<=max
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const validDescription=value=>value===undefined || value==='' || clean(value,280);
@@ -77,6 +87,8 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
       || world.updatedAt!==undefined && (!Number.isSafeInteger(world.updatedAt) || world.updatedAt<0))throw new Error('Invalid published world');
     return world;
   };
+  const retained=async id=>(await redis.lrange(`${prefix}:region-history:${id}`,0,7))
+    .map(raw=>retainedVersion(JSON.parse(raw),id,value=>decode(JSON.stringify(value))));
   return {
     async get(id) {
       try {validateWorldId(id);} catch {return null;}
@@ -113,6 +125,19 @@ export function createRedisWorldCatalog({redis,prefix,now=Date.now}={}) {
         || !Number.isSafeInteger(draft.version) || draft.version<1 || draft.version>100001
         || digest(JSON.stringify(compileRegionPackage(draft.region,'Revision draft')))!==draft.compiledSha256))throw new Error('Invalid region draft');
       return {world,publishedRegion,draft};
+    },
+    async history(id) {
+      const world=await this.get(id);
+      if(!world || world.template!=='region-v1')return {ok:false,reason:'missing'};
+      return {ok:true,world,versions:(await retained(id)).map(entry=>entry.version)};
+    },
+    async version(id,revision,baseRegionSha256) {
+      if(!validVersionRequest(revision,baseRegionSha256))return {ok:false,reason:'invalid_version'};
+      const world=await this.get(id);
+      if(!world || world.template!=='region-v1')return {ok:false,reason:'missing'};
+      if(world.regionSha256!==baseRegionSha256)return {ok:false,reason:'stale'};
+      const entry=(await retained(id)).find(value=>value.version.revision===revision);
+      return entry?{ok:true,world,...entry}:{ok:false,reason:'missing_version'};
     },
     async saveDraft(data,editorId) {
       const draft=draftInput(data,editorId,now);
@@ -160,6 +185,19 @@ export function createMemoryWorldCatalog({now=Date.now}={}) {
       const world=await this.get(id);
       if(!world || world.template!=='region-v1')return null;
       return {world:structuredClone(world),publishedRegion:editableRegionFromWorld(await this.getRegion(id)),draft:structuredClone(drafts.get(id)??null)};
+    },
+    async history(id) {
+      const world=await this.get(id);
+      if(!world || world.template!=='region-v1')return {ok:false,reason:'missing'};
+      return {ok:true,world:structuredClone(world),versions:(history.get(id)??[]).map(entry=>retainedVersion(entry,id).version)};
+    },
+    async version(id,revision,baseRegionSha256) {
+      if(!validVersionRequest(revision,baseRegionSha256))return {ok:false,reason:'invalid_version'};
+      const retained=await this.history(id);
+      if(!retained.ok)return retained;
+      if(retained.world.regionSha256!==baseRegionSha256)return {ok:false,reason:'stale'};
+      const entry=(history.get(id)??[]).map(value=>retainedVersion(value,id)).find(value=>value.version.revision===revision);
+      return entry?{ok:true,world:retained.world,...entry}:{ok:false,reason:'missing_version'};
     },
     async saveDraft(data,editorId) {
       const draft=draftInput(data,editorId,now);

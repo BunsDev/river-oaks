@@ -114,6 +114,11 @@ async page=>{
       return (await fetch('/api/world-draft/load',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify({id:'moon-garden'})})).status;
     });
     check(deniedDraft===403,'The server refuses a guest revision draft request');
+    const deniedHistory=await guest.evaluate(async()=>{
+      const session=await (await fetch('/auth/session')).json();
+      return (await fetch('/api/world-draft/history',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify({id:'moon-garden'})})).status;
+    });
+    check(deniedHistory===403,'The server keeps published version history private to Jevica');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     await guest.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===2);
     check(true,'The new world has shared presence');
@@ -129,6 +134,29 @@ async page=>{
   const live=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(live.world.communityLocations.some(place=>place.name==='Revised Moon Arch'),'Applying a saved draft updates the published region');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click();
+  await page.locator('.world-portal-list button[aria-label="Edit revision draft for Moon Garden"]').click();
+  await page.locator('.region-editor').waitFor({state:'visible'});
+  await page.locator('.region-editor [data-action=done]').click();
+  await page.locator('.world-portal-revision select[aria-label="Previous published version"]').selectOption('1');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('.world-portal-revision button', {hasText:'Load version into editor'}).click();
+  await page.locator('.region-editor').waitFor({state:'visible'});
+  await page.locator('.region-editor-chooser').selectOption('places:place-1');
+  check((await page.locator('.region-editor-fields label').filter({hasText:'Name'}).locator('input').inputValue())==='Moon Arch','Jevica loads a retained published version into the private editor');
+  await page.locator('.region-editor [data-action=done]').click();
+  check(await page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).isDisabled(),'A restored version must be saved before it can be applied');
+  await page.locator('.world-portal-revision button', {hasText:'Save revision draft'}).click();
+  await page.waitForFunction(()=>document.querySelector('.world-portal-revision-status')?.textContent.includes('saved across devices'));
+  await Promise.all([page.waitForNavigation({waitUntil:'commit',timeout:60000}),
+    page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).click()]);
+  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected
+    && window.__riverMultiplayer().snapshot.regionSha256
+    && document.querySelector('#view-name')?.textContent==='Moon Garden',null,{timeout:60000});
+  const restored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
+  check(restored.world.communityLocations.some(place=>place.name==='Moon Arch'),'Saving and applying the retained version restores the live region');
+  check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);
   return {passed:true,checks,errors};
 }

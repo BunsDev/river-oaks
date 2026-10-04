@@ -34,7 +34,10 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const saveRevision=element('button','Save revision draft');saveRevision.type='button';
   const applyRevision=element('button','Apply saved draft');applyRevision.type='button';applyRevision.disabled=true;
   const discardRevision=element('button','Discard revision draft');discardRevision.type='button';
-  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision);
+  const versionLabel=element('label','Previous published version');versionLabel.hidden=true;
+  const versionSelect=element('select');versionSelect.setAttribute('aria-label','Previous published version');versionLabel.append(versionSelect);
+  const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
+  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
   section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
@@ -80,8 +83,14 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const editRevision=async world=>{
     try {
       const editable=await draftRequest('load',{id:world.id});
+      const history=await draftRequest('history',{id:world.id});
+      if(history.world.regionSha256!==editable.world.regionSha256)throw new Error('This world changed. Reload its published region before editing.');
       const studio=await ensureEditor(),key=revisionKey(world.id);
       revisionTarget={world:editable.world,key,draftVersion:editable.draft?.version??0};revisionTitle.textContent=`Revision draft for ${world.title}`;revisionPanel.hidden=false;
+      versionSelect.replaceChildren(...history.versions.map(version=>{
+        const option=element('option',`Version ${version.revision}`);option.value=String(version.revision);return option;
+      }));
+      versionLabel.hidden=restoreVersion.hidden=!history.versions.length;
       const local=studio.draftFor(key);
       const differs=Boolean(local&&editable.draft&&JSON.stringify(local)!==JSON.stringify(editable.draft.region));
       const openLocal=Boolean(local)&&(!differs||window.confirm('This device has a different local draft. Open it instead of the saved server draft?'));
@@ -92,6 +101,19 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
         :editable.draft?'Saved server draft loaded.':'Published region copied into a private draft.';
     } catch(error) {status.textContent=error.message||'Could not load the region draft.';}
   };
+  restoreVersion.addEventListener('click',async()=>{
+    if(!revisionTarget || !window.confirm('Replace this device’s region draft with the selected published version?'))return;
+    restoreVersion.disabled=true;
+    try {
+      const revision=Number(versionSelect.value);
+      const result=await draftRequest('version',{id:revisionTarget.world.id,revision,
+        baseRegionSha256:revisionTarget.world.regionSha256});
+      editor.loadRegion(result.region,revisionTarget.key);
+      applyRevision.disabled=true;
+      revisionStatus.textContent=`Version ${revision} is in the editor. Save the draft, then apply it.`;
+    } catch(error) {revisionStatus.textContent=error.message||'Could not load that version.';}
+    finally {restoreVersion.disabled=false;}
+  });
   saveRevision.addEventListener('click',async()=>{
     if(!revisionTarget)return;
     saveRevision.disabled=true;

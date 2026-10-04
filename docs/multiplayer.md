@@ -142,7 +142,11 @@ device. Applying validates the old checkpoint, carries forward durable player
 state and creations, then atomically publishes the revised catalog and room
 checkpoint. A layout that conflicts with an existing creation is rejected.
 Connected visitors reload the revised map; active NPC wishes reset. Guests
-cannot load, save, discard, or apply drafts.
+cannot load, save, discard, or apply drafts. Jevica can select one of the last
+eight published versions and load it into her private editor. She must save
+that copy as a new revision draft before applying it. Version reads verify the
+retained region hash, and applying still checks the current region and existing
+creations before changing the live world.
 
 Shared play uses 98 simulated residents, down from 193 in solo play (49%).
 Every outdoor scenario resident and at least one staff member per shop remains.

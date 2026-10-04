@@ -114,6 +114,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const editable = await worldCatalog.editable(data?.id);
           return editable ? json(res, 200, editable) : json(res, 404, { error: 'Editable region not found.' });
         }
+        if (action === 'history' || action === 'version') {
+          const result = action === 'history' ? await worldCatalog.history(data?.id)
+            : await worldCatalog.version(data?.id, data?.revision, data?.baseRegionSha256);
+          const status = result.ok ? 200 : result.reason === 'invalid_version' ? 400 : result.reason === 'stale' ? 409 : 404;
+          return json(res, status, result.ok ? result : { error: result.reason });
+        }
         if (action === 'save') {
           const result = await worldCatalog.saveDraft(data, identity.userId);
           const status = result.ok ? 200 : result.reason === 'invalid_draft' ? 400
