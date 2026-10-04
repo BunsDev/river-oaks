@@ -36,7 +36,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const discardRevision=element('button','Discard revision draft');discardRevision.type='button';
   revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision);
   section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
-  let worlds=[],loaded=false,loading=null,lastAttempt=0;
+  let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
   const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
@@ -135,7 +135,8 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     list.replaceChildren();
     for(const world of worlds) {
       const row=element('li');const link=element('a',world.title);link.href=worldVisitUrl(world.id);
-      const detail=element('small',world.id===currentId()?'Here now':world.description||'Shared world');
+      const visitors=Number.isSafeInteger(world.visitors)&&world.visitors>=0?world.visitors:0;
+      const detail=element('small',`${world.id===currentId()?'Here now':world.description||'Shared world'} · ${visitors} ${visitors===1?'visitor':'visitors'} online`);
       row.append(link,detail);
       if(getCanPublish() && world.template==='region-v1') {
         const edit=element('button','Edit draft');edit.type='button';edit.setAttribute('aria-label',`Edit revision draft for ${world.title}`);
@@ -151,8 +152,8 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     form.hidden=!getCanPublish();
   };
   function load() {
-    if(loaded)return Promise.resolve();
     if(loading)return loading;
+    if(loaded&&(!section.checkVisibility()||Date.now()-lastLoaded<15000))return Promise.resolve();
     if(Date.now()-lastAttempt<5000)return Promise.resolve();
     lastAttempt=Date.now();
     loading=(async()=>{
@@ -161,7 +162,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
         if(!response.ok || !response.headers.get('content-type')?.includes('application/json'))throw new Error('World directory unavailable.');
         const data=await response.json();
         if(!Array.isArray(data.worlds))throw new Error('World directory unavailable.');
-        worlds=data.worlds;loaded=true;render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
+        worlds=data.worlds;loaded=true;lastLoaded=Date.now();render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
       } catch {status.textContent='World directory unavailable right now.';}
     })().finally(()=>{loading=null;});
     return loading;
@@ -188,5 +189,6 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   });
   updateRegionSource();
   render();
+  setInterval(()=>{if(document.visibilityState==='visible'&&section.checkVisibility())void load();},15000);
   return {element:section,load,refreshCapability:render};
 }
