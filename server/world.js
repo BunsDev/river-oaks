@@ -7,6 +7,7 @@ import { storefrontSpot } from '../preview/src/arrival.js';
 import { APPEARANCE_COOLDOWN_MS, DEFAULT_SHARED_APPEARANCE, MOVEMENTS, isBeastAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { isJevicaAdmin } from './admin.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
@@ -19,7 +20,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 1, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 2, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -49,7 +50,8 @@ function decodeCheckpoint(json) {
 
 // The transport authenticates identities. Only this object advances the town;
 // client messages contain player intent, never resident state or elapsed time.
-export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin } = {}) {
+export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, sharedPopulation = true, isAdmin = isJevicaAdmin, worldId = DEFAULT_WORLD_ID } = {}) {
+  validateWorldId(worldId);
   const environment = createWalkingEnvironment(worldData);
   const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map();
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
@@ -387,7 +389,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function snapshot() {
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',revision,elapsed,players:[...players.values()].map(publicPlayer),chat:copy(chat),builds:copy([...builds.values()]),wishes:copy(state.wishes),community,
+    return {type:'snapshot',worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),chat:copy(chat),builds:copy([...builds.values()]),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
         life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null)}:null,
         wish:copy(local.wish??null),wishDisruption:local.wishDisruption??null,priority:local.priority,need:local.need,needKnown:local.needKnown,status:local.status,
@@ -400,7 +402,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],
       life:life?Object.fromEntries(LIFE_FIELDS.map(key=>[key,life[key]])):null}));
-    const envelope={version:CHECKPOINT_VERSION,worldFingerprint,payload};
+    const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint,payload};
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
     return {...envelope,checksum:digest(envelope)};
   }
@@ -410,15 +412,20 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const serialized=JSON.stringify(value);
       if (typeof serialized!=='string' || Buffer.byteLength(serialized)>MAX_CHECKPOINT_BYTES) throw new Error('Invalid size');
       const saved=JSON.parse(serialized);
-      if (!record(saved) || !fields(saved,['version','worldFingerprint','payload','checksum']) || saved.version!==CHECKPOINT_VERSION
-        || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest({version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload})) throw new Error('Invalid envelope');
+      const legacy=saved?.version===1 && worldId===DEFAULT_WORLD_ID;
+      const envelope=legacy
+        ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
+        : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
+      if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
+        || !(legacy || saved.version===CHECKPOINT_VERSION && saved.worldId===worldId)
+        || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
         // Validate the entire old checkpoint before dropping any retired shop
         // residents. This keeps invalid data in a removed record from being
         // laundered into an accepted reduced-population checkpoint.
-        const legacy=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin});
-        if (!legacy.restore(saved).ok) throw new Error('Invalid legacy checkpoint');
+        const fullPopulation=createSharedWorld(worldData,{now,maxPlayers,sharedPopulation:false,isAdmin,worldId});
+        if (!fullPopulation.restore(saved).ok) throw new Error('Invalid legacy checkpoint');
         const activeIds=new Set(residentIdentities.map(local=>local.id));
         const kept=recovered.state.locals.filter(local=>activeIds.has(local.id));
         const removed=recovered.state.locals.filter(local=>!activeIds.has(local.id));
@@ -573,5 +580,5 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (const local of state.locals) localById.set(local.id,local);
     focus.clear();chat.length=0;builds.clear();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
-  return {join,leave,command,step,snapshot,checkpoint,restore,reset,players,state};
+  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,players,state};
 }

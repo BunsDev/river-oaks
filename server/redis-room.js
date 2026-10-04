@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld } from './world.js';
+import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
@@ -55,8 +56,9 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize,isAdmin}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
+  validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`};
@@ -76,12 +78,13 @@ export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize,i
     // A fresh lease always reloads durable state, even for this process's token.
     // A tentative mutation is reusable only after its fenced commit succeeds.
     if(ownership===2)cached=null;
-    const world=cached?.world??createSharedWorld(worldData,{now,isAdmin});
+    const world=cached?.world??createSharedWorld(worldData,{now,isAdmin,worldId});
     const time=now();
     let previous=cached?.previous??null,connections=cached?.connections??new Map();
     if(!cached && stored) {
       previous=unpack(stored);
-      if(!record(previous) || previous.version!==1 || !Number.isSafeInteger(previous.revision) || previous.revision<0
+      if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || previous.version===2 && previous.worldId===worldId)
+        || !Number.isSafeInteger(previous.revision) || previous.revision<0
         || !Number.isFinite(previous.lastTick) || !Array.isArray(previous.connections) || !world.restore(previous.checkpoint).ok) throw new Error('Invalid durable town checkpoint');
       for(const connection of previous.connections) {
         if(!record(connection) || !validIdentity(connection.identity) || !id(connection.connectionId) || !Number.isFinite(connection.lastSeen)
@@ -138,8 +141,8 @@ export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize,i
     }
     if(closed){cached=null;return null;}
     const revision=(previous?.revision??0)+1;
-    const view={snapshot:world.snapshot(),connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
-    const checkpoint={version:1,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint()};
+    const view={worldId,snapshot:world.snapshot(),connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
+    const checkpoint={version:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint()};
     const committed=await redis.eval(COMMIT,4+replies.length,keys.lease,keys.state,keys.view,keys.queue,...replies.map(reply=>reply.key),
       token,pack(checkpoint),pack(view),batch.length,LEASE_MS,REPLY_MS,...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
@@ -185,5 +188,5 @@ export function createRedisRoom({redis,prefix,worldData,now=Date.now,authorize,i
     closed=true;cached=null;
     await redis.eval(RELEASE,1,keys.lease,token);
   }
-  return {request,tick,read,close};
+  return {worldId,request,tick,read,close};
 }

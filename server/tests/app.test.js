@@ -7,9 +7,10 @@ const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
-async function fixture(t,{landmarks=createMemoryLandmarks()}={}){
+async function fixture(t,{landmarks=createMemoryLandmarks(),worldId='river-oaks'}={}){
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
+  world.worldId=worldId;
   const app=createGameServer({auth,world,landmarks,origin:'http://127.0.0.1',staticRoot:'/nonexistent'});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
@@ -26,6 +27,21 @@ test('anonymous requests and cross-origin or forged-CSRF ticket requests are den
  assert.equal((await fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1'}})).status,401);
  assert.equal((await ticket(origin,'one',{Origin:'https://evil.example'})).status,403);
  assert.equal((await ticket(origin,'one',{'X-CSRF-Token':'wrong'})).status,403);
+});
+test('tickets name their world and protocol, and the socket rejects a different world or version',async t=>{
+ const {origin}=await fixture(t,{worldId:'garden-2'});
+ const request=path=>fetch(origin+path,{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:'session=one','X-CSRF-Token':'test-csrf'}});
+ assert.equal((await request('/api/multiplayer/ticket')).status,404);
+ assert.equal((await request('/api/multiplayer/ticket?world=river-oaks')).status,404);
+ const response=await request('/api/multiplayer/ticket?world=garden-2');
+ assert.equal(response.status,200);
+ const {ticket,worldId,protocolVersion}=await response.json();
+ assert.equal(worldId,'garden-2');assert.equal(protocolVersion,1);
+ assert.equal((await request('/api/landmarks/list?world=river-oaks')).status,404);
+ assert.equal((await request('/api/landmarks/list?world=garden-2')).status,200);
+ await assert.rejects(connect(origin,`${ticket}&world=river-oaks&protocol=1`,'one'),/403/);
+ await assert.rejects(connect(origin,`${ticket}&world=garden-2&protocol=2`,'one'),/426/);
+ const {ws}=await connect(origin,`${ticket}&world=garden-2&protocol=1`,'one');t.after(()=>ws.terminate());
 });
 test('two authenticated accounts receive the shared roster, and tickets are single-use',async t=>{
  const {origin,world}=await fixture(t);

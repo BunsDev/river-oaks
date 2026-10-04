@@ -1,4 +1,5 @@
 import './multiplayer.css';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers, onPlaySolo = null }) {
@@ -24,7 +25,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
   const chatStatus=element('p',null,'multiplayer-chat-status');chatStatus.setAttribute('role','status');
   chatSection.append(chatTitle,chatHistory,chatForm,chatStatus);
   panel.append(summary,list,notice,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
-  let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false;
+  let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID;
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
     const active=document.activeElement,inside=gate.contains(active);
@@ -90,11 +91,16 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     if(stopped||connecting||connected)return;connecting=true;retry.hidden=true;login.hidden=true;
     setStatus('Connecting to the town…');
     try{
+      worldId=worldIdFromSearch(location.search);
       const session=await api('/auth/session');
       if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play with others.');connecting=false;return;}
       identity=session.user;csrfToken=session.csrfToken;
-      const access=await api('/api/multiplayer/ticket',{method:'POST'});moderator=access.moderator;
+      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});moderator=access.moderator;
+      if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
+        const error=new Error('This world needs a newer client. Refresh the page to join.');error.status=426;throw error;
+      }
       const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
+      url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
       const ws=new WebSocket(url);socket=ws;
       const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);
       ws.addEventListener('message',event=>{
@@ -102,6 +108,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
         try{
           const data=JSON.parse(event.data);
           if(data.type==='snapshot'){
+            if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
@@ -116,12 +123,12 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
         clearTimeout(deadline);if(socket!==ws)return;
         socket=null;connected=false;connecting=false;chatInput.disabled=chatSend.disabled=true;clearPending();onPlayers([],selfId);
         if(stopped)return;
-        const terminal=[4003,4009].includes(event.code);
-        setStatus(event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=false;
+        const terminal=[4000,4003,4009].includes(event.code);
+        setStatus(event.code===4000?'This world changed. Refresh the page to join.':event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=event.code===4000;
         if(!terminal)schedule();
       });
       ws.addEventListener('error',()=>{status.textContent='The town connection is unavailable.';});
-    }catch(error){connecting=false;setStatus(error.message);retry.hidden=false;if(error.status!==403)schedule();}
+    }catch(error){connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
   }
   function command(message){
     if(!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
@@ -152,7 +159,7 @@ export function createMultiplayer({ getPose, onSnapshot, onCorrection, onPlayers
     get connected(){return connected;},get traveling(){return traveling;},get identity(){return identity;},get snapshot(){return latestSnapshot;},command,
     landmarkRequest(action,data={}){
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
-      return api(`/api/landmarks/${action}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     },
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};

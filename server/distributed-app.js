@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createClientAddress } from './client-address.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -16,6 +17,8 @@ const json = (res, status, value) => {
 export function createDistributedServer({ auth, room, security, landmarks, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
+  const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
+  const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
   const connections = new Map(), moderatorIds = new Set(moderators);
   const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
@@ -63,17 +66,19 @@ export function createDistributedServer({ auth, room, security, landmarks, origi
     res.setHeader('Referrer-Policy', 'same-origin');
     res.setHeader('X-Frame-Options', 'DENY');
     try {
-      const path = new URL(req.url, 'http://localhost').pathname;
+      const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
       if (await auth.handle(req, res)) return;
       if (path === '/api/multiplayer/ticket' && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
-        const ticket = await security.issueTicket(identity);
-        return ticket ? json(res, 200, { ticket, moderator: moderatorIds.has(identity.userId) })
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const ticket = await security.issueTicket(identity, worldId);
+        return ticket ? json(res, 200, { ticket, worldId, protocolVersion: WORLD_PROTOCOL_VERSION, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
       }
       if (path.startsWith('/api/landmarks/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         if (!landmarks) return json(res, 503, { error: 'Landmarks are unavailable.' });
         const action = path.slice('/api/landmarks/'.length);
         if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId) });
@@ -123,9 +128,12 @@ export function createDistributedServer({ auth, room, security, landmarks, origi
     try {
       const url = new URL(req.url, 'http://localhost');
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
+      if (!matchesWorld(url)) return reject(403);
+      const protocol = url.searchParams.get('protocol');
+      if (protocol !== String(WORLD_PROTOCOL_VERSION) && !(protocol === null && worldId === DEFAULT_WORLD_ID)) return reject(426);
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || await security.isBanned(identity.userId)
-        || !(await security.consumeTicket(url.searchParams.get('ticket'), identity))) return reject(401);
+        || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
       wss.handleUpgrade(req, socket, head, ws => {
         ws.on('error', () => {});
         if (stopped) { ws.close(1012, 'Town restarting'); return; }

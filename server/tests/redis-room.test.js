@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
 import { createRedisRoom } from '../redis-room.js';
 
@@ -48,6 +49,27 @@ testRedis('two coordinators share committed players, wishes, ownership and concu
   assert.equal((await b.read()).snapshot.locals[0].wish,null);
 });
 
+testRedis('separate world rooms isolate presence, commands, and snapshots for the same account',async t=>{
+  const f=await setup(t),river=f.create(),prefix=`{river-oaks:test:${randomUUID()}}`;
+  const garden=createRedisRoom({redis:f.redis,prefix,worldId:'garden-2',worldData,now:()=>100000,authorize:async()=>true,isAdmin:id=>id==='alice'});
+  try {
+    assert.equal((await f.join(river,'alice')).ok,true);
+    assert.equal((await garden.request({type:'join',identity:f.identity('alice'),connectionId:'garden-socket'})).ok,true);
+    assert.equal((await f.join(river,'bob')).ok,true);
+    assert.deepEqual((await river.read()).snapshot.players.map(player=>player.id),['alice','bob']);
+    assert.deepEqual((await garden.read()).snapshot.players.map(player=>player.id),['alice']);
+    assert.equal((await river.read()).snapshot.worldId,'river-oaks');
+    assert.equal((await garden.read()).snapshot.worldId,'garden-2');
+    assert.equal((await f.command(garden,'alice',{type:'chat',text:'wrong socket'})).error,'stale_connection');
+    assert.equal((await f.command(garden,'alice',{type:'chat',text:'Private garden'},'garden-socket')).ok,true);
+    assert.deepEqual((await river.read()).snapshot.chat,[]);
+    assert.equal((await garden.read()).snapshot.chat[0].text,'Private garden');
+  } finally {
+    await garden.close();
+    const keys=await f.redis.keys(`${prefix}:*`);if(keys.length)await f.redis.del(...keys);
+  }
+});
+
 testRedis('restart restores checkpoint and replacing an account preserves wishes while fencing stale sockets',async t=>{
   const f=await setup(t),first=f.create();
   await f.join(first,'alice');await f.command(first,'alice',{type:'travel',localId:'local-00'});
@@ -62,6 +84,22 @@ testRedis('restart restores checkpoint and replacing an account preserves wishes
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'})).error,'stale_connection');
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'},'alice-new')).ok,true);
   assert.equal((await f.command(replacement,'alice',{type:'wish',localId:'local-00',kind:'dog'},'alice-new')).error,'wish_cooldown');
+});
+
+testRedis('default room upgrades a stored version-one checkpoint without losing its roster',async t=>{
+  const f=await setup(t),room=f.create();
+  assert.equal((await f.join(room,'alice')).ok,true);
+  const key=`${f.prefix}:state`,stored=JSON.parse(inflateSync(await f.redis.getBuffer(key)).toString('utf8'));
+  stored.version=1;delete stored.worldId;
+  const checkpoint=stored.checkpoint;
+  checkpoint.version=1;delete checkpoint.worldId;
+  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:1,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  await f.redis.set(key,deflateSync(Buffer.from(JSON.stringify(stored))));
+  await room.close();
+  const restored=f.create();
+  assert.equal((await f.join(restored,'alice','replacement')).ok,true);
+  assert.deepEqual((await restored.read()).snapshot.players.map(player=>player.id),['alice']);
+  assert.equal((await restored.read()).snapshot.worldId,'river-oaks');
 });
 
 testRedis('authorization revocation and presence expiration remove residents and owned wishes',async t=>{

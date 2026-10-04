@@ -112,7 +112,7 @@ test('appearance belongs to the authenticated account and survives departure and
   assert.equal(restored.join({userId:'a',name:'Alice'}).player.appearance,'woman-tailored');
 });
 
-const resign=checkpoint=>{checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');return checkpoint;};
+const resign=checkpoint=>{const {checksum: _checksum,...envelope}=checkpoint;checkpoint.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');return checkpoint;};
 
 test('every character form and style is selectable and durable',()=>{
   const {world,advance,now}=setup(),ids=SHARED_APPEARANCES.map(appearance=>appearance.id).filter(id=>id!=='jevica');
@@ -174,7 +174,7 @@ test('appearance migration restores a town checkpoint written before player look
   delete checkpoint.payload.builds;
   for(const player of checkpoint.payload.players)delete player.appearance;
   for(const [,ledger] of checkpoint.payload.ledgers)delete ledger.appearanceAt;
-  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  resign(checkpoint);
   const restored=createSharedWorld(data,{now});
   assert.deepEqual(restored.restore(checkpoint),{ok:true});
   assert.ok(restored.snapshot().players.every(player=>player.appearance==='jevica'));
@@ -274,7 +274,7 @@ test('build commands reject road, invalid position, and forged checkpoint record
   const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
   checkpoint.payload.builds[0].ownerId='forged';
   checkpoint.payload.builds[0].position=[0,0];
-  checkpoint.checksum=createHash('sha256').update(JSON.stringify({version:checkpoint.version,worldFingerprint:checkpoint.worldFingerprint,payload:checkpoint.payload})).digest('hex');
+  resign(checkpoint);
   const fresh=createSharedWorld(data,{now});
   assert.equal(fresh.restore(checkpoint).error,'invalid_checkpoint');
   assert.deepEqual(fresh.snapshot().builds,[]);
@@ -656,7 +656,7 @@ test('corrupt or incompatible checkpoints fail closed without changing the live 
     assert.equal(world.restore(bad).ok,false);
     assert.deepEqual(world.snapshot(),before);
     // Schema checks remain necessary even if a storage writer recalculates integrity.
-    bad.checksum=createHash('sha256').update(JSON.stringify({version:bad.version,worldFingerprint:bad.worldFingerprint,payload:bad.payload})).digest('hex');
+    resign(bad);
     assert.equal(world.restore(bad).ok,false);
     assert.deepEqual(world.snapshot(),before);
   }

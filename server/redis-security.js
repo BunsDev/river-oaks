@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
 const LIMIT = `
 local expired = redis.call('ZRANGEBYSCORE', KEYS[2], '-inf', ARGV[2])
@@ -34,7 +35,7 @@ if not expires or tonumber(expires) <= tonumber(ARGV[2]) then
   redis.call('HDEL', KEYS[1], ARGV[1]); redis.call('ZREM', KEYS[2], ARGV[1]); return 0
 end
 local user = cjson.decode(value)
-if user.userId ~= ARGV[3] or user.sessionId ~= ARGV[4] or redis.call('HEXISTS', KEYS[3], ARGV[3]) == 1 then return 0 end
+if user.userId ~= ARGV[3] or user.sessionId ~= ARGV[4] or (user.worldId or 'river-oaks') ~= ARGV[5] or redis.call('HEXISTS', KEYS[3], ARGV[3]) == 1 then return 0 end
 redis.call('HDEL', KEYS[1], ARGV[1]); redis.call('ZREM', KEYS[2], ARGV[1])
 return 1`;
 
@@ -80,15 +81,17 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
       if (!['access', 'frames'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
-    async issueTicket(user) {
+    async issueTicket(user, worldId = DEFAULT_WORLD_ID) {
+      try { validateWorldId(worldId); } catch { return null; }
       if (!identity(user) || !await limited('tickets', user.userId, 10, 60000)) return null;
       const ticket = randomBytes(32).toString('base64url');
-      const issued = await execute(ISSUE, ['tickets:values', 'tickets:expiry', 'bans'], [now(), ticket, JSON.stringify({ userId: user.userId, sessionId: user.sessionId }), user.userId]);
+      const issued = await execute(ISSUE, ['tickets:values', 'tickets:expiry', 'bans'], [now(), ticket, JSON.stringify({ userId: user.userId, sessionId: user.sessionId, worldId }), user.userId]);
       return issued === 1 ? ticket : null;
     },
-    async consumeTicket(ticket, user) {
+    async consumeTicket(ticket, user, worldId = DEFAULT_WORLD_ID) {
+      try { validateWorldId(worldId); } catch { return false; }
       if (typeof ticket !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(ticket) || !identity(user)) return false;
-      return await execute(CONSUME, ['tickets:values', 'tickets:expiry', 'bans'], [ticket, now(), user.userId, user.sessionId]) === 1;
+      return await execute(CONSUME, ['tickets:values', 'tickets:expiry', 'bans'], [ticket, now(), user.userId, user.sessionId, worldId]) === 1;
     },
     async isBanned(userId) {
       if (!text(userId)) return false;

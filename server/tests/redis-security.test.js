@@ -52,6 +52,12 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     const results = await Promise.all([store.consumeTicket(ticket, user), second.consumeTicket(ticket, user)]);
     assert.equal(results.filter(Boolean).length, 1);
   });
+  await run('a ticket issued for one world cannot join another world', async ({ store }) => {
+    const user = { userId: 'user-a', sessionId: 'session-a' };
+    const ticket = await store.issueTicket(user, 'garden-2');
+    assert.equal(await store.consumeTicket(ticket, user, 'river-oaks'), false);
+    assert.equal(await store.consumeTicket(ticket, user, 'garden-2'), true);
+  });
   await run('tickets expire after 15 seconds and account issuance is capped', async ({ store, advance }) => {
     const user = { userId: 'user-a', sessionId: 'session-a' };
     const tickets = await Promise.all(Array.from({ length: 15 }, () => store.issueTicket(user)));

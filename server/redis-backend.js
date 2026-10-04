@@ -6,6 +6,8 @@ import { createRedisSecurity } from './redis-security.js';
 import { createDistributedServer } from './distributed-app.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { vercelClientAddress } from './vercel-routing.js';
+import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { roomPrefixFor, accountPrefixFor } from './world-keys.js';
 
 export async function createRedisBackend(env = process.env) {
   const origin = env.PUBLIC_ORIGIN;
@@ -18,7 +20,8 @@ export async function createRedisBackend(env = process.env) {
   const namespace = env.REDIS_NAMESPACE ?? (env.VERCEL_ENV === 'production' ? 'river-oaks:production:v1' : null);
   if (!namespace || !/^[A-Za-z0-9:_-]{1,120}$/.test(namespace)) throw new Error('Redis namespace is not configured');
   if (env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && namespace.startsWith('river-oaks:production:')) throw new Error('Preview cannot use the production town');
-  const prefix = `{${namespace}}`;
+  const worldId = validateWorldId(env.WORLD_ID ?? DEFAULT_WORLD_ID);
+  const prefix = `{${namespace}}`, roomPrefix = roomPrefixFor(namespace,worldId);
   const worldData = JSON.parse(await readFile(new URL('../preview/public/data/district.json', import.meta.url)));
   worldData.vegetation = JSON.parse(await readFile(new URL('../preview/public/data/district-vegetation.json', import.meta.url)));
   const redis = new Redis(env.REDIS_URL, {
@@ -33,14 +36,14 @@ export async function createRedisBackend(env = process.env) {
     const security = createRedisSecurity({ redis, prefix });
     // Account bookmarks outlive a town checkpoint version while previews keep
     // their own namespace and cannot read production accounts.
-    const accountPrefix = `{${namespace.replace(/:v\d+$/, '')}:accounts:v1}`;
+    const accountPrefix = accountPrefixFor(namespace,worldId);
     const landmarks = createRedisLandmarks({ redis, prefix: accountPrefix });
     let game;
     const auth = createRedisAuth({ redis, prefix, origin,
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
       onLogout: (userId, sessionId) => game.disconnectUser(userId, sessionId),
     });
-    const room = createRedisRoom({ redis, prefix, worldData, authorize: async identity =>
+    const room = createRedisRoom({ redis, prefix:roomPrefix, worldId, worldData, authorize: async identity =>
       await auth.isSessionActive(identity.userId, identity.sessionId)
         && !(await security.isBanned(identity.userId)) });
     game = createDistributedServer({ auth, room, security, landmarks, origin,
@@ -48,7 +51,7 @@ export async function createRedisBackend(env = process.env) {
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
     });
-    return { server: game.server, async close() {
+    return { worldId, server: game.server, async close() {
       await game.close(); await room.close(); security.close(); redis.disconnect();
     } };
   } catch {

@@ -11,8 +11,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const modes = process.argv.slice(2);
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
-if (modes.some(mode => !['development', 'required'].includes(mode))) throw new Error('Choose development or required shared play.');
-const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : ['development', 'required'], rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
+const supportedModes=['development','development-world','development-solo','required'];
+if (modes.some(mode => !supportedModes.includes(mode))) throw new Error(`Choose ${supportedModes.join(', ')} shared play.`);
+const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : supportedModes, rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
 let browser, child;
 const interruption = new AbortController();
@@ -47,11 +48,11 @@ async function stop() {
   try { await exited; } finally { clearTimeout(deadline); child = null; }
 }
 async function start(mode, ports) {
-  const development = mode === 'development';
+  const development = mode.startsWith('development');
   for (const port of Object.values(ports)) await unused(port);
   const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', String(ports.web)] : ['server/tests/browser-fixture.js'];
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
-  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: development ? 'auto' : 'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json') };
+  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: mode==='development'?'auto':mode==='development-solo'?'choice':'required', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json') };
   interruption.signal.throwIfAborted();
   child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {
@@ -90,14 +91,15 @@ try {
   });
   await probe.close();
   console.log(`Shared renderer: ${report.renderer}; ${report.rendering}`);
-  for (const mode of modes.length ? modes : ['development', 'required']) {
+  for (const mode of modes.length ? modes : supportedModes) {
     interruption.signal.throwIfAborted();
     const used = new Set();
     const web = await freePort(used); used.add(web);
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    for (const name of mode === 'development' ? ['multiplayer-dev'] : ['multiplayer', 'multiplayer-gate']) {
+    const names=mode==='development'?['multiplayer-dev']:mode==='development-world'?['world-boundary']:mode==='development-solo'?['solo-admin']:['multiplayer','multiplayer-gate'];
+    for (const name of names) {
       interruption.signal.throwIfAborted();
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);

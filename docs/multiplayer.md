@@ -49,8 +49,8 @@ Their positions come from the server's current player pose, and Redis stores
 them outside the town checkpoint so reconnects and new server instances retain
 them. Solo landmarks remain in browser storage.
 
-In shared play, only Jevica's two configured WorkOS owner accounts can grant
-wishes or use Build & decorate, including saved designs. The server checks the
+Only Jevica's two configured WorkOS owner accounts can grant wishes or use
+Build & decorate, including saved designs. In shared play, the server checks the
 authenticated user ID for every command; a selected Jevica appearance does not
 grant authority. Other visitors can see creations and wish effects, meet
 residents, chat, travel, and participate in community scenarios. On loopback
@@ -58,7 +58,11 @@ development auth, the first issued development identity is the owner fixture.
 Jevica can move or remove creations made before the restriction; their previous
 owners cannot keep building. Earlier guest design records remain private in the
 checkpoint but cannot be used while the restriction is active.
-Solo play remains a separate local sandbox without an authenticated account.
+Solo play remains a local sandbox. Its wish controls require a server-confirmed
+Jevica session and recheck that session before each wish action. An offline or
+signed-out solo player cannot grant wishes. Solo play has no building controls.
+Local simulation state is browser-owned; shared-world authority is enforced by
+the server.
 
 Build & decorate lets the owner place, move, turn, and remove up to 24 owned
 creations in the shared town. A placed creation can be saved as a design, then
@@ -89,6 +93,11 @@ One renewable Redis lease controls simulation writes. A fenced transaction commi
 Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
+
+`WORLD_ID` selects one world instance for a server process. It defaults to
+`river-oaks`; other canonical IDs require `?world=<id>` in the browser URL.
+The [world boundary](world-boundary.md) documents admission, Redis keys,
+checkpoint compatibility, and the current limits of this first extraction.
 
 ## Deployment readiness
 
