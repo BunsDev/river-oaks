@@ -44,7 +44,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
     }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);entry.label.textContent=player.name+' · avatar unavailable';}});
   };
   return {
-    stats(){return [...entries].map(([id,entry])=>({id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),position:entry.holder.position.toArray()}));},
+    stats(){return [...entries].map(([id,entry])=>{
+      const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
+      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),position:entry.holder.position.toArray()};
+    });},
     sync(players,selfId){
       const peers=players.filter(player=>player.id!==selfId);
       for(const [id,entry]of entries)if(!peers.some(player=>player.id===id)){remove(entry);entries.delete(id);}
@@ -80,7 +83,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,'continue',false,{speed:ride?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!ride&&target.altitude>0.1,riding:Boolean(ride),ridingKind:ride?.kind,seatToFloor:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:ride?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!ride&&target.altitude>0.1,riding:Boolean(ride),ridingKind:ride?.kind,seatToFloor:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
           entry.riderSeated=Boolean(ride);
           entry.outfit.update(!ride&&target.altitude>0.1);entry.vehicle.object.visible=!ride&&target.altitude>0.1;
           if(entry.road){

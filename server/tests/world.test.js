@@ -32,6 +32,34 @@ function setup() {
 const cast = (world,userId='a',localId='local-00') => world.command(userId,{type:'wish',localId,kind:'dragon'});
 const travel = (world,id,userId='a') => world.command(userId,{type:'travel',localId:id});
 
+test('visitors can share bounded gestures without gaining Jevica permissions',()=>{
+  let time=1000;
+  const world=createWorld(data,{now:()=>time,isAdmin:()=>false});
+  world.join({userId:'a',name:'Alice'});world.join({userId:'b',name:'Bob'});
+  const player=id=>world.snapshot().players.find(item=>item.id===id);
+  assert.equal(player('a').gesture,null);
+  assert.equal(world.command('a',{type:'gesture',kind:'wave'}).ok,true);
+  assert.equal(player('a').gesture,'wave');
+  assert.equal(player('b').gesture,null);
+  for(const command of [{type:'gesture',kind:'unknown'},{type:'gesture',kind:'bow',userId:'b'}])
+    assert.equal(world.command('a',command).error,'invalid_gesture');
+  assert.equal(world.command('a',{type:'gesture',kind:'bow'}).error,'gesture_cooldown');
+  time+=2000;
+  assert.equal(world.command('b',{type:'gesture',kind:'bow'}).ok,true);
+  assert.equal(player('b').gesture,'bow');
+  assert.equal(world.command('b',{type:'build',action:'remove',id:'build-1'}).error,'admin_only');
+  assert.equal(world.command('b',{type:'wish',localId:'local-00',kind:'dragon'}).error,'admin_only');
+  const restored=createWorld(data,{now:()=>time,isAdmin:()=>false});
+  assert.deepEqual(restored.restore(world.checkpoint()),{ok:true});
+  assert.equal(restored.snapshot().players.find(item=>item.id==='b').gesture,'bow');
+  assert.equal(restored.command('b',{type:'gesture',kind:'wave'}).error,'gesture_cooldown','recovery keeps the gesture limit');
+  const corrupt=world.checkpoint();corrupt.payload.players.find(item=>item.id==='b').gesture='forged';
+  assert.equal(restored.restore(resign(corrupt)).error,'invalid_checkpoint');
+  assert.equal(restored.snapshot().players.find(item=>item.id==='b').gesture,'bow','a rejected checkpoint does not alter the room');
+  time+=4000;
+  assert.equal(restored.snapshot().players.find(item=>item.id==='b').gesture,null);
+});
+
 test('only the named account can enter shared play as either Jevica form',()=>{
   const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
   const world=createSharedWorld(data);

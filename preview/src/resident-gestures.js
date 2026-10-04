@@ -14,13 +14,15 @@ export function createResidentGestures({reducedMotion=false}={}) {
   const pose=Object.fromEntries(joints.map(name=>[name,[0,0,0]]));
   const velocities=Object.fromEntries(joints.map(name=>[name,[0,0,0]]));
   const greeting={lowerarm_r:[0,0,0]};
+  const wave={upperarm_r:[-1.05,0,-.2],lowerarm_r:[0,0,1.25]};
   return {
     update(action,delta,time=0) {
       // Culling suspends avatar updates. Resume from the last displayed pose;
       // do not spend hidden time as a large first-visible catch-up step.
       if(reducedMotion||delta>0.25)return pose;
       greeting.lowerarm_r[2]=-0.32+Math.sin(time*2)*0.025;
-      const target=action==='force'?force:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='bow'?bow:{};
+      wave.lowerarm_r[2]=1.25+Math.sin(time*9)*.16;
+      const target=action==='force'?force:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:{};
       const dt=Number.isFinite(delta)?Math.max(0,Math.min(0.08,delta)):0;
       const frequency=10,decay=Math.exp(-frequency*dt);
       for(const name of joints)for(let axis=0;axis<3;axis++){

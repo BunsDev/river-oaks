@@ -39,6 +39,12 @@ async page => {
     await tab.locator('[data-section=community-section]').click();
   };
   await openPeople(page);
+  await page.getByRole('button',{name:'Wave',exact:true}).click();
+  await second.waitForFunction(id=>{
+    const town=window.__riverMultiplayer(),player=town.snapshot?.players.find(person=>person.id===id),remote=town.remotes?.find(person=>person.id===id);
+    return player?.gesture==='wave'&&remote?.gesture==='wave'&&remote.rightArmMotion>.4;
+  },a.self,{timeout:10000});
+  check(true,'A shared wave reaches the peer and visibly raises the remote avatar arm');
   await page.locator('.multiplayer-chat-form input').fill('Hello from the town');
   await page.locator('.multiplayer-chat-form button').click();
   await second.locator('.multiplayer-chat-message').filter({hasText:'Hello from the town'}).waitFor({state:'attached'});

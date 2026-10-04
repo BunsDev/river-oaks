@@ -13,7 +13,7 @@ function load(url, context, nextLoad) {
       globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId;
-      return { object, update(_now, _action, _speaking, motion) { object.userData.frames.push(motion); }, dispose() {} };
+      return { object, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, dispose() {} };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
   if (url.endsWith('/flight-vehicles.js')) return { format: 'module', shortCircuit: true, source: "import * as THREE from 'three'; export function createFlightVehicle() { return { object: new THREE.Group(), dispose() {} }; }" };
@@ -110,6 +110,23 @@ test('a non-owner remote cannot render as Jevica',async()=>{
     players.sync([{id:'guest',name:'Guest',position:[0,0,0],altitude:0,yaw:0,appearance:'jevica'}],'self');
     await new Promise(resolve=>setImmediate(resolve));
     assert.equal(players.stats()[0].appearance,'sable-human');
+    players.dispose();
+  }finally{globalThis.document=previousDocument;}
+});
+
+test('remote avatars play the gesture selected by the room snapshot',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  try{
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),players=createRemotePlayers(scene,new Element());
+    const peer={id:'guest',name:'Guest',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human',gesture:'wave'};
+    players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));
+    players.update(0,camera);
+    const frames=scene.children[0].children[0].userData.frames;
+    assert.equal(frames.at(-1).action,'wave');
+    players.sync([{...peer,gesture:'bow'}],'self');players.update(100,camera);
+    assert.equal(frames.at(-1).action,'bow');
+    players.sync([{...peer,gesture:null}],'self');players.update(200,camera);
+    assert.equal(frames.at(-1).action,'continue');
     players.dispose();
   }finally{globalThis.document=previousDocument;}
 });

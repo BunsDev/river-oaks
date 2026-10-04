@@ -13,6 +13,14 @@ test('Force casting reaches with the free arm and eases back without disturbing 
   assert.ok(Object.values(pose).flat().every(value=>Math.abs(value)<1e-6));
 });
 
+test('a wave raises the right arm and settles back into the walking pose',()=>{
+  const motion=createResidentGestures();let pose;
+  for(let frame=0;frame<60;frame++)pose=motion.update('wave',1/60,frame/60);
+  assert.ok(pose.upperarm_r[0]<-.8 && pose.lowerarm_r[2]>1,'the greeting reads as a raised hand');
+  for(let frame=0;frame<120;frame++)pose=motion.update('continue',1/60,frame/60);
+  assert.ok(Object.values(pose).flat().every(angle=>Math.abs(angle)<1e-6));
+});
+
 const copy=pose=>structuredClone(pose);
 test('passive acknowledgement is a small head nod that leaves walking arms free',()=>{
   const motion=createResidentGestures();let pose;

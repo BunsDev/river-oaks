@@ -12,11 +12,12 @@ import { buildKind, buildFinish, buildRoads, checkBuildSite, BUILD_REACH, BUILD_
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
-const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, FOCUS_MS = 30000;
+const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
 const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
+const GESTURES = ['wave','bow'];
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
 const copy = value => structuredClone(value);
 const fields = (message, allowed) => Object.keys(message).every(key => allowed.includes(key));
@@ -68,7 +69,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Beast movement is an account preference that only shows in a beast form,
   // so switching to a humanoid form and back keeps it.
   const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
-  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),gesture:player.gestureUntil>now()?player.gesture:null,canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
     if (appearanceByUser.size>MAX_APPEARANCES) {
@@ -121,12 +122,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     clearExpiredLedgers(time);
     if (!ledgers.has(identity.userId)) {
       if (ledgers.size >= MAX_LEDGERS) return reject('world_busy');
-      ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,chatAt:-Infinity,appearanceAt:-Infinity,tokens:12,tokenAt:time,seen:time});
+      ledgers.set(identity.userId,{wishAt:-Infinity,travelAt:-Infinity,chatAt:-Infinity,appearanceAt:-Infinity,gestureAt:-Infinity,tokens:12,tokenAt:time,seen:time});
     }
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
     const appearance=permittedAppearance(identity.userId,appearanceByUser.get(identity.userId));
     const player = {id:identity.userId,name:identity.name.slice(0,80),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
-      poseAt:time,moveBudget:0.1,liftBudget:0.1};
+      poseAt:time,moveBudget:0.1,liftBudget:0.1,gesture:null,gestureUntil:0};
     players.set(player.id,player);
     rememberAppearance(player.id,appearance);
     revision++;
@@ -177,6 +178,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
     Object.assign(player,{position:[position[0],position[1],ground],yaw:Math.atan2(Math.sin(yaw),Math.cos(yaw)),altitude,vehicle:message.vehicle??null});
+    if(altitude>0.1 || message.vehicle){player.gesture=null;player.gestureUntil=0;}
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -259,7 +261,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const target=local?.position ?? place?.position ?? (point ? null : mode==='enter' && room ? room.toWorld(room.center,room.depth-1) : store.facade);
     // A bare position keeps the traveller's own facing; a place faces its spot.
     const yaw=target && !(target[0]===destination[0] && target[1]===destination[1]) ? Math.atan2(destination[0]-target[0],target[1]-destination[1]) : player.yaw;
-    Object.assign(player,{position:destination,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1,vehicle:null});
+    Object.assign(player,{position:destination,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1,vehicle:null,gesture:null,gestureUntil:0});
     revision++;
     return {ok:true,player:publicPlayer(player)};
   }
@@ -275,6 +277,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (ledger.tokens<1) return reject('rate_limited');
     ledger.tokens--;
     if (message.type==='travel') return travel(player,message,ledger,time);
+    if (message.type==='gesture') {
+      if(!fields(message,['type','kind']) || !GESTURES.includes(message.kind))return reject('invalid_gesture');
+      if(player.altitude>0.1 || player.vehicle)return reject('gesture_on_foot','Step out or land before greeting someone.');
+      if(time-ledger.gestureAt<GESTURE_COOLDOWN_MS)return reject('gesture_cooldown','Wait a moment before another gesture.');
+      player.gesture=message.kind;player.gestureUntil=time+GESTURE_DURATION_MS;ledger.gestureAt=time;revision++;
+      return {ok:true,player:publicPlayer(player)};
+    }
     if (message.type==='appearance') {
       // A retired ID resolves to its replacement, which is what the town keeps.
       const chosen=fields(message,['type','appearance']) ? sharedAppearance(message.appearance) : null;
@@ -506,8 +515,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && ['wishAt','travelAt'].every(key=>Number.isFinite(ledger[key]) || ledger[key]===-Infinity)
         && (ledger.chatAt===undefined || Number.isFinite(ledger.chatAt) || ledger.chatAt===-Infinity)
         && (ledger.appearanceAt===undefined || Number.isFinite(ledger.appearanceAt) || ledger.appearanceAt===-Infinity)
+        && (ledger.gestureAt===undefined || Number.isFinite(ledger.gestureAt) || ledger.gestureAt===-Infinity)
         && ['tokenAt','seen'].every(key=>Number.isFinite(ledger[key])) && nonnegative(ledger.tokens) && ledger.tokens<=12);
-      for (const ledger of nextLedgers.values()) {ledger.chatAt??=-Infinity;ledger.appearanceAt??=-Infinity;}
+      for (const ledger of nextLedgers.values()) {ledger.chatAt??=-Infinity;ledger.appearanceAt??=-Infinity;ledger.gestureAt??=-Infinity;}
       const nextAppearances=restoreMap(recovered.appearances??[],MAX_APPEARANCES,appearance=>Boolean(sharedAppearance(appearance)));
       // Checkpoints written before an appearance was retired keep its replacement.
       for (const [id,appearance] of nextAppearances) nextAppearances.set(id,permittedAppearance(id,appearance));
@@ -543,8 +553,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && point(player.position,3) && Number.isFinite(player.yaw)
         && (player.vehicle == null || isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
+        && (player.gesture===undefined && player.gestureUntil===undefined
+          || (player.gesture===null || GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       for (const player of nextPlayers.values()) {
+        player.gesture??=null;player.gestureUntil??=0;
         player.appearance=permittedAppearance(player.id,player.appearance??nextAppearances.get(player.id));
         if(nextAppearances.has(player.id) && nextAppearances.get(player.id)!==player.appearance) throw new Error('Invalid player appearance');
         if(!nextAppearances.has(player.id))nextAppearances.set(player.id,player.appearance);
