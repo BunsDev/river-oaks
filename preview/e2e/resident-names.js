@@ -49,7 +49,8 @@ async page => {
   await open('alice',page);
   check(await named(page,'alice')==='alice','A resident is shown by their GitHub username');
   const owner=await open('owner'),impostor=await open('impostor');
-  await waitForPlayer(page,ownerId);await waitForPlayer(page,'impostor');
+  // Each browser must have received the other players before it is asked.
+  for(const tab of [page,owner,impostor])for(const id of [ownerId,'impostor'])await waitForPlayer(tab,id);
   check(await named(page,ownerId)==='Jevica','The admin account is Jevica');
   check(await named(page,'impostor')==='resident','A non-admin session claiming Jevica is not shown as Jevica');
   check(await named(impostor,'impostor')==='resident'&&await named(owner,'impostor')==='resident','Every viewer, including the impostor, sees the same name');
