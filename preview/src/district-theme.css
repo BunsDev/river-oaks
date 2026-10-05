@@ -59,7 +59,7 @@
 :root[data-theme] #enter-destination:disabled { opacity: .45; cursor: default; }
 .store-inside { margin: 8px 0 0; line-height: 1.45; }
 .interior-swatch { background: linear-gradient(135deg, #ffd9ae, #e2a1c9); }
-#walking-enter { display: block; width: 100%; margin: 6px 0 4px; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2a1c9; background: #2a1e28; color: #f7e8f1; font-weight: 600; pointer-events: auto; cursor: pointer; }
-#walking-enter[hidden] { display: none; }
-#walking-enter kbd { font: inherit; opacity: .7; margin-left: 4px; }
+#walking-enter, #walking-interact { display: block; width: 100%; margin: 6px 0 4px; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2a1c9; background: #2a1e28; color: #f7e8f1; font-weight: 600; pointer-events: auto; cursor: pointer; }
+#walking-enter[hidden], #walking-interact[hidden] { display: none; }
+#walking-enter kbd, #walking-interact kbd { font: inherit; opacity: .7; margin-left: 4px; }
 body.inside-store .walking-title > span::after { content: ' · INSIDE'; opacity: .9; }

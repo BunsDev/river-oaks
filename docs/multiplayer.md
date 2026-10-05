@@ -427,9 +427,10 @@ for measured results, command options, and hosted readiness gates.
 ## Shared furniture seating
 
 In shared play, placed Garden seats have two independent slots and Lounge chairs
-have one. Stand near furniture in the same room, choose an available slot in
-**Nearby seats**, and select **Sit down**. **Stand up** works with keyboard and
-touch controls. Dragging turns the camera while the body faces the seat front.
+have one, and every storefront bench has two (`bench:<store>`, slots 0 and 1).
+Stand near furniture in the same room, choose an available slot in
+**Nearby seats**, and select **Sit down**, or press **Z** to sit on the nearest
+free one. **Stand up** (or **Z** again) works with keyboard and touch controls. Dragging turns the camera while the body faces the seat front.
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
@@ -455,5 +456,24 @@ new checkpoint format. Browser protocol 1 remains compatible for existing
 commands. Refresh older clients to display seats; their existing Places travel
 still releases a reservation.
 
-This interaction covers placed creations. Built-in shop/park furniture is a
-separate model system and is not yet interactive.
+Placed creations and storefront benches are interactive; other built-in shop
+and park furniture is not yet. Bench places come from the same placement the
+browser draws (`preview/src/world-interactions.js`, which the server, browser and
+townspeople share), and a bench stands its sitter up in front of it.
+
+**Townspeople** resting at a storefront sit on its bench every other visit when a
+place is free and no player holds it, and stand up in front of it before walking
+on; a storm stands everyone up. A place a resident holds is occupied for players
+too. Their snapshot `life.seat` lets every browser draw them seated. Single
+player seats the visitor in the browser and keeps that place from residents.
+
+## Watering planters
+
+Anyone can water a planter: the two by each boutique door, the street planters
+(identified by position, so server and browser agree), and the flower planters
+Jevica builds. Stand within 2.2 m in the same room or on the same street and
+press **Z**. `{type:'water', planterId}` is checked by the server and rate limited
+with gestures: it turns the player to the planter and shows the `water` gesture,
+with a watering can, for 3.6 s. The body keeps facing the planter while the
+camera moves, and walking off ends it. Nobody waters while seated. Watering is an
+animation only: planters keep no state.

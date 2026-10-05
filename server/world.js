@@ -10,6 +10,7 @@ import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
+import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -21,6 +22,9 @@ const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
 const MAX_HOME_GUESTS = 16;
 const GESTURES = ['wave','bow'];
+// Watering is a gesture the server starts for a planter in reach; a player
+// cannot request it as a bare gesture.
+const SHOWN_GESTURES = [...GESTURES,'water'];
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
 const copy = value => structuredClone(value);
 const fields = (message, allowed) => Object.keys(message).every(key => allowed.includes(key));
@@ -75,18 +79,31 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Every name leaves the world checked against its account: only Jevica's
   // accounts are Jevica, whatever a stored or restored record says.
   const publicPlayer = player => ({id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:player.gestureUntil>now()?player.gesture:null,canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  // Seats are Jevica's garden seats and lounge chairs, and the two places on
+  // every storefront bench ('bench:<store>', slots 0 and 1).
+  const benches=benchSeats(worldData);
+  const seatAt=(buildId,slot,source=builds)=>String(buildId).startsWith('bench:')
+    ? resolveBenchSeat(benches,buildId,slot,(x,north)=>environment.groundAt(x,-north)) : resolveSeat(source.get(buildId),slot);
+  // A townsperson resting on a bench place holds it as a player would.
+  const residentOnSeat=(buildId,slot)=>state.locals.some(local=>local.life?.seat?.id===`${buildId}:${slot}`);
+  // Planters: two by each boutique door, the street planters, and Jevica's.
+  let staticPlanters=null;
+  const planterSites=()=>{
+    staticPlanters??=[...boutiquePlanters(worldData),...lanePlanters(worldData,(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z))];
+    return new Map([...staticPlanters,...buildPlanters([...builds.values()])].map(planter=>[planter.id,planter]));
+  };
   function publicSeat(player) {
-    const seat=player.sitting && resolveSeat(builds.get(player.sitting.buildId),player.sitting.slot);
+    const seat=player.sitting && seatAt(player.sitting.buildId,player.sitting.slot);
     return seat?{buildId:seat.buildId,slot:seat.slot,height:seat.height,yaw:seat.yaw}:null;
   }
   const seatOccupied=(buildId,slot)=>[...players.values()].some(p=>p.sitting?.buildId===buildId && p.sitting.slot===slot);
   const buildOccupied=id=>[...players.values()].some(p=>p.sitting?.buildId===id);
   function sit(player,message,time) {
     if(!fields(message,['type','buildId','slot']) || !textId(message.buildId))return reject('invalid_seat');
-    const build=builds.get(message.buildId),seat=resolveSeat(build,message.slot);
+    const seat=seatAt(message.buildId,message.slot);
     if(!seat)return reject('invalid_seat');
     if(player.sitting)return reject('already_seated','Stand up before choosing another seat.');
-    if(seatOccupied(seat.buildId,seat.slot))return reject('seat_occupied','Someone is already using this seat.');
+    if(seatOccupied(seat.buildId,seat.slot) || residentOnSeat(seat.buildId,seat.slot))return reject('seat_occupied','Someone is already using this seat.');
     const room=buildRoomAt(environment,seat.position),playerRoom=buildRoomAt(environment,player.position);
     if(room && ownerOnlyHomes.has(room.storeId) && !canEnterHome(player.id,room.storeId))return reject('private_home');
     if(player.altitude>.1 || player.vehicle || distance(player.position,seat.position)>SEAT_REACH
@@ -106,11 +123,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(!fields(message,['type']))return reject('invalid_seat');
     if(!player.sitting)return reject('not_seated');
     const build=builds.get(player.sitting.buildId),roomId=buildRoomAt(environment,player.position)?.storeId??null;
+    // A bench has no build: stand up around the place itself, in front first.
+    const anchor=build??seatAt(player.sitting.buildId,player.sitting.slot);
+    const centre=anchor?[anchor.position[0],anchor.position[1]]:[player.position[0],player.position[1]],facing=anchor?.yaw??seatYaw(player.yaw+Math.PI);
     const objects=[...builds.values()],others=[...players.values()];
     let destination=null;
     for(const radius of [1.65,2.2,2.8]) {
       for(const angle of [0,Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2,3*Math.PI/4,-3*Math.PI/4,Math.PI]) {
-        const yaw=build.yaw+angle,x=build.position[0]+Math.sin(yaw)*radius,north=build.position[1]-Math.cos(yaw)*radius;
+        const yaw=facing+angle,x=centre[0]+Math.sin(yaw)*radius,north=centre[1]-Math.cos(yaw)*radius;
         const ground=environment.groundAt(x,-north);
         if(!Number.isFinite(ground) || Math.abs(ground-player.position[2])>.35
           || (buildRoomAt(environment,[x,north])?.storeId??null)!==roomId
@@ -121,7 +141,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const t=i/steps,east=player.position[0]+(x-player.position[0])*t,n=player.position[1]+(north-player.position[1])*t;
           if(!environment.isFree(east,-n) || Math.abs(environment.groundAt(east,-n)-ground)>.35
             || (buildRoomAt(environment,[east,n])?.storeId??null)!==roomId
-            || objects.some(item=>item.id!==build.id && distance(item.position,[east,n])<buildKind(item.kind).radius+.3)) {clear=false;break;}
+            || objects.some(item=>item.id!==build?.id && distance(item.position,[east,n])<buildKind(item.kind).radius+.3)) {clear=false;break;}
         }
         if(clear){destination=[x,north,ground];break;}
       }
@@ -130,6 +150,23 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(!destination)return reject('stand_blocked','There is no clear space to stand. Use Places to travel out.');
     Object.assign(player,{position:destination,sitting:null,poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
     revision++;return {ok:true,player:publicPlayer(player)};
+  }
+  // Watering is only an animation: the planter keeps no state. Anyone may
+  // water a planter in reach, in the same room or on the same street.
+  function water(player,message,ledger,time) {
+    if(!fields(message,['type','planterId']) || !textId(message.planterId))return reject('invalid_planter');
+    const planter=planterSites().get(message.planterId);
+    if(!planter)return reject('unknown_planter','That planter is not here.');
+    if(player.sitting)return reject('seated','Stand up first.');
+    if(player.altitude>.1 || player.vehicle)return reject('water_on_foot','Step out or land first.');
+    if(distance(player.position,[planter.x,planter.north])>WATER_REACH
+      || (buildRoomAt(environment,[planter.x,planter.north])?.storeId??null)!==(buildRoomAt(environment,player.position)?.storeId??null))
+      return reject('planter_out_of_reach','Walk closer to the planter.');
+    if(time-ledger.gestureAt<GESTURE_COOLDOWN_MS)return reject('gesture_cooldown','Wait a moment before watering again.');
+    // The body turns to the planter; a player's yaw is the camera's, behind them.
+    player.yaw=seatYaw(headingTo(player.position,[planter.x,planter.north])+Math.PI);
+    player.gesture='water';player.gestureUntil=time+WATER_MS;ledger.gestureAt=time;revision++;
+    return {ok:true,player:publicPlayer(player)};
   }
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
@@ -260,7 +297,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
-    Object.assign(player,{position:[position[0],position[1],ground],yaw:Math.atan2(Math.sin(yaw),Math.cos(yaw)),altitude,vehicle:message.vehicle??null});
+    // Watering keeps the body turned to the planter; walking off ends it.
+    if (player.gesture==='water' && distance(position,player.position)>0.3) {player.gesture=null;player.gestureUntil=0;}
+    const watering = player.gesture==='water' && player.gestureUntil>time;
+    Object.assign(player,{position:[position[0],position[1],ground],yaw:watering?player.yaw:Math.atan2(Math.sin(yaw),Math.cos(yaw)),altitude,vehicle:message.vehicle??null});
     if(altitude>0.1 || message.vehicle){player.gesture=null;player.gestureUntil=0;}
     revision++;
     return {ok:true,player:publicPlayer(player)};
@@ -382,6 +422,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(message.type==='sit')return sit(player,message,time);
     if(message.type==='stand')return stand(player,message,time);
     if (message.type==='travel') return travel(player,message,ledger,time);
+    if (message.type==='water') return water(player,message,ledger,time);
     if (message.type==='gesture') {
       if(!fields(message,['type','kind']) || !GESTURES.includes(message.kind))return reject('invalid_gesture');
       if(player.altitude>0.1 || player.vehicle)return reject('gesture_on_foot','Step out or land before greeting someone.');
@@ -565,7 +606,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for (let i=0;i<steps;i++) {
       stepWishes(state,dt);
       stepCommunity(state,dt);
-      stepResidentLife(life,dt);
+      stepResidentLife(life,dt,{takenSeats:new Set([...players.values()].filter(player=>player.sitting).map(player=>`${player.sitting.buildId}:${player.sitting.slot}`))});
     }
     elapsed+=duration;
     revision++;
@@ -577,7 +618,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
-        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null)}:null,
+        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null),seat:copy(local.life.seat??null)}:null,
         wish:copy(local.wish??null),wishDisruption:local.wishDisruption??null,priority:local.priority,need:local.need,needKnown:local.needKnown,status:local.status,
         action:local.action,source:local.source,lastInteraction:local.lastInteraction,lastResult:copy(local.lastResult),anchorId:local.anchorId,anchorName:local.anchorName})),
     };
@@ -705,7 +746,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && (player.vehicle == null || isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1)
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
-          || (player.gesture===null || GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
+          || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
         && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
       const occupiedSeats=new Set();
       for (const player of nextPlayers.values()) {
@@ -717,7 +758,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-environment.groundAt(east,-north))>0.2)
           || (player.altitude>0.1?!environment.canFly(east,ground+player.altitude,-north):!environment.isFree(east,-north))) throw new Error('Invalid player position');
         if(player.sitting) {
-          const seat=resolveSeat(nextBuilds.get(player.sitting.buildId),player.sitting.slot),key=`${player.sitting.buildId}:${player.sitting.slot}`;
+          const seat=seatAt(player.sitting.buildId,player.sitting.slot,nextBuilds),key=`${player.sitting.buildId}:${player.sitting.slot}`;
           if(!seat || occupiedSeats.has(key) || player.altitude!==0 || player.vehicle
             || seat.position.some((value,index)=>Math.abs(value-player.position[index])>1e-6)
             || Math.abs(seatYaw(player.yaw-(seat.yaw-Math.PI)))>1e-6)throw new Error('Invalid seated player');
