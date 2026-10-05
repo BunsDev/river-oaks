@@ -333,3 +333,60 @@ test('an ask made in a storm while walks are paused does not start a wait later'
   const after=[...local.position];step(life,5*60,{storm:false});
   assert.ok(moved(local,after)>.3,`once walks resume in clear weather they carry on (${moved(local,after).toFixed(2)} m)`);
 });
+
+// A storefront bench at stop 'a': residents resting there sit on it, one to a
+// place, and stand up in front of it before walking on.
+const benchWorld={...world,stores:[{id:'a',name:'Garden café',facade:[-12,0,0],outward:[0,1],visit:[-12,0]}]};
+test('resting residents sit on a free storefront bench place, one each, and stand before walking on',()=>{
+  const state=createCommunity(benchWorld),life=createResidentLife(benchWorld,state);
+  assert.equal(life.benches.get('a')?.length,2,'the bench offers two places');
+  const seen=new Map();let standsBeforeWalking=true,stillWhileSeated=true;
+  for(let i=0;i<60*240;i++) {
+    const before=new Map(state.locals.map(local=>[local.id,{seat:local.life.seat?.id??null,position:[...local.position]}]));
+    stepResidentLife(life,1/60);
+    const held=state.locals.filter(local=>local.life.seat).map(local=>local.life.seat.id);
+    assert.equal(new Set(held).size,held.length,'never two residents on one place');
+    for(const local of state.locals) {
+      const was=before.get(local.id);
+      if(local.life.seat) {
+        const seat=life.benches.get('a').find(place=>place.id===local.life.seat.id);
+        if(!seen.has(local.id))seen.set(local.id,seat.id);
+        assert.ok(Math.hypot(local.position[0]-seat.x,local.position[1]-seat.north)<1e-9,'on the bench place');
+        assert.equal(local.life.heading,seat.heading,'facing the street');
+        if(was.seat===seat.id && Math.hypot(local.position[0]-was.position[0],local.position[1]-was.position[1])>1e-9)stillWhileSeated=false;
+      } else if(was.seat) {
+        // Stood up: from the bench to the pavement in front, never further.
+        const seat=life.benches.get('a').find(place=>place.id===was.seat);
+        if(Math.hypot(local.position[0]-seat.approach[0],local.position[1]-seat.approach[1])>0.05)standsBeforeWalking=false;
+      }
+    }
+  }
+  assert.ok(seen.size>=1,'somebody rested on the bench');
+  assert.ok(stillWhileSeated,'a seated resident does not slide');
+  assert.ok(standsBeforeWalking,'they stand in front of the bench before walking');
+});
+
+test('residents leave a bench place to a player who holds it',()=>{
+  const state=createCommunity(benchWorld),life=createResidentLife(benchWorld,state);
+  const places=new Set(life.benches.get('a').map(place=>place.id));
+  for(let i=0;i<60*240;i++) {
+    stepResidentLife(life,1/60,{takenSeats:places});
+    assert.ok(state.locals.every(local=>!local.life.seat),'no resident sits on a held place');
+  }
+  // In single player the visitor's own seat is held the same way.
+  const solo=createResidentLife(benchWorld,createCommunity(benchWorld)),[first,second]=solo.benches.get('a');
+  for(let i=0;i<60*240;i++) {
+    stepResidentLife(solo,1/60,{visitorPose:{riding:{kind:'seat',seatId:first.id}}});
+    assert.ok(solo.state.locals.every(local=>local.life.seat?.id!==first.id));
+  }
+  assert.ok(second.id);
+});
+
+test('a storm stands everyone up before they seek shelter',()=>{
+  const state=createCommunity(benchWorld),life=createResidentLife(benchWorld,state);
+  let sat=false;
+  for(let i=0;i<60*240 && !sat;i++){stepResidentLife(life,1/60);sat=state.locals.some(local=>local.life.seat);}
+  assert.ok(sat,'somebody sat down first');
+  stepResidentLife(life,1/60,{storm:true});
+  assert.ok(state.locals.every(local=>!local.life.seat));
+});

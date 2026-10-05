@@ -79,3 +79,15 @@ test('resuming after culling preserves the pose before continuing the transition
   const resumed=motion.update('greet',1/60);
   assert.ok(Math.abs(resumed.lowerarm_r[2]-before.lowerarm_r[2])<0.15,'normal frame steps resume smoothly');
 });
+
+test('watering leans in, looks down and tips the can forward with the right hand', () => {
+  const gestures = createResidentGestures();
+  let pose;
+  for (let i = 0; i < 90; i++) pose = gestures.update('water', 1 / 60, i / 60);
+  assert.ok(pose.upperarm_r[0] < -0.6, 'right arm forward');
+  assert.ok(pose.hand_r[0] > 0.25, 'wrist tipped to pour');
+  assert.ok(pose.spine_03[0] > 0.1 && pose.head[0] > 0.15, 'leaning in, looking down');
+  assert.equal(pose.upperarm_l[0], 0, 'the left arm stays free');
+  for (let i = 0; i < 120; i++) pose = gestures.update('continue', 1 / 60, i / 60);
+  assert.ok(Math.abs(pose.hand_r[0]) < 0.01, 'releases back to rest');
+});

@@ -3,6 +3,7 @@ import { turnToward } from './gait.js';
 import { createResidentNavigation } from './navigation.js';
 import { residentContext } from './personas.js';
 import { helperVisit,syncVolunteerVisits,planVolunteerVisit,observeVolunteerArrivals } from './volunteer-visits.js';
+import { benchSeats } from './world-interactions.js';
 
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const ACTIONS=new Set(['continue','pause','greet','redirect','seek_shelter','slow','stop']);
@@ -23,11 +24,18 @@ export function createResidentLife(world,state,routeProvider=null) {
   const stops=(world.communityLocations ?? []).map(stop=>({...stop,position:navigation.sidewalkPoint(stop.position)})).filter(stop=>navigation.free(stop.position));
   // These small awnings exist in the interpreted storefront mesh, not a shelter registry.
   const shelters=(world.stores ?? []).map(store=>({id:store.id,name:store.name,position:[store.facade[0]+store.outward[0]*0.9,store.facade[1]+store.outward[1]*0.9]})).filter(stop=>navigation.free(stop.position));
+  // Storefront benches by store: a resident resting at that storefront may sit.
+  const benches=new Map();
+  for(const seat of benchSeats(world)) {
+    if(!navigation.free(seat.approach)) continue;
+    if(!benches.has(seat.storeId)) benches.set(seat.storeId,[]);
+    benches.get(seat.storeId).push(seat);
+  }
   state.locals.forEach((local,index)=>{
     if(!local.indoor&&!local.stationary){const point=navigation.sidewalkPoint(local.position);local.position=[...point,navigation.ground(point)];}
     local.life={speed:0,distance:0,heading:index*2.4,status:'resting',action:'continue',source:'local_rules',route:[],routeVersion:0,destination:null,waitUntil:0.5+index*0.17,reactionUntil:0,visits:0,blocked:false};
   });
-  return {state,navigation,routeProvider:routeProvider ?? navigation.route,planning:false,stops,shelters,elapsed:0,storm:false,revision:0,packet:null,cursor:0,paused:false,stats:{jev:0,local_rules:0,safety_override:0,latency_ms:null}};
+  return {state,navigation,routeProvider:routeProvider ?? navigation.route,planning:false,stops,shelters,benches,takenSeats:new Set(),elapsed:0,storm:false,revision:0,packet:null,cursor:0,paused:false,stats:{jev:0,local_rules:0,safety_override:0,latency_ms:null}};
 }
 
 function plan(life,local,index) {
@@ -43,16 +51,42 @@ function plan(life,local,index) {
   const candidate=candidates[motion.attempt ?? 0];
   if(!candidate) {motion.waitUntil=life.elapsed+5;motion.attempt=0;motion.status=sheltering?'shelter unavailable':'resting';return;}
   const revision=life.revision,generation=life.state.generation,routeVersion=motion.routeVersion;
+  // Every other rest at a storefront with a free bench place is spent sitting.
+  const seat=!sheltering && (index+motion.visits)%2===0 ? freeBenchPlace(life,candidate.id,local) : null;
+  const goal=seat?seat.approach:candidate.position;
   const accept=route=>{
     if(life.revision!==revision || life.state.generation!==generation || motion.routeVersion!==routeVersion) return;
     if(!route) {motion.attempt=(motion.attempt ?? 0)+1;motion.waitUntil=life.elapsed+0.2;return;}
-    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering};motion.attempt=0;
+    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering,...(seat?{seatId:seat.id}:{})};motion.attempt=0;
   };
-  const result=life.routeProvider(local.position.slice(0,2),candidate.position.slice(0,2));
+  const result=life.routeProvider(local.position.slice(0,2),goal.slice(0,2));
   if(result?.then) {
     life.planning=true;
     result.then(accept,()=>accept(null)).finally(()=>{life.planning=false;});
   } else accept(result);
+}
+
+// A bench place nobody sits on or is walking to, and no player holds.
+const benchHolder=(life,id,except)=>life.takenSeats.has(id) || life.state.locals.some(other=>other!==except
+  && (other.life?.seat?.id===id || other.life?.destination?.seatId===id && other.life.route.length));
+function freeBenchPlace(life,storeId,local) {
+  return (life.benches?.get(storeId) ?? []).find(seat=>!benchHolder(life,seat.id,local)) ?? null;
+}
+function benchSeat(life,id) {
+  for(const places of life.benches?.values() ?? [])for(const seat of places)if(seat.id===id)return seat;
+  return null;
+}
+function sitDown(life,local,seat) {
+  local.life.seat={id:seat.id,heading:seat.heading,height:seat.height};
+  local.position=[seat.x,seat.north,life.navigation.ground([seat.x,seat.north])];
+  local.life.heading=seat.heading;local.life.status='resting on a bench';
+}
+// Standing up steps back to the pavement in front of the bench.
+export function standUp(life,local) {
+  const seat=local.life?.seat && benchSeat(life,local.life.seat.id);
+  if(!local.life?.seat) return;
+  if(seat) local.position=[seat.approach[0],seat.approach[1],life.navigation.ground(seat.approach)];
+  local.life.seat=null;
 }
 
 function passingHeading(life,local,heading,speed,visitor,obstacles=[]) {
@@ -129,14 +163,16 @@ function faceConversationPartners(state,visitor,storm,dt) {
   }
 }
 
-export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPose=null,obstacles=[],storm=false,humidity=0.72,hour=15}={}) {
+export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPose=null,obstacles=[],storm=false,humidity=0.72,hour=15,takenSeats=null}={}) {
   if(!life || !Number.isFinite(delta) || delta<=0) return;
   const {state}=life;
+  // Seats players hold: the server passes every seated player; solo play, the visitor's own seat.
+  life.takenSeats=takenSeats ?? new Set(visitorPose?.riding?.seatId ? [visitorPose.riding.seatId] : []);
   if(life.storm!==storm || life.paused!==paused) {
     life.revision++;life.packet=null;life.paused=paused;
     if(life.storm!==storm) {
       life.storm=storm;
-      for(const local of state.locals) Object.assign(local.life,{route:[],destination:null,waitUntil:life.elapsed,reactionUntil:0,attempt:0});
+      for(const local of state.locals) {standUp(life,local);Object.assign(local.life,{route:[],destination:null,waitUntil:life.elapsed,reactionUntil:0,attempt:0});}
     }
   }
   for(const local of state.locals) {local.life.previousSpeed=local.life.speed>0 ? local.life.velocity ?? local.life.speed : 0;local.life.speed=0;}
@@ -183,9 +219,11 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
     if(visit && (!state.running || !storm && ['routing','assisting'].includes(visit.phase))) {motion.status=!state.running?'visit paused':visit.phase==='assisting'?'helping neighbor':'preparing visit';continue;}
     if(['pause','greet','stop'].includes(motion.action)) {motion.status=motion.action==='greet'?'greeting':'paused';continue;}
     if(!motion.route.length && life.elapsed>=motion.waitUntil && !planned && !life.planning && (!visit || storm || motion.action==='seek_shelter')) {
-      planned=true;life.cursor=(index+1)%state.locals.length;plan(life,local,index);
+      planned=true;life.cursor=(index+1)%state.locals.length;standUp(life,local);plan(life,local,index);
     }
     if(!motion.route.length) continue;
+    // Any route, including a volunteer visit, starts on foot.
+    if(motion.seat) standUp(life,local);
     while(motion.route.length>1 && distance(local.position,motion.route[0])<0.025) motion.route.shift();
     const target=motion.route[0],length=distance(local.position,target);
     const nearbyVisitor=streetVisitor(local,visitor,visitorPose);
@@ -197,6 +235,8 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
       if(!motion.route.length) {
         motion.visits++;motion.status=motion.destination.shelter?'sheltered':'resting';
         motion.waitUntil=motion.destination.shelter?Infinity:life.elapsed+(motion.destination.returning?1:6+index%5*2);
+        const seat=motion.destination.seatId && benchSeat(life,motion.destination.seatId);
+        if(seat && !benchHolder(life,seat.id,local)) {sitDown(life,local,seat);motion.waitUntil+=6;}
         if(!motion.destination.returning && !motion.destination.visit) {local.anchorId=motion.destination.id;local.anchorName=motion.destination.name;local.persona.anchorName=motion.destination.name;}
       }
       continue;

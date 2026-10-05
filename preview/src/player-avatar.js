@@ -91,6 +91,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
   let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null;
+  // Watering: until when, and the planter the body turns toward (scene coordinates).
+  let waterUntil = 0, waterTarget = null;
   // Solo choices stay on this device; in the shared town the account owns both
   // the appearance and whether a beast form moves like its animal.
   let soloAppearance=defaultAppearanceFor(userId),soloMovement=false;
@@ -312,6 +314,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get feet() {return avatar?.feet??[];},
     get attention() {return attention.pose;},
     cast(now) { castUntil = now + 520; },
+    water(now, target, duration) { waterUntil = now + duration; waterTarget = target; },
+    get watering() { return performance.now() < waterUntil; },
     setForceTarget(target) {forceTarget=target;},
     getWandTip(target) {return outfit?.getWandTip(target)??null;},
     onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
@@ -336,6 +340,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding||!canFlyAs(userId,appearance);
       carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
+      host.dataset.playerSeat = pose?.riding?.seatId ?? '';host.dataset.playerWatering = String(now < waterUntil);
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
       if (pose && avatar) {
         holder.position.set(pose.position[0], pose.ground + pose.altitude, pose.position[2]);
@@ -348,12 +353,16 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         const dt = previous === null ? 0 : Math.min(0.08, (now - previous) / 1000);
         const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:Boolean(pose.riding),flying:pose.flying,conversation:getConversation(),spell:forceTarget});
         const travelHeading=pose.speed>.05?Math.atan2(pose.velocity[0],pose.velocity[1]):undefined;
-        if(!pose.riding&&(forceTarget||previous===null||pose.speed>.05)) {
-          const facing=forceTarget?Math.atan2(forceTarget[0]-holder.position.x,forceTarget[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
+        // Walking off, riding or flying ends watering.
+        if(waterUntil&&(pose.speed>.3||pose.riding||pose.flying))waterUntil=0;
+        const watering=now<waterUntil&&waterTarget;
+        if(!pose.riding&&(forceTarget||watering||previous===null||pose.speed>.05)) {
+          const aim=forceTarget??(watering?waterTarget:null);
+          const facing=aim?Math.atan2(aim[0]-holder.position.x,aim[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
+        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : watering ? 'water' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){
@@ -368,7 +377,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';
-      panel.querySelector('#player-mode').textContent=pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
+      panel.querySelector('#player-mode').textContent=pose?.riding?.kind==='seat'?'Sitting':pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
       panel.querySelector('.player-flight-pad').hidden=!pose?.flying||!canFlyAs(userId,appearance);host.dataset.flightVehicle=pose?.flying?form:'';
       // No flashing or camera shake: character motion respects reduced motion.
       holder.userData.reducedMotion = reducedMotion;

@@ -46,7 +46,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   return {
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),position:entry.holder.position.toArray()};
+      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),seated:Boolean(entry.seated),seat:entry.target.seat?.id??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
       const peers=players.filter(player=>player.id!==selfId);
@@ -73,6 +73,10 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         const dx=holder.position.x-before.x,dz=holder.position.z-before.z;
         if(entry.heading===undefined)entry.heading=target.yaw+Math.PI;
         if(target.vehicle)entry.heading=target.yaw;
+        // Seated: face the way the seat faces. Watering: face the planter,
+        // which the server turned them toward (a player's yaw is the camera's).
+        else if(target.seat)entry.heading=target.seat.heading;
+        else if(target.gesture==='water')entry.heading=target.yaw+Math.PI;
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
         holder.visible=holder.position.distanceTo(camera.position)<120;
@@ -82,10 +86,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           const beast=target.movement==='beast'?traversalForAppearance(target.appearance):null;
           const ride=entry.road?.spec;
           const speed=delta?Math.hypot(dx,dz)/delta:0;
-          avatar.object.position.set(0,ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
+          const seat=!ride&&target.seat;
+          avatar.object.position.set(0,ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:seat?seat.height-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:ride?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!ride&&target.altitude>0.1,riding:Boolean(ride),ridingKind:ride?.kind,seatToFloor:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
-          entry.riderSeated=Boolean(ride);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:ride||seat?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!ride&&target.altitude>0.1,riding:Boolean(ride||seat),ridingKind:ride?.kind??(seat?'seat':undefined),seatToFloor:ride?ride.passengerSeat[1]-ride.passengerFloor:seat?seat.height:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
+          entry.riderSeated=Boolean(ride);entry.seated=Boolean(seat);
           entry.outfit.update(!ride&&target.altitude>0.1);entry.vehicle.object.visible=!ride&&target.altitude>0.1;
           if(entry.road){
             entry.roadDistance+=Math.hypot(dx,dz);
@@ -93,7 +98,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
             entry.road.animate(now,Math.min(ride.maxSpeed,speed));
           }
         }
-        const point=holder.position.clone().add(new THREE.Vector3(0,2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
+        const point=holder.position.clone().add(new THREE.Vector3(0,target.seat?1.75:2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
         if(!label.hidden)label.style.transform=`translate(${(point.x+1)*host.clientWidth/2}px,${(1-point.y)*host.clientHeight/2}px) translate(-50%,-100%)`;
       }
     },

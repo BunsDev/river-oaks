@@ -90,7 +90,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
         ? 'Builder: R rotate · Shift+R reverse · Enter place · Esc finish'
         : document.querySelector('#force-toggle[aria-pressed=true]')
           ? 'Force: T toggle · G lift · R push · X lower · WASD move · arrows turn'
-        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · B flight · Space rise · C lower · J companion · P beast movement · V camera · Q cast (invasion)';
+        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · B flight · Space rise · C lower · J companion · P beast movement · V camera · Q cast (invasion)';
   };
   const open = ({ help = false } = {}) => { returnFocus = document.activeElement; search.value = ''; dialog.querySelector('.commands-reference').open = help; render(); dialog.showModal(); search.focus(); };
   trigger.addEventListener('click', () => open());

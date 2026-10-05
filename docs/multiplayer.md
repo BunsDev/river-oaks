@@ -194,6 +194,21 @@ Every signed-in resident is shown by their GitHub username, everywhere another p
 - **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
 - **Groups, events and places** have their own titles; those are not resident names and are not restricted.
 
+## Sitting and watering
+
+Anyone can sit on a seat or water a planter; only Jevica places seats and planters (`build`). The places are listed in `preview/src/world-interactions.js`, which the server, the browser and the townspeople share:
+
+- **Seats:** two places on every storefront bench (`bench:<store>:<0|1>`), two on each garden seat and one in each lounge chair Jevica builds (`build:<build>:<n>`).
+- **Planters:** two by each boutique door, every street planter (identified by position, so server and browser agree), and each flower planter Jevica builds.
+
+`{type:'interact', action:'sit'|'stand'|'water', targetId}` is checked by the server like a gesture:
+
+- **Sit** needs both feet on the ground, a seat within 2 m that no player or resident holds, and access to the room it is in. The player is moved onto the seat and their snapshot carries `seat: {id, heading, height}`; others draw them in the seated pose there. While seated, poses from the seat, or still in flight from where they stood, change nothing; a pose that moves elsewhere stands them up first. Travel, leaving the world, a revoked home invitation, and Jevica moving or removing the seat also stand them up.
+- **Stand** returns the player to where they stood before sitting.
+- **Water** needs a planter within 2.2 m and is rate limited with gestures. It turns the player to the planter and shows the `water` gesture, with a watering can, for 3.6 s; the body keeps facing the planter while the camera moves, and walking off ends it. It is an animation only: planters keep no state.
+
+Townspeople resting at a storefront sit on its bench every other visit when a place is free and no player holds it, and stand up in front of it before walking on; a storm stands everyone up. Their snapshot `life.seat` lets every browser draw them seated. In single player, the browser does all of this itself, and the player's own seat is held from the townspeople.
+
 ## Shared storage and coordination
 
 Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json).
