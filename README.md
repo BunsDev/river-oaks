@@ -13,6 +13,10 @@ the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
 curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)
 and [street geometry](docs/street-standards.md).
 
+Approved residents can find and host scheduled gatherings in **Places → Events**,
+RSVP privately, and visit named meeting points across shared worlds.
+See [world events](docs/world-events.md).
+
 ## Run the live showcase
 
 Players can choose single player or the shared town from the play-mode control after signing in with GitHub through WorkOS and receiving waitlist approval. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.

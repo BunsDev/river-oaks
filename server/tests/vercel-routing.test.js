@@ -14,6 +14,7 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   for (const action of ['list', 'add', 'remove']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/landmarks/${action}`), `/api/landmarks/${action}`);
   for (const action of ['list', 'request', 'accept', 'remove', 'messages', 'send', 'invite-world', 'invite-place']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/social/${action}&world=moon-garden`), `/api/social/${action}?world=moon-garden`);
   for (const action of ['list','read','create','invite','accept','decline','leave','remove','send']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/groups/${action}&world=moon-garden`), `/api/groups/${action}?world=moon-garden`);
+  for (const action of ['list','create','rsvp','cancel']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/events/${action}&world=moon-garden`), `/api/events/${action}?world=moon-garden`);
   for (const action of ['view','save']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/profile/${action}&world=moon-garden`), `/api/profile/${action}?world=moon-garden`);
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/../../.env'), '/not-found');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/login&_river_path=/auth/logout'), '/not-found');
@@ -24,9 +25,9 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
 test('Vercel rewrites every resident social and group action to the server entry',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url)));
   const rewrites=new Map(config.rewrites.map(item=>[item.source,item.destination]));
-  for(const scope of ['social','groups']) {
+  for(const scope of ['social','groups','events']) {
     const actions=scope==='social'?['list','request','accept','remove','messages','send','invite-world','invite-place']
-      :['list','read','create','invite','accept','decline','leave','remove','send'];
+      :scope==='groups'?['list','read','create','invite','accept','decline','leave','remove','send']:['list','create','rsvp','cancel'];
     for(const action of actions)assert.equal(rewrites.get(`/api/${scope}/${action}`),`/api/server?_river_path=/api/${scope}/${action}`);
   }
 });

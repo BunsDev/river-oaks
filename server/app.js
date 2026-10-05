@@ -15,17 +15,18 @@ import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { eventAction } from './events-api.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000);
   const access = createRateLimiter(1000,60000,4096), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
@@ -160,6 +161,16 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:pathname.slice('/api/groups/'.length),identity,groups,social,
           readBody:()=>body(req),allowWrite:id=>groupWrites(id)});
+        return json(res,result.status,result.value);
+      }
+      if (pathname.startsWith('/api/events/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+          resolveVenue:async placeId=>{
+            const place=world.resolvePlace(placeId);
+            return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
+          },allowWrite:id=>eventWrites(id)});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {

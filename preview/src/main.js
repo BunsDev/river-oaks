@@ -64,6 +64,7 @@ import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
+import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 
 setupUIMotion();
@@ -80,7 +81,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, loc
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
-let worldPortal = null;
+let worldPortal = null, worldEvents = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
@@ -210,6 +211,8 @@ function initializeRenderer() {
   $('.panel-scroll').prepend($('#community-section'));
   worldPortal=createWorldPortal({host:$('#explore-section'),getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
   void worldPortal.load();
+  worldEvents=createWorldEvents({host:$('#explore-section')});
+  void worldEvents.load();
   setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
@@ -649,6 +652,7 @@ async function loadWorld() {
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
+    worldEvents?.setPlaces(places);
     placesUI?.setWorld(data);
     placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
