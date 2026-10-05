@@ -176,7 +176,7 @@ function initializeRenderer() {
     getVisitor: () => walking?.active ? walking.getPosition() : null,
     getVisitorPose: () => walking?.getPose() ?? null,
     getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
-    getPersona: () => playerAvatar?.form ?? 'visitor',
+    getPersona: () => playerAvatar?.persona ?? 'visitor',
     getCanGrantWishes: () => soloCanGrantWishes,
     authorizeSoloWish: refreshSoloPrivileges,
     onWish: () => playerAvatar?.cast(performance.now()),

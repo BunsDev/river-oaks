@@ -285,6 +285,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get carriage(){return carriage;},
     get object(){return holder;},
     get form() {return form;},
+    // Residents greet and recognise the player as Jevica only on her accounts.
+    get persona() {return owner?form:'visitor';},
     setSharedMode(value){
       if(sharedMode===value)return;
       if(value&&owner)crewLocals();
@@ -312,7 +314,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     react(now) {
       const pose = walking.getPose();
-      const visitorForm=sharedMode?null:form;
+      const visitorForm=sharedMode||!owner?null:form;
       const reactionPeople = reactions.update(getLocals() ?? [], pose, visitorForm, now, position => walking.canSee(position));
       host.dataset.visitorReactions = JSON.stringify(reactionPeople.map(local => ({id:local.id,form:visitorForm,action:local.visitorReaction.action})));
     },

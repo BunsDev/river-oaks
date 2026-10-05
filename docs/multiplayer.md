@@ -185,6 +185,15 @@ The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.j
 
 Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
+## Resident names
+
+Every signed-in resident is shown by their GitHub username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
+
+- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `github-<account ID>`.
+- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `github-<account ID>` instead.
+- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
+- **Groups, events and places** have their own titles; those are not resident names and are not restricted.
+
 ## Shared storage and coordination
 
 Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json).
@@ -308,6 +317,7 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `WORKOS_API_KEY` | API key from the matching WorkOS environment |
 | `WORKOS_CLIENT_ID` | Client ID from that same environment |
 | `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters |
+| `GITHUB_TOKEN` | Optional. A GitHub token with no scopes, used only to look up public GitHub usernames by account ID. Without it the lookup is anonymous and limited to 60 an hour per server address |
 | `HOST` | `127.0.0.1` behind a host proxy, or `0.0.0.0` inside the container |
 | `PORT` | `8787` unless your platform requires another port |
 | `REDIS_URL` | Marketplace secret for the shared backend |

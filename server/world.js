@@ -10,6 +10,7 @@ import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { isJevicaAdmin } from './admin.js';
+import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
@@ -70,7 +71,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Beast movement is an account preference that only shows in a beast form,
   // so switching to a humanoid form and back keeps it.
   const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
-  const publicPlayer = player => ({id:player.id,name:player.name,appearance:player.appearance,movement:movementOf(player),gesture:player.gestureUntil>now()?player.gesture:null,canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  // Every name leaves the world checked against its account: only Jevica's
+  // accounts are Jevica, whatever a stored or restored record says.
+  const publicPlayer = player => ({id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:player.gestureUntil>now()?player.gesture:null,canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,position:[...player.position],yaw:player.yaw,altitude:player.altitude});
   const rememberAppearance = (id,appearance) => {
     appearanceByUser.delete(id);appearanceByUser.set(id,appearance);
     if (appearanceByUser.size>MAX_APPEARANCES) {
@@ -115,6 +118,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     return [x0, north0];
   }
+  // A resident who is still in the world when they sign in again keeps their
+  // place but takes the name their current session carries.
+  function rename(identity) {
+    const player=identity && players.get(identity.userId);
+    if (!player || typeof identity.name!=='string') return null;
+    const name=accountName(identity.userId,identity.name.slice(0,80));
+    if (player.name!==name) {player.name=name;revision++;}
+    return publicPlayer(player);
+  }
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -127,7 +139,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
     const appearance=permittedAppearance(identity.userId,appearanceByUser.get(identity.userId));
-    const player = {id:identity.userId,name:identity.name.slice(0,80),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
+    const player = {id:identity.userId,name:accountName(identity.userId,identity.name.slice(0,80)),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
       poseAt:time,moveBudget:0.1,liftBudget:0.1,gesture:null,gestureUntil:0};
     players.set(player.id,player);
     rememberAppearance(player.id,appearance);
@@ -495,7 +507,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function snapshot() {
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),chat:copy(chat),builds:copy([...builds.values()]),wishes:copy(state.wishes),community,
+    return {type:'snapshot',worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),
+      chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
+      builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
         life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null)}:null,
         wish:copy(local.wish??null),wishDisruption:local.wishDisruption??null,priority:local.priority,need:local.need,needKnown:local.needKnown,status:local.status,
@@ -710,7 +724,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     focus.clear();chat.length=0;builds.clear();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
-  return {worldId,join,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,players,state};
+  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

@@ -44,6 +44,8 @@ export async function workosSdkFixture(t, config, scenario) {
         email_verified: true, first_name: 'Val', last_name: null, profile_picture_url: null,
         created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
       access_token: accessToken, refresh_token: 'private-refresh', authentication_method: 'GitHubOAuth' }));
+    } else if (req.method === 'GET' && req.url === '/user_management/users/user_sdk/identities') {
+      res.end(JSON.stringify([{ idp_id: '3003', type: 'OAuth', provider: 'GitHubOAuth' }]));
     } else { res.writeHead(404); res.end('{}'); }
   });
   server.listen(0, '127.0.0.1');

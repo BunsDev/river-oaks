@@ -254,7 +254,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(!connections.has(identity.userId) && !departures.has(identity.userId)) {
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
-        }
+        } else world.rename(identity);
         if(presence)await presence.join(identity.userId,{id:worldId,title:worldTitle},token);
         if(ws.readyState!==WebSocket.OPEN){
           if(presence)await presence.leave(identity.userId,token);

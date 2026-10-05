@@ -1,3 +1,4 @@
+import { guardGroup, guardResult } from './name-guard.js';
 /** Authenticated group actions shared by the local and Redis world gateways. */
 const keys=(value,allowed)=>value && typeof value==='object' && !Array.isArray(value)
   && Object.keys(value).every(key=>allowed.includes(key));
@@ -7,7 +8,7 @@ const failure=(status,error)=>({status,value:{error}});
 
 export async function groupAction({action,identity,groups,social,readBody,allowWrite}) {
   if(!groups)return failure(503,'Groups are unavailable.');
-  if(action==='list')return {status:200,value:{groups:await groups.list(identity.userId)}};
+  if(action==='list')return {status:200,value:{groups:(await groups.list(identity.userId)).map(guardGroup)}};
   if(!['read','create','invite','accept','decline','leave','remove','send'].includes(action))return failure(404,'Not found.');
   let data;
   try{data=await readBody();}catch{return failure(400,'Invalid group request.');}
@@ -18,7 +19,7 @@ export async function groupAction({action,identity,groups,social,readBody,allowW
     return failure(400,'Invalid group request.');
   if(action==='read') {
     const group=await groups.read(identity.userId,data.groupId);
-    return group?{status:200,value:{group}}:failure(404,'Group not found.');
+    return group?{status:200,value:{group:guardGroup(group)}}:failure(404,'Group not found.');
   }
   if(!await allowWrite(identity.userId))return failure(429,'Please wait before changing groups.');
   let result;
@@ -33,7 +34,7 @@ export async function groupAction({action,identity,groups,social,readBody,allowW
   else if(action==='leave')result=await groups.leave(identity.userId,data.groupId);
   else if(action==='remove')result=await groups.remove(identity,data.groupId,data.memberId);
   else result=await groups.send(identity,data.groupId,data.text);
-  if(result.ok)return {status:200,value:result};
+  if(result.ok)return {status:200,value:guardResult(result)};
   const status=result.reason==='invalid'?400:result.reason==='limit'?429:result.reason==='forbidden'?403:409;
   const message={invalid:'Invalid group request.',limit:'Group limit reached.',forbidden:'Only the group owner can do that.',
     existing:'This resident already belongs to or has an invitation to the group.',missing:'Group or membership is no longer available.'}[result.reason]

@@ -7,6 +7,7 @@ import { WorkOS } from '@workos-inc/node';
 import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
+import { createGitHubFixture } from './github-fixture.js';
 const module = await import('../auth.js').catch(() => ({}));
 const { createAuth } = module;
 const config = { apiKey: 'sk_test', clientId: 'client_test', cookiePassword: 'a'.repeat(32), origin: 'http://localhost:3000' };
@@ -34,6 +35,10 @@ function adapter(clock) {
     mintDistinctSessions() { distinctSessions = true; },
     setUserId(id) { user = { ...user, id }; },
     userManagement: {
+      async getUserIdentities(id) {
+        const githubId = { user_1: '1001', user_2: '1002' }[id];
+        return githubId ? [{ idpId: githubId, type: 'OAuth', provider: 'GitHubOAuth' }] : [];
+      },
       async getAuthorizationUrlWithPKCE(options) {
         const url = new URL('https://api.workos.com/user_management/authorize');
         for (const [key, value] of Object.entries(options)) url.searchParams.set(key, value);
@@ -94,7 +99,8 @@ async function fixture(t, overrides = {}) {
   let time = Date.now();
   const workos = adapter(() => time);
   const loggedOut = [];
-  const auth = createAuth({ ...config, workos, now: () => time, onLogout: (...args) => loggedOut.push(args), ...overrides });
+  const githubApi = createGitHubFixture({ 1001: 'val-dev', 1002: 'second-resident', 2002: 'real-sdk-resident', 3003: 'sdk-boundary-resident' });
+  const auth = createAuth({ ...config, workos, githubFetch: githubApi.fetcher, now: () => time, onLogout: (...args) => loggedOut.push(args), ...overrides });
   const server = createServer(async (req, res) => {
     if (!await auth.handle(req, res)) { res.writeHead(404); res.end(); }
   });
@@ -109,7 +115,7 @@ async function fixture(t, overrides = {}) {
     const callback = await request(`/auth/callback?code=code_1&state=${state}`, { headers: { cookie: stateCookie } });
     return { response, callback, state, stateCookie, sessionCookie: cookie(callback, 'river_oaks_session') };
   }
-  return { auth, workos, loggedOut, request, login, advance: (ms) => { time += ms; } };
+  return { auth, workos, githubApi, loggedOut, request, login, advance: (ms) => { time += ms; } };
 }
 
 test('fails closed without credentials and rejects insecure non-local origins', async (t) => {
@@ -135,7 +141,7 @@ test('completes state-bound PKCE callback and exposes only safe identity and CSR
   const session = await app.request('/auth/session', { headers: { cookie: sessionCookie } });
   assert.equal(session.headers.get('cache-control'), 'no-store');
   const body = await session.json();
-  assert.deepEqual(body.user, { id: 'user_1', name: 'Val Dev' });
+  assert.deepEqual(body.user, { id: 'user_1', name: 'val-dev' }, 'the GitHub username, not the WorkOS display name');
   assert.equal(body.authenticated, true);
   assert.equal(body.canGrantWishes, false, 'a verified visitor has no Jevica privileges');
   assert.match(body.csrfToken, /^[A-Za-z0-9_-]{32,}$/);
@@ -306,7 +312,7 @@ test('accepts a dedicated application token with the environment issuer', async 
   const { callback, sessionCookie } = await app.login();
   assert.equal(callback.status, 302);
   assert.deepEqual((await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user,
-    { id: 'user_1', name: 'Val Dev' });
+    { id: 'user_1', name: 'val-dev' });
 });
 
 test('bounded login state expires and frees capacity', async (t) => {
@@ -372,11 +378,13 @@ test('official SDK seals and verifies a signed session through the real HTTP cal
     } };
   };
   sdk.userManagement.getJWKS = async () => async () => publicKey;
+  sdk.userManagement.getUserIdentities = async userId => (userId === 'user_real_sdk' ? [{ idpId: '2002', type: 'OAuth', provider: 'GitHubOAuth' }] : []);
   const app = await fixture(t, { workos: sdk });
   const { callback, sessionCookie } = await app.login();
   assert.equal(callback.status, 302);
   const response = await app.request('/auth/session', { headers: { cookie: sessionCookie } });
-  assert.deepEqual((await response.json()).user, { id: 'user_real_sdk', name: 'Val' });
+  // The GitHub username, not the WorkOS first name "Val".
+  assert.deepEqual((await response.json()).user, { id: 'user_real_sdk', name: 'real-sdk-resident' });
   const sealed = decodeURIComponent(sessionCookie.slice(sessionCookie.indexOf('=') + 1));
   assert.equal((await sdk.userManagement.loadSealedSession({ sessionData: sealed, cookiePassword: config.cookiePassword }).authenticate()).authenticated, true);
   const midpoint = Math.floor(sealed.length / 2);
@@ -391,11 +399,13 @@ for (const scenario of boundaryCases) {
     const app = await fixture(t, { workos: sdk });
     const { callback, sessionCookie } = await app.login();
     assert.equal(callback.status, scenario.status);
-    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    // A rejected session is never looked up on GitHub.
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`,
+      ...(scenario.status === 302 ? ['GET /user_management/users/user_sdk/identities'] : [])]);
     if (scenario.status === 302) {
       assert.ok(sessionCookie);
       const session = await app.request('/auth/session', { headers: { cookie: sessionCookie } });
-      assert.equal((await session.json()).authenticated, true);
+      assert.deepEqual((await session.json()).user, { id: 'user_sdk', name: 'sdk-boundary-resident' });
     } else {
       assert.equal(sessionCookie, undefined);
       assert.deepEqual(await callback.json(), { error: 'invalid_session' });

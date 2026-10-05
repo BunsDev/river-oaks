@@ -4,6 +4,8 @@ import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
+import { createGitHubNames, createRedisGitHubNameStore } from './github-names.js';
+import { residentName, validGitHubLogin } from '../preview/src/resident-names.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
@@ -169,7 +171,7 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, workos, now = Date.now, onLogout = () => {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
@@ -182,6 +184,16 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   // Use a caller-provided hash tag unchanged; otherwise derive a stable safe tag.
   const namespace = typeof prefix === 'string' && /\{[^{}]+\}/.test(prefix) ? prefix : `{${digest(String(prefix))}}`;
   const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies', 'user-sessions'].map(suffix => `${namespace}:auth:${suffix}`);
+  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, token: githubToken, fetcher: githubFetch, now,
+    store: createRedisGitHubNameStore({ redis, key: `${namespace}:auth:github` }) });
+  // Residents are shown by GitHub username; only an admin account is Jevica.
+  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
+  // Sessions from before usernames were stored, or whose lookup failed, are
+  // named from the per-user record, which is refreshed at most every 10 minutes.
+  const named = async (user, record) => {
+    if (!user || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
+    return { ...user, name: nameOf(record.userId, await github.known(record.userId).catch(() => null)) };
+  };
   const transaction = data => redis.eval(TRANSACTION, keys.length, ...keys, JSON.stringify({ ...data, now: now() }));
   const decode = raw => raw ? JSON.parse(raw) : null;
   const binding = record => ({ sessionId: record.sessionId, userId: record.userId, generation: record.generation });
@@ -204,8 +216,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         || claims.client_id !== clientId) return null;
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
-      const name = [result.user.firstName, result.user.lastName].filter(part => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
-      return { userId: record.userId, sessionId: record.sessionId, name, email: result.user.email, expiresAt, csrfToken: record.csrfToken };
+      return { userId: record.userId, sessionId: record.sessionId, name: nameOf(record.userId, record), email: result.user.email, expiresAt, csrfToken: record.csrfToken };
     } catch { return null; }
   }
 
@@ -225,7 +236,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const user = identity(verified, record);
         if (!user || !enabled || !await active(record, hash)) return null;
         if (res && sealed !== presented) setCookie(res, SESSION_COOKIE, sealed, Math.floor((record.expiresAt - now()) / 1000));
-        return user;
+        return named(user, record);
       }
       if (!res || verified.reason !== 'invalid_jwt') return null;
       const owner = token();
@@ -244,7 +255,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           nextHash: digest(refreshed.sealedSession), sealedSession: refreshed.sealedSession, grace: COOKIE_GRACE }));
         if (!committed || !enabled || !await active(committed, committed.cookieHash)) return null;
         setCookie(res, SESSION_COOKIE, refreshed.sealedSession, Math.floor((record.expiresAt - now()) / 1000));
-        return user;
+        return named(user, committed);
       } finally {
         await transaction({ op: 'refresh-release', ...binding(record), owner });
       }
@@ -268,6 +279,9 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       logSessionRejection(verified, record, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
+    // Only a verified session is looked up on GitHub.
+    const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+    Object.assign(record, { githubId, login });
     if (!enabled) throw new Error('Auth closed');
     if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
@@ -375,6 +389,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
+        const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+        Object.assign(record, { githubId, login });
         if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });

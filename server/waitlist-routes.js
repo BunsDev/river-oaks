@@ -1,3 +1,5 @@
+import { accountName } from '../preview/src/resident-names.js';
+import { guardWaitlistRequest } from './name-guard.js';
 import { timingSafeEqual } from 'node:crypto';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
@@ -17,11 +19,11 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
     if (!identity) { json(res, 401, { error: 'sign_in_required' }); return true; }
     if (path === '/api/waitlist/status') {
       const record = await waitlist.request(identity);
-      json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: identity.name } });
+      json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) } });
       return true;
     }
     if (!adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
-    if (path === '/api/waitlist/requests') { json(res, 200, { requests: await waitlist.list() }); return true; }
+    if (path === '/api/waitlist/requests') { json(res, 200, { requests: (await waitlist.list()).map(guardWaitlistRequest) }); return true; }
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'invalid_origin_or_csrf' }); return true;
     }
