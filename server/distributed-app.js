@@ -1,3 +1,4 @@
+import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -247,7 +248,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   });
   server.requestTimeout = 15_000; server.headersTimeout = 10_000;
   const wss = new WebSocketServer({
-    noServer: true, maxPayload: 2048,
+    noServer: true, maxPayload: 8192,
     perMessageDeflate: {
       threshold: 1024, serverNoContextTakeover: true, clientNoContextTakeover: true,
       concurrencyLimit: 4, zlibDeflateOptions: { level: 1 },
@@ -261,7 +262,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
       if (!matchesWorld(url)) return reject(403);
       const protocol = url.searchParams.get('protocol');
-      if (protocol !== String(WORLD_PROTOCOL_VERSION) && !(protocol === null && worldId === DEFAULT_WORLD_ID)) return reject(426);
+      if (protocol !== String(WORLD_PROTOCOL_VERSION)) return reject(426);
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
@@ -295,6 +296,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (!message || typeof message !== 'object' || Array.isArray(message) || typeof message.type !== 'string'
               || (message.requestId !== undefined && (typeof message.requestId !== 'string' || message.requestId.length > 64))) throw new Error();
           } catch { send(ws, { type: 'result', ok: false, message: 'Invalid game command.' }); return; }
+          if(raw.length>2048 && !(isAdmin(identity.userId)&&message.type==='build'&&validAssembly(message.assembly))){ws.close(1009,'Game command too large.');return;}
           // Ordinary movement updates need only their latest waiting position.
           // Requests expecting acknowledgments retain one slot per command.
           const coalescible = message.type === 'pose' && message.requestId === undefined;

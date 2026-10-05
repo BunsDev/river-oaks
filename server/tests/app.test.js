@@ -72,7 +72,8 @@ test('standalone server gates a game file however its path is encoded',async t=>
 });
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
- const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?ticket='+token,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
+ const query=new URLSearchParams('ticket='+token);if(!query.has('protocol'))query.set('protocol','2');
+ const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?'+query,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
  ws.once('message',data=>resolve({ws,snapshot:JSON.parse(data)}));ws.once('error',reject);
 });
 test('one address can start only a few sign-ins at a time',async t=>{
@@ -95,12 +96,12 @@ test('tickets name their world and protocol, and the socket rejects a different 
  const response=await request('/api/multiplayer/ticket?world=garden-2');
  assert.equal(response.status,200);
  const {ticket,worldId,protocolVersion}=await response.json();
- assert.equal(worldId,'garden-2');assert.equal(protocolVersion,1);
+ assert.equal(worldId,'garden-2');assert.equal(protocolVersion,2);
  assert.equal((await request('/api/landmarks/list?world=river-oaks')).status,404);
  assert.equal((await request('/api/landmarks/list?world=garden-2')).status,200);
- await assert.rejects(connect(origin,`${ticket}&world=river-oaks&protocol=1`,'one'),/403/);
- await assert.rejects(connect(origin,`${ticket}&world=garden-2&protocol=2`,'one'),/426/);
- const {ws}=await connect(origin,`${ticket}&world=garden-2&protocol=1`,'one');t.after(()=>ws.terminate());
+ await assert.rejects(connect(origin,`${ticket}&world=river-oaks&protocol=2`,'one'),/403/);
+ await assert.rejects(connect(origin,`${ticket}&world=garden-2&protocol=1`,'one'),/426/);
+ const {ws}=await connect(origin,`${ticket}&world=garden-2&protocol=2`,'one');t.after(()=>ws.terminate());
 });
 test('two authenticated accounts receive the shared roster, and tickets are single-use',async t=>{
  const {origin,world}=await fixture(t);

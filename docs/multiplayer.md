@@ -446,15 +446,14 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints now write version 3 and read valid versions 1 (original
-district only), 2 and 3. Nonempty seat reservations are only valid in version 3.
-The prior version-2 coordinator rejects version-3 checkpoints, preventing it from
-writing a walking pose over a reservation during a rolling deployment. The upgraded writer uses a monotonic lease generation and can
-atomically take over an older lease. Existing commit fencing prevents that old writer from
-publishing or trimming commands. Do not roll back to pre-seating code against the
-new checkpoint format. Browser protocol 1 remains compatible for existing
-commands. Refresh older clients to display seats; their existing Places travel
-still releases a reservation.
+Private world checkpoints write version 4 and read valid versions 1 (original
+district only), 2, 3 and 4. Seat reservations require version 3 or later; custom
+assemblies require version 4. The version-4 coordinator atomically takes over
+older leases. Commit fencing prevents an older writer from publishing or
+trimming commands. Do not roll back older code against version-4 checkpoints.
+Browser protocol 2 is required: version-1 and unversioned clients must refresh
+before joining.
+This prevents older renderers from applying snapshots with unknown geometry.
 
 Placed creations and storefront benches are interactive; other built-in shop
 and park furniture is not yet. Bench places come from the same placement the
@@ -477,3 +476,28 @@ with gestures: it turns the player to the planter and shows the `water` gesture,
 with a watering can, for 3.6 s. The body keeps facing the planter while the
 camera moves, and walking off ends it. Nobody waters while seated. Watering is an
 animation only: planters keep no state.
+
+
+## Custom creator objects
+
+Jevica can choose **Custom object** in Build & decorate, name the creation, and
+assemble up to 16 boxes, spheres, or cylinders. Each part has dimensions, local
+position, rotation in degrees, a hex color, and matte, metal, gloss, or glass
+material. Edit parts loads a placed creation into builder mode; placement
+confirms its geometry and root transform together. Saved designs retain every
+part and material for account-wide copying into other worlds.
+
+The server checks the complete assembly before any mutation. Part dimensions
+are 0.05–4 meters, the creation stays above ground and within 4 meters high and
+2.6 meters horizontal radius, and its assembly data is at most 6 KiB. Placement
+uses conservative assembly bounds; walking and flying use conservative oriented
+boxes for individual parts, leaving gaps between parts open. Curved primitives
+have box collision bounds, not triangle physics. NPC routes still use the
+existing static navigation geometry.
+
+Only Jevica's verified accounts can create, edit, remove, or save designs.
+Guests receive confirmed geometry without those permissions. Creator requests
+with valid assemblies may use an 8 KiB WebSocket frame; other commands retain
+the 2 KiB limit, existing queue limits, and rate limits. Old clients are rejected
+by the protocol gate. Imported assets and creator scripts remain future work;
+shared voice remains deferred in its plan.

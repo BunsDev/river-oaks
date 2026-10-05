@@ -54,7 +54,7 @@ import { createSeatAndWater } from './seat-and-water.js';
 import { createSharedSeatingControls } from './shared-seating-ui.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
 import { builderTarget, evaluatePlacement, poseFeet } from './builder-mode.js';
-import { buildKind, buildRoads as buildSiteRoads } from './shared-build.js';
+import { buildKind, buildGeometry, buildRoads as buildSiteRoads } from './shared-build.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -225,6 +225,7 @@ function initializeRenderer() {
   void worldEvents.load();
   sidebarSections = setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
+  walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -509,9 +510,9 @@ function populateWorld(data) {
 
 // One walkable-area model per loaded district, shared by arrival checks.
 let arrivalEnvironment = null;
-function walkingEnvironment() {
-  if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world) };
-  return arrivalEnvironment.environment;
+function walkingEnvironment(includeCreations=true) {
+  if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world,[{contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false}]), placement:createWalkingEnvironment(world) };
+  return includeCreations?arrivalEnvironment.environment:arrivalEnvironment.placement;
 }
 
 function enterWalk(position, lookAt, pitch = 0) {
@@ -836,15 +837,16 @@ function updateBuilder() {
     builderPointer.ray.setFromCamera(builderPointer.at, camera);
     ray = { origin: builderPointer.ray.ray.origin.toArray(), direction: builderPointer.ray.ray.direction.toArray() };
   }
-  const target = builderTarget(pose, ray), kindId = builder.moving?.kind ?? builder.kind, kind = buildKind(kindId);
+  const target = builderTarget(pose, ray), kindId = builder.moving?.kind ?? builder.kind, kind = buildGeometry({kind:kindId,assembly:builder.assembly});
+  if(!kind){buildLayer?.setGhost(null);buildControls.aimAt(null,{valid:false,message:'Fix the object parts before placing.'});return;}
   if (world !== builderRoads?.world) builderRoads = { world, roads: buildSiteRoads(world) };
   const snapshot = multiplayer?.snapshot;
-  const key = JSON.stringify([target, kindId, builder.finish, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
+  const key = JSON.stringify([target, kindId, builder.finish, builder.assembly, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
   if (key === builderAim) return;
   builderAim = key;
-  const verdict = evaluatePlacement({ environment: walkingEnvironment(), roads: builderRoads.roads, kind, position: target, feet: poseFeet(pose),
+  const verdict = evaluatePlacement({ environment: walkingEnvironment(false), roads: builderRoads.roads, kind, assembly:builder.assembly, yaw:builder.yaw, position: target, feet: poseFeet(pose),
     builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
-  buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
+  buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, assembly:builder.assembly, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
   buildControls.aimAt(target, verdict);
 }
 document.addEventListener('keydown', event => {
@@ -1002,6 +1004,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
+  window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
   window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {

@@ -464,3 +464,65 @@ The integrated local run on base `c80fc3f` passed 677 preview tests and 289
 Redis-backed server tests with zero failures/skips. The [seating browser
 receipt](../data/reports/shared-seating.json) hashes the measured sources and
 records the full-render journey. The build and reflection smoke passed.
+
+## Creator objects — 5 October 2026
+
+The creator milestone retains the 98-person shared cast, 193-person solo cast,
+32-player room limit, and Jevica's two verified creator accounts. Each account
+can place 24 roots with up to 16 parts each: at most 768 new custom meshes under
+the current production permission policy. The world-wide 192-root cap remains.
+This introduces more client rendering work; earlier rendered district samples
+above did not include maximum-size creator assemblies and remain historical
+measurements.
+
+`node server/creator-performance-audit.js` writes
+[`creator-objects-performance.json`](../data/reports/creator-objects-performance.json)
+with exact source hashes. Its local Node/Three scene probe used 48 roots and
+768 parts, including all three shapes and all four materials:
+
+| Observation | Result |
+| --- | ---: |
+| Cold scene sync | 18.67 ms |
+| Unchanged snapshot sync p95, 100 samples | 1.18 ms |
+| Conservative 32-player/48-object collision batch p95 | 1.04 ms |
+| Live materials, including six shared preview surfaces | 774 |
+| Shared geometries, including three preview geometries | 6 |
+| Assembly-only JSON / deflate level 1 | 106,778 / 2,013 bytes |
+
+One hundred geometry/color replacements retained the same resource counts;
+removal released all 768 part surfaces. Disposal left the scene empty. The
+collision probe repeats a near-miss against overlapping roots to exercise all
+parts; this exceeds real placement density. These are local CPU timings and
+resource counts, not GPU frame timings, VRAM bytes, or WebSocket wire bytes.
+Distinct physical surfaces and transmission need a full-district GPU budget
+before accepting the maximum custom-object population.
+
+Real memory and Redis transports accept a valid 16-part request larger than
+2 KiB from Jevica. Guests retain the 2 KiB command limit and cannot create,
+edit, remove, or save designs. Redis gateway acceptance covers full assembly
+copies into a second published world and recovery after a gateway restart.
+The two-browser journey covers confirmed rendering, material replacement,
+saved copies, guest denial, reconnect, and removal.
+
+[`creator-objects-rollout.json`](../data/reports/creator-objects-rollout.json)
+records a probe using the actual previous version-3 coordinator and current
+version-4 coordinator against loopback Redis. Version 4 recovered old presence,
+took over the old lease immediately, and retained the assembly. An old writer
+and its close could not disturb the live lease. A fresh old coordinator
+rejected the version-4 checkpoint without writing partial state; version 4
+then retook its lease. Browser protocol 2 rejects incompatible clients.
+
+To repeat the rollout probe, export the previous source tree with `git archive`,
+provide its dependencies, and run:
+
+```sh
+REDIS_URL=redis://127.0.0.1:6379 \
+  CREATOR_PREVIOUS_COMMIT=23f2503ecd81e4ddb230c39773022bc2828504e3 \
+  node server/creator-rollout-audit.js /path/to/previous-source
+```
+
+Global readiness remains unaccepted. The existing hosted multi-region soak,
+regional latency, physical-device, and long-running resource gates remain
+open; add maximum assemblies to that workload. Player collision uses
+conservative per-part boxes, while NPC routes retain static navigation. Shared
+voice remains deferred in its plan.

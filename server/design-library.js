@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { buildFinish, buildKind, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
+import { buildFinish, buildGeometry, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { validateWorldId } from '../preview/src/world-contract.js';
 
 const MAX_ACCOUNTS = 10000;
@@ -18,8 +18,8 @@ function validSource(source) {
   try { validateWorldId(source.worldId); return true; } catch { return false; }
 }
 function validItem(item) {
-  return record(item) && Object.keys(item).every(key => ['id', 'kind', 'finish', 'createdAt', 'source'].includes(key))
-    && designId(item.id) && buildKind(item.kind) && buildFinish(item.finish)
+  return record(item) && Object.keys(item).every(key => ['id', 'kind', 'finish', 'assembly', 'createdAt', 'source'].includes(key))
+    && designId(item.id) && buildGeometry(item) && buildFinish(item.finish)
     && Number.isSafeInteger(item.createdAt) && item.createdAt >= 0
     && (item.source === undefined || validSource(item.source));
 }
@@ -35,10 +35,10 @@ function decode(raw) {
   return value;
 }
 function proposal(value) {
-  if (!record(value) || Object.keys(value).some(key => !['kind', 'finish', 'source'].includes(key))
-    || !buildKind(value.kind) || !buildFinish(value.finish)
+  if (!record(value) || Object.keys(value).some(key => !['kind', 'finish', 'assembly', 'source'].includes(key))
+    || !buildGeometry(value) || !buildFinish(value.finish)
     || value.source !== undefined && !validSource(value.source)) return null;
-  return { kind: value.kind, finish: value.finish, ...(value.source ? { source: clone(value.source) } : {}) };
+  return { kind: value.kind, finish: value.finish, ...(value.assembly ? {assembly:clone(value.assembly)} : {}), ...(value.source ? { source: clone(value.source) } : {}) };
 }
 function sourceMatch(items, source) {
   return source && items.find(item => item.source?.worldId === source.worldId && item.source.designId === source.designId);

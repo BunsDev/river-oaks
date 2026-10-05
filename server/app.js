@@ -1,3 +1,4 @@
+import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve, relative, sep, extname } from 'node:path';
@@ -226,7 +227,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
   });
   server.requestTimeout=15000;server.headersTimeout=10000;
   // Snapshots are repetitive JSON; the shared Redis server compresses them the same way.
-  const wss=new WebSocketServer({noServer:true,maxPayload:2048,perMessageDeflate:{threshold:1024,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:1}}});
+  const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:{threshold:1024,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:1}}});
   server.on('upgrade',async(req,socket,head)=>{
     const reject=status=>{socket.end(`HTTP/1.1 ${status} Rejected\r\nConnection: close\r\n\r\n`);};
     socket.on('error',()=>{});
@@ -235,7 +236,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(rateLimitKey(clientAddress(req))))return reject(403);
       if(!matchesWorld(url))return reject(403);
       const protocol=url.searchParams.get('protocol');
-      if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
+      if(protocol!==String(WORLD_PROTOCOL_VERSION))return reject(426);
       const identity=await auth.authenticate(req);
       if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
@@ -276,6 +277,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string'
               || (message.requestId!==undefined && (typeof message.requestId!=='string' || message.requestId.length>64)))throw new Error('Invalid');
           }catch{message=null;}
+          if(raw.length>2048 && !(isAdmin(identity.userId)&&message?.type==='build'&&validAssembly(message.assembly)))return ws.close(1009,'Game command too large.');
           // Supersede only unacknowledged poses. A travel command keeps its
           // place between the latest pose before it and the latest pose after.
           const coalescible=message?.type==='pose' && message.requestId===undefined;

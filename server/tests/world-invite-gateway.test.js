@@ -35,7 +35,7 @@ test('contact world invitations use the sender room and persist across gateway r
   assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'})).status,409);
   const open=async user=>{
     const ticket=(await (await post(user,'/api/multiplayer/ticket?world=moon-garden',{})).json()).ticket;
-    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
     sockets.push(socket);
     await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{if(JSON.parse(raw).type==='snapshot')resolve();});});
     return socket;

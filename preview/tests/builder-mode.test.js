@@ -57,3 +57,11 @@ test('the preview and the town agree on every spot they are asked about', () => 
   assert.ok(agreed >= 60);
   assert.ok(outcomes.has('ok') && outcomes.size >= 3, `covers acceptance and several refusals: ${[...outcomes]}`);
 });
+
+test('creator preview accounts for a flying visitor full collision volume',async()=>{
+  const {newAssembly}=await import('../src/creator-object.js'),{buildGeometry}=await import('../src/shared-build.js');
+  const assembly=newAssembly(),kind=buildGeometry({kind:'object',assembly});
+  const verdict=evaluatePlacement({environment,roads,kind,assembly,yaw:0,position:[-12,3.4],feet:[-12,0],
+    players:[{id:'other',position:[-10.4,3.4,0],altitude:1.2}],selfId:'owner'});
+  assert.equal(verdict.reason,'player');assert.equal(verdict.valid,false);
+});

@@ -17,7 +17,7 @@ export async function accountDesignCommand({ command, userId, connectionId, worl
     if (!fields(command, ['type', 'action', 'templateId', 'position', 'yaw'])) return { result: reject('invalid_build') };
     const item = await library.get(userId, command.templateId);
     if (!item) return { result: reject('unknown_design') };
-    return { command: { type: 'build', action: 'place', kind: item.kind, finish: item.finish, position: command.position, yaw: command.yaw } };
+    return { command: { type: 'build', action: 'place', kind: item.kind, finish: item.finish, ...(item.assembly ? {assembly:structuredClone(item.assembly)} : {}), position: command.position, yaw: command.yaw } };
   }
   if (command.type !== 'inventory') return { command };
   if (!isAdmin(userId)) return { result: reject('admin_only', 'Only Jevica can use building designs in the shared town.') };
@@ -39,14 +39,14 @@ export async function accountDesignCommand({ command, userId, connectionId, worl
     const view = await room.read(), build = view?.snapshot?.builds?.find(item => item.id === command.buildId);
     if (!build) return { result: reject('unknown_build') };
     if (build.ownerId !== userId) return { result: reject('not_build_owner') };
-    const saved = await library.save(userId, { kind: build.kind, finish: build.finish });
+    const saved = await library.save(userId, { kind: build.kind, finish: build.finish, ...(build.assembly ? {assembly:build.assembly} : {}) });
     if (!saved.ok) return { result: saved };
     return { result: { ok: true, library: true, item: { ...saved.item, scope: 'account' }, items: combined(saved.items, local, worldId) } };
   }
   if (action === 'copy') {
     const original = local.find(item => item.id === command.id);
     if (!original) return { result: reject('unknown_design') };
-    const saved = await library.save(userId, { kind: original.kind, finish: original.finish, source: { worldId, designId: original.id } });
+    const saved = await library.save(userId, { kind: original.kind, finish: original.finish, ...(original.assembly ? {assembly:original.assembly} : {}), source: { worldId, designId: original.id } });
     if (!saved.ok) return { result: saved };
     return { result: { ok: true, library: true, item: { ...saved.item, scope: 'account' }, items: combined(saved.items, local, worldId) } };
   }

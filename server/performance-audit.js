@@ -48,7 +48,7 @@ async function transportProbe(players,durationMs) {
       const response=await fetch(`${base}/api/multiplayer/ticket`,{method:'POST',headers:{Origin:origin,Cookie:`audit=${id}`,'X-CSRF-Token':'audit-csrf'}});
       if(!response.ok)throw new Error(`Ticket ${i}: HTTP ${response.status}`);
       const {ticket}=await response.json();
-      const ws=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?ticket=${ticket}`,{headers:{Origin:origin,Cookie:`audit=${id}`}});
+      const ws=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`audit=${id}`}});
       const sample={id,count:0,bytes:0,arrival:[],errors:0};samples.push(sample);connections.push(ws);
       ws.on('error',()=>{sample.errors++;});
       ws.on('message',raw=>{if(JSON.parse(raw).type==='snapshot'){sample.count++;sample.bytes+=raw.length;sample.arrival.push(performance.now());}});

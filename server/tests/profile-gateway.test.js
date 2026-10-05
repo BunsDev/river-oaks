@@ -33,7 +33,7 @@ test('authenticated profiles persist across worlds and gateway replacement', {sk
   assert.equal((await post('admin','/api/worlds',{id:'moon-garden',title:'Moon Garden',region})).status,201);
   const open=async user=>{
     const ticket=(await (await post(user,'/api/multiplayer/ticket?world=moon-garden',{})).json()).ticket;
-    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
     sockets.push(socket);
     await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{if(JSON.parse(raw).type==='snapshot')resolve();});});
     return socket;

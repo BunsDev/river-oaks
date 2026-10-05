@@ -1,10 +1,12 @@
 import * as THREE from 'three';
-import { buildFinish, buildKind } from './shared-build.js';
+import { buildFinish, buildKind, buildGeometry } from './shared-build.js';
+import { validAssembly, objectCollider } from './creator-object.js';
 
 // Small authored models share their materials and geometry across placements.
 // Their world transforms, ownership, and lifetime come only from snapshots.
 export function createSharedBuildLayer(scene) {
   const object=new THREE.Group();object.name='Player creations';scene.add(object);
+  const colliders=[];
   const entries=new Map(),geometries=new Set(),materials=new Set(),templates=new Map();
   const material=(color,options={})=>{const result=new THREE.MeshStandardMaterial({color,roughness:.65,...options});materials.add(result);return result;};
   const box=(x,y,z)=>{const result=new THREE.BoxGeometry(x,y,z);geometries.add(result);return result;};
@@ -68,6 +70,27 @@ export function createSharedBuildLayer(scene) {
     }
     templates.set(key,group);return group;
   };
+  const primitiveGeometries=new Map();
+  const modelKey=item=>JSON.stringify([item.kind,item.finish,item.assembly]);
+  const makeModel=(item,preview=false)=>{
+    if(item.kind!=='object')return template(item.kind,item.finish).clone();
+    const group=new THREE.Group();group.userData.customSurfaces=[];
+    if(!validAssembly(item.assembly))return group;
+    for(const part of item.assembly.parts){
+      let geometry=primitiveGeometries.get(part.shape);
+      if(!geometry){geometry=part.shape==='box'?box(1,1,1):part.shape==='sphere'?sphere(24,16):cylinder(.5,.5,1,32);primitiveGeometries.set(part.shape,geometry);}
+      let surface=ghostOk;
+      if(!preview){
+        const options=part.material==='metal'?{roughness:.3,metalness:.85}:part.material==='gloss'?{roughness:.16,metalness:.08}:{roughness:.86,metalness:0};
+        surface=part.material==='glass'?new THREE.MeshPhysicalMaterial({color:part.color,roughness:.08,metalness:0,transmission:.7,thickness:.15,ior:1.45}):new THREE.MeshStandardMaterial({color:part.color,...options});
+        materials.add(surface);group.userData.customSurfaces.push(surface);
+      }
+      const scale=part.shape==='sphere'?part.size.map(n=>n/2):part.size;
+      place(group,geometry,surface,part.position,scale,part.rotation);
+    }
+    return group;
+  };
+  const release=entry=>{for(const surface of entry.userData.customSurfaces??[]){materials.delete(surface);surface.dispose();}entry.removeFromParent();};
   // Builder mode's preview: a translucent copy of the item and a footprint ring
   // the size the town checks, green where it can go and red where it cannot.
   let ghost=null;
@@ -76,21 +99,21 @@ export function createSharedBuildLayer(scene) {
   const fillOk=material('#5fd38a',{transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide}),fillBad=material('#e5534b',{transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide});
   const ring=new THREE.RingGeometry(.94,1,48),fill=new THREE.CircleGeometry(.94,48);ring.rotateX(-Math.PI/2);fill.rotateX(-Math.PI/2);geometries.add(ring);geometries.add(fill);
   const arrow=new THREE.ConeGeometry(.09,.22,3);arrow.rotateX(Math.PI/2);geometries.add(arrow);
-  const makeGhost=(kind,finish)=>{
-    const group=new THREE.Group();group.name='Builder preview';group.userData.key=`${kind}:${finish}`;
-    const model=template(kind,finish).clone();model.traverse(item=>{if(item.isMesh){item.castShadow=false;item.receiveShadow=false;item.renderOrder=2;}});
-    const radius=buildKind(kind).radius,footprint=new THREE.Group();footprint.scale.setScalar(radius);
+  const makeGhost=spec=>{
+    const group=new THREE.Group();group.name='Builder preview';group.userData.key=modelKey(spec);
+    const model=makeModel(spec,true);model.traverse(item=>{if(item.isMesh){item.castShadow=false;item.receiveShadow=false;item.renderOrder=2;}});
+    const radius=(buildGeometry(spec)??buildKind(spec.kind)).radius,footprint=new THREE.Group();footprint.scale.setScalar(radius);
     const edge=new THREE.Mesh(ring,ringOk),floor=new THREE.Mesh(fill,fillOk),front=new THREE.Mesh(arrow,ringOk);
     edge.position.y=floor.position.y=.03;front.position.set(0,.05,1.18);front.scale.setScalar(1/radius);
     for(const mesh of [edge,floor,front]){mesh.renderOrder=3;footprint.add(mesh);}
     group.add(model,footprint);group.userData.parts={model,edge,floor,front};object.add(group);return group;
   };
   return {
-    object,
+    object,colliders,
     setGhost(spec){
       if(!spec){if(ghost){ghost.removeFromParent();ghost=null;}return;}
-      const key=`${spec.kind}:${spec.finish}`;
-      if(ghost?.userData.key!==key){ghost?.removeFromParent();ghost=makeGhost(spec.kind,spec.finish);}
+      const key=modelKey(spec);
+      if(ghost?.userData.key!==key){ghost?.removeFromParent();ghost=makeGhost(spec);}
       ghost.position.set(spec.position[0],spec.ground,-spec.position[1]);ghost.rotation.y=spec.yaw;ghost.visible=true;
       const {model,edge,floor,front}=ghost.userData.parts;
       model.traverse(item=>{if(item.isMesh)item.material=spec.valid?ghostOk:ghostBad;});
@@ -99,16 +122,19 @@ export function createSharedBuildLayer(scene) {
     get ghost(){return ghost;},
     sync(items){
       const visible=new Set(items.map(item=>item.id));
-      for(const [id,entry] of entries)if(!visible.has(id)){entry.removeFromParent();entries.delete(id);}
+      for(const [id,entry] of entries)if(!visible.has(id)){release(entry);entries.delete(id);}
       for(const item of items){
         let entry=entries.get(item.id);
-        if(!entry){entry=template(item.kind,item.finish).clone();entry.name=`${item.ownerName}'s ${item.kind}`;object.add(entry);entries.set(item.id,entry);}
+        if(!entry||entry.userData.modelKey!==modelKey(item)){if(entry)release(entry);entry=makeModel(item);entry.userData.modelKey=modelKey(item);entry.name=item.assembly?.name??`${item.ownerName}'s ${item.kind}`;object.add(entry);entries.set(item.id,entry);}
         entry.position.set(item.position[0],item.ground,-item.position[1]);entry.rotation.y=item.yaw;
+        const colliderKey=JSON.stringify([item.assembly,item.position,item.ground,item.yaw]);
+        if(entry.userData.colliderKey!==colliderKey){entry.userData.colliderKey=colliderKey;entry.userData.collider=objectCollider(item);}
         entry.userData.build={id:item.id,ownerId:item.ownerId,ownerName:item.ownerName,kind:item.kind};
       }
+      colliders.splice(0,colliders.length,...[...entries.values()].map(entry=>entry.userData.collider).filter(Boolean));
     },
     update(cameraPosition){for(const entry of entries.values())entry.visible=entry.position.distanceToSquared(cameraPosition)<110*110;},
-    stats(){return {count:entries.size,visible:[...entries.values()].filter(item=>item.visible).length};},
-    dispose(){ghost=null;object.removeFromParent();object.clear();entries.clear();for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
+    stats(){return {count:entries.size,materials:materials.size,geometries:geometries.size,visible:[...entries.values()].filter(item=>item.visible).length};},
+    dispose(){colliders.length=0;ghost=null;object.removeFromParent();object.clear();entries.clear();for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
   };
 }

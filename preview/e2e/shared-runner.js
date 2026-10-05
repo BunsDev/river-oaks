@@ -12,7 +12,7 @@ const modes = process.argv.slice(2);
 const selectedJourney = process.env.RIVER_OAKS_SHARED_JOURNEY;
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
-const supportedModes=['development','development-world','development-solo','development-publish','required'];
+const supportedModes=['development','development-world','development-solo','development-publish','required','creator'];
 if (modes.some(mode => !supportedModes.includes(mode))) throw new Error(`Choose ${supportedModes.join(', ')} shared play.`);
 const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : supportedModes, rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
@@ -53,7 +53,7 @@ async function start(mode, ports) {
   for (const port of Object.values(ports)) await unused(port);
   const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', String(ports.web)] : ['server/tests/browser-fixture.js'];
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
-  const env = { ...process.env, NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: mode==='development'?'auto':mode==='development-solo'?'choice':'required', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
+  const env = { ...process.env, RIVER_OAKS_TEST_CREATOR:mode==='creator'?'1':'0', NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: mode==='development'?'auto':mode==='development-solo'?'choice':'required', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
   interruption.signal.throwIfAborted();
   child = spawn(process.execPath, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {
@@ -99,7 +99,7 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared','shared-seating']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin','solo-sit-and-water']:mode==='development-publish'?['world-publish']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names','sit-and-water'];
+    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared','shared-seating']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin','solo-sit-and-water']:mode==='development-publish'?['world-publish']:mode==='creator'?['creator-objects']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names','sit-and-water'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();

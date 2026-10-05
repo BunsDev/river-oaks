@@ -55,7 +55,7 @@ async function fixture(t, { moderation, worldData=district, waitlist=approvedWai
 }
 
 function client(origin, ticket, session) {
-  const ws=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?ticket=${ticket}`,{headers:{Origin:publicOrigin,Cookie:`test_session=${session}`}});
+  const ws=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?protocol=2&ticket=${ticket}`,{headers:{Origin:publicOrigin,Cookie:`test_session=${session}`}});
   const messages=[],waiters=new Set();
   let request=0;
   ws.on('message',raw=>{
@@ -317,7 +317,7 @@ test('malformed raw HTTP URL returns 400 without an unhandled rejection and serv
 test('invalid WebSocket key cannot admit a player before the handshake is validated',async t=>{
   const f=await fixture(t),token=await f.issue('alice-session');
   const response=await rawRequest(f.origin,[
-    `GET /multiplayer?ticket=${token} HTTP/1.1`,
+    `GET /multiplayer?protocol=2&ticket=${token} HTTP/1.1`,
     'Host: localhost',
     'Connection: Upgrade',
     'Upgrade: websocket',
