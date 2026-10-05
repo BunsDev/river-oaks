@@ -1,4 +1,4 @@
-# Multiplayer performance audit — 3 October 2026
+# Multiplayer performance audit — updated 5 October 2026
 
 ## Scope and result
 
@@ -11,8 +11,8 @@ checkpoint recovery use the same deterministic selection.
 The 32-player admission limit passed short loopback WebSocket and Redis room
 probes with no connection errors, and the full Redis-backed server suite passed
 with a local Redis container. This is **local functional readiness**, not a
-global capacity sign-off. A single Redis writer, one `iad1` region, cold
-route-planning pauses, and the absence of long-running multi-region measurements
+global capacity sign-off. A single Redis writer, one `iad1` region, crowded
+client rendering, and the absence of long-running multi-region measurements
 are the remaining capacity risks. The 4 October navigation follow-up below
 measures the cold route pause below 200 ms locally; hosted headroom remains
 unverified.
@@ -83,7 +83,9 @@ performance. Room state and public view are compressed before Redis storage.
 - The server sends complete snapshots at a 5 Hz target. A 32-player room
   generates approximately 10 MiB/s of **uncompressed** snapshot JSON before
   WebSocket compression and backpressure, based on the sampled 64 KB snapshot.
-  Client GPU/frame costs were not measured at 32 rendered avatars.
+  The original probe did not measure client frame costs at 32 rendered avatars.
+  The local rendered follow-up below now measures one hardware browser; hosted
+  and physical mobile frame costs remain unverified.
 - The population migration validates the old checkpoint before filtering,
   transfers an active wish from a removed shop resident to an available
   retained resident in the same shop when possible, then another free resident,
@@ -252,3 +254,110 @@ A local Redis 7 full-calendar sample on Apple M3 Max measured 100 list reads:
 Overflow was rejected. This is loopback storage evidence. Hosted multi-region
 latency, many simultaneous calendar readers, and full-calendar DOM rendering
 cost remain unmeasured. See [events](world-events.md) for limits and semantics.
+
+## Rendered crowd follow-up — 5 October 2026
+
+`npm run audit:multiplayer:render` now exercises the real district in a hardware
+Chromium browser with 1, 8, 16 and 32 authenticated **synthetic** guest accounts.
+One browser renders the scene; the other accounts are real WebSocket transport
+actors using mixed shipped humanoid looks, bounded movement and periodic waves.
+The crowd camera frames every peer landmark. Models may occlude one another,
+and the ordinary HUD remains present. The development build retains the full
+materials, shadows, reflection captures and postprocessing; this is not a
+production-bundle profile, live WorkOS acceptance, or a multi-browser soak.
+All 98 shared NPCs remain. Every transport actor is checked for denied
+building/wish commands; the complete roster, including the browser visitor, is
+checked for false capability flags using the production admin predicate.
+
+The receipts record the base revision and SHA-256 hashes of the measured runtime,
+harness and dependency lockfile. The final runs used Node 24.18.1, Three 0.186.1,
+ws 8.22.0, Vite 8.3.2 and Playwright 1.63.0 on a **busy Apple M3 Max** with the
+ANGLE Metal renderer. Desktop is 1280×800 at DPR 1; the phone-sized viewport is
+390×844 at DPR 2 **on the same Mac GPU**, not physical phone hardware.
+
+### Fixed Sharpest quality
+
+Eight samples used a five-second warmup, waited for all started assets to finish,
+and measured at least 15 seconds each with native resolution and AO enabled.
+Frame intervals retain stalls; no frames over 250 ms are discarded by the audit.
+Main-loop timing is wall time inside animation/render submission, including any
+driver waits; it is not GPU timer-query time or exclusive CPU utilization.
+Draw calls include the composer's passes and shadows, not only the beauty pass.
+
+| Viewport | Players | Frame p50 | Frame p95 | Main loop p95 | Snapshot gap p95 | Gesture ack p95 | Draw calls |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| desktop | 1 | 16.7 ms | 33.4 ms | 21.8 ms | 237.3 ms | 49.4 ms | 1,766 |
+| desktop | 8 | 33.3 ms | 33.4 ms | 28.4 ms | 224.7 ms | 65.4 ms | 2,636 |
+| desktop | 16 | 33.4 ms | 50.1 ms | 45.9 ms | 227.9 ms | 98.1 ms | 5,085 |
+| desktop | 32 | 66.6 ms | 66.8 ms | 64.4 ms | 251.6 ms | 141 ms | 10,305 |
+| phone-viewport | 1 | 16.7 ms | 33.4 ms | 23.2 ms | 238.8 ms | 47.8 ms | 1,478 |
+| phone-viewport | 8 | 33.3 ms | 33.4 ms | 27.4 ms | 214.9 ms | 84.2 ms | 2,329 |
+| phone-viewport | 16 | 33.3 ms | 50 ms | 38.9 ms | 227.8 ms | 82.4 ms | 4,790 |
+| phone-viewport | 32 | 50 ms | 66.7 ms | 59.4 ms | 236.5 ms | 126.3 ms | 9,999 |
+
+### Default Auto quality at capacity
+
+Separate 32-player samples used a 20-second warmup and at least 30 seconds of
+measurement. These sequential runs are observations, not a controlled claim
+about the percentage benefit of Auto under changing host load.
+
+| Viewport | Frame p50 | Frame p95 | Main loop p95 | Effective scale | AO | Draw calls |
+| --- | ---: | ---: | ---: | ---: | --- | ---: |
+| desktop | 50 ms | 50.1 ms | 50.2 ms | 0.6 | off | 6,821 |
+| phone-viewport | 50 ms | 66.7 ms | 56.8 ms | 0.6 | off | 6,663 |
+
+Both Auto samples had already settled at 60% resolution with AO disabled before
+measurement and kept those settings. The crowded scene still has substantial
+frame costs on this high-end host. Profile the production bundle's animation,
+skinning, procedural accessories and multipass draw workload, then reduce avatar
+draw calls/geometry and measure again before accepting a client frame budget.
+The current samples do not establish smooth 32-player play on typical hardware.
+
+### Dynamic connections and cleanup
+
+All ten samples admitted their requested roster and loaded every peer without
+asset failures, browser exceptions, unplanned connection closes, rejected sampled
+commands or movement corrections. Each populated tier reconnected the same
+authenticated peer and recovered the complete roster; the 32-player samples
+exercise this at the room limit. The reports
+separate socket admission, browser/model convergence, measured warmup, reconnect
+and departure times. Departures use the normal ten-second grace rather than an
+admin kick, followed by three seconds for resource observation.
+
+- desktop: reconnect 171 ms; roster departure 10299 ms. Renderer geometry count fell from 3,111 to 357; textures from 335 to 252.
+- phone-viewport: reconnect 167 ms; roster departure 10265 ms. Renderer geometry count fell from 3,082 to 332; textures from 321 to 239.
+
+These are renderer resource **counts**, not VRAM bytes or proof against long-term
+leaks. Cached templates and the evolving district remain after peers leave.
+Snapshot traffic in the receipts is decoded UTF-8 JSON delivered to the browser,
+not compressed TCP/WebSocket wire bytes. Actors do not run all residents' social,
+group or calendar UI polls; add that traffic to the hosted soak.
+
+### Reproduce and remaining gates
+
+```sh
+npm ci
+npx playwright install chromium
+npm run audit:multiplayer:render
+npm run audit:multiplayer:render -- --players=32 --seconds=30 --warmup=20 \
+  --quality=auto --output=data/reports/rendered-multiplayer-auto-audit.json
+```
+
+`--seconds` accepts 5–600, `--warmup` 1–60, `--quality` sharp/auto/smooth,
+and `--players` an increasing subset of 1,8,16,32. Software renderers, empty
+timing samples, overflow, missing peers/assets, permission escalation and failed
+connection convergence fail the command. Sampled gestures wait for their ack
+and cooldown; a deadline regression test prevents an extra early final gesture.
+Owned services close on completion or interruption; no existing server is reused
+or stopped. Development audit hooks are absent from the production build.
+
+Receipts: [Sharpest](../data/reports/rendered-multiplayer-audit.json),
+[Auto](../data/reports/rendered-multiplayer-auto-audit.json). A successful audit
+means the probe completed with valid data and functional checks; there is no
+passing frame-rate SLA in this command.
+
+The room limit stays at 32. Production GPU/CPU profiling and a defined client
+frame target, physical mobile and ordinary desktop measurements, and the hosted
+30-minute multi-region WorkOS/Redis soak described above remain required gates.
+Include lease takeover, function recycling, slow clients, real API polling and
+compressed outbound bytes in that soak. **Global readiness is unverified.**
