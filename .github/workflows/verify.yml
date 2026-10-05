@@ -8,6 +8,18 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
+    # Redis-backed server tests (auth, sessions, rooms, presence, designs, groups)
+    # skip without REDIS_URL; this service runs them, as production uses Redis.
+    services:
+      redis:
+        image: redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -19,6 +31,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:server
+        env:
+          REDIS_URL: redis://127.0.0.1:6379
       - run: npm run test:desktop
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reflections:webgl

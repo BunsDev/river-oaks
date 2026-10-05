@@ -265,6 +265,10 @@ node --test server/tests/auth.test.js server/tests/workos-session.test.js
 REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test.js
 ```
 
+Every Redis-backed server test skips without `REDIS_URL`. CI's `preview` job runs a
+pinned Redis 7.4 service and sets `REDIS_URL` for `npm run test:server`, so all of
+them run there (238 tests, none skipped).
+
 These are local cryptographic boundary tests, not proof of WorkOS's hosted key
 provisioning or a live sign-in. Repeat the custom-domain smoke checks above after
 promotion. On 2026-10-03, the current `sim.jev.works` deployment passed a
