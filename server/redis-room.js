@@ -13,7 +13,14 @@ const ENQUEUE=`
   return 1
 `;
 const ACQUIRE=`
-  local owned = redis.call('GET',KEYS[1]) == ARGV[1]
+  local owner = redis.call('GET',KEYS[1])
+  local generation = owner and tonumber(string.match(owner,'^v(%d+):')) or 2
+  local requested = tonumber(string.match(ARGV[1],'^v(%d+):')) or 2
+  if owner and generation < requested then
+    redis.call('DEL',KEYS[1])
+    owner = false
+  end
+  local owned = owner == ARGV[1]
   if owned then redis.call('PEXPIRE',KEYS[1],ARGV[2])
   elseif not redis.call('SET',KEYS[1],ARGV[1],'NX','PX',ARGV[2]) then
     return {0,false,{},redis.call('GET',KEYS[4])}
@@ -82,7 +89,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  const token=randomUUID();
+  // Monotonic writer generation: checkpoint v3 adds seat locks. A newer
+  // writer atomically fences an older lease; peers/future generations retain it.
+  const token=`v3:${randomUUID()}`;
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);

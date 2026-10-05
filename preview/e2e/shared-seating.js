@@ -1,0 +1,106 @@
+async page => {
+  const checks=[],errors=[];
+  const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
+  const origin='http://127.0.0.1:5173';
+  const join=async tab=>{
+    tab.on('pageerror',error=>errors.push(error.message));
+    await tab.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
+    await tab.waitForFunction(()=>window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady==='true');
+  };
+  const self=tab=>tab.evaluate(()=>{const t=window.__riverMultiplayer();return t.snapshot.players.find(p=>p.id===t.selfId);});
+  const openPlaces=async tab=>{
+    if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await tab.locator('#panel-toggle').click();
+    await tab.locator('[data-section=explore-section]').click();
+  };
+  const closePanel=async tab=>{if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();};
+  await join(page);
+  check(await page.locator('.shared-seating-controls').count()===1,'Shared play provides accessible furniture seating controls');
+  check(await page.locator('.shared-seating-controls').getAttribute('aria-label')==='Furniture seating','Seating controls have an accessible name');
+  const district=await (await page.request.get(`${origin}/data/district.json`)).json(),spot=district.communityLocations[5];
+  await openPlaces(page);
+  await page.locator(`#places-list li[data-place-id="spot:${spot.id}"] button[aria-label^="Go to"]`).click();
+  await page.waitForFunction(name=>document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`),spot.name);
+  await closePanel(page);
+  if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
+  await page.locator('#build-mode').click();
+  const canvas=await page.locator('#canvas-host').boundingBox();
+  let aimed=false;
+  for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]) {
+    await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);
+    await page.waitForTimeout(300);
+    if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed=true;break;}
+  }
+  check(aimed,`Jevica can place a garden seat on open ground (${await page.locator('#build-hint').textContent()})`);
+  await page.locator('#build-place').click();
+  await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===1);
+  const build=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds[0]);
+  await page.locator('#build-mode').click();
+  await page.locator('.visit-tools-toggle').click();
+  const left=`${build.id}:0`,right=`${build.id}:1`;
+  await page.locator('#nearby-seat').selectOption(left);await page.locator('#seat-sit').click();
+  await page.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='Seated');
+  const owner=await self(page);
+  const poseGround=await page.evaluate(()=>window.__riverCarriage().pose.ground);
+  check(Math.abs(poseGround-owner.position[2])<1e-6,'Seated poses use the furniture base height on sloping terrain');
+  check(owner.sitting?.slot===0,'The local pose is seated only after server confirmation');
+  await page.locator('#canvas-host').focus();await page.keyboard.down('KeyW');await page.waitForTimeout(450);await page.keyboard.up('KeyW');
+  check(JSON.stringify((await self(page)).position)===JSON.stringify(owner.position),'Walking input cannot move a seated player');
+  const bodyBefore=await page.evaluate(()=>window.__riverPlayerAttention().bodyYaw);
+  await page.mouse.move(canvas.x+canvas.width*.75,canvas.y+canvas.height*.48);await page.mouse.down();
+  await page.mouse.move(canvas.x+canvas.width*.9,canvas.y+canvas.height*.44,{steps:8});await page.mouse.up();
+  const bodyAfter=await page.evaluate(()=>window.__riverPlayerAttention().bodyYaw);
+  check(Math.abs(bodyAfter-bodyBefore)<.01,'Looking around leaves the body facing the seat front');
+  const context=await page.context().browser().newContext();
+  try{
+    const guest=await context.newPage();let guestSocket,connections=0;
+    await guest.routeWebSocket('**/multiplayer?*',route=>{guestSocket={client:route,server:route.connectToServer()};connections++;});
+    await join(guest);
+    if(!await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
+    await guest.locator('input[name=player-form][value=beast]').check();
+    await guest.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='woman-casual'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
+    await guest.locator('.visit-tools-toggle').click();await openPlaces(guest);
+    await guest.locator('.world-map-player-list>summary').click();
+    await guest.locator(`.world-map-player-list button[data-peer-id="${owner.id}"]`).click();
+    await guest.getByRole('button',{name:'Meet nearby',exact:true}).click();
+    await guest.waitForFunction(name=>document.querySelector('.world-map-status')?.textContent.includes(`You're near ${name}`),owner.name);
+    await closePanel(guest);
+    await guest.locator('#nearby-seat').waitFor({state:'visible'});
+    check(await guest.locator(`#nearby-seat option[value="${left}"]`).isDisabled(),'Occupied slots cannot be chosen in the guest UI');
+    await guest.locator('#nearby-seat').selectOption(right);await guest.locator('#seat-sit').click();
+    await guest.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='Seated');
+    const visitor=await self(guest);
+    check(visitor.sitting?.slot===1&&visitor.appearance==='woman-casual'&&!visitor.canBuild&&!visitor.canGrantWishes,'A guest uses the second slot without acquiring admin powers');
+    await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.riderSeated&&p.sitting?.slot===1),visitor.id);
+    check(true,'The other browser renders the confirmed remote seated pose');
+    if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
+    await guest.locator('[data-section=community-section]').click();
+    await guest.getByRole('button',{name:'Wave',exact:true}).click();
+    await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.gesture==='wave'&&p.rightArmMotion>.7&&p.riderSeated),visitor.id);
+    check(true,'Seated fox visitors visibly wave to the other browser without moving their seat');
+    await closePanel(guest);
+    if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
+    await page.locator('#build-list button',{hasText:'Remove'}).click();
+    await page.waitForFunction(()=>document.querySelector('#build-status')?.textContent.includes('stand before removing'));
+    check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds.length))===1,'Occupied furniture cannot be removed by its admin builder');
+    await page.locator('.visit-tools-toggle').click();
+    const prior=guestSocket;await Promise.all([prior.client.close({code:1001,reason:'Acceptance reconnect'}),prior.server.close({code:1001,reason:'Acceptance reconnect'})]);
+    await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#player-mode')?.textContent==='Seated');
+    check(connections>=2&&(await self(guest)).id===visitor.id&&(await self(guest)).sitting?.slot===1,'The same account recovers its seat on socket reconnect within the grace period');
+    if(await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
+    await guest.setViewportSize({width:390,height:844});
+    await guest.locator('#seat-stand').scrollIntoViewIfNeeded();
+    check(await guest.locator('#seat-stand').isVisible(),'The stand control is available at a phone-sized viewport');
+    await guest.screenshot({path:'output/playwright/shared-seating-phone.png'});
+    await guest.locator('#seat-stand').focus();await guest.keyboard.press('Enter');
+    await guest.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='On foot');
+    const standing=await self(guest);
+    check(!standing.sitting&&Math.hypot(standing.position[0]-build.position[0],standing.position[1]-build.position[1])>=1.28,'Keyboard standing reaches a clear ground position');
+    await page.screenshot({path:'output/playwright/shared-seating-desktop.png'});
+  }finally{await context.close();}
+  await page.locator('#seat-stand').click();await page.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='On foot');
+  if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
+  await page.locator('#build-list button',{hasText:'Remove'}).click();
+  await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===0);
+  check(errors.length===0,'No browser exceptions');
+  return {passed:true,checks,errors};
+}

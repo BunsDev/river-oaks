@@ -1,0 +1,55 @@
+{
+  "createdAt": "2026-10-05T14:17:22.714Z",
+  "status": "passed",
+  "modes": [
+    "development"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance. Redis coordinator behavior is covered separately by server tests and the rolling probe, not this browser receipt.",
+  "results": [
+    {
+      "name": "shared-seating",
+      "status": "passed",
+      "seconds": 41.484,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Shared play provides accessible furniture seating controls",
+          "Seating controls have an accessible name",
+          "Jevica can place a garden seat on open ground (Ready to place.)",
+          "Seated poses use the furniture base height on sloping terrain",
+          "The local pose is seated only after server confirmation",
+          "Walking input cannot move a seated player",
+          "Looking around leaves the body facing the seat front",
+          "Occupied slots cannot be chosen in the guest UI",
+          "A guest uses the second slot without acquiring admin powers",
+          "The other browser renders the confirmed remote seated pose",
+          "Seated fox visitors visibly wave to the other browser without moving their seat",
+          "Occupied furniture cannot be removed by its admin builder",
+          "The same account recovers its seat on socket reconnect within the grace period",
+          "The stand control is available at a phone-sized viewport",
+          "Keyboard standing reaches a clear ground position",
+          "No browser exceptions"
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+  "source": {
+    "baseCommit": "c80fc3fc444347054f8619eeba68e1cec86d64f3",
+    "sha256": {
+      "package-lock.json": "ad7f31a48b7f04a1faa8a2682b8ff16804624520c396351e223cb4213b77aa9f",
+      "server/world.js": "33c2d7f47a5212eebe6baf96e55ca3b010809fca57b800ca8facddad541d138c",
+      "server/avatar-preferences.js": "4d05775788b2a0d54d584a3c87b79de2eb6b4f2797d4b5e7c4107afdc5fc43cd",
+      "preview/src/shared-seating.js": "32ddaaa1a04d2e2adeb97932c3bce0024f5917e3ccbe0f827922900ccf6b7afd",
+      "preview/src/shared-seating-ui.js": "a5c50adfeb35467f931cf8d14672985bcb3eac5437d41215817ae4258c7c2ffa",
+      "preview/src/walking-ui.js": "1a18cbeb427d7618c926b08ddedb58c8aabfb2666603748b235161ba074ad1d3",
+      "preview/src/player-avatar.js": "b86eb12e5189b63b48761d159d4a5e72a3ab8ae94b7b7851b0fee75d142226b9",
+      "preview/src/remote-players.js": "87d502af695b2bb61917934ea7a4ff01d168f6dec59523144ea8341b448728c0",
+      "preview/src/avatars.js": "8eca70b922f763d836cb3776e747a384db3cf469c58829d53366eb3b71176bba",
+      "preview/src/main.js": "aaaeebed1f780cce3adb7697b040ffe9c0903283a87207e54c00ffa785563dd9",
+      "preview/e2e/shared-seating.js": "ab824bca23084cf10f5aa78f53aafdf8a6609ff0088db778c5afa17a45291c6c"
+    }
+  }
+}

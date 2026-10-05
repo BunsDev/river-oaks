@@ -13,7 +13,7 @@ function load(url, context, nextLoad) {
       globalThis.__remoteAvatarAttempts?.push(options?.appearanceId);
       if(globalThis.__remoteFailOnce===options?.appearanceId){globalThis.__remoteFailOnce=null;throw new Error('temporary asset failure');}
       const object = new THREE.Group(); object.userData.frames = []; object.userData.profile = profile; object.userData.appearance = options?.appearanceId; object.userData.suspends = 0;
-      return { object, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() {} };
+      return { object, rig:{hipHeight:.9}, update(_now, action, _speaking, motion) { object.userData.frames.push({...motion,action}); }, suspend() { object.userData.suspends++; }, dispose() {} };
     }` };
   if (url.endsWith('/player-costume.js')) return { format: 'module', shortCircuit: true, source: 'export function createPlayerCostume() { return { update() {}, dispose() {} }; }' };
   if (url.endsWith('/flight-vehicles.js')) return { format: 'module', shortCircuit: true, source: "import * as THREE from 'three'; export function createFlightVehicle() { return { object: new THREE.Group(), dispose() {} }; }" };
@@ -142,6 +142,26 @@ test('remote avatars play the gesture selected by the room snapshot',async()=>{
     assert.equal(frames.at(-1).action,'bow');
     players.sync([{...peer,gesture:null}],'self');players.update(200,camera);
     assert.equal(frames.at(-1).action,'continue');
+    players.dispose();
+  }finally{globalThis.document=previousDocument;}
+});
+
+test('confirmed furniture seating pins peer hips and facing even during arrival interpolation',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  try{
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),players=createRemotePlayers(scene,new Element());
+    const peer={id:'guest',name:'Guest',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'};
+    players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));players.update(0,camera);
+    const holder=scene.children[0],body=holder.children[0];
+    players.sync([{...peer,position:[2,0,0],yaw:-Math.PI/2,gesture:'wave',sitting:{buildId:'build-1',slot:0,height:.705,yaw:Math.PI/2}}],'self');
+    players.update(100,camera);
+    const frame=body.userData.frames.at(-1);
+    assert.equal(frame.riding,true);assert.equal(frame.ridingKind,'seat');assert.equal(frame.seatToFloor,.705);
+    assert.equal(frame.speed,0);assert.equal(frame.flying,false);assert.equal(frame.action,'wave');
+    assert.equal(holder.position.distanceTo(new THREE.Vector3(2,0,0)),0,'confirmed seat cannot float toward its furniture');
+    assert.equal(holder.rotation.y,Math.PI/2,'seat facing does not follow approach direction');
+    assert.equal(body.position.y,.705-.9+.025);
+    players.sync([peer],'self');players.update(200,camera);assert.equal(body.position.y,0);assert.equal(body.userData.frames.at(-1).riding,false);
     players.dispose();
   }finally{globalThis.document=previousDocument;}
 });

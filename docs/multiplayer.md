@@ -423,3 +423,37 @@ The default tests 1/8/16/32 players at fixed Sharpest quality in desktop and
 phone-sized viewports. `--quality=auto` exercises the normal adaptive mode.
 The phone-sized view still uses the host GPU. See the [performance audit](multiplayer-performance-audit.md)
 for measured results, command options, and hosted readiness gates.
+
+## Shared furniture seating
+
+In shared play, placed Garden seats have two independent slots and Lounge chairs
+have one. Stand near furniture in the same room, choose an available slot in
+**Nearby seats**, and select **Sit down**. **Stand up** works with keyboard and
+touch controls. Dragging turns the camera while the body faces the seat front.
+Furniture is usable by approved guests; building, saved designs and wish granting
+remain restricted to Jevica's verified owner accounts.
+
+The town assigns the position, facing and cushion height. Occupied slots reject
+other visitors, and occupied furniture cannot be moved, turned or removed. Stand
+searches nearby clear ground in the same room, including the path to the exit
+point. If that space is blocked, the visitor keeps the reservation and can use
+Places to travel elsewhere. Travel releases the seat. Revoking a private-home
+invitation moves the visitor outside and releases their seat.
+
+A connection can recover its seat within the normal ten-second reconnect grace.
+After that grace, departure releases it. A compatible region revision keeps
+furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
+recovery validates slots, unique occupancy and the exact furniture-derived pose.
+
+Private world checkpoints now write version 3 and read valid versions 1 (original
+district only), 2 and 3. Nonempty seat reservations are only valid in version 3.
+The prior version-2 coordinator rejects version-3 checkpoints, preventing it from
+writing a walking pose over a reservation during a rolling deployment. The upgraded writer uses a monotonic lease generation and can
+atomically take over an older lease. Existing commit fencing prevents that old writer from
+publishing or trimming commands. Do not roll back to pre-seating code against the
+new checkpoint format. Browser protocol 1 remains compatible for existing
+commands. Refresh older clients to display seats; their existing Places travel
+still releases a reservation.
+
+This interaction covers placed creations. Built-in shop/park furniture is a
+separate model system and is not yet interactive.

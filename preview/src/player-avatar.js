@@ -322,18 +322,18 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       host.dataset.visitorReactions = JSON.stringify(reactionPeople.map(local => ({id:local.id,form:visitorForm,action:local.visitorReaction.action})));
     },
     update(now,camera,viewportHeight) {
-      const pose = walking.getPose();panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
+      const pose = walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       carriage.update(now);carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
-      carriageButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||pose.flying||carriage.riding||away;
+      carriageButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
       companionButton.disabled=sharedMode&&!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||pose.flying||!carriage.placement||away;
+      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away;
       rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
       vehicleSelect.disabled=sharedMode&&!owner||carriage.riding||away;driveButton.disabled=sharedMode&&!owner||!carriage.riding||away;
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
       if(driveStatus.textContent!==carriage.chauffeur.label)driveStatus.textContent=carriage.chauffeur.label;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);
-      host.dataset.riding=String(carriage.riding);flightButton.disabled=carriage.riding||!canFlyAs(userId,appearance);
+      host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
       carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
@@ -343,17 +343,18 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
           holder.position.fromArray(pose.riding.seat);holder.quaternion.fromArray(pose.riding.quaternion);
           holder.position.addScaledVector(new THREE.Vector3(0,1,0).applyQuaternion(holder.quaternion),-avatar.rig.hipHeight+.025);
         }
+        if(pose.sitting){holder.position.y+=pose.sitting.height-avatar.rig.hipHeight+.025;holder.rotation.y=pose.sitting.yaw;}
         if(!pose.riding){holder.rotation.x=0;holder.rotation.z=0;}
         vehicle.object.visible=pose.flying;
         const dt = previous === null ? 0 : Math.min(0.08, (now - previous) / 1000);
-        const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:Boolean(pose.riding),flying:pose.flying,conversation:getConversation(),spell:forceTarget});
+        const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:seated,flying:pose.flying,conversation:getConversation(),spell:forceTarget});
         const travelHeading=pose.speed>.05?Math.atan2(pose.velocity[0],pose.velocity[1]):undefined;
-        if(!pose.riding&&(forceTarget||previous===null||pose.speed>.05)) {
+        if(!seated&&(forceTarget||previous===null||pose.speed>.05)) {
           const facing=forceTarget?Math.atan2(forceTarget[0]-holder.position.x,forceTarget[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
-        if(focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!pose.riding?'force':now < castUntil ? 'amazed' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||pose.riding?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:Boolean(pose.riding),ridingKind:pose.riding?.kind,seatToFloor:pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,Boolean(pose.riding));
+        if(!seated&&focus.facing!==null)holder.rotation.y=focus.facing;
+        avatar.update(now, forceTarget&&!seated?'force':now < castUntil ? 'amazed' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){
@@ -368,7 +369,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';
-      panel.querySelector('#player-mode').textContent=pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
+      panel.querySelector('#player-mode').textContent=pose?.sitting?'Seated':pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
       panel.querySelector('.player-flight-pad').hidden=!pose?.flying||!canFlyAs(userId,appearance);host.dataset.flightVehicle=pose?.flying?form:'';
       // No flashing or camera shake: character motion respects reduced motion.
       holder.userData.reducedMotion = reducedMotion;

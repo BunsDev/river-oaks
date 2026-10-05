@@ -96,7 +96,7 @@ export async function legacyDefaultAppearance(redis,stateKey,userId) {
   const room=JSON.parse(inflateSync(packed,{maxOutputLength:16*1024*1024}).toString('utf8'));
   const saved=room?.checkpoint;
   if(![1,2].includes(room?.version) || room.version===2 && room.worldId!==DEFAULT_WORLD_ID
-    || !saved || ![1,2].includes(saved.version) || saved.version===2 && saved.worldId!==DEFAULT_WORLD_ID)
+    || !saved || ![1,2,3].includes(saved.version) || saved.version>=2 && saved.worldId!==DEFAULT_WORLD_ID)
     throw new Error('Invalid legacy account appearance checkpoint');
   const envelope=saved.version===1
     ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}

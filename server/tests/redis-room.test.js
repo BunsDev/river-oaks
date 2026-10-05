@@ -196,12 +196,12 @@ testRedis('lost lease cannot publish replies or trim queue; next leader replays 
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1);
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   assert.equal((await f.redis.keys(`${f.prefix}:reply:*`)).length,1,'only earlier committed join has a reply');
-  await f.redis.set(`${f.prefix}:lease`,'different-leader','PX',5000);
+  await f.redis.set(`${f.prefix}:lease`,'v3:different-leader','PX',5000);
   release();await delay(250);
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1,'stale commit cannot trim pending operation');
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   await stalled.close();
-  assert.equal(await f.redis.get(`${f.prefix}:lease`),'different-leader','close only releases its own lease');
+  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v3:different-leader','close only releases its own lease');
   await f.redis.del(`${f.prefix}:lease`);
   const survivor=f.create();await survivor.tick();
   await request;
@@ -289,4 +289,45 @@ testRedis('JWT expiry denies commands but preserves wishes through fresh-token r
   await room.request({type:'join',identity:carol,connectionId:'carol-socket'});
   f.advance(11000);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.some(player=>player.id==='carol'),false,'expired-token grace is bounded to10s');
+});
+
+testRedis('competing edges reserve one furniture slot and recover it through coordinator replacement',async t=>{
+  const f=await setup(t),first=f.create(),second=f.create();
+  for(const id of ['alice','bob','charlie'])assert.equal((await f.join(first,id)).ok,true);
+  const placed=await f.command(first,'alice',{type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0});assert.equal(placed.ok,true);
+  const intent={type:'sit',buildId:placed.item.id,slot:0};
+  const results=await Promise.all([f.command(first,'bob',intent),f.command(second,'charlie',intent)]);
+  assert.equal(results.filter(result=>result.ok).length,1);assert.equal(results.find(result=>!result.ok).error,'seat_occupied');
+  const before=(await first.read()).snapshot,winner=before.players.find(player=>player.sitting)?.id;
+  assert.ok(winner==='bob'||winner==='charlie');
+  await first.close();await second.close();
+  const replacement=f.create();assert.equal((await f.join(replacement,winner,`${winner}-new`)).ok,true);
+  const recovered=(await replacement.read()).snapshot.players.find(player=>player.id===winner);
+  assert.equal(recovered.sitting.buildId,placed.item.id);assert.equal(recovered.sitting.slot,0);
+  assert.equal((await f.command(replacement,'alice',{type:'build',action:'remove',id:placed.item.id})).error,'seat_in_use');
+  assert.equal((await f.command(replacement,winner,{type:'stand'},`${winner}-new`)).ok,true);
+  const other=winner==='bob'?'charlie':'bob';
+  assert.equal((await f.command(replacement,other,intent)).ok,true);
+  assert.equal((await replacement.request({type:'leave',userId:other,connectionId:`${other}-socket`})).ok,true);
+  assert.equal((await f.command(replacement,'alice',intent)).error,'seat_occupied','reconnect grace retains the reservation');
+  f.advance(11000);await replacement.tick();
+  const released=await f.command(replacement,'alice',intent);assert.equal(released.ok,true,JSON.stringify(released));
+});
+
+testRedis('an upgraded coordinator takes over an older lease without waiting for its TTL',async t=>{
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=randomUUID();
+  await f.redis.set(key,legacy,'PX',5000);
+  await room.tick();
+  const owner=await f.redis.get(key);
+  assert.notEqual(owner,legacy,'a pre-seating writer cannot keep renewing the obsolete lease');
+  assert.match(owner,/^v3:/);
+  assert.equal((await room.read()).snapshot.worldId,'river-oaks');
+});
+
+testRedis('an older generation does not steal an active newer coordinator lease',async t=>{
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v4:${randomUUID()}`;
+  await f.redis.set(key,future,'PX',5000);
+  await room.tick();
+  assert.equal(await f.redis.get(key),future);
+  assert.equal(await room.read(),null);
 });
