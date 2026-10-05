@@ -6,6 +6,9 @@ export function setupSidebar() {
   const storageKey = 'river-oaks-panel-collapsed';
   let collapsed = true;
   try { collapsed = localStorage.getItem(storageKey) !== 'false'; } catch { /* Session controls work without storage. */ }
+  trigger.setAttribute('aria-keyshortcuts', 'Meta+B Control+B');
+  const keyHint = document.createElement('kbd'); keyHint.className = 'rail-key-hint'; keyHint.setAttribute('aria-hidden', 'true');
+  keyHint.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘B' : 'Ctrl B'; trigger.append(keyHint);
 
   const apply = () => {
     // Move focus before hiding the panel so keyboard users never get stranded inside inert content.
@@ -15,30 +18,33 @@ export function setupSidebar() {
     panel.setAttribute('aria-hidden', String(collapsed));
     trigger.setAttribute('aria-expanded', String(!collapsed));
     trigger.setAttribute('aria-label', collapsed ? 'Explore River Oaks' : 'Close exploration panel');
-    trigger.title = collapsed ? 'People, places & settings' : 'Close exploration panel';
+    trigger.title = `${collapsed ? 'People, places & settings' : 'Close exploration panel'} (${keyHint.textContent})`;
     trigger.querySelector('.trigger-arrow').textContent = collapsed ? '›' : '‹';
     trigger.querySelector('.trigger-label').textContent = collapsed ? 'Explore' : 'Close';
   };
-  trigger.addEventListener('click', (event) => {
-    collapsed = !collapsed;
+  const setOpen = (open, { focus = false } = {}) => {
+    if (open && matchMedia('(max-width:1200px)').matches && document.querySelector('#community-dialogue')?.hidden === false) {
+      document.querySelector('#community-close')?.click();
+    }
+    collapsed = !open;
     try { localStorage.setItem(storageKey, String(collapsed)); } catch { /* Keep the choice for this page session. */ }
     apply();
-    if (collapsed && event.detail > 0 && document.body.classList.contains('walking')) {
-      document.querySelector('#canvas-host').focus({ preventScroll: true });
-    }
+    if (focus) (open ? panel.querySelector('[role=tab][aria-selected=true]') ?? trigger : document.querySelector('#canvas-host')).focus({ preventScroll: true });
+  };
+  trigger.addEventListener('click', (event) => {
+    setOpen(collapsed, { focus: !collapsed && event.detail > 0 && document.body.classList.contains('walking') });
   });
   panel.addEventListener('keydown',event=>{
-    if(event.key!=='Escape'||collapsed)return;
-    event.preventDefault();event.stopPropagation();collapsed=true;
-    try { localStorage.setItem(storageKey,'true'); } catch { /* Session controls remain available. */ }
-    apply();
+    if(event.key!=='Escape'||event.isComposing||collapsed)return;
+    event.preventDefault();event.stopPropagation();setOpen(false, { focus: true });
   });
   window.addEventListener('storage', (event) => {
     if (event.key !== storageKey && event.key !== null) return;
-    collapsed = event.newValue === 'true';
+    collapsed = event.newValue !== 'false';
     apply();
   });
   apply();
+  return { panel, trigger, setOpen, toggle: () => setOpen(collapsed, { focus: true }), get expanded() { return !collapsed; } };
 }
 
 // One task at a time. Secondary controls stay in labeled disclosures rather
@@ -63,7 +69,7 @@ export function setupSidebarSections({ graphics = null } = {}) {
   const appearance = panel.querySelector('.appearance-control');
   const voice = ['#community-voice', '#community-voice-status', '#community-life', '#community-life-status'];
   const voiceLabel = panel.querySelector('label[for="community-voice"]');
-  settings.append(heading, ...atmosphereChildren, appearance, ...(graphics ? [graphics] : []),
+  settings.append(heading, appearance, ...(graphics ? [graphics] : []), disclosure('Light & atmosphere', atmosphereChildren, true),
     createJevSettings(), createJevSettings('elevenlabs'), disclosure('Voices & resident walks', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
   atmosphere.remove(); about.remove();
   const more = panel.querySelector('#community-more');
@@ -76,17 +82,27 @@ export function setupSidebarSections({ graphics = null } = {}) {
   const nav = panel.querySelector('.experience-nav'); nav.setAttribute('role','tablist'); nav.setAttribute('aria-label','District controls');
   const buttons = [...nav.querySelectorAll('[data-section]')];
   const sections = [people, places, settings], labels = ['People', 'Places', 'Settings'];
+  const scroll = panel.querySelector('.panel-scroll'), positions = new Map();
+  let selected = -1;
   const select = (index, focus = false) => {
+    const changed = index !== selected;
+    if (changed) {
+      if (selected >= 0) positions.set(selected, scroll.scrollTop);
+      scroll.scrollTop = 0;
+    }
     buttons.forEach((button,i) => {
       button.setAttribute('aria-selected', String(i === index)); button.tabIndex = i === index ? 0 : -1;
       sections[i].hidden = i !== index;
     });
-    panel.querySelector('.panel-scroll').scrollTop = 0;
+    if (changed) scroll.scrollTop = positions.get(index) ?? 0;
+    selected = index;
+    try { localStorage.setItem('river-oaks-rail-tab', sections[index].id); } catch { /* Session navigation works without storage. */ }
     if (focus) buttons[index].focus({preventScroll:true});
   };
   buttons.forEach((button,index) => {
     button.textContent = labels[index]; button.id = `rail-tab-${index}`; button.setAttribute('role','tab');
     button.setAttribute('aria-controls',sections[index].id); button.dataset.tone = ['people','places','scene'][index];
+    button.title = `${labels[index]} (Alt+${index + 1})`; button.setAttribute('aria-keyshortcuts', `Alt+${index + 1}`);
     sections[index].setAttribute('role','tabpanel'); sections[index].setAttribute('aria-labelledby',button.id);
     sections[index].dataset.tone = button.dataset.tone;
     button.addEventListener('click',()=>select(index));
@@ -95,5 +111,8 @@ export function setupSidebarSections({ graphics = null } = {}) {
       if (target !== null) {event.preventDefault();select(target,true);}
     });
   });
-  select(0);
+  let initial = 0;
+  try { initial = Math.max(0, sections.findIndex(section => section.id === localStorage.getItem('river-oaks-rail-tab'))); } catch { /* Default to People. */ }
+  select(initial);
+  return { select, get selected() { return selected; } };
 }

@@ -361,3 +361,61 @@ frame target, physical mobile and ordinary desktop measurements, and the hosted
 30-minute multi-region WorkOS/Redis soak described above remain required gates.
 Include lease takeover, function recycling, slow clients, real API polling and
 compressed outbound bytes in that soak. **Global readiness is unverified.**
+
+
+## Crowded accessory follow-up — 5 October 2026
+
+A 1 ms Chromium CDP CPU sampler at 32 players attributed 74.1% of desktop and
+78.1% of phone-viewport sampled time to the composer, including 19.5%/21.2%
+in shadows. Remote-player updates accounted for 7.8%/7.5%. These are overlapping
+inclusive samples and include submission/driver waits, not GPU timer queries.
+The [diagnostic summary](../data/reports/crowded-avatar-cpu-summary.json) records
+host load and profile hashes; raw profiles and the temporary instrumented
+harness were used locally and are not checked-in audit receipts.
+
+The procedural forest aristocrat had 265/294 accessory meshes per avatar.
+Static opaque pieces sharing a bone and material now use the existing costume
+batcher, reducing those counts to 49/62. Every authored accessory triangle is
+retained. Baking preserves positions, normals and UVs; bone animation still
+moves the complete accessory. Named pieces, transparent meshes, hidden pieces
+and Lyra's independently toggled prowl outfit stay separate. No graphics setting,
+NPC population, room limit or admin capability changes are involved.
+
+Sequential unprofiled baseline/candidate runs used the same Apple M3 Max,
+Sharpest settings, viewports, mixed human looks, 10-second warmup and at least
+15 seconds of measurement. All 98 shared NPCs remain. CPU load averages at start
+were 21.6/33.9/29.0 for baseline and 31.6/40.1/32.9 for candidate; this busy host
+and asynchronous scene movement prevent a controlled percentage frame-speed
+claim. Draw calls include shadows and composer passes.
+
+| Viewport | Players | Frame p95 before / after | Main loop p95 before / after | Draw calls before / after |
+| --- | ---: | ---: | ---: | ---: |
+| desktop | 1 | 33.4 / 33.4 ms | 20.3 / 21.0 ms | 1,748 / 1,703 |
+| desktop | 32 | 83.3 / 50.1 ms | 68.2 / 44.7 ms | 10,292 / 4,557 |
+| phone-viewport | 1 | 33.4 / 33.4 ms | 19.0 / 19.5 ms | 1,445 / 1,418 |
+| phone-viewport | 32 | 66.7 / 50.0 ms | 61.9 / 41.2 ms | 10,009 / 4,297 |
+
+At capacity, these samples submitted 56–57% fewer draws. All 31 peers loaded
+and their labels were in view. Both runs passed reconnect at capacity, normal
+departure, asset/error checks, and denial of forged guest build/wish commands,
+with zero movement corrections. Desktop capacity triangle totals stayed near
+18.76 million; dynamic scene/culling differences affect complete-frame totals.
+The regression suite independently checks exact accessory triangle counts for
+all 20 human/furry reference forms, animated surface transforms, disposal,
+transparent/named exclusions and Lyra's outfit visibility. Crowd screenshots
+were inspected with full rendering. Physical mobile remains unmeasured.
+
+Receipts: [baseline](../data/reports/crowded-avatar-baseline.json) and
+[batched](../data/reports/crowded-avatar-batched.json). They hash the measured
+accessory and batching modules as well as the original audit sources. To repeat
+on a chosen revision (use a distinct output path for each):
+
+```sh
+npm run audit:multiplayer:render -- --players=1,32 --seconds=15 --warmup=10 \
+  --output=data/reports/crowded-avatar-batched.json
+```
+
+This fixes a substantial draw-submission cost; it does not establish a 32-player
+frame target on ordinary hardware. The production GPU profile, physical-device
+measurements and hosted multi-region WorkOS/Redis soak above remain required.
+Jevica alone retains building and wish granting. **Global readiness is unverified.**

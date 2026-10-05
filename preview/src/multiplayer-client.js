@@ -44,7 +44,9 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     gestureControls.append(button);return button;
   });
   gestures.append(gestureTitle,gestureControls,gestureStatus);
-  panel.append(summary,list,notice,gestures,chatSection,leaveTown,logout);document.querySelector('#community-section')?.prepend(panel);
+  panel.append(summary,list,notice,chatSection,gestures,leaveTown,logout);
+  // Residents and the local meeting action lead; connected-town tools follow.
+  document.querySelector('#community-more')?.before(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID,homeAccess=[];
   let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
@@ -88,6 +90,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const groups=createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
     request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
+  panel.append(leaveTown,logout);
   const latestPlayers=new Map();
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);

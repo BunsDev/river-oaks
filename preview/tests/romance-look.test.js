@@ -91,6 +91,29 @@ test('reference outfits attach to moving bones in both forms and dispose',async(
   }
 });
 
+test('Lyra has opaque coverage around her hips in both upright forms',async()=>{
+  for(const profile of ['lyra-human','woman-daywear']){
+    const appearance=sharedAppearance(profile),source=await loadCharacterRig(appearance.rig);
+    const avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'}),root=new THREE.Group();root.add(avatar.model);
+    const look=createRomanceLook(avatar,root,appearance);
+    try{
+      const wrap=root.getObjectByName('Lyra velvet wrap');
+      assert.ok(wrap,profile+': velvet wrap is present');
+      assert.equal(wrap.material.transparent,false);
+      assert.equal(wrap.material.opacity,1);
+      // Cast through the actual indexed geometry, including the back and seam.
+      wrap.updateMatrixWorld(true);
+      for(let i=0;i<72;i++){
+        const angle=i/72*Math.PI*2,origin=new THREE.Vector3(Math.sin(angle)*.5,-.08,Math.cos(angle)*.5);
+        const target=new THREE.Vector3(0,-.08,0);
+        wrap.localToWorld(origin);wrap.localToWorld(target);
+        const ray=new THREE.Raycaster(origin,target.sub(origin).normalize());
+        assert.ok(ray.intersectObject(wrap).length,profile+': opaque hip coverage at angle '+angle);
+      }
+    }finally{look.dispose();avatar.dispose();}
+  }
+});
+
 test('Sable replaces the human face without changing the shared template or a second avatar',async()=>{
   const source=await loadCharacterRig('jevica'),avatar=instantiateAvatar(source,{targetHeight:source.height,id:'player'});
   const neighbor=instantiateAvatar(source,{targetHeight:source.height,id:'remote-neighbor'});

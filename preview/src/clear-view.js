@@ -1,3 +1,4 @@
+import { isGameplayKey } from './keyboard-input.js';
 // Clear view hides the floating HUD cards so the street can be seen whole.
 // Conversations, the rail and this toggle stay; H or the chip brings it back.
 // It is a per-visit choice and is not remembered.
@@ -23,7 +24,7 @@ export function createClearView({ viewport, onChange = () => {} }) {
   // the canvas, and the chip itself should answer its own shortcut.
   const typing = target => target instanceof Element && target.closest('input, textarea, select, [contenteditable=""], [contenteditable=true]');
   document.addEventListener('keydown', event => {
-    if (event.code !== 'KeyH' || event.repeat || event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) return;
+    if (event.code !== 'KeyH' || !isGameplayKey(event) || event.repeat || event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) return;
     if (!document.body.classList.contains('walking') && !active) return;
     event.preventDefault(); set(!active);
   });

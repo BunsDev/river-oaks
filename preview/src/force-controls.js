@@ -1,3 +1,4 @@
+import { isGameplayKey } from './keyboard-input.js';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from './walking.js';
 import { carriageContains } from './carriage-parking.js';
@@ -97,7 +98,7 @@ export function createForceControls({host,walking,getTargets,getObstacles,getCar
   });
   choice.addEventListener('change',paint);choice.addEventListener('blur',paint);
   const key=event=>{
-    if(event.repeat||!isAvailable())return;
+    if(event.repeat||!isAvailable()||!isGameplayKey(event))return;
     const action=event.code==='KeyT'?toggle:enabled?({KeyG:lift,KeyR:push,KeyX:lower,Escape:lower})[event.code]:null;
     if(action){event.preventDefault();action();}
   };
