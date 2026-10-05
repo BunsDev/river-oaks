@@ -31,13 +31,26 @@ function dom() {
   return { host: new Element('main'), byId: id => doc.querySelector(`#${id}`) };
 }
 const world = { communityLocations: [{ id: 'a', name: 'Plaza', position: [0, 0, 0] }, { id: 'b', name: 'Café', position: [2, 0, 0] }] };
+const rooms=[{index:0,storeId:'shop',name:'Café',theme:'dining',floor:0,toWorld:(a,d)=>[a,d],people:[{role:'staff',a:0,d:0},{role:'guest',a:1,d:0},{role:'guest',a:2,d:0}]}];
 function setup(options = {}) {
   const elements = dom(), commands = [];
   const client = {identity:{id:'alice'},snapshot:{players:[{id:'alice',canGrantWishes:true}]},async command(command) { commands.push(command); return { ok: true, message: 'Confirmed by town' }; } };
-  const panel = createCommunityPanel({ host: elements.host, getVisitor: () => [0,0,0], getPersona: () => 'jevica', getMultiplayer: () => client, ...options });
-  panel.setWorld(world);
+  const panel = createCommunityPanel({ host: elements.host, getVisitor: () => [0,0,0], getRoomId: () => 'shop', getPersona: () => 'jevica', getMultiplayer: () => client, ...options });
+  panel.setWorld(world,rooms);
   return { panel, commands, client, ...elements };
 }
+
+test('joining multiplayer removes street NPCs from an existing solo directory and rejects their selection',async()=>{
+  let shared=null;
+  const {panel,client,byId}=setup({getMultiplayer:()=>shared});
+  const outside=panel.state.locals.find(local=>!local.indoor);
+  assert.ok(outside);
+  shared=client;
+  panel.applyRemote({community:{},locals:panel.state.locals.map(local=>({id:local.id,indoor:Boolean(local.indoor)}))});
+  assert.ok(panel.state.locals.length>0&&panel.state.locals.every(local=>local.indoor));
+  assert.ok(byId('community-local').options.every(option=>option.value.startsWith('store-')));
+  assert.equal(await panel.selectLocal(outside.id),false);
+});
 
 test('shared snapshots merge by id, keep personas/selection, and clear removed wishes', async () => {
   const { panel } = setup();
@@ -45,7 +58,7 @@ test('shared snapshots merge by id, keep personas/selection, and clear removed w
   panel.state.selectedId = local.id;
   local.wish = { kind: 'dog' }; local.wishDisruption = 'noise';
   assert.equal(typeof panel.applyRemote, 'function');
-  panel.applyRemote({ community: { running: true, elapsed: 42, selectedId: 'other' }, locals: [{ id: local.id, position: [5,6,0], wish: null, wishDisruption: null }], wishes: { ...panel.state.wishes, resolved: 1 } });
+  panel.applyRemote({ community: { running: true, elapsed: 42, selectedId: 'other' }, locals: [{ id: local.id, indoor:true, position: [5,6,0], wish: null, wishDisruption: null }], wishes: { ...panel.state.wishes, resolved: 1 } });
   assert.equal(panel.state.selectedId, local.id);
   assert.equal(local.persona, persona);
   assert.deepEqual(local.position, [5,6,0]);

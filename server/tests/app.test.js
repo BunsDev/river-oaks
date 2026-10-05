@@ -1,24 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { request as httpRequest } from 'node:http';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createGameServer } from '../app.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
+import { createMemoryGroups } from '../groups.js';
+import { SIGN_INS_PER_ADDRESS } from '../rate-limit.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
 };
 async function fixture(t,options={},staticRoot='/nonexistent'){
   const waitlist=options?.isApproved?options:options.waitlist??approvedWaitlist;
-  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),worldId='river-oaks'}=options?.isApproved?{}:options;
+  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),groups=createMemoryGroups(),worldId='river-oaks'}=options?.isApproved?{}:options;
   const players=new Map();let commands=0;
   const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
   world.worldId=worldId;
-  const app=createGameServer({auth,world,landmarks,social,waitlist,origin:'http://127.0.0.1',staticRoot});
+  const app=createGameServer({auth,world,landmarks,social,groups,waitlist,origin:'http://127.0.0.1',staticRoot});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
@@ -43,10 +46,41 @@ test('standalone server protects every game chunk and world data after approval'
     assert.equal(response.headers.get('vary'),'Cookie');
   }
 });
+// fetch() would normalise these paths before sending them; the raw request
+// line is what a scanner sends.
+const rawGet=(origin,path,id)=>new Promise((resolve,reject)=>{
+  const {hostname,port}=new URL(origin);
+  const req=httpRequest({hostname,port,path,headers:id?{Cookie:`session=${id}`}:{}},res=>{res.resume();res.on('end',()=>resolve(res.statusCode));});
+  req.on('error',reject);req.end();
+});
+test('standalone server gates a game file however its path is encoded',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
+  for(const file of ['index.html','assets/index-entry.js','assets/main-game.js','data/district.json'])await writeFile(join(root,file),'fixture');
+  await symlink(join(root,'data/district.json'),join(root,'alias.json'));
+  const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
+  const {origin}=await fixture(t,waitlist,root);
+  for(const path of ['/%64ata/district.json','/data%2Fdistrict.json','/data/district%2Ejson','/%61ssets/main-game.js',
+    '/assets/main-game%2Ejs','/assets%2Fmain-game.js','/data//district.json','/alias.json','/assets/index-entry.js%2F..%2Fmain-game.js']){
+    assert.equal(await rawGet(origin,path),403,path);
+    assert.equal(await rawGet(origin,path,'guest'),403,path);
+  }
+  for(const path of ['/%64ata/district.json','/assets/main-game%2Ejs','/alias.json'])assert.equal(await rawGet(origin,path,'owner'),200,path);
+  assert.equal(await rawGet(origin,'/%E0%A4%A/x'),403);
+  assert.equal(await rawGet(origin,'/%61ssets/index-entry.js'),200);
+});
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
- const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?ticket='+token,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
+ const query=new URLSearchParams('ticket='+token);if(!query.has('protocol'))query.set('protocol','2');
+ const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?'+query,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
  ws.once('message',data=>resolve({ws,snapshot:JSON.parse(data)}));ws.once('error',reject);
+});
+test('one address can start only a few sign-ins at a time',async t=>{
+  const {origin}=await fixture(t);
+  for(let i=0;i<SIGN_INS_PER_ADDRESS;i++)assert.notEqual((await fetch(origin+'/auth/login')).status,429);
+  assert.equal((await fetch(origin+'/auth/login')).status,429);
+  assert.notEqual((await fetch(origin+'/auth/session')).status,429,'other routes keep their own limit');
 });
 test('anonymous requests and cross-origin or forged-CSRF ticket requests are denied',async t=>{
  const {origin}=await fixture(t);
@@ -62,12 +96,12 @@ test('tickets name their world and protocol, and the socket rejects a different 
  const response=await request('/api/multiplayer/ticket?world=garden-2');
  assert.equal(response.status,200);
  const {ticket,worldId,protocolVersion}=await response.json();
- assert.equal(worldId,'garden-2');assert.equal(protocolVersion,1);
+ assert.equal(worldId,'garden-2');assert.equal(protocolVersion,2);
  assert.equal((await request('/api/landmarks/list?world=river-oaks')).status,404);
  assert.equal((await request('/api/landmarks/list?world=garden-2')).status,200);
- await assert.rejects(connect(origin,`${ticket}&world=river-oaks&protocol=1`,'one'),/403/);
- await assert.rejects(connect(origin,`${ticket}&world=garden-2&protocol=2`,'one'),/426/);
- const {ws}=await connect(origin,`${ticket}&world=garden-2&protocol=1`,'one');t.after(()=>ws.terminate());
+ await assert.rejects(connect(origin,`${ticket}&world=river-oaks&protocol=2`,'one'),/403/);
+ await assert.rejects(connect(origin,`${ticket}&world=garden-2&protocol=1`,'one'),/426/);
+ const {ws}=await connect(origin,`${ticket}&world=garden-2&protocol=2`,'one');t.after(()=>ws.terminate());
 });
 test('two authenticated accounts receive the shared roster, and tickets are single-use',async t=>{
  const {origin,world}=await fixture(t);
@@ -162,4 +196,31 @@ test('contacts require a meeting and acceptance before private messages',async t
   assert.equal(history.messages[0].text,'Hello privately');
   assert.equal((await post('two','remove',{peerId:'one'})).status,200);
   assert.equal((await post('one','messages',{peerId:'two'})).status,404);
+});
+test('authenticated group routes persist across members and reject outsiders',async t=>{
+  const {origin}=await fixture(t);
+  const post=(user,scope,action,data={})=>fetch(origin+`/api/${scope}/${action}`,{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${user}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:JSON.stringify(data)});
+  const created=await post('one','groups','create',{name:'Neighborhood Circle'});
+  assert.equal(created.status,200);const {id:groupId}=(await created.json()).group;
+  assert.equal((await post('one','groups','invite',{groupId,peerId:'two'})).status,409);
+  const one=await connect(origin,(await (await ticket(origin,'one')).json()).ticket,'one');t.after(()=>one.ws.terminate());
+  const two=await connect(origin,(await (await ticket(origin,'two')).json()).ticket,'two');t.after(()=>two.ws.terminate());
+  assert.equal((await post('one','social','request',{peerId:'two'})).status,200);
+  assert.equal((await post('two','social','accept',{peerId:'one'})).status,200);
+  assert.equal((await post('one','groups','invite',{groupId,peerId:'two'})).status,200);
+  assert.equal((await post('two','groups','read',{groupId})).status,404);
+  assert.equal((await post('two','groups','accept',{groupId})).status,200);
+  assert.equal((await post('two','groups','send',{groupId,text:'Hello across the world'})).status,200);
+  assert.equal((await post('three','groups','read',{groupId})).status,404);
+  assert.equal((await post('','groups','list')).status,401);
+  assert.equal((await post('one','groups','list')).status,200);
+  assert.equal((await post('one','groups','read',{groupId})).status,200);
+});
+test('residents behind one address can poll contacts and groups without hitting the access limit',async t=>{
+  const {origin}=await fixture(t);
+  for(let cycle=0;cycle<6;cycle++)for(let account=0;account<16;account++)for(const scope of ['social','groups']) {
+    const response=await fetch(`${origin}/api/${scope}/list`,{method:'POST',headers:{Origin:'http://127.0.0.1',
+      Cookie:`session=resident${account}`,'X-CSRF-Token':'test-csrf','Content-Type':'application/json'},body:'{}'});
+    assert.equal(response.status,200,`${scope} poll for resident ${account} in cycle ${cycle}`);
+  }
 });

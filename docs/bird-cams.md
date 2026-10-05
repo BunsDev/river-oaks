@@ -1,7 +1,7 @@
 # Bird cams
 
 Three city birds, a mourning dove, a blue jay and a cardinal, fly over the
-district on Jev's autopilot. Open **Play, build & rides → Bird cams** and choose
+district on Jev's autopilot. Open **Play & rides → Bird cams** and choose
 **Ride along** to see through a bird's eyes.
 
 ## Jev's autopilot

@@ -1,13 +1,17 @@
 import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
+import { createWorldLandmarks } from './world-landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
 import { createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
+import { createRedisGroups } from './groups.js';
 import { createRedisProfiles } from './profiles.js';
+import { createRedisEvents } from './events.js';
 import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
+import { createRedisDesignLibrary } from './design-library.js';
 import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
@@ -15,7 +19,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
     const existing=await storedAppearance.get(userId);
@@ -23,7 +28,11 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     const legacy=await legacyDefaultAppearance(redis,`${roomPrefixFor(namespace,DEFAULT_WORLD_ID)}:state`,userId);
     return storedAppearance.initialize(userId,legacy??local);
   }};
-  const worlds=new Map(),pending=new Map();
+  const worlds=new Map(),pending=new Map(),landmarkStores=new Map();
+  const landmarkStoreFor=id=>{
+    if(!landmarkStores.has(id))landmarkStores.set(id,createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)}));
+    return landmarkStores.get(id);
+  };
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   const worldDirectory=async()=>{
     const entries=await catalog.list();
@@ -50,8 +59,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
-      const landmarks=createRedisLandmarks({redis,prefix:accountPrefixFor(namespace,id)});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,profiles,presence,worldDirectory,origin,moderators,trustedProxyIPs,
+      const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,landmarks,social,groups,profiles,events,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

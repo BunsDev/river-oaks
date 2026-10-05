@@ -40,7 +40,7 @@ test('the local owner publishes and joins a second world without restarting the 
   const access=await fetch(origin+'/api/multiplayer/ticket?world=moon-garden',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   assert.equal(access.status,200);
   const ticket=(await access.json()).ticket;
-  const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:cookie}});
+  const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:cookie}});
   t.after(()=>socket.terminate());
   const snapshot=await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});});
   assert.equal(snapshot.worldId,'moon-garden');
@@ -54,7 +54,7 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal((await command(socket,'gait',{type:'movement',movement:'beast'})).ok,true);
   const riverAccess=await fetch(origin+'/api/multiplayer/ticket?world=river-oaks',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   const riverTicket=(await riverAccess.json()).ticket;
-  const riverSocket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=river-oaks&protocol=1&ticket=${riverTicket}`,{headers:{Origin:origin,Cookie:cookie}});
+  const riverSocket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=river-oaks&protocol=2&ticket=${riverTicket}`,{headers:{Origin:origin,Cookie:cookie}});
   t.after(()=>riverSocket.terminate());
   const riverSnapshot=await new Promise((resolve,reject)=>{riverSocket.once('error',reject);riverSocket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});});
   assert.equal(riverSnapshot.players.find(player=>player.id===owner.user.id).appearance,'woman-casual');
@@ -63,6 +63,8 @@ test('the local owner publishes and joins a second world without restarting the 
   const guest=await fetch(origin+'/auth/session');
   const guestSession=await guest.json(),guestCookie=guest.headers.get('set-cookie').split(';')[0];
   assert.equal((await draftRequest(guestSession,guestCookie,'load',{id:'moon-garden'})).status,403);
+  assert.equal((await draftRequest(guestSession,guestCookie,'history',{id:'moon-garden'})).status,403);
+  assert.equal((await draftRequest(guestSession,guestCookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:editable.world.regionSha256})).status,403);
   const profileRequest=(session,sessionCookie,action,data)=>fetch(origin+`/api/profile/${action}?world=moon-garden`,{method:'POST',headers:{Origin:origin,Cookie:sessionCookie,'X-CSRF-Token':session.csrfToken,'Content-Type':'application/json'},body:JSON.stringify(data)});
   assert.equal((await profileRequest(owner,cookie,'save',{tagline:'Garden host',bio:'Welcome to my world.',pronouns:'she/her',interests:['Gardens'],expectedVersion:0})).status,200);
   assert.equal((await (await profileRequest(owner,cookie,'view',{})).json()).profile.bio,'Welcome to my world.');
@@ -77,6 +79,14 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal(await oldConnectionClosed,4000);
   assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Private revision');
   assert.equal((await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
+  const history=await (await draftRequest(owner,cookie,'history',{id:'moon-garden'})).json();
+  assert.deepEqual(history.versions.map(version=>version.revision),[1]);
+  const original=await (await draftRequest(owner,cookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:history.world.regionSha256})).json();
+  assert.equal(original.region.places[0].name,editable.publishedRegion.places[0].name);
+  assert.equal((await draftRequest(owner,cookie,'version',{id:'moon-garden',revision:1,baseRegionSha256:editable.world.regionSha256})).status,409);
+  assert.equal((await draftRequest(owner,cookie,'save',{id:'moon-garden',baseRegionSha256:history.world.regionSha256,expectedDraftVersion:0,region:original.region})).status,200);
+  assert.equal((await draftRequest(owner,cookie,'apply',{id:'moon-garden',expectedDraftVersion:1})).status,200);
+  assert.equal((await (await fetch(origin+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
 });
 
 test('a configured alternate world exposes the bundled geography without a catalog entry',async t=>{
@@ -113,7 +123,7 @@ test('accepted contacts see a current world across joins and old socket cleanup'
     const ticketResponse=await post(account,`/api/multiplayer/ticket?world=${worldId}`);
     assert.equal(ticketResponse.status,200);
     const {ticket}=await ticketResponse.json();
-    const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,
+    const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,
       {headers:{Origin:origin,Cookie:account.cookie}});
     sockets.push(socket);
     const snapshot=await new Promise((resolve,reject)=>{

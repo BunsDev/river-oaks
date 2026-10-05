@@ -2,6 +2,7 @@ import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { measureHead } from './head-fit.js';
+import { batchCostumeAttachments } from './costume-batching.js';
 
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
@@ -34,10 +35,6 @@ export function createReferenceStyle(avatar,appearance){
       const z=front?.07:-.055-(layer%3)*.022;
       tube(face,hair,[[x*.8,.20,z],[x,.08,z+.015],[x+side*.015,-.04,z-.012],[x-side*.012,-.18,z+.015],[x+side*.021,-.35,z-.012],[x,-.53,z]],.011+(i%3)*.002);
     }
-  }
-  function pendant(){
-    tube(face,gold,[[0,-.015,.088],[0,-.078,.102]],.0028);
-    ball(face,gold,[0,-.08,.105],[.014,.017,.007]);
   }
   function shoulderBag({color,side=1,large=false}){
     const bag=material(color,{roughness:.64}),holder=torso;
@@ -175,7 +172,8 @@ export function createReferenceStyle(avatar,appearance){
     const velvet=material('#754759',{roughness:.78,sheen:1,sheenColor:new THREE.Color('#b5788d'),side:THREE.DoubleSide});
     const fold=material('#9b6476',{roughness:.82,sheen:.8,sheenColor:new THREE.Color('#d5a0ac'),side:THREE.DoubleSide});
     for(const side of [-1,1])tube(torso,fold,[[side*.13,.26,.06],[side*.12,.19,.13],[0,.13,.15]],.004);
-    drape(pelvis,velvet,{from:-.45,to:2.7,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
+    // Opaque velvet wraps all the way around; the sheer train is an overlay.
+    drape(pelvis,velvet,{from:-.45,to:Math.PI*2-.45,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
     const pixels=new Uint8Array(256*256*4);
     for(let y=0;y<256;y++)for(let x=0;x<256;x++){
       const cellX=Math.floor(x/25),cellY=Math.floor(y/29),seed=(Math.imul(cellX+3,73856093)^Math.imul(cellY+7,19349663))>>>0;
@@ -189,7 +187,7 @@ export function createReferenceStyle(avatar,appearance){
     drape(pelvis,sheer,{from:.22,to:Math.PI*2-.22,top:.09,length:.86,rx:.19,rz:.14,flare:.1,jag:.26,lobes:3,name:'Lyra spotted sheer train'});
     const jewel=mesh(pelvis,new THREE.TorusGeometry(.022,.005,9,28),gold,[.18,.075,.13]);jewel.rotation.y=.3;
     ball(pelvis,fold,[.18,.075,.135],[.012,.016,.006]);
-    pendant();shoulderBag({color:'#704753'});boots('#704753');
+    shoulderBag({color:'#704753'});boots('#704753');
     for(const side of [-1,1]){
       const wrist=aligned(`hand_${side}`);if(wrist){const band=mesh(wrist,new THREE.TorusGeometry(.018,.003,8,24),gold,[0,.025,0]);band.rotation.x=Math.PI/2;}
     }
@@ -235,9 +233,7 @@ export function createReferenceStyle(avatar,appearance){
       for(let i=0;i<9;i++){const t=i/9;leaf(face,foliage,[x+(i%2?.017:-.017),scalp-.04-t*.66,-.115-t*.04],.022,(i%2?-1:1)*.7,.2);}
       for(let i=0;i<flowers;i++)blossom(face,[x+(i%2?.012:-.012),.05-i*.19,-.13-i*.008],.01);
     }
-    // Gold leaf pendant and earrings.
-    tube(face,leafGold,[[-.045,-.03,.05],[0,-.09,.098],[.045,-.03,.05]],.0021);
-    leaf(face,leafGold,[0,-.105,.102],.02,0,-.2);
+    // Gold leaf earrings.
     for(const side of [-1,1]){ball(face,leafGold,[side*.09,-.012,.01],[.004,.004,.004]);leaf(face,leafGold,[side*.092,-.034,.012],.014,0,.2);}
     // Tunic: an olive V over the chest, open ivory drapes around the hips with a
     // handkerchief hem, and olive panels down the front and back.
@@ -298,7 +294,7 @@ export function createReferenceStyle(avatar,appearance){
     tube(torso,gold,[[-.063,.292,.052],[-.044,.235,.113],[0,.194,.141],[.044,.235,.113],[.063,.292,.052]],.0018);
     ball(torso,gold,[0,.183,.143],[.009,.012,.003]);
   }else if(appearance.character==='vesper'){
-    dressSkirt('#541a30',{wrap:true});pendant();shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
+    dressSkirt('#541a30',{wrap:true});shoulderBag({color:'#4b2931'});boots('#4a1f2e');relaxedSleeves('#521a30');
     // The panther wears her hoops through the base of her ears. Authored on the
     // 0.20 skull like the scalp pieces, so the fit below lowers them with it.
     const panther=appearance.form==='beast';
@@ -315,8 +311,6 @@ export function createReferenceStyle(avatar,appearance){
     }
     for(let i=0;i<3;i++)ball(torso,darkGold,[0,.21-i*.07,.152],[.006,.006,.004]);
     shoulderBag({color:'#533e32',side:-1,large:true});boots('#49362d',{rugged:true});
-    // The wolf's pendant rests under the muzzle; on a man it would sit on his throat.
-    if(appearance.form==='beast')pendant();
     // The sculpted wolf head (animal-face.js) carries the fur; no tuft cones over it.
   }else if(appearance.character==='kai'){
     const formal=appearance.variant==='formal',explorer=appearance.variant==='explorer',base=formal?'#dfd1bd':explorer?'#282e38':'#1e1b20';
@@ -340,9 +334,6 @@ export function createReferenceStyle(avatar,appearance){
       ball(parent,starlight,[x,y,z],[i%4===0?.006:.003,.0018,.0017]);
       if(i%4===0){tube(parent,starlight,[[x-.014,y,z],[x+.014,y,z]],.0016);tube(parent,starlight,[[x,y-.017,z],[x,y+.017,z]],.0016);}
     }
-    const sun=mesh(face,new THREE.TorusGeometry(.016,.002,7,20),starlight,[0,-.074,.102]);
-    for(let i=0;i<8;i++){const angle=i*Math.PI/4;const ray=box(face,starlight,[Math.cos(angle)*.026,-.074+Math.sin(angle)*.026,.104],[.011,.002,.002],.001);ray.rotation.z=angle;}
-    tube(face,starlight,[[0,-.015,.089],[0,-.058,.101]],.002);
     if(!explorer){
       for(const side of [-1,1])for(let i=0;i<3;i++)ball(torso,starlight,[side*(.14+i*.015),.26-i*.09,.176],[.003,.004,.002]);
     }
@@ -363,9 +354,6 @@ export function createReferenceStyle(avatar,appearance){
     box(pelvis,leather,[0,.09,.137],[.31,.029,.016],.005);
     box(pelvis,silver,[0,.09,.149],[.037,.036,.009],.005);
     boots('#1c1a1d',{rugged:true});
-    // Dark, loosely swept locks remain legible when the source short hair is hidden.
-    tube(face,silver,[[0,-.025,.087],[0,-.078,.1]],.0025);
-    ball(face,silver,[0,-.082,.103],[.013,.018,.007]);
   }
   // Hair and headwear above were authored for a 0.20 skull top; the shipped
   // rigs measure 0.149-0.160, which left them floating. Lower everything rooted
@@ -378,6 +366,11 @@ export function createReferenceStyle(avatar,appearance){
       if(top>.12)child.position.y+=lift;
     }
   }
+  // Bake only static, unnamed opaque pieces on the same bone/material. Keep
+  // transparent surfaces sorted separately and named pieces addressable. Lyra's
+  // outfit has per-piece visibility during prowl, so retain those handles.
+  if(appearance.character!=='lyra')batchCostumeAttachments([...attachments].map(group=>({group})),resources,
+    item=>!item.name&&item.visible&&!item.material.transparent);
   const sourceClothes=[];
   if(appearance.character==='lyra'&&appearance.form==='beast')model.traverse(item=>{
     if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);

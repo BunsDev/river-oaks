@@ -1,9 +1,10 @@
 // Builder mode: where a creation would go and whether the town will accept
 // it there. Pure functions over the walking pose, so the browser preview and
 // its tests share one rule set with the server (shared-build.js).
-import { BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REACH, BUILD_REASONS, checkBuildSite } from './shared-build.js';
+import {objectCollider,blocksPlayer} from './creator-object.js';
+import { BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REACH, BUILD_REASONS, buildYaw, buildRoomAt, checkBuildSite } from './shared-build.js';
 
-export const BUILD_AHEAD = 2.4, BUILD_ROTATE_STEP = Math.PI / 12;
+export const BUILD_AHEAD = 2.4, BUILD_ROTATE_STEP = Math.PI / 8;
 // Kept just inside the town's reach, so a clamped target is never refused for distance.
 const REACH_MARGIN = .15;
 const snap = value => Math.round(value * 10) / 10;
@@ -31,13 +32,21 @@ export function builderTarget(pose, ray = null, {grid = .1} = {}) {
 }
 
 // Everything the town checks for a place or a move, as one verdict.
-export function evaluatePlacement({ environment, roads, kind, position, feet, builds = [], players = [], selfId = null, moving = null }) {
+export function evaluatePlacement({ environment, roads, kind, assembly, yaw=0, position, feet, builds = [], players = [], selfId = null, moving = null }) {
+  const threshold=environment.roomAt(feet[0],-feet[1]);
+  if(threshold && !threshold.contains(feet[0],feet[1]))
+    return { valid: false, reason: 'threshold', message: BUILD_REASONS.threshold, ground: environment.groundAt(position[0],-position[1]) };
   if (gap(feet, position) > BUILD_REACH || (moving && gap(feet, moving.position) > BUILD_EDIT_REACH)) return { valid: false, reason: 'reach', message: BUILD_REASONS.reach, ground: environment.groundAt(position[0], -position[1]) };
+  const room=buildRoomAt(environment,feet)?.storeId??null,targetRoom=buildRoomAt(environment,position)?.storeId??null;
+  if (room!==targetRoom || moving && room!==(buildRoomAt(environment,moving.position)?.storeId??null))
+    return { valid: false, reason: 'room', message: 'Stand in the same home as the creation, or outside with it.', ground: environment.groundAt(position[0],-position[1]) };
   const site = checkBuildSite({ environment, roads, position, kind, builds, ignoreId: moving?.id ?? null });
   const ground = site.ground ?? environment.groundAt(position[0], -position[1]);
   if (site.reason) return { valid: false, reason: site.reason, message: BUILD_REASONS[site.reason], ground };
   // The town counts every player, the builder included.
-  const standing = players.find(player => gap(player.position, position) < kind.radius + BUILD_PLAYER_GAP);
+  const snappedYaw=buildYaw(yaw);
+  const collider=objectCollider({kind:kind.id,assembly,position,ground,yaw:snappedYaw});
+  const standing = players.find(player => gap(player.position, position) < kind.radius + BUILD_PLAYER_GAP || blocksPlayer(collider,player));
   if (standing) return { valid: false, reason: 'player', message: standing.id === selfId ? 'Step back a little: you are standing there.' : BUILD_REASONS.player, ground };
   return { valid: true, reason: null, message: 'Ready to place.', ground };
 }

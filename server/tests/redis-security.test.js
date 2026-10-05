@@ -32,15 +32,22 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     assert.equal(await store.allow('arbitrary-new-scope', 'client', 5, 1000), false);
     assert.equal(await store.allow('access', 'x'.repeat(257), 5, 1000), false);
   });
-  await run('rate-limit cardinality is capped and unused collections expire', async ({ store, redis, prefix, advance }) => {
-    const pairs = [], expiry = [];
-    for (let i = 0; i < 4096; i++) { pairs.push(`client-${i}`, '1'); expiry.push(Date.now() + 1000, `client-${i}`); }
-    await redis.hset(`${prefix}:limit:access:counts`, ...pairs);
-    await redis.zadd(`${prefix}:limit:access:expiry`, ...expiry);
-    assert.equal(await store.allow('access', 'overflow', 5, 1000), false);
-    advance(2000);
-    assert.equal(await store.allow('access', 'overflow', 5, 1000), true);
-    assert.ok(await redis.pttl(`${prefix}:limit:access:counts`) > 0);
+  // A shared table capped at 4096 clients let a flood of distinct addresses
+  // lock out every newcomer for the rest of the window.
+  await run('each client has its own expiring counter, so a flood cannot lock out a newcomer', async ({ store, redis, prefix }) => {
+    await Promise.all(Array.from({ length: 5000 }, (_, i) => store.allow('access', `flood-${i}`, 5, 60_000)));
+    assert.equal(await store.allow('access', 'newcomer', 1, 60_000), true);
+    assert.equal(await store.allow('access', 'newcomer', 1, 60_000), false);
+    const keys = await redis.keys(`${prefix}:limit:access:*`);
+    assert.equal(keys.length, 5001);
+    assert.ok(keys.every(key => /^[A-Za-z0-9_-]{43}:\d+$/.test(key.slice(`${prefix}:limit:access:`.length))), 'client ids are hashed into key names');
+    const ttls = await Promise.all(keys.slice(0, 20).map(key => redis.pttl(key)));
+    assert.ok(ttls.every(ttl => ttl > 0 && ttl <= 60_000));
+  });
+  await run('sign-in starts are a separate limit scope', async ({ store }) => {
+    for (let i = 0; i < 3; i++) assert.equal(await store.allow('login', 'client', 3, 60_000), true);
+    assert.equal(await store.allow('login', 'client', 3, 60_000), false);
+    assert.equal(await store.allow('access', 'client', 3, 60_000), true);
   });
   await run('tickets bind the session, survive wrong-user attempts, and consume once across clients', async ({ store, redis, prefix }) => {
     const user = { userId: 'user-a', sessionId: 'session-a' };

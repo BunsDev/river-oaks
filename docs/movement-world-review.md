@@ -68,7 +68,7 @@ For indoor decoration, enter a boutique, open F3, point at its floor, and copy t
 
 [Unreal World Partition](https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine) supplies grid-based world streaming and integrates with HLOD. That addresses content streaming, not automatic migration of this game's JavaScript simulation, WorkOS/Redis town, UI, characters, or account state. An Unreal comparison should be a separately scoped vertical slice on the same hardware and gameplay workload, with explicit browser-distribution and asset-pipeline costs. No migration or world rebuild was performed.
 
-## Verification evidence
+## Historical October 3 verification evidence
 
 The original review receipts are retained locally in `../data/reports/movement-retry/completion.json`; generated reports are not committed. Test harnesses changed in `preview/tests/movement-review.test.js`, `limb-fit.test.js`, `prince-flight.test.js`, and `preview/e2e/{movement-review,bird-cams,debug-tools,multiplayer-dev,experience-runner}.js`.
 
@@ -100,3 +100,21 @@ Final checks:
 - The build emits the existing warning about chunks above 500 kB. Large-world GPU capacity and multiplayer load capacity remain unmeasured.
 
 The branch retains the patch. Keep the worktree until the pull request has been reviewed and its local evidence is no longer needed.
+
+## PR #124 reconciliation on October 5
+
+Reconciled the movement-only successor to #102 against main at `a0b3ec90e24ec4481fe5b5d6fc5e4a2d3c18219c`. The three conflicts preserve creator assembly geometry and placement checks, account inventory state, and the newer rail-navigation journey while adding bird tree clearance, sensing, and configurable placement grids. The authentication stack already delivered by #98 is not reintroduced.
+
+Current local verification:
+
+- Clean install from the current dependency lock: zero reported vulnerabilities.
+- Preview unit suite: 713 passed, zero failures or skips.
+- Desktop unit suite: eight passed after refreshing the current dependencies.
+- Production build: passed; the existing large-chunk warning remains.
+- Bird visibility: the 60-second full-render journey passed the existing readable-bird and companion presence thresholds.
+- Full-render browser journeys: movement review, bird cameras, debug tools, carriage companion, and rail navigation passed.
+- Full-render two-browser development journeys: multiplayer development (including shared fitted vines and one/half-metre placement grids), groups, world events, shared rails, and shared seating passed.
+- Independent review: no production blockers; 17 focused movement, limb-fit, and Prince flight tests passed.
+- Worktree secret scan and net-diff whitespace checks passed. The commit hook separately verifies the staged contents.
+
+Local receipts are archived separately from historical main reports. These checks use local approved identity fixtures and fallback behavior; they do not establish live provider quality, physical-device acceptance, or global multiplayer capacity. Hosted CI and preview status are verified on the final PR head before merging.

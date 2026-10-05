@@ -1,4 +1,4 @@
-const joints=['head','spine_03','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r','hand_l'];
+const joints=['head','spine_03','upperarm_l','upperarm_r','lowerarm_l','lowerarm_r','hand_l','hand_r'];
 const surprised={head:[0.04,0,0],upperarm_l:[-0.25,0,0],upperarm_r:[-0.7,0,0],lowerarm_l:[0,0,0.7],lowerarm_r:[0,0,1.35]};
 const startled={...surprised,head:[-0.1,0,0],upperarm_l:[-0.7,0,0],lowerarm_l:[0,0,1.35]};
 const acknowledgement={head:[0.075,0,0]};
@@ -14,13 +14,22 @@ export function createResidentGestures({reducedMotion=false}={}) {
   const pose=Object.fromEntries(joints.map(name=>[name,[0,0,0]]));
   const velocities=Object.fromEntries(joints.map(name=>[name,[0,0,0]]));
   const greeting={lowerarm_r:[0,0,0]};
+  const wave={upperarm_r:[-1.05,0,-.2],lowerarm_r:[0,0,1.25]};
+  // Watering: lean in, look down at the planter, right arm forward with the
+  // can tipped, and a slow pour that sways the wrist.
+  const water={spine_03:[.16,0,0],head:[.22,0,0],upperarm_r:[-.78,0,-.08],lowerarm_r:[0,0,.32],hand_r:[.42,0,0]};
+  let suspended=false;
   return {
+    suspend(){suspended=true;},
     update(action,delta,time=0) {
-      // Culling suspends avatar updates. Resume from the last displayed pose;
-      // do not spend hidden time as a large first-visible catch-up step.
-      if(reducedMotion||delta>0.25)return pose;
+      if(reducedMotion || !Number.isFinite(delta) || delta<0)return pose;
+      // A visible slow frame still needs to animate. Explicit suspension keeps
+      // a culled avatar from catching up across its hidden interval.
+      if(suspended){suspended=false;return pose;}
       greeting.lowerarm_r[2]=-0.32+Math.sin(time*2)*0.025;
-      const target=action==='force'?force:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='bow'?bow:{};
+      wave.lowerarm_r[2]=1.25+Math.sin(time*9)*.16;
+      water.hand_r[0]=.42+Math.sin(time*2.6)*.08;
+      const target=action==='force'?force:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:action==='water'?water:{};
       const dt=Number.isFinite(delta)?Math.max(0,Math.min(0.08,delta)):0;
       const frequency=10,decay=Math.exp(-frequency*dt);
       for(const name of joints)for(let axis=0;axis<3;axis++){

@@ -1,26 +1,62 @@
 # Places: go anywhere, keep what you find
 
-The **Places** tab (the first tab of the side panel) is the district's map in
-list form, and the first piece of a world that people explore rather than
-tour. It is built from the district data at load, so a new district brings
-its own places without code changes.
+The **Places** tab contains destination and landmark lists. The optional
+top-down World map and **Worlds** directory are
+disabled by default. Set `VITE_WORLD_MAP=true` before starting development or
+building to enable them in Places and Commands (?); restart the dev server or
+rebuild after changing the flag. Unset, false, and other values keep both
+hidden. Destination lists and landmarks work in either mode.
+World publishing and editing additionally require `VITE_CREATION_TOOLS=true`
+and the existing account permissions.
+
+When enabled, roads, buildings, named places, and the current location come
+from the active world's compiled data, so a newly published region has its own
+map without hand-authored artwork.
 
 ## What is there
 
 - **Where you are.** A live label names the nearest place within 45 m
   ("You're at Toulouse", "You're near Dior (23 m)"), or says you are out on
-  the street.
+  the street. A bright marker follows the player on the map.
+- **World map.** Click a named marker or any point inside the current world to
+  preview a destination, then choose **Go here**. Arrow keys move the selected
+  point when the map has focus; Shift moves it one metre at a time. **Copy link**
+  shares the selected world and position. Roads and buildings are visual
+  context, never permission to enter a private home or pass through a wall:
+  travel still uses the server's outdoor arrival check in shared play. Saved
+  landmarks appear on the map only in their own world; the account list below
+  continues to show landmarks from every world.
+- **People in this world.** In shared play, outdoor players in the same world
+  appear as live map markers and in a keyboard-accessible list. Choose a player
+  and **Meet nearby** to ask the server for a clear spot beside their current
+  position. The server resolves the player at the moment of travel, requires
+  that they are still in the same room and outdoors, and keeps the arrival clear
+  of other players. A peer selection cannot enter a private home or create
+  a link to that player's current position. Players who leave or enter an
+  interior disappear from this outdoor map.
+- **Land parcels.** Creator worlds can show up to 32 named plots as map
+  boundaries and in a keyboard-accessible list. Selecting one reports its area
+  and whether it belongs to your signed-in account. Parcel selection does not
+  teleport into a building; the ordinary map point and travel checks still
+  govern movement. Ownership is recorded by Jevica in the region studio and
+  does not grant building or wish powers.
+- **Events.** Find scheduled gatherings across worlds, RSVP privately, or host
+  a gathering at a named outdoor meeting point. Times use your local time zone;
+  venue links use the same shared-world arrival checks. See [events](world-events.md).
 - **Go somewhere.** Every named place in the district, once each: the arrival
   point, the community meeting spots, and any storefront that is not already a
   meeting spot. In the shipped district the 30 spots *are* the 30 storefronts,
   so the list is 31 long. **Go** teleports beside the place; **Link** copies a
   URL that brings someone else there.
 - **Your landmarks.** Stand somewhere, name it, **Save here**. A landmark keeps
-  the exact position and the way you were facing. In shared play, landmarks
-  belong to the signed-in account and remain private across devices and server
-  instances. The server saves the player's current position and facing. Solo
-  play keeps landmarks in browser storage (`river-oaks-landmarks`). Up to 50
-  per account or solo device.
+  the exact position, the way you were facing, and its world. In shared play,
+  the Places tab lists your private landmarks from every published world. **Go**
+  opens the saved world when needed; **Link** shares that world and position.
+  The server saves the player's current pose, and landmarks remain private
+  across devices and server instances. Existing landmarks stay in their
+  original worlds and appear in the combined list without migration. Each
+  world allows up to 50 landmarks per account. Solo play keeps up to 50
+  landmarks in browser storage (`river-oaks-landmarks`).
 - **Shared links.** `?place=spot:<id>` or `?place=shop:<id>` lands a visitor
   beside a named place after the district loads; `?at=<x>,<north>[,<yaw>]`
   restores an exact position inside the district. A link outside the district
@@ -44,12 +80,16 @@ own facing for a bare position.
 - `preview/src/places.js`: the place list, nearest-place search, landmark
   store, link formatting and parsing, open-spot search. Pure, unit tested.
 - `preview/src/places-ui.js`: the tab's DOM and the status line.
+- `preview/src/world-map.js`: map projection, geometry, selection, and live
+  player marker.
 - `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
-- `server/world.js`: `travel` destinations `placeId` and `position`.
-- `server/landmarks.js`: account landmark storage; Redis persists shared play
-  across edge instances, and the standalone town keeps an in-memory store.
+- `server/world.js`: `travel` destinations `placeId`, `position`, and `peerId`.
+- `server/landmarks.js`: private per-world account landmark storage; Redis
+  persists shared play across edge instances.
+- `server/world-landmarks.js`: combines the bounded per-world lists for the
+  account and tags each location with its origin world.
 
 ## Next
 
-Creator regions can now be published as separate worlds with their own named
-places. Parcels with owners remain future work.
+Owner-managed parcel permissions and an economy remain future work. Jevica
+continues to control all shared building and wish granting.

@@ -1,0 +1,339 @@
+{
+  "createdAt": "2026-10-05T18:17:25.810Z",
+  "status": "passed",
+  "scope": "Local Node CPU route searches with valid static district placements and synthetic maximum assemblies. Not shared tick latency, GPU/frame time, hosted capacity, regional latency, or physical-device acceptance.",
+  "machine": {
+    "node": "v24.18.1",
+    "cpu": "Apple M3 Max",
+    "loadAverage": [
+      23.0986328125,
+      17.68408203125,
+      15.89208984375
+    ]
+  },
+  "limits": {
+    "verifiedCreatorAccounts": 2,
+    "rootsPerAccount": 24,
+    "partsPerRoot": 16,
+    "sharedNPCs": 98,
+    "soloNPCs": 193,
+    "playerCap": 32
+  },
+  "probes": {
+    "districtBaseline": {
+      "roots": 0,
+      "parts": 0,
+      "samples": [
+        {
+          "afterDynamicResetMs": 285.982708,
+          "warmMs": 23.449540999999954,
+          "waypoints": 19
+        },
+        {
+          "afterDynamicResetMs": 240.564208,
+          "warmMs": 114.48049999999989,
+          "waypoints": 13
+        },
+        {
+          "afterDynamicResetMs": 228.21583299999998,
+          "warmMs": 119.50245900000004,
+          "waypoints": 13
+        },
+        {
+          "afterDynamicResetMs": 38.436542000000145,
+          "warmMs": 37.072167000000036,
+          "waypoints": 15
+        },
+        {
+          "afterDynamicResetMs": 24.67862500000001,
+          "warmMs": 23.473666999999978,
+          "waypoints": 19
+        },
+        {
+          "afterDynamicResetMs": 92.67587500000013,
+          "warmMs": 97.97254199999998,
+          "waypoints": 13
+        },
+        {
+          "afterDynamicResetMs": 116.8679589999997,
+          "warmMs": 119.669625,
+          "waypoints": 13
+        },
+        {
+          "afterDynamicResetMs": 39.55716700000039,
+          "warmMs": 41.61974999999984,
+          "waypoints": 15
+        },
+        {
+          "afterDynamicResetMs": 30.919792000000143,
+          "warmMs": 26.625583000000006,
+          "waypoints": 19
+        },
+        {
+          "afterDynamicResetMs": 104.2021249999998,
+          "warmMs": 123.33999999999969,
+          "waypoints": 13
+        }
+      ],
+      "dynamicResetP95Ms": 285.982708,
+      "warmP95Ms": 123.33999999999969,
+      "maxDynamicResetMs": 285.982708,
+      "routes": [
+        {
+          "start": [
+            -2811.6370057739227,
+            -1274.6878035440777
+          ],
+          "end": [
+            -2682.3721836604677,
+            -1403.546458538075
+          ],
+          "waypoints": 19
+        },
+        {
+          "start": [
+            -2803.242437166924,
+            -1228.517266829408
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 13
+        },
+        {
+          "start": [
+            -2795.0677698669306,
+            -1198.7857634885402
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 13
+        },
+        {
+          "start": [
+            -2784.8263104306943,
+            -1294.5639466083487
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 15
+        }
+      ],
+      "removalRecovered": true
+    },
+    "districtMaximumAssemblies": {
+      "roots": 48,
+      "parts": 768,
+      "samples": [
+        {
+          "afterDynamicResetMs": 357.5406250000001,
+          "warmMs": 25.925458000000162,
+          "waypoints": 22
+        },
+        {
+          "afterDynamicResetMs": 364.5276670000003,
+          "warmMs": 41.337582999999995,
+          "waypoints": 23
+        },
+        {
+          "afterDynamicResetMs": 262.89279199999964,
+          "warmMs": 44.76670800000011,
+          "waypoints": 25
+        },
+        {
+          "afterDynamicResetMs": 147.69045800000004,
+          "warmMs": 53.17100000000028,
+          "waypoints": 19
+        },
+        {
+          "afterDynamicResetMs": 121.36583399999927,
+          "warmMs": 21.876083000000108,
+          "waypoints": 22
+        },
+        {
+          "afterDynamicResetMs": 184.2425000000003,
+          "warmMs": 40.25541599999997,
+          "waypoints": 23
+        },
+        {
+          "afterDynamicResetMs": 187.78454200000033,
+          "warmMs": 47.114832999999635,
+          "waypoints": 25
+        },
+        {
+          "afterDynamicResetMs": 152.42720800000006,
+          "warmMs": 60.62045799999942,
+          "waypoints": 19
+        },
+        {
+          "afterDynamicResetMs": 128.91770799999995,
+          "warmMs": 31.83087499999965,
+          "waypoints": 22
+        },
+        {
+          "afterDynamicResetMs": 184.00904100000025,
+          "warmMs": 40.78612499999963,
+          "waypoints": 23
+        }
+      ],
+      "dynamicResetP95Ms": 364.5276670000003,
+      "warmP95Ms": 60.62045799999942,
+      "maxDynamicResetMs": 364.5276670000003,
+      "routes": [
+        {
+          "start": [
+            -2811.6370057739227,
+            -1274.6878035440777
+          ],
+          "end": [
+            -2682.3721836604677,
+            -1403.546458538075
+          ],
+          "waypoints": 22
+        },
+        {
+          "start": [
+            -2803.242437166924,
+            -1228.517266829408
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 23
+        },
+        {
+          "start": [
+            -2795.0677698669306,
+            -1198.7857634885402
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 25
+        },
+        {
+          "start": [
+            -2784.8263104306943,
+            -1294.5639466083487
+          ],
+          "end": [
+            -2881.917552145995,
+            -1428.390462029362
+          ],
+          "waypoints": 19
+        }
+      ],
+      "removalRecovered": true
+    },
+    "denseSyntheticMaximumAssemblies": {
+      "roots": 48,
+      "parts": 768,
+      "samples": [
+        {
+          "afterDynamicResetMs": 25.130167000000256,
+          "warmMs": 7.280875000000378,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 17.87816699999985,
+          "warmMs": 6.7690829999992275,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.15087500000027,
+          "warmMs": 6.115708000000268,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.513957999999548,
+          "warmMs": 6.4375410000002375,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.293165999999474,
+          "warmMs": 6.719124999999622,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.067458999999872,
+          "warmMs": 6.188083000000006,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 11.98870799999986,
+          "warmMs": 6.417166999999608,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.3915420000003,
+          "warmMs": 6.643457999999555,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.547708000000057,
+          "warmMs": 6.1108329999997295,
+          "waypoints": 3
+        },
+        {
+          "afterDynamicResetMs": 12.051582999999482,
+          "warmMs": 6.025624999999309,
+          "waypoints": 3
+        }
+      ],
+      "dynamicResetP95Ms": 25.130167000000256,
+      "warmP95Ms": 7.280875000000378,
+      "maxDynamicResetMs": 25.130167000000256,
+      "routes": [
+        {
+          "start": [
+            -35,
+            -35
+          ],
+          "end": [
+            35,
+            35
+          ],
+          "waypoints": 3
+        },
+        {
+          "start": [
+            -35,
+            35
+          ],
+          "end": [
+            35,
+            -35
+          ],
+          "waypoints": 3
+        }
+      ],
+      "removalRecovered": true
+    }
+  },
+  "assertions": [
+    "Every measured route remains reachable and each whole segment clears confirmed geometry.",
+    "Dynamic reset samples invalidate assembly occupancy/edges, retain static geography caches, and rebuild the object index. Each probe begins with fresh static caches; later samples reuse them.",
+    "Removing assemblies releases navigation occupancy."
+  ],
+  "gaps": [
+    "Local route CPU timing is not a hosted SLA or global capacity sign-off.",
+    "Maximum-assembly GPU, physical devices and multi-region soak remain unverified."
+  ],
+  "sha256": {
+    "preview/src/navigation.js": "6dc1655892316e5b8225bad7ebbcbf803423ffd198f9d671c714662ea8805e04",
+    "preview/src/creator-object.js": "e7907cd0dc14e1c9c0cbe49b4643c29faee388f4ee1884a7affd0a08ff0ba29b",
+    "preview/src/walking.js": "0c2c3f154bf2bef2922dc7aa3c3b1f1a95fcc6ace1888696ea322f10337d2dd6",
+    "preview/src/resident-life.js": "92b36ad542d14f77b0dc21741e94dbcc20ddcacfe28ae0a3f71b15d92a4fd64a",
+    "server/world.js": "4dda4365c9d5504876c8272ba5f2b553339a38fbcb894c53b300267c46571b53",
+    "server/creator-navigation-audit.js": "273167b70b19c2a0aa14c87c29bdedcdabf156bfb5e242843df176371e0e771e",
+    "preview/public/data/district.json": "016380e5fbfca84316cccb8c71026e03a7feb9b1ac90d704a80401b858031b62",
+    "preview/public/data/district-vegetation.json": "c2e70f6a529f76d74e410ff05efa4f9ee749c9c009f7a0ab0c28e05712bf60b3"
+  }
+}

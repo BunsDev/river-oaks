@@ -1,0 +1,64 @@
+{
+  "createdAt": "2026-10-05T17:19:21.072Z",
+  "status": "passed",
+  "scope": "Synthetic Node CPU and Three scene-resource probe. No GPU timing, full district, hosted service, global latency, or physical-device acceptance.",
+  "machine": {
+    "node": "v24.18.1",
+    "cpu": "Apple M3 Max",
+    "loadAverage": [
+      18.1953125,
+      23.501953125,
+      25.47119140625
+    ]
+  },
+  "limits": {
+    "verifiedCreatorAccounts": 2,
+    "objectsPerAccount": 24,
+    "partsPerObject": 16,
+    "normalMaximumNewMeshes": 768,
+    "worldRootLimit": 192
+  },
+  "probe": {
+    "objects": 48,
+    "parts": 768,
+    "resources": {
+      "count": 48,
+      "materials": 774,
+      "geometries": 6,
+      "visible": 48
+    },
+    "coldSyncMs": 18.674,
+    "unchangedSyncP95Ms": 1.1809999999999974,
+    "conservative32Player48ObjectCollisionBatchP95Ms": 1.0372499999999718,
+    "assemblySnapshotBytes": 106778,
+    "assemblySnapshotDeflateLevel1Bytes": 2013,
+    "edits": 100,
+    "unchangedSnapshots": 100,
+    "replacedSurfaceDisposed": true,
+    "removedMaterials": 768,
+    "disposedSceneEmpty": true
+  },
+  "sha256": {
+    "preview/src/creator-object.js": "edf2a4f294e2301fd6b9af676dca5eb237cfd0b6eaedc3e2691a1524cc909c0b",
+    "preview/src/creator-object-ui.js": "be6931d19412e46868909f5f4643446a458d9d2465688cdd6fa0d3ca9c61a9f1",
+    "preview/src/shared-build-layer.js": "590f23a17a510d668d4caa15ba426795323e6800c494a26dce1e6b63b4d5fe96",
+    "preview/src/shared-build.js": "2a7804ed3c5465ac36033a2be87e2822535de29a407d174b9ae2660bdc55bdfb",
+    "preview/src/builder-mode.js": "95c9f5bbce84c6a25e972923e5d3b2555de3c49e1af637c82c815486071d9ce4",
+    "preview/src/shared-build-ui.js": "e2fe4d5d106f1937827a07a16c0c2e50fe47a9a574d00546e3debb45cb00a641",
+    "preview/src/main.js": "7c2d486c3dac7649e9fd9d99e2954390e2327c3280d2f69eb854b8bf9ef16429",
+    "preview/src/walking.js": "0c2c3f154bf2bef2922dc7aa3c3b1f1a95fcc6ace1888696ea322f10337d2dd6",
+    "preview/src/world-contract.js": "bb03a9b7e884da3951db25c2d392567ca17cb1f1421970486d08df2a8dae1963",
+    "server/world.js": "02f5d3b793da8507be44bfe36ce14f5cbf419d016a5a564a53781357c164a719",
+    "server/redis-room.js": "56c34e6f5638e6f5c71309d752e9598bb4f5b8df511eb497bec2d8eebd5f54e0",
+    "server/design-library.js": "3dbe097d5ec842714a195c2b64fc1c66a9672498116454a0ca028a432795d5ab",
+    "server/design-commands.js": "76b92053c1ab60c0d9b6ddd6c7b42f0a708032a2b26aa73e9e040051e45fa27e",
+    "server/app.js": "f30c293ab45501f64e29e9affe4874a076704a5a652758f21ef436d975980aa0",
+    "server/distributed-app.js": "804d9c7ff9fc1c29f14bb9f288b64ae1b96d4d35c93131adee2a8ac487629f77",
+    "server/creator-performance-audit.js": "75a0beb38f975e18f81a84c0a02ef2d38e08df1df3d09d6673a9963be66f3685"
+  },
+  "gaps": [
+    "768 distinct surfaces add rendering work; full-world GPU headroom with maximum assemblies remains unverified.",
+    "NPC navigation remains static; creator collisions apply to player walking/flying.",
+    "Hosted multi-region soak, simultaneous regional arrivals, and physical devices remain required for global readiness."
+  ]
+}

@@ -13,6 +13,10 @@ the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
 curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)
 and [street geometry](docs/street-standards.md).
 
+Approved residents can find and host scheduled gatherings in **Places → Events**,
+RSVP privately, and visit named meeting points across shared worlds.
+See [world events](docs/world-events.md).
+
 ## Run the live showcase
 
 Players can choose single player or the shared town from the play-mode control after signing in with GitHub through WorkOS and receiving waitlist approval. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
@@ -37,7 +41,14 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
-The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+**Cmd/Ctrl+B** toggles exploration; **Cmd/Ctrl+Shift+B** toggles play controls.
+**Cmd/Ctrl+K** opens searchable commands, **?** shows contextual keyboard help,
+**Alt+1/2/3** selects People/Places/Settings, and **/** searches destinations.
+Escape returns from a rail to the world. Rail choices and the selected tab are
+remembered; shortcuts leave text entry and modal dialogs alone.
+[Rail layout and keyboard review](docs/rail-navigation.md)
+
+The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. Z sits on a nearby bench or seat, stands up again, or waters a nearby planter; townspeople rest on the storefront benches too. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
@@ -133,6 +144,11 @@ gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
 The installed Git hook scans the **staged index**, blocks credential filenames even when force-added, and fails closed if Gitleaks is missing. CI runs the same protection plus a full-history scan, lint, Python 3.11/3.13 tests, preview behavior tests/build on Node 24, and an offline pipeline smoke test. Actions and the scanner archive are pinned. New clones must run `scripts/install-hooks.sh`; require the `Verify` checks in repository branch protection before relying on CI as a merge gate.
 
 Tests target observable failure modes: missing ArcGIS pages, coordinate/containment corruption, mismatched canopy placement, malformed Jev answers, bounded timeouts, overloaded HTTP requests, schedule preservation, and real secret-guard rejection in temporary Git repositories. They do not substitute for Unreal compilation, visual inspection, privacy review, or GPU profiling. [Testing approach](docs/testing.md)
+
+For multiplayer capacity evidence, see the [performance audit](docs/multiplayer-performance-audit.md).
+`npm run audit:multiplayer` probes local simulation and transport;
+`npm run audit:multiplayer:render` measures a real hardware browser with up to
+32 synthetic connected players. Local results do not establish global readiness.
 
 ## Work without downloads
 

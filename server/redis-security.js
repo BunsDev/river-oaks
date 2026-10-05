@@ -1,19 +1,13 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 
+// One counter per client and window, so a flood of distinct clients cannot fill
+// a shared table and lock out everyone else. Each counter expires after its
+// window; the window number comes from the caller's clock.
 const LIMIT = `
-local expired = redis.call('ZRANGEBYSCORE', KEYS[2], '-inf', ARGV[2])
-for _, key in ipairs(expired) do redis.call('HDEL', KEYS[1], key) end
-redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', ARGV[2])
-local count = redis.call('HGET', KEYS[1], ARGV[1])
-if not count and redis.call('HLEN', KEYS[1]) >= 4096 then return 0 end
-redis.call('PEXPIRE', KEYS[1], tonumber(ARGV[4]) * 2)
-redis.call('PEXPIRE', KEYS[2], tonumber(ARGV[4]) * 2)
-if count and tonumber(count) >= tonumber(ARGV[3]) then return 0 end
-if not count then redis.call('ZADD', KEYS[2], tonumber(ARGV[2]) + tonumber(ARGV[4]), ARGV[1]) end
-redis.call('HINCRBY', KEYS[1], ARGV[1], 1)
-redis.call('PEXPIRE', KEYS[1], tonumber(ARGV[4]) * 2)
-redis.call('PEXPIRE', KEYS[2], tonumber(ARGV[4]) * 2)
+local count = redis.call('INCR', KEYS[1])
+if count == 1 or redis.call('PTTL', KEYS[1]) < 0 then redis.call('PEXPIRE', KEYS[1], tonumber(ARGV[2])) end
+if count > tonumber(ARGV[1]) then return 0 end
 return 1`;
 
 const ISSUE = `
@@ -68,7 +62,9 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   const execute = (script, keys, args) => redis.eval(script, keys.length, ...keys.map(key), ...args);
   const limited = async (scope, id, limit, windowMs) => {
     if (!text(id, 256) || !Number.isInteger(limit) || limit < 1 || limit > 10000 || !Number.isInteger(windowMs) || windowMs < 1 || windowMs > 3600000) return false;
-    return await execute(LIMIT, [`limit:${scope}:counts`, `limit:${scope}:expiry`], [id, now(), limit, windowMs]) === 1;
+    // The id is hashed so client-chosen text never becomes part of a key name.
+    const bucket = createHash('sha256').update(id).digest('base64url');
+    return await execute(LIMIT, [`limit:${scope}:${bucket}:${Math.floor(now() / windowMs)}`], [limit, windowMs]) === 1;
   };
   const event = (kind, record) => {
     if (!text(kind, 32) || !/^[a-z][a-z0-9_-]*$/.test(kind) || !record || typeof record !== 'object' || Array.isArray(record)) throw new Error('Invalid audit event');
@@ -78,7 +74,7 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   };
   return {
     async allow(scope, id, limit, windowMs) {
-      if (!['access', 'frames', 'social', 'profile'].includes(scope)) return false;
+      if (!['access', 'login', 'frames', 'social', 'groups', 'events', 'profile', 'inventory'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {

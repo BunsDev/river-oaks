@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { paverSurface } from './materials.js';
-import { STREET, streetSection, streetOffset, sidewalkOffset, crossingDistance, streetStations } from './street-profile.js';
+import { STREET, streetSection, streetOffset, sidewalkOffset, crossingDistance, streetStations, streetPoint } from './street-profile.js';
 
 // Batched herringbone brick, stone curb, paint and warning surfaces. The same triangles support feet
 // and carriage wheels through registerGroundSurfaces; there is no visual-only curb.
@@ -15,20 +15,18 @@ export function buildDesignatedSidewalks(world,isFree=()=>true) {
   const add=(batch,vertices,tint,uvs=[[0,0],[1,0],[1,1],[0,1]])=>{
     for(const i of [0,2,1,0,3,2]) {batch.positions.push(vertices[i][0],vertices[i][2],-vertices[i][1]);batch.colors.push(...tint);batch.uvs.push(...uvs[i]);}
   };
-  const point=(segment,along,across,t,out,side,height)=>{
-    const d=side*(segment.width/2+out),x=segment.a[0]+along[0]*t+across[0]*d,y=segment.a[1]+along[1]*t+across[1]*d;
+  const point=(segment,t,out,side,height)=>{
+    const d=side*(segment.width/2+out),[x,y]=streetPoint(segment,t,d);
     return [x,y,terrainHeight(world.terrain,x,y)+height(x,y)];
   };
   for(const segment of network.segments) {
     if(segment.walkway)continue;
     const section=streetSection({width_m:segment.width});
-    const length=Math.hypot(segment.b[0]-segment.a[0],segment.b[1]-segment.a[1]);
-    const along=[(segment.b[0]-segment.a[0])/length,(segment.b[1]-segment.a[1])/length],across=[-along[1],along[0]];
     const cuts=streetStations(segment,network.crossings);
     const edges=[0,STREET.curbWidth,STREET.warningSetback,STREET.warningSetback+STREET.warningDepth,section.furnitureWidth,STREET.rampRun,section.sidewalkWidth].sort((a,b)=>a-b);
     for(let i=1;i<cuts.length;i++)for(const side of [-1,1]) {
       const start=cuts[i-1],end=cuts[i];if(end-start<1e-5)continue;
-      const at=(t,out)=>point(segment,along,across,t,out,side,(x,y)=>out<0?streetOffset(segment.width,segment.width/2+out,crossingDistance(network,segment.road,[x,y])):sidewalkOffset(segment.width,out,crossingDistance(network,segment.road,[x,y])));
+      const at=(t,out)=>point(segment,t,out,side,(x,y)=>out<0?streetOffset(segment.width,segment.width/2+out,crossingDistance(network,segment.road,[x,y])):sidewalkOffset(segment.width,out,crossingDistance(network,segment.road,[x,y])));
       const middle=at((start+end)/2,0);
       if(!network.clearOfOtherRoads(middle,segment.road,.15))continue;
       // Gutter lies inside the retained curb-to-curb envelope.

@@ -3,6 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { placesOf } from '../preview/src/places.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
@@ -12,7 +13,14 @@ const ENQUEUE=`
   return 1
 `;
 const ACQUIRE=`
-  local owned = redis.call('GET',KEYS[1]) == ARGV[1]
+  local owner = redis.call('GET',KEYS[1])
+  local generation = owner and tonumber(string.match(owner,'^v(%d+):')) or 2
+  local requested = tonumber(string.match(ARGV[1],'^v(%d+):')) or 2
+  if owner and generation < requested then
+    redis.call('DEL',KEYS[1])
+    owner = false
+  end
+  local owned = owner == ARGV[1]
   if owned then redis.call('PEXPIRE',KEYS[1],ARGV[2])
   elseif not redis.call('SET',KEYS[1],ARGV[1],'NX','PX',ARGV[2]) then
     return {0,false,{},redis.call('GET',KEYS[4])}
@@ -81,7 +89,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  const token=randomUUID();
+  // Monotonic writer generation: checkpoint v4 adds creator assemblies. A newer
+  // writer atomically fences an older lease; peers/future generations retain it.
+  const token=`v4:${randomUUID()}`;
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);
@@ -166,7 +176,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(operation.identity.expiresAt<=time || !await allowed(operation.identity))return rejected('session_invalid');
         let result;
         if(world.players.has(operation.identity.userId)) {
-          result={ok:true,player:world.snapshot().players.find(player=>player.id===operation.identity.userId)};
+          result={ok:true,player:world.rename(operation.identity)};
         } else result=world.join(operation.identity);
         if(result.ok && avatarPreferences) {
           const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
@@ -260,5 +270,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     closed=true;cached=null;
     await redis.eval(RELEASE,1,keys.lease,token);
   }
-  return {worldId,request,tick,read,close};
+  async function resolvePlace(placeId) {
+    const data=regionCatalog && worldId!==DEFAULT_WORLD_ID ? await regionCatalog.getRegion(worldId) : worldData;
+    return placesOf(data).find(place=>place.id===placeId)??null;
+  }
+  return {worldId,request,tick,read,resolvePlace,close};
 }

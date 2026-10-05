@@ -43,6 +43,8 @@ A renderer crash reloads the district once automatically. Repeated crashes withi
 
 The renderer has no Node access or privileged preload API. Sandbox, context isolation, navigation restrictions, and denied device permissions follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security). WorkOS device sign-in opens in the system browser, and external HTTPS references ask before opening there. The packaged window stays on the exact River Oaks origin.
 
+Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. Check a build with `npx electron-fuses read --app "dist/desktop/River Oaks-darwin-arm64/River Oaks.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
+
 ## Verification
 
 ```sh
@@ -53,6 +55,6 @@ npm run build
 RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
-The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS GitHub account after the Production provider is configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. A live packaged-app check requires signing in with an approved WorkOS GitHub account after the Production provider is configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. macOS can drop a fullscreen request made during a Space switch or another app's transition; the fullscreen check then asks once more and records it under `fullscreenRetries` in the report, so a real fullscreen failure still fails. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
 
 Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.

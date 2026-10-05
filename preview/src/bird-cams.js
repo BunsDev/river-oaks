@@ -1,3 +1,4 @@
+import { isGameplayKey } from './keyboard-input.js';
 import * as THREE from 'three';
 
 // Bird cams: a few city birds that Jev flies over the district on autopilot,
@@ -236,11 +237,11 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
   const manualKeys = { KeyW: 'throttle+', ArrowUp: 'throttle+', KeyS: 'throttle-', ArrowDown: 'throttle-', KeyA: 'turn+', ArrowLeft: 'turn+', KeyD: 'turn-', ArrowRight: 'turn-', Space: 'climb+', KeyC: 'climb-', ShiftLeft: 'climb-', ShiftRight: 'climb-' };
   const typing = event => event.target.closest?.('input, textarea, select, [contenteditable]');
   document.addEventListener('keydown', event => {
-    if (!riding || typing(event)) return;
+    if (!riding || typing(event) || !isGameplayKey(event)) return;
     if (event.code === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); api.land(); return; }
     if (event.code === 'KeyT' && !event.repeat) { event.preventDefault(); api.toggleControl(); return; }
     if (event.code === 'KeyN' && !event.repeat) { event.preventDefault(); api.next(); return; }
-    if (manualKeys[event.code]) {
+    if (manualKeys[event.code] && (event.target === host || event.target === document.body)) {
       event.preventDefault(); event.stopImmediatePropagation();
       if (riding.mode !== 'manual') { riding.mode = 'manual'; emit(); }
       keys.add(event.code);

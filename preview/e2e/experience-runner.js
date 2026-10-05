@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'places', 'ui-polish', 'hud-and-quality', 'auto-mode', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
+const suite = ['birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'auto-mode', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-conversation', 'carriage-mobile', 'force-mobile', 'invasion'];
 const names = process.argv.slice(2);
 if (names.some(name => !suite.includes(name))) throw new Error(`Choose harnesses from: ${suite.join(', ')}`);
 process.env.VITE_SINGLE_PLAYER = 'true';
@@ -32,7 +32,7 @@ try {
       console.log(`Running ${name}`);
       // These repository harnesses are page functions, also used by the browser CLI.
       const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replace(/http:\/\/127\.0\.0\.1:\d+/g, origin);
-      const result = await eval(`(${source})`)(page);
+      const result = await eval(`(${source})`)(page, { worldMapEnabled: vite.config.env.VITE_WORLD_MAP === 'true' });
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);
     } catch (error) {

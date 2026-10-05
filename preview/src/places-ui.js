@@ -4,34 +4,46 @@
 import { nearestPlace, placeLink, positionLink } from './places.js';
 import { worldIdFromSearch } from './world-contract.js';
 import { worldVisitUrl } from './world-portal.js';
+import { createWorldMap } from './world-map.js';
+import './world-map.css';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
 
-export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
+export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo, getPosition, getYaw, isOutdoor = () => true, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
   const host = $('#places'), here = $('#places-here'), list = $('#places-list'), marks = $('#landmarks-list'), status = $('#places-status');
   const nameInput = $('#landmark-name'), addButton = $('#landmark-add');
   if (!host) return null;
   let current = places, currentLandmarks = landmarks;
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
+  const worldMap=worldMapEnabled ? createWorldMap({host,onGo,getPosition,getYaw,isOutdoor,shareBase,say,copy}) : null;
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
     item.dataset.placeId = place.id;
     const name = document.createElement('span'); name.className = 'place-name'; name.textContent = place.name;
-    const kind = document.createElement('span'); kind.className = 'place-kind'; kind.textContent = KIND_LABEL[place.kind] ?? place.kind;
-    const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Go'; go.setAttribute('aria-label', `Go to ${place.name}`);
-    go.addEventListener('click', async () => { say(`Heading to ${place.name}…`); const result = await onGo(place); say(result?.ok === false ? (result.message ?? 'That place is not reachable right now.') : `You're at ${place.name}`, result?.ok === false ? 'error' : 'ok'); });
+    const kind = document.createElement('span'); kind.className = 'place-kind';
+    kind.textContent = place.kind === 'landmark' && place.worldId
+      ? `${KIND_LABEL.landmark} · ${place.worldTitle ?? place.worldId}` : KIND_LABEL[place.kind] ?? place.kind;
+    const crossWorld = place.kind === 'landmark' && place.worldId && place.worldId !== worldIdFromSearch(location.search);
+    const go = document.createElement(crossWorld ? 'a' : 'button');
+    if (crossWorld) go.href = positionLink(place.position, place.yaw ?? 0, worldVisitUrl(place.worldId));
+    else {
+      go.type = 'button';
+      go.addEventListener('click', async () => { say(`Heading to ${place.name}…`); const result = await onGo(place); say(result?.ok === false ? (result.message ?? 'That place is not reachable right now.') : `You're at ${place.name}`, result?.ok === false ? 'error' : 'ok'); });
+    }
+    go.textContent = 'Go'; go.setAttribute('aria-label', `Go to ${place.name}${crossWorld ? ` in ${place.worldTitle ?? place.worldId}` : ''}`);
     const share = document.createElement('button'); share.type = 'button'; share.textContent = 'Link'; share.setAttribute('aria-label', `Copy a link to ${place.name}`);
-    share.addEventListener('click', () => copy(place.kind === 'landmark' || place.kind === 'link' ? positionLink(place.position, place.yaw ?? 0, shareBase()) : placeLink(place, shareBase())));
+    share.addEventListener('click', () => copy(place.kind === 'landmark' || place.kind === 'link'
+      ? positionLink(place.position, place.yaw ?? 0, place.worldId ? worldVisitUrl(place.worldId) : shareBase()) : placeLink(place, shareBase())));
     item.append(name, kind, go, share);
     if (removable) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove landmark ${place.name}`);
       remove.addEventListener('click', async () => {
         const store=currentLandmarks;remove.disabled=true;
         try {
-          const removed=await store.remove(place.id);
+          const removed=await store.remove(place.id,place.worldId);
           if(store!==currentLandmarks)return;
           if(!removed)return say('That landmark is no longer available.','error');
           renderLandmarks();say(`Removed ${place.name}`);
@@ -45,11 +57,13 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   function renderPlaces() {
     list.replaceChildren(...current.map(place => row(place)));
     $('#places-count').textContent = String(current.length);
+    worldMap?.setPlaces(current);
   }
   function renderLandmarks() {
     const items = currentLandmarks.list();
     marks.replaceChildren(...items.map(place => row(place, { removable: true })));
     $('#landmarks-empty').hidden = items.length > 0;
+    worldMap?.setLandmarks(items);
   }
   addButton.addEventListener('click', async () => {
     const position = getPosition();
@@ -67,6 +81,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
 
   function refreshHere() {
     const position = getPosition();
+    worldMap?.refresh();
     const near = position ? nearestPlace(current, position, 45) : null;
     here.replaceChildren();
     if (!near) { here.textContent = position ? 'Out on the street' : 'Not walking yet'; here.dataset.placeId = ''; return; }
@@ -77,10 +92,12 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, sh
   renderPlaces(); renderLandmarks(); refreshHere();
   const timer = setInterval(refreshHere, 500);
   return {
+    setWorld(next) { worldMap?.setWorld(next); },
+    setPlayers(players,selfId) { worldMap?.setPlayers(players,selfId); },
     setPlaces(next) { current = next; renderPlaces(); refreshHere(); },
     setLandmarks(next) { currentLandmarks = next; renderLandmarks(); },
     refresh() { renderLandmarks(); refreshHere(); },
     say,
-    dispose() { clearInterval(timer); },
+    dispose() { clearInterval(timer); worldMap?.dispose(); },
   };
 }

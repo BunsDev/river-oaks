@@ -1,0 +1,7 @@
+.shared-seating-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.45rem;margin:.6rem 0;padding:.65rem;border:1px solid var(--line,#748b87);border-radius:.7rem;background:rgba(19,36,35,.8)}
+.shared-seating-controls[hidden]{display:none}
+.shared-seating-controls label,.shared-seating-controls p{grid-column:1/-1;margin:0;font-size:.8rem}
+.shared-seating-controls select{min-width:0;max-width:100%;font:inherit;color:inherit;background:#213431;border:1px solid #839c92;border-radius:.4rem;padding:.45rem}
+.shared-seating-controls button{min-height:44px}
+.shared-seating-controls #seat-stand{grid-column:1/-1}
+.shared-seating-controls p:empty{display:none}

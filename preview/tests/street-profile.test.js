@@ -12,6 +12,25 @@ const road={id:'street',kind:'service',width_m:6.5,points:[[-40,0,0],[40,0,0]]};
 const world=()=>({bounds_m:[-50,-20,50,20],roads:[structuredClone(road)],collisionPolygons:[]});
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-5,`${a} != ${b}`);
 
+test('road, curb, brick and tactile polygons share the same joined edge at a bend',t=>{
+  t.mock.method(THREE.TextureLoader.prototype,'load',()=>new THREE.Texture());
+  const data=world();data.roads[0].points=[[-6,0,0],[0,0,0],[30,30,0]];
+  const roads=buildRoads(data),sidewalks=buildDesignatedSidewalks(data);
+  const contains=(mesh,lateral)=>{
+    const p=mesh.geometry.attributes.position,x=-lateral*Math.tan(Math.PI/8);
+    for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i)-x)<1e-5&&Math.abs(p.getZ(i)+lateral)<1e-5)return true;
+    return false;
+  };
+  const half=road.width_m/2;
+  assert.ok(contains(roads.userData.asphalt,half),'asphalt ends on the shared corner polygon');
+  assert.ok(contains(sidewalks.getObjectByName('Street concrete'),half),'curb and gutter use the same corner');
+  assert.ok(contains(sidewalks.getObjectByName('Street pavers'),half+STREET.curbWidth),'brick paving follows the joined curve');
+  assert.ok(contains(sidewalks.getObjectByName('Street warnings'),half+STREET.warningSetback),'warning panels share the curve instead of overlapping rectangles');
+  registerGroundSurfaces(data,[roads,sidewalks]);
+  const d=half+STREET.curbWidth;
+  close(groundSurfaceHeight(data,-d*Math.tan(Math.PI/8),-d),sidewalkOffset(road.width_m,STREET.curbWidth,0));
+});
+
 test('the retained road width has a two-percent crown and Type A gutter/curb relationship',()=>{
   const section=streetSection(road);
   close(section.curbFace,3.25);

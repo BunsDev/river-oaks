@@ -38,6 +38,11 @@ spatial ground index. Painted zebra bars run parallel to the street, repeated
 across the walking direction. Warnings and concrete are batched into three meshes;
 warning domes use a texture rather than individual meshes.
 
+At continuous road bends, asphalt, gutters, curbs, pavers and ramp warnings share
+joined polygon corners. Bounded miter joins prevent independently extruded strips
+from leaving gaps or protruding triangles. True junctions retain their existing
+crossing treatment and clipping.
+
 Lamps, bins and planters occupy the furnishing strip. Planters run along the
 street to avoid projecting into the eight-foot walking strip. New fixtures avoid
 crossing openings and flares. Mapped pedestrian ways remain pedestrian pavement,

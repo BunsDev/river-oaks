@@ -22,7 +22,7 @@ worldData.vegetation = JSON.parse(await readFile(new URL('../../preview/public/d
 const revoked = new Set(), nodes = [];
 const identity = req => {
   const userId = req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob)/)?.[1];
-  return userId && !revoked.has(userId) ? { userId, name: userId === 'alice' ? 'Alice' : 'Bob', sessionId: userId,
+  return userId && !revoked.has(userId) ? { userId, name: userId, sessionId: userId,
     csrfToken: 'fixture-' + userId, expiresAt: Date.now() + 3600_000 } : null;
 };
 for (const port of [8788, 8789]) {

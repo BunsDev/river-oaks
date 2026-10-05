@@ -80,3 +80,37 @@ export function streetStations(segment, crossings) {
   }
   return [...new Set(cuts)].sort((a,b)=>a-b);
 }
+
+// Continuous polygon strips share one cross-section at each bend, including
+// compatible roads split into separate source records. Junctions keep their
+// own profiles; a bounded miter prevents acute corners from growing spikes.
+export function joinStreetSegments(segments) {
+  const nodes=new Map();
+  const add=(point,entry)=>{const key=`${point[0]},${point[1]}`;if(!nodes.has(key))nodes.set(key,[]);nodes.get(key).push(entry);};
+  for(const segment of segments) {
+    const dx=segment.b[0]-segment.a[0],dy=segment.b[1]-segment.a[1],length=Math.hypot(dx,dy);
+    const direction=[dx/length,dy/length],normal=[-direction[1],direction[0]];
+    segment.startAcross=segment.endAcross=normal;
+    add(segment.a,{segment,end:false,away:direction});
+    add(segment.b,{segment,end:true,away:direction.map(v=>-v)});
+  }
+  for(const entries of nodes.values()) {
+    if(entries.length!==2)continue;
+    const [a,b]=entries;
+    if(a.segment.width!==b.segment.width||a.segment.walkway!==b.segment.walkway)continue;
+    for(const [current,other]of [[a,b],[b,a]]) {
+      const incoming=current.end?current.away.map(v=>-v):other.away.map(v=>-v);
+      const outgoing=current.end?other.away:current.away;
+      const denominator=1+incoming[0]*outgoing[0]+incoming[1]*outgoing[1];
+      const across=denominator>1e-8?[-(incoming[1]+outgoing[1])/denominator,(incoming[0]+outgoing[0])/denominator]:[-incoming[1],incoming[0]];
+      const scale=Math.max(1,Math.hypot(...across)/2);
+      current.segment[current.end?'endAcross':'startAcross']=across.map(v=>v/scale);
+    }
+  }
+}
+
+export function streetPoint(segment,station,lateral) {
+  const dx=segment.b[0]-segment.a[0],dy=segment.b[1]-segment.a[1],t=station/Math.hypot(dx,dy);
+  return [segment.a[0]+dx*t+lateral*(segment.startAcross[0]*(1-t)+segment.endAcross[0]*t),
+    segment.a[1]+dy*t+lateral*(segment.startAcross[1]*(1-t)+segment.endAcross[1]*t)];
+}

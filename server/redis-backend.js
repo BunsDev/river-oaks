@@ -40,6 +40,7 @@ export async function createRedisBackend(env = process.env) {
     let gateway;
     const auth = createRedisAuth({ redis, prefix, origin,
       apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD,
+      githubToken: env.GITHUB_TOKEN || null,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId),
     });
     gateway = createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,

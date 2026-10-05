@@ -83,7 +83,7 @@ async def test_missing_model_and_invalid_audio_are_unavailable(tmp_path):
 async def test_http_speech_returns_wave_and_rejects_oversized_requests():
     engine = LocalVoice(synthesizer=lambda request: (np.zeros(2400), 24000))
     transport = httpx.ASGITransport(app=create_app(voice=engine))
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
         status = (await client.get("/v1/voice")).json()
         assert status["available"] and status["local"] and not status["remote_inference"]
         reply = await client.post("/v1/voice", json={"text": "Hello", "voice": "af_bella"})
@@ -97,12 +97,12 @@ async def test_http_busy_voice_can_be_retried_but_missing_model_cannot(tmp_path)
     engine = LocalVoice(synthesizer=lambda request: (np.zeros(2400), 24000))
     engine.busy = True
     transport = httpx.ASGITransport(app=create_app(voice=engine))
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
         reply = await client.post("/v1/voice", json={"text": "Hello"})
         assert reply.status_code == 503
         assert reply.headers.get("retry-after") == "1"
     transport = httpx.ASGITransport(app=create_app(voice=LocalVoice(tmp_path)))
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
         reply = await client.post("/v1/voice", json={"text": "Hello"})
         assert reply.status_code == 503
         assert "retry-after" not in reply.headers

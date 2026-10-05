@@ -40,6 +40,26 @@ function supplyBag() {
   group.add(body,handle);group.visible=false;return group;
 }
 
+// A small galvanised watering can, held by the handle while watering. Its
+// origin is the handle; the spout points along +Z, the way the body faces.
+let canAssets=null;
+function wateringCan() {
+  if(!canAssets) {
+    const metal=new THREE.MeshStandardMaterial({color:'#8f9c98',metalness:.62,roughness:.38});
+    const water=new THREE.MeshStandardMaterial({color:'#a9d6ee',transparent:true,opacity:.42,roughness:.1,depthWrite:false});
+    canAssets={metal,water,body:new THREE.CylinderGeometry(.07,.08,.19,16),handle:new THREE.TorusGeometry(.055,.008,6,16,Math.PI),
+      spout:new THREE.CylinderGeometry(.007,.013,.24,8),rose:new THREE.CylinderGeometry(.026,.011,.03,12),stream:new THREE.CylinderGeometry(.004,.012,.42,8)};
+  }
+  const group=new THREE.Group();group.name='Watering can';
+  const body=new THREE.Mesh(canAssets.body,canAssets.metal);body.position.set(0,-.13,.04);
+  const handle=new THREE.Mesh(canAssets.handle,canAssets.metal);handle.position.set(0,-.035,.04);handle.rotation.y=Math.PI/2;
+  const spout=new THREE.Mesh(canAssets.spout,canAssets.metal);spout.position.set(0,-.1,.17);spout.rotation.x=.95;
+  const rose=new THREE.Mesh(canAssets.rose,canAssets.metal);rose.position.set(0,-.025,.27);rose.rotation.x=.95;
+  const stream=new THREE.Mesh(canAssets.stream,canAssets.water);stream.name='Watering stream';stream.position.set(0,-.24,.29);
+  for(const part of [body,handle,spout,rose])part.castShadow=true;
+  group.add(body,handle,spout,rose,stream);group.visible=false;return group;
+}
+
 export function avatarProfile(index) {
   // Generic appearances for cultural portrayals, never scans or likenesses of them.
   return ({20:'woman-tailored',21:'woman-casual',22:'man-tailored',23:'woman-daywear'})[index] ?? AVATAR_PROFILES[index % AVATAR_PROFILES.length];
@@ -128,6 +148,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const look=(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
     ? createRomanceLook(avatar,root,sharedAppearance(appearanceId)) : null;
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
+  const can=wateringCan();root.add(can);
   const adjustment = new THREE.Quaternion();
   const feet = createFootPlacement(model, root), baseY = model.position.y;
   const seatedShoes=new Map(feet.legs.map(leg=>[leg,leg.foot.getWorldQuaternion(new THREE.Quaternion())]));
@@ -146,7 +167,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   return {
     object:root, profile, rig:avatar,
     // The visibility owner explicitly suspends the clock, even for brief culls.
-    suspend() {previousTime=null;},
+    suspend() {previousTime=null;gestures.suspend();},
     get carrying() {return kit.visible;},
     get conversationPose() {return conversation.pose;},
     get facePose() {return face.pose;},
@@ -209,6 +230,9 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
           seated[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);});
+          if(locomotion.ridingKind==='seat' && gesture[bone.name])gesture[bone.name].forEach((angle,i)=>{
+            adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);
+          });
         }
         root.updateWorldMatrix(true,true);
         const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
@@ -218,6 +242,12 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           const scale=leg.foot.getWorldScale(new THREE.Vector3());
           const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
           const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
+          if(locomotion.ridingKind==='seat') {
+            // These authored cushions are high. Let short legs hang naturally
+            // instead of stretching nearly straight to reach the floor.
+            const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
+            target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+          }
           const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
           if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
           leg.error=applyLegIK(leg,target,pole);
@@ -272,6 +302,13 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       look?.update(now,{reducedMotion:noMotion,blink:face.pose,gaze:avatar.eyes.pose,motion:{beast:beastWanted&&Boolean(beastGait),speed:walkingSpeed,turn:turnRate}});
       kit.visible=Boolean(locomotion?.visitId && hand);
       if(kit.visible) {root.updateWorldMatrix(true,true);hand.getWorldPosition(kit.position);root.worldToLocal(kit.position);}
+      // The can stays upright in the body's frame and tips forward to pour.
+      can.visible=action==='water' && Boolean(hand) && !locomotion?.riding;
+      if(can.visible) {
+        root.updateWorldMatrix(true,true);hand.getWorldPosition(can.position);root.worldToLocal(can.position);
+        can.rotation.set(noMotion?.4:.4+Math.sin(t*2.6)*.08,0,0);
+        can.getObjectByName('Watering stream').scale.y=noMotion?1:.85+Math.sin(t*17)*.15;
+      }
     },
     dispose() { upperBody.dispose(); look?.dispose(); avatar.dispose(); },
   };

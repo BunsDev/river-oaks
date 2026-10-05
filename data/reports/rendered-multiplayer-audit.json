@@ -1,0 +1,1199 @@
+{
+  "source": {
+    "baseCommit": "2a8429cadf9f3f622f13f59a6c23c1ff4e4fa552",
+    "sha256": {
+      "package-lock.json": "009901f9ffffbf6bce29ac2c9b1a4fb81cdbd5996aeca84e88b608c736ace374",
+      "preview/src/main.js": "e9ad43d7509af6f4b4b3969d6aa7b78cb262809b3b7d2caed7ef8360625428b4",
+      "preview/src/render-audit.js": "00c9566c7849865a1667a9ed04f1c439715dab428c12578e0dc0792c56d993f3",
+      "preview/src/render-pipeline.js": "63a091643c25939a429b751d552df3222581001bcd2bbffad10d9542eeb0f366",
+      "preview/src/remote-players.js": "be50fde3880e909d0685ac7bcd4610d1a36a03bd68ed991384f4db801aa7700d",
+      "preview/src/avatars.js": "dffbdfe5752f70e0d1be2debf02558c95b8d72d2d968bf400ddcfed5c9763888",
+      "preview/src/romance-look.js": "4954346ef6231c9e77a6ae124451362a5fe88624cff680973d4d61bf523a3ba8",
+      "server/app.js": "337ca5040cda0d1836777720bcabedcc2528471725af41fa210cabae12050147",
+      "server/world.js": "7cdbf9f1d81672b202372e715159922b15da47ef843bdc2119279499fd6d17b4",
+      "preview/audit/rendered-multiplayer.js": "c6bda48b9cf3e5e57820cadbe2b3809d6fbb79c699c32269b15c7b73950c2fbc",
+      "preview/audit/metrics.js": "21da99e463a43b88104a0fcde235d04b6f81248bc0eb6d264555f0bee68811fb"
+    }
+  },
+  "dependencies": {
+    "three": "0.186.1",
+    "ws": "8.22.0",
+    "vite": "8.3.2",
+    "playwright": "1.63.0"
+  },
+  "createdAt": "2026-10-05T11:46:20.776Z",
+  "status": "passed",
+  "options": {
+    "seconds": 15,
+    "warmup": 5,
+    "quality": "sharp",
+    "players": [
+      1,
+      8,
+      16,
+      32
+    ],
+    "output": "data/reports/rendered-multiplayer-audit.json"
+  },
+  "machine": {
+    "node": "v24.18.1",
+    "platform": "darwin/arm64",
+    "cpu": "Apple M3 Max",
+    "logicalCPUs": 16,
+    "loadAverageAtStart": [
+      29.7275390625,
+      23.0283203125,
+      20.51171875
+    ]
+  },
+  "scope": "Loopback in-memory authority; synthetic approved guest accounts; one Chromium renderer plus transport actors. Phone viewport uses the host GPU. No Redis, live WorkOS, hosted network, geographic load, or global readiness proof.",
+  "results": [
+    {
+      "profile": {
+        "name": "desktop",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "deviceScaleFactor": 1
+      },
+      "players": 1,
+      "seconds": 15.03,
+      "npcs": 98,
+      "joined": 0,
+      "join": null,
+      "browserConvergenceMs": 62,
+      "warmupMs": 5206,
+      "frame": {
+        "count": 649,
+        "p50Ms": 16.7,
+        "p95Ms": 33.4,
+        "p99Ms": 33.5,
+        "maxMs": 50
+      },
+      "cpuSubmission": {
+        "count": 649,
+        "p50Ms": 18.7,
+        "p95Ms": 21.8,
+        "p99Ms": 23.6,
+        "maxMs": 32.6
+      },
+      "framesOver33Ms": 97,
+      "framesOver50Ms": 0,
+      "snapshots": 82,
+      "snapshotGap": {
+        "count": 81,
+        "p50Ms": 199.3,
+        "p95Ms": 237.3,
+        "p99Ms": 266.8,
+        "maxMs": 266.8
+      },
+      "decodedSnapshotBytesPerSecond": 313360,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 31.5,
+        "p95Ms": 49.4,
+        "p99Ms": 49.4,
+        "maxMs": 49.4
+      },
+      "loadedPeers": 0,
+      "onScreenPeers": 0,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 43
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 4828,
+          "calls": 1715,
+          "triangles": 9098233,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 343,
+          "textures": 240
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 47
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 17848,
+          "calls": 1766,
+          "triangles": 9213219,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 347,
+          "textures": 243
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0
+    },
+    {
+      "profile": {
+        "name": "desktop",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "deviceScaleFactor": 1
+      },
+      "players": 8,
+      "seconds": 15.02,
+      "npcs": 98,
+      "joined": 7,
+      "join": {
+        "count": 7,
+        "p50Ms": 5.79,
+        "p95Ms": 16.53,
+        "p99Ms": 16.53,
+        "maxMs": 16.53
+      },
+      "browserConvergenceMs": 341,
+      "warmupMs": 5172,
+      "frame": {
+        "count": 545,
+        "p50Ms": 33.3,
+        "p95Ms": 33.4,
+        "p99Ms": 33.5,
+        "maxMs": 50.1
+      },
+      "cpuSubmission": {
+        "count": 545,
+        "p50Ms": 24.4,
+        "p95Ms": 28.4,
+        "p99Ms": 35.5,
+        "maxMs": 38.9
+      },
+      "framesOver33Ms": 120,
+      "framesOver50Ms": 1,
+      "snapshots": 83,
+      "snapshotGap": {
+        "count": 82,
+        "p50Ms": 196.4,
+        "p95Ms": 224.7,
+        "p99Ms": 242.7,
+        "maxMs": 242.7
+      },
+      "decodedSnapshotBytesPerSecond": 327389,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 60.3,
+        "p95Ms": 65.4,
+        "p99Ms": 65.4,
+        "maxMs": 65.4
+      },
+      "loadedPeers": 7,
+      "onScreenPeers": 7,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 37
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 21948,
+          "calls": 2636,
+          "triangles": 10777767,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 619,
+          "textures": 265
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 37
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 32888,
+          "calls": 2636,
+          "triangles": 10777767,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 619,
+          "textures": 265
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 69
+    },
+    {
+      "profile": {
+        "name": "desktop",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "deviceScaleFactor": 1
+      },
+      "players": 16,
+      "seconds": 15.04,
+      "npcs": 98,
+      "joined": 8,
+      "join": {
+        "count": 8,
+        "p50Ms": 4.58,
+        "p95Ms": 5.52,
+        "p99Ms": 5.52,
+        "maxMs": 5.52
+      },
+      "browserConvergenceMs": 432,
+      "warmupMs": 5154,
+      "frame": {
+        "count": 377,
+        "p50Ms": 33.4,
+        "p95Ms": 50.1,
+        "p99Ms": 50.1,
+        "maxMs": 150.1
+      },
+      "cpuSubmission": {
+        "count": 377,
+        "p50Ms": 35.4,
+        "p95Ms": 45.9,
+        "p99Ms": 49.9,
+        "maxMs": 51.5
+      },
+      "framesOver33Ms": 233,
+      "framesOver50Ms": 21,
+      "snapshots": 83,
+      "snapshotGap": {
+        "count": 82,
+        "p50Ms": 188.1,
+        "p95Ms": 227.9,
+        "p99Ms": 263.7,
+        "maxMs": 263.7
+      },
+      "decodedSnapshotBytesPerSecond": 339112,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 82,
+        "p95Ms": 98.1,
+        "p99Ms": 98.1,
+        "maxMs": 98.1
+      },
+      "loadedPeers": 15,
+      "onScreenPeers": 15,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 25
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 35688,
+          "calls": 5103,
+          "triangles": 13597677,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 1419,
+          "textures": 287
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 27
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 43269,
+          "calls": 5085,
+          "triangles": 13594649,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 1419,
+          "textures": 287
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 100
+    },
+    {
+      "profile": {
+        "name": "desktop",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "deviceScaleFactor": 1
+      },
+      "players": 32,
+      "seconds": 15.07,
+      "npcs": 98,
+      "joined": 16,
+      "join": {
+        "count": 16,
+        "p50Ms": 4.09,
+        "p95Ms": 5.56,
+        "p99Ms": 5.56,
+        "maxMs": 5.56
+      },
+      "browserConvergenceMs": 682,
+      "warmupMs": 5280,
+      "frame": {
+        "count": 243,
+        "p50Ms": 66.6,
+        "p95Ms": 66.8,
+        "p99Ms": 83.3,
+        "maxMs": 83.4
+      },
+      "cpuSubmission": {
+        "count": 243,
+        "p50Ms": 57.5,
+        "p95Ms": 64.4,
+        "p99Ms": 66.5,
+        "maxMs": 69.1
+      },
+      "framesOver33Ms": 243,
+      "framesOver50Ms": 174,
+      "snapshots": 81,
+      "snapshotGap": {
+        "count": 80,
+        "p50Ms": 186.3,
+        "p95Ms": 251.6,
+        "p99Ms": 257.4,
+        "maxMs": 257.4
+      },
+      "decodedSnapshotBytesPerSecond": 353775,
+      "gestureAck": {
+        "count": 8,
+        "p50Ms": 126.8,
+        "p95Ms": 141,
+        "p99Ms": 141,
+        "maxMs": 141
+      },
+      "loadedPeers": 31,
+      "onScreenPeers": 31,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 14
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 45070,
+          "calls": 10290,
+          "triangles": 18756823,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 3107,
+          "textures": 331
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          1280,
+          800
+        ],
+        "buffer": [
+          1280,
+          800
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 16
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 49970,
+          "calls": 10305,
+          "triangles": 18837505,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 3111,
+          "textures": 335
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 171,
+      "departureConvergenceMs": 10299,
+      "resourceSettleMs": 3000,
+      "afterPeersLeave": {
+        "peers": 0,
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "viewport": [
+            1280,
+            800
+          ],
+          "buffer": [
+            1280,
+            800
+          ],
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 42
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 56170,
+            "calls": 1785,
+            "triangles": 9238117,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 357,
+            "textures": 252
+          }
+        }
+      }
+    },
+    {
+      "profile": {
+        "name": "phone-viewport",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "deviceScaleFactor": 2
+      },
+      "players": 1,
+      "seconds": 15.02,
+      "npcs": 98,
+      "joined": 0,
+      "join": null,
+      "browserConvergenceMs": 154,
+      "warmupMs": 5125,
+      "frame": {
+        "count": 630,
+        "p50Ms": 16.7,
+        "p95Ms": 33.4,
+        "p99Ms": 33.4,
+        "maxMs": 100
+      },
+      "cpuSubmission": {
+        "count": 630,
+        "p50Ms": 20.2,
+        "p95Ms": 23.2,
+        "p99Ms": 24.4,
+        "maxMs": 26.6
+      },
+      "framesOver33Ms": 101,
+      "framesOver50Ms": 1,
+      "snapshots": 83,
+      "snapshotGap": {
+        "count": 82,
+        "p50Ms": 199.7,
+        "p95Ms": 238.8,
+        "p99Ms": 309.9,
+        "maxMs": 309.9
+      },
+      "decodedSnapshotBytesPerSecond": 317161,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 41.4,
+        "p95Ms": 47.8,
+        "p99Ms": 47.8,
+        "maxMs": 47.8
+      },
+      "loadedPeers": 0,
+      "onScreenPeers": 0,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 50
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 5395,
+          "calls": 1433,
+          "triangles": 8085449,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 328,
+          "textures": 235
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 48
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 18036,
+          "calls": 1478,
+          "triangles": 8093019,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 328,
+          "textures": 235
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0
+    },
+    {
+      "profile": {
+        "name": "phone-viewport",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "deviceScaleFactor": 2
+      },
+      "players": 8,
+      "seconds": 15.03,
+      "npcs": 98,
+      "joined": 7,
+      "join": {
+        "count": 7,
+        "p50Ms": 4.93,
+        "p95Ms": 5.87,
+        "p99Ms": 5.87,
+        "maxMs": 5.87
+      },
+      "browserConvergenceMs": 439,
+      "warmupMs": 5118,
+      "frame": {
+        "count": 577,
+        "p50Ms": 33.3,
+        "p95Ms": 33.4,
+        "p99Ms": 33.4,
+        "maxMs": 33.5
+      },
+      "cpuSubmission": {
+        "count": 577,
+        "p50Ms": 24.8,
+        "p95Ms": 27.4,
+        "p99Ms": 28.8,
+        "maxMs": 29.7
+      },
+      "framesOver33Ms": 118,
+      "framesOver50Ms": 0,
+      "snapshots": 82,
+      "snapshotGap": {
+        "count": 81,
+        "p50Ms": 201.6,
+        "p95Ms": 214.9,
+        "p99Ms": 254.9,
+        "maxMs": 254.9
+      },
+      "decodedSnapshotBytesPerSecond": 323359,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 56.6,
+        "p95Ms": 84.2,
+        "p99Ms": 84.2,
+        "maxMs": 84.2
+      },
+      "loadedPeers": 7,
+      "onScreenPeers": 7,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 37
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 21996,
+          "calls": 2329,
+          "triangles": 9637287,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 598,
+          "textures": 256
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 38
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 33576,
+          "calls": 2329,
+          "triangles": 9637287,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 598,
+          "textures": 256
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 66
+    },
+    {
+      "profile": {
+        "name": "phone-viewport",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "deviceScaleFactor": 2
+      },
+      "players": 16,
+      "seconds": 15.04,
+      "npcs": 98,
+      "joined": 8,
+      "join": {
+        "count": 8,
+        "p50Ms": 4.73,
+        "p95Ms": 6.43,
+        "p99Ms": 6.43,
+        "maxMs": 6.43
+      },
+      "browserConvergenceMs": 437,
+      "warmupMs": 5169,
+      "frame": {
+        "count": 410,
+        "p50Ms": 33.3,
+        "p95Ms": 50,
+        "p99Ms": 50.1,
+        "maxMs": 50.1
+      },
+      "cpuSubmission": {
+        "count": 410,
+        "p50Ms": 35.1,
+        "p95Ms": 38.9,
+        "p99Ms": 40.7,
+        "maxMs": 46.5
+      },
+      "framesOver33Ms": 204,
+      "framesOver50Ms": 11,
+      "snapshots": 83,
+      "snapshotGap": {
+        "count": 82,
+        "p50Ms": 196.5,
+        "p95Ms": 227.8,
+        "p99Ms": 239.6,
+        "maxMs": 239.6
+      },
+      "decodedSnapshotBytesPerSecond": 339154,
+      "gestureAck": {
+        "count": 9,
+        "p50Ms": 80.1,
+        "p95Ms": 82.4,
+        "p99Ms": 82.4,
+        "maxMs": 82.4
+      },
+      "loadedPeers": 15,
+      "onScreenPeers": 15,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 27
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 36556,
+          "calls": 4820,
+          "triangles": 12466826,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 1398,
+          "textures": 278
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 29
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 44796,
+          "calls": 4790,
+          "triangles": 12276578,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 1398,
+          "textures": 278
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 94
+    },
+    {
+      "profile": {
+        "name": "phone-viewport",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "deviceScaleFactor": 2
+      },
+      "players": 32,
+      "seconds": 15.05,
+      "npcs": 98,
+      "joined": 16,
+      "join": {
+        "count": 16,
+        "p50Ms": 4.34,
+        "p95Ms": 8.35,
+        "p99Ms": 8.35,
+        "maxMs": 8.35
+      },
+      "browserConvergenceMs": 705,
+      "warmupMs": 5300,
+      "frame": {
+        "count": 264,
+        "p50Ms": 50,
+        "p95Ms": 66.7,
+        "p99Ms": 66.7,
+        "maxMs": 66.8
+      },
+      "cpuSubmission": {
+        "count": 264,
+        "p50Ms": 54.6,
+        "p95Ms": 59.4,
+        "p99Ms": 60.9,
+        "maxMs": 62.2
+      },
+      "framesOver33Ms": 264,
+      "framesOver50Ms": 124,
+      "snapshots": 82,
+      "snapshotGap": {
+        "count": 81,
+        "p50Ms": 181.7,
+        "p95Ms": 236.5,
+        "p99Ms": 246.1,
+        "maxMs": 246.1
+      },
+      "decodedSnapshotBytesPerSecond": 358995,
+      "gestureAck": {
+        "count": 8,
+        "p50Ms": 114.9,
+        "p95Ms": 126.3,
+        "p99Ms": 126.3,
+        "maxMs": 126.3
+      },
+      "loadedPeers": 31,
+      "onScreenPeers": 31,
+      "graphicsBefore": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 19
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 46943,
+          "calls": 10002,
+          "triangles": 17562850,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 3082,
+          "textures": 321
+        }
+      },
+      "graphicsAfter": {
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "viewport": [
+          390,
+          844
+        ],
+        "buffer": [
+          780,
+          1688
+        ],
+        "quality": {
+          "mode": "sharp",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 18
+        },
+        "pipeline": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "render": {
+          "frame": 52263,
+          "calls": 9999,
+          "triangles": 17636910,
+          "points": 0,
+          "lines": 0
+        },
+        "memory": {
+          "geometries": 3082,
+          "textures": 321
+        }
+      },
+      "assets": {
+        "loaded": 107,
+        "total": 107,
+        "failed": 0,
+        "done": true
+      },
+      "actorCorrections": 0,
+      "reconnectMs": 167,
+      "departureConvergenceMs": 10265,
+      "resourceSettleMs": 3000,
+      "afterPeersLeave": {
+        "peers": 0,
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "viewport": [
+            390,
+            844
+          ],
+          "buffer": [
+            780,
+            1688
+          ],
+          "quality": {
+            "mode": "sharp",
+            "scale": 1,
+            "occlusion": true,
+            "fps": 47
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": true,
+            "renderScale": 1,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 59144,
+            "calls": 1473,
+            "triangles": 7957718,
+            "points": 0,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 332,
+            "textures": 239
+          }
+        }
+      }
+    }
+  ],
+  "browser": "153.0.8010.12"
+}

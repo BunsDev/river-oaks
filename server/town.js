@@ -7,10 +7,13 @@ import { createModeration } from './moderation.js';
 import { createGameServer } from './app.js';
 import { createFileWaitlist } from './waitlist.js';
 import { createMemoryLandmarks } from './landmarks.js';
+import { createWorldLandmarks } from './world-landmarks.js';
 import { createMemoryWorldCatalog } from './world-catalog.js';
 import { createWorldRouter } from './world-router.js';
 import { createMemorySocial } from './social.js';
+import { createMemoryGroups } from './groups.js';
 import { createMemoryProfiles } from './profiles.js';
+import { createMemoryEvents } from './events.js';
 import { createMemoryAvatarPreferences } from './avatar-preferences.js';
 import { createMemoryPresence } from './presence.js';
 import { isJevicaAdmin } from './admin.js';
@@ -49,12 +52,16 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
   });
 
-  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),profiles=createMemoryProfiles(),avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence();
+  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
+  const landmarkStoreFor=id=>{
+    if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
+    return landmarkStores.get(id);
+  };
   const worldDirectory=async()=>(await catalog.list()).map(entry=>({...entry,visitors:games.get(entry.id)?.game.playerCount??0}));
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
-    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
+    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, origin, onLogout });
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   async function applyRegion(id,expectedDraftVersion,actorId) {
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};
@@ -83,7 +90,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
-      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,landmarks:createMemoryLandmarks(),social,profiles,avatarPreferences,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,avatarPreferences,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},

@@ -55,7 +55,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
     const ticketResponse=await post(user,`/api/multiplayer/ticket?world=${worldId}`,{});
     assert.equal(ticketResponse.status,200);
     const ticket=(await ticketResponse.json()).ticket;
-    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
     sockets.push(socket);
     const snapshot=await new Promise((resolve,reject)=>{
       socket.once('error',reject);
@@ -70,6 +70,16 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(first.snapshot.locals.length>8,true);
   assert.equal(first.snapshot.players.length,1);
   assert.equal(second.snapshot.players.length,1);
+  const riverMark=await (await post('admin','/api/landmarks/add?world=river-oaks',{name:'District arrival'})).json();
+  const moonMark=await (await post('admin','/api/landmarks/add?world=moon-garden',{name:'Garden arrival'})).json();
+  assert.equal(riverMark.landmark.worldId,'river-oaks');
+  assert.equal(moonMark.landmark.worldId,'moon-garden');
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks',{})).json()).landmarks.map(item=>item.worldId),['river-oaks']);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks&allWorlds=1',{})).json()).landmarks.map(item=>item.worldId).sort(),['moon-garden','river-oaks']);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=moon-garden&allWorlds=1',{})).json()).landmarks.map(item=>item.id).sort(),[riverMark.landmark.id,moonMark.landmark.id].sort());
+  assert.deepEqual((await (await post('guest','/api/landmarks/list?world=moon-garden',{})).json()).landmarks,[]);
+  assert.equal((await (await post('guest','/api/landmarks/remove?world=river-oaks',{id:moonMark.landmark.id,worldId:'moon-garden'})).json()).removed,false);
+  assert.equal((await (await post('admin','/api/landmarks/remove?world=river-oaks',{id:moonMark.landmark.id,worldId:'missing-world'})).json()).removed,false);
   const command=(socket,requestId,body)=>new Promise((resolve,reject)=>{
     const receive=raw=>{const value=JSON.parse(raw);if(value.type==='result'&&value.requestId===requestId){socket.off('message',receive);resolve(value);}};
     socket.on('message',receive);socket.once('error',reject);socket.send(JSON.stringify({requestId,...body}));
@@ -101,6 +111,9 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   const adminAgain=await open('moon-garden');
   assert.equal(adminAgain.snapshot.worldId,'moon-garden');
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=moon-garden&allWorlds=1',{})).json()).landmarks.map(item=>item.id).sort(),[riverMark.landmark.id,moonMark.landmark.id].sort());
+  assert.equal((await (await post('admin','/api/landmarks/remove?world=moon-garden',{id:riverMark.landmark.id,worldId:'river-oaks'})).json()).removed,true);
+  assert.deepEqual((await (await post('admin','/api/landmarks/list?world=river-oaks&allWorlds=1',{})).json()).landmarks.map(item=>item.id),[moonMark.landmark.id]);
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
@@ -139,6 +152,14 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(live.world.communityLocations[0].name,'Hidden revision');
   assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
   assert.equal((await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,409);
+  assert.equal((await post('guest','/api/world-draft/history',{id:'moon-garden'})).status,403);
+  assert.equal((await post('guest','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:live.regionSha256})).status,403);
+  const history=await (await post('admin','/api/world-draft/history',{id:'moon-garden'})).json();
+  assert.deepEqual(history.versions.map(version=>version.revision),[1]);
+  assert.equal((await post('admin','/api/world-draft/version',{id:'moon-garden',revision:0,baseRegionSha256:live.regionSha256})).status,400);
+  assert.equal((await post('admin','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:oldHash})).status,409);
+  const original=await (await post('admin','/api/world-draft/version',{id:'moon-garden',revision:1,baseRegionSha256:live.regionSha256})).json();
+  assert.equal(original.region.places[0].name,editable.publishedRegion.places[0].name);
   await gateway.close();
   const staleRoom=createRedisRoom({redis,prefix:roomPrefixFor(namespace,'moon-garden'),worldId:'moon-garden',
     worldData:publishedData.world,regionSha256:oldHash,regionCatalog:gateway.catalog,
@@ -149,4 +170,10 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   base=`http://127.0.0.1:${gateway.server.address().port}`;
   assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
+  assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:live.regionSha256,expectedDraftVersion:0,region:original.region})).status,200);
+  const restored=await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1});
+  assert.equal(restored.status,200);
+  assert.equal((await restored.json()).world.revision,3);
+  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
+  assert.deepEqual((await (await post('admin','/api/world-draft/history',{id:'moon-garden'})).json()).versions.map(version=>version.revision),[2,1]);
 });

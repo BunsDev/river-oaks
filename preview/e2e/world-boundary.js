@@ -5,11 +5,11 @@ async page => {
   await page.goto(`${origin}/?world=garden-2&motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   const live=await page.evaluate(()=>{const m=window.__riverMultiplayer();return {worldId:m.snapshot.worldId,version:m.snapshot.protocolVersion,admin:m.snapshot.players.find(player=>player.id===m.selfId)?.canBuild};});
-  check(live.worldId==='garden-2'&&live.version===1,'An alternate world joins with its own versioned snapshot');
+  check(live.worldId==='garden-2'&&live.version===2,'An alternate world joins with its own versioned snapshot');
   check(live.admin===true,'Jevica retains building permission in the alternate world');
   const otherContext=await page.context().browser().newContext();
   try {
-    const other=await otherContext.newPage();other.on('pageerror',error=>errors.push(error.message));
+    const other=await otherContext.newPage();other.setDefaultTimeout(60000);other.on('pageerror',error=>errors.push(error.message));
     await other.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
     await other.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer?.().snapshot?.worldId==='river-oaks');
     check(true,'An unqualified link still joins the original River Oaks world');

@@ -9,6 +9,10 @@ async page => {
   const gap = (hud, place) => Math.hypot(hud[0] - place[0], -hud[2] - place[1]);
   const open = async () => {
     await page.locator('#loading').waitFor({ state: 'hidden' });
+    // Loading chrome can leave before the player model and first walking frame.
+    // Every position assertion below needs the actual walker, including after reload.
+    await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true'
+      && Array.isArray(JSON.parse(document.querySelector('#walking-hud')?.dataset.position ?? 'null')));
     const toggle = page.locator('#panel-toggle');
     if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
     await page.locator('[data-section=explore-section]').click();

@@ -325,7 +325,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
     reset.disabled = shared || !state.locals.length;
     reset.title = shared ? 'The shared town can only be reset by its host.' : '';
     scenarioSelect.title = shared ? 'Everyone shares the same community scenario.' : '';
-    const nearby = nearbyPeople(state.locals, getVisitor());
+    const nearby = nearbyPeople(shared ? state.locals.filter(sameSpace) : state.locals, getVisitor());
     const focusedNearby = nearbyList.contains(document.activeElement) ? document.activeElement : null;
     nearbyEmpty.hidden = nearby.length > 0;
     const currentIds = new Set(nearby.map(item => item.local.id));
@@ -677,7 +677,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       selectionEpoch++;
       invalidate();invalidateLife();
       navigationService?.dispose();navigationService=getMultiplayer()?null:createNavigationService(world);
-      state = createCommunity(world, rooms, {carriage:!getMultiplayer(),sharedPopulation:Boolean(getMultiplayer())});
+      state = createCommunity(world, rooms, {carriage:!getMultiplayer(),sharedPopulation:Boolean(getMultiplayer()),outdoor:!getMultiplayer()});
       life=getMultiplayer()?null:createResidentLife(world,state,navigationService?.route);
       dialogue.hidden = true;
       offered.clear();
@@ -695,7 +695,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getEconomy = ()
       Object.assign(state, snapshot.community, {selectedId});
       state.scenario = COMMUNITY_SCENARIOS[state.scenarioKey] ?? state.scenario;
       if (snapshot.wishes) state.wishes = structuredClone(snapshot.wishes);
-      const remoteIds=new Set(snapshot.locals.map(local=>local.id));
+      const remoteIds=new Set(snapshot.locals.filter(local=>local.indoor).map(local=>local.id));
       if(state.locals.some(local=>!remoteIds.has(local.id))){
         state.locals=state.locals.filter(local=>remoteIds.has(local.id));
         if(state.selectedId&&!remoteIds.has(state.selectedId))closeDialogue();

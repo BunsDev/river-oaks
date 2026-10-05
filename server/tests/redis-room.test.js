@@ -1,21 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import Redis from 'ioredis';
 import { createRedisRoom } from '../redis-room.js';
+import { compileRegionPackage } from '../region-package.js';
 
 const enabled=Boolean(process.env.REDIS_URL);
 const testRedis=(name,fn)=>test(name,{skip:!enabled},fn);
 const worldData={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],collisionPolygons:[],stores:[],buildings:[],
   communityLocations:[{id:'a',name:'Garden',position:[-12,0,0]},{id:'b',name:'Gallery',position:[12,0,0]},{id:'c',name:'Plaza',position:[0,15,0]}]};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function setup(t,{authorize=async()=>true}={}) {
+async function setup(t,{authorize=async()=>true,world=worldData}={}) {
   const redis=new Redis(process.env.REDIS_URL,{lazyConnect:true,maxRetriesPerRequest:1,retryStrategy:null});
   redis.on('error',()=>{});await redis.connect();
   const prefix=`{river-oaks:test:${randomUUID()}}`,rooms=[];
   let time=100000;
-  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData,authorize,now:()=>time,isAdmin:id=>id==='alice'});rooms.push(room);return room;};
+  const create=(client=redis)=>{const room=createRedisRoom({redis:client,prefix,worldData:world,authorize,now:()=>time,isAdmin:id=>id==='alice'});rooms.push(room);return room;};
   t.after(async()=>{
     await Promise.all(rooms.map(room=>room.close()));
     const keys=await redis.keys(`${prefix}:*`);
@@ -103,6 +105,27 @@ testRedis('restart restores checkpoint and replacing an account preserves wishes
   assert.equal((await f.command(replacement,'alice',{type:'wish',localId:'local-00',kind:'dog'},'alice-new')).error,'wish_cooldown');
 });
 
+testRedis('private home invitations survive coordinator replacement and revocation ejects guests',async t=>{
+  const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index===2
+    ? {...building,interior:{name:'Moon House',category:'home',entrance:'south',access:'owner'}}:building)};
+  const world=compileRegionPackage(region,'Moon Garden'),storeId=world.stores[0].id;
+  const f=await setup(t,{world}),first=f.create();
+  assert.equal((await f.join(first,'alice')).ok,true);
+  assert.equal((await f.join(first,'bob')).ok,true);
+  assert.equal((await f.command(first,'bob',{type:'travel',storeId,mode:'enter'})).error,'private_home');
+  assert.equal((await f.command(first,'bob',{type:'homeAccess',action:'grant',storeId,peerId:'bob'})).error,'admin_only');
+  assert.equal((await f.command(first,'alice',{type:'homeAccess',action:'grant',storeId,peerId:'bob'})).ok,true);
+  await first.close();
+  const replacement=f.create();
+  assert.deepEqual((await f.command(replacement,'bob',{type:'homeAccess',action:'list'})).homes.map(home=>home.storeId),[storeId]);
+  assert.equal((await f.command(replacement,'bob',{type:'travel',storeId,mode:'enter'})).ok,true);
+  assert.equal((await f.command(replacement,'bob',{type:'wish',localId:'local-00',kind:'dragon'})).error,'admin_only');
+  assert.equal((await f.command(replacement,'alice',{type:'homeAccess',action:'revoke',storeId,peerId:'bob'})).ok,true);
+  assert.deepEqual((await f.command(replacement,'bob',{type:'homeAccess',action:'list'})).homes,[]);
+  assert.equal((await f.command(replacement,'bob',{type:'travel',storeId,mode:'enter'})).error,'private_home');
+});
+
 testRedis('default room upgrades a stored version-one checkpoint without losing its roster',async t=>{
   const f=await setup(t),room=f.create();
   assert.equal((await f.join(room,'alice')).ok,true);
@@ -173,12 +196,12 @@ testRedis('lost lease cannot publish replies or trim queue; next leader replays 
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1);
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   assert.equal((await f.redis.keys(`${f.prefix}:reply:*`)).length,1,'only earlier committed join has a reply');
-  await f.redis.set(`${f.prefix}:lease`,'different-leader','PX',5000);
+  await f.redis.set(`${f.prefix}:lease`,'v4:different-leader','PX',5000);
   release();await delay(250);
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1,'stale commit cannot trim pending operation');
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   await stalled.close();
-  assert.equal(await f.redis.get(`${f.prefix}:lease`),'different-leader','close only releases its own lease');
+  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v4:different-leader','close only releases its own lease');
   await f.redis.del(`${f.prefix}:lease`);
   const survivor=f.create();await survivor.tick();
   await request;
@@ -266,4 +289,45 @@ testRedis('JWT expiry denies commands but preserves wishes through fresh-token r
   await room.request({type:'join',identity:carol,connectionId:'carol-socket'});
   f.advance(11000);await delay(210);await room.tick();
   assert.equal((await room.read()).snapshot.players.some(player=>player.id==='carol'),false,'expired-token grace is bounded to10s');
+});
+
+testRedis('competing edges reserve one furniture slot and recover it through coordinator replacement',async t=>{
+  const f=await setup(t),first=f.create(),second=f.create();
+  for(const id of ['alice','bob','charlie'])assert.equal((await f.join(first,id)).ok,true);
+  const placed=await f.command(first,'alice',{type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,3],yaw:0});assert.equal(placed.ok,true);
+  const intent={type:'sit',buildId:placed.item.id,slot:0};
+  const results=await Promise.all([f.command(first,'bob',intent),f.command(second,'charlie',intent)]);
+  assert.equal(results.filter(result=>result.ok).length,1);assert.equal(results.find(result=>!result.ok).error,'seat_occupied');
+  const before=(await first.read()).snapshot,winner=before.players.find(player=>player.sitting)?.id;
+  assert.ok(winner==='bob'||winner==='charlie');
+  await first.close();await second.close();
+  const replacement=f.create();assert.equal((await f.join(replacement,winner,`${winner}-new`)).ok,true);
+  const recovered=(await replacement.read()).snapshot.players.find(player=>player.id===winner);
+  assert.equal(recovered.sitting.buildId,placed.item.id);assert.equal(recovered.sitting.slot,0);
+  assert.equal((await f.command(replacement,'alice',{type:'build',action:'remove',id:placed.item.id})).error,'seat_in_use');
+  assert.equal((await f.command(replacement,winner,{type:'stand'},`${winner}-new`)).ok,true);
+  const other=winner==='bob'?'charlie':'bob';
+  assert.equal((await f.command(replacement,other,intent)).ok,true);
+  assert.equal((await replacement.request({type:'leave',userId:other,connectionId:`${other}-socket`})).ok,true);
+  assert.equal((await f.command(replacement,'alice',intent)).error,'seat_occupied','reconnect grace retains the reservation');
+  f.advance(11000);await replacement.tick();
+  const released=await f.command(replacement,'alice',intent);assert.equal(released.ok,true,JSON.stringify(released));
+});
+
+testRedis('an upgraded coordinator takes over an older lease without waiting for its TTL',async t=>{
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=`v3:${randomUUID()}`;
+  await f.redis.set(key,legacy,'PX',5000);
+  await room.tick();
+  const owner=await f.redis.get(key);
+  assert.notEqual(owner,legacy,'a pre-creator writer cannot keep renewing the obsolete lease');
+  assert.match(owner,/^v4:/);
+  assert.equal((await room.read()).snapshot.worldId,'river-oaks');
+});
+
+testRedis('an older generation does not steal an active newer coordinator lease',async t=>{
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v5:${randomUUID()}`;
+  await f.redis.set(key,future,'PX',5000);
+  await room.tick();
+  assert.equal(await f.redis.get(key),future);
+  assert.equal(await room.read(),null);
 });

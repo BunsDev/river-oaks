@@ -22,5 +22,10 @@ export function createGameAssetMiddleware({ fetcher = fetch, forward = next } = 
   };
 }
 
-export const config = { matcher: ['/assets/:path*', '/data/:path*'] };
+// Run on every static path, not just the plain /assets and /data spellings:
+// the CDN serves /%64ata/district.json and /data%2Fdistrict.json as
+// /data/district.json, and only a match here puts them through the gate. The
+// API, auth and socket routes go to the server function, which checks access
+// itself.
+export const config = { matcher: ['/((?!api/|auth/|multiplayer).*)'] };
 export default createGameAssetMiddleware();

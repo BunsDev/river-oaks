@@ -1,31 +1,34 @@
+import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
-import { resolve, sep, extname } from 'node:path';
+import { resolve, relative, sep, extname } from 'node:path';
 import { stat, realpath } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
-import { createRateLimiter } from './rate-limit.js';
-import { createClientAddress } from './client-address.js';
+import { createClientAddress, rateLimitKey } from './client-address.js';
+import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
+import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { eventAction } from './events-api.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, profiles = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000);
-  const access = createRateLimiter(120,60000,4096), moderatorIds = new Set(moderators);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000);
+  const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
   const send = (ws,value,options) => sendFrame(ws,value,options);
@@ -61,7 +64,8 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     try {
       const pathname=new URL(req.url,'http://localhost').pathname;
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
-      if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
+      if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many requests. Try again shortly.'});
+      if (pathname==='/auth/login' && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many sign-in attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
@@ -90,6 +94,12 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(action==='load') {
           const editable=await worldCatalog.editable(data?.id);
           return editable?json(res,200,editable):json(res,404,{error:'Editable region not found.'});
+        }
+        if(action==='history' || action==='version') {
+          const result=action==='history'?await worldCatalog.history(data?.id)
+            :await worldCatalog.version(data?.id,data?.revision,data?.baseRegionSha256);
+          return json(res,result.ok?200:result.reason==='invalid_version'?400:result.reason==='stale'?409:404,
+            result.ok?result:{error:result.reason});
         }
         if(action==='save') {
           const result=await worldCatalog.saveDraft(data,identity.userId);
@@ -121,7 +131,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if(!landmarks)return json(res,503,{error:'Landmarks are unavailable.'});
         const action=pathname.slice('/api/landmarks/'.length);
-        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId)});
+        if(action==='list')return json(res,200,{ok:true,landmarks:await landmarks.list(identity.userId,new URL(req.url,'http://localhost').searchParams.get('allWorlds')==='1')});
         const data=await body(req);
         if(action==='add'){
           if(connections.get(identity.userId)?.identity.sessionId!==identity.sessionId)return json(res,409,{error:'Join the town before saving a landmark.'});
@@ -130,7 +140,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           const result=await landmarks.add(identity.userId,{name:data?.name,position:player.position.slice(0,2),yaw:player.yaw});
           return json(res,result.ok?200:400,result.ok?result:{error:result.reason});
         }
-        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id)});
+        if(action==='remove')return json(res,200,{ok:true,removed:await landmarks.remove(identity.userId,data?.id,data?.worldId)});
       }
       if (pathname.startsWith('/api/social/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
@@ -140,7 +150,29 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             ? snapshot().players.find(player=>player.id===peerId) : null,
           inviteWorld:async user=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? {id:worldId,title:worldTitle}:null,
+          invitePlace:async(user,placeId)=>{
+            if(connections.get(user.userId)?.identity.sessionId!==user.sessionId)return null;
+            const place=world.resolvePlace(placeId);
+            return place?{world:{id:worldId,title:worldTitle},place}:null;
+          },
           allowWrite:id=>socialWrites(id)});
+        return json(res,result.status,result.value);
+      }
+      if (pathname.startsWith('/api/groups/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        const result=await groupAction({action:pathname.slice('/api/groups/'.length),identity,groups,social,
+          readBody:()=>body(req),allowWrite:id=>groupWrites(id)});
+        return json(res,result.status,result.value);
+      }
+      if (pathname.startsWith('/api/events/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
+        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+          resolveVenue:async placeId=>{
+            const place=world.resolvePlace(placeId);
+            return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
+          },allowWrite:id=>eventWrites(id)});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {
@@ -164,17 +196,24 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
       if (!['GET','HEAD'].includes(req.method)) return json(res,405,{error:'Method not allowed'});
       if (!staticRoot) return json(res,404,{error:'Run the frontend development server.'});
-      const protectedAsset = protectedGameAsset(pathname);
-      if (protectedAsset) {
-        const identity = await auth.authenticate(req);
-        if (!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))) {
-          return json(res,403,{error:'waitlist_approval_required'});
-        }
-      }
-      let path=resolve(staticRoot,'.'+decodeURIComponent(pathname==='/'?'/index.html':pathname));
+      const approvedViewer=async()=>{
+        const identity=await auth.authenticate(req);
+        return Boolean(identity && !isBanned(identity.userId) && await waitlist.isApproved(identity.userId));
+      };
+      const requested=pathname==='/'?'/index.html':pathname;
+      // The gate classifies the decoded path, so /%64ata/district.json is gated
+      // like /data/district.json.
+      let protectedAsset=protectedGameAsset(requested);
+      if (protectedAsset && !(await approvedViewer())) return json(res,403,{error:'waitlist_approval_required'});
       const root=await realpath(staticRoot);
-      path=await realpath(path);
+      const path=await realpath(resolve(root,'.'+decodeURIComponent(requested)));
       if (!path.startsWith(root+sep)) return json(res,404,{error:'Not found'});
+      // Classify the file being served too, so a symlink cannot expose a gated
+      // file under a public name.
+      if (!protectedAsset && protectedGameAsset('/'+relative(root,path).split(sep).join('/'))) {
+        if (!(await approvedViewer())) return json(res,403,{error:'waitlist_approval_required'});
+        protectedAsset=true;
+      }
       const info=await stat(path);if(!info.isFile())return json(res,404,{error:'Not found'});
       res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
       res.setHeader('Cache-Control',protectedAsset?'private, no-store':extname(path)==='.html'?'no-cache':'public, max-age=300');
@@ -188,16 +227,16 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
   });
   server.requestTimeout=15000;server.headersTimeout=10000;
   // Snapshots are repetitive JSON; the shared Redis server compresses them the same way.
-  const wss=new WebSocketServer({noServer:true,maxPayload:2048,perMessageDeflate:{threshold:1024,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:1}}});
+  const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:{threshold:1024,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:1}}});
   server.on('upgrade',async(req,socket,head)=>{
     const reject=status=>{socket.end(`HTTP/1.1 ${status} Rejected\r\nConnection: close\r\n\r\n`);};
     socket.on('error',()=>{});
     try {
       const url=new URL(req.url,'http://localhost');
-      if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
+      if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(rateLimitKey(clientAddress(req))))return reject(403);
       if(!matchesWorld(url))return reject(403);
       const protocol=url.searchParams.get('protocol');
-      if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);
+      if(protocol!==String(WORLD_PROTOCOL_VERSION))return reject(426);
       const identity=await auth.authenticate(req);
       if(!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId)))return reject(401);
       const key=url.searchParams.get('ticket'),ticket=tickets.get(key);
@@ -216,7 +255,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if(!connections.has(identity.userId) && !departures.has(identity.userId)) {
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
-        }
+        } else world.rename(identity);
         if(presence)await presence.join(identity.userId,{id:worldId,title:worldTitle},token);
         if(ws.readyState!==WebSocket.OPEN){
           if(presence)await presence.leave(identity.userId,token);
@@ -228,30 +267,45 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         const connection={ws,identity,token,alive:true};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
-        let messageQueue = Promise.resolve();
+        let messageQueue = Promise.resolve(),waitingPose=null;
         ws.on('message',(raw,isBinary)=>{
           if(connections.get(identity.userId)!==connection)return;
           if(isBinary || !frames(identity.userId))return ws.close(4008,'Too many or invalid messages.');
+          let message;
+          try{
+            message=JSON.parse(raw.toString());
+            if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string'
+              || (message.requestId!==undefined && (typeof message.requestId!=='string' || message.requestId.length>64)))throw new Error('Invalid');
+          }catch{message=null;}
+          if(raw.length>2048 && !(isAdmin(identity.userId)&&message?.type==='build'&&validAssembly(message.assembly)))return ws.close(1009,'Game command too large.');
+          // Supersede only unacknowledged poses. A travel command keeps its
+          // place between the latest pose before it and the latest pose after.
+          const coalescible=message?.type==='pose' && message.requestId===undefined;
+          if(coalescible && waitingPose){waitingPose.message=message;return;}
+          const slot={message};
+          if(coalescible)waitingPose=slot;else waitingPose=null;
           messageQueue = messageQueue.then(async()=>{
+          if(waitingPose===slot)waitingPose=null;
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
           if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           try {
-            const message=JSON.parse(raw.toString());
-            if(!message || typeof message!=='object' || Array.isArray(message) || typeof message.type!=='string')throw new Error('Invalid');
+            const message=slot.message;
+            if(!message)throw new Error('Invalid');
             if(message.type==='report') {
               if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
               moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
             const {requestId,...command}=message;
-            if(requestId!==undefined && (typeof requestId!=='string' || requestId.length>64))throw new Error('Invalid request id');
             const result=world.command(identity.userId,command);
             if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
+            const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
+            if(earlyAck)send(ws,{type:'result',requestId,...result});
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
-            if(requestId!==undefined || !result.ok)send(ws,{type:'result',requestId,...result});
+            if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
         });

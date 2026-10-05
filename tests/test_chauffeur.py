@@ -67,7 +67,7 @@ async def test_provider_and_bridge_control_driving_without_exposing_keys():
         engine = ChauffeurEngine(provider)
         app = create_app(chauffeur_engine=engine)
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app), base_url="http://t"
+            transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
         ) as client:
             data = packet().model_dump()
             assert (await client.post("/v1/chauffeur", json=data)).json()[

@@ -25,6 +25,8 @@ if (process.argv.includes('--dev')) {
 }
 delete env.ELECTRON_RUN_AS_NODE;
 const started = performance.now();
+// A packaged build has the Node inspector fuse turned off (desktop/fuses.js),
+// so Playwright cannot attach to it. This mode only works on an unfused build.
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];
@@ -145,22 +147,29 @@ try {
   });
   assert.ok(report.performance.samples > 100, 'render loop keeps advancing');
   for (const fullScreen of [true, false]) {
-    await app.evaluate(async ({ BrowserWindow }, fullScreen) => {
+    const transition = await app.evaluate(async ({ BrowserWindow }, fullScreen) => {
       const window = BrowserWindow.getAllWindows()[0];
-      if (window.isFullScreen() === fullScreen) return;
+      if (window.isFullScreen() === fullScreen) return { retried: false };
       // macOS fullscreen transitions are asynchronous. Observe completion
       // before asserting state or starting the opposite transition.
       const event = fullScreen ? 'enter-full-screen' : 'leave-full-screen';
-      await new Promise((resolve, reject) => {
-        const done = () => { clearTimeout(timer); resolve(); };
-        const timer = setTimeout(() => {
-          window.removeListener(event, done);
-          reject(new Error(`Timed out waiting for ${event}`));
-        }, 10000);
+      const state = () => ({ focused: window.isFocused(), visible: window.isVisible(), minimized: window.isMinimized(), fullScreen: window.isFullScreen() });
+      const attempt = timeout => new Promise(resolve => {
+        const done = () => { clearTimeout(timer); resolve(true); };
+        const timer = setTimeout(() => { window.removeListener(event, done); resolve(false); }, timeout);
         window.once(event, done);
         window.setFullScreen(fullScreen);
       });
+      // macOS can drop a request made during a Space switch or another app's
+      // transition (seen once in six runs; it normally completes in ~0.7 s). Ask
+      // once more if nothing changed; a real fullscreen failure still fails twice.
+      if (await attempt(10000)) return { retried: false };
+      const first = state();
+      if (first.fullScreen === fullScreen) return { retried: false, lateState: first };
+      if (await attempt(20000)) return { retried: true, first };
+      throw new Error(`Timed out waiting for ${event} after a retry ` + JSON.stringify({ first, now: state() }));
     }, fullScreen);
+    if (transition.retried) (report.fullscreenRetries ??= []).push({ fullScreen, ...transition });
     assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), fullScreen);
   }
   check('native fullscreen round trip');

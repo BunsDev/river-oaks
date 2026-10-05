@@ -7,9 +7,10 @@ import Redis from 'ioredis';
 import { WorkOS } from '@workos-inc/node';
 import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { createAuthAdapter } from './redis-auth-fixture.js';
+import { createGitHubFixture } from './github-fixture.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
-const { createRedisAuth } = await import('../redis-auth.js').catch(() => ({}));
+const { createRedisAuth, MAX_PENDING_SIGN_INS, MAX_SESSIONS, MAX_SESSIONS_PER_USER } = await import('../redis-auth.js').catch(() => ({}));
 const integration = (name, run) => test(name, { skip: !process.env.REDIS_URL }, run);
 const config = { apiKey: 'sk_test', clientId: 'client_test', cookiePassword: 'a'.repeat(32), origin: 'https://river.example' };
 const cookie = (response, name = 'river_oaks_session') => response.headers.getSetCookie().find(value => value.startsWith(`${name}=`))?.split(';')[0];
@@ -17,22 +18,23 @@ const cookie = (response, name = 'river_oaks_session') => response.headers.getSe
 async function fixture(t, overrides = {}) {
   assert.equal(typeof createRedisAuth, 'function', 'redis-auth must export createRedisAuth');
   const prefix = `{river-oaks:test:${randomUUID()}}`;
-  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies'].map(suffix => `${prefix}:auth:${suffix}`);
+  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies', 'user-sessions'].map(suffix => `${prefix}:auth:${suffix}`);
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, connectTimeout: 5000, enableOfflineQueue: false });
   redis.on('error', () => {});
   await redis.connect();
   const peer = redis.duplicate({ lazyConnect: true }); peer.on('error', () => {}); await peer.connect();
   let time = Date.now();
   const now = () => time, workos = createAuthAdapter(now), loggedOut = [], servers = [], auths = [];
+  const githubApi = createGitHubFixture({ 1001: 'val-dev', 1002: 'second-resident', 3003: 'sdk-boundary-resident' });
   t.after(async () => {
     for (const auth of auths) auth.close();
     for (const server of servers) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
     // Delete only the exact random namespace owned by this test, never FLUSH.
-    await redis.del(...keys);
+    await redis.del(...keys, `${prefix}:auth:github`);
     await Promise.all([redis.quit(), peer.quit()]);
   });
   async function app(connection = redis, options = {}) {
-    const auth = createRedisAuth({ ...config, redis: connection, prefix, workos, now, onLogout: (...args) => loggedOut.push(args), ...overrides, ...options });
+    const auth = createRedisAuth({ ...config, redis: connection, prefix, workos, githubFetch: githubApi.fetcher, now, onLogout: (...args) => loggedOut.push(args), ...overrides, ...options });
     auths.push(auth);
     const server = createServer(async (req, res) => { if (!await auth.handle(req, res)) { res.writeHead(404); res.end(); } });
     servers.push(server); server.listen(0, '127.0.0.1'); await once(server, 'listening');
@@ -46,7 +48,7 @@ async function fixture(t, overrides = {}) {
     return { response, path: `/auth/callback?code=code&state=${state}`, headers: { cookie: cookie(response, 'river_oaks_auth_state') } };
   }
   async function login() { const start = await begin(); const response = await b.request(start.path, { headers: start.headers }); return { response, sessionCookie: cookie(response) }; }
-  return { a, b, app, begin, login, redis, peer, prefix, keys, workos, loggedOut, now, advance: ms => { time += ms; } };
+  return { a, b, app, begin, login, redis, peer, prefix, keys, workos, githubApi, loggedOut, now, advance: ms => { time += ms; } };
 }
 
 integration('cross-instance callback consumes PKCE once and survives closing the login instance', async t => {
@@ -60,7 +62,7 @@ integration('cross-instance callback consumes PKCE once and survives closing the
   const c = await f.app();
   const session = await c.request('/auth/session', { headers: { cookie: cookie(successful) } });
   const body = await session.json();
-  assert.deepEqual(body.user, { id: 'user_1', name: 'Val Dev' });
+  assert.deepEqual(body.user, { id: 'user_1', name: 'val-dev' });
   assert.ok(body.csrfToken);
   assert.equal(body.canGrantWishes,false);
   assert.doesNotMatch(JSON.stringify(body), /private|email|accessToken|refreshToken/);
@@ -213,19 +215,41 @@ integration('absolute expiry cannot be extended by refresh or by closing an inst
 integration('state and session admission caps are atomic across nodes', async t => {
   const f = await fixture(t);
   const stateFields = [], scores = [];
-  for (let i = 0; i < 999; i++) { stateFields.push(`seed-${i}`, JSON.stringify({expiresAt:f.now()+60_000})); scores.push(f.now()+60_000, `seed-${i}`); }
+  for (let i = 0; i < MAX_PENDING_SIGN_INS - 1; i++) { stateFields.push(`seed-${i}`, JSON.stringify({expiresAt:f.now()+60_000})); scores.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[0], ...stateFields); await f.redis.zadd(f.keys[1], ...scores);
   const admissions = await Promise.all([f.a.request('/auth/login'),f.b.request('/auth/login')]);
   assert.deepEqual(admissions.map(response=>response.status).sort(), [302,503]);
-  assert.equal(await f.redis.hlen(f.keys[0]), 1000);
+  assert.equal(await f.redis.hlen(f.keys[0]), MAX_PENDING_SIGN_INS);
   f.advance(61_000);
   const starts = await Promise.all([f.begin(),f.begin(f.b)]);
   const sessions = [], expiry = [];
-  for (let i = 0; i < 9999; i++) { sessions.push(`seed-${i}`, JSON.stringify({sessionId:`seed-${i}`,cookieHash:`hash-${i}`,expiresAt:f.now()+60_000})); expiry.push(f.now()+60_000, `seed-${i}`); }
+  for (let i = 0; i < MAX_SESSIONS - 1; i++) { sessions.push(`seed-${i}`, JSON.stringify({sessionId:`seed-${i}`,cookieHash:`hash-${i}`,expiresAt:f.now()+60_000})); expiry.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[2], ...sessions); await f.redis.zadd(f.keys[3], ...expiry);
   const callbacks = await Promise.all(starts.map((start,index) => [f.a,f.b][index].request(start.path,{headers:start.headers})));
   assert.deepEqual(callbacks.map(response=>response.status).sort(), [302,503]);
-  assert.equal(await f.redis.hlen(f.keys[2]), 10000);
+  assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS);
+});
+
+// One account could sign in over and over until the shared session table was
+// full, locking every other account out for the seven-day session lifetime.
+integration('one account keeps only its newest sessions, so repeated sign-ins cannot fill the table', async t => {
+  const f = await fixture(t), cookies = [];
+  for (let i = 0; i < MAX_SESSIONS_PER_USER + 3; i++) {
+    const { response, sessionCookie } = await f.login();
+    assert.equal(response.status, 302);
+    cookies.push(sessionCookie);
+  }
+  assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS_PER_USER);
+  assert.equal(await f.redis.hlen(f.keys[4]), MAX_SESSIONS_PER_USER);
+  assert.equal(JSON.parse(await f.redis.hget(f.keys[5], 'user_1')).length, MAX_SESSIONS_PER_USER);
+  const signedIn = async cookie => (await (await f.a.request('/auth/session', { headers: { cookie } })).json()).authenticated;
+  for (const cookie of cookies.slice(0, 3)) assert.equal(await signedIn(cookie), false, 'the oldest sessions were retired');
+  for (const cookie of cookies.slice(3)) assert.equal(await signedIn(cookie), true);
+  // Another account is unaffected.
+  f.workos.setUserId('user_2');
+  const other = await f.login();
+  assert.equal(await signedIn(other.sessionCookie), true);
+  assert.equal(JSON.parse(await f.redis.hget(f.keys[5], 'user_2')).length, 1);
 });
 
 integration('Redis failures and missing configuration fail closed without exposing errors', async t => {
@@ -270,9 +294,11 @@ integration('real WorkOS SDK sealed sessions and signed JWTs authenticate on ano
     return {data:{user:{object:'user',id:'user_sdk',email:'private@example.com',email_verified:true,first_name:'Val',last_name:null,profile_picture_url:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},access_token:accessToken,refresh_token:'private-refresh',authentication_method:'GitHubOAuth'}};
   };
   sdk.userManagement.getJWKS=async()=>async()=>publicKey;
+  sdk.userManagement.getUserIdentities=async userId=>userId==='user_sdk'?[{idpId:'3003',type:'OAuth',provider:'GitHubOAuth'}]:[];
   const f=await fixture(t,{workos:sdk}),{response,sessionCookie}=await f.login();
   assert.equal(response.status,302);
-  assert.equal((await f.a.auth.authenticate({headers:{cookie:sessionCookie}})).userId,'user_sdk');
+  const user=await f.a.auth.authenticate({headers:{cookie:sessionCookie}});
+  assert.deepEqual([user.userId,user.name],['user_sdk','sdk-boundary-resident']);
   const value=decodeURIComponent(sessionCookie.slice(sessionCookie.indexOf('=')+1)),midpoint=Math.floor(value.length/2);
   const tampered=`${value.slice(0,midpoint)}${value[midpoint]==='a'?'b':'a'}${value.slice(midpoint+1)}`;
   assert.equal(await f.b.auth.authenticate({headers:{cookie:`river_oaks_session=${encodeURIComponent(tampered)}`}}),null);
@@ -286,9 +312,11 @@ for (const scenario of boundaryCases) {
     const f = await fixture(t, { workos: sdk });
     const { response, sessionCookie } = await f.login();
     assert.equal(response.status, scenario.status);
-    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`]);
+    // A rejected session is never looked up on GitHub.
+    assert.deepEqual(requests, ['POST /user_management/authenticate', `GET /sso/jwks/${config.clientId}`,
+      ...(scenario.status === 302 ? ['GET /user_management/users/user_sdk/identities'] : [])]);
     if (scenario.status === 302) {
-      assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).userId, 'user_sdk');
+      assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'sdk-boundary-resident');
     } else {
       assert.equal(sessionCookie, undefined);
       assert.deepEqual(await response.json(), { error: 'invalid_session' });
@@ -298,3 +326,45 @@ for (const scenario of boundaryCases) {
     }
   });
 }
+
+// Residents are shown by GitHub username. Only the admin is Jevica, whatever
+// any other account puts in its GitHub profile name or username.
+integration('residents are named by GitHub username and only the admin is Jevica', async t => {
+  const f = await fixture(t);
+  const nameFor = async cookie => (await (await f.a.request('/auth/session', { headers: { cookie } })).json()).user?.name;
+  f.workos.setDisplayName('Jevica');
+  assert.equal(await nameFor((await f.login()).sessionCookie), 'val-dev', 'a GitHub profile name of Jevica is ignored');
+  f.workos.setUserId('user_2'); f.githubApi.accounts['1002'] = 'Jevica';
+  assert.equal(await nameFor((await f.login()).sessionCookie), 'github-1002', 'a GitHub username of Jevica is not shown');
+  f.githubApi.accounts['1002'] = 'jev1ca-official';
+  assert.equal(await nameFor((await f.login()).sessionCookie), 'github-1002', 'nor a lookalike');
+  f.workos.setUserId(JEVICA_ADMIN_USER_IDS[0]); f.workos.githubIds[JEVICA_ADMIN_USER_IDS[0]] = '1003'; f.githubApi.accounts['1003'] = 'BunsDev';
+  f.workos.setDisplayName('Val', 'Dev');
+  const admin = (await f.login()).sessionCookie;
+  assert.equal(await nameFor(admin), 'Jevica', 'the admin account is Jevica');
+  assert.equal((await f.b.auth.authenticate({ headers: { cookie: admin } })).name, 'Jevica', 'on every instance');
+});
+
+integration('a GitHub outage at sign-in shows the GitHub account number until GitHub answers again', async t => {
+  const f = await fixture(t);
+  f.githubApi.down = true;
+  const { sessionCookie } = await f.login();
+  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'github-1001');
+  f.githubApi.down = false;
+  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'github-1001', 'not retried on every request');
+  f.advance(10 * 60_000);
+  // The WorkOS access token has expired by now; the HTTP session route refreshes it.
+  assert.equal((await (await f.b.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user.name, 'val-dev');
+});
+
+integration('a session created before usernames were stored is named by GitHub username on its next request', async t => {
+  const f = await fixture(t), { sessionCookie } = await f.login();
+  const [id, raw] = await f.redis.hgetall(f.keys[2]).then(entries => Object.entries(entries)[0]);
+  const legacy = JSON.parse(raw); delete legacy.githubId; delete legacy.login;
+  await f.redis.hset(f.keys[2], id, JSON.stringify(legacy));
+  await f.redis.del(`${f.prefix}:auth:github`);
+  const before = f.githubApi.calls.length;
+  assert.equal((await f.b.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'val-dev');
+  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'val-dev');
+  assert.equal(f.githubApi.calls.length, before + 1, 'looked up once, then remembered');
+});

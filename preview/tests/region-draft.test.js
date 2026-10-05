@@ -24,3 +24,18 @@ test('the editor refuses imported geometry it cannot safely edit or publish', ()
   assert.equal(editableRegion({ ...draft, buildings: [{ id: 'edge-hall', center: [92, 0], size: [20, 12, 9], yaw_deg: 30, kind: 'residential' }] }), false);
   assert.equal(editableRegion({ ...draft, buildings: [{ id: 'arrival-hall', center: draft.spawn, size: [12, 12, 9], yaw_deg: 0, kind: 'residential' }] }), false);
 });
+
+test('the editor accepts bounded walk-in venues on retail buildings',()=>{
+  const draft=blankRegion(),building={id:'gallery',center:[28,24],size:[18,16,8],yaw_deg:0,kind:'retail',
+    interior:{name:'Moon Gallery',category:'art',entrance:'south'}};
+  assert.equal(editableRegion({...draft,buildings:[building]}),true);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'parking'}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,interior:{...building.interior,entrance:'roof'}}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,size:[5,16,8]}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential',interior:{...building.interior,category:'home'}}]}),true);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential'}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,interior:{...building.interior,category:'home'}}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,interior:{...building.interior,access:'owner'}}]}),false);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential',interior:{name:'Moon House',category:'home',entrance:'south',access:'owner'}}]}),true);
+  assert.equal(editableRegion({...draft,buildings:[{...building,kind:'residential',interior:{name:'Moon House',category:'home',entrance:'south',access:'friends'}}]}),false);
+});

@@ -8,7 +8,9 @@ const COOKIE = 'river_oaks_dev_session';
 const SESSION_TTL = 7 * 24 * 60 * 60_000;
 const MAX_SESSIONS = 256;
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
-const NAMES = ['Wren', 'Juniper', 'Marlow', 'Sage', 'Rowan', 'Indigo', 'Tamsin', 'Ellis', 'Briar', 'Linden'];
+// Shaped like GitHub usernames, as signed-in residents are shown. No
+// development identity is a Jevica account, so none is ever named Jevica.
+const NAMES = ['wren', 'juniper', 'marlow', 'sage', 'rowan', 'indigo', 'tamsin', 'ellis', 'briar', 'linden'];
 
 export function devAuthAllowed({ origin, env = process.env } = {}) {
   let url;
@@ -39,7 +41,7 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
     const cookie = randomBytes(24).toString('base64url');
     const userId = `dev-${createHash('sha256').update(cookie).digest('hex').slice(0, 12)}`;
     ownerUserId ??= userId;
-    const name = `${NAMES[sessions.size % NAMES.length]} (dev)`;
+    const name = `${NAMES[sessions.size % NAMES.length]}-dev`;
     const record = { userId, name, sessionId: userId, csrfToken: randomBytes(24).toString('base64url'), expiresAt: now() + SESSION_TTL };
     sessions.set(cookie, record);
     res.setHeader('Set-Cookie', `${COOKIE}=${cookie}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_TTL / 1000}`);

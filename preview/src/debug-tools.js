@@ -5,6 +5,7 @@ import { groundSurfaceTriangles } from './world-surface.js';
 import { createWalkingEnvironment } from './walking.js';
 import { storeRoomsFor } from './store-rooms.js';
 import { colliderSegments, colliderWalls, describeObject, heaviestMeshes, ringSegments, ringToScene, roadSegments, roofRings, roomRings, storeMarkers, walkableSamples } from './debug-geometry.js';
+import { fillTermList } from './term-list.js';
 import './debug-tools.css';
 
 // In-game debugging for the browser and desktop builds: collision, ground,
@@ -242,13 +243,17 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
     replace('selection', group('Selection', ...parts));
     const size = bounds.getSize(new THREE.Vector3());
     box.hidden = false;
-    box.innerHTML = `<dt>Selected</dt><dd title="${info.path}">${info.path}</dd>
-      <dt>Type</dt><dd>${info.type}${info.skinned ? ' (skinned)' : ''}${instanceId !== null ? ` · instance ${instanceId} of ${info.instances}` : ''}</dd>
-      <dt>Polygons</dt><dd>${info.triangles.toLocaleString()} tris · ${info.vertices.toLocaleString()} verts${info.instances > 1 ? ` · ${info.drawnTriangles.toLocaleString()} drawn` : ''}</dd>
-      <dt>Materials</dt><dd>${info.materials.join(', ') || '–'}</dd>
-      <dt>Bounds</dt><dd>${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)} m</dd>
-      <dt>Face</dt><dd>${faceText}</dd>
-      <dt>Hit</dt><dd>E ${fmt(selection.point.x)} · N ${fmt(-selection.point.z)} · up ${fmt(selection.point.y)}</dd>`;
+    // Object and material names come from loaded models and creator regions, so
+    // they are written as text, never parsed as markup.
+    fillTermList(box, [
+      ['Selected', info.path, info.path],
+      ['Type', `${info.type}${info.skinned ? ' (skinned)' : ''}${instanceId !== null ? ` · instance ${instanceId} of ${info.instances}` : ''}`],
+      ['Polygons', `${info.triangles.toLocaleString()} tris · ${info.vertices.toLocaleString()} verts${info.instances > 1 ? ` · ${info.drawnTriangles.toLocaleString()} drawn` : ''}`],
+      ['Materials', info.materials.join(', ') || '–'],
+      ['Bounds', `${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)} m`],
+      ['Face', faceText],
+      ['Hit', `E ${fmt(selection.point.x)} · N ${fmt(-selection.point.z)} · up ${fmt(selection.point.y)}`],
+    ]);
   }
   // Capture phase: while inspecting, a click selects geometry instead of starting a conversation.
   const onPointerDown = event => { if (!open || !state.inspector || event.button !== 0 || !host.contains(event.target) || panel.contains(event.target)) return; event.stopPropagation(); event.preventDefault(); select(pick(event)); };

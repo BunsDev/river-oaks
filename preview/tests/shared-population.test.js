@@ -8,6 +8,15 @@ import { storePersonId } from '../src/store-encounters.js';
 
 const district=JSON.parse(await readFile(new URL('../public/data/district.json',import.meta.url),'utf8'));
 
+test('multiplayer presentation keeps building residents and omits outdoor and vehicle encounters',()=>{
+  const rooms=storeRoomsFor(district);
+  const shared=createCommunity(district,rooms,{sharedPopulation:true,outdoor:false});
+  const cast=createCommunity(district,rooms,{carriage:false,sharedPopulation:true});
+  assert.deepEqual(shared.locals.map(local=>local.id),cast.locals.filter(local=>local.indoor).map(local=>local.id));
+  assert.equal(shared.locals.length,74);
+  assert.ok(shared.locals.every(local=>local.indoor&&!local.vehicleRole));
+});
+
 test('shared district removes about half its NPCs while retaining outdoor scenarios and a shop host',()=>{
   const rooms=storeRoomsFor(district);
   const solo=createCommunity(district,rooms,{carriage:false});

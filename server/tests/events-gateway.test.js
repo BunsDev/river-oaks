@@ -1,0 +1,43 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import Redis from 'ioredis';
+import { createWorldGateway } from '../world-gateway.js';
+import { createRedisSecurity } from '../redis-security.js';
+import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
+import { approvedWaitlist } from './waitlist-fixture.js';
+
+test('approved events persist across worlds and gateway replacement with authenticated authority', {skip:!process.env.REDIS_URL,timeout:30_000},async t=>{
+  const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
+  const namespace=`river-oaks:events-gateway:${randomUUID()}`,prefix=`{${namespace}}`,origin='https://sim.jev.works';
+  const worldData=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url)));
+  const region=JSON.parse(await readFile(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+  const users={admin:JEVICA_ADMIN_USER_IDS[0],host:'host-user',guest:'guest-user'};
+  const auth={handle:async()=>false,authenticate:async req=>{
+    const userId=users[req.headers.cookie?.match(/test_session=(\w+)/)?.[1]];
+    return userId?{userId,name:userId,sessionId:userId+'-session',csrfToken:'test-csrf',expiresAt:Date.now()+60_000}:null;
+  },isSessionActive:async()=>true,close(){}};
+  const security=createRedisSecurity({redis,prefix});
+  const makeGateway=()=>createWorldGateway({redis,namespace,worldData,auth,security,waitlist:{...approvedWaitlist,isApproved:async id=>id!=='guest-user'},origin});
+  let gateway=makeGateway();await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
+  let base=`http://127.0.0.1:${gateway.server.address().port}`;
+  t.after(async()=>{await gateway.close();security.close();const keys=await redis.keys(`*${namespace}*`);if(keys.length)await redis.del(...keys);await redis.quit();});
+  const post=(user,path,data={},csrf='test-csrf')=>fetch(base+path,{method:'POST',headers:{Origin:origin,Cookie:`test_session=${user}`,'X-CSRF-Token':csrf,'Content-Type':'application/json'},body:JSON.stringify(data)});
+  assert.equal((await post('admin','/api/worlds',{id:'moon-garden',title:'Moon Garden',region})).status,201);
+  const startsAt=Date.now()+3_600_000,draft={title:'Moon stories',description:'An outdoor gathering.\nBring a story.',placeId:'arrival',startsAt,endsAt:startsAt+3_600_000,capacity:2};
+  assert.equal((await post('missing','/api/events/list')).status,401);
+  assert.equal((await post('guest','/api/events/list')).status,403,'waitlist approval is required');
+  assert.equal((await post('host','/api/events/create?world=moon-garden',draft,'wrong')).status,403);
+  assert.equal((await post('host','/api/events/create?world=moon-garden',{...draft,worldId:'river-oaks'})).status,400);
+  const created=await post('host','/api/events/create?world=moon-garden',draft);assert.equal(created.status,201);
+  const {event}=await created.json();assert.equal(event.worldTitle,'Moon Garden');assert.equal(event.hostName,'host-user');
+  assert.equal((await post('host','/api/events/create?world=moon-garden',{...draft,placeId:'shop:missing'})).status,400);
+  assert.equal((await post('admin','/api/events/rsvp',{id:event.id,going:true})).status,200);
+  const listed=(await (await post('admin','/api/events/list')).json()).events[0];
+  assert.equal(listed.worldId,'moon-garden');assert.equal(listed.attending,2);assert.equal('attendees' in listed,false);
+  await gateway.close();gateway=makeGateway();await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${gateway.server.address().port}`;
+  const restored=(await (await post('host','/api/events/list')).json()).events[0];assert.equal(restored.attending,2);assert.equal(restored.isHost,true);
+  assert.equal((await post('admin','/api/events/cancel',{id:event.id})).status,200);
+  assert.deepEqual((await (await post('host','/api/events/list?world=moon-garden')).json()).events,[]);
+});

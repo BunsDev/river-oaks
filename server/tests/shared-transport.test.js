@@ -13,7 +13,7 @@ import { approvedWaitlist } from './waitlist-fixture.js';
 const district = JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
 const publicOrigin = 'https://sim.jev.works';
 
-async function fixture(t, { moderation, worldData=district } = {}) {
+async function fixture(t, { moderation, worldData=district, waitlist=approvedWaitlist } = {}) {
   let time = 100000, app;
   const sessions = new Map([
     ['alice-session', {userId:'alice',name:'Alice',sessionId:'alice-session'}],
@@ -41,7 +41,7 @@ async function fixture(t, { moderation, worldData=district } = {}) {
     },
   };
   const world=createSharedWorld(worldData,{now:()=>time,isAdmin:id=>id==='alice'});
-  app=createGameServer({auth,world,waitlist:approvedWaitlist,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
+  app=createGameServer({auth,world,waitlist,origin:publicOrigin,moderation,moderators:['moderator'],now:()=>time});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   t.after(()=>app.close());
   const origin=`http://127.0.0.1:${app.server.address().port}`;
@@ -55,7 +55,7 @@ async function fixture(t, { moderation, worldData=district } = {}) {
 }
 
 function client(origin, ticket, session) {
-  const ws=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?ticket=${ticket}`,{headers:{Origin:publicOrigin,Cookie:`test_session=${session}`}});
+  const ws=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?protocol=2&ticket=${ticket}`,{headers:{Origin:publicOrigin,Cookie:`test_session=${session}`}});
   const messages=[],waiters=new Set();
   let request=0;
   ws.on('message',raw=>{
@@ -100,6 +100,41 @@ function closed(ws) {
 
 // These deliberately exercise the actual strict world command schema. A mock
 // command handler would miss requestId accidentally leaking into world.command.
+test('travel acknowledgment reaches its player before the full snapshot',async t=>{
+  const f=await fixture(t),alice=await connect(f,'alice-session');
+  const before=alice.messages.length;
+  const arrived=await alice.command({type:'travel',localId:'local-00'});
+  assert.equal(arrived.ok,true);
+  const snapshot=await alice.waitFor(message=>message.type==='snapshot'
+    && JSON.stringify(message.players.find(player=>player.id==='alice')?.position)===JSON.stringify(arrived.player.position),before);
+  assert.ok(alice.messages.indexOf(arrived)<alice.messages.indexOf(snapshot));
+});
+
+test('waiting movement poses coalesce on either side of a travel command',async t=>{
+  let block=false,release,started;
+  const blocked=new Promise(resolve=>{release=resolve;});
+  const entered=new Promise(resolve=>{started=resolve;});
+  const waitlist={...approvedWaitlist,async isApproved(){if(block){block=false;started();await blocked;}return true;}};
+  const f=await fixture(t,{waitlist}),alice=await connect(f,'alice-session');
+  let done;
+  const finished=new Promise(resolve=>{done=resolve;});
+  const executed=[],command=f.world.command;
+  f.world.command=(id,message)=>{executed.push(message);if(executed.length===4)done();return command(id,message);};
+  t.after(()=>release());
+  const spawn=f.world.snapshot().players.find(player=>player.id==='alice').position;
+  const pose=value=>({type:'pose',position:spawn,yaw:value/100,altitude:0});
+  block=true;alice.ws.send(JSON.stringify(pose(0)));await entered;
+  for(let i=1;i<=12;i++)alice.ws.send(JSON.stringify(pose(i)));
+  alice.ws.send(JSON.stringify({type:'travel',localId:'local-00',requestId:'travel'}));
+  for(let i=13;i<=24;i++)alice.ws.send(JSON.stringify(pose(i)));
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(alice.ws.readyState,WebSocket.OPEN);
+  release();
+  await alice.waitFor(message=>message.type==='result'&&message.requestId==='travel');
+  await finished;
+  assert.deepEqual(executed,[pose(0),pose(12),{type:'travel',localId:'local-00'},pose(24)]);
+});
+
 test('real shared snapshots propagate grants and owner undo across two WebSocket accounts',async t=>{
   const f=await fixture(t),alice=await connect(f,'alice-session'),bob=await connect(f,'bob-session');
   assert.equal((await bob.waitFor(message=>message.type==='snapshot')).players.length,2);
@@ -282,7 +317,7 @@ test('malformed raw HTTP URL returns 400 without an unhandled rejection and serv
 test('invalid WebSocket key cannot admit a player before the handshake is validated',async t=>{
   const f=await fixture(t),token=await f.issue('alice-session');
   const response=await rawRequest(f.origin,[
-    `GET /multiplayer?ticket=${token} HTTP/1.1`,
+    `GET /multiplayer?protocol=2&ticket=${token} HTTP/1.1`,
     'Host: localhost',
     'Connection: Upgrade',
     'Upgrade: websocket',

@@ -4,7 +4,7 @@
 :root[data-theme] .identity h1,:root[data-theme] .walking-title strong,:root[data-theme] .viewport-heading,:root[data-theme] #player-name{font-family:var(--font-display);letter-spacing:-.035em}
 :root[data-theme] #walking-meet-nearby,:root[data-theme] #walking-talk{background:#327572;border-color:#84aba0;color:#fff4de}
 :root[data-theme] #walking-controls-toggle{color:#c7e4cf}
-:root[data-theme] #walking-enter{background:#234a4d;border-color:#c7b185;color:#fff1cf}
+:root[data-theme] #walking-enter,:root[data-theme] #walking-interact{background:#234a4d;border-color:#c7b185;color:#fff1cf}
 :root[data-theme] #player-carriage{background:#e6d9b9;color:#354f48;border:1px solid #bba16a}
 :root[data-theme=dark] #player-carriage{background:#53645a;color:#fff0cb}
 :root[data-theme] .viewport-kicker,:root[data-theme] .walking-title>span{letter-spacing:.20em}

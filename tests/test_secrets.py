@@ -180,3 +180,41 @@ def test_history_scan_automatically_loads_repository_rules(repo):
     assert result.returncode == 1
     findings = json.loads((repo / "report.json").read_text())
     assert any(item["RuleID"] == "typesafe-api-key-assignment" for item in findings)
+
+
+# Project secret types beyond the scanner defaults. Values are assembled from
+# fragments so this file never holds a secret-shaped literal.
+FAKE_HEX = "9f8e7d6c" * 6
+FAKE_B62 = "Q7mZ2xK9" * 5
+
+
+@pytest.mark.parametrize(
+    ("name", "text"),
+    [
+        ("voice.ini", "ELEVENLABS_API_KEY=" + "sk_" + FAKE_HEX),
+        ("notes.md", "use key " + "sk_" + FAKE_HEX + " for voices"),
+        ("server.env.txt", "WORKOS_API_KEY=" + "sk_" + "test_" + FAKE_B62),
+        ("deploy.sh", "export WORKOS_COOKIE_PASSWORD='" + FAKE_B62 + "'"),
+        ("config.yml", "redis: rediss://default:" + FAKE_B62 + "@town.upstash.io:6379"),
+        ("kv.ini", "KV_REST_API_TOKEN=" + FAKE_B62),
+    ],
+)
+def test_project_secret_types_are_blocked(repo, name, text):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    stage(repo, name, text)
+    assert check(repo).returncode != 0, name
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "ELEVENLABS_API_KEY=\nWORKOS_API_KEY=\nWORKOS_COOKIE_PASSWORD=\n",
+        "REDIS_URL=redis://127.0.0.1:6379\n",
+    ],
+)
+def test_project_placeholders_pass(repo, text):
+    if not shutil.which("gitleaks"):
+        pytest.skip("Install gitleaks to exercise the real scanner")
+    stage(repo, "example.env.txt", text)
+    assert check(repo).returncode == 0

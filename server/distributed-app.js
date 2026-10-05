@@ -1,15 +1,19 @@
+import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
-import { createRateLimiter } from './rate-limit.js';
-import { createClientAddress } from './client-address.js';
+import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
+import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
+import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { eventAction } from './events-api.js';
+import { accountDesignCommand } from './design-commands.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -19,20 +23,23 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, profiles = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, groups = null, profiles = null, events = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
   const connections = new Map(), moderatorIds = new Set(moderators);
-  const localAccess = createRateLimiter(120, 60_000), localFrames = createRateLimiter(40, 1000);
+  const localAccess = createRateLimiter(1000, 60_000), localFrames = createRateLimiter(40, 1000);
   let stopped = false, ticking = false;
   const send = (ws, value, options) => sendFrame(ws, value, options);
   const access = req => {
-    const ip = address(req);
-    return localAccess(ip) && security.allow('access', ip, 120, 60_000);
+    const ip = rateLimitKey(address(req));
+    return localAccess(ip) && security.allow('access', ip, 1000, 60_000);
   };
+  // Each sign-in start holds a pending slot until it completes or expires, so
+  // one address may start only a few at a time.
+  const signInStart = req => security.allow('login', rateLimitKey(address(req)), SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW);
   const authorized = async (req, res) => {
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
@@ -80,6 +87,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
+      if (path === '/auth/login' && !(await signInStart(req))) return json(res, 429, { error: 'Too many sign-in attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
@@ -113,6 +121,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const editable = await worldCatalog.editable(data?.id);
           return editable ? json(res, 200, editable) : json(res, 404, { error: 'Editable region not found.' });
         }
+        if (action === 'history' || action === 'version') {
+          const result = action === 'history' ? await worldCatalog.history(data?.id)
+            : await worldCatalog.version(data?.id, data?.revision, data?.baseRegionSha256);
+          const status = result.ok ? 200 : result.reason === 'invalid_version' ? 400 : result.reason === 'stale' ? 409 : 404;
+          return json(res, status, result.ok ? result : { error: result.reason });
+        }
         if (action === 'save') {
           const result = await worldCatalog.saveDraft(data, identity.userId);
           const status = result.ok ? 200 : result.reason === 'invalid_draft' ? 400
@@ -144,7 +158,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         if (!landmarks) return json(res, 503, { error: 'Landmarks are unavailable.' });
         const action = path.slice('/api/landmarks/'.length);
-        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId) });
+        if (action === 'list') return json(res, 200, { ok: true, landmarks: await landmarks.list(identity.userId, url.searchParams.get('allWorlds') === '1') });
         let data;
         try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid landmark request.' }); }
         if (action === 'add') {
@@ -155,7 +169,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           const result = await landmarks.add(identity.userId, { name: data?.name, position: player.position.slice(0, 2), yaw: player.yaw });
           return json(res, result.ok ? 200 : 400, result.ok ? result : { error: result.reason });
         }
-        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id) });
+        if (action === 'remove') return json(res, 200, { ok: true, removed: await landmarks.remove(identity.userId, data?.id, data?.worldId) });
       }
       if (path.startsWith('/api/social/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
@@ -171,8 +185,31 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? {id:worldId,title:worldTitle} : null;
           },
+          invitePlace: async (user,placeId) => {
+            const view=await room.read();
+            if(!view?.connections.some(item=>item.userId===user.userId && item.sessionId===user.sessionId))return null;
+            const place=await room.resolvePlace(placeId);
+            return place?{world:{id:worldId,title:worldTitle},place}:null;
+          },
           allowWrite: id => security.allow('social', id, 12, 60_000) });
         return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/groups/') && req.method === 'POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000)});
+        return json(res,result.status,result.value);
+      }
+      if (path.startsWith('/api/events/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+          resolveVenue:async placeId=>{
+            const place=await room.resolvePlace(placeId);
+            return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
+          },allowWrite:id=>security.allow('events',id,12,60_000)});
+        return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
@@ -211,7 +248,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   });
   server.requestTimeout = 15_000; server.headersTimeout = 10_000;
   const wss = new WebSocketServer({
-    noServer: true, maxPayload: 2048,
+    noServer: true, maxPayload: 8192,
     perMessageDeflate: {
       threshold: 1024, serverNoContextTakeover: true, clientNoContextTakeover: true,
       concurrencyLimit: 4, zlibDeflateOptions: { level: 1 },
@@ -225,7 +262,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (stopped || url.pathname !== '/multiplayer' || req.headers.origin !== origin || !(await access(req))) return reject(403);
       if (!matchesWorld(url)) return reject(403);
       const protocol = url.searchParams.get('protocol');
-      if (protocol !== String(WORLD_PROTOCOL_VERSION) && !(protocol === null && worldId === DEFAULT_WORLD_ID)) return reject(426);
+      if (protocol !== String(WORLD_PROTOCOL_VERSION)) return reject(426);
       const identity = await auth.authenticate(req);
       if (!identity || identity.expiresAt <= now() || !(await waitlist.isApproved(identity.userId)) || await security.isBanned(identity.userId)
         || !(await security.consumeTicket(url.searchParams.get('ticket'), identity, worldId))) return reject(401);
@@ -259,6 +296,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (!message || typeof message !== 'object' || Array.isArray(message) || typeof message.type !== 'string'
               || (message.requestId !== undefined && (typeof message.requestId !== 'string' || message.requestId.length > 64))) throw new Error();
           } catch { send(ws, { type: 'result', ok: false, message: 'Invalid game command.' }); return; }
+          if(raw.length>2048 && !(isAdmin(identity.userId)&&message.type==='build'&&validAssembly(message.assembly))){ws.close(1009,'Game command too large.');return;}
           // Ordinary movement updates need only their latest waiting position.
           // Requests expecting acknowledgments retain one slot per command.
           const coalescible = message.type === 'pose' && message.requestId === undefined;
@@ -284,10 +322,14 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
               send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report sent to the town moderators.' : 'Report could not be submitted.' });
               return;
             }
-            const result = await room.request({ type: 'command', userId: identity.userId, connectionId, message: command });
+            const resolved = await accountDesignCommand({ command, userId: identity.userId, connectionId, worldId,
+              room, library: designLibrary, security, isAdmin });
+            const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command });
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
+            const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
+            if (earlyAck) send(ws, { type: 'result', requestId, ...result });
             if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read());
-            if (requestId !== undefined || !result.ok) send(ws, { type: 'result', requestId, ...result });
+            if (!earlyAck && (requestId !== undefined || !result.ok)) send(ws, { type: 'result', requestId, ...result });
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
         ws.on('close', () => {

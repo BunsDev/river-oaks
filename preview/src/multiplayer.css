@@ -27,7 +27,28 @@
 .multiplayer-social-history p { margin: 0 0 8px; }
 .multiplayer-social-form { display: flex; gap: 6px; }
 .multiplayer-social-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.multiplayer-social-meeting { display: flex; align-items: end; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.multiplayer-social-meeting label { display: grid; gap: 4px; font-size: 12px; }
+.multiplayer-social-meeting select { max-width: 190px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .multiplayer-social-status { min-height: 1.4em; }
+.multiplayer-gestures { margin: 12px 0; }
+.multiplayer-gestures h3 { margin: 0 0 6px; font-size: 13px; }
+.multiplayer-gesture-controls { display: flex; gap: 8px; }
+.multiplayer-gesture-controls button { min-height: 36px; }
+.multiplayer-gestures [role=status] { min-height: 1.3em; margin: 5px 0 0; font-size: 12px; }
+.multiplayer-groups { margin: 16px 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; }
+.multiplayer-groups h3, .multiplayer-groups h4, .multiplayer-groups h5 { margin: 0 0 8px; font-size: 14px; }
+.multiplayer-groups > p { margin: 0 0 10px; line-height: 1.4; }
+.multiplayer-groups-create, .multiplayer-group-form, .multiplayer-group-invite { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.multiplayer-groups input, .multiplayer-groups select { min-width: 0; flex: 1 1 120px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+.multiplayer-groups button { min-height: 36px; }
+.multiplayer-group-row, .multiplayer-group-member { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.multiplayer-group-row span, .multiplayer-group-member span { flex: 1; overflow-wrap: anywhere; }
+.multiplayer-group-row small { opacity: .75; }
+.multiplayer-group-conversation { margin-top: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.multiplayer-group-history { min-height: 48px; max-height: 180px; overflow: auto; overflow-wrap: anywhere; }
+.multiplayer-group-history p { margin: 0 0 8px; }
+.multiplayer-group-status { min-height: 1.4em; }
 .multiplayer-profile { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
 .multiplayer-profile[hidden] { display: none; }
 .multiplayer-profile-content p { margin: 6px 0; white-space: pre-wrap; }

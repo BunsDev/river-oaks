@@ -1,5 +1,14 @@
 # Deploy the shared town
 
+Groups and open-ended creation controls are disabled by default. Set
+`VITE_CREATION_TOOLS=true` before starting development or building to show
+Groups, event hosting, Build & decorate (including saved designs), and world
+publishing/editing. Only the exact value `true` enables them; restart the dev
+server or rebuild after changing the flag. Publishing/editing also requires
+`VITE_WORLD_MAP=true` to expose the Worlds section and the existing account
+permissions. Event browsing and RSVPs, contacts, chat, profiles, landmarks,
+and existing shared creations remain available with creation tools off.
+
 ## Develop locally with WorkOS
 
 `npm run dev` starts WorkOS authentication and the shared town inside the Vite
@@ -44,6 +53,10 @@ account and follow it between worlds and server instances. Redis retains up to
 recovery. A new account preference first takes the saved River Oaks appearance
 when one exists. The solo-only invasion and auto visit are hidden, since
 each would diverge from the shared town.
+Multiplayer streets show real players and Jevica's companion/chauffeur.
+Other street residents are hidden; the NPC directory and nearby interactions
+keep building residents. Shop staff, guests, and indoor encounters remain.
+Single player retains its full outdoor cast.
 The People panel also has contacts and private messages. An invitation can be
 sent only to a player currently present in the same world; that player must
 accept before either can send a private message. Contacts and the latest 40
@@ -56,6 +69,19 @@ connected. The server records the sender's room as a private message, and the
 recipient can choose its world link to travel there. The sender cannot supply
 a destination in the request. World invitations share the 40-message history
 and write limit; they do not grant building or wish permissions.
+An accepted contact can also choose a named public place in their current world
+and send a private meeting invitation. The server resolves the place against the
+active published region and stores its world and place IDs in the message. The
+recipient's link joins that world and travels to the place; a stale place link
+can no longer travel if a later region revision removes the place. Place
+invitations share the same history and rate limit.
+In creator worlds, Jevica can invite an accepted contact into an owner-only
+home from that contact's People panel conversation. The invitation applies to
+one home and survives reconnects and compatible region revisions. Each home
+holds up to 16 invited accounts. A visitor may enter after the client receives
+the invitation; revoking access moves an occupant outside. Home entry never
+grants building or wish authority. Jevica can revoke any invitation from the
+private home guest list even after removing that account from contacts.
 Accepted contacts also see whether a resident is online and can follow a link
 to their current world without waiting for an invitation. The contact list
 exposes the world name and ID, never the resident's exact position. Pending
@@ -67,6 +93,25 @@ The client checks for new invitations and messages every 10 seconds while its
 browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,
 origin and CSRF checked requests.
+
+With `VITE_CREATION_TOOLS=true`, residents can create private groups from the
+People panel. The owner invites
+accepted contacts, and each person accepts or declines before joining. Members
+can chat across worlds and reconnects; nonmembers and pending invitees cannot
+read the conversation. Owners can cancel invitations, remove members, or disband
+the group, and members can leave. Redis keeps group membership and the latest
+60 messages outside room checkpoints, so separate server instances see the same
+group. Each account can belong to or be invited to at most 12 groups, with up
+to 32 members and pending invitations per group. Names, descriptions, and
+messages are bounded; writes are rate limited. Group membership never grants
+building, world publishing, or wish permissions. The client checks for group
+changes every 10 seconds while visible and connected.
+
+The People panel also offers **Wave** and **Bow**. These short gestures are
+validated by the shared world and shown on every nearby player's avatar. They
+expire after a few seconds, have a brief cooldown, and do not change building
+or wish permissions.
+
 The People panel lets each signed-in resident edit a short profile with a
 tagline, bio, pronouns, and up to eight interests. A profile is readable only
 by someone currently meeting that resident in a world or by an accepted
@@ -78,10 +123,22 @@ The People panel also includes town chat. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
-The Places panel keeps up to 50 private landmarks per account in shared play.
-Their positions come from the server's current player pose, and Redis stores
-them outside the town checkpoint so reconnects and new server instances retain
-them. Solo landmarks remain in browser storage.
+The Places panel lists private landmarks across all published worlds in shared
+play, with up to 50 per world per account. Their positions come from the
+server's current player pose, and each record is labeled with its origin world.
+Redis stores them outside town checkpoints so reconnects and new server
+instances retain them. Opening a landmark in another world follows a link to
+that world and its saved position; arrival still passes the destination
+world's outdoor travel check. Solo landmarks remain in browser storage.
+The world map shows outdoor players in the same shared room. Selecting one and
+choosing **Meet nearby** sends their account ID to the server, which resolves
+their current position and searches for an outdoor arrival spot clear of other
+players. Indoor players are omitted from the map, and travel to one is refused.
+The map does not offer a link to another player's position.
+Creator regions can also show up to 32 named land parcels. Jevica assigns an
+owner from her account or accepted contacts in the region studio. Ownership is
+published with the region, survives compatible revisions, and appears as
+**Your parcel** to that account. It grants no build, wish, or home-entry rights.
 The Worlds directory shows an aggregate visitor count for each published world
 and refreshes while the directory is visible. Redis updates each count in the
 same fenced commit as the room; the count expires after 30 seconds if its room
@@ -103,13 +160,22 @@ signed-out solo player cannot grant wishes. Solo play has no building controls.
 Local simulation state is browser-owned; shared-world authority is enforced by
 the server.
 
-Build & decorate lets the owner place, move, turn, and remove up to 24 owned
-creations in the shared town. A placed creation can be saved as a design, then
-placed again from **Saved designs**. The owner can keep 48 designs. The
-inventory is returned only to its owner; placed copies are visible to everyone.
-Designs survive reconnects and town resets through the private checkpoint.
+With `VITE_CREATION_TOOLS=true`, Build & decorate lets the owner place, move,
+turn, and remove up to 24 owned
+creations in the shared town. A placed creation can be saved as an account
+design, then placed again from **Saved designs** in any published world. Jevica
+can keep 48 account designs. The account library is private and stored outside
+room checkpoints, so it survives travel, reconnects, world resets, and Redis
+edge replacement; placed copies remain visible to everyone in their world.
+Designs saved before the account library remain in their original world
+checkpoint. **Copy to account** makes one of these older designs available in
+every world while retaining the original. Deleting the account copy reveals
+the original again in that world.
 Each new placement still passes the server's reach, ground, road, collision,
 and capacity checks. Deleting a design does not remove copies already placed.
+Jevica can also furnish residential creator homes. Placement must stay within
+the same home as her avatar and leave the doorway and built-in fixtures clear;
+retail interiors remain protected. Guests still cannot build anywhere.
 
 Jevica can open an existing creator region in the World studio, save a private
 revision draft, and apply it to the live world. The draft is stored in shared
@@ -118,7 +184,11 @@ device. Applying validates the old checkpoint, carries forward durable player
 state and creations, then atomically publishes the revised catalog and room
 checkpoint. A layout that conflicts with an existing creation is rejected.
 Connected visitors reload the revised map; active NPC wishes reset. Guests
-cannot load, save, discard, or apply drafts.
+cannot load, save, discard, or apply drafts. Jevica can select one of the last
+eight published versions and load it into her private editor. She must save
+that copy as a new revision draft before applying it. Version reads verify the
+retained region hash, and applying still checks the current region and existing
+creations before changing the live world.
 
 Shared play uses 98 simulated residents, down from 193 in solo play (49%).
 Every outdoor scenario resident and at least one staff member per shop remains.
@@ -130,6 +200,15 @@ The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.j
 
 Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
+## Resident names
+
+Every signed-in resident is shown by their GitHub username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
+
+- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `github-<account ID>`.
+- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `github-<account ID>` instead.
+- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
+- **Groups, events and places** have their own titles; those are not resident names and are not restricted.
+
 ## Shared storage and coordination
 
 Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json).
@@ -139,6 +218,10 @@ The Redis backend stores OAuth state, email verification challenges, sessions, s
 One renewable Redis lease controls simulation writes. A fenced transaction commits the compressed world checkpoint, public snapshot, consumed operation batch, and command acknowledgments together. A replacement instance restores residents, wishes, movement budgets, cooldowns, and conversation holds. An expired lease cannot overwrite the replacement's state. The world pauses without players; it does not simulate all elapsed offline time.
 
 Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+
+Vehicle exits use the server-checked travel command before completing the local
+dismount. This keeps the seat-to-ground transition from being rejected as an
+ordinary walking-speed violation. A refused exit keeps the rider seated.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 
@@ -210,6 +293,10 @@ node --test server/tests/auth.test.js server/tests/workos-session.test.js
 REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test.js
 ```
 
+Every Redis-backed server test skips without `REDIS_URL`. CI's `preview` job runs a
+pinned Redis 7.4 service and sets `REDIS_URL` for `npm run test:server`, so all of
+them run there without skips when Redis is healthy.
+
 These are local cryptographic boundary tests, not proof of WorkOS's hosted key
 provisioning or a live sign-in. Repeat the custom-domain smoke checks above after
 promotion. On 2026-10-03, the current `sim.jev.works` deployment passed a
@@ -249,6 +336,7 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `WORKOS_API_KEY` | API key from the matching WorkOS environment |
 | `WORKOS_CLIENT_ID` | Client ID from that same environment |
 | `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters |
+| `GITHUB_TOKEN` | Optional. A GitHub token with no scopes, used only to look up public GitHub usernames by account ID. Without it the lookup is anonymous and limited to 60 an hour per server address |
 | `HOST` | `127.0.0.1` behind a host proxy, or `0.0.0.0` inside the container |
 | `PORT` | `8787` unless your platform requires another port |
 | `REDIS_URL` | Marketplace secret for the shared backend |
@@ -336,3 +424,106 @@ Open `http://127.0.0.1:5173/` consistently. Vite starts the town server on port 
 Local HTTP cookies omit `Secure`. Both the standalone server and the default `npm run dev` flow use WorkOS. Run the automated server tests with `npm run test:server`; they don't replace a live GitHub sign-in check.
 
 On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.
+
+## Scheduled gatherings
+
+[World events](world-events.md) give approved residents a shared calendar,
+private RSVPs, and outdoor venue links across published worlds. Hosts manage
+their own gatherings; Jevica can cancel any event. These account records do
+not alter building, wish, home-entry, or publishing permissions.
+
+## Measure browser capacity
+
+Run `npm run audit:multiplayer:render` on a machine with hardware WebGL2 after
+installing Chromium with `npx playwright install chromium`. It creates its own
+ephemeral loopback town and synthetic guests, exercises dynamic joins, movement,
+gestures, reconnects and ordinary departures, then closes its owned services.
+The default tests 1/8/16/32 players at fixed Sharpest quality in desktop and
+phone-sized viewports. `--quality=auto` exercises the normal adaptive mode.
+The phone-sized view still uses the host GPU. See the [performance audit](multiplayer-performance-audit.md)
+for measured results, command options, and hosted readiness gates.
+
+## Shared furniture seating
+
+In shared play, placed Garden seats have two independent slots and Lounge chairs
+have one, and every storefront bench has two (`bench:<store>`, slots 0 and 1).
+Stand near furniture in the same room, choose an available slot in
+**Nearby seats**, and select **Sit down**, or press **Z** to sit on the nearest
+free one. **Stand up** (or **Z** again) works with keyboard and touch controls. Dragging turns the camera while the body faces the seat front.
+Furniture is usable by approved guests; building, saved designs and wish granting
+remain restricted to Jevica's verified owner accounts.
+
+The town assigns the position, facing and cushion height. Occupied slots reject
+other visitors, and occupied furniture cannot be moved, turned or removed. Stand
+searches nearby clear ground in the same room, including the path to the exit
+point. If that space is blocked, the visitor keeps the reservation and can use
+Places to travel elsewhere. Travel releases the seat. Revoking a private-home
+invitation moves the visitor outside and releases their seat.
+
+A connection can recover its seat within the normal ten-second reconnect grace.
+After that grace, departure releases it. A compatible region revision keeps
+furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
+recovery validates slots, unique occupancy and the exact furniture-derived pose.
+
+Private world checkpoints write version 4 and read valid versions 1 (original
+district only), 2, 3 and 4. Seat reservations require version 3 or later; custom
+assemblies require version 4. The version-4 coordinator atomically takes over
+older leases. Commit fencing prevents an older writer from publishing or
+trimming commands. Do not roll back older code against version-4 checkpoints.
+Browser protocol 2 is required: version-1 and unversioned clients must refresh
+before joining.
+This prevents older renderers from applying snapshots with unknown geometry.
+
+Placed creations and storefront benches are interactive; other built-in shop
+and park furniture is not yet. Bench places come from the same placement the
+browser draws (`preview/src/world-interactions.js`, which the server, browser and
+townspeople share), and a bench stands its sitter up in front of it.
+
+**Townspeople** resting at a storefront sit on its bench every other visit when a
+place is free and no player holds it, and stand up in front of it before walking
+on; a storm stands everyone up. A place a resident holds is occupied for players
+too. Their snapshot `life.seat` lets every browser draw them seated. Single
+player seats the visitor in the browser and keeps that place from residents.
+
+## Watering planters
+
+Anyone can water a planter: the two by each boutique door, the street planters
+(identified by position, so server and browser agree), and the flower planters
+Jevica builds. Stand within 2.2 m in the same room or on the same street and
+press **Z**. `{type:'water', planterId}` is checked by the server and rate limited
+with gestures: it turns the player to the planter and shows the `water` gesture,
+with a watering can, for 3.6 s. The body keeps facing the planter while the
+camera moves, and walking off ends it. Nobody waters while seated. Watering is an
+animation only: planters keep no state.
+
+
+## Custom creator objects
+
+Jevica can choose **Custom object** in Build & decorate, name the creation, and
+assemble up to 16 boxes, spheres, or cylinders. Each part has dimensions, local
+position, rotation in degrees, a hex color, and matte, metal, gloss, or glass
+material. Edit parts loads a placed creation into builder mode; placement
+confirms its geometry and root transform together. Saved designs retain every
+part and material for account-wide copying into other worlds.
+
+The server checks the complete assembly before any mutation. Part dimensions
+are 0.05–4 meters, the creation stays above ground and within 4 meters high and
+2.6 meters horizontal radius, and its assembly data is at most 6 KiB. Placement
+uses conservative assembly bounds; walking and flying use conservative oriented
+boxes for individual parts, leaving gaps between parts open. Curved primitives
+have box collision bounds, not triangle physics. Shared NPC routes and walking
+also respect confirmed custom parts. A new obstacle triggers a bounded detour
+through the existing planner; empty openings and overhead parts stay traversable.
+Placement reserves residents' grounded return paths as well as lifted bodies.
+When restoring an older save with an enclosed resident, the server searches up
+to 4 meters for nearby level pedestrian-safe ground in the same room, clear of
+other people. It preserves the destination and requeues affected volunteer
+visits without spending another visit. Recovery fails atomically if no safe
+point exists. Ordinary walking does not relocate residents.
+
+Only Jevica's verified accounts can create, edit, remove, or save designs.
+Guests receive confirmed geometry without those permissions. Creator requests
+with valid assemblies may use an 8 KiB WebSocket frame; other commands retain
+the 2 KiB limit, existing queue limits, and rate limits. Old clients are rejected
+by the protocol gate. Imported assets and creator scripts remain future work;
+shared voice remains deferred in its plan.

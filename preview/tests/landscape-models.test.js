@@ -66,6 +66,35 @@ test('crowns step down in detail with distance and never add leaf layers', () =>
   assert.ok(TREE_LEAF_LAYERS.every((layers, index) => index === 0 || layers <= TREE_LEAF_LAYERS[index - 1]));
 });
 
+test('EZ Tree oaks ship licensed, bounded assets without multiplying leaf shells', () => {
+  const manifest = JSON.parse(read('../public/assets/landscape/ez-tree-manifest.json'));
+  assert.equal(manifest.generator, '@dgreenheck/ez-tree');
+  assert.equal(manifest.version, '1.1.0');
+  assert.equal(manifest.license, 'MIT');
+  assert.match(read('../public/assets/landscape/ez-tree-LICENSE.txt').toString(), /Copyright \(c\) 2024 Daniel Greenheck/);
+  assert.deepEqual(TREE_LEAF_LAYERS, [1, 1, 1], 'the generated crown is already dense');
+  const counts = [], materials = [];
+  for (const asset of manifest.derivatives) {
+    const bytes = read(`../public${asset.path}`);
+    assert.equal(bytes.length, asset.bytes);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256);
+    const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
+    materials.push(gltf.materials.map(material => material.name).sort().join());
+    if (asset.path.includes('high')) {
+      assert.ok(gltf.images.every(image => image.bufferView !== undefined));
+      assert.ok(gltf.materials.every(material => material.pbrMetallicRoughness.baseColorTexture));
+      assert.ok(gltf.materials.find(material => material.name === 'branches').normalTexture);
+      assert.equal(gltf.materials.find(material => material.name === 'leaves').alphaMode, 'MASK');
+    } else assert.equal(gltf.images, undefined, 'distant trees reuse near-tree maps');
+    const triangles = gltf.meshes.flatMap(mesh => mesh.primitives).reduce((sum, primitive) => sum + gltf.accessors[primitive.indices].count / 3, 0);
+    assert.equal(triangles, asset.triangles); counts.push(triangles);
+  }
+  assert.deepEqual(materials, ['branches,leaves', 'branches,leaves', 'branches,leaves']);
+  assert.ok(counts[0] > counts[1] && counts[1] > counts[2]);
+  assert.ok(counts[0] < 35000 && counts[1] < 24000 && counts[2] < 14000);
+  assert.ok(manifest.derivatives.reduce((sum, asset) => sum + asset.bytes, 0) < 4e6);
+});
+
 test('tree shadow proxies appear only for shadow casting inside the sun frustum', () => {
   const sun = new THREE.DirectionalLight(); sun.position.set(0, 100, 0); sun.target.position.set(0, 0, 0);
   Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 300 });

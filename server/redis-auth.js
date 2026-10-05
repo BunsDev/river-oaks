@@ -4,10 +4,16 @@ import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
+import { createGitHubNames, createRedisGitHubNameStore } from './github-names.js';
+import { residentName, validGitHubLogin } from '../preview/src/resident-names.js';
 
 const SESSION_COOKIE = 'river_oaks_session', STATE_COOKIE = 'river_oaks_auth_state';
 const STATE_TTL = 20 * 60_000, SESSION_TTL = 7 * 24 * 60 * 60_000;
 const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
+// Pending sign-ins are also limited per address by the caller, so filling this
+// pool takes thousands of addresses. One account keeps its newest sessions, so
+// signing in over and over cannot fill the session table.
+export const MAX_PENDING_SIGN_INS = 20_000, MAX_SESSIONS = 10_000, MAX_SESSIONS_PER_USER = 10;
 const PROVIDERS = { github: 'GitHubOAuth' };
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
@@ -15,16 +21,25 @@ const validId = value => typeof value === 'string' && value.length > 0 && value.
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-// Five fixed keys share one Redis hash slot. Cookie digests are hash fields, so
+// Six fixed keys share one Redis hash slot. Cookie digests are hash fields, so
 // untrusted cookies cannot allocate keys. Admission, rotation and deletion are
 // atomic; a deleted session can never be recreated by a delayed refresh commit.
+// KEYS[6] maps each account to its session ids, oldest first.
 const TRANSACTION = `
 local p = cjson.decode(ARGV[1])
 local time = p.now
+local function forgetOwned(userId, id)
+  local raw = redis.call('HGET', KEYS[6], userId)
+  if not raw then return end
+  local kept = {}
+  for _, owned in ipairs(cjson.decode(raw)) do if owned ~= id then table.insert(kept, owned) end end
+  if #kept == 0 then redis.call('HDEL', KEYS[6], userId) else redis.call('HSET', KEYS[6], userId, cjson.encode(kept)) end
+end
 local function removeSession(id, record)
   if record then
     redis.call('HDEL', KEYS[5], record.cookieHash)
     if record.previousHash then redis.call('HDEL', KEYS[5], record.previousHash) end
+    if record.userId then forgetOwned(record.userId, id) end
   end
   redis.call('HDEL', KEYS[3], id)
   redis.call('ZREM', KEYS[4], id)
@@ -46,7 +61,7 @@ local function allowedCookie(record, hash)
   return hash == record.cookieHash or (hash == record.previousHash and record.previousUntil > time)
 end
 if p.op == 'state-put' then
-  if redis.call('HLEN', KEYS[1]) >= 1000 or redis.call('HEXISTS', KEYS[1], p.id) == 1 then return false end
+  if redis.call('HLEN', KEYS[1]) >= ${MAX_PENDING_SIGN_INS} or redis.call('HEXISTS', KEYS[1], p.id) == 1 then return false end
   redis.call('HSET', KEYS[1], p.id, cjson.encode(p.record))
   redis.call('ZADD', KEYS[2], p.record.expiresAt, p.id)
   redis.call('PEXPIRE', KEYS[1], p.ttl)
@@ -73,11 +88,27 @@ elseif p.op == 'state-take' then
   redis.call('ZREM', KEYS[2], p.id)
   return raw
 elseif p.op == 'session-put' then
-  if redis.call('HLEN', KEYS[3]) >= 10000 or redis.call('HEXISTS', KEYS[3], p.record.sessionId) == 1 then return false end
+  if redis.call('HEXISTS', KEYS[3], p.record.sessionId) == 1 then return false end
+  local owned = {}
+  local raw = redis.call('HGET', KEYS[6], p.record.userId)
+  if raw then
+    for _, id in ipairs(cjson.decode(raw)) do
+      if redis.call('HEXISTS', KEYS[3], id) == 1 then table.insert(owned, id) end
+    end
+  end
+  -- Signing in again retires the account's oldest sessions past the limit.
+  while #owned >= ${MAX_SESSIONS_PER_USER} do
+    local oldest = table.remove(owned, 1)
+    local old = redis.call('HGET', KEYS[3], oldest)
+    removeSession(oldest, old and cjson.decode(old) or nil)
+  end
+  if redis.call('HLEN', KEYS[3]) >= ${MAX_SESSIONS} then return false end
   save(p.record)
   redis.call('ZADD', KEYS[4], p.record.expiresAt, p.record.sessionId)
   redis.call('HSET', KEYS[5], p.record.cookieHash, p.record.sessionId)
-  for i = 3, 5 do redis.call('PEXPIRE', KEYS[i], p.ttl) end
+  table.insert(owned, p.record.sessionId)
+  redis.call('HSET', KEYS[6], p.record.userId, cjson.encode(owned))
+  for i = 3, 6 do redis.call('PEXPIRE', KEYS[i], p.ttl) end
   return 'ok'
 elseif p.op == 'cookie-get' then
   local id = redis.call('HGET', KEYS[5], p.hash)
@@ -140,7 +171,7 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, workos, now = Date.now, onLogout = () => {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
@@ -152,7 +183,17 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   const sdk = enabled ? workos ?? new WorkOS(apiKey, { clientId, timeout: 10_000, maxRetries: 1 }) : null;
   // Use a caller-provided hash tag unchanged; otherwise derive a stable safe tag.
   const namespace = typeof prefix === 'string' && /\{[^{}]+\}/.test(prefix) ? prefix : `{${digest(String(prefix))}}`;
-  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies'].map(suffix => `${namespace}:auth:${suffix}`);
+  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies', 'user-sessions'].map(suffix => `${namespace}:auth:${suffix}`);
+  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, token: githubToken, fetcher: githubFetch, now,
+    store: createRedisGitHubNameStore({ redis, key: `${namespace}:auth:github` }) });
+  // Residents are shown by GitHub username; only an admin account is Jevica.
+  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
+  // Sessions from before usernames were stored, or whose lookup failed, are
+  // named from the per-user record, which is refreshed at most every 10 minutes.
+  const named = async (user, record) => {
+    if (!user || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
+    return { ...user, name: nameOf(record.userId, await github.known(record.userId).catch(() => null)) };
+  };
   const transaction = data => redis.eval(TRANSACTION, keys.length, ...keys, JSON.stringify({ ...data, now: now() }));
   const decode = raw => raw ? JSON.parse(raw) : null;
   const binding = record => ({ sessionId: record.sessionId, userId: record.userId, generation: record.generation });
@@ -175,8 +216,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         || claims.client_id !== clientId) return null;
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
-      const name = [result.user.firstName, result.user.lastName].filter(part => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
-      return { userId: record.userId, sessionId: record.sessionId, name, email: result.user.email, expiresAt, csrfToken: record.csrfToken };
+      return { userId: record.userId, sessionId: record.sessionId, name: nameOf(record.userId, record), email: result.user.email, expiresAt, csrfToken: record.csrfToken };
     } catch { return null; }
   }
 
@@ -196,7 +236,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         const user = identity(verified, record);
         if (!user || !enabled || !await active(record, hash)) return null;
         if (res && sealed !== presented) setCookie(res, SESSION_COOKIE, sealed, Math.floor((record.expiresAt - now()) / 1000));
-        return user;
+        return named(user, record);
       }
       if (!res || verified.reason !== 'invalid_jwt') return null;
       const owner = token();
@@ -215,7 +255,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           nextHash: digest(refreshed.sealedSession), sealedSession: refreshed.sealedSession, grace: COOKIE_GRACE }));
         if (!committed || !enabled || !await active(committed, committed.cookieHash)) return null;
         setCookie(res, SESSION_COOKIE, refreshed.sealedSession, Math.floor((record.expiresAt - now()) / 1000));
-        return user;
+        return named(user, committed);
       } finally {
         await transaction({ op: 'refresh-release', ...binding(record), owner });
       }
@@ -239,6 +279,9 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       logSessionRejection(verified, record, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
+    // Only a verified session is looked up on GitHub.
+    const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+    Object.assign(record, { githubId, login });
     if (!enabled) throw new Error('Auth closed');
     if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
@@ -346,6 +389,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
+        const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+        Object.assign(record, { githubId, login });
         if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });

@@ -2,7 +2,7 @@ import { createPedestrianNetwork } from './pedestrian-network.js';
 import { createWalkingEnvironment } from './walking.js';
 
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
-const finite = point => Array.isArray(point) && point.length>=2 && point.slice(0,2).every(Number.isFinite);
+const finite = point => Array.isArray(point) && point.length>=2 && Number.isFinite(point[0]) && Number.isFinite(point[1]);
 function inside(point,ring) {
   let result=false;
   for(let i=0,j=ring.length-1;i<ring.length;j=i++) {
@@ -14,29 +14,57 @@ function inside(point,ring) {
 
 // Small metric grid, queried lazily. It is a simulation route planner, not a
 // survey of pedestrian access. Large neighborhood scenes stay outside this budget.
-export function createResidentNavigation(world,{allowRoads=false}={}) {
+export function createResidentNavigation(world,{allowRoads=false,placedObjects=[]}={}) {
   const bounds=world.bounds_m;
   if(world.scene!=='district' || !bounds?.every(Number.isFinite)) return null;
   const [west,south,east,north]=bounds, cell=1;
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;
   if(width<2 || height<2 || size>80000) return null;
-  const environment=createWalkingEnvironment(world), trunks=new Map(), pedestrian=createPedestrianNetwork(world);
+  const environment=createWalkingEnvironment(world), trunks=new Map(), wideTrunks=[], pedestrian=createPedestrianNetwork(world);
   for(const support of world.vegetation?.branch_supports ?? []) {
-    const [x,y]=support.position,key=`${Math.floor(x/4)},${Math.floor(y/4)}`;
-    if(!trunks.has(key)) trunks.set(key,[]);
-    trunks.get(key).push([x,y,0.4+Math.max(0.065,(support.height_m ?? 20)*0.014)]);
-  }
-  const free = point => {
-    if(!finite(point) || !environment.isFree(point[0],-point[1]) || (world.site_ring && !inside(point,world.site_ring))) return false;
-    const bx=Math.floor(point[0]/4),by=Math.floor(point[1]/4);
-    for(let x=bx-1;x<=bx+1;x++) for(let y=by-1;y<=by+1;y++) {
-      if(trunks.get(`${x},${y}`)?.some(stem=>distance(point,stem)<stem[2])) return false;
+    const [x,y]=support.position,radius=0.4+Math.max(0.065,(support.height_m ?? 20)*0.014);
+    if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(radius))continue;
+    const stem=[x,y,radius*radius],left=Math.floor((x-radius)/4),right=Math.floor((x+radius)/4);
+    const bottom=Math.floor((y-radius)/4),top=Math.floor((y+radius)/4);
+    if((right-left+1)*(top-bottom+1)>4096) {wideTrunks.push(stem);continue;}
+    for(let bx=left;bx<=right;bx++)for(let by=bottom;by<=top;by++) {
+      const key=`${bx},${by}`;
+      if(!trunks.has(key))trunks.set(key,[]);
+      trunks.get(key).push(stem);
     }
-    return true;
+  }
+  const staticFree = point => {
+    if(!finite(point) || !environment.isFree(point[0],-point[1]) || (world.site_ring && !inside(point,world.site_ring))) return false;
+    const blocked=stem=>(point[0]-stem[0])**2+(point[1]-stem[1])**2<stem[2];
+    return !trunks.get(`${Math.floor(point[0]/4)},${Math.floor(point[1]/4)}`)?.some(blocked) && !wideTrunks.some(blocked);
   };
   const ground = point => environment.groundAt(point[0],-point[1]);
-  const canTravel = (a,b) => {
+  const objectBuckets=new Map(),wideObjects=[],bucketSize=4;
+  const indexObjects=()=>{
+    objectBuckets.clear();wideObjects.length=0;
+    for(const object of placedObjects){
+      const b=object.bounds;
+      if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)){wideObjects.push(object);continue;}
+      const left=Math.floor((b[0]-.35)/bucketSize),right=Math.floor((b[2]+.35)/bucketSize);
+      const bottom=Math.floor((b[1]-.35)/bucketSize),top=Math.floor((b[3]+.35)/bucketSize);
+      if((right-left+1)*(top-bottom+1)>4096){wideObjects.push(object);continue;}
+      for(let x=left;x<=right;x++)for(let z=bottom;z<=top;z++){
+        const key=`${x},${z}`;if(!objectBuckets.has(key))objectBuckets.set(key,[]);objectBuckets.get(key).push(object);
+      }
+    }
+  };
+  indexObjects();
+  const objectFree=point=>{
+    if(!placedObjects.length)return true;
+    const x=point[0],z=-point[1],near=objectBuckets.get(`${Math.floor(x/bucketSize)},${Math.floor(z/bucketSize)}`);
+    if(!near?.length&&!wideObjects.length)return true;
+    const y=ground(point)+.9,blocked=object=>object.contains(x,y,z,.35,.9);
+    return !near?.some(blocked)&&!wideObjects.some(blocked);
+  };
+  const free=point=>staticFree(point)&&objectFree(point);
+  const canTravel = (a,b,objects=true) => {
     if(!finite(a) || !finite(b)) return false;
+    const clear=objects?free:staticFree;
     const length=distance(a,b);
     if(length>Math.hypot(east-west,north-south)) return false;
     // Resolve thin fixture corners that the physical walker cannot step through.
@@ -44,12 +72,14 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
     // A body already beside a fixture must not choose a long segment that
     // skips the immediate edge in the first sample interval.
     if(length>0)for(const offset of [.001,.01,.025])for(const t of [Math.min(.5,offset/length),Math.max(.5,1-offset/length)]) {
-      if(!free([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]))return false;
+      if(!clear([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]))return false;
     }
     let previous=ground(a);
     for(let i=0;i<=steps;i++) {
-      const point=[a[0]+(b[0]-a[0])*i/steps,a[1]+(b[1]-a[1])*i/steps],z=ground(point);
-      if(!free(point) || !Number.isFinite(z) || Math.abs(z-previous)>0.25) return false;
+      const point=[a[0]+(b[0]-a[0])*i/steps,a[1]+(b[1]-a[1])*i/steps];
+      if(!clear(point))return false;
+      const z=ground(point);
+      if(!Number.isFinite(z) || Math.abs(z-previous)>0.25) return false;
       previous=z;
     }
     return true;
@@ -57,20 +87,50 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
   const travelCost=(a,b)=>allowRoads?distance(a,b):pedestrian.segmentCost(a,b);
   const walkable = (a,b) => canTravel(a,b) && Number.isFinite(travelCost(a,b));
   const position = id => [west+(id%width)*cell,south+Math.floor(id/width)*cell];
-  const occupancy=new Int8Array(size),edges=new Map();
-  const available = id => {
-    if(!occupancy[id]) occupancy[id]=free(position(id)) && (allowRoads||pedestrian.classify(position(id))!=='road')?1:-1;
+  const occupancy=new Int8Array(size),edges=new Map(),objectOccupancy=new Int8Array(size),objectEdges=new Map();
+  const staticAvailable = id => {
+    if(!occupancy[id]) occupancy[id]=staticFree(position(id)) && (allowRoads||pedestrian.classify(position(id))!=='road')?1:-1;
     return occupancy[id]===1;
   };
-  const links = id => {
+  const available=id=>{
+    if(!staticAvailable(id))return false;
+    if(!placedObjects.length)return true;
+    if(!objectOccupancy[id])objectOccupancy[id]=objectFree(position(id))?1:-1;
+    return objectOccupancy[id]===1;
+  };
+  const staticLinks = id => {
     if(edges.has(id)) return edges.get(id);
     const x=id%width,y=Math.floor(id/width),result=[];
     for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++) {
       if(!dx && !dy || x+dx<0 || x+dx>=width || y+dy<0 || y+dy>=height) continue;
       const next=id+dx+dy*width;
-      if(available(next) && walkable(position(id),position(next))) result.push(next);
+      if(!staticAvailable(next))continue;
+      // Each grid edge is traversable in both directions. Reuse the reverse
+      // edge when its other endpoint has already been expanded by A*.
+      const previous=edges.get(next);
+      // Collision and pedestrian cost are both expensive; evaluate each once
+      // for a new edge, then reuse the cached reverse edge on later searches.
+      const cost=previous
+        ? previous.find(link=>link.id===id)?.cost??Infinity
+        : canTravel(position(id),position(next),false)?travelCost(position(id),position(next)):Infinity;
+      if(Number.isFinite(cost))result.push({id:next,cost});
     }
     edges.set(id,result);return result;
+  };
+  const links=id=>{
+    const base=staticLinks(id);
+    if(!placedObjects.length)return base;
+    if(objectEdges.has(id))return objectEdges.get(id);
+    const start=position(id),result=base.filter(link=>{
+      if(!available(link.id))return false;
+      const end=position(link.id),length=distance(start,end),steps=Math.ceil(length/.05);
+      // Match canTravel's probes beside thin corners at both endpoints.
+      for(const offset of [.001,.01,.025])for(const t of [Math.min(.5,offset/length),Math.max(.5,1-offset/length)])
+        if(!objectFree([start[0]+(end[0]-start[0])*t,start[1]+(end[1]-start[1])*t]))return false;
+      for(let i=0;i<=steps;i++)if(!objectFree([start[0]+(end[0]-start[0])*i/steps,start[1]+(end[1]-start[1])*i/steps]))return false;
+      return true;
+    });
+    objectEdges.set(id,result);return result;
   };
   const connectors = point => {
     const x=Math.round((point[0]-west)/cell),y=Math.round((point[1]-south)/cell),result=[];
@@ -83,7 +143,7 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
   };
   const gridRoute = (start,end) => {
     if(!free(start) || !free(end)) return null;
-    if(walkable(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
+    if(canTravel(start,end) && travelCost(start,end)<=distance(start,end)*1.15) return [[...end]];
     const starts=connectors(start),goals=new Set(connectors(end));
     if(!starts.length || !goals.size) return null;
     const scores=new Float64Array(size).fill(Infinity),parent=new Int32Array(size).fill(-1),closed=new Uint8Array(size),heap=[];
@@ -97,14 +157,14 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
       if(heap.length) { let i=0;while(i*2+1<heap.length) {let child=i*2+1;if(child+1<heap.length && heap[child+1].priority<heap[child].priority) child++;if(heap[child].priority>=last.priority) break;heap[i]=heap[child];i=child;}heap[i]=last; }
       return first;
     };
-    for(const id of starts) {scores[id]=Number.isFinite(travelCost(start,position(id)))?travelCost(start,position(id)):distance(start,position(id))*8;push(id,scores[id]);}
+    for(const id of starts) {const cost=travelCost(start,position(id));scores[id]=Number.isFinite(cost)?cost:distance(start,position(id))*8;push(id,scores[id]);}
     let found=-1,visits=0;
     while(heap.length && visits<15000) {
       const {id,cost}=pop();if(closed[id] || cost>scores[id]) continue;
       closed[id]=1;visits++;
       if(goals.has(id)) {found=id;break;}
-      for(const next of links(id)) {
-        const score=cost+travelCost(position(id),position(next));
+      for(const link of links(id)) {
+        const next=link.id,score=cost+link.cost;
         if(score>=scores[next]) continue;
         scores[next]=score;parent[next]=id;push(next,score);
       }
@@ -118,7 +178,7 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
     while(index<path.length) {
       let next=index;
       let retained=travelCost(previous,path[next]);
-      while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!walkable(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
+      while(next+1<path.length) {retained+=travelCost(path[next],path[next+1]);if(!canTravel(previous,path[next+1]) || travelCost(previous,path[next+1])>retained*1.03)break;next++;}
       result.push(path[next]);previous=path[next];index=next+1;
     }
     return result;
@@ -158,5 +218,10 @@ export function createResidentNavigation(world,{allowRoads=false}={}) {
     }
     return [...point.slice(0,2)];
   };
-  return { route,canTravel,canWalk:walkable,free,ground,pedestrian,sidewalkPoint };
+  // Static geography remains fingerprinted/immutable. Assembly edits evict
+  // only dynamic occupancy/edges and rebuild the nearby-object index. Held
+  // routes still check each movement and recover through the existing slot.
+  const invalidate=()=>{objectOccupancy.fill(0);objectEdges.clear();indexObjects();};
+  const setPlacedObjects=objects=>{placedObjects.splice(0,placedObjects.length,...objects);invalidate();};
+  return { route,canTravel,canWalk:walkable,free,ground,pedestrian,sidewalkPoint,invalidate,setPlacedObjects };
 }

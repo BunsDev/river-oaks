@@ -8,6 +8,7 @@ import { createWorldGateway } from '../world-gateway.js';
 import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
+import { placesOf } from '../../preview/src/places.js';
 
 test('contact world invitations use the sender room and persist across gateway replacement', {skip:!process.env.REDIS_URL,timeout:30_000},async t=>{
   const redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
@@ -34,7 +35,7 @@ test('contact world invitations use the sender room and persist across gateway r
   assert.equal((await post('admin','/api/social/invite-world?world=moon-garden',{peerId:'guest-user'})).status,409);
   const open=async user=>{
     const ticket=(await (await post(user,'/api/multiplayer/ticket?world=moon-garden',{})).json()).ticket;
-    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
     sockets.push(socket);
     await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{if(JSON.parse(raw).type==='snapshot')resolve();});});
     return socket;
@@ -53,10 +54,34 @@ test('contact world invitations use the sender room and persist across gateway r
   const received=await post('guest','/api/social/messages?world=river-oaks',{peerId:admin});
   assert.equal(received.status,200);
   assert.deepEqual((await received.json()).messages,[message]);
+  const published=(await (await fetch(`${base}/api/world-data?world=moon-garden`)).json()).world;
+  const place=placesOf(published).find(item=>item.kind==='spot')??placesOf(published)[0];
+  assert.ok(place);
+  assert.equal((await post('admin','/api/social/invite-place?world=moon-garden',{peerId:'guest-user',placeId:'spot:missing'})).status,409);
+  assert.equal((await post('admin','/api/social/invite-place?world=moon-garden',{peerId:'guest-user',placeId:place.id,worldId:'river-oaks'})).status,400);
+  const meeting=await post('admin','/api/social/invite-place?world=moon-garden',{peerId:'guest-user',placeId:place.id});
+  assert.equal(meeting.status,200);
+  const {message:placeMessage}=await meeting.json();
+  assert.equal(placeMessage.kind,'place-invite');
+  assert.equal(placeMessage.worldId,'moon-garden');
+  assert.equal(placeMessage.placeId,place.id);
+  assert.equal(placeMessage.placeName,place.name);
+  assert.deepEqual((await (await post('guest','/api/social/messages?world=river-oaks',{peerId:admin})).json()).messages,[message,placeMessage]);
   assert.equal((await post('missing','/api/social/messages?world=river-oaks',{peerId:admin})).status,401);
   for(const socket of sockets)socket.terminate();
   await gateway.close();gateway=makeGateway();
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   base=`http://127.0.0.1:${gateway.server.address().port}`;
-  assert.deepEqual((await (await post('guest','/api/social/messages?world=river-oaks',{peerId:admin})).json()).messages,[message]);
+  assert.deepEqual((await (await post('guest','/api/social/messages?world=river-oaks',{peerId:admin})).json()).messages,[message,placeMessage]);
+  const adminSocket=await open('admin');
+  const editable=(await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json());
+  const renamed={...editable.publishedRegion,places:editable.publishedRegion.places.map(item=>item.id===place.ref?{...item,name:'New Meeting Place'}:item)};
+  assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:renamed})).status,200);
+  const disconnected=new Promise(resolve=>adminSocket.once('close',resolve));
+  assert.equal((await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,200);
+  await disconnected;
+  await open('admin');
+  const revised=await post('admin','/api/social/invite-place?world=moon-garden',{peerId:'guest-user',placeId:place.id});
+  assert.equal(revised.status,200);
+  assert.equal((await revised.json()).message.placeName,'New Meeting Place');
 });

@@ -1,3 +1,5 @@
+import { accountName } from '../preview/src/resident-names.js';
+
 /** A profile is readable through an in-world encounter or an accepted contact. */
 export async function profileAction({action,identity,profiles,social,readBody,visiblePlayer,allowWrite}) {
   if(!profiles)return {status:503,value:{error:'Profiles are unavailable.'}};
@@ -21,5 +23,5 @@ export async function profileAction({action,identity,profiles,social,readBody,vi
     if(!visible && !contact)return {status:404,value:{error:'Profile not found.'}};
     name=visible?.name??contact.peer.name;
   }
-  return {status:200,value:{profile:{...(await profiles.get(peerId)),userId:peerId,name}}};
+  return {status:200,value:{profile:{...(await profiles.get(peerId)),userId:peerId,name:accountName(peerId,name)}}};
 }

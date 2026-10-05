@@ -12,11 +12,14 @@ import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { bindRenderVisibility } from './render-lifecycle.js';
+import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
+import { setupRailNavigation } from './rail-navigation.js';
+import { isGameplayKey } from './keyboard-input.js';
 import { createAccountLandmarks, createLandmarks, destinationFromSearch, openSpotNear, placesOf } from './places.js';
 import { setupPlacesUI } from './places-ui.js';
 import { renderPixelRatio } from './viewport.js';
@@ -48,9 +51,11 @@ import { createPlayMode } from './play-mode.js';
 import './play-mode.css';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
+import { createSeatAndWater } from './seat-and-water.js';
+import { createSharedSeatingControls } from './shared-seating-ui.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
 import { builderTarget, evaluatePlacement, poseFeet } from './builder-mode.js';
-import { buildKind, buildRoads as buildSiteRoads } from './shared-build.js';
+import { buildKind, buildGeometry, buildRoads as buildSiteRoads } from './shared-build.js';
 import './style.css';
 import './playground-theme.css';
 import './district-theme.css';
@@ -58,6 +63,7 @@ import './immersive.css';
 import './sidebar.css';
 import './visual-finish.css';
 import './retro-finish.css';
+import './rail-navigation.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
 import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
@@ -65,11 +71,14 @@ import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
+import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 
 setupUIMotion();
 setupThemeControls();
-setupSidebar();
+const sidebar = setupSidebar();
+let sidebarSections, playDock, clearView;
+setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView });
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -77,16 +86,18 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
+const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
-let worldPortal = null;
+let worldPortal = null, worldEvents = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
-let multiplayer, remotePlayers, buildLayer, buildControls;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let soloCanGrantWishes = false;
 async function refreshSoloPrivileges() {
   try {
@@ -96,12 +107,15 @@ async function refreshSoloPrivileges() {
   } catch { soloCanGrantWishes = false; }
   if (community?.state) community.refresh();
   worldPortal?.refreshCapability();
+  districtUI?.refreshAccess();
   return soloCanGrantWishes;
 }
 let autoTownDecision = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
+const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
+const creationToolsEnabled = import.meta.env.VITE_CREATION_TOOLS === 'true';
 let playModeStorage = null;
 try { playModeStorage = window.localStorage; } catch { /* The current visit still plays solo. */ }
 if (!playModeStorage) try { playModeStorage = window.sessionStorage; } catch { /* Stay in single player. */ }
@@ -172,7 +186,7 @@ function initializeRenderer() {
     getVisitor: () => walking?.active ? walking.getPosition() : null,
     getVisitorPose: () => walking?.getPose() ?? null,
     getObstacles: () => forceObjects.map(object=>[object.position.x,-object.position.z,object.position.y]),
-    getPersona: () => playerAvatar?.form ?? 'visitor',
+    getPersona: () => playerAvatar?.persona ?? 'visitor',
     getCanGrantWishes: () => soloCanGrantWishes,
     authorizeSoloWish: refreshSoloPrivileges,
     onWish: () => playerAvatar?.cast(performance.now()),
@@ -187,10 +201,12 @@ function initializeRenderer() {
         return result.ok;
       });
       if (local.indoor) {
+        const store = world.stores.find(store => store.id === local.storeId);
+        if (!canEnterStore(store)) return false;
         const room = storeRoomsFor(world).find(room => room.storeId === local.storeId);
         const position = walking.active ? walking.getPosition() : null;
         if (room && (!position || !room.contains(position[0], position[1]))) {
-          enterStore(world.stores.find(store => store.id === local.storeId));
+          enterStore(store);
         }
         return walking.focusPerson(local);
       }
@@ -206,14 +222,21 @@ function initializeRenderer() {
     if (!document.hidden && !multiplayer && ['solo','off','unavailable','signed-out'].includes(host.dataset.multiplayer)) void refreshSoloPrivileges();
   });
   $('.panel-scroll').prepend($('#community-section'));
-  worldPortal=createWorldPortal({host:$('#explore-section'),getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
-  void worldPortal.load();
-  setupSidebarSections({ graphics: quality.element });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer) });
+  if (worldMapEnabled) {
+    worldPortal=createWorldPortal({host:$('#explore-section'),creationToolsEnabled,getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
+    void worldPortal.load();
+  }
+  worldEvents=createWorldEvents({host:$('#explore-section'),creationToolsEnabled});
+  void worldEvents.load();
+  sidebarSections = setupSidebarSections({ graphics: quality.element });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
+  walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
+    requestVehicleExit: position => multiplayer?multiplayer.travel({position:[position[0],-position[2]]}):Promise.resolve({ok:true}),
     getPortrait: id => portraits.portrait(id) });
+  seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer });
   breakableGlass=createBreakableGlass({reducedMotion,
     groundAt:(x,z)=>world?groundSurfaceHeight(world,x,z):0,
     onChange:()=>storefrontReflections?.invalidate(),
@@ -221,11 +244,11 @@ function initializeRenderer() {
   liftSparkles=createLiftSparkles({reducedMotion});scene.add(liftSparkles.object);
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
-  const playDock = createPlayDock(), visitTools = playDock.content;
-  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
+  playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
+  if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'),buildControls.panel,$('.auto-controls'), invasion.panel);
+  visitTools.append($('.player-controls'),$('.auto-controls'),...(buildControls?[buildControls.panel]:[]), invasion.panel);
   force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
@@ -240,12 +263,13 @@ function initializeRenderer() {
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
-  visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
+  visitTools.insertBefore(birdCamsUI.panel, buildControls?.panel ?? invasion.panel);
   $('#viewport').append(playDock.element);
-  createClearView({ viewport: $('#viewport') });
+  clearView = createClearView();
   let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
   landmarks = createLandmarks({ storage });
-  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0 });
+  placesUI = setupPlacesUI({ places: [], landmarks, worldMapEnabled, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
+    isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
   if (multiplayerMode === 'choice') {
     createPlayMode({ viewport: $('#viewport'), storage: playModeStorage, active: playMode.mode, remembered: playMode.remembered });
     if (playMode.mode === 'multiplayer') startMultiplayer();
@@ -258,7 +282,7 @@ function initializeRenderer() {
     else {if (town.signIn) $('#connection').textContent = 'Playing solo · sign in to join the shared town';void refreshSoloPrivileges();}
   });
   else {host.dataset.multiplayer = 'off';void refreshSoloPrivileges();}
-  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior });
+  districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior, canEnter: canEnterStore });
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
@@ -287,8 +311,9 @@ function initializeRenderer() {
 // player's appearance; solo character choices stay on this device.
 function startMultiplayer() {
   if (multiplayer) return;
+  if (localsGroup) localsGroup.visible = false;
   landmarkAccountId = null;
-  landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+  landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
   placesUI?.setLandmarks(landmarks);
   autoControls?.stop(); invasion?.reset();
   $('.auto-controls').hidden = true;
@@ -299,36 +324,47 @@ function startMultiplayer() {
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
+    creationToolsEnabled,
     getPose: () => walking?.getPose(),
+    getMeetingPlaces: () => world ? placesOf(world) : [],
+    getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
+    onHomeAccess: () => districtUI?.refreshAccess(),
     onSnapshot: snapshot => { if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]); },
     onCorrection: player => { if (world && player) walking.applyServerPose(player); },
     onPlayers: (players, selfId) => {
       remotePlayers.sync(players, selfId);
+      placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
+      walking?.syncSeating(self);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
+      districtUI?.refreshAccess();
       if (self) void worldPortal?.load();
       if (self) void arriveAtSharedLink();
       buildControls?.sync(players.length ? multiplayer?.snapshot?.builds ?? [] : [], self?.canBuild ? selfId : null);
       if (self?.canBuild) buildControls?.loadInventory(selfId);
       if (self && landmarkAccountId !== selfId) {
         landmarkAccountId = selfId;
-        const store = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        const store = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
         landmarks = store;
         placesUI?.setLandmarks(store);
         store.load().then(() => { if (landmarks === store) placesUI?.refresh(); })
           .catch(error => { if (landmarks === store) placesUI?.say(error.message, 'error'); });
       } else if (!self && landmarkAccountId !== null) {
         landmarkAccountId = null;
-        landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data) });
+        landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
         placesUI?.setLandmarks(landmarks);
       }
     },
     onPlaySolo: multiplayerMode === 'choice' ? () => switchPlayMode(playModeStorage, 'solo') : null,
   });
+  seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
+    getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
+    request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
+    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false});
   host.dataset.multiplayer = 'joined';
 }
 
@@ -439,12 +475,13 @@ function populateWorld(data) {
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
   const furniture=buildStreetFurniture(data,streetSpace);
+  seatAndWater?.load(data,streetSpace);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
-  localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
+  localsGroup = buildLocals(data, multiplayer ? [] : community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: Boolean(multiplayer) });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
-  layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
+  layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
@@ -487,9 +524,10 @@ function birdFlightEnvironment() {
   if(birdEnvironment?.base!==base)birdEnvironment={base,value:treeFlightEnvironment(base,world)};
   return birdEnvironment.value;
 }
-function walkingEnvironment() {
-  if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world) };
-  return arrivalEnvironment.environment;
+
+function walkingEnvironment(includeCreations=true) {
+  if (arrivalEnvironment?.world !== world) arrivalEnvironment = { world, environment: createWalkingEnvironment(world,[{contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false}]), placement:createWalkingEnvironment(world) };
+  return includeCreations?arrivalEnvironment.environment:arrivalEnvironment.placement;
 }
 
 function enterWalk(position, lookAt, pitch = 0) {
@@ -497,7 +535,14 @@ function enterWalk(position, lookAt, pitch = 0) {
   walking.enter(world, position, lookAt, pitch);
 }
 
+function canEnterStore(store) {
+  if (store?.access !== 'owner') return true;
+  return multiplayer ? Boolean(multiplayer.snapshot?.players.find(player => player.id === multiplayer.identity?.id)?.canBuild
+    || multiplayer.homeAccess.some(home => home.storeId === store.id)) : soloCanGrantWishes;
+}
+
 function enterStore(store) {
+  if (!canEnterStore(store)) return { ok: false, message: 'This home is private. Jevica can invite you inside.' };
   if (multiplayer) { districtUI.select(store.id); return multiplayer.travel({storeId:store.id,mode:'enter'}); }
   const room = storeRoomsFor(world).find(item => item.storeId === store.id);
   if (!room) return arriveAtStore(store);
@@ -518,8 +563,9 @@ function describeInterior(store) {
   const room = world ? storeRoomsFor(world).find(item => item.storeId === store.id) : null;
   if (!room) return 'Exterior viewing destination.';
   const { label, staff, guests, mannequins, highlights } = multiplayer ? sharedRoomSummary(room) : room.summary;
-  const people = [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
-  return `${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Imagined interior, not a photographed store.`;
+  const people = store.category === 'home' ? `${guests} resident${guests === 1 ? '' : 's'}`
+    : [`${staff} associate${staff === 1 ? '' : 's'}`, `${guests} guest${guests === 1 ? '' : 's'}`, mannequins ? `${mannequins} mannequin${mannequins === 1 ? '' : 's'}` : null].filter(Boolean).join(', ');
+  return `${store.access === 'owner' ? 'Invitation-only home · ' : ''}${label} · ${Math.round(room.width)} × ${Math.round(room.depth)} m walk-in floor · ${people} · ${highlights.join(', ')}. Fictional room layout.`;
 }
 
 // Places: a spot teleports to a clear outdoor point beside it, a storefront
@@ -529,7 +575,8 @@ function describeInterior(store) {
 async function goToPlace(place) {
   if (!world || !walking) return { ok: false, message: 'The district is still loading.' };
   if (multiplayer) {
-    const target = place.kind === 'spot' ? { placeId: place.ref } : place.kind === 'shop' ? { storeId: place.ref, mode: 'arrive' } : { position: [place.position[0], place.position[1]] };
+    const target = place.kind === 'spot' ? { placeId: place.ref } : place.kind === 'shop' ? { storeId: place.ref, mode: 'arrive' }
+      : place.kind === 'peer' ? { peerId: place.ref } : { position: [place.position[0], place.position[1]] };
     const result = await multiplayer.travel(target);
     if (result?.ok && Number.isFinite(place.yaw) && ['landmark', 'link'].includes(place.kind)) walking.setYaw(place.yaw);
     return result;
@@ -638,6 +685,9 @@ async function loadWorld() {
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
+    worldEvents?.setPlaces(places);
+    placesUI?.setWorld(data);
+    placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
     const linked = destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {
@@ -646,7 +696,7 @@ async function loadWorld() {
         const result = await goToPlace(linked);
         placesUI?.say(result?.ok === false ? (result.message ?? `${linked.name} is not reachable right now.`) : `You're at ${linked.name}`, result?.ok === false ? 'error' : 'ok');
       }
-    }
+    } else if(new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
   } finally {
@@ -682,6 +732,7 @@ function followSunShadow() {
 }
 
 function render(now) {
+  const auditStart = renderAudit ? performance.now() : 0;
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
@@ -690,7 +741,7 @@ function render(now) {
   breakableGlass?.update(delta);
   playerAvatar?.react(now);
   community?.update(delta, now);
-  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
+  if (!multiplayer && localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
   layers.trees?.userData.update?.(camera.position);
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   community?.updateSpeech(delta);
@@ -709,6 +760,8 @@ function render(now) {
   birdCams?.update(delta);
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
+  seatingControls?.update(now);
+  if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -721,7 +774,7 @@ function render(now) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
     else {
-      const stop = world.stores.find(store => store.name === 'Dior').visit;
+      const stop = world.stores.find(store => store.name === 'Dior')?.visit ?? world.stores[0]?.visit ?? world.walkSpawn;
       reflectionPosition.set(stop[0], terrainHeight(world.terrain, stop[0], stop[1]) + 2.5, -stop[1]);
     }
     storefrontReflections.update(now, reflectionPosition);
@@ -741,6 +794,7 @@ function render(now) {
     host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
+  renderAudit?.frame(now, performance.now() - auditStart);
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -771,7 +825,7 @@ const BIRD_ACTIVITY = [[/held by the force|enchant|wish/i, 7], [/chatting|helpin
 function birdInterests() {
   const interests = [];
   for (const local of community?.state?.locals ?? []) {
-    if (local.indoor || !Array.isArray(local.position)) continue;
+    if (multiplayer || local.indoor || !Array.isArray(local.position)) continue;
     const status = String(local.status ?? ''), weight = BIRD_ACTIVITY.find(([pattern]) => pattern.test(status))?.[1] ?? 2;
     interests.push({ id: `local:${local.id}`, label: status ? `${local.name} (${status})` : local.name, position: [local.position[0], local.position[1]], weight: local.id === community.state.selectedId ? weight + 3 : weight });
   }
@@ -788,9 +842,9 @@ function updateBuilder() {
   const builder = buildControls?.builder;
   if (!builder?.active || !world || !walking?.active) { buildLayer?.setGhost(null); builderAim = ''; return; }
   const pose = walking.getPose();
-  if (!pose || pose.flying || pose.riding || pose.roomId) {
+  if (!pose || pose.flying || pose.riding || pose.roomId && !world.stores.some(store=>store.id===pose.roomId && store.category==='home')) {
     buildLayer?.setGhost(null);
-    if (builderAim !== 'grounded') { builderAim = 'grounded'; buildControls.aimAt(null, { valid: false, message: 'Stand outside on the ground to build.' }); }
+    if (builderAim !== 'grounded') { builderAim = 'grounded'; buildControls.aimAt(null, { valid: false, message: 'Stand outside or inside a home to build.' }); }
     return;
   }
   let ray = null;
@@ -798,19 +852,20 @@ function updateBuilder() {
     builderPointer.ray.setFromCamera(builderPointer.at, camera);
     ray = { origin: builderPointer.ray.ray.origin.toArray(), direction: builderPointer.ray.ray.direction.toArray() };
   }
-  const target = builderTarget(pose, ray, {grid:builder.grid}), kindId = builder.moving?.kind ?? builder.kind, kind = buildKind(kindId);
+  const target = builderTarget(pose, ray, {grid:builder.grid}), kindId = builder.moving?.kind ?? builder.kind, kind = buildGeometry({kind:kindId,assembly:builder.assembly});
+  if(!kind){buildLayer?.setGhost(null);buildControls.aimAt(null,{valid:false,message:'Fix the object parts before placing.'});return;}
   if (world !== builderRoads?.world) builderRoads = { world, roads: buildSiteRoads(world) };
   const snapshot = multiplayer?.snapshot;
-  const key = JSON.stringify([target, kindId, builder.finish, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
+  const key = JSON.stringify([target, kindId, builder.finish, builder.assembly, builder.yaw, builder.moving?.id, snapshot?.revision, pose.position.map(v => Math.round(v * 10))]);
   if (key === builderAim) return;
   builderAim = key;
-  const verdict = evaluatePlacement({ environment: walkingEnvironment(), roads: builderRoads.roads, kind, position: target, feet: poseFeet(pose),
+  const verdict = evaluatePlacement({ environment: walkingEnvironment(false), roads: builderRoads.roads, kind, assembly:builder.assembly, yaw:builder.yaw, position: target, feet: poseFeet(pose),
     builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
-  buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
+  buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, assembly:builder.assembly, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
   buildControls.aimAt(target, verdict);
 }
 document.addEventListener('keydown', event => {
-  if (!buildControls?.builder.active || event.target.closest?.('input, textarea, select, button, [contenteditable]')) return;
+  if (!buildControls?.builder.active || !isGameplayKey(event) || event.target.closest?.('button')) return;
   if (event.code === 'KeyR' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); buildControls.rotate(event.shiftKey ? -1 : 1); }
   else if (event.code === 'Enter' && !event.repeat) { event.preventDefault(); void buildControls.place(); }
   else if (event.code === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); buildControls.setBuilder(false); }
@@ -886,8 +941,65 @@ try {
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
 
+// Explicit development capacity audit camera and timing; absent from production.
+if (import.meta.env.DEV && renderAudit) {
+  window.__riverRenderAudit = {
+    start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    crowdView() {
+      const players = multiplayer?.snapshot?.players ?? [];
+      if (!players.length) throw new Error('Join the shared world before framing its crowd.');
+      const target = new THREE.Vector3();
+      for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
+      target.divideScalar(players.length);
+      const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
+      const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
+      auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
+    },
+    graphics() {
+      const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
+      return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+        viewport: renderer.getSize(new THREE.Vector2()).toArray(), buffer: renderer.getDrawingBufferSize(new THREE.Vector2()).toArray(),
+        quality: quality.stats, pipeline: pipeline.stats, render: { ...renderer.info.render }, memory: { ...renderer.info.memory } };
+    },
+  };
+}
+
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverSeatAndWater = () => seatAndWater ? {
+    seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
+    // Arrive on open pavement beside a seat or planter, by the normal travel path.
+    async goNear(id) {
+      const { seats, planters } = seatAndWater.sites(), site = [...seats, ...planters].find(item => item.id === id);
+      if (!site || !world) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      const around = [1.1, 1.5].flatMap(radius => Array.from({ length: 8 }, (_, i) => [site.x + Math.sin(i * Math.PI / 4) * radius, site.north + Math.cos(i * Math.PI / 4) * radius]));
+      for (const position of [site.approach, ...around].filter(point => point && free(point))) {
+        const result = await goToPlace({ kind: 'landmark', name: 'Nearby', position });
+        if (result?.ok) return { ok: true, position };
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      }
+      return { ok: false };
+    },
+    face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
+    goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
+    // Residents on benches, as drawn: the seat, how far the body is lifted, which way it faces.
+    residents() {
+      return (localsGroup?.userData.models ?? []).map(person => {
+        const local = community.state?.locals.find(item => item.id === person.userData.localId);
+        if (!local?.life?.seat) return null;
+        // Joint heights above the ground and the knee's reach ahead of the hips.
+        const avatar = person.userData.avatar, joint = name => avatar?.rig?.model?.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()) ?? null;
+        const hip = joint('thigh_l'), knee = joint('calf_l'), foot = joint('foot_l');
+        const forward = new THREE.Vector3(Math.sin(person.rotation.y), 0, Math.cos(person.rotation.y));
+        const legs = hip && knee && foot ? { hip: hip.y - person.position.y, knee: knee.y - person.position.y, foot: foot.y - person.position.y,
+          kneeAhead: knee.clone().sub(hip).dot(forward) } : null;
+        return { id: local.id, name: local.name, seat: local.life.seat, position: local.position, visible: person.visible, legs,
+          // Hips above the ground: the body is lowered so they rest on the seat.
+          hips: person.userData.avatar ? person.userData.avatar.object.position.y + person.userData.avatar.rig.hipHeight : null, heading: person.rotation.y };
+      }).filter(Boolean);
+    },
+  } : null;
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
@@ -907,6 +1019,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     const rig=station?.avatar??resident?.rig,head=rig?.model.getObjectByName('head');
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose??resident?.conversationPose,face:station?.face.pose??resident?.facePose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
+  window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
   window.__riverCarriage = () => ({vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[...(localsGroup?.userData.models ?? []),...([playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar))].map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&community.state.locals.some(local=>local.id===person.id)).map(person => {

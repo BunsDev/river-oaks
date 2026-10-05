@@ -11,10 +11,11 @@ export function worldVisitUrl(id,base=location.href) {
   return url.href;
 }
 
-export function createWorldPortal({host,getCanPublish=()=>false}={}) {
+export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEnabled=false}={}) {
+  const canPublish=()=>creationToolsEnabled&&getCanPublish();
   const section=element('section',null,'world-portal');section.setAttribute('aria-label','Worlds');
   const heading=element('h3','Worlds');
-  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat. Jevica can publish a region and prepare private revision drafts.','quiet-note');
+  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat.'+(creationToolsEnabled?' Jevica can publish a region and prepare private revision drafts.':''),'quiet-note');
   const status=element('p','Loading worlds…','world-portal-status');status.setAttribute('role','status');
   const list=element('ul',null,'world-portal-list');
   const form=element('form',null,'world-portal-form');form.hidden=true;
@@ -34,13 +35,33 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const saveRevision=element('button','Save revision draft');saveRevision.type='button';
   const applyRevision=element('button','Apply saved draft');applyRevision.type='button';applyRevision.disabled=true;
   const discardRevision=element('button','Discard revision draft');discardRevision.type='button';
-  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision);
-  section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
+  const versionLabel=element('label','Previous published version');versionLabel.hidden=true;
+  const versionSelect=element('select');versionSelect.setAttribute('aria-label','Previous published version');versionLabel.append(versionSelect);
+  const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
+  revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
+  section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
+  const parcelOwnerChoices=async()=>{
+    const response=await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'});
+    if(!response.ok)return [];
+    const session=await response.json();
+    if(!session.authenticated||!session.canGrantWishes||typeof session.user?.id!=='string')return [];
+    const choices=[{id:session.user.id,name:session.user.name??'Jevica'}];
+    try{
+      const contacts=await fetch(`/api/social/list?world=${encodeURIComponent(currentId())}`,{
+        method:'POST',credentials:'same-origin',headers:{'X-CSRF-Token':session.csrfToken??''}});
+      if(contacts.ok){
+        const data=await contacts.json();
+        for(const item of data.contacts??[])if(item.status==='accepted'&&typeof item.peer?.id==='string'&&typeof item.peer.name==='string')
+          choices.push({id:item.peer.id,name:item.peer.name});
+      }
+    }catch{/* The owner can still leave a parcel unassigned or assign it to herself. */}
+    return choices;
+  };
   const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
-    .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{
+    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,onChange:()=>{
       if(revisionTarget){revisionStatus.textContent='Changes on this device are ready to save.';applyRevision.disabled=true;}
       else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
     }}))
@@ -80,8 +101,14 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const editRevision=async world=>{
     try {
       const editable=await draftRequest('load',{id:world.id});
+      const history=await draftRequest('history',{id:world.id});
+      if(history.world.regionSha256!==editable.world.regionSha256)throw new Error('This world changed. Reload its published region before editing.');
       const studio=await ensureEditor(),key=revisionKey(world.id);
       revisionTarget={world:editable.world,key,draftVersion:editable.draft?.version??0};revisionTitle.textContent=`Revision draft for ${world.title}`;revisionPanel.hidden=false;
+      versionSelect.replaceChildren(...history.versions.map(version=>{
+        const option=element('option',`Version ${version.revision}`);option.value=String(version.revision);return option;
+      }));
+      versionLabel.hidden=restoreVersion.hidden=!history.versions.length;
       const local=studio.draftFor(key);
       const differs=Boolean(local&&editable.draft&&JSON.stringify(local)!==JSON.stringify(editable.draft.region));
       const openLocal=Boolean(local)&&(!differs||window.confirm('This device has a different local draft. Open it instead of the saved server draft?'));
@@ -92,6 +119,19 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
         :editable.draft?'Saved server draft loaded.':'Published region copied into a private draft.';
     } catch(error) {status.textContent=error.message||'Could not load the region draft.';}
   };
+  restoreVersion.addEventListener('click',async()=>{
+    if(!revisionTarget || !window.confirm('Replace this device’s region draft with the selected published version?'))return;
+    restoreVersion.disabled=true;
+    try {
+      const revision=Number(versionSelect.value);
+      const result=await draftRequest('version',{id:revisionTarget.world.id,revision,
+        baseRegionSha256:revisionTarget.world.regionSha256});
+      editor.loadRegion(result.region,revisionTarget.key);
+      applyRevision.disabled=true;
+      revisionStatus.textContent=`Version ${revision} is in the editor. Save the draft, then apply it.`;
+    } catch(error) {revisionStatus.textContent=error.message||'Could not load that version.';}
+    finally {restoreVersion.disabled=false;}
+  });
   saveRevision.addEventListener('click',async()=>{
     if(!revisionTarget)return;
     saveRevision.disabled=true;
@@ -138,7 +178,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       const visitors=Number.isSafeInteger(world.visitors)&&world.visitors>=0?world.visitors:0;
       const detail=element('small',`${world.id===currentId()?'Here now':world.description||'Shared world'} · ${visitors} ${visitors===1?'visitor':'visitors'} online`);
       row.append(link,detail);
-      if(getCanPublish() && world.template==='region-v1') {
+      if(canPublish() && world.template==='region-v1') {
         const edit=element('button','Edit draft');edit.type='button';edit.setAttribute('aria-label',`Edit revision draft for ${world.title}`);
         edit.addEventListener('click',()=>editRevision(world));row.append(edit);
       }
@@ -149,7 +189,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       document.title=`${current.title} — ${current.template==='region-v1'?'Shared worlds':'River Oaks'}`;
       const view=document.querySelector('#view-name');if(view)view.textContent=current.title;
     }
-    form.hidden=!getCanPublish();
+    form.hidden=!canPublish();
   };
   function load() {
     if(loading)return loading;
@@ -168,7 +208,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     return loading;
   }
   form.addEventListener('submit',async event=>{
-    event.preventDefault();if(!getCanPublish())return;
+    event.preventDefault();if(!canPublish())return;
     publish.disabled=true;status.textContent='Publishing world…';
     try {
       const session=await (await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'})).json();

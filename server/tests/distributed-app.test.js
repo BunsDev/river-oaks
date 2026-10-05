@@ -7,9 +7,11 @@ import { WebSocket } from 'ws';
 import { createDistributedServer } from '../distributed-app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
+import { SIGN_INS_PER_ADDRESS } from '../rate-limit.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createRedisLandmarks } from '../landmarks.js';
 import { createRedisSocial } from '../social.js';
+import { createRedisGroups } from '../groups.js';
 
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
@@ -18,7 +20,7 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
   const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });
   redis.on('error', () => {});
   const prefix = `{river-oaks:test:${randomUUID()}}`;
-  const sessions = new Map(['alice', 'bob', 'moderator'].map(userId => [userId, {
+  const sessions = new Map(['alice', 'bob', 'moderator',...Array.from({length:16},(_,index)=>`resident${index}`)].map(userId => [userId, {
     userId, name: userId, sessionId: userId + '-session', csrfToken: 'test-csrf', expiresAt: Date.now() + 60_000,
   }]));
   const nodes = [];
@@ -39,7 +41,7 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
     };
     const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
-    const app = createDistributedServer({ auth, security, room, waitlist, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), origin, moderators: ['moderator'] });
+    const app = createDistributedServer({ auth, security, room, waitlist, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), groups:createRedisGroups({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
     nodes.push({ app, room, security, prefix:roomPrefix, url: `http://127.0.0.1:${app.server.address().port}` });
   }
@@ -52,9 +54,9 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
     assert.equal(response.status, 200);
     return (await response.json()).ticket;
   };
-  return { nodes, sessions, post, ticket };
+  return { nodes, sessions, post, ticket, redis, prefix };
 }
-function client(node, user, ticket, worldId = null, protocol = null) {
+function client(node, user, ticket, worldId = null, protocol = 2) {
   const query = new URLSearchParams({ ticket });
   if (worldId) query.set('world', worldId);
   if (protocol) query.set('protocol', String(protocol));
@@ -86,6 +88,15 @@ function client(node, user, ticket, worldId = null, protocol = null) {
 }
 const closed = ws => new Promise(resolve => ws.once('close', (code) => resolve(code)));
 
+// Each sign-in start holds a pending slot for twenty minutes; one address used
+// to be able to take every slot and block sign-in for everyone.
+test('one address can start only a few sign-ins at a time, across instances', live, async t => {
+  const { nodes } = await fixture(t);
+  for (let i = 0; i < SIGN_INS_PER_ADDRESS; i++) assert.notEqual((await fetch(nodes[i % 2].url + '/auth/login')).status, 429);
+  for (const node of nodes) assert.equal((await fetch(node.url + '/auth/login')).status, 429);
+  assert.notEqual((await fetch(nodes[0].url + '/auth/session')).status, 429, 'other routes keep their own limit');
+});
+
 test('pending accounts cannot use distributed world APIs', live, async t => {
   const waitlist = { ...approvedWaitlist, isApproved: async id => id === 'alice' };
   const { nodes, post } = await fixture(t, { waitlist });
@@ -99,6 +110,13 @@ test('distributed HTTP authentication and CSRF gates reject invalid tickets', li
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { Origin: 'https://evil.example' })).status, 403);
   assert.equal((await f.post(a, 'alice', '/api/multiplayer/ticket', null, { 'X-CSRF-Token': 'wrong' })).status, 403);
 });
+test('distributed residents behind one address can poll contacts and groups',live,async t=>{
+  const f=await fixture(t),[a]=f.nodes;
+  for(let cycle=0;cycle<6;cycle++)for(let account=0;account<16;account++)for(const scope of ['social','groups']) {
+    const response=await f.post(a,`resident${account}`,`/api/${scope}/list`,{});
+    assert.equal(response.status,200,`${scope} poll for resident ${account} in cycle ${cycle}`);
+  }
+});
 
 test('distributed tickets and sockets are admitted only to their named world and protocol', live, async t => {
   const f=await fixture(t,{worldId:'garden-2'}),[a]=f.nodes;
@@ -107,7 +125,7 @@ test('distributed tickets and sockets are admitted only to their named world and
   const issued=await f.post(a,'alice','/api/multiplayer/ticket?world=garden-2');
   assert.equal(issued.status,200);
   const {ticket,worldId,protocolVersion}=await issued.json();
-  assert.equal(worldId,'garden-2');assert.equal(protocolVersion,1);
+  assert.equal(worldId,'garden-2');assert.equal(protocolVersion,2);
   assert.equal((await f.post(a,'alice','/api/landmarks/list?world=river-oaks')).status,404);
   assert.equal((await f.post(a,'alice','/api/landmarks/list?world=garden-2')).status,200);
   const rejected=(world,protocol)=>new Promise(resolve=>{
@@ -115,9 +133,9 @@ test('distributed tickets and sockets are admitted only to their named world and
     ws.once('unexpected-response',(_request,response)=>{resolve(response.statusCode);response.resume();});
     ws.once('error',()=>{});
   });
-  assert.equal(await rejected('river-oaks',1),403);
-  assert.equal(await rejected('garden-2',2),426);
-  const alice=client(a,'alice',ticket,'garden-2',1);t.after(()=>alice.ws.terminate());
+  assert.equal(await rejected('river-oaks',2),403);
+  assert.equal(await rejected('garden-2',3),426);
+  const alice=client(a,'alice',ticket,'garden-2',2);t.after(()=>alice.ws.terminate());
   const joined=await alice.waitFor(message=>message.selfId==='alice');
   assert.equal(joined.worldId,'garden-2');
 });
@@ -126,13 +144,13 @@ test('two distributed worlds share sign-in but isolate presence and ticket admis
   const f=await fixture(t,{worldIds:['river-oaks','garden-2']}),[river,garden]=f.nodes;
   const riverTicket=await f.ticket(river,'alice');
   const crossed=await new Promise(resolve=>{
-    const ws=new WebSocket(`${garden.url.replace('http:','ws:')}/multiplayer?ticket=${riverTicket}&world=garden-2&protocol=1`,{headers:{Origin:origin,Cookie:'test_session=alice'}});
+    const ws=new WebSocket(`${garden.url.replace('http:','ws:')}/multiplayer?ticket=${riverTicket}&world=garden-2&protocol=2`,{headers:{Origin:origin,Cookie:'test_session=alice'}});
     ws.once('unexpected-response',(_request,response)=>{resolve(response.statusCode);response.resume();});
     ws.once('error',()=>{});
   });
   assert.equal(crossed,401);
-  const a=client(river,'alice',riverTicket,'river-oaks',1);
-  const b=client(garden,'alice',await f.ticket(garden,'alice'),'garden-2',1);
+  const a=client(river,'alice',riverTicket,'river-oaks',2);
+  const b=client(garden,'alice',await f.ticket(garden,'alice'),'garden-2',2);
   t.after(()=>{a.ws.terminate();b.ws.terminate();});
   assert.equal((await a.waitFor(message=>message.selfId==='alice')).worldId,'river-oaks');
   assert.equal((await b.waitFor(message=>message.selfId==='alice')).worldId,'garden-2');
@@ -179,6 +197,27 @@ test('accepted contacts and private history survive distributed edge replacement
   assert.equal(history.messages[0].text,'Across instances');
   assert.equal((await f.post(b,'bob','/api/social/remove',{peerId:'alice'})).status,200);
   assert.equal((await f.post(a,'alice','/api/social/messages',{peerId:'bob'})).status,404);
+});
+test('group invitations and chat cross Redis edges without leaking to outsiders',live,async t=>{
+  const f=await fixture(t,{worldIds:['river-oaks','garden-2']}),[a,b]=f.nodes;
+  const created=await f.post(a,'alice','/api/groups/create?world=river-oaks',{name:'World Walkers'});
+  assert.equal(created.status,200);const {id:groupId}=(await created.json()).group;
+  const alice=client(a,'alice',await f.ticket(a,'alice'));
+  const bob=client(b,'bob',await f.ticket(b,'bob'),'garden-2',2);
+  t.after(()=>{alice.ws.terminate();bob.ws.terminate();});
+  await alice.waitFor(message=>message.selfId==='alice');
+  await bob.waitFor(message=>message.selfId==='bob');
+  assert.equal((await f.post(a,'alice','/api/social/request?world=river-oaks',{peerId:'bob'})).status,409,'contacts still require a meeting');
+  // Existing accepted contacts can be invited from either world.
+  const social=createRedisSocial({redis:f.redis,prefix:f.prefix});
+  await social.request({userId:'alice',name:'alice'},{userId:'bob',name:'bob'});await social.accept('bob','alice');
+  assert.equal((await f.post(a,'alice','/api/groups/invite?world=river-oaks',{groupId,peerId:'bob'})).status,200);
+  assert.equal((await f.post(b,'bob','/api/groups/read?world=garden-2',{groupId})).status,404);
+  assert.equal((await f.post(b,'bob','/api/groups/accept?world=garden-2',{groupId})).status,200);
+  assert.equal((await f.post(b,'bob','/api/groups/send?world=garden-2',{groupId,text:'Across regions'})).status,200);
+  const read=await f.post(a,'alice','/api/groups/read?world=river-oaks',{groupId});
+  assert.equal((await read.json()).group.messages[0].text,'Across regions');
+  assert.equal((await f.post(a,'moderator','/api/groups/read?world=river-oaks',{groupId})).status,404);
 });
 
 test('different server instances share tickets, players, wishes, and durable acknowledgments', live, async t => {

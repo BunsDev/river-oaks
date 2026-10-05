@@ -28,3 +28,13 @@
 .shared-build-turn button{flex:1}
 .shared-build-keys{margin:8px 0 0!important;font-size:10px!important}
 .shared-build-row.moving{border-color:var(--accent)}
+.creator-object-editor{min-width:0;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:12px}
+.creator-object-editor[hidden]{display:none}
+.creator-object-editor legend{font-weight:600}
+.creator-object-editor label{display:block;font-size:11px;color:var(--muted)}
+.creator-object-editor input,.creator-object-editor select{box-sizing:border-box;width:100%;min-height:38px;margin:4px 0 8px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+.creator-object-editor input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.creator-vector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.creator-part-actions{display:flex;gap:6px;margin-bottom:8px}
+.creator-part-actions button{flex:1}
+.creator-object-editor p{margin:8px 0 3px}

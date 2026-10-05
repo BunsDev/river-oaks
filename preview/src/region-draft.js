@@ -9,6 +9,10 @@ const slug = value => typeof value === 'string' && value.length <= 48 && /^[a-z0
 const label = value => typeof value === 'string' && value === value.trim() && [...value].length > 0 && [...value].length <= 64
   && !/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(value);
 const between = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
+const interior = value => keys(value, ['name', 'category', 'entrance', 'access']) && label(value.name)
+  && ['clothes', 'art', 'restaurant', 'wellness', 'home'].includes(value.category)
+  && ['south', 'east', 'north', 'west'].includes(value.entrance)
+  && (value.access === undefined || value.category === 'home' && ['public', 'owner'].includes(value.access));
 
 export function blankRegion() {
   return {
@@ -17,7 +21,7 @@ export function blankRegion() {
     terrain: { width: 9, height: 9, heights_m: Array(81).fill(0) },
     spawn: [0, -20],
     roads: [{ id: 'main-walk', name: 'Main Walk', kind: 'footway', width_m: 4, points: [[0, -80], [0, 80]] }],
-    buildings: [], trees: [],
+    buildings: [], trees: [], parcels: [],
     places: [
       { id: 'south-garden', name: 'South Garden', position: [-36, -54] },
       { id: 'east-garden', name: 'East Garden', position: [54, -36] },
@@ -43,8 +47,17 @@ export function spawnClear(region) {
   });
 }
 
+export function parcelFits(region, parcel) {
+  if (!Array.isArray(parcel?.bounds_m) || parcel.bounds_m.length !== 4 || !parcel.bounds_m.every(Number.isFinite)) return false;
+  const [west, south, east, north] = parcel.bounds_m;
+  if (east - west < 6 || north - south < 6 || !insideRegion(region, [west, south]) || !insideRegion(region, [east, north])) return false;
+  return (region.parcels ?? []).every(other => other === parcel || other?.id === parcel.id ||
+    Array.isArray(other?.bounds_m) && other.bounds_m.length === 4 &&
+    (east <= other.bounds_m[0] || west >= other.bounds_m[2] || north <= other.bounds_m[1] || south >= other.bounds_m[3]));
+}
+
 export function editableRegion(value) {
-  if (!keys(value, ['schema_version', 'bounds_m', 'terrain', 'spawn', 'roads', 'buildings', 'trees', 'places'])
+  if (!keys(value, ['schema_version', 'bounds_m', 'terrain', 'spawn', 'roads', 'buildings', 'trees', 'places', 'parcels'])
     || value.schema_version !== 1 || !Array.isArray(value.bounds_m) || value.bounds_m.length !== 4
     || !value.bounds_m.every(number => between(number, -10000, 10000))
     || !between(value.bounds_m[2] - value.bounds_m[0], 40, 512)
@@ -55,7 +68,9 @@ export function editableRegion(value) {
     || !value.terrain.heights_m.every(number => between(number, -50, 500)) || !point(value.spawn) || !insideRegion(value, value.spawn)
     || !Array.isArray(value.roads) || value.roads.length < 1 || value.roads.length > 64
     || !Array.isArray(value.buildings) || value.buildings.length > 80
+    || value.buildings.filter(item => item?.interior !== undefined).length > 8
     || !Array.isArray(value.trees) || value.trees.length > 256
+    || value.parcels !== undefined && (!Array.isArray(value.parcels) || value.parcels.length > 32)
     || !Array.isArray(value.places) || value.places.length < 4 || value.places.length > 64) return false;
   const ids = new Set();
   const id = item => { if (!slug(item.id) || ids.has(item.id)) return false; ids.add(item.id); return true; };
@@ -65,12 +80,17 @@ export function editableRegion(value) {
     && Array.isArray(item.points) && item.points.length >= 2 && item.points.length <= 128
     && item.points.every(position => point(position) && insideRegion(value, position))
     && item.points.some((position, index) => index > 0 && Math.hypot(position[0] - item.points[index - 1][0], position[1] - item.points[index - 1][1]) >= .1))
-    && value.buildings.every(item => keys(item, ['id', 'center', 'size', 'yaw_deg', 'kind']) && id(item)
+    && value.buildings.every(item => keys(item, ['id', 'center', 'size', 'yaw_deg', 'kind', 'interior']) && id(item)
       && point(item.center) && Array.isArray(item.size) && item.size.length === 3
       && between(item.size[0], 4, 80) && between(item.size[1], 4, 80) && between(item.size[2], 5.5, 50)
-      && between(item.yaw_deg, -180, 180) && ['retail', 'residential', 'parking'].includes(item.kind) && buildingFits(value, item))
+      && between(item.yaw_deg, -180, 180) && ['retail', 'residential', 'parking'].includes(item.kind) && buildingFits(value, item)
+      && (item.interior === undefined || item.size[0] >= 6 && item.size[1] >= 6 && interior(item.interior)
+        && (item.kind === 'residential' ? item.interior.category === 'home' : item.kind === 'retail' && item.interior.category !== 'home')))
     && value.trees.every(item => keys(item, ['id', 'position', 'height_m', 'crown_radius_m']) && id(item)
       && point(item.position) && insideRegion(value, item.position) && between(item.height_m, 2, 35) && between(item.crown_radius_m, .5, 10))
+    && (value.parcels ?? []).every(item => keys(item, ['id', 'name', 'bounds_m', 'owner_id']) && id(item) && label(item.name)
+      && (item.owner_id === undefined || typeof item.owner_id === 'string' && item.owner_id.length <= 160 && /^[\w.-]+$/.test(item.owner_id))
+      && parcelFits(value, item))
     && value.places.every(item => keys(item, ['id', 'name', 'position']) && id(item) && label(item.name)
       && point(item.position) && insideRegion(value, item.position))
     && spawnClear(value);
@@ -93,7 +113,7 @@ export function insideRegion(region, [east, north], margin = 1) {
 }
 
 export function nextRegionId(region, stem) {
-  const ids = new Set([...region.roads, ...region.buildings, ...region.trees, ...region.places].map(item => item.id));
+  const ids = new Set([...region.roads, ...region.buildings, ...region.trees, ...(region.parcels ?? []), ...region.places].map(item => item.id));
   let index = 1;
   while (ids.has(`${stem}-${index}`)) index++;
   return `${stem}-${index}`;

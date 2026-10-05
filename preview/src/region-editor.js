@@ -1,9 +1,9 @@
-import { blankRegion, buildingFits, editableRegion, insideRegion, mapPoint, nextRegionId, regionPoint, spawnClear, terrainIndex, REGION_DRAFT_STORAGE_KEY, REGION_MAP_SIZE } from './region-draft.js';
+import { blankRegion, buildingFits, editableRegion, insideRegion, mapPoint, nextRegionId, parcelFits, regionPoint, spawnClear, terrainIndex, REGION_DRAFT_STORAGE_KEY, REGION_MAP_SIZE } from './region-draft.js';
 import './region-editor.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
-const limits = { roads: 64, buildings: 80, trees: 256, places: 64 };
-const labels = { select: 'Select', terrain: 'Terrain', road: 'Road', building: 'Building', tree: 'Tree', place: 'Place', spawn: 'Arrival' };
+const limits = { roads: 64, buildings: 80, trees: 256, places: 64, parcels: 32 };
+const labels = { select: 'Select', terrain: 'Terrain', road: 'Road', building: 'Building', parcel: 'Parcel', tree: 'Tree', place: 'Place', spawn: 'Arrival' };
 const slug = value => typeof value === 'string' && value.length <= 48 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const copy = value => structuredClone(value);
@@ -14,7 +14,7 @@ const svgNode = (tag, attributes = {}, text = '') => {
   return node;
 };
 
-export function createRegionEditor({ onChange = () => {} } = {}) {
+export function createRegionEditor({ onChange = () => {}, getOwnerChoices = async () => [] } = {}) {
   const dialog = document.createElement('dialog'); dialog.className = 'region-editor';
   dialog.setAttribute('aria-label', 'Design a region');
   dialog.innerHTML = `<div class="region-editor-shell">
@@ -32,7 +32,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   const hint = $('.region-editor-hint'), status = $('.region-editor-status'), coordinates = $('.region-editor-coordinates');
   const deleteButton = $('[data-action="delete"]'), chooser = $('.region-editor-chooser');
   const eastInput = $('[data-coordinate="east"]'), northInput = $('[data-coordinate="north"]');
-  let region = null, selected = null, tool = 'select', roadStart = null, roadInProgress = null, storageKey = REGION_DRAFT_STORAGE_KEY;
+  let region = null, selected = null, tool = 'select', roadStart = null, roadInProgress = null, parcelStart = null, ownerChoices = [], storageKey = REGION_DRAFT_STORAGE_KEY;
   const say = message => { status.textContent = message; };
   const saved = key => {
     try { const raw = localStorage.getItem(key); const value = raw && JSON.parse(raw); return editableRegion(value) ? value : null; }
@@ -44,9 +44,10 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     onChange(copy(region));
   };
   const selectTool = next => {
-    tool = next; roadStart = null; roadInProgress = null;
+    tool = next; roadStart = null; roadInProgress = null; parcelStart = null;
     for (const button of tools.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.tool === tool));
     hint.textContent = tool === 'road' ? 'Click two points for a new road, then click to add more. Choose Select to finish.'
+      : tool === 'parcel' ? 'Click two opposite corners to mark a parcel of at least 6 × 6 m. Parcels cannot overlap.'
       : tool === 'terrain' ? 'Click a grid sample, then set its height.'
         : tool === 'select' ? 'Click an item to edit it. Click the map with a tool to add to your region.'
           : `Click the map to set ${labels[tool].toLowerCase()}.`;
@@ -63,7 +64,8 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   const field = (label, value, apply, { type = 'text', min, max, step = 'any', options } = {}) => {
     const wrapper = document.createElement('label'); wrapper.textContent = label;
     const input = document.createElement(options ? 'select' : 'input'); input.className = 'region-editor-field';
-    if (options) for (const option of options) input.add(new Option(option, option));
+    if (options) for (const option of options) input.add(new Option(typeof option === 'string' ? option : option.label,
+      typeof option === 'string' ? option : option.value));
     else { input.type = type; if (type === 'number') { input.step = step; if (min !== undefined) input.min = min; if (max !== undefined) input.max = max; } }
     input.value = String(value); wrapper.append(input);
     input.addEventListener('change', () => {
@@ -81,7 +83,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     item.name = next;
   });
   const idField = item => field('ID', item.id, next => {
-    if (!slug(next) || [...region.roads, ...region.buildings, ...region.trees, ...region.places].some(other => other !== item && other.id === next)) {
+    if (!slug(next) || [...region.roads, ...region.buildings, ...region.trees, ...region.parcels, ...region.places].some(other => other !== item && other.id === next)) {
       say('Use a unique lowercase slug for the ID.'); return false;
     }
     const previous = item.id; item.id = next; selected.id = next;
@@ -109,7 +111,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     }); return; }
     const item = itemForSelection(); if (!item) { selected = null; renderInspector(); return; }
     idField(item);
-    if (selected.type === 'roads' || selected.type === 'places') nameField(item);
+    if (selected.type === 'roads' || selected.type === 'places' || selected.type === 'parcels') nameField(item);
     if (selected.type === 'roads') {
       field('Kind', item.kind, next => { item.kind = next; item.width_m = next === 'footway' ? 4 : 8.4; }, { options: ['footway', 'residential'] });
       field('Width (m)', item.width_m, next => { item.width_m = next; }, { type: 'number', min: item.kind === 'footway' ? 2 : 6, max: item.kind === 'footway' ? 8 : 16, step: '.1' });
@@ -118,6 +120,16 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       positionFields(item.points[index], next => { item.points[index] = next; });
       const removePoint = document.createElement('button'); removePoint.type = 'button'; removePoint.textContent = 'Remove road point'; removePoint.disabled = item.points.length <= 2;
       removePoint.addEventListener('click', () => { item.points.splice(index, 1); selected.point = 0; changed(); }); fields.append(removePoint);
+    } else if (selected.type === 'parcels') {
+      const edges=['West (m)','South (m)','East (m)','North (m)'];
+      for (let index=0;index<4;index++) field(edges[index],item.bounds_m[index],next=>{
+        const previous=item.bounds_m[index];item.bounds_m[index]=next;
+        if (!parcelFits(region,item)) {item.bounds_m[index]=previous;say('Keep the parcel at least 6 × 6 m, inside the region, and separate from other parcels.');return false;}
+      },{type:'number',step:'.1',min:region.bounds_m[index%2],max:region.bounds_m[index%2+2]});
+      const choices=[{value:'',label:'Unassigned'},...ownerChoices.map(owner=>({value:owner.id,label:owner.name}))];
+      if(item.owner_id&&!choices.some(choice=>choice.value===item.owner_id))choices.push({value:item.owner_id,label:'Previously assigned account'});
+      field('Owner',item.owner_id??'',next=>{if(next)item.owner_id=next;else delete item.owner_id;},{options:choices});
+      const note=document.createElement('p');note.textContent='Ownership is recorded with this parcel. Building and wish powers stay with Jevica.';fields.append(note);
     } else {
       const key = selected.type === 'buildings' ? 'center' : 'position';
       positionFields(item[key], next => {
@@ -134,15 +146,45 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       if (selected.type === 'buildings') {
         const changeBuilding = mutate => {
           const previous = { size: [...item.size], yaw_deg: item.yaw_deg }; mutate();
-          if (!buildingFits(region, item) || !spawnClear(region)) {
+          if (!buildingFits(region, item) || !spawnClear(region) || item.interior && (item.size[0] < 6 || item.size[1] < 6)) {
             item.size = previous.size; item.yaw_deg = previous.yaw_deg;
-            say('Keep the whole building inside the boundary and clear of arrival.'); return false;
+            say('Keep the building in bounds and at least 6 × 6 m for a walk-in interior.'); return false;
           }
         };
-        field('Kind', item.kind, next => { item.kind = next; }, { options: ['retail', 'residential', 'parking'] });
+        field('Kind', item.kind, next => { if (next !== item.kind) delete item.interior; item.kind = next; }, { options: ['retail', 'residential', 'parking'] });
         for (const [index, label, min, max] of [[0, 'Width (m)', 4, 80], [1, 'Depth (m)', 4, 80], [2, 'Height (m)', 5.5, 50]])
           field(label, item.size[index], next => changeBuilding(() => { item.size[index] = next; }), { type: 'number', min, max, step: '.1' });
         field('Rotation (°)', item.yaw_deg, next => changeBuilding(() => { item.yaw_deg = next; }), { type: 'number', min: -180, max: 180, step: '1' });
+        if (item.kind !== 'parking') {
+          field('Walk-in space', item.interior?.category ?? '', next => {
+            if (!next) { delete item.interior; return; }
+            if (!item.interior && region.buildings.filter(building => building.interior).length >= 8) {
+              say('A region can have up to eight walk-in interiors.'); return false;
+            }
+            if (item.size[0] < 6 || item.size[1] < 6) { say('Make this building at least 6 × 6 m first.'); return false; }
+            item.interior = { name: item.interior?.name ?? `${item.kind === 'residential' ? 'Home' : 'Venue'} ${item.id}`, category: next, entrance: item.interior?.entrance ?? 'south',
+              ...(next === 'home' && item.interior?.access === 'owner' ? { access: 'owner' } : {}) };
+          }, { options: item.kind === 'residential' ? [{ value: '', label: 'Exterior only' }, { value: 'home', label: 'Furnished home lounge' }]
+            : [{ value: '', label: 'Exterior only' }, { value: 'art', label: 'Gallery' },
+              { value: 'clothes', label: 'Fashion boutique' }, { value: 'restaurant', label: 'Café or dining' },
+              { value: 'wellness', label: 'Wellness studio' }] });
+          if (item.interior) {
+            if (item.interior.category === 'home') field('Home access', item.interior.access ?? 'public', next => {
+              if (next === 'owner') item.interior.access = 'owner'; else delete item.interior.access;
+            }, { options: [{ value: 'public', label: 'Open to visitors' }, { value: 'owner', label: 'Jevica and invited guests' }] });
+            field('Interior name', item.interior.name, next => {
+              if (!next || [...next].length > 64 || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(next)) {
+                say('Interior names must contain 1–64 visible characters.'); return false;
+              }
+              item.interior.name = next;
+            });
+            field('Entrance face', item.interior.entrance, next => { item.interior.entrance = next; },
+              { options: [{ value: 'south', label: 'South face (rotates with building)' },
+                { value: 'east', label: 'East face (rotates with building)' },
+                { value: 'north', label: 'North face (rotates with building)' },
+                { value: 'west', label: 'West face (rotates with building)' }] });
+          }
+        }
       }
     }
     deleteButton.hidden = false;
@@ -152,7 +194,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   function renderChooser() {
     chooser.replaceChildren(new Option('Choose on the map', ''));
     chooser.add(new Option('Arrival', 'spawn'));
-    for (const [type, heading] of [['roads', 'Roads'], ['buildings', 'Buildings'], ['trees', 'Trees'], ['places', 'Places']]) {
+    for (const [type, heading] of [['roads', 'Roads'], ['buildings', 'Buildings'], ['parcels', 'Parcels'], ['trees', 'Trees'], ['places', 'Places']]) {
       const group = document.createElement('optgroup'); group.label = heading;
       for (const item of region[type]) group.append(new Option(item.name ?? item.id, `${type}:${item.id}`));
       chooser.append(group);
@@ -181,6 +223,12 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       const light = clamp(76 - elevation * 1.6, 32, 86);
       map.append(svgNode('rect', { x: column * cellW, y: row * cellH, width: cellW + .1, height: cellH + .1,
         fill: elevation < 0 ? `hsl(196 38% ${clamp(72 + elevation, 42, 82)}%)` : `hsl(81 25% ${light}%)` }));
+    }
+    for (const parcel of region.parcels) {
+      const [west,south,east,north]=parcel.bounds_m,[x,y]=mapPoint(region,[west,north]);
+      const [right,bottom]=mapPoint(region,[east,south]);
+      plot('parcels',parcel,svgNode('rect',{x,y,width:right-x,height:bottom-y}));
+      const label=svgNode('text',{x:x+7,y:y+15},parcel.name);label.classList.add('region-map-label');map.append(label);
     }
     for (const road of region.roads) {
       const points = road.points.map(point => mapPoint(region, point).join(',')).join(' ');
@@ -211,8 +259,8 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     const [sx, sy] = mapPoint(region, region.spawn);
     const spawn = svgNode('g', { transform: `translate(${sx} ${sy})` }); spawn.dataset.type = 'spawn';
     spawn.append(svgNode('circle', { cx: 0, cy: 0, r: 12 }), svgNode('path', { d: 'M-6 0H6M0-6V6' })); map.append(spawn);
-    if (roadStart) { const [cx, cy] = mapPoint(region, roadStart); map.append(svgNode('circle', { cx, cy, r: 6, fill: '#b04d88' })); }
-    coordinates.textContent = `Boundary ${region.bounds_m.join(', ')} m · ${region.buildings.length} buildings · ${region.trees.length} trees · ${region.places.length} places`;
+    if (roadStart || parcelStart) { const [cx, cy] = mapPoint(region, roadStart??parcelStart); map.append(svgNode('circle', { cx, cy, r: 6, fill: '#b04d88' })); }
+    coordinates.textContent = `Boundary ${region.bounds_m.join(', ')} m · ${region.buildings.length} buildings · ${region.parcels.length} parcels · ${region.trees.length} trees · ${region.places.length} places`;
     renderChooser();
     renderInspector();
   }
@@ -234,6 +282,14 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
       const previous = region.spawn; region.spawn = point;
       if (!spawnClear(region)) { region.spawn = previous; say('The arrival point needs clear space outside buildings.'); return; }
       selected = { type: 'spawn' };
+    }
+    else if (tool === 'parcel') {
+      if(!parcelStart){parcelStart=point;render();say('Choose the opposite parcel corner.');return;}
+      if(region.parcels.length>=limits.parcels){say('This region has the maximum number of parcels.');return;}
+      const bounds_m=[Math.min(parcelStart[0],point[0]),Math.min(parcelStart[1],point[1]),Math.max(parcelStart[0],point[0]),Math.max(parcelStart[1],point[1])];
+      const parcel={id:nextRegionId(region,'parcel'),name:'New Parcel',bounds_m};
+      if(!parcelFits(region,parcel)){say('Parcel needs at least 6 × 6 m and cannot overlap another parcel.');return;}
+      region.parcels.push(parcel);parcelStart=null;selected={type:'parcels',id:parcel.id};
     }
     else if (tool === 'road') {
       if (roadInProgress) {
@@ -287,8 +343,12 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
   });
   const open = (key = REGION_DRAFT_STORAGE_KEY) => {
     if(storageKey!==key){storageKey=key;region=null;}
-    region ??= saved(storageKey) ?? blankRegion(); selected = null; selectTool('select'); render();
+    region ??= saved(storageKey) ?? blankRegion();region.parcels??=[]; selected = null; selectTool('select'); render();
     if (!dialog.open) dialog.showModal(); onChange(copy(region));
+    Promise.resolve().then(getOwnerChoices).then(choices=>{
+      ownerChoices=Array.isArray(choices)?choices.filter(choice=>typeof choice?.id==='string'&&typeof choice?.name==='string'):[];
+      if(dialog.open)renderInspector();
+    }).catch(()=>{ownerChoices=[];if(dialog.open)renderInspector();});
     say(storageKey===REGION_DRAFT_STORAGE_KEY?'Draft saved on this device. The world is fixed when published.'
       :'Draft saved on this device. Save the revision to sync it across devices.');
   };
@@ -304,7 +364,7 @@ export function createRegionEditor({ onChange = () => {} } = {}) {
     },
     loadRegion(value, key = REGION_DRAFT_STORAGE_KEY) {
       if (!editableRegion(value)) throw new Error('Region package does not have an editable v1 layout.');
-      storageKey=key;region=copy(value);selected=null;roadStart=null;roadInProgress=null;persist();open(key);
+      storageKey=key;region=copy(value);region.parcels??=[];selected=null;roadStart=null;roadInProgress=null;parcelStart=null;persist();open(key);
     },
     getRegion() { return region ? copy(region) : null; },
     draftFor(key = REGION_DRAFT_STORAGE_KEY) { return storageKey===key&&region ? copy(region) : saved(key); },
