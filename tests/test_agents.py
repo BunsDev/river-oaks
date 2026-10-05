@@ -138,7 +138,9 @@ def test_packets_reject_duplicate_ids_nonfinite_positions_and_oversize():
 
 async def test_http_health_and_decisions():
     app = create_app(DecisionEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         assert (await c.get("/health")).json()["mode"] == "local_rules"
         response = await c.post("/v1/decisions", json=snapshot().model_dump())
         assert response.status_code == 200
@@ -170,7 +172,9 @@ async def test_concurrent_service_requests_fail_fast_instead_of_queueing():
             return await super().decide(packet)
 
     app = create_app(WaitingEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         first = asyncio.create_task(c.post("/v1/decisions", json=snapshot().model_dump()))
         await entered.wait()
         second = await c.post("/v1/decisions", json=snapshot().model_dump())

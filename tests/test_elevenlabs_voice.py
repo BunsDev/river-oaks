@@ -39,7 +39,9 @@ def test_selected_voice_and_bounded_cached_audio():
 
 def test_voice_key_override_is_private_and_resettable():
     voice = ElevenLabsVoice(api_key="server-secret")
-    with TestClient(create_app(engine=DecisionEngine(), elevenlabs_voice=voice)) as client:
+    with TestClient(
+        create_app(engine=DecisionEngine(), elevenlabs_voice=voice), base_url="http://127.0.0.1"
+    ) as client:
         assert client.get("/v1/settings/elevenlabs").json()["source"] == "server"
         response = client.put("/v1/settings/elevenlabs", json={"api_key": "manual-secret"})
         assert response.json()["source"] == "manual"
