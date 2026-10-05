@@ -42,8 +42,25 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
+  const parcelOwnerChoices=async()=>{
+    const response=await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'});
+    if(!response.ok)return [];
+    const session=await response.json();
+    if(!session.authenticated||!session.canGrantWishes||typeof session.user?.id!=='string')return [];
+    const choices=[{id:session.user.id,name:session.user.name??'Jevica'}];
+    try{
+      const contacts=await fetch(`/api/social/list?world=${encodeURIComponent(currentId())}`,{
+        method:'POST',credentials:'same-origin',headers:{'X-CSRF-Token':session.csrfToken??''}});
+      if(contacts.ok){
+        const data=await contacts.json();
+        for(const item of data.contacts??[])if(item.status==='accepted'&&typeof item.peer?.id==='string'&&typeof item.peer.name==='string')
+          choices.push({id:item.peer.id,name:item.peer.name});
+      }
+    }catch{/* The owner can still leave a parcel unassigned or assign it to herself. */}
+    return choices;
+  };
   const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
-    .then(({createRegionEditor})=>editor=createRegionEditor({onChange:()=>{
+    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,onChange:()=>{
       if(revisionTarget){revisionStatus.textContent='Changes on this device are ready to save.';applyRevision.disabled=true;}
       else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
     }}))

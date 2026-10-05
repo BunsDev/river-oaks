@@ -17,7 +17,7 @@ const ENTRANCE_EDGES={south:0,east:1,north:2,west:3};
 
 /** Compile a bounded, creator-authored local-metre map into the shared district contract. */
 export function compileRegionPackage(region,title) {
-  if(!label(title) || !keys(region,['schema_version','bounds_m','terrain','spawn','roads','buildings','trees','places'])
+  if(!label(title) || !keys(region,['schema_version','bounds_m','terrain','spawn','roads','buildings','trees','places','parcels'])
     || region.schema_version!==1 || !Array.isArray(region.bounds_m) || region.bounds_m.length!==4)fail();
   const [west,south,east,north]=region.bounds_m;
   if(![west,south,east,north].every(value=>finite(value,-10000,10000))
@@ -35,6 +35,7 @@ export function compileRegionPackage(region,title) {
   if(!position(region.spawn))fail();
   for(const [name,min,max] of [['roads',1,64],['buildings',0,80],['trees',0,256],['places',4,64]])
     if(!Array.isArray(region[name]) || region[name].length<min || region[name].length>max)fail();
+  if(region.parcels!==undefined && (!Array.isArray(region.parcels) || region.parcels.length>32))fail();
   const unique=new Set();
   const takeId=id=>{if(!slug(id)||unique.has(id))fail();unique.add(id);return id;};
   const roads=region.roads.map(road=>{
@@ -87,10 +88,23 @@ export function compileRegionPackage(region,title) {
     if(!keys(place,['id','name','position']) || !label(place.name) || !position(place.position))fail();
     return {id:takeId(place.id),name:place.name,position:[...place.position,altitude(place.position)]};
   });
+  const parcels=[];
+  for(const parcel of region.parcels??[]){
+    if(!keys(parcel,['id','name','bounds_m','owner_id']) || !label(parcel.name)
+      || !Array.isArray(parcel.bounds_m) || parcel.bounds_m.length!==4 || !parcel.bounds_m.every(Number.isFinite)
+      || parcel.owner_id!==undefined && (typeof parcel.owner_id!=='string' || parcel.owner_id.length>160 || !/^[\w.-]+$/.test(parcel.owner_id)))fail();
+    const [left,bottom,right,top]=parcel.bounds_m;
+    if(right-left<6 || top-bottom<6 || !inBounds([left,bottom],1) || !inBounds([right,top],1)
+      || parcels.some(other=>right>other.bounds_m[0] && left<other.bounds_m[2]
+        && top>other.bounds_m[1] && bottom<other.bounds_m[3]))fail();
+    parcels.push({id:takeId(parcel.id),name:parcel.name,bounds_m:[left,bottom,right,top],
+      ring:[[left,bottom],[right,bottom],[right,top],[left,top],[left,bottom]],
+      ...(parcel.owner_id?{ownerId:parcel.owner_id}:{})});
+  }
   const hash=createHash('sha256').update(JSON.stringify(region)).digest('hex');
   const world={schema_version:1,scene:'district',title,address:'Creator-authored region',origin:[0,0],crs:'LOCAL:METRES',
     bounds_m:[west,south,east,north],site_ring:[[west,south],[east,south],[east,north],[west,north],[west,south]],
-    buildings,roads,trees,parcels:[],stores,terrain:surface,walkSurfaceOffset:0,walkSpawn:[...region.spawn,altitude(region.spawn)],
+    buildings,roads,trees,parcels,stores,terrain:surface,walkSurfaceOffset:0,walkSpawn:[...region.spawn,altitude(region.spawn)],
     collisionPolygons:buildings.map(building=>building.ring),communityLocations,
     provenance:{kind:'creator',source:'Creator-authored region package',source_sha256:hash,attribution:'World creator'},
     limitations:['This region and its geography were supplied by its creator.'],
@@ -121,7 +135,9 @@ export function editableRegionFromWorld(world) {
     buildings:world.buildings.map(building=>({id:building.id,center:building.center.slice(0,2),size:[...building.size],yaw_deg:building.yaw_deg,kind:building.kind,
       ...(building.interior?{interior:{...building.interior}}:{})})),
     trees:world.trees.map(tree=>({id:tree.id,position:tree.position.slice(0,2),height_m:tree.height_m,crown_radius_m:tree.crown_radius_m})),
-    places:world.communityLocations.map(place=>({id:place.id,name:place.name,position:place.position.slice(0,2)}))};
+    places:world.communityLocations.map(place=>({id:place.id,name:place.name,position:place.position.slice(0,2)})),
+    parcels:(world.parcels??[]).map(parcel=>({id:parcel.id,name:parcel.name,bounds_m:[...parcel.bounds_m],
+      ...(parcel.ownerId?{owner_id:parcel.ownerId}:{})}))};
   compileRegionPackage(source,world.title);
   return source;
 }
