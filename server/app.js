@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
-import { resolve, sep, extname } from 'node:path';
+import { resolve, relative, sep, extname } from 'node:path';
 import { stat, realpath } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -183,17 +183,24 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
       if (!['GET','HEAD'].includes(req.method)) return json(res,405,{error:'Method not allowed'});
       if (!staticRoot) return json(res,404,{error:'Run the frontend development server.'});
-      const protectedAsset = protectedGameAsset(pathname);
-      if (protectedAsset) {
-        const identity = await auth.authenticate(req);
-        if (!identity || isBanned(identity.userId) || !(await waitlist.isApproved(identity.userId))) {
-          return json(res,403,{error:'waitlist_approval_required'});
-        }
-      }
-      let path=resolve(staticRoot,'.'+decodeURIComponent(pathname==='/'?'/index.html':pathname));
+      const approvedViewer=async()=>{
+        const identity=await auth.authenticate(req);
+        return Boolean(identity && !isBanned(identity.userId) && await waitlist.isApproved(identity.userId));
+      };
+      const requested=pathname==='/'?'/index.html':pathname;
+      // The gate classifies the decoded path, so /%64ata/district.json is gated
+      // like /data/district.json.
+      let protectedAsset=protectedGameAsset(requested);
+      if (protectedAsset && !(await approvedViewer())) return json(res,403,{error:'waitlist_approval_required'});
       const root=await realpath(staticRoot);
-      path=await realpath(path);
+      const path=await realpath(resolve(root,'.'+decodeURIComponent(requested)));
       if (!path.startsWith(root+sep)) return json(res,404,{error:'Not found'});
+      // Classify the file being served too, so a symlink cannot expose a gated
+      // file under a public name.
+      if (!protectedAsset && protectedGameAsset('/'+relative(root,path).split(sep).join('/'))) {
+        if (!(await approvedViewer())) return json(res,403,{error:'waitlist_approval_required'});
+        protectedAsset=true;
+      }
       const info=await stat(path);if(!info.isFile())return json(res,404,{error:'Not found'});
       res.setHeader('Content-Type',types[extname(path)]??'application/octet-stream');
       res.setHeader('Cache-Control',protectedAsset?'private, no-store':extname(path)==='.html'?'no-cache':'public, max-age=300');
