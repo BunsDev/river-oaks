@@ -9,6 +9,7 @@ import { turnToward } from './gait.js';
 import { VISITOR_FORMS, createVisitorReactions } from './visitor-persona.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
+import { isGameplayKey } from './keyboard-input.js';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
@@ -50,6 +51,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
+  panel.insertBefore(panel.querySelector('.player-quick-actions'), panel.querySelector('.character-picker'));
+  panel.insertBefore(panel.querySelector('.player-flight-pad'), panel.querySelector('.character-picker'));
   document.querySelector('#viewport').append(panel);
   const cameraButton = panel.querySelector('#player-camera'), status = panel.querySelector('#player-status');
   panel.addEventListener('click',event=>{
@@ -78,7 +81,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Jev, with a clear space beside the vehicle.';
   };
   companionButton.addEventListener('click',toggleCompanion);
-  host.addEventListener('keydown',event=>{if(event.code==='KeyJ'&&!event.repeat&&(!sharedMode||owner)){event.preventDefault();toggleCompanion();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyJ'&&!event.repeat&&(!sharedMode||owner)){event.preventDefault();toggleCompanion();}});
   carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
     companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to your ride':'Walk with Jev';
@@ -205,7 +208,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   };
   beastButton.addEventListener('click',toggleBeastMovement);
   // P for prowl; Force mode already uses X to lower what it holds.
-  host.addEventListener('keydown',event=>{if(event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}});
   syncPicker();
   const listeners = new Set();
   const reactions = createVisitorReactions(),attention=createPlayerAttention();
@@ -216,7 +219,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     status.textContent=message;walking.notify?.(message);
   };
   flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())refuseFlight();});
-  host.addEventListener('keydown',event=>{if(event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())refuseFlight();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())refuseFlight();}});
   for(const button of panel.querySelectorAll('[data-flight-key]')) {
     const release=()=>host.dispatchEvent(new KeyboardEvent('keyup',{code:button.dataset.flightKey,bubbles:true}));
     button.addEventListener('pointerdown',event=>{event.preventDefault();button.setPointerCapture(event.pointerId);host.focus();host.dispatchEvent(new KeyboardEvent('keydown',{code:button.dataset.flightKey,bubbles:true}));});
@@ -224,7 +227,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   }
   const toggleCamera = enabled => { walking.setThirdPerson(enabled);cameraButton.querySelector('[data-camera-label]').textContent = enabled ? 'Third person' : 'First person';cameraButton.setAttribute('aria-pressed', String(enabled)); };
   cameraButton.addEventListener('click', () => toggleCamera(!walking.thirdPerson));
-  host.addEventListener('keydown', event => {if (event.code === 'KeyV' && !event.repeat) {event.preventDefault();toggleCamera(!walking.thirdPerson);} });
+  host.addEventListener('keydown', event => {if (isGameplayKey(event) && event.code === 'KeyV' && !event.repeat) {event.preventDefault();toggleCamera(!walking.thirdPerson);} });
   const load = async () => {
     const generation = ++version;
     panel.setAttribute('aria-busy', 'true');status.textContent = 'Loading appearance…';

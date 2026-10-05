@@ -172,7 +172,8 @@ export function createReferenceStyle(avatar,appearance){
     const velvet=material('#754759',{roughness:.78,sheen:1,sheenColor:new THREE.Color('#b5788d'),side:THREE.DoubleSide});
     const fold=material('#9b6476',{roughness:.82,sheen:.8,sheenColor:new THREE.Color('#d5a0ac'),side:THREE.DoubleSide});
     for(const side of [-1,1])tube(torso,fold,[[side*.13,.26,.06],[side*.12,.19,.13],[0,.13,.15]],.004);
-    drape(pelvis,velvet,{from:-.45,to:2.7,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
+    // Opaque velvet wraps all the way around; the sheer train is an overlay.
+    drape(pelvis,velvet,{from:-.45,to:Math.PI*2-.45,top:.11,length:.67,rx:.19,rz:.14,flare:.045,jag:.12,lobes:2,name:'Lyra velvet wrap'});
     const pixels=new Uint8Array(256*256*4);
     for(let y=0;y<256;y++)for(let x=0;x<256;x++){
       const cellX=Math.floor(x/25),cellY=Math.floor(y/29),seed=(Math.imul(cellX+3,73856093)^Math.imul(cellY+7,19349663))>>>0;

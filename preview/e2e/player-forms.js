@@ -101,11 +101,14 @@ async page => {
   check(await page.locator('#player-camera').getAttribute('aria-pressed')==='true','V restores third person');
   await page.evaluate(()=>document.documentElement.dataset.theme='dark');
   await page.screenshot({path:'output/playwright/jevica-ui-dark.png'});
+  const rememberedPlayOpen=await page.locator('.visit-tools').evaluate(el=>el.open);
   await page.setViewportSize({width:390,height:844});
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
   check(!await page.locator('.player-settings').evaluate(el=>el.open),'Mobile character controls start collapsed');
+  check(await page.locator('.visit-tools').evaluate(el=>el.open)===rememberedPlayOpen,'The chosen play-rail state survives a mobile reload');
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'No mobile horizontal overflow');
   await page.screenshot({path:'output/playwright/jevica-ui-mobile.png'});
+  if(await page.locator('.visit-tools').evaluate(el=>el.open))await page.locator('.visit-tools-toggle').click();
   await page.locator('.visit-tools-toggle').focus();await page.keyboard.press('Enter');
   check(await page.locator('#player-flight').isVisible(),'Keyboard expands character controls');
   check(await page.locator('#player-flight').evaluate(el=>el.getBoundingClientRect().height>=44),'44px flight target');

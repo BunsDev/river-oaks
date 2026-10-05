@@ -17,6 +17,8 @@ import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
 import { setupDistrictUI } from './district-ui.js';
 import { setupSidebar, setupSidebarSections } from './sidebar.js';
+import { setupRailNavigation } from './rail-navigation.js';
+import { isGameplayKey } from './keyboard-input.js';
 import { createAccountLandmarks, createLandmarks, destinationFromSearch, openSpotNear, placesOf } from './places.js';
 import { setupPlacesUI } from './places-ui.js';
 import { renderPixelRatio } from './viewport.js';
@@ -58,6 +60,7 @@ import './immersive.css';
 import './sidebar.css';
 import './visual-finish.css';
 import './retro-finish.css';
+import './rail-navigation.css';
 import { setupUIMotion } from './ui-motion.js';
 import { STREET } from './street-profile.js';
 import { createBirdCams, BIRD_WINGSPAN } from './bird-cams.js';
@@ -70,7 +73,9 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 
 setupUIMotion();
 setupThemeControls();
-setupSidebar();
+const sidebar = setupSidebar();
+let sidebarSections, playDock, clearView;
+setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView });
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -216,7 +221,7 @@ function initializeRenderer() {
   void worldPortal.load();
   worldEvents=createWorldEvents({host:$('#explore-section')});
   void worldEvents.load();
-  setupSidebarSections({ graphics: quality.element });
+  sidebarSections = setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
@@ -229,11 +234,11 @@ function initializeRenderer() {
   liftSparkles=createLiftSparkles({reducedMotion});scene.add(liftSparkles.object);
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
-  const playDock = createPlayDock(), visitTools = playDock.content;
+  playDock = createPlayDock(); const visitTools = playDock.content;
   buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'),buildControls.panel,$('.auto-controls'), invasion.panel);
+  visitTools.append($('.player-controls'),$('.auto-controls'),buildControls.panel, invasion.panel);
   force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
@@ -248,9 +253,9 @@ function initializeRenderer() {
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? walkingEnvironment() : null, getInterests: birdInterests });
   birdCamsUI = createBirdCamsUI(birdCams);
-  visitTools.insertBefore(birdCamsUI.panel, invasion.panel);
+  visitTools.insertBefore(birdCamsUI.panel, buildControls.panel);
   $('#viewport').append(playDock.element);
-  createClearView({ viewport: $('#viewport') });
+  clearView = createClearView({ viewport: $('#viewport') });
   let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
   landmarks = createLandmarks({ storage });
   placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
@@ -833,7 +838,7 @@ function updateBuilder() {
   buildControls.aimAt(target, verdict);
 }
 document.addEventListener('keydown', event => {
-  if (!buildControls?.builder.active || event.target.closest?.('input, textarea, select, button, [contenteditable]')) return;
+  if (!buildControls?.builder.active || !isGameplayKey(event) || event.target.closest?.('button')) return;
   if (event.code === 'KeyR' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); buildControls.rotate(event.shiftKey ? -1 : 1); }
   else if (event.code === 'Enter' && !event.repeat) { event.preventDefault(); void buildControls.place(); }
   else if (event.code === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); buildControls.setBuilder(false); }

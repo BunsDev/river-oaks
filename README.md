@@ -41,6 +41,13 @@ Community dispatches recruit a visible resident carrying supplies. Use **Find vo
 
 **Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
+**Cmd/Ctrl+B** toggles exploration; **Cmd/Ctrl+Shift+B** toggles play controls.
+**Cmd/Ctrl+K** opens searchable commands, **?** shows contextual keyboard help,
+**Alt+1/2/3** selects People/Places/Settings, and **/** searches destinations.
+Escape returns from a rail to the world. Rail choices and the selected tab are
+remembered; shortcuts leave text entry and modal dialogs alone.
+[Rail layout and keyboard review](docs/rail-navigation.md)
+
 The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
