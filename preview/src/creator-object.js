@@ -49,7 +49,8 @@ export function objectCollider(item){
     const matrix=[c*e,-c*f,d,a*f+b*e*d,a*e-b*f*d,-b*c,b*f-a*e*d,b*e+a*f*d,a*c];
     return {matrix,position:part.position,half:part.size.map(n=>n/2)};
   });
-  return {contains(x,y,z,radius,halfHeight=radius){
+  return {bounds:[item.position[0]-bounds.radius,-item.position[1]-bounds.radius,item.position[0]+bounds.radius,-item.position[1]+bounds.radius],
+    contains(x,y,z,radius,halfHeight=radius){
     const dx=x-item.position[0],dz=z+item.position[1],dy=y-item.ground;
     if(Math.hypot(dx,dz)>bounds.radius+radius||dy+halfHeight<bounds.bottom||dy-halfHeight>bounds.height)return false;
     const east=cy*dx-sy*dz,south=sy*dx+cy*dz;

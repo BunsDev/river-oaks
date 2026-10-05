@@ -524,5 +524,44 @@ REDIS_URL=redis://127.0.0.1:6379 \
 Global readiness remains unaccepted. The existing hosted multi-region soak,
 regional latency, physical-device, and long-running resource gates remain
 open; add maximum assemblies to that workload. Player collision uses
-conservative per-part boxes, while NPC routes retain static navigation. Shared
-voice remains deferred in its plan.
+conservative per-part boxes. The resident-navigation follow-up below closes
+the static NPC route gap. Shared voice remains deferred in its plan.
+
+## Creator navigation follow-up — 5 October 2026
+
+Shared residents now route around confirmed custom parts. Placement reserves
+both the current body and the grounded return path of a lifted resident. Old
+version-4 saves that already enclosed a resident recover to nearby level,
+pedestrian-safe ground in the same room. An unrecoverable candidate fails
+before live state changes. Edits/removal/reset/recovery refresh dynamic route
+occupancy and edges while retaining static geography caches. Nearby collider
+buckets avoid querying every remote assembly for every route sample. Grid
+edges retain the complete-segment and thin-corner endpoint checks.
+
+Run the local route CPU probe with:
+
+```sh
+node server/creator-navigation-audit.js
+```
+
+[`creator-navigation.json`](../data/reports/creator-navigation.json) records
+exact source hashes, raw samples, and the host's load. It samples four long
+reachable district routes, not just the short ambient strolls. Each probe
+begins with fresh static caches. Later dynamic resets invalidate only assembly
+occupancy/edges, retaining geography caches. Each measured complete segment
+was checked for collision clearance.
+
+| Local workload | Roots / parts | Dynamic-reset search p95 | Warm search p95 |
+| --- | ---: | ---: | ---: |
+| District without assemblies | 0 / 0 | 285.98 ms | 123.34 ms |
+| District with valid assembly footprints | 48 / 768 | 364.53 ms | 60.62 ms |
+| Dense synthetic open grid | 48 / 768 | 25.13 ms | 7.28 ms |
+
+These sequential Node samples on a busy Apple M3 Max are diagnostic CPU
+measurements. They are not a controlled percentage improvement, shared tick
+latency, GPU/frame time, or a hosted SLA. The long searches still exceed a
+frame and the district maximum exceeds 200 ms. Retain the single route-search
+slot and include long volunteer/arrival routes and maximum assemblies in the
+hosted soak. Worker-based or incremental authority routing remains a capacity
+follow-up; global readiness remains unaccepted. The 98 shared NPCs, 193 solo
+NPCs, 32-player cap and Jevica-only capabilities are unchanged.
