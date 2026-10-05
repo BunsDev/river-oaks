@@ -3,11 +3,11 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Accessories attached to the same bone move together. Bake their local
 // transforms into one mesh per material to keep detailed crowns and wands cheap.
-export function batchCostumeAttachments(attachments, owned) {
+export function batchCostumeAttachments(attachments, owned, eligible = () => true) {
   for (const { group } of attachments) {
     const batches = new Map();
     for (const mesh of group.children) {
-      if (!mesh.isMesh || mesh.userData.deformableCostume) continue;
+      if (!mesh.isMesh || mesh.userData.deformableCostume || !eligible(mesh)) continue;
       if (!batches.has(mesh.material)) batches.set(mesh.material, []);
       batches.get(mesh.material).push(mesh);
     }

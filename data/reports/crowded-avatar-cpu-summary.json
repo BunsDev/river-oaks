@@ -1,0 +1,54 @@
+{
+  "scope": "Diagnostic CDP CPU sampling of the development build, not GPU timer queries or exclusive CPU utilization. Inclusive categories overlap. Profiling perturbs frame times; use unprofiled paired receipts for comparison. Raw profiles are not checked in; this summary records local diagnostics.",
+  "baseCommit": "c8daf1b067f27c197439eb3ecef354cfc77b079f",
+  "browser": "153.0.8010.12",
+  "machine": {
+    "node": "v24.18.1",
+    "platform": "darwin/arm64",
+    "cpu": "Apple M3 Max",
+    "logicalCPUs": 16,
+    "loadAverageAtStart": [
+      13.46923828125,
+      14.61181640625,
+      18.72607421875
+    ]
+  },
+  "samplingIntervalMicroseconds": 1000,
+  "profilerHarnessSHA256": "c831667397a6dadc8a8873b275cb9e295496274cb6357de56d97017d57114ef6",
+  "results": [
+    {
+      "viewport": "desktop",
+      "totalSampledMs": 10387.64,
+      "inclusiveSampledMs": {
+        "mainLoop": 9276.47,
+        "remoteUpdate": 809.17,
+        "composer": 7694.93,
+        "shadow": 2027.88
+      },
+      "inclusivePercent": {
+        "mainLoop": 89.3,
+        "remoteUpdate": 7.79,
+        "composer": 74.08,
+        "shadow": 19.52
+      },
+      "rawProfileSHA256": "774fc0494010e59b1f34160c5fda4d844ffbef9ef94f6e0b43120e0b99ee5a9a"
+    },
+    {
+      "viewport": "phone-viewport",
+      "totalSampledMs": 10404.96,
+      "inclusiveSampledMs": {
+        "mainLoop": 9649.59,
+        "remoteUpdate": 779.4,
+        "composer": 8125.15,
+        "shadow": 2205.11
+      },
+      "inclusivePercent": {
+        "mainLoop": 92.74,
+        "remoteUpdate": 7.49,
+        "composer": 78.09,
+        "shadow": 21.19
+      },
+      "rawProfileSHA256": "6fc6553aabc9ef84e855f9f6cc3602f2103b3dcdd93826d057e333d743361c3b"
+    }
+  ]
+}
