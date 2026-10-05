@@ -15,7 +15,7 @@ const cookie = (response, name) => response.headers.getSetCookie().find((value) 
 function adapter(clock) {
   const sealed = new Map();
   const calls = { codes: [], refresh: 0 };
-  let verificationRequired = false;
+  let verificationRequired = false, signIns = 0, distinctSessions = false;
   let user = { id: 'user_1', firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: true };
   let issuer = 'https://api.workos.com', tokenClientId = config.clientId, authenticationMethod = 'GitHubOAuth';
   function mint(sessionId = 'session_1') {
@@ -31,6 +31,8 @@ function adapter(clock) {
     setTokenClientId(value) { tokenClientId = value; },
     setAuthenticationMethod(value) { authenticationMethod = value; },
     requireEmailVerification() { verificationRequired = true; },
+    mintDistinctSessions() { distinctSessions = true; },
+    setUserId(id) { user = { ...user, id }; },
     userManagement: {
       async getAuthorizationUrlWithPKCE(options) {
         const url = new URL('https://api.workos.com/user_management/authorize');
@@ -50,7 +52,7 @@ function adapter(clock) {
             code: 'email_verification_required', status: 403, pendingAuthenticationToken: 'private-pending-token',
           });
         }
-        return mint();
+        return mint(distinctSessions ? `session_${++signIns}` : undefined);
       },
       async authenticateWithEmailVerification(options) {
         assert.equal(options.pendingAuthenticationToken, 'private-pending-token');
@@ -308,11 +310,26 @@ test('accepts a dedicated application token with the environment issuer', async 
 });
 
 test('bounded login state expires and frees capacity', async (t) => {
-  const app = await fixture(t);
-  for (let i = 0; i < 1_000; i++) assert.equal((await app.request('/auth/login')).status, 302);
+  const app = await fixture(t, { maxStates: 50 });
+  for (let i = 0; i < 50; i++) assert.equal((await app.request('/auth/login')).status, 302);
   assert.equal((await app.request('/auth/login')).status, 503);
   app.advance(21 * 60_000);
   assert.equal((await app.request('/auth/login')).status, 302);
+});
+
+// One account could sign in over and over until the session table was full,
+// locking every other account out.
+test('one account keeps only its newest sessions, so repeated sign-ins cannot fill the table', async (t) => {
+  const app = await fixture(t);
+  app.workos.mintDistinctSessions();
+  const cookies = [];
+  for (let i = 0; i < 13; i++) cookies.push((await app.login()).sessionCookie);
+  const signedIn = async cookie => (await (await app.request('/auth/session', { headers: { cookie } })).json()).authenticated;
+  for (const cookie of cookies.slice(0, 3)) assert.equal(await signedIn(cookie), false, 'the oldest sessions were retired');
+  for (const cookie of cookies.slice(3)) assert.equal(await signedIn(cookie), true);
+  app.workos.setUserId('user_2');
+  assert.equal(await signedIn((await app.login()).sessionCookie), true, 'another account is unaffected');
+  assert.equal(await signedIn(cookies.at(-1)), true);
 });
 
 test('absolute session expiry cannot be extended by refresh', async (t) => {

@@ -7,6 +7,7 @@ import { WebSocket } from 'ws';
 import { createDistributedServer } from '../distributed-app.js';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';
+import { SIGN_INS_PER_ADDRESS } from '../rate-limit.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createRedisLandmarks } from '../landmarks.js';
 import { createRedisSocial } from '../social.js';
@@ -86,6 +87,15 @@ function client(node, user, ticket, worldId = null, protocol = null) {
   } };
 }
 const closed = ws => new Promise(resolve => ws.once('close', (code) => resolve(code)));
+
+// Each sign-in start holds a pending slot for twenty minutes; one address used
+// to be able to take every slot and block sign-in for everyone.
+test('one address can start only a few sign-ins at a time, across instances', live, async t => {
+  const { nodes } = await fixture(t);
+  for (let i = 0; i < SIGN_INS_PER_ADDRESS; i++) assert.notEqual((await fetch(nodes[i % 2].url + '/auth/login')).status, 429);
+  for (const node of nodes) assert.equal((await fetch(node.url + '/auth/login')).status, 429);
+  assert.notEqual((await fetch(nodes[0].url + '/auth/session')).status, 429, 'other routes keep their own limit');
+});
 
 test('pending accounts cannot use distributed world APIs', live, async t => {
   const waitlist = { ...approvedWaitlist, isApproved: async id => id === 'alice' };

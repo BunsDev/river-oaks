@@ -2,8 +2,8 @@ import { createServer } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
-import { createRateLimiter } from './rate-limit.js';
-import { createClientAddress } from './client-address.js';
+import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
+import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -33,9 +33,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   let stopped = false, ticking = false;
   const send = (ws, value, options) => sendFrame(ws, value, options);
   const access = req => {
-    const ip = address(req);
+    const ip = rateLimitKey(address(req));
     return localAccess(ip) && security.allow('access', ip, 1000, 60_000);
   };
+  // Each sign-in start holds a pending slot until it completes or expires, so
+  // one address may start only a few at a time.
+  const signInStart = req => security.allow('login', rateLimitKey(address(req)), SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW);
   const authorized = async (req, res) => {
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
@@ -83,6 +86,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
+      if (path === '/auth/login' && !(await signInStart(req))) return json(res, 429, { error: 'Too many sign-in attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
