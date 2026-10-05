@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { request as httpRequest } from 'node:http';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createGameServer } from '../app.js';
@@ -43,6 +44,30 @@ test('standalone server protects every game chunk and world data after approval'
     assert.equal(response.headers.get('cache-control'),'private, no-store');
     assert.equal(response.headers.get('vary'),'Cookie');
   }
+});
+// fetch() would normalise these paths before sending them; the raw request
+// line is what a scanner sends.
+const rawGet=(origin,path,id)=>new Promise((resolve,reject)=>{
+  const {hostname,port}=new URL(origin);
+  const req=httpRequest({hostname,port,path,headers:id?{Cookie:`session=${id}`}:{}},res=>{res.resume();res.on('end',()=>resolve(res.statusCode));});
+  req.on('error',reject);req.end();
+});
+test('standalone server gates a game file however its path is encoded',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
+  for(const file of ['index.html','assets/index-entry.js','assets/main-game.js','data/district.json'])await writeFile(join(root,file),'fixture');
+  await symlink(join(root,'data/district.json'),join(root,'alias.json'));
+  const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
+  const {origin}=await fixture(t,waitlist,root);
+  for(const path of ['/%64ata/district.json','/data%2Fdistrict.json','/data/district%2Ejson','/%61ssets/main-game.js',
+    '/assets/main-game%2Ejs','/assets%2Fmain-game.js','/data//district.json','/alias.json','/assets/index-entry.js%2F..%2Fmain-game.js']){
+    assert.equal(await rawGet(origin,path),403,path);
+    assert.equal(await rawGet(origin,path,'guest'),403,path);
+  }
+  for(const path of ['/%64ata/district.json','/assets/main-game%2Ejs','/alias.json'])assert.equal(await rawGet(origin,path,'owner'),200,path);
+  assert.equal(await rawGet(origin,'/%E0%A4%A/x'),403);
+  assert.equal(await rawGet(origin,'/%61ssets/index-entry.js'),200);
 });
 const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ticket',{method:'POST',headers:{Origin:'http://127.0.0.1',Cookie:`session=${id}`,'X-CSRF-Token':'test-csrf',...headers}});
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
