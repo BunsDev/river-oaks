@@ -10,10 +10,10 @@ import { Vector3, Quaternion } from 'three';
 
 // Legacy public name keeps existing companion/force integrations compatible.
 // Only road vehicles are constructed; the retired carriage and team never load.
-export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,reducedMotion=false}) {
+export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,requestExit=async()=>({ok:true}),reducedMotion=false}) {
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur();
- let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,network=null,mounted=false,enabled=true;
+ let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,network=null,mounted=false,enabled=true,exiting=false;
  const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
  const apply=()=>{
   model.object.position.fromArray(placement.position);model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
@@ -57,7 +57,19 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
    return model.wheels.map(wheel=>{let gap=Infinity;wheel.traverse(mesh=>{if(!mesh.isMesh||mesh.material.name!=='Road tyre rubber')return;const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){point.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);gap=Math.min(gap,point.y-environment.groundAt(point.x,point.z));}});return gap;});
   },
   board(){const pose=walking.getPose();if(!enabled||!driver.canDrive||!placement||!pose||pose.flying||pose.roomId||Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8)return false;mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;},
-  leave(){if(!mounted)return false;const exit=findCarriageExit(placement,environment,getLocals()??[]);if(!exit)return false;walking.dismount(exit);return true;},summon,
+  get exiting(){return exiting;},
+  async leave(){
+   if(!mounted||exiting)return false;
+   const exit=findCarriageExit(placement,environment,getLocals()??[]);if(!exit)return false;
+   const seat=ride.pose.seat;ride.brake();exiting=true;
+   try {
+    const result=await requestExit(exit);if(!result.ok)return false;
+    const destination=result.player?[result.player.position[0],result.player.position[2],-result.player.position[1]]:exit;
+    walking.dismount(destination);
+    walking.setYaw(Math.atan2(destination[0]-seat[0],destination[2]-seat[2]));
+    return true;
+   } catch {return false;} finally {exiting=false;}
+  },summon,
   updateOptics(camera,viewportHeight){driver.updateOptics?.(camera,viewportHeight);},
   update(now=performance.now()){
    if(!enabled)return;

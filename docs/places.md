@@ -1,7 +1,15 @@
 # Places: go anywhere, keep what you find
 
-The **Places** tab combines a top-down world map with the destination and
-landmark lists. Roads, buildings, named places, and the current location come
+The **Places** tab contains destination and landmark lists. The optional
+top-down World map and **Worlds** directory are
+disabled by default. Set `VITE_WORLD_MAP=true` before starting development or
+building to enable them in Places and Commands (?); restart the dev server or
+rebuild after changing the flag. Unset, false, and other values keep both
+hidden. Destination lists and landmarks work in either mode.
+World publishing and editing additionally require `VITE_CREATION_TOOLS=true`
+and the existing account permissions.
+
+When enabled, roads, buildings, named places, and the current location come
 from the active world's compiled data, so a newly published region has its own
 map without hand-authored artwork.
 

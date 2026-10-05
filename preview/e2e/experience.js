@@ -11,8 +11,8 @@ async page => {
   check(await page.locator('.invasion-controls').evaluate(el=>el.tagName==='DETAILS'&&!el.open),'Optional scenario starts collapsed');
   await page.locator('.player-settings summary').click();
   check(await page.locator('#player-vehicle').isVisible(),'Rides can be discovered from the character card');
-  await page.locator('#player-camera').focus();await page.keyboard.press('h');
-  check(await page.locator('.clear-view-toggle').evaluate(el=>el===document.activeElement),'Clear view moves focus out of hidden controls');
+  await page.locator('.player-settings summary').focus();await page.keyboard.press('h');
+  check(await page.locator('.commands-toggle').evaluate(el=>el===document.activeElement),'Clear view moves focus to Commands outside hidden controls');
   await page.keyboard.press('h');await page.locator('.player-settings summary').click();
   await page.locator('#panel-toggle').click();
   await page.locator('[data-section=settings-section]').focus();await page.keyboard.press('Escape');
@@ -42,8 +42,8 @@ async page => {
   await page.locator('.invasion-controls > summary').click();
   await page.locator('#invasion-toggle').scrollIntoViewIfNeeded();
   check(await page.locator('#invasion-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'The last disclosure action can be reached in landscape');
-  check(await page.locator('.visit-tools-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.right-12,r.top+r.height/2));}),'The dock collapse indicator is not covered by Clear view');
-  check(await page.locator('.clear-view-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),'Clear view remains independently reachable in landscape');
+  check(await page.locator('.visit-tools-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.right-12,r.top+r.height/2));}),'The dock collapse indicator is not covered by Commands');
+  check(await page.locator('.commands-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),'Commands remains independently reachable in landscape');
   await page.screenshot({path:'output/playwright/aaa-hud-landscape.png'});
   await page.setViewportSize({width:1440,height:1000});
   await page.route('**/v1/auto',route=>{const packet=route.request().postDataJSON();return route.fulfill({json:{schema_version:1,tick:packet.tick,generation:packet.generation,source:'unavailable',reason:'not_configured',candidate_id:'wait',confidence:0}});});

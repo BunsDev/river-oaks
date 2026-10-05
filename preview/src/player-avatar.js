@@ -11,7 +11,7 @@ import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppe
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
 
-export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), getPortrait=null, reducedMotion }) {
+export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), getPortrait=null, reducedMotion }) {
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
   const owner=isJevicaOwner(userId);
   let sharedMode=false,crewLocal=null;
@@ -22,7 +22,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(sharedMode&&owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
     return sharedMode&&owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
-  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,reducedMotion});
+  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,reducedMotion});
   const panel = document.createElement('section');panel.className = 'player-controls';panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
     <div class="player-portrait"><img src="/assets/characters/jevica-portrait.png" alt="" width="72" height="88" ${owner?'':'hidden'}><span class="player-monogram" ${owner?'hidden':''} aria-hidden="true">${owner?'J':'S'}</span></div>
@@ -68,8 +68,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else status.textContent=`${carriage.label} is ready.`;});
   driveButton.addEventListener('click',()=>{if(carriage.chauffeur.active)carriage.stopTour();else if(!carriage.tour())status.textContent='Board your vehicle on a clear road to start a scenic drive.';});
   const rideButton=panel.querySelector('#player-ride');
-  rideButton.addEventListener('click',()=>{
-    if(carriage.riding)status.textContent=carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
+  rideButton.addEventListener('click',async()=>{
+    if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
   // Keep the detailed decision source in diagnostics; the player sees what Jev
@@ -331,7 +331,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
       carriageButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
       companionButton.disabled=sharedMode&&!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away;
+      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
       rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
       vehicleSelect.disabled=sharedMode&&!owner||carriage.riding||away;driveButton.disabled=sharedMode&&!owner||!carriage.riding||away;
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));

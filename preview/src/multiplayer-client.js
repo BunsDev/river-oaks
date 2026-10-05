@@ -5,7 +5,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { accountName } from './resident-names.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, onPlaySolo = null }) {
+export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, onPlaySolo = null, creationToolsEnabled = false }) {
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -88,8 +88,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     },
     request:socialRequest,
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
-  const groups=createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
-    request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
+  const groups=creationToolsEnabled?createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
+    request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(leaveTown,logout);
   const latestPlayers=new Map();
   const displayPlayers=players=>{
@@ -175,7 +175,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
             if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups.refresh(true);void refreshHomeAccess();}
+            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void refreshHomeAccess();}
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
@@ -239,6 +239,6 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);clearInterval(homeAccessTimer);socket?.close();clearPending();social.dispose();groups.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){stopped=true;clearTimeout(retryTimer);clearInterval(homeAccessTimer);socket?.close();clearPending();social.dispose();groups?.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
   };
 }

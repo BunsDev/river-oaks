@@ -1,5 +1,9 @@
 # Creator region packages
 
+The publishing and region editor controls require both `VITE_WORLD_MAP=true`
+and `VITE_CREATION_TOOLS=true` before development starts or the frontend is
+built. Both flags default off; account permissions still apply when enabled.
+
 Jevica can publish a region from **Explore → Publish a world**. Choose
 **Design a region** to create one on a map, or upload a JSON file. The studio
 edits terrain height samples, roads, buildings, walk-in venues and homes, named land parcels, trees, arrival, and named

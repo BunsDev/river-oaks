@@ -14,6 +14,8 @@
     "test:experience": "node preview/e2e/experience-runner.js",
     "test:shared": "node preview/e2e/shared-runner.js",
     "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
+    "test:trees:webgl": "node preview/e2e/landscape-trees.js",
+    "assets:trees": "node scripts/prepare_ez_tree.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
     "audit:multiplayer": "node server/performance-audit.js data/reports/multiplayer-performance-audit.json",
@@ -34,6 +36,7 @@
     "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@dgreenheck/ez-tree": "1.1.0",
     "@electron/fuses": "2.1.3",
     "@electron/packager": "20.3.0",
     "electron": "44.5.1",

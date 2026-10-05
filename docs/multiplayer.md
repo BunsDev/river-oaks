@@ -1,5 +1,14 @@
 # Deploy the shared town
 
+Groups and open-ended creation controls are disabled by default. Set
+`VITE_CREATION_TOOLS=true` before starting development or building to show
+Groups, event hosting, Build & decorate (including saved designs), and world
+publishing/editing. Only the exact value `true` enables them; restart the dev
+server or rebuild after changing the flag. Publishing/editing also requires
+`VITE_WORLD_MAP=true` to expose the Worlds section and the existing account
+permissions. Event browsing and RSVPs, contacts, chat, profiles, landmarks,
+and existing shared creations remain available with creation tools off.
+
 ## Develop locally with WorkOS
 
 `npm run dev` starts WorkOS authentication and the shared town inside the Vite
@@ -44,6 +53,10 @@ account and follow it between worlds and server instances. Redis retains up to
 recovery. A new account preference first takes the saved River Oaks appearance
 when one exists. The solo-only invasion and auto visit are hidden, since
 each would diverge from the shared town.
+Multiplayer streets show real players and Jevica's companion/chauffeur.
+Other street residents are hidden; the NPC directory and nearby interactions
+keep building residents. Shop staff, guests, and indoor encounters remain.
+Single player retains its full outdoor cast.
 The People panel also has contacts and private messages. An invitation can be
 sent only to a player currently present in the same world; that player must
 accept before either can send a private message. Contacts and the latest 40
@@ -81,7 +94,8 @@ browser tab is visible and connected.
 Private messages are visible only to the two participants through authenticated,
 origin and CSRF checked requests.
 
-Residents can also create private groups from the People panel. The owner invites
+With `VITE_CREATION_TOOLS=true`, residents can create private groups from the
+People panel. The owner invites
 accepted contacts, and each person accepts or declines before joining. Members
 can chat across worlds and reconnects; nonmembers and pending invitees cannot
 read the conversation. Owners can cancel invitations, remove members, or disband
@@ -146,7 +160,8 @@ signed-out solo player cannot grant wishes. Solo play has no building controls.
 Local simulation state is browser-owned; shared-world authority is enforced by
 the server.
 
-Build & decorate lets the owner place, move, turn, and remove up to 24 owned
+With `VITE_CREATION_TOOLS=true`, Build & decorate lets the owner place, move,
+turn, and remove up to 24 owned
 creations in the shared town. A placed creation can be saved as an account
 design, then placed again from **Saved designs** in any published world. Jevica
 can keep 48 account designs. The account library is private and stored outside
@@ -203,6 +218,10 @@ The Redis backend stores OAuth state, email verification challenges, sessions, s
 One renewable Redis lease controls simulation writes. A fenced transaction commits the compressed world checkpoint, public snapshot, consumed operation batch, and command acknowledgments together. A replacement instance restores residents, wishes, movement budgets, cooldowns, and conversation holds. An expired lease cannot overwrite the replacement's state. The world pauses without players; it does not simulate all elapsed offline time.
 
 Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+
+Vehicle exits use the server-checked travel command before completing the local
+dismount. This keeps the seat-to-ground transition from being rejected as an
+ordinary walking-speed violation. A refused exit keeps the rider seated.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 

@@ -38,7 +38,7 @@ async page => {
   check(await page.locator('[data-quality=sharp]').getAttribute('aria-pressed') === 'true', 'the graphics choice persists');
   await page.evaluate(() => { try { localStorage.removeItem('river-oaks-graphics'); } catch {} });
 
-  // Clear view: H hides the visit cards, the chip brings them back.
+  // Clear view: H hides the visit cards, Commands brings them back.
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   await page.waitForFunction(() => document.body.classList.contains('walking') && document.querySelector('#canvas-host').dataset.playerReady === 'true');
   await page.locator('#canvas-host').focus();
@@ -46,11 +46,13 @@ async page => {
   check(await page.evaluate(() => document.body.classList.contains('clear-view')), 'H toggles clear view');
   // Visibility follows a short fade, which a long frame can delay.
   await page.waitForFunction(() => getComputedStyle(document.querySelector('.visit-tools')).visibility === 'hidden', null, { timeout: 5000 });
-  const cleared = await page.evaluate(() => ({ cards: getComputedStyle(document.querySelector('.visit-tools')).visibility, console: getComputedStyle(document.querySelector('.walking-console')).visibility, chip: getComputedStyle(document.querySelector('.clear-view-toggle')).visibility }));
+  const cleared = await page.evaluate(() => ({ cards: getComputedStyle(document.querySelector('.visit-tools')).visibility, console: getComputedStyle(document.querySelector('.walking-console')).visibility, commands: getComputedStyle(document.querySelector('.commands-toggle')).visibility }));
   check(cleared.cards === 'hidden' && cleared.console === 'hidden', 'H clears the visit cards');
-  check(cleared.chip === 'visible', 'the way back stays visible');
+  check(cleared.commands === 'visible', 'Commands stays visible as the way back');
+  check(await page.locator('.clear-view-toggle').count() === 0, 'The standalone Clear view button is removed');
   await page.screenshot({ path: 'output/playwright/hud-clear-view.png' });
-  await page.locator('.clear-view-toggle').click();
+  await page.locator('.commands-toggle').click();
+  await page.locator('.rail-commands').getByRole('button', { name: /^Show controls/ }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector('.visit-tools')).visibility === 'visible', null, { timeout: 5000 });
   await page.locator('#panel-toggle').click();
   await page.locator('[data-section=explore-section]').click();

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { physicalSurface, paverSurface } from './materials.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
-import { STREET, isWalkway, streetOffset, streetSection, streetStations, crossingDistance } from './street-profile.js';
+import { STREET, isWalkway, streetOffset, streetSection, streetStations, streetPoint, crossingDistance } from './street-profile.js';
 
 export function buildRoads(world) {
   const network = createPedestrianNetwork(world);
@@ -10,20 +10,16 @@ export function buildRoads(world) {
   const asphalt = physicalSurface('asphalt', { tileSize: 7, normalScale: new THREE.Vector2(0.22, 0.22), color: '#62696b', roughness: 0.9, side: THREE.DoubleSide, variation: 0.3 });
   for (const walkway of [false, true]) {
     const positions = [], uvs = [];
-    for (const road of world.roads.filter(r => isWalkway(r) === walkway)) {
+    for (const segment of network.segments.filter(s => s.walkway === walkway)) {
+      const road={id:segment.road,width_m:segment.width};
       const half = road.width_m / 2, inner = streetSection(road).asphaltHalf;
       const offsets = walkway ? [-half, half] : [-half, -inner, 0, inner, half];
-      for (let i = 1; i < road.points.length; i++) {
-        const a = road.points[i - 1], b = road.points[i], length = Math.hypot(b[0]-a[0], b[1]-a[1]);
-        if (!length) continue;
-        const ux=(b[0]-a[0])/length, uy=(b[1]-a[1])/length;
-        const cuts=streetStations({a,b,road:road.id},network.crossings);
-        for(let step=1;step<cuts.length;step++)for(let band=1;band<offsets.length;band++) {
-          const vertices=[[cuts[step-1]/length,offsets[band-1]],[cuts[step]/length,offsets[band-1]],[cuts[step]/length,offsets[band]],[cuts[step-1]/length,offsets[band]]];
-          for(const index of [0,2,1,0,3,2]) {
-            const [t,d]=vertices[index],x=a[0]+ux*length*t-uy*d,y=a[1]+uy*length*t+ux*d;
-            positions.push(x,terrainHeight(world.terrain,x,y)+(walkway ? STREET.plazaOffset + 0.004 : streetOffset(road.width_m,d,crossingDistance(network,road.id,[x,y]))),-y);uvs.push(x,-y);
-          }
+      const cuts=streetStations(segment,network.crossings);
+      for(let step=1;step<cuts.length;step++)for(let band=1;band<offsets.length;band++) {
+        const vertices=[[cuts[step-1],offsets[band-1]],[cuts[step],offsets[band-1]],[cuts[step],offsets[band]],[cuts[step-1],offsets[band]]];
+        for(const index of [0,2,1,0,3,2]) {
+          const [t,d]=vertices[index],[x,y]=streetPoint(segment,t,d);
+          positions.push(x,terrainHeight(world.terrain,x,y)+(walkway ? STREET.plazaOffset + 0.004 : streetOffset(road.width_m,d,crossingDistance(network,road.id,[x,y]))),-y);uvs.push(x,-y);
         }
       }
     }

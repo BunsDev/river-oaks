@@ -32,7 +32,7 @@ try {
       console.log(`Running ${name}`);
       // These repository harnesses are page functions, also used by the browser CLI.
       const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replace(/http:\/\/127\.0\.0\.1:\d+/g, origin);
-      const result = await eval(`(${source})`)(page);
+      const result = await eval(`(${source})`)(page, { worldMapEnabled: vite.config.env.VITE_WORLD_MAP === 'true' });
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);
     } catch (error) {

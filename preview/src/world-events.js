@@ -9,7 +9,7 @@ const errors={invalid_event:'Use a title, a start within 30 days, and a duration
   event_missing:'This event ended or was cancelled.',event_forbidden:'Only the host or Jevica can cancel this event.',
   event_host:'The host stays on the guest list. Cancel the event to remove it.'};
 const localInput=date=>new Date(date.getTime()-date.getTimezoneOffset()*60_000).toISOString().slice(0,16);
-export function createWorldEvents({host}) {
+export function createWorldEvents({host,creationToolsEnabled=false}) {
   const section=node('section',null,'world-events');section.setAttribute('aria-label','World events');
   const heading=node('h3','Events'),intro=node('p','Meet for art, conversation, and celebrations across shared worlds. Times are shown in your local time zone.','quiet-note');
   const status=node('p','Loading events…','world-events-status');status.setAttribute('role','status');
@@ -30,7 +30,7 @@ export function createWorldEvents({host}) {
   const submit=node('button','Schedule event');submit.type='submit';submit.disabled=true;
   const note=node('p','Choose an outdoor meeting point in this world. RSVPs include you; they do not reserve a world connection or admission to a private home.','quiet-note');
   form.append(field('Event name',title),field('Description',description),field('Meeting point',venue),field('Starts (local time)',start),field('Ends (local time)',end),field('RSVP capacity',capacity),note,submit);
-  studio.append(summary,form);section.append(heading,intro,filters,status,list,studio);const portal=host.querySelector('.world-portal');if(portal)portal.after(section);else host.append(section);
+  studio.append(summary,form);section.append(heading,intro,filters,status,list);if(creationToolsEnabled)section.append(studio);const portal=host.querySelector('.world-portal');if(portal)portal.after(section);else host.append(section);
   let events=[],loading=null,busy=false,signature='';
   const resetTimes=()=>{const hour=new Date(Date.now()+3_600_000);start.value=localInput(hour);end.value=localInput(new Date(hour.getTime()+3_600_000));};resetTimes();
   async function request(action,data={}) {

@@ -257,12 +257,11 @@ export function createRomanceLook(avatar,root,appearance) {
   }
   // Small, physically shaded accessories keep the human archetypes recognizable
   // at conversational distance without replacing their detailed source faces.
-  let pendant=null;
+  let earrings=null;
   if(style.jewelry!==false){
-    pendant=new THREE.Group();head.add(pendant);
-    const trim=mat(style.trim,{metalness:.65,roughness:.28}),gemstone=mat(style.gem??'#7ab5ac',{metalness:.2,roughness:.16});
-    ball(pendant,trim,[0,-.058,.072],[.012,.017,.007]);ball(pendant,gemstone,[0,-.059,.079],[.007,.011,.004]);
-    for(const side of [-1,1])ball(pendant,trim,[side*.087,.035,.018],[.005,.012,.005]);
+    earrings=new THREE.Group();head.add(earrings);
+    const trim=mat(style.trim,{metalness:.65,roughness:.28});
+    for(const side of [-1,1])ball(earrings,trim,[side*.087,.035,.018],[.005,.012,.005]);
   }
-  return {beast:false,update(){},dispose(){reference.dispose();pendant?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
+  return {beast:false,update(){},dispose(){reference.dispose();earrings?.removeFromParent();group.removeFromParent();for(const geometry of resources)geometry.dispose();for(const material of materials)material.dispose();}};
 }
