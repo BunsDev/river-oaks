@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-05T14:17:22.714Z",
+  "createdAt": "2026-10-05T14:47:22.291Z",
   "status": "passed",
   "modes": [
     "development"
@@ -10,13 +10,14 @@
     {
       "name": "shared-seating",
       "status": "passed",
-      "seconds": 41.484,
+      "seconds": 43.765,
       "result": {
         "passed": true,
         "checks": [
+          "The fresh loopback owner has building and wish permissions",
           "Shared play provides accessible furniture seating controls",
           "Seating controls have an accessible name",
-          "Jevica can place a garden seat on open ground (Ready to place.)",
+          "The fixture owner can place a garden seat on open ground (Ready to place.)",
           "Seated poses use the furniture base height on sloping terrain",
           "The local pose is seated only after server confirmation",
           "Walking input cannot move a seated player",
@@ -37,7 +38,7 @@
   ],
   "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
   "source": {
-    "baseCommit": "c80fc3fc444347054f8619eeba68e1cec86d64f3",
+    "baseCommit": "df98cb3e4a53e788a577206ff0fad317825dd51a",
     "sha256": {
       "package-lock.json": "ad7f31a48b7f04a1faa8a2682b8ff16804624520c396351e223cb4213b77aa9f",
       "server/world.js": "33c2d7f47a5212eebe6baf96e55ca3b010809fca57b800ca8facddad541d138c",
@@ -49,7 +50,8 @@
       "preview/src/remote-players.js": "87d502af695b2bb61917934ea7a4ff01d168f6dec59523144ea8341b448728c0",
       "preview/src/avatars.js": "8eca70b922f763d836cb3776e747a384db3cf469c58829d53366eb3b71176bba",
       "preview/src/main.js": "aaaeebed1f780cce3adb7697b040ffe9c0903283a87207e54c00ffa785563dd9",
-      "preview/e2e/shared-seating.js": "ab824bca23084cf10f5aa78f53aafdf8a6609ff0088db778c5afa17a45291c6c"
+      "preview/e2e/shared-seating.js": "e50f0bca2e28d6c7865a3d61d4902119f93ec2ff03319fdcfc931bfe4cab5453",
+      "preview/e2e/shared-runner.js": "568e041994500415a6026d89014525eea5884d7f51fd0d817a17261f66b18b89"
     }
   }
 }

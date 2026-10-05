@@ -14,6 +14,8 @@ async page => {
   };
   const closePanel=async tab=>{if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();};
   await join(page);
+  const fixtureOwner=await self(page);
+  check(fixtureOwner.canBuild&&fixtureOwner.canGrantWishes,'The fresh loopback owner has building and wish permissions');
   check(await page.locator('.shared-seating-controls').count()===1,'Shared play provides accessible furniture seating controls');
   check(await page.locator('.shared-seating-controls').getAttribute('aria-label')==='Furniture seating','Seating controls have an accessible name');
   const district=await (await page.request.get(`${origin}/data/district.json`)).json(),spot=district.communityLocations[5];
@@ -30,7 +32,7 @@ async page => {
     await page.waitForTimeout(300);
     if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed=true;break;}
   }
-  check(aimed,`Jevica can place a garden seat on open ground (${await page.locator('#build-hint').textContent()})`);
+  check(aimed,`The fixture owner can place a garden seat on open ground (${await page.locator('#build-hint').textContent()})`);
   await page.locator('#build-place').click();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===1);
   const build=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds[0]);

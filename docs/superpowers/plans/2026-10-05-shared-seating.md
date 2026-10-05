@@ -35,3 +35,12 @@ Hosted gates, production deployment and owned-worktree retirement are pending.
 Rolling-coordinator probe used actual c80fc3f world/Redis code: upgraded the
 active older lease, replayed a queued operation, fenced a delayed old commit and
 kept the two-player roster and seat. Lease tests also retain same/newer writers.
+
+The first hosted run passed the other 13 browser journeys but caught a fixture
+isolation error: the seating journey inherited earlier dev accounts/creations
+and joined as a guest. It now starts a fresh loopback server when run in the
+suite, and explicitly verifies the fixture owner's capability flags. Production
+permissions and test timeouts remain unchanged.
+
+The full local development sequence passed all five journeys after the fix,
+including earlier account/creation activity followed by isolated seating.
