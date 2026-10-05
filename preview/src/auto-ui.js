@@ -1,5 +1,6 @@
 import { createAutoVisitor } from './auto-visitor.js';
 import { createNavigationService } from './navigation-service.js';
+import { isGameplayKey } from './keyboard-input.js';
 import './auto.css';
 
 export function createAutoControls({ walking, community, getWorld, getStorm }) {
@@ -38,7 +39,7 @@ export function createAutoControls({ walking, community, getWorld, getStorm }) {
   const stop = () => { if (controller.status.enabled) controller.stop('You took over · auto off'); };
   window.addEventListener('blur', stop);
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-  document.addEventListener('keydown', event => { if (event.code === 'Escape') stop(); }, true);
+  document.addEventListener('keydown', event => { if (event.code === 'Escape' && isGameplayKey(event)) stop(); }, true);
   // Reading the rail does not take over the visit. Actions that move the visitor
   // or reset the scenario cancel synchronously before their handlers run.
   document.addEventListener('click', event => {

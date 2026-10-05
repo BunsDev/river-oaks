@@ -1,3 +1,4 @@
+import { isGameplayKey } from './keyboard-input.js';
 import { createInvaders } from './invaders.js';
 import { createWalkingEnvironment } from './walking.js';
 import { canCast, castSpell, createInvasion, releaseResidents, stepInvasion, RESIDENTS_LOST_LIMIT, SPELL_RANGE } from './invasion.js';
@@ -90,7 +91,7 @@ export function createInvasionControls({ scene, host, walking, getWorld, getLoca
   };
   toggle.addEventListener('click', () => { if (state?.phase === 'active') { state.phase = 'called-off'; finish('Invasion called off. Everyone is back on the pavement.'); } else begin(); });
   cast.addEventListener('click', () => { tryCast(); host.focus({ preventScroll: true }); });
-  host.addEventListener('keydown', event => { if (event.code === 'KeyQ' && !event.repeat) { event.preventDefault(); tryCast(); } });
+  host.addEventListener('keydown', event => { if (isGameplayKey(event) && event.code === 'KeyQ' && !event.repeat) { event.preventDefault(); tryCast(); } });
   refreshGate(); publish();
   return {
     panel,

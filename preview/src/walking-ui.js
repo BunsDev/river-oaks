@@ -8,6 +8,7 @@ import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalking
 import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
+import { isGameplayKey } from './keyboard-input.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {}, getSharedPopulation = () => false, canEnterStore = () => true }) {
@@ -109,7 +110,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#walking-meet-nearby').addEventListener('click', () => { clear(); onMeetNearby(); });
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
-    if (!active || dialogueOpen()) return;
+    if (!active || dialogueOpen() || !isGameplayKey(event)) return;
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'Escape'].includes(event.code)) {
       onManual();
       // Cancel the chauffeur even when a quick tap ends before the next frame.
