@@ -10,7 +10,7 @@ const sign = envelope => ({ ...envelope, checksum: createHash('sha256').update(J
 
 test('world ids are canonical slugs and the default has a stable protocol', () => {
   assert.equal(DEFAULT_WORLD_ID, 'river-oaks');
-  assert.equal(WORLD_PROTOCOL_VERSION, 1);
+  assert.equal(WORLD_PROTOCOL_VERSION, 2);
   assert.equal(validateWorldId('garden-2'), 'garden-2');
   for (const bad of ['', 'Garden', '-garden', 'garden-', 'a/b', 'a'.repeat(49)]) assert.throws(() => validateWorldId(bad));
   assert.equal(worldIdFromSearch('?place=arrival'),DEFAULT_WORLD_ID);

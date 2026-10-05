@@ -89,9 +89,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v3 adds seat locks. A newer
+  // Monotonic writer generation: checkpoint v4 adds creator assemblies. A newer
   // writer atomically fences an older lease; peers/future generations retain it.
-  const token=`v3:${randomUUID()}`;
+  const token=`v4:${randomUUID()}`;
   let closed=false,pendingTick=null,lastAttempt=-Infinity,lastView=null,cached=null;
   async function read() {
     const buffer=await redis.getBuffer(keys.view);

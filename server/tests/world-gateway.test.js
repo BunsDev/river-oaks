@@ -55,7 +55,7 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
     const ticketResponse=await post(user,`/api/multiplayer/ticket?world=${worldId}`,{});
     assert.equal(ticketResponse.status,200);
     const ticket=(await ticketResponse.json()).ticket;
-    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
+    const socket=new WebSocket(`${base.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:`test_session=${user}`}});
     sockets.push(socket);
     const snapshot=await new Promise((resolve,reject)=>{
       socket.once('error',reject);

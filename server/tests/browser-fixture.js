@@ -33,7 +33,9 @@ const auth={authenticate:async req=>identity(req),async handle(req,res){
   }
   res.statusCode=404;res.end('{}');return true;
 }};
-app=createGameServer({auth,world:createSharedWorld(data,{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),waitlist:approvedWaitlist,origin});
+// Creator acceptance uses the production Jevica allowlist. The older journeys
+// retain their isolated Alice builder fixture.
+app=createGameServer({auth,world:createSharedWorld(data,process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),waitlist:approvedWaitlist,origin});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
 const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/profile':townHttp,'/api/waitlist':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});

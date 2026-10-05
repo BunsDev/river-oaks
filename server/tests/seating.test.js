@@ -173,7 +173,7 @@ test('seating uses a new private checkpoint version while upgrading valid pre-se
   for(const player of old.payload.players)delete player.sitting;
   const restored=createSharedWorld(data);assert.deepEqual(restored.restore(resign(old)),{ok:true});
   assert.equal(sit(f).ok,true);
-  const current=f.world.checkpoint();assert.equal(current.version,3,'old coordinators must reject state whose seat locks they do not understand');
+  const current=f.world.checkpoint();assert.equal(current.version,4,'old coordinators must reject state whose seat locks they do not understand');
   const downgrade=structuredClone(current);downgrade.version=2;
   assert.equal(restored.restore(resign(downgrade)).error,'invalid_checkpoint','a seat cannot be laundered into the old format');
 });

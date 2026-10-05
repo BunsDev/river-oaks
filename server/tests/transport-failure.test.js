@@ -29,7 +29,7 @@ for (const failure of ['snapshot-read', 'join-acknowledgment']) {
     const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
     t.after(() => app.close());
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-    const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });
+    const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, { headers: { Origin: 'http://localhost' } });
     t.after(() => ws.terminate());
     const [code] = await once(ws, 'close');
     assert.equal(code, 1013);
@@ -66,7 +66,7 @@ test('coalesces waiting poses without reordering them across travel', { timeout:
   const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
   t.after(async () => { releaseFirst(); await app.close(); });
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });
+  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, { headers: { Origin: 'http://localhost' } });
   t.after(() => ws.terminate());
   await once(ws, 'message');
   const pose = value => ({ type: 'pose', position: [value, 0, 0], yaw: 0, altitude: 0 });
@@ -103,7 +103,7 @@ test('durable travel acknowledgment does not wait for the broadcast read', { tim
   const app=createDistributedServer({auth,security,room,waitlist:approvedWaitlist,origin:'http://localhost'});
   t.after(async()=>{releaseRead();await app.close();});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
-  const ws=new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`,{headers:{Origin:'http://localhost'}});
+  const ws=new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`,{headers:{Origin:'http://localhost'}});
   t.after(()=>ws.terminate());
   await once(ws,'message');
   ws.send(JSON.stringify({type:'travel',storeId:'store',requestId:'travel'}));
@@ -138,7 +138,7 @@ test('compresses public snapshots without leaking private view fields and bounds
   const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin: 'http://localhost' });
   t.after(() => app.close());
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?ticket=test`, { headers: { Origin: 'http://localhost' } });
+  const ws = new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=test`, { headers: { Origin: 'http://localhost' } });
   t.after(() => ws.terminate());
   let extensions;
   ws.once('upgrade', response => { extensions = response.headers['sec-websocket-extensions']; });

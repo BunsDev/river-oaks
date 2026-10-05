@@ -186,7 +186,7 @@ async page => {
   const blocked = await builder();
   check(blocked.valid === 'false', `The preview turns red on the spot just taken (${blocked.hint})`);
   const yaw = (await builder()).yaw; await page.keyboard.press('KeyR');
-  check(Math.abs((await builder()).yaw - yaw - Math.PI / 12) < 1e-6, 'R turns the preview');
+  check(Math.abs((await builder()).yaw - yaw - Math.PI / 8) < 1e-6, 'R turns the preview');
   await page.keyboard.press('Escape');
   check(!(await builder()).active && !(await builder()).ghost, 'Escape leaves builder mode and removes the preview');
   check(await page.locator('.visit-tools').evaluate(node => node.open), 'Escape in builder mode leaves the dock open');

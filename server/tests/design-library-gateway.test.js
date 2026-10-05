@@ -9,7 +9,8 @@ import { createRedisSecurity } from '../redis-security.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 
-test('Jevica saves and copies designs across published worlds without granting guests building rights',
+for(const assembly of [undefined,{name:'Portable rose',parts:[{shape:'box',size:[1,1,1],position:[0,.5,0],rotation:[0,.3,0],color:'#b97986',material:'metal'}]}])
+test(`Jevica saves and copies designs across published worlds without granting guests building rights (${assembly?'assembly':'furniture'})`,
   { skip: !process.env.REDIS_URL, timeout: 60_000 }, async t => {
     const redis = new Redis(process.env.REDIS_URL); redis.on('error', () => {});
     const namespace = `river-oaks:design-gateway-test:${randomUUID()}`, prefix = `{${namespace}}`, origin = 'https://sim.jev.works';
@@ -41,7 +42,7 @@ test('Jevica saves and copies designs across published worlds without granting g
       const response = await post(user, `/api/multiplayer/ticket?world=${worldId}`, {});
       assert.equal(response.status, 200);
       const { ticket } = await response.json();
-      const socket = new WebSocket(`${base.replace('http:', 'ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,
+      const socket = new WebSocket(`${base.replace('http:', 'ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,
         { headers: { Origin: origin, Cookie: `test_session=${user}` } });
       sockets.push(socket);
       await new Promise((resolve, reject) => {
@@ -65,7 +66,7 @@ test('Jevica saves and copies designs across published worlds without granting g
     assert.equal(published.status, 201);
     assert.equal((await post('admin', '/api/worlds', { id: 'star-garden', title: 'Star Garden', description: 'Another garden', region })).status, 201);
     const moon = await open('moon-garden');
-    const placed = await command(moon, { type: 'build', action: 'place', kind: 'seat', finish: 'rose', position: [0, -18], yaw: 0 });
+    const placed = await command(moon, { type: 'build', action: 'place', kind: assembly?'object':'seat', finish: 'rose', ...(assembly?{assembly}:{}), position: [0, -18], yaw: 0 });
     assert.equal(placed.ok, true);
     const saved = await command(moon, { type: 'inventory', action: 'save', buildId: placed.item.id });
     assert.equal(saved.ok, true);
@@ -78,7 +79,8 @@ test('Jevica saves and copies designs across published worlds without granting g
     assert.deepEqual((await command(star, { type: 'inventory', action: 'list' })).items.map(item => item.id), [saved.item.id]);
     const placedElsewhere = await command(star, { type: 'build', action: 'place', templateId: saved.item.id, position: [0, -18], yaw: 0 });
     assert.equal(placedElsewhere.ok, true);
-    assert.equal(placedElsewhere.item.kind, 'seat');
+    assert.equal(placedElsewhere.item.kind, assembly?'object':'seat');
+    if(assembly)assert.deepEqual(placedElsewhere.item.assembly,assembly);
     assert.equal(placedElsewhere.item.finish, 'rose');
     assert.equal((await command(river, { type: 'build', action: 'place', templateId: saved.item.id, position: [999, 999], yaw: 0 })).error,
       'build_out_of_reach', 'the global template reaches ordinary server placement checks');
@@ -94,6 +96,7 @@ test('Jevica saves and copies designs across published worlds without granting g
     assert.equal(beforeCopy.items.find(item => item.id === legacy.item.id)?.scope, 'world');
     const copied = await command(moon, { type: 'inventory', action: 'copy', id: legacy.item.id });
     assert.equal(copied.ok, true);
+    if(assembly)assert.deepEqual(copied.item.assembly,assembly);
     assert.equal(copied.items.some(item => item.id === legacy.item.id), false);
     assert.equal((await command(river, { type: 'inventory', action: 'list' })).items.some(item => item.id === copied.item.id), true);
     assert.equal((await command(moon, { type: 'inventory', action: 'remove', id: copied.item.id })).items.some(item => item.id === legacy.item.id), true);
@@ -101,5 +104,8 @@ test('Jevica saves and copies designs across published worlds without granting g
     await gateway.close();
     gateway = makeGateway(); await listen();
     const rejoined = await open('moon-garden');
-    assert.equal((await command(rejoined, { type: 'inventory', action: 'list' })).items.some(item => item.id === saved.item.id), true);
+    const recovered=(await command(rejoined, { type: 'inventory', action: 'list' })).items.find(item=>item.id===saved.item.id);
+    assert.ok(recovered);if(assembly)assert.deepEqual(recovered.assembly,assembly);
+    const recoveredRoom=await (await gateway.worldFor('moon-garden')).room.read();
+    if(assembly)assert.deepEqual(recoveredRoom.snapshot.builds.find(item=>item.id===placed.item.id).assembly,assembly);
   });

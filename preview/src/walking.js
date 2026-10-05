@@ -70,13 +70,22 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     if (room) return !roomBlocked(room, x, -z, RADIUS);
     return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
+  // Full conservative footprint clearance for creator placement. Unlike point
+  // samples, disk/polygon intersection also catches obstacles inside the disk.
+  const isAreaFree=(x,z,radius)=>{
+    const margin=radius+RADIUS;
+    if(x<west+margin||x>east-margin||z<-north+margin||z>-south-margin)return false;
+    const room=roomFor(x,z,margin);
+    if(room)return !roomBlocked(room,x,-z,margin);
+    return !obstacles.some(o=>x>o.minX-radius&&x<o.maxX+radius&&z>o.minZ-radius&&z<o.maxZ+radius&&overlaps(x,z,o.ring,margin));
+  };
   const isFree = (x,z) => {
     if(!baseIsFree(x,z))return false;
     if(!placedObjects.length)return true;
     // Every obstacle tests the same candidate position. Resolve its surface
     // once, while keeping later queries fresh for moving objects and terrain.
     const y=groundAt(x,z)+.9;
-    return !placedObjects.some(object=>object.contains(x,y,z,RADIUS));
+    return !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
   };
   const canFly = (x, altitude, z) => {
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
@@ -94,7 +103,7 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     }
     return true;
   };
-  return { groundAt, isFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  return { groundAt, isFree, isAreaFree, canFly, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

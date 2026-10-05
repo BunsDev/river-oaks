@@ -72,7 +72,7 @@ async function connectActor(index) {
   const response = await fetch(`${town}/api/multiplayer/ticket`, { method: 'POST', headers: { Origin: origin, Cookie: `render_audit=${id}`, 'X-CSRF-Token': 'render-audit-csrf' }, signal: AbortSignal.any([abort.signal, AbortSignal.timeout(10000)]) });
   assert.equal(response.status, 200, `Actor ticket ${id}`);
   const { ticket } = await response.json();
-  const ws = new WebSocket(`${town.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}`, { headers: { Origin: origin, Cookie: `render_audit=${id}` } });
+  const ws = new WebSocket(`${town.replace('http:', 'ws:')}/multiplayer?protocol=2&ticket=${ticket}`, { headers: { Origin: origin, Cookie: `render_audit=${id}` } });
   const actor = { id, ws, errors: 0, corrections: 0, commands: 0, pending: new Map(), home: null, expectedClose: false };
   actors.set(id, actor);
   ws.on('error', error => { actor.errors++; errors.push(`${id}: ${error.message}`); });

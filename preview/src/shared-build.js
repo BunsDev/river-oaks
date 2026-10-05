@@ -1,5 +1,6 @@
 // Pure data shared by the browser and the authoritative town. IDs are stable
 // checkpoint values; changing a label or model does not invalidate old builds.
+import { validAssembly,objectBounds } from './creator-object.js';
 export const BUILD_KINDS = [
   {id:'seat',label:'Garden seat',radius:.88,height:.9},
   {id:'planter',label:'Flower planter',radius:.65,height:.8},
@@ -7,6 +8,7 @@ export const BUILD_KINDS = [
   {id:'sculpture',label:'Ribbon sculpture',radius:.72,height:2.1},
   {id:'armchair',label:'Lounge chair',radius:.78,height:1.12},
   {id:'side-table',label:'Side table',radius:.55,height:.66},
+  {id:'object',label:'Custom object',radius:.71,height:1},
 ];
 export const BUILD_FINISHES = [
   {id:'rose',label:'Rose',color:'#b97986',accent:'#edc6bc'},
@@ -16,10 +18,14 @@ export const BUILD_FINISHES = [
 ];
 export const buildKind = id => BUILD_KINDS.find(item=>item.id===id)??null;
 export const buildFinish = id => BUILD_FINISHES.find(item=>item.id===id)??null;
+export const buildGeometry = item => item?.kind==='object'
+  ? validAssembly(item.assembly)?{...buildKind('object'),...objectBounds(item.assembly)}:null
+  : item?.assembly===undefined?buildKind(item?.kind):null;
 
 // Placement rules shared by the browser preview and the authoritative town, so
 // builder mode shows exactly what the server will accept. Positions are
 // [east, north]; environment is a walking environment (z = -north).
+export const buildYaw=yaw=>Math.round(Math.atan2(Math.sin(yaw),Math.cos(yaw))/(Math.PI/8))*(Math.PI/8);
 export const BUILD_REACH = 3.6, BUILD_EDIT_REACH = 4.5, BUILD_PLAYER_GAP = .65;
 export const MAX_SAVED_DESIGNS = 48;
 export const BUILD_REASONS = {
@@ -51,6 +57,7 @@ export function checkBuildSite({ environment, roads, position, kind, builds = []
   if (!Number.isFinite(ground)) return { reason: 'ground' };
   const room=environment.roomAt(east,z);
   if (room && room.category !== 'home') return { reason: 'indoors' };
+  if (room && kind.height>room.height-.1) return { reason:'room' };
   if (room && !room.contains(east,north,kind.radius+.35)) return { reason: 'room' };
   if (room && room.toLocal(east,north)[1] < kind.radius+1.5) return { reason: 'doorway' };
   for (let i = 0; i < 8; i++) {
@@ -59,8 +66,8 @@ export function checkBuildSite({ environment, roads, position, kind, builds = []
     if (!environment.isFree(x, -n)) return { reason: 'blocked' };
     if (Math.abs(environment.groundAt(x, -n) - ground) > .35) return { reason: 'uneven' };
   }
-  if (!environment.isFree(east, z)) return { reason: 'blocked' };
+  if (!environment.isFree(east, z) || kind.id==='object' && environment.isAreaFree && !environment.isAreaFree(east,z,kind.radius)) return { reason: 'blocked' };
   if (!room && roads.some(road => segmentDistance(east, north, road.a, road.b) < road.radius + kind.radius + .25)) return { reason: 'road' };
-  if (builds.some(item => item.id !== ignoreId && gap(item.position, position) < (buildKind(item.kind)?.radius ?? 0) + kind.radius + .25)) return { reason: 'creation' };
+  if (builds.some(item => item.id !== ignoreId && gap(item.position, position) < (buildGeometry(item)?.radius ?? 0) + kind.radius + .25)) return { reason: 'creation' };
   return { ground };
 }

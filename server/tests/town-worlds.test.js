@@ -40,7 +40,7 @@ test('the local owner publishes and joins a second world without restarting the 
   const access=await fetch(origin+'/api/multiplayer/ticket?world=moon-garden',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   assert.equal(access.status,200);
   const ticket=(await access.json()).ticket;
-  const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=1&ticket=${ticket}`,{headers:{Origin:origin,Cookie:cookie}});
+  const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=moon-garden&protocol=2&ticket=${ticket}`,{headers:{Origin:origin,Cookie:cookie}});
   t.after(()=>socket.terminate());
   const snapshot=await new Promise((resolve,reject)=>{socket.once('error',reject);socket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});});
   assert.equal(snapshot.worldId,'moon-garden');
@@ -54,7 +54,7 @@ test('the local owner publishes and joins a second world without restarting the 
   assert.equal((await command(socket,'gait',{type:'movement',movement:'beast'})).ok,true);
   const riverAccess=await fetch(origin+'/api/multiplayer/ticket?world=river-oaks',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken}});
   const riverTicket=(await riverAccess.json()).ticket;
-  const riverSocket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=river-oaks&protocol=1&ticket=${riverTicket}`,{headers:{Origin:origin,Cookie:cookie}});
+  const riverSocket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=river-oaks&protocol=2&ticket=${riverTicket}`,{headers:{Origin:origin,Cookie:cookie}});
   t.after(()=>riverSocket.terminate());
   const riverSnapshot=await new Promise((resolve,reject)=>{riverSocket.once('error',reject);riverSocket.on('message',raw=>{const value=JSON.parse(raw);if(value.type==='snapshot')resolve(value);});});
   assert.equal(riverSnapshot.players.find(player=>player.id===owner.user.id).appearance,'woman-casual');
@@ -123,7 +123,7 @@ test('accepted contacts see a current world across joins and old socket cleanup'
     const ticketResponse=await post(account,`/api/multiplayer/ticket?world=${worldId}`);
     assert.equal(ticketResponse.status,200);
     const {ticket}=await ticketResponse.json();
-    const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=1&ticket=${ticket}`,
+    const socket=new WebSocket(`${origin.replace('http:','ws:')}/multiplayer?world=${worldId}&protocol=2&ticket=${ticket}`,
       {headers:{Origin:origin,Cookie:account.cookie}});
     sockets.push(socket);
     const snapshot=await new Promise((resolve,reject)=>{
