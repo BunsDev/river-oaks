@@ -224,3 +224,15 @@ test('residents behind one address can poll contacts and groups without hitting 
     assert.equal(response.status,200,`${scope} poll for resident ${account} in cycle ${cycle}`);
   }
 });
+
+
+test('standalone landing and game entry resolve separately', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'typesafe-pages-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'play'));
+  await writeFile(join(root,'index.html'),'landing');
+  await writeFile(join(root,'play/index.html'),'game');
+  const {origin}=await fixture(t,{},root);
+  assert.equal(await (await fetch(origin+'/')).text(),'landing');
+  for(const path of ['/play','/play/'])assert.equal(await (await fetch(origin+path)).text(),'game');
+});

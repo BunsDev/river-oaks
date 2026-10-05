@@ -52,6 +52,7 @@ export function stepCarriage(state,environment,input,delta) {
   if(!Number.isFinite(delta)||delta<=0)return state;
   const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps;
   const controls=drivingInput(input),spec=VEHICLES[state.vehicle];
+  if(controls.brake){state.speed=0;fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);return state;}
   const forward=controls.forward,turn=Math.max(-1,Math.min(1,controls.turn-controls.strafe));
   for(let i=0;i<steps;i++) {
     const target=forward*(forward<0?1.4:(spec?.maxSpeed??4));

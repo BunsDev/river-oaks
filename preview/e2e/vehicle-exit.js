@@ -5,6 +5,10 @@ async page => {
   page.on('websocket', socket => socket.on('framereceived', ({ payload }) => {
     try { const message = JSON.parse(String(payload)); if (message.type === 'result' && message.correction) corrections.push(message); } catch {}
   }));
+  await page.route('**/v1/chauffeur', async route => {
+    const packet=route.request().postDataJSON();
+    await route.fulfill({json:{schema_version:1,tick:packet.tick,generation:packet.generation,source:'jev',candidate_id:'cruise',confidence:.9}});
+  });
   await page.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' });
   await page.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host').dataset.playerReady === 'true' && document.querySelector('#canvas-host').dataset.carriageDriverReady === 'true');
   if (!await page.locator('.player-settings').evaluate(node => node.open)) await page.locator('.player-settings > summary').click();
@@ -12,6 +16,22 @@ async page => {
   await page.waitForFunction(() => window.__riverCarriage().riding);
   await page.waitForFunction(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId).vehicle === 'rolls'; });
   check(true, 'Jevica boards a vehicle accepted by the shared town');
+  await page.locator('#player-chauffeur').click();
+  await page.waitForFunction(()=>window.__riverCarriage().chauffeur.source==='jev');
+  check(true,'Jev smart driving receives a valid decision');
+  await page.locator('#player-drive-pause').click();
+  await page.waitForFunction(()=>window.__riverCarriage().chauffeur.paused);
+  const paused=await page.evaluate(()=>window.__riverCarriage().placement.position.slice());
+  await page.waitForTimeout(250);
+  const held=await page.evaluate(()=>window.__riverCarriage().placement);
+  check(held.speed===0&&Math.hypot(...held.position.map((v,i)=>v-paused[i]))<.01,'Paused smart drive holds the vehicle');
+  await page.locator('#player-drive-pause').click();
+  await page.waitForFunction(()=>window.__riverCarriage().chauffeur.source==='jev');
+  const forward=page.locator('[data-drive="forward"]');
+  await forward.dispatchEvent('keydown',{code:'Space'});await forward.dispatchEvent('keyup',{code:'Space'});
+  check(!await page.evaluate(()=>window.__riverCarriage().chauffeur.active),'A quick manual direction immediately cancels autopilot');
+  await page.locator('#player-drive-park').click();
+  check(await page.evaluate(()=>window.__riverCarriage().placement.speed===0),'Brake and park stops the vehicle');
   corrections.length = 0;
   await page.locator('#player-ride').click();
   await page.waitForFunction(() => !window.__riverCarriage().riding);

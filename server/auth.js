@@ -36,7 +36,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -44,7 +44,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, g
     if ((parsed.protocol === 'https:' || (parsed.protocol === 'http:' && local))
       && !parsed.username && !parsed.password && parsed.pathname === '/' && !parsed.search && !parsed.hash) base = parsed.origin;
   } catch { /* Invalid configuration fails closed below. */ }
-  let enabled = Boolean(base && apiKey && clientId && typeof cookiePassword === 'string' && cookiePassword.length >= 32);
+  let enabled = Boolean(['/', '/play'].includes(returnPath) && base && apiKey && clientId && typeof cookiePassword === 'string' && cookiePassword.length >= 32);
   const sdk = enabled ? workos ?? new WorkOS(apiKey, {
     clientId, timeout: 10_000, maxRetries: 1,
   }) : null;
@@ -115,7 +115,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, g
     // until the lookup finishes, so no request sees the record without it.
     Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
-    res.writeHead(302, { Location: '/' }); res.end();
+    res.writeHead(302, { Location: returnPath }); res.end();
   }
 
   // Decode expiry only after the SDK has verified the sealed session and JWT.

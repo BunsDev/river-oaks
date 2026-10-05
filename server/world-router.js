@@ -6,7 +6,7 @@ const json=(res,status,error)=>{
   res.end(JSON.stringify({error}));
 };
 
-export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID}={}) {
+export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,handleRequest=async()=>false}={}) {
   validateWorldId(configuredWorldId);
   function select(req) {
     const url=new URL(req.url,'http://localhost');
@@ -17,6 +17,7 @@ export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID}=
   }
   const server=createServer(async(req,res)=>{
     try {
+      if(await handleRequest(req,res))return;
       const world=await worldFor(select(req));
       if(!world)return json(res,404,'World not found.');
       world.game.server.emit('request',req,res);

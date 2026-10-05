@@ -13,14 +13,14 @@ export const VEHICLES = {
 export function vehicleKind(value) { return value==='rolls'||value==='motorcycle'?value:null; }
 /** @param {unknown} value */
 const control=value=>typeof value==='number'&&Number.isFinite(value)?Math.max(-1,Math.min(1,value)):0;
-/** @param {unknown} value @returns {{forward:number,turn:number,strafe:number}} */
+/** @param {unknown} value @returns {{forward:number,turn:number,strafe:number,brake?:boolean}} */
 export function drivingInput(value) {
  const input=value&&typeof value==='object'?/** @type {Record<string,unknown>} */(value):{};
- return {forward:control(input.forward),turn:control(input.turn),strafe:control(input.strafe)};
+ return {forward:control(input.forward),turn:control(input.turn),strafe:control(input.strafe),...(input.brake===true?{brake:true}:{})};
 }
-/** Only high-level intents cross the AI boundary. Models cannot supply poses or speed. @param {unknown} value @returns {'tour'|'stop'|null} */
+/** Only high-level intents cross the AI boundary. Models cannot supply poses or speed. @param {unknown} value @returns {'tour'|'stop'|'pause'|'resume'|null} */
 export function chauffeurCommand(value) {
  if(!value||typeof value!=='object')return null;
  const mode=/** @type {Record<string,unknown>} */(value).mode;
- return mode==='tour'||mode==='stop'?mode:null;
+ return ['tour','stop','pause','resume'].includes(mode)?mode:null;
 }

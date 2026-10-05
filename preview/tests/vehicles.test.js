@@ -75,3 +75,14 @@ test('regenerated Houston streets fit two full-width Rolls vehicles outside gutt
  assert.ok(!carriageContains(one,...[two.position[0],1,two.position[2]],VEHICLES.rolls.width/2),'opposing cars do not intersect');
  }
 });
+
+
+test('manual reverse, steering and emergency brake remain collision bounded',()=>{
+ const state={vehicle:'rolls',position:[0,0,0],yaw:0,speed:0,distance:0,steering:0};
+ const env={groundAt:()=>0,canOccupy:()=>true};
+ for(let i=0;i<120;i++)stepCarriage(state,env,{forward:-1,turn:1},1/60);
+ assert.ok(state.speed<0&&state.speed>=-1.4);assert.ok(state.position[0]>0);assert.ok(state.yaw<0);
+ const position=[...state.position];stepCarriage(state,env,{brake:true},1/60);
+ assert.equal(state.speed,0);assert.deepEqual(state.position,position);
+ env.canOccupy=()=>false;stepCarriage(state,env,{forward:1},1/60);assert.deepEqual(state.position,position);
+});

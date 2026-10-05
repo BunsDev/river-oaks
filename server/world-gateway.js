@@ -16,7 +16,7 @@ import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin}={}) {
+  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -76,7 +76,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     pending.set(id,load);
     return load;
   }
-  const router=createWorldRouter({worldFor,configuredWorldId});
+  const router=createWorldRouter({worldFor,configuredWorldId,handleRequest});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
     await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
   },async close() {

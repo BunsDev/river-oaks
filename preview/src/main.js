@@ -234,6 +234,11 @@ function initializeRenderer() {
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
+    requestChauffeur: async(url,options)=>{
+      if(import.meta.env.DEV)return fetch(url,options);
+      const session=await fetch('/auth/session',{signal:options.signal,credentials:'same-origin',cache:'no-store'}).then(response=>response.json());
+      return fetch('/api/chauffeur',{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':session.csrfToken??''}});
+    },
     requestVehicleExit: position => multiplayer?multiplayer.travel({position:[position[0],-position[2]]}):Promise.resolve({ok:true}),
     getPortrait: id => portraits.portrait(id) });
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer });

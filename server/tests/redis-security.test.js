@@ -24,6 +24,16 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     const store = createRedisSecurity({ redis, prefix, now: () => time });
     await exercise({ store, redis, prefix, advance: ms => { time += ms; } });
   });
+  await run('chauffeur decisions share an owner rate budget across instances', async ({store,redis,prefix,advance}) => {
+    const peer=createRedisSecurity({redis,prefix});
+    assert.equal(await store.allow('chauffeur','owner',2,60000),true);
+    assert.equal(await peer.allow('chauffeur','owner',2,60000),true);
+    assert.equal(await store.allow('chauffeur','owner',2,60000),false);
+    assert.equal(await store.allow('chauffeur','other',2,60000),true);
+    advance(60000);
+    assert.equal(await store.allow('chauffeur','owner',2,60000),true);
+    peer.close();
+  });
   await run('rate limits are atomic, expire, and reject invalid scopes and keys', async ({ store, advance }) => {
     const results = await Promise.all(Array.from({ length: 30 }, () => store.allow('access', 'client', 5, 1000)));
     assert.equal(results.filter(Boolean).length, 5);

@@ -368,3 +368,13 @@ integration('a session created before usernames were stored is named by GitHub u
   assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'val-dev');
   assert.equal(f.githubApi.calls.length, before + 1, 'looked up once, then remembered');
 });
+
+
+integration('canonical callbacks return to /play across Redis instances', async t => {
+  const f = await fixture(t, { returnPath: '/play' }), start = await f.begin();
+  const callback = await f.b.request(start.path, { headers: start.headers });
+  assert.equal(callback.status, 302);
+  assert.equal(callback.headers.get('location'), '/play');
+  const invalid = await f.app(f.redis, { returnPath: '//evil.example' });
+  assert.equal((await invalid.request('/auth/login')).status, 503);
+});

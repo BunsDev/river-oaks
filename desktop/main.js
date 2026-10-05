@@ -4,14 +4,14 @@ import { join } from 'node:path';
 import { navigationAllowed, windowBounds } from './runtime.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 
-app.setName('River Oaks');
+app.setName('TypeSafe Place');
 app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
 let window, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
-const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://sim.jev.works/';
+const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://typesafe.place/play';
 const gameOrigin = new URL(entry).origin;
 const clientId = dev ? process.env.WORKOS_CLIENT_ID : 'client_01M3ZHFZDKDSTJ2RNSMP5V9SKV';
 if (dev) {
@@ -35,7 +35,7 @@ async function loadGame() {
         const verification = new URL(url);
         verification.search = '';
         verification.hash = '';
-        const { response } = await dialog.showMessageBox({ type: 'info', message: 'Sign in to River Oaks',
+        const { response } = await dialog.showMessageBox({ type: 'info', message: 'Sign in to TypeSafe Place',
           detail: `Choose GitHub and confirm code ${code}. To avoid an existing Google session, open ${verification} in a private window and enter the code there.`,
           buttons: ['Open browser', 'Use private window', 'Quit'], defaultId: 0, cancelId: 2 });
         if (response === 2) return false;
@@ -51,7 +51,7 @@ async function loadGame() {
   }
   catch (error) {
     if (quitting || !window || window.isDestroyed()) return;
-    const { response } = await dialog.showMessageBox({ type: 'error', message: 'River Oaks could not open', detail: error.message, buttons: ['Try again', 'Quit'], defaultId: 0, cancelId: 1 });
+    const { response } = await dialog.showMessageBox({ type: 'error', message: 'TypeSafe Place could not open', detail: error.message, buttons: ['Try again', 'Quit'], defaultId: 0, cancelId: 1 });
     console.error('Game load failed:', error.message);
     if (response === 0) void loadGame(); else app.quit();
   }
@@ -61,7 +61,7 @@ function createWindow() {
   const displays = [screen.getPrimaryDisplay(), ...screen.getAllDisplays().filter(d => d.id !== screen.getPrimaryDisplay().id)].map(d => d.workArea);
   window = new BrowserWindow({
     ...windowBounds(saved, displays), minWidth: 800, minHeight: 600,
-    title: dev ? 'River Oaks · Development' : 'River Oaks', backgroundColor: '#18271f', show: false,
+    title: dev ? 'TypeSafe Place · Development' : 'TypeSafe Place', backgroundColor: '#18271f', show: false,
     autoHideMenuBar: process.platform !== 'darwin',
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, backgroundThrottling: true, spellcheck: false },
   });
@@ -133,7 +133,7 @@ else {
       // Debug tools (colliders, walkable grid, polygon inspector) live in the game; F3 toggles them there too.
       { label: 'View', submenu: [{ role: 'togglefullscreen' }, { label: 'Debug tools', accelerator: 'F3', click: () => window?.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('river-oaks:debug'))").catch(() => {}) }, ...(dev ? [{ role: 'toggleDevTools' }] : [])] },
       { role: 'windowMenu' },
-      { label: 'Help', submenu: [{ label: 'Game controls', click: () => dialog.showMessageBox(window, { message: 'Explore River Oaks', detail: 'WASD · Walk\nDrag · Look around\nShift · Walk faster\nE · Talk nearby\nF · Enter or leave a shop\nB · Fly or land\nSpace / C · Rise / descend\nV · Change camera\nH · Hide or show the HUD\n\nGraphics and appearance are in Settings. Auto adjusts scene resolution to the available frame budget.' }) }] },
+      { label: 'Help', submenu: [{ label: 'Game controls', click: () => dialog.showMessageBox(window, { message: 'Explore TypeSafe Place', detail: 'WASD · Walk\nDrag · Look around\nShift · Walk faster\nE · Talk nearby\nF · Enter or leave a shop\nB · Fly or land\nSpace / C · Rise / descend\nV · Change camera\nH · Hide or show the HUD\n\nGraphics and appearance are in Settings. Auto adjusts scene resolution to the available frame budget.' }) }] },
     ]));
     createWindow();
   }).catch(error => { console.error('Desktop startup failed:', error); app.exit(1); });
