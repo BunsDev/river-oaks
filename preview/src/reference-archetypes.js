@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { measureHead } from './head-fit.js';
+import { batchCostumeAttachments } from './costume-batching.js';
 
 // Clothing and accessories authored against the rest pose of the shipped rigs.
 // Each piece follows a bone, so walking, gestures, and remote animation still work.
@@ -376,6 +377,11 @@ export function createReferenceStyle(avatar,appearance){
       if(top>.12)child.position.y+=lift;
     }
   }
+  // Bake only static, unnamed opaque pieces on the same bone/material. Keep
+  // transparent surfaces sorted separately and named pieces addressable. Lyra's
+  // outfit has per-piece visibility during prowl, so retain those handles.
+  if(appearance.character!=='lyra')batchCostumeAttachments([...attachments].map(group=>({group})),resources,
+    item=>!item.name&&item.visible&&!item.material.transparent);
   const sourceClothes=[];
   if(appearance.character==='lyra'&&appearance.form==='beast')model.traverse(item=>{
     if(item.isMesh&&item.material?.name==='female_casualsuit02')sourceClothes.push(item);

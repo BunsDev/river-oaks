@@ -29,7 +29,8 @@ const district = JSON.parse(await readFile(new URL('../public/data/district.json
 district.vegetation = JSON.parse(await readFile(new URL('../public/data/district-vegetation.json', import.meta.url)));
 const appearances = SHARED_APPEARANCES.filter(look => look.character !== 'jevica' && look.form === 'human');
 const sourceFiles = ['package-lock.json', 'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/render-pipeline.js',
-  'preview/src/remote-players.js', 'preview/src/avatars.js', 'preview/src/romance-look.js', 'server/app.js', 'server/world.js',
+  'preview/src/remote-players.js', 'preview/src/avatars.js', 'preview/src/romance-look.js',
+  'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'server/app.js', 'server/world.js',
   'preview/audit/rendered-multiplayer.js', 'preview/audit/metrics.js'];
 const source = { baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sha256: Object.fromEntries(await Promise.all(sourceFiles.map(async file => [file, createHash('sha256').update(await readFile(`${root}/${file}`)).digest('hex')]))) };
