@@ -492,8 +492,15 @@ are 0.05–4 meters, the creation stays above ground and within 4 meters high an
 2.6 meters horizontal radius, and its assembly data is at most 6 KiB. Placement
 uses conservative assembly bounds; walking and flying use conservative oriented
 boxes for individual parts, leaving gaps between parts open. Curved primitives
-have box collision bounds, not triangle physics. NPC routes still use the
-existing static navigation geometry.
+have box collision bounds, not triangle physics. Shared NPC routes and walking
+also respect confirmed custom parts. A new obstacle triggers a bounded detour
+through the existing planner; empty openings and overhead parts stay traversable.
+Placement reserves residents' grounded return paths as well as lifted bodies.
+When restoring an older save with an enclosed resident, the server searches up
+to 4 meters for nearby level pedestrian-safe ground in the same room, clear of
+other people. It preserves the destination and requeues affected volunteer
+visits without spending another visit. Recovery fails atomically if no safe
+point exists. Ordinary walking does not relocate residents.
 
 Only Jevica's verified accounts can create, edit, remove, or save designs.
 Guests receive confirmed geometry without those permissions. Creator requests

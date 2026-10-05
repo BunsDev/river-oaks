@@ -56,7 +56,6 @@ const report={createdAt:new Date().toISOString(),status:'passed',
     edits:100,unchangedSnapshots:100,replacedSurfaceDisposed:true,removedMaterials:768,disposedSceneEmpty:true},
   sha256:Object.fromEntries(await Promise.all(files.map(async file=>[file,createHash('sha256').update(await readFile(new URL('../'+file,import.meta.url))).digest('hex')]))),
   gaps:['768 distinct surfaces add rendering work; full-world GPU headroom with maximum assemblies remains unverified.',
-    'NPC navigation remains static; creator collisions apply to player walking/flying.',
     'Hosted multi-region soak, simultaneous regional arrivals, and physical devices remain required for global readiness.']};
 const output=process.argv[2]??'data/reports/creator-objects-performance.json';await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report.probe,null,2));

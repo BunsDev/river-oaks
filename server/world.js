@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
 import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
+import { personElevation } from '../preview/src/person-position.js';
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
@@ -67,9 +68,23 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const colliders=[],placementEnvironment=createWalkingEnvironment(worldData);
   const environment = createWalkingEnvironment(worldData,colliders);
   const players = new Map(), ledgers = new Map(), focus = new Map(), chat = [], appearanceByUser = new Map(), movementByUser = new Map(), builds = new Map(), inventory = new Map(), homeGuests = new Map();
-  const syncColliders=()=>colliders.splice(0,colliders.length,...[...builds.values()].map(objectCollider).filter(Boolean));
+  let colliderKey='[]';
+  const syncColliders=(navigation=life?.navigation)=>{
+    const objects=[...builds.values()].filter(item=>item.kind==='object');
+    const key=JSON.stringify(objects.map(({id,assembly,position,ground,yaw})=>({id,assembly,position,ground,yaw})));
+    // Furniture changes do not evict resident geography caches.
+    if(key===colliderKey)return;
+    colliderKey=key;colliders.splice(0,colliders.length,...objects.map(objectCollider));
+    navigation?.setPlacedObjects(colliders);
+  };
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
+  // Reserve the whole grounded-to-lifted column, so undoing a wish or lowering
+  // a Force hold cannot return the resident through confirmed geometry.
+  const residentBlocked=(collider,local)=>{
+    const ground=local.position[2],up=personElevation(local);
+    return collider.contains(local.position[0],(ground+up)/2+.9,-local.position[1],.35,.9+Math.abs(up-ground)/2);
+  };
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
   const residentIdentities = state.locals.map(({id,name,indoor,storeId})=>({id,name,indoor,storeId}));
@@ -542,7 +557,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site');
       const yaw=buildYaw(message.yaw);
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
-      if([...players.values()].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site');
+      if([...players.values()].some(other=>blocksPlayer(collider,other))
+        || collider && state.locals.some(local=>!local.abducted && residentBlocked(collider,local)))
+        return reject('blocked_build_site');
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
         : {...previous,...(definition.assembly?{assembly:copy(definition.assembly)}:{}),position:[...message.position],ground,yaw};
@@ -820,9 +837,44 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (Boolean(clock)!==Boolean(life) || clock && (!record(clock) || !nonnegative(clock.elapsed) || !integer(clock.revision)
         || !integer(clock.cursor) || clock.cursor>=Math.max(1,nextState.locals.length) || typeof clock.storm!=='boolean'
         || typeof clock.paused!=='boolean' || clock.packet!==null || !record(clock.stats))) throw new Error('Invalid resident clock');
+      // Older v4 writers let residents walk/land inside assemblies. Repair
+      // only those occupied starts before committing recovery. Normal walking
+      // never teleports. Search nearby free ground in the same room, leaving
+      // players/other residents clear and preserving the original destination.
+      const nextColliders=[...nextBuilds.values()].map(objectCollider).filter(Boolean);
+      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation}));
+      nextLife?.navigation.setPlacedObjects(nextColliders);
+      const repairedResidents=new Set();
+      for(const local of nextState.locals){
+        if(local.abducted||!nextColliders.some(collider=>residentBlocked(collider,local)))continue;
+        const original=[...local.position],roomId=recoveredEnvironment.roomAt(original[0],-original[1])?.storeId??null;
+        let repaired=false;
+        for(let radius=.25;radius<=4&&!repaired;radius+=.25)for(let i=0;i<32;i++){
+          const angle=i/32*Math.PI*2,x=original[0]+Math.cos(angle)*radius,north=original[1]+Math.sin(angle)*radius;
+          const ground=recoveredEnvironment.groundAt(x,-north),candidate={...local,position:[x,north,ground]};
+          if(!recoveredEnvironment.isFree(x,-north)
+            || nextLife && (!nextLife.navigation.free([x,north])||nextLife.navigation.pedestrian.classify([x,north])==='road')
+            || Math.abs(ground-original[2])>.35
+            || (recoveredEnvironment.roomAt(x,-north)?.storeId??null)!==roomId
+            || nextColliders.some(collider=>residentBlocked(collider,candidate))
+            || [...nextPlayers.values()].some(player=>Math.hypot(player.position[0]-x,player.position[1]-north)<.7)
+            || nextState.locals.some(other=>other!==local&&!other.abducted&&Math.abs(other.position[2]-ground)<1.8&&Math.hypot(other.position[0]-x,other.position[1]-north)<.7))continue;
+          local.position=candidate.position;
+          if(local.life){local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;}
+          repairedResidents.add(local.id);repaired=true;break;
+        }
+        if(!repaired)throw new Error('Cannot recover enclosed resident');
+      }
+      // A repaired recipient/helper invalidates the visit approach saved by
+      // an older writer. Requeue it without spending another supply/visit.
+      for(const job of nextState.jobs)if(['routing','traveling','assisting'].includes(job.phase)
+        && (repairedResidents.has(job.localId)||repairedResidents.has(job.helperId))){
+        job.phase='queued';job.approachAttempt=0;
+        const helper=nextState.locals.find(local=>local.id===job.helperId);
+        if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
+      }
       // Navigation caches/functions derive from the same fingerprinted district.
       // Build them before committing; only serialized simulation state is restored.
-      const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation}));
       if (nextLife) {Object.assign(nextLife,clock);nextLife.state=state;}
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state,nextState);
@@ -832,7 +884,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       chat.splice(0,chat.length,...nextChat);
       appearanceByUser.clear();for(const [id,appearance] of nextAppearances) appearanceByUser.set(id,appearance);
       movementByUser.clear();for(const [id,movement] of nextMovements) movementByUser.set(id,movement);
-      builds.clear();for(const [id,item] of nextBuilds)builds.set(id,item);syncColliders();
+      builds.clear();for(const [id,item] of nextBuilds)builds.set(id,item);syncColliders(nextLife?.navigation);
+      nextLife?.navigation.setPlacedObjects(colliders);
       inventory.clear();for(const [id,items] of nextInventory)inventory.set(id,items);
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
