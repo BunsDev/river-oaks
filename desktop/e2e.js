@@ -25,6 +25,8 @@ if (process.argv.includes('--dev')) {
 }
 delete env.ELECTRON_RUN_AS_NODE;
 const started = performance.now();
+// A packaged build has the Node inspector fuse turned off (desktop/fuses.js),
+// so Playwright cannot attach to it. This mode only works on an unfused build.
 const executablePath = process.env.RIVER_OAKS_DESKTOP_EXECUTABLE;
 const app = await electron.launch({ executablePath, args: [...(executablePath ? [] : [root]), `--user-data-dir=${profile}`], env, timeout: 30000 });
 const errors = [], failedAssets = [], tempFiles = [];

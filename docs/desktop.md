@@ -43,6 +43,8 @@ A renderer crash reloads the district once automatically. Repeated crashes withi
 
 The renderer has no Node access or privileged preload API. Sandbox, context isolation, navigation restrictions, and denied device permissions follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security). WorkOS device sign-in opens in the system browser, and external HTTPS references ask before opening there. The packaged window stays on the exact River Oaks origin.
 
+Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. Check a build with `npx electron-fuses read --app "dist/desktop/River Oaks-darwin-arm64/River Oaks.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
+
 ## Verification
 
 ```sh
