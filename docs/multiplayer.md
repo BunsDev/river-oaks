@@ -267,7 +267,7 @@ REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test
 
 Every Redis-backed server test skips without `REDIS_URL`. CI's `preview` job runs a
 pinned Redis 7.4 service and sets `REDIS_URL` for `npm run test:server`, so all of
-them run there (238 tests, none skipped).
+them run there without skips when Redis is healthy.
 
 These are local cryptographic boundary tests, not proof of WorkOS's hosted key
 provisioning or a live sign-in. Repeat the custom-domain smoke checks above after
@@ -402,3 +402,14 @@ On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 
 private RSVPs, and outdoor venue links across published worlds. Hosts manage
 their own gatherings; Jevica can cancel any event. These account records do
 not alter building, wish, home-entry, or publishing permissions.
+
+## Measure browser capacity
+
+Run `npm run audit:multiplayer:render` on a machine with hardware WebGL2 after
+installing Chromium with `npx playwright install chromium`. It creates its own
+ephemeral loopback town and synthetic guests, exercises dynamic joins, movement,
+gestures, reconnects and ordinary departures, then closes its owned services.
+The default tests 1/8/16/32 players at fixed Sharpest quality in desktop and
+phone-sized viewports. `--quality=auto` exercises the normal adaptive mode.
+The phone-sized view still uses the host GPU. See the [performance audit](multiplayer-performance-audit.md)
+for measured results, command options, and hosted readiness gates.

@@ -138,6 +138,11 @@ The installed Git hook scans the **staged index**, blocks credential filenames e
 
 Tests target observable failure modes: missing ArcGIS pages, coordinate/containment corruption, mismatched canopy placement, malformed Jev answers, bounded timeouts, overloaded HTTP requests, schedule preservation, and real secret-guard rejection in temporary Git repositories. They do not substitute for Unreal compilation, visual inspection, privacy review, or GPU profiling. [Testing approach](docs/testing.md)
 
+For multiplayer capacity evidence, see the [performance audit](docs/multiplayer-performance-audit.md).
+`npm run audit:multiplayer` probes local simulation and transport;
+`npm run audit:multiplayer:render` measures a real hardware browser with up to
+32 synthetic connected players. Local results do not establish global readiness.
+
 ## Work without downloads
 
 ```sh

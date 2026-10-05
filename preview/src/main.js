@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { bindRenderVisibility } from './render-lifecycle.js';
+import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
 import { configureMaterials, physicalSurface, paverSurface, loadEnvironment } from './materials.js';
@@ -77,6 +78,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
+const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, localsGroup, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
@@ -699,6 +702,7 @@ function followSunShadow() {
 }
 
 function render(now) {
+  const auditStart = renderAudit ? performance.now() : 0;
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
@@ -726,6 +730,7 @@ function render(now) {
   birdCams?.update(delta);
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
+  if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -758,6 +763,7 @@ function render(now) {
     host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
+  renderAudit?.frame(now, performance.now() - auditStart);
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -902,6 +908,29 @@ try {
   if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
+
+// Explicit development capacity audit camera and timing; absent from production.
+if (import.meta.env.DEV && renderAudit) {
+  window.__riverRenderAudit = {
+    start: () => renderAudit.start(), stop: () => renderAudit.stop(),
+    crowdView() {
+      const players = multiplayer?.snapshot?.players ?? [];
+      if (!players.length) throw new Error('Join the shared world before framing its crowd.');
+      const target = new THREE.Vector3();
+      for (const player of players) target.add(new THREE.Vector3(player.position[0], player.position[2] + 1, -player.position[1]));
+      target.divideScalar(players.length);
+      const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
+      const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
+      auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
+    },
+    graphics() {
+      const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
+      return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+        viewport: renderer.getSize(new THREE.Vector2()).toArray(), buffer: renderer.getDrawingBufferSize(new THREE.Vector2()).toArray(),
+        quality: quality.stats, pipeline: pipeline.stats, render: { ...renderer.info.render }, memory: { ...renderer.info.memory } };
+    },
+  };
+}
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {

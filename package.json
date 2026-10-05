@@ -23,7 +23,8 @@
     "desktop:start": "electron .",
     "desktop:package": "node desktop/package.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
-    "test:desktop:e2e": "node desktop/e2e.js"
+    "test:desktop:e2e": "node desktop/e2e.js",
+    "audit:multiplayer:render": "node preview/audit/rendered-multiplayer.js"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",
