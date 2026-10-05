@@ -61,7 +61,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
-    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, origin, onLogout });
+    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, origin, onLogout });
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   async function applyRegion(id,expectedDraftVersion,actorId) {
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};

@@ -1,3 +1,4 @@
+import { accountName } from '../preview/src/resident-names.js';
 import { randomUUID } from 'node:crypto';
 import { validateWorldId } from '../preview/src/world-contract.js';
 
@@ -23,7 +24,7 @@ function proposal(actor,data,venue,now,createId) {
 }
 const view=(event,userId,admin)=>{
   const {attendees,hostId,...publicFields}=event;
-  return {...publicFields,going:attendees.includes(userId),attending:attendees.length,isHost:hostId===userId,canCancel:admin||hostId===userId};
+  return {...publicFields,hostName:accountName(hostId,publicFields.hostName),going:attendees.includes(userId),attending:attendees.length,isHost:hostId===userId,canCancel:admin||hostId===userId};
 };
 const ordered=events=>events.sort((a,b)=>a.startsAt-b.startsAt || a.id.localeCompare(b.id));
 

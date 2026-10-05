@@ -41,7 +41,14 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
     request(identity) {
       if (!validId(identity?.userId)) throw new Error('Invalid waitlist identity');
       return serialize(async () => {
-        const existing = records.get(identity.userId);
+        let existing = records.get(identity.userId);
+        // A request keeps the name its owner currently signs in with, so the
+        // approval list shows GitHub usernames rather than an older name.
+        const name = recordFor(identity, adminIds, now).name;
+        if (existing && existing.name !== name) {
+          existing = { ...existing, name };
+          const next = new Map(records); next.set(existing.userId, existing); await persist(next);
+        }
         if (existing) return adminIds.has(identity.userId) || autoApprove ? { ...existing, status: 'approved' } : existing;
         if (records.size >= 10000) throw new Error('Waitlist capacity reached');
         const record = recordFor(identity, adminIds, now, autoApprove), next = new Map(records);
@@ -70,7 +77,15 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
 
 const REQUEST = `
 local existing = redis.call('HGET', KEYS[1], ARGV[1])
-if existing then return existing end
+if existing then
+  local record = cjson.decode(existing)
+  local name = cjson.decode(ARGV[2]).name
+  if record.name == name then return existing end
+  record.name = name
+  local updated = cjson.encode(record)
+  redis.call('HSET', KEYS[1], ARGV[1], updated)
+  return updated
+end
 if redis.call('HLEN', KEYS[1]) >= 10000 then return false end
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
 return ARGV[2]`;

@@ -3,18 +3,20 @@ import { randomBytes } from 'node:crypto';
 // WorkOS boundary fixture; HTTP state/cookies and all Redis transactions stay real.
 export function createAuthAdapter(now = Date.now) {
   const sealed = new Map(), calls = { codes: 0, refresh: 0 };
-  let verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null, authenticationMethod = 'GitHubOAuth', verificationRequired = false, userId = 'user_1';
+  let displayName = { firstName: 'Val', lastName: 'Dev' }, verified = true, issuer = 'https://api.workos.com', tokenClientId = 'client_test', refreshGate = null, authenticationMethod = 'GitHubOAuth', verificationRequired = false, userId = 'user_1';
   function mint(sessionId) {
-    const user = { id: userId, firstName: 'Val', lastName: 'Dev', email: 'private@example.com', emailVerified: verified };
+    const user = { id: userId, ...displayName, email: 'private@example.com', emailVerified: verified };
     const accessToken = `header.${Buffer.from(JSON.stringify({ iss: issuer, client_id: tokenClientId, sub: user.id, sid: sessionId, exp: Math.floor(now() / 1000) + 300 })).toString('base64url')}.signature`;
     const sealedSession = randomBytes(32).toString('base64url');
     sealed.set(sealedSession, { authenticated: true, user, sessionId, accessToken, authenticationMethod });
     return { user, accessToken, refreshToken: 'private-refresh', sealedSession, authenticationMethod };
   }
-  return {
+  const adapter = {
     calls,
     setVerified(value) { verified = value; },
     setUserId(value) { userId = value; },
+    // The free-text GitHub profile name WorkOS reports; residents are never shown by it.
+    setDisplayName(firstName, lastName = null) { displayName = { firstName, lastName }; },
     setIssuer(value) { issuer = value; },
     setTokenClientId(value) { tokenClientId = value; },
     setAuthenticationMethod(value) { authenticationMethod = value; },
@@ -25,7 +27,13 @@ export function createAuthAdapter(now = Date.now) {
       refreshGate = { wait: new Promise(resolve => { release = resolve; }), entered };
       return { started, release };
     },
+    // WorkOS user to GitHub account ID; a test may change or remove one.
+    githubIds: { user_1: '1001', user_2: '1002' },
     userManagement: {
+      async getUserIdentities(id) {
+        const githubId = adapter.githubIds[id];
+        return githubId ? [{ idpId: githubId, type: 'OAuth', provider: 'GitHubOAuth' }] : [];
+      },
       async getAuthorizationUrlWithPKCE() {
         const state = randomBytes(32).toString('base64url');
         return { state, codeVerifier: 'private-pkce-verifier', url: `https://api.workos.com/user_management/authorize?state=${state}&code_challenge=challenge` };
@@ -72,4 +80,5 @@ export function createAuthAdapter(now = Date.now) {
       },
     },
   };
+  return adapter;
 }

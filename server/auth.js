@@ -3,6 +3,8 @@ import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
 import { validWorkOSIssuer, logSessionRejection } from './workos-session.js';
 import { isJevicaAdmin } from './admin.js';
+import { createGitHubNames, createMemoryGitHubNameStore } from './github-names.js';
+import { residentName, validGitHubLogin } from '../preview/src/resident-names.js';
 
 const SESSION_COOKIE = 'river_oaks_session';
 const STATE_COOKIE = 'river_oaks_auth_state';
@@ -34,7 +36,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -47,6 +49,16 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     clientId, timeout: 10_000, maxRetries: 1,
   }) : null;
   const secure = base?.startsWith('https:');
+  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, store: createMemoryGitHubNameStore(), token: githubToken, fetcher: githubFetch, now });
+  // Residents are shown by GitHub username; only an admin account is Jevica.
+  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
+  // A session whose lookup failed is renamed once GitHub answers again.
+  const named = async (user, record) => {
+    if (!user || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
+    const account = await github.known(record.userId).catch(() => null);
+    if (validGitHubLogin(account?.login)) Object.assign(record, account);
+    return { ...user, name: nameOf(record.userId, account) };
+  };
   const states = new Map();
   const verifications = new Map();
   const sessions = new Map();
@@ -91,7 +103,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     makeRoomFor(verified.user.id);
     if (!enabled || sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return; }
     const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
-      csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL };
+      csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
     sessions.set(record.sessionId, record);
     cookies.set(record.cookieHash, record.sessionId);
     if (!identity(verified, record)) {
@@ -99,6 +111,9 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       logSessionRejection(verified, record, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
+    // Only a verified session is looked up on GitHub. The cookie is not sent
+    // until the lookup finishes, so no request sees the record without it.
+    Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
     res.writeHead(302, { Location: '/' }); res.end();
   }
@@ -114,8 +129,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       || claims.client_id !== clientId) return null;
     const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
     if (expiresAt <= now()) return null;
-    const name = [result.user.firstName, result.user.lastName].filter((part) => typeof part === 'string').join(' ').trim().slice(0, 60) || 'Resident';
-    return { userId: result.user.id, name, email: result.user.email, sessionId: result.sessionId, expiresAt, csrfToken: record.csrfToken };
+    return { userId: result.user.id, name: nameOf(record.userId, record), email: result.user.email, sessionId: result.sessionId, expiresAt, csrfToken: record.csrfToken };
   }
 
   async function authenticateRequest(req, res) {
@@ -128,7 +142,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
     try {
       const session = sdk.userManagement.loadSealedSession({ sessionData: sealed, cookiePassword });
       const result = await session.authenticate();
-      if (result.authenticated) return identity(result, record);
+      if (result.authenticated) return named(identity(result, record), record);
       // Only a previously issued, active cookie may refresh, and only over HTTP.
       if (!res || result.reason !== 'invalid_jwt') return null;
       if (!record.refreshing) {
@@ -147,7 +161,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
       const refreshed = await record.refreshing;
       if (!refreshed || sessions.get(record.sessionId) !== record) return null;
       setCookie(res, SESSION_COOKIE, refreshed.sealed, Math.max(0, Math.floor((record.expiresAt - now()) / 1000)));
-      return refreshed.user;
+      return named(refreshed.user, record);
     } catch { return null; }
   }
 
@@ -264,13 +278,14 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, workos, n
         makeRoomFor(verified.user.id);
         if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
-          csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL };
+          csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
         sessions.set(record.sessionId, record); cookies.set(record.cookieHash, record.sessionId);
         if (!identity(verified, record)) {
           removeSession(record);
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
+        Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {

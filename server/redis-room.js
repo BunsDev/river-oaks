@@ -167,7 +167,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(operation.identity.expiresAt<=time || !await allowed(operation.identity))return rejected('session_invalid');
         let result;
         if(world.players.has(operation.identity.userId)) {
-          result={ok:true,player:world.snapshot().players.find(player=>player.id===operation.identity.userId)};
+          result={ok:true,player:world.rename(operation.identity)};
         } else result=world.join(operation.identity);
         if(result.ok && avatarPreferences) {
           const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));

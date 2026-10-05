@@ -1,8 +1,10 @@
+import { guardContact, guardMessage, guardResult } from './name-guard.js';
+
 /** Shared HTTP behavior for local and Redis backed resident relationships. */
 export async function socialAction({ action, identity, social, presence, readBody, visiblePlayer, inviteWorld, invitePlace, allowWrite }) {
   if (!social) return { status: 503, value: { error: 'Contacts are unavailable.' } };
   if (action === 'list') {
-    const contacts = await social.list(identity.userId);
+    const contacts = (await social.list(identity.userId)).map(guardContact);
     if (!presence) return { status: 200, value: { contacts } };
     const locations = await presence.getMany(contacts.filter(item => item.status === 'accepted').map(item => item.peer.id));
     return { status: 200, value: { contacts: contacts.map(item => item.status === 'accepted'
@@ -15,7 +17,7 @@ export async function socialAction({ action, identity, social, presence, readBod
   }
   if (action === 'messages') {
     const messages = await social.messages(identity.userId, data.peerId);
-    return messages ? { status: 200, value: { messages } } : { status: 404, value: { error: 'Contact not found.' } };
+    return messages ? { status: 200, value: { messages: messages.map(guardMessage) } } : { status: 404, value: { error: 'Contact not found.' } };
   }
   if (!['request', 'accept', 'remove', 'send', 'invite-world', 'invite-place'].includes(action)) return { status: 404, value: { error: 'Not found.' } };
   if (!await allowWrite(identity.userId)) return { status: 429, value: { error: 'Please wait before changing contacts.' } };
@@ -41,7 +43,7 @@ export async function socialAction({ action, identity, social, presence, readBod
     result=await social.invitePlace(identity,data.peerId,destination.world,destination.place);
   }
   else result = await social.send(identity, data.peerId, data.text);
-  if (result.ok) return { status: 200, value: result };
+  if (result.ok) return { status: 200, value: guardResult(result) };
   const status = result.reason === 'invalid' ? 400 : result.reason === 'limit' ? 429 : 409;
   return { status, value: { error: result.reason === 'existing' ? 'A contact invitation already exists.'
     : result.reason === 'limit' ? 'Contact limit reached.'
