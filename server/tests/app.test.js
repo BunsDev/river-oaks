@@ -10,6 +10,7 @@ import { approvedWaitlist } from './waitlist-fixture.js';
 import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
 import { createMemoryGroups } from '../groups.js';
+import { SIGN_INS_PER_ADDRESS } from '../rate-limit.js';
 const auth = {
   async handle(){return false;},
   async authenticate(req){const id=req.headers.cookie?.match(/session=(\w+)/)?.[1];return id?{userId:id,name:id,sessionId:id,csrfToken:'test-csrf',expiresAt:Date.now()+60000}:null;},
@@ -73,6 +74,12 @@ const ticket = async (origin,id,headers={}) => fetch(origin+'/api/multiplayer/ti
 const connect=(origin,token,id,wsOrigin='http://127.0.0.1')=>new Promise((resolve,reject)=>{
  const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?ticket='+token,{headers:{Origin:wsOrigin,Cookie:`session=${id}`}});
  ws.once('message',data=>resolve({ws,snapshot:JSON.parse(data)}));ws.once('error',reject);
+});
+test('one address can start only a few sign-ins at a time',async t=>{
+  const {origin}=await fixture(t);
+  for(let i=0;i<SIGN_INS_PER_ADDRESS;i++)assert.notEqual((await fetch(origin+'/auth/login')).status,429);
+  assert.equal((await fetch(origin+'/auth/login')).status,429);
+  assert.notEqual((await fetch(origin+'/auth/session')).status,429,'other routes keep their own limit');
 });
 test('anonymous requests and cross-origin or forged-CSRF ticket requests are denied',async t=>{
  const {origin}=await fixture(t);

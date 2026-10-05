@@ -5,8 +5,8 @@ import { stat, realpath } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
-import { createRateLimiter } from './rate-limit.js';
-import { createClientAddress } from './client-address.js';
+import { createClientAddress, rateLimitKey } from './client-address.js';
+import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -27,7 +27,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
   const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000);
-  const access = createRateLimiter(1000,60000,4096), moderatorIds = new Set(moderators);
+  const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
   const send = (ws,value,options) => sendFrame(ws,value,options);
@@ -63,7 +63,8 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     try {
       const pathname=new URL(req.url,'http://localhost').pathname;
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
-      if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(clientAddress(req))) return json(res,429,{error:'Too many requests. Try again shortly.'});
+      if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many requests. Try again shortly.'});
+      if (pathname==='/auth/login' && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many sign-in attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
@@ -231,7 +232,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     socket.on('error',()=>{});
     try {
       const url=new URL(req.url,'http://localhost');
-      if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(clientAddress(req)))return reject(403);
+      if(stopped || url.pathname!=='/multiplayer' || req.headers.origin!==origin || !access(rateLimitKey(clientAddress(req))))return reject(403);
       if(!matchesWorld(url))return reject(403);
       const protocol=url.searchParams.get('protocol');
       if(protocol!==String(WORLD_PROTOCOL_VERSION) && !(protocol===null && worldId===DEFAULT_WORLD_ID))return reject(426);

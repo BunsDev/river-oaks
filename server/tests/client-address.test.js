@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createClientAddress as create } from '../client-address.js';
+import { createClientAddress as create, rateLimitKey } from '../client-address.js';
 const request = (peer, forwarded) => ({ socket: { remoteAddress: peer }, headers: { 'x-forwarded-for': forwarded } });
 
 test('ignores spoofed forwarding headers by default and for untrusted peers', () => {
@@ -35,4 +35,14 @@ test('invalid trust configuration fails rather than granting broad trust', () =>
 
 test('missing peer information never trusts a forwarding header', () => {
   assert.equal(create(['127.0.0.1'])(request(undefined, '198.51.100.1')), 'unknown');
+});
+
+test('IPv6 addresses are rate limited per /64, IPv4 per address', () => {
+  assert.equal(rateLimitKey('2001:db8:1:2:3:4:5:6'), '2001:db8:1:2::/64');
+  assert.equal(rateLimitKey('2001:db8:1:2:ffff:ffff:ffff:ffff'), '2001:db8:1:2::/64');
+  assert.equal(rateLimitKey('2001:db8::1'), '2001:db8:0:0::/64');
+  assert.equal(rateLimitKey('2001:DB8:a:b::'), '2001:db8:a:b::/64');
+  assert.notEqual(rateLimitKey('2001:db8:1:3::1'), rateLimitKey('2001:db8:1:2::1'));
+  assert.equal(rateLimitKey('203.0.113.7'), '203.0.113.7');
+  assert.equal(rateLimitKey('unknown'), 'unknown');
 });

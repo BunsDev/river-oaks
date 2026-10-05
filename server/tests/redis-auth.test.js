@@ -9,7 +9,7 @@ import { boundaryCases, workosSdkFixture } from './workos-sdk-fixture.js';
 import { createAuthAdapter } from './redis-auth-fixture.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
-const { createRedisAuth } = await import('../redis-auth.js').catch(() => ({}));
+const { createRedisAuth, MAX_PENDING_SIGN_INS, MAX_SESSIONS, MAX_SESSIONS_PER_USER } = await import('../redis-auth.js').catch(() => ({}));
 const integration = (name, run) => test(name, { skip: !process.env.REDIS_URL }, run);
 const config = { apiKey: 'sk_test', clientId: 'client_test', cookiePassword: 'a'.repeat(32), origin: 'https://river.example' };
 const cookie = (response, name = 'river_oaks_session') => response.headers.getSetCookie().find(value => value.startsWith(`${name}=`))?.split(';')[0];
@@ -17,7 +17,7 @@ const cookie = (response, name = 'river_oaks_session') => response.headers.getSe
 async function fixture(t, overrides = {}) {
   assert.equal(typeof createRedisAuth, 'function', 'redis-auth must export createRedisAuth');
   const prefix = `{river-oaks:test:${randomUUID()}}`;
-  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies'].map(suffix => `${prefix}:auth:${suffix}`);
+  const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies', 'user-sessions'].map(suffix => `${prefix}:auth:${suffix}`);
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, connectTimeout: 5000, enableOfflineQueue: false });
   redis.on('error', () => {});
   await redis.connect();
@@ -213,19 +213,41 @@ integration('absolute expiry cannot be extended by refresh or by closing an inst
 integration('state and session admission caps are atomic across nodes', async t => {
   const f = await fixture(t);
   const stateFields = [], scores = [];
-  for (let i = 0; i < 999; i++) { stateFields.push(`seed-${i}`, JSON.stringify({expiresAt:f.now()+60_000})); scores.push(f.now()+60_000, `seed-${i}`); }
+  for (let i = 0; i < MAX_PENDING_SIGN_INS - 1; i++) { stateFields.push(`seed-${i}`, JSON.stringify({expiresAt:f.now()+60_000})); scores.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[0], ...stateFields); await f.redis.zadd(f.keys[1], ...scores);
   const admissions = await Promise.all([f.a.request('/auth/login'),f.b.request('/auth/login')]);
   assert.deepEqual(admissions.map(response=>response.status).sort(), [302,503]);
-  assert.equal(await f.redis.hlen(f.keys[0]), 1000);
+  assert.equal(await f.redis.hlen(f.keys[0]), MAX_PENDING_SIGN_INS);
   f.advance(61_000);
   const starts = await Promise.all([f.begin(),f.begin(f.b)]);
   const sessions = [], expiry = [];
-  for (let i = 0; i < 9999; i++) { sessions.push(`seed-${i}`, JSON.stringify({sessionId:`seed-${i}`,cookieHash:`hash-${i}`,expiresAt:f.now()+60_000})); expiry.push(f.now()+60_000, `seed-${i}`); }
+  for (let i = 0; i < MAX_SESSIONS - 1; i++) { sessions.push(`seed-${i}`, JSON.stringify({sessionId:`seed-${i}`,cookieHash:`hash-${i}`,expiresAt:f.now()+60_000})); expiry.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[2], ...sessions); await f.redis.zadd(f.keys[3], ...expiry);
   const callbacks = await Promise.all(starts.map((start,index) => [f.a,f.b][index].request(start.path,{headers:start.headers})));
   assert.deepEqual(callbacks.map(response=>response.status).sort(), [302,503]);
-  assert.equal(await f.redis.hlen(f.keys[2]), 10000);
+  assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS);
+});
+
+// One account could sign in over and over until the shared session table was
+// full, locking every other account out for the seven-day session lifetime.
+integration('one account keeps only its newest sessions, so repeated sign-ins cannot fill the table', async t => {
+  const f = await fixture(t), cookies = [];
+  for (let i = 0; i < MAX_SESSIONS_PER_USER + 3; i++) {
+    const { response, sessionCookie } = await f.login();
+    assert.equal(response.status, 302);
+    cookies.push(sessionCookie);
+  }
+  assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS_PER_USER);
+  assert.equal(await f.redis.hlen(f.keys[4]), MAX_SESSIONS_PER_USER);
+  assert.equal(JSON.parse(await f.redis.hget(f.keys[5], 'user_1')).length, MAX_SESSIONS_PER_USER);
+  const signedIn = async cookie => (await (await f.a.request('/auth/session', { headers: { cookie } })).json()).authenticated;
+  for (const cookie of cookies.slice(0, 3)) assert.equal(await signedIn(cookie), false, 'the oldest sessions were retired');
+  for (const cookie of cookies.slice(3)) assert.equal(await signedIn(cookie), true);
+  // Another account is unaffected.
+  f.workos.setUserId('user_2');
+  const other = await f.login();
+  assert.equal(await signedIn(other.sessionCookie), true);
+  assert.equal(JSON.parse(await f.redis.hget(f.keys[5], 'user_2')).length, 1);
 });
 
 integration('Redis failures and missing configuration fail closed without exposing errors', async t => {

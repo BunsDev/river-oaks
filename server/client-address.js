@@ -34,3 +34,13 @@ export function createClientAddress(trustedProxyIPs = []) {
     return address;
   };
 }
+
+// The key an address is rate limited under. One IPv6 subscriber usually holds a
+// whole /64, so its addresses share one bucket instead of 2^64 of them.
+export function rateLimitKey(address) {
+  if (typeof address !== 'string' || isIP(address) !== 6) return address;
+  const [head, tail = ''] = address.split('::');
+  const left = head ? head.split(':') : [], right = tail ? tail.split(':') : [];
+  const groups = address.includes('::') ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right] : left;
+  return `${groups.slice(0, 4).map(group => parseInt(group, 16).toString(16)).join(':')}::/64`;
+}
