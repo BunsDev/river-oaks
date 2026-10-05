@@ -50,6 +50,7 @@ import { createPlayMode } from './play-mode.js';
 import './play-mode.css';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
+import { createSharedSeatingControls } from './shared-seating-ui.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
 import { builderTarget, evaluatePlacement, poseFeet } from './builder-mode.js';
 import { buildKind, buildRoads as buildSiteRoads } from './shared-build.js';
@@ -94,7 +95,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let autoControls, playerAvatar, invasion, force, liftSparkles, breakableGlass;
 let forceObjects=[],forceObstacles=[];
-let multiplayer, remotePlayers, buildLayer, buildControls;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls;
 let soloCanGrantWishes = false;
 async function refreshSoloPrivileges() {
   try {
@@ -325,6 +326,7 @@ function startMultiplayer() {
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
+      walking?.syncSeating(self);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
@@ -348,6 +350,9 @@ function startMultiplayer() {
     },
     onPlaySolo: multiplayerMode === 'choice' ? () => switchPlayMode(playModeStorage, 'solo') : null,
   });
+  seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
+    getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
+    request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player)});
   host.dataset.multiplayer = 'joined';
 }
 
@@ -735,6 +740,7 @@ function render(now) {
   birdCams?.update(delta);
   if (!multiplayer) invasion?.update(delta, now);
   multiplayer?.update(now);
+  seatingControls?.update(now);
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);

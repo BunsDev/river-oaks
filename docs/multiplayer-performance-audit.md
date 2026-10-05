@@ -419,3 +419,48 @@ This fixes a substantial draw-submission cost; it does not establish a 32-player
 frame target on ordinary hardware. The production GPU profile, physical-device
 measurements and hosted multi-region WorkOS/Redis soak above remain required.
 Jevica alone retains building and wish granting. **Global readiness is unverified.**
+
+## Shared furniture seating — 5 October 2026
+
+Placed garden seats and lounge chairs now carry server-authoritative occupancy.
+Reservations live in the existing player checkpoint, with no extra Redis key,
+API poll or background simulation. A public player adds `sitting: null` while
+standing, or a build ID, slot, height and facing while seated. The existing 5 Hz
+snapshot carries this bounded metadata for at most 32 players. An occupied build
+cannot move or disappear; local and remote renderers pin hips to its cushion.
+All seven rigs were checked against both authored cushion heights. High seats
+allow naturally bent, dangling legs instead of stretching shoes to the ground.
+
+A sit command scans at most 32 players. A stand command searches at most 24
+nearby candidates, checks other players/creations, and samples a same-room path
+at 15 cm spacing. It runs only on explicit intent. The client reuses snapshots,
+throttles nearby choices to 5 Hz, exposes at most eight slots, and changes option
+nodes only when their membership/occupancy labels change. The world remains
+capped at 192 placed creations; building remains restricted to Jevica.
+
+Local Redis tests race two coordinators for one slot, replace the coordinator,
+recover the reservation and release it after the normal disconnect grace.
+World tests cover private-home revocation, compatible region updates, blocked
+stand-up exits, travel, corrupt/duplicate seat checkpoints and guest capability
+flags. The full-render two-browser journey checks a human and a fox form, occupied
+options, seated movement/facing, removal denial, a real socket reconnect, and
+keyboard standing at a phone-sized viewport. The phone viewport uses this Mac's
+GPU and is not physical mobile acceptance.
+
+Checkpoint version 3 fences pre-seating writers; valid older checkpoints upgrade.
+The actual prior main implementation rejects the new format. A monotonic writer
+generation atomically takes over older leases while
+respecting same/newer generations; the existing commit fence protects state,
+replies and queue trimming. A local probe using the actual prior main coordinator
+held its commit, upgraded its active lease, replayed the queued intent and
+confirmed that its late commit could not overwrite the seat. Redis ticks still
+use two round trips. Rollback requires a coordinator that understands version 3.
+This local evidence does not measure hosted rollout availability. Include mixed-version
+draining, seating/standing while crowded,
+and combined UI/API traffic in the required hosted multi-region soak. The
+32-player limit and global/device release gaps above remain unchanged.
+
+The integrated local run on base `c80fc3f` passed 677 preview tests and 289
+Redis-backed server tests with zero failures/skips. The [seating browser
+receipt](../data/reports/shared-seating.json) hashes the measured sources and
+records the full-render journey. The build and reflection smoke passed.

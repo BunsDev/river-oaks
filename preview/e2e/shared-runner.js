@@ -99,10 +99,13 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin']:mode==='development-publish'?['world-publish']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names'];
+    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared','shared-seating']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin']:mode==='development-publish'?['world-publish']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
+      // Seating needs an empty town and the first loopback account's owner rights.
+      // A new browser context does not reset server-held accounts or creations.
+      if (name === 'shared-seating' && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];

@@ -209,6 +209,9 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
           seated[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);});
+          if(locomotion.ridingKind==='seat' && gesture[bone.name])gesture[bone.name].forEach((angle,i)=>{
+            adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);
+          });
         }
         root.updateWorldMatrix(true,true);
         const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
@@ -218,6 +221,12 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           const scale=leg.foot.getWorldScale(new THREE.Vector3());
           const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
           const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
+          if(locomotion.ridingKind==='seat') {
+            // These authored cushions are high. Let short legs hang naturally
+            // instead of stretching nearly straight to reach the floor.
+            const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
+            target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+          }
           const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
           if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
           leg.error=applyLegIK(leg,target,pole);

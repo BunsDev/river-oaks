@@ -28,3 +28,19 @@ test('every build catalog choice creates a bounded, grounded 3D object',()=>{
   layer.sync([]);assert.equal(layer.stats().count,0);
   layer.dispose();assert.equal(scene.children.length,0);
 });
+
+test('assigned furniture slots lie on the rendered cushion tops at every snapped rotation',async()=>{
+  const {resolveSeat,seatSlots}=await import('../src/shared-seating.js');
+  const scene=new THREE.Scene(),layer=createSharedBuildLayer(scene);
+  try{
+    for(const kind of ['seat','armchair'])for(let step=0;step<16;step++) {
+      const build={id:kind==='seat'?'build-1':'build-2',ownerId:'jevica',ownerName:'Jevica',kind,finish:'rose',position:[7,11],ground:2.3,yaw:step*Math.PI/8,createdAt:1};
+      layer.sync([build]);scene.updateMatrixWorld(true);
+      for(const slot of seatSlots(kind)) {
+        const seat=resolveSeat(build,slot),ray=new THREE.Raycaster(new THREE.Vector3(seat.position[0],5,-seat.position[1]),new THREE.Vector3(0,-1,0));
+        const hit=ray.intersectObject(layer.object,true)[0];assert.ok(hit);
+        assert.ok(Math.abs(hit.point.y-build.ground-seat.height)<1e-6,`${kind}/${step}/${slot}: cushion contact ${hit.point.y}`);
+      }
+    }
+  }finally{layer.dispose();}
+});
