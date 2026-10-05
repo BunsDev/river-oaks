@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "dev": "vite --config preview/vite.config.js",
+    "dev:landing": "vite --config landing-page/vite.config.js",
     "build": "vite build --config preview/vite.config.js && node scripts/build_landing_page.js",
     "test": "node --test preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
