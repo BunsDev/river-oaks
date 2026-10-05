@@ -80,3 +80,20 @@ async def test_provider_and_bridge_control_driving_without_exposing_keys():
             assert "secret-fixture" not in result.text
             await client.delete("/v1/settings/jev")
             assert engine.api_key is None
+
+
+def test_comprehensive_controls_obey_direction_clearance_and_parking():
+    engine = ChauffeurEngine()
+    candidates = [{"id": a, "action": a, "label": a} for a in engine.thresholds]
+
+    def choices(**changes):
+        p = packet(candidates=candidates, **changes)
+        return set(engine.request_body(p)["state"]["candidates"])
+
+    assert "accelerate" in choices(speed=0)
+    assert "turn_left" in choices(turn_radians=0.8)
+    assert "turn_right" not in choices(turn_radians=0.8)
+    assert choices(road_clear=False) == {"stop", "brake", "yield"}
+    assert "reverse" in choices(recovery=True, rear_clear=True, speed=0)
+    assert "reverse" not in choices(recovery=True, rear_clear=False, speed=0)
+    assert choices(remaining_m=1) == {"stop", "brake", "park"}

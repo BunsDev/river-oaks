@@ -1,3 +1,4 @@
+import policy from '../../src/river_oaks/chauffeur-policy.json' with { type: 'json' };
 // @ts-check
 import { STREET } from './street-profile.js';
 import { drivingInput, chauffeurCommand } from './vehicle-config.js';
@@ -37,47 +38,53 @@ export function scenicRoute(world,pose) {
  return dense;
 }
 export function createChauffeur({fetcher=(...args)=>fetch(...args),clock=()=>performance.now()}={}) {
- let route=[],index=0,active=false,label='Jev is ready',generation=0,tick=0,pending=null,nextPoll=0,leaseUntil=0,action=null,stalled=0,source=null;
+ let route=[],index=0,active=false,label='Jev is ready',generation=0,tick=0,pending=null,nextPoll=0,leaseUntil=0,action=null,stalled=0,source=null,paused=false;
  const cancel=()=>{generation++;pending?.abort();pending=null;leaseUntil=0;action=null;source=null;};
- const poll=(pose,error,remaining,roadClear)=>{
+ const poll=(pose,error,remaining,roadClear,rearClear,recovery)=>{
   const now=clock();if(pending||now<nextPoll)return;
   const controller=new AbortController();pending=controller;nextPoll=now+1500;
-  const request={schema_version:1,tick:++tick,generation,vehicle:pose.vehicle??'rolls',speed:Math.min(20,Math.abs(pose.speed)),remaining_m:Math.min(100000,remaining),turn_radians:error,road_clear:roadClear,
-   candidates:['cruise','slow','yield','stop'].map(action=>({id:action,action,label:action}))};
-  const timer=setTimeout(()=>controller.abort(),1800);
+  const request={schema_version:1,tick:++tick,generation,vehicle:pose.vehicle??'rolls',speed:Math.min(20,Math.abs(pose.speed)),remaining_m:Math.min(100000,remaining),turn_radians:error,road_clear:roadClear,rear_clear:rearClear,recovery,
+   candidates:Object.keys(policy.thresholds).map(action=>({id:action,action,label:action}))};
+  const timer=setTimeout(()=>controller.abort(),2800);
   const timeout=new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(new Error('Aborted')),{once:true}));
   Promise.race([fetcher('/v1/chauffeur',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:controller.signal}).then(r=>{if(!r.ok)throw new Error('Unavailable');return r.json();}),timeout]).then(answer=>{
    if(!active||generation!==request.generation||controller.signal.aborted)return;
-   const thresholds={cruise:.6,slow:.5,yield:.4,stop:.4};
+   const thresholds=policy.thresholds;
    const valid=answer.schema_version===1&&answer.tick===request.tick&&answer.generation===request.generation&&answer.source==='jev'&&Object.hasOwn(thresholds,answer.candidate_id)&&Number.isFinite(answer.confidence)&&answer.confidence>=thresholds[answer.candidate_id]&&answer.confidence<=1;
-   if(!valid){leaseUntil=0;action=null;source=null;label=answer.reason==='not_configured'?'Add your Jev API key in Settings':'Jev unavailable · holding';return;}
-   action=answer.candidate_id;source='jev';leaseUntil=clock()+2800;label=action==='cruise'?'Jev smart driving':action==='slow'?'Jev is slowing down':action==='yield'?'Jev is yielding':'Jev has stopped';
+   if(!valid){leaseUntil=0;action=null;source=null;label=answer.reason==='not_configured'?(import.meta.env?.DEV?'Add your Jev API key in Settings':'Jev smart driving is not configured on the server'):'Jev unavailable · holding';return;}
+   action=answer.candidate_id;source='jev';leaseUntil=clock()+2800;label=({cruise:'Jev smart driving',accelerate:'Jev is accelerating',slow:'Jev is slowing down',turn_left:'Jev is steering left',turn_right:'Jev is steering right',brake:'Jev is braking',reverse:'Jev is reversing carefully',yield:'Jev is yielding',stop:'Jev has stopped',park:'Jev is parking'})[action];
   }).catch(()=>{if(generation===request.generation){leaseUntil=0;action=null;source=null;label='Jev unavailable · holding';}}).finally(()=>{clearTimeout(timer);if(pending===controller)pending=null;});
  };
  return {
-  get status(){return {active,label,source,remaining:Math.max(0,route.length-index)};},
+  get status(){return {active,paused,label,source,remaining:Math.max(0,route.length-index)};},
   request(command,points=[]) {
    const mode=chauffeurCommand(command);if(!mode)return false;
-   if(mode==='stop'){cancel();active=false;route=[];label='Jev is ready';return true;}
+   if(mode==='stop'){cancel();active=false;paused=false;route=[];label='Jev is ready';return true;}
+   if(mode==='pause'){if(!active)return false;cancel();active=false;paused=true;label='Ride paused';return true;}
+   if(mode==='resume'){if(!paused||!route.length)return false;cancel();active=true;paused=false;nextPoll=0;label='Connecting to Jev…';return true;}
    if(points.length<2||points.some(p=>p.length!==2||!p.every(Number.isFinite)))return false;
-   cancel();route=points.map(p=>[...p]);index=0;stalled=0;active=true;nextPoll=0;label='Connecting to Jev…';return true;
+   cancel();route=points.map(p=>[...p]);index=0;stalled=0;active=true;paused=false;nextPoll=0;label='Connecting to Jev…';return true;
   },
-  input(pose,manual,dt,{roadClear=true}={}) {
+  input(pose,manual,dt,{roadClear=true,rearClear=false}={}) {
    const controls=drivingInput(manual);
-   if(controls.forward||controls.turn||controls.strafe){if(active)cancel();active=false;label='Manual directions';return controls;}
+   if(controls.forward||controls.turn||controls.strafe||controls.brake){if(active)cancel();active=false;paused=false;route=[];label='Manual directions';return controls;}
    if(!active)return controls;
    while(index<route.length-1&&Math.hypot(route[index][0]-pose.position[0],route[index][1]-pose.position[2])<4)index++;
    const target=route[index],dx=target[0]-pose.position[0],dz=target[1]-pose.position[2],gap=Math.hypot(dx,dz);
-   if(index===route.length-1&&gap<2){cancel();active=false;label='Scenic drive complete';return controls;}
-   const angle=Math.atan2(dz,-dx)-pose.yaw,error=Math.atan2(Math.sin(angle),Math.cos(angle));
-   if(Math.abs(error)>Math.PI*.65){cancel();active=false;label='Jev needs room to turn';return controls;}
+      const angle=Math.atan2(dz,-dx)-pose.yaw,error=Math.atan2(Math.sin(angle),Math.cos(angle));
+   if(Math.abs(pose.speed)>.03)stalled=0;
+   const recovery=Math.abs(error)>Math.PI*.65||stalled>2;
    let remaining=gap;for(let i=index+1;i<route.length;i++)remaining+=Math.hypot(route[i][0]-route[i-1][0],route[i][1]-route[i-1][1]);
-   poll(pose,error,remaining,roadClear);
+   poll(pose,error,remaining,roadClear,rearClear,recovery);
+   if(clock()>=leaseUntil)return controls;
+   if(action==='park'&&remaining<2){cancel();active=false;route=[];label='Jev has parked';return drivingInput({brake:true});}
+   if(action==='reverse')return rearClear&&recovery?drivingInput({forward:-.35,turn:-error*1.5}):controls;
    if(!roadClear){label='Jev is waiting for a clear road';return controls;}
-   if(clock()>=leaseUntil||!['cruise','slow'].includes(action))return controls;
+   if(remaining<2||!['cruise','accelerate','slow','turn_left','turn_right'].includes(action)||recovery)return controls;
+   if(action==='turn_left'&&error<.12||action==='turn_right'&&error>-.12)return controls;
    stalled=Math.abs(pose.speed)<.03?stalled+Math.max(0,Math.min(.08,dt)):0;
-   if(stalled>2){cancel();active=false;label='Jev is waiting for a clear road';return controls;}
-   return drivingInput({forward:Math.min(action==='slow'?.22:.55,Math.max(.18,Math.cos(error)*.55),gap/8),turn:error*2.4,strafe:0});
+   const throttle=action==='accelerate'?.75:action==='slow'||action.startsWith('turn_')?.25:.55;
+   return drivingInput({forward:Math.min(throttle,Math.max(.12,Math.cos(error)*throttle),gap/8),turn:action==='turn_left'?Math.max(.15,error*2.4):action==='turn_right'?Math.min(-.15,error*2.4):error*2.4,strafe:0});
   },
   dispose(){cancel();active=false;},
  };

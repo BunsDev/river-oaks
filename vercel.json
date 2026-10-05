@@ -27,13 +27,38 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 300,
-      "includeFiles": "preview/public/data/district*.json"
+      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json}"
     }
   },
   "regions": [
     "iad1"
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "sim.jev.works"
+        }
+      ],
+      "destination": "https://typesafe.place/play",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "sim.jev.works"
+        }
+      ],
+      "destination": "https://typesafe.place/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    { "source": "/api/chauffeur", "destination": "/api/server?_river_path=/api/chauffeur" },
     {
       "source": "/auth/login",
       "destination": "/api/server?_river_path=/auth/login"

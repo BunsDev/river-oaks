@@ -155,3 +155,23 @@ test('accepted contacts see a current world across joins and old socket cleanup'
     await new Promise(resolve=>setTimeout(resolve,20));
   }
 });
+
+
+test('standalone hosted chauffeur route requires an approved owner and rate budget', async t => {
+  const port=await freePort(),origin=`http://127.0.0.1:${port}`;
+  const temporary=await mkdtemp(join(tmpdir(),'typesafe-driving-'));
+  const town=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',
+    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json')},devAuth:'local',staticRoot:null});
+  await new Promise(resolve=>town.server.listen(port,'127.0.0.1',resolve));
+  t.after(async()=>{await town.close();await rm(temporary,{recursive:true,force:true});});
+  const session=await fetch(origin+'/auth/session'),owner=await session.json(),cookie=session.headers.get('set-cookie').split(';')[0];
+  const packet={schema_version:1,tick:1,generation:1,vehicle:'rolls',speed:0,remaining_m:40,turn_radians:0,road_clear:true,candidates:[{id:'stop',action:'stop',label:'stop'}]};
+  const request=(headers={})=>fetch(origin+'/api/chauffeur',{method:'POST',headers:{Origin:origin,Cookie:cookie,'X-CSRF-Token':owner.csrfToken,'Content-Type':'application/json',...headers},body:JSON.stringify(packet)});
+  assert.equal((await request({'X-CSRF-Token':'bad'})).status,403);
+  assert.equal((await request({Origin:'https://evil.example'})).status,403);
+  const guestResponse=await fetch(origin+'/auth/session'),guest=await guestResponse.json(),guestCookie=guestResponse.headers.get('set-cookie').split(';')[0];
+  assert.equal((await request({Cookie:guestCookie,'X-CSRF-Token':guest.csrfToken})).status,403);
+  assert.equal((await (await request()).json()).reason,'not_configured');
+  for(let i=1;i<40;i++)assert.equal((await request()).status,200);
+  assert.equal((await request()).status,429);
+});

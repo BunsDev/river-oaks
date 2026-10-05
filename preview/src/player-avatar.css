@@ -37,3 +37,5 @@
 .player-portrait img.live-portrait { object-fit:cover; object-position:50% 35%; }
 /* The movement mode sits at the header's lower right; keep the role clear of it. */
 .player-identity #player-role { padding-right:50px; }
+
+.player-drive-pad{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}.player-drive-pad button{touch-action:none;user-select:none}

@@ -196,7 +196,7 @@ The same roster drives the server, browser, room counts, and rendered people.
 Old full-population checkpoints migrate into this roster and preserve active
 indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
-The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://sim.jev.works`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
+The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://typesafe.place`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
 Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
@@ -235,7 +235,7 @@ checkpoint compatibility, and the current limits of this first extraction.
 
 Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. On the protected acceptance alias, two real WorkOS accounts signed in through the dedicated TypeSafe application, joined the same hosted roster, and each rejoined after a reload. Signing out the second account removed it from the first account's roster. A later hosted run kept a wish active while the alias moved to a new deployment: the first account rejoined there with the wish intact, and a temporary ban disconnected the second account and denied a new ticket. Unban restored its access; the wish was undone and both accounts signed out.
 
-The TypeSafe WorkOS project has a dedicated **River Oaks District** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M40WBV2ST9M3SRBGA8THBXBD`). Keep the local `.env` client ID and API key from the same Staging environment; a removed environment's client ID produces WorkOS's “Invalid client ID” page. Register `http://127.0.0.1:5173/auth/callback` as the Staging callback and `http://127.0.0.1:5173/` as its sign-out return URL. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Configure GitHub social login and device authorization in both environments; disable Magic Auth and email/password sign-in, and disable other social providers. The server accepts only `GitHubOAuth` sessions, including sessions exchanged from the desktop device flow. Preview deployments need their own authorized origin, cookie secret, and Redis namespaces. Do not copy production state into previews.
+The TypeSafe WorkOS project has a dedicated **TypeSafe Place** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M40WBV2ST9M3SRBGA8THBXBD`). Keep the local `.env` client ID and API key from the same Staging environment; a removed environment's client ID produces WorkOS's “Invalid client ID” page. Register `http://127.0.0.1:5173/auth/callback` as the Staging callback and `http://127.0.0.1:5173/` as its sign-out return URL. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Configure GitHub social login and device authorization in both environments; disable Magic Auth and email/password sign-in, and disable other social providers. The server accepts only `GitHubOAuth` sessions, including sessions exchanged from the desktop device flow. Preview deployments need their own authorized origin, cookie secret, and Redis namespaces. Do not copy production state into previews.
 
 The local Redis tests exercise cross-instance logout and ban enforcement; the hosted run confirms the ban and unban behavior, but does not identify which Vercel worker handled each browser. The candidate was staged with `--skip-domain` on the protected `river-oaks-acceptance-0xbuns.vercel.app` alias. After promoting a deployment, smoke-check sign-in, session, and anonymous ticket rejection on `sim.jev.works`. The original single-process acceptance report is not Vercel acceptance evidence.
 
@@ -321,18 +321,19 @@ Configure the WorkOS environment whose credentials you'll use with these exact U
 
 | Setting | Production value |
 | --- | --- |
-| Redirect URI for the authorization callback | `https://sim.jev.works/auth/callback` |
-| Sign-in initiation URL | `https://sim.jev.works/auth/login` |
-| Application home URL | `https://sim.jev.works/` |
-| Allowed logout return URL | `https://sim.jev.works/` |
+| Redirect URI for the authorization callback | `https://typesafe.place/auth/callback` |
+| Sign-in initiation URL | `https://typesafe.place/auth/login` |
+| Application home URL | `https://typesafe.place/` |
+| Allowed logout return URL | `https://typesafe.place/` |
 
-The callback redirects to `/` after sign-in. The application signs out through `POST /auth/logout` with its CSRF token, then follows WorkOS's logout URL with the home URL as `returnTo`. Register the home URL as the logout destination, rather than the application's POST endpoint.
+The callback redirects to `/play` in production with `AUTH_RETURN_PATH=/play` (the local default is `/`). The application signs out through `POST /auth/logout` with its CSRF token, then follows WorkOS's logout URL with the home URL as `returnTo`. Register the home URL as the logout destination, rather than the application's POST endpoint.
 
 Copy `.env.example` to `.env` if you don't already have a private environment file. Preserve your existing sidecar settings. Fill these server settings through your deployment's secret store or private environment file:
 
 | Variable | Value |
 | --- | --- |
-| `PUBLIC_ORIGIN` | `https://sim.jev.works`, with no trailing slash or path |
+| `AUTH_RETURN_PATH` | `/play` for the hosted landing page; defaults to `/` locally |
+| `PUBLIC_ORIGIN` | `https://typesafe.place`, with no trailing slash or path |
 | `WORKOS_API_KEY` | API key from the matching WorkOS environment |
 | `WORKOS_CLIENT_ID` | Client ID from that same environment |
 | `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters |
@@ -386,7 +387,7 @@ docker volume create river-oaks-moderation
 docker run -d --name river-oaks --restart unless-stopped \
   --env-file .env.production \
   -e HOST=0.0.0.0 \
-  -e PUBLIC_ORIGIN=https://sim.jev.works \
+  -e PUBLIC_ORIGIN=https://typesafe.place \
   -e MODERATION_FILE=/app/.runtime/moderation.json \
   -p 127.0.0.1:8787:8787 \
   -v river-oaks-moderation:/app/.runtime \
@@ -527,3 +528,10 @@ with valid assemblies may use an 8 KiB WebSocket frame; other commands retain
 the 2 KiB limit, existing queue limits, and rate limits. Old clients are rejected
 by the protocol gate. Imported assets and creator scripts remain future work;
 shared voice remains deferred in its plan.
+
+
+### Jev smart rides
+
+Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. All vehicle movement retains road, pedestrian and collision checks.
+
+Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.13.0`). The endpoint requires an approved owner session, canonical Origin, CSRF token and a shared Redis rate budget. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.

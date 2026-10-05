@@ -171,14 +171,14 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
     if ((parsed.protocol === 'https:' || parsed.protocol === 'http:' && local) && !parsed.username && !parsed.password
       && parsed.pathname === '/' && !parsed.search && !parsed.hash) base = parsed.origin;
   } catch { /* Invalid configuration is unavailable, never anonymous access. */ }
-  let enabled = Boolean(redis?.eval && typeof prefix === 'string' && prefix.length > 0 && prefix.length <= 200
+  let enabled = Boolean(['/', '/play'].includes(returnPath) && redis?.eval && typeof prefix === 'string' && prefix.length > 0 && prefix.length <= 200
     && base && apiKey && clientId && typeof cookiePassword === 'string' && cookiePassword.length >= 32);
   const sdk = enabled ? workos ?? new WorkOS(apiKey, { clientId, timeout: 10_000, maxRetries: 1 }) : null;
   // Use a caller-provided hash tag unchanged; otherwise derive a stable safe tag.
@@ -285,7 +285,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     if (!enabled) throw new Error('Auth closed');
     if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
-    res.writeHead(302, { Location: '/' }); res.end();
+    res.writeHead(302, { Location: returnPath }); res.end();
   }
 
   async function handle(req, res) {

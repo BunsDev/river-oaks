@@ -153,7 +153,7 @@ test('completes state-bound PKCE callback and exposes only safe identity and CSR
 });
 
 test('GitHub sign-in completes WorkOS email verification before issuing a session', async t => {
-  const app = await fixture(t);
+  const app = await fixture(t, { returnPath: '/play' });
   app.workos.requireEmailVerification();
   const { callback } = await app.login();
   assert.equal(callback.status, 303);
@@ -174,7 +174,7 @@ test('GitHub sign-in completes WorkOS email verification before issuing a sessio
   assert.match(await (await post('000000')).text(), /could not be confirmed/);
   const verified = await post('123456');
   assert.equal(verified.status, 302);
-  assert.equal(verified.headers.get('location'), '/');
+  assert.equal(verified.headers.get('location'), '/play');
   const sessionCookie = cookie(verified, 'river_oaks_session');
   assert.ok(sessionCookie);
   assert.equal((await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).authenticated, true);
@@ -414,3 +414,13 @@ for (const scenario of boundaryCases) {
     }
   });
 }
+
+
+test('canonical game callback returns to /play and rejects unsafe return paths', async t => {
+  const app = await fixture(t, { returnPath: '/play' });
+  assert.equal((await app.login()).callback.headers.get('location'), '/play');
+  for (const returnPath of ['https://evil.example', '//evil.example', '/play?next=evil', '/auth/login']) {
+    const invalid = await fixture(t, { returnPath });
+    assert.equal((await invalid.request('/auth/login')).status, 503);
+  }
+});

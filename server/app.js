@@ -200,7 +200,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         const identity=await auth.authenticate(req);
         return Boolean(identity && !isBanned(identity.userId) && await waitlist.isApproved(identity.userId));
       };
-      const requested=pathname==='/'?'/index.html':pathname;
+      const requested=pathname==='/'?'/index.html':['/play','/play/'].includes(pathname)?'/play/index.html':pathname;
       // The gate classifies the decoded path, so /%64ata/district.json is gated
       // like /data/district.json.
       let protectedAsset=protectedGameAsset(requested);
