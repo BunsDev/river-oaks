@@ -9,6 +9,7 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .agents import DecisionEngine, Snapshot
 from .auto import AutoEngine, AutoSnapshot
@@ -84,6 +85,10 @@ def create_app(
             yield
 
     app = FastAPI(title="River Oaks decision bridge", lifespan=lifespan)
+    # The bridge spends paid API credits and changes settings, and binding to
+    # loopback alone does not stop a website that points its own domain at
+    # 127.0.0.1 (DNS rebinding): its requests still name that domain in Host.
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
     app.state.engine = engine or DecisionEngine()
     app.state.auto_engine = auto_engine or AutoEngine()
     app.state.companion_engine = companion_engine or CompanionEngine()

@@ -125,7 +125,9 @@ def test_eligibility_excludes_weather_distance_and_resource_violations():
 
 async def test_unconfigured_http_and_validation_are_explicit():
     app = create_app(auto_engine=AutoEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         assert (await c.get("/v1/auto")).json()["available"] is False
         result = (await c.post("/v1/auto", json=packet().model_dump())).json()
         assert result["candidate_id"] is None and result["reason"] == "not_configured"
@@ -185,7 +187,9 @@ async def test_quality_status_rejects_stale_or_non_live_evidence(tmp_path, monke
         "competitive_metrics": {"cases": 30, "coverage": 1, "accepted_accuracy": 1},
     }
     app = create_app(auto_engine=AutoEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         path.write_text(json.dumps(report))
         assert (await c.get("/v1/auto")).json()["quality"] == "evaluated_on_heldout_scenarios"
         for changes in [

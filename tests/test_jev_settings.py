@@ -21,7 +21,7 @@ async def test_override_reaches_both_engines_and_clear_restores_server_keys():
         auto = AutoEngine(remote, "auto-server-fixture")
         app = create_app(engine, auto_engine=auto)
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app), base_url="http://test"
+            transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
         ) as c:
             status = await c.get("/v1/settings/jev")
             assert status.json() == {"source": "server", "configured": True}
@@ -86,7 +86,9 @@ async def test_override_reaches_both_engines_and_clear_restores_server_keys():
 async def test_invalid_override_does_not_echo_or_replace_key(payload):
     engine = DecisionEngine(api_key="server-fixture")
     app = create_app(engine)
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         result = await c.put("/v1/settings/jev", json=payload)
         assert result.status_code == 400
         assert "fixture" not in result.text
@@ -95,7 +97,9 @@ async def test_invalid_override_does_not_echo_or_replace_key(payload):
 
 async def test_override_is_not_required_or_persisted_in_a_new_bridge():
     app = create_app(DecisionEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         assert (await c.get("/v1/settings/jev")).json() == {"source": "none", "configured": False}
         result = await c.put("/v1/settings/jev", content=json.dumps({"api_key": "fixture"}))
         assert result.status_code == 415
@@ -110,5 +114,7 @@ async def test_override_is_not_required_or_persisted_in_a_new_bridge():
         }
         await c.put("/v1/settings/jev", json={"api_key": "fixture"})
     fresh = create_app(DecisionEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(fresh), base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(fresh), base_url="http://127.0.0.1"
+    ) as c:
         assert (await c.get("/v1/settings/jev")).json() == {"source": "none", "configured": False}

@@ -96,7 +96,9 @@ async def test_low_confidence_is_not_presented_as_jev():
 
 async def test_bridge_route_reports_unconfigured_and_shares_key_override():
     app = create_app(auto_engine=AutoEngine(), companion_engine=CompanionEngine())
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://t") as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://127.0.0.1"
+    ) as c:
         body = {"schema_version": 1, "tick": 0, "generation": 0, "candidates": CANDIDATES}
         result = (await c.post("/v1/companion", json=body)).json()
         assert result["source"] == "unavailable" and result["reason"] == "not_configured"
