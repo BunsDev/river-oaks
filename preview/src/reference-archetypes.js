@@ -1,3 +1,4 @@
+import {measureLimbProfile,limbSurfacePoint} from './limb-fit.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { measureHead } from './head-fit.js';
@@ -141,12 +142,14 @@ export function createReferenceStyle(avatar,appearance){
     ball(parent,heart,position,[size*.42,size*.42,size*.3]);
   }
   // A vine spirals around a limb frame's axis with leaves on alternate turns.
-  function spiralVine(piece,radius,from,to,{turns=2.5,stem,foliage,leaves=8,flowers=0}={}){
-    const length=piece.userData.length,points=[];
-    for(let i=0;i<=40;i++){const t=i/40,a=t*turns*Math.PI*2;points.push([Math.cos(a)*radius,length*(from+(to-from)*t),Math.sin(a)*radius]);}
-    tube(piece,stem,points,.0042);
-    for(let i=0;i<leaves;i++){const t=(i+.5)/leaves,a=t*turns*Math.PI*2;leaf(piece,foliage,[Math.cos(a)*(radius+.008),length*(from+(to-from)*t),Math.sin(a)*(radius+.008)],.022,a,.6);}
-    for(let i=0;i<flowers;i++){const t=(i+.3)/flowers,a=t*turns*Math.PI*2+1;blossom(piece,[Math.cos(a)*(radius+.012),length*(from+(to-from)*t),Math.sin(a)*(radius+.012)],.009);}
+  function spiralVine(piece,radius,from,to,{turns=2.5,stem,foliage,leaves=8,flowers=0,fit=false}={}){
+    const length=piece.userData.length,points=[],profile=fit?measureLimbProfile(model,piece):null;
+    piece.userData.vineFit=profile?'skin-profile':'authored';
+    const point=(t,a,offset=0)=>limbSurfacePoint(profile,length*(from+(to-from)*t),a,radius+offset,.006+offset);
+    for(let i=0;i<=40;i++){const t=i/40,a=t*turns*Math.PI*2;points.push(point(t,a));}
+    tube(piece,stem,points,.0042).name=profile?'Silvan fitted arm vine':'Silvan authored vine';
+    for(let i=0;i<leaves;i++){const t=(i+.5)/leaves,a=t*turns*Math.PI*2;leaf(piece,foliage,point(t,a,.008),.022,a,.6);}
+    for(let i=0;i<flowers;i++){const t=(i+.3)/flowers,a=t*turns*Math.PI*2+1;blossom(piece,point(t,a,.012),.009);}
   }
   // An open drape around the hips with a handkerchief hem: angles run from the
   // front (0) around the body, radii widen as it falls.
@@ -265,7 +268,7 @@ export function createReferenceStyle(avatar,appearance){
       }
       if(!masculine){
         const upper=along(`upperarm_${side}`,`lowerarm_${side}`);
-        if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1});
+        if(upper)spiralVine(upper,.043,.1,1,{turns:1.8,stem,foliage,leaves:7,flowers:1,fit:true});
         // Cream linen trousers under the drape.
         const thigh=along(`thigh_${side}`,`calf_${side}`);
         if(thigh){const length=thigh.userData.length,leg=mesh(thigh,new THREE.CylinderGeometry(.08,.132,length*1.08,18),trousers,[0,length*.5,0]);leg.scale.z=1;}

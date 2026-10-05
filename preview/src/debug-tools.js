@@ -1,3 +1,4 @@
+import {placementCoordinate} from './placement-coordinate.js';
 import * as THREE from 'three';
 import { terrainHeight } from './geometry.js';
 import { groundSurfaceTriangles } from './world-surface.js';
@@ -18,6 +19,7 @@ export const DEBUG_LAYERS = [
   { id: 'source', label: 'Source map', hint: 'Mapped roads, footprints, doors and visit points' },
   { id: 'rooms', label: 'Store rooms', hint: 'Interior pockets (blue) and fixtures (orange)' },
   { id: 'flight', label: 'Flight clearance', hint: 'Roof limits the bubble stays above' },
+  { id: 'navigation', label: 'Jev routes & sensing', hint: 'Cyan route; green clear probes; red blocked probes, including momentum' },
   { id: 'skeletons', label: 'Skeletons', hint: 'Bones of people within 40 m' },
   { id: 'wireframe', label: 'Wireframe scene', hint: 'Every mesh as polygons' },
   { id: 'xray', label: 'X-ray overlays', hint: 'Draw overlays through walls and floors' },
@@ -31,14 +33,14 @@ const readSaved = () => { try { return JSON.parse(localStorage.getItem(STORAGE_K
 const save = value => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(value)); } catch { /* private window */ } };
 const fmt = (value, digits = 2) => Number.isFinite(value) ? value.toFixed(digits) : '–';
 
-export function createDebugTools({ scene, camera, host, renderer, getWorld, getEnvironment = () => null, getFocus = () => null }) {
+export function createDebugTools({ scene, camera, host, renderer, getWorld, getEnvironment = () => null, getFocus = () => null, getNavigation = () => null }) {
   const root = new THREE.Group(); root.name = 'Debug overlays'; root.renderOrder = 10; scene.add(root);
   // Overlays must never shade the scene: keep them out of the ambient-occlusion geometry pass.
   root.userData.aoExclude = true;
   const saved = readSaved();
   const state = Object.fromEntries(DEBUG_LAYERS.map(layer => [layer.id, Boolean(saved.layers?.[layer.id])]));
   const overlays = new Map(), wireframed = new Map();
-  let world = null, fallbackEnvironment = null, localCentre = null, lastLocal = 0, lastSkeletons = 0, lastWireframe = 0, lastStats = 0;
+  let world = null, fallbackEnvironment = null, localCentre = null, lastLocal = 0, lastSkeletons = 0, lastWireframe = 0, lastStats = 0, lastNavigation = 0;
   let selection = null, cursor = null, open = Boolean(saved.open), counts = {};
 
   const panel = document.createElement('section');
@@ -46,6 +48,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
   panel.innerHTML = `<header><strong>Debug</strong><span>F3</span><button type="button" data-debug-close aria-label="Close debug tools">×</button></header>
     <fieldset>${DEBUG_LAYERS.map(layer => `<label title="${layer.hint}"><input type="checkbox" data-debug-layer="${layer.id}"> ${layer.label}</label>`).join('')}</fieldset>
     <dl class="debug-readout" data-debug-cursor><dt>Cursor</dt><dd>Move over the scene</dd></dl>
+    <button type="button" data-debug-copy>Copy placement coordinates</button><p data-debug-copy-status role="status"></p>
     <dl class="debug-readout" data-debug-selection hidden></dl>
     <details data-debug-heavy><summary>Heaviest meshes</summary><ol></ol></details>
     <p class="debug-stats" data-debug-stats></p>`;
@@ -59,6 +62,13 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
   }
   $('[data-debug-close]').addEventListener('click', () => toggle(false));
   $('[data-debug-heavy]').addEventListener('toggle', () => renderHeavy());
+  $('[data-debug-copy]').addEventListener('click', async () => {
+    const status=$('[data-debug-copy-status]');
+    if(!cursor){status.textContent='Point at the ground first.';return;}
+    const value=JSON.stringify(placementCoordinate(environment(),cursor.x,cursor.z));
+    try{await navigator.clipboard.writeText(value);status.textContent='Copied '+value;}
+    catch{status.textContent=value;}
+  });
 
   const environment = () => getEnvironment() ?? (fallbackEnvironment?.world === world ? fallbackEnvironment.value : (fallbackEnvironment = { world, value: createWalkingEnvironment(world) }).value);
   const groundAt = (x, z) => environment().groundAt(x, z);
@@ -78,6 +88,20 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
   const replace = (id, object) => { const old = overlays.get(id); if (old) { old.removeFromParent(); dispose(old); } if (object) { root.add(object); overlays.set(id, object); } else overlays.delete(id); };
 
   const builders = {
+    navigation() {
+      const nav=getNavigation(),route=[],clear=[],blocked=[];
+      if(!nav)return group('Jev navigation');
+      let from=nav.position;
+      for(const p of nav.route?.path?.length?nav.route.path:nav.route?.target?[nav.route.target]:[]) {
+        const to=[p[0],groundAt(p[0],-p[1])+.15,-p[1]];route.push(...from,...to);from=to;
+      }
+      if(nav.sensing){
+        route.push(...nav.sensing.origin,...nav.sensing.target);
+        for(const ray of nav.sensing.rays)(ray.clear?clear:blocked).push(...nav.sensing.origin,...ray.end);
+      }
+      counts.navigationProbes=nav.sensing?.rays.length??0;
+      return group('Jev navigation',lines(route,'#39d0ff','Jev route'),lines(clear,'#4ee37a','Clear sensing'),lines(blocked,'#ff4d4d','Blocked sensing'));
+    },
     colliders() {
       const rings = (world.collisionPolygons ?? []).map(ringToScene);
       const walls = new THREE.BufferGeometry(); walls.setAttribute('position', new THREE.Float32BufferAttribute(colliderWalls(rings, groundAt, 3), 3));
@@ -301,6 +325,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
       if (state.walkable) rebuild('walkable');
       if (state.ground) rebuild('ground');
     }
+    if (state.navigation && now-lastNavigation>120) {lastNavigation=now;rebuild('navigation');}
     if (state.skeletons && now - lastSkeletons > 2000) { lastSkeletons = now; localCentre ??= focus; rebuild('skeletons'); }
     if (state.wireframe && now - lastWireframe > 2000) { lastWireframe = now; applyWireframe(true); }
     if (now - lastStats > 500) {

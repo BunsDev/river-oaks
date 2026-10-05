@@ -14,7 +14,7 @@ export const BIRDS = [
 ];
 // Circling height and radius keep a watching bird inside a walker's view: the
 // walking camera's frame tops out about 12 degrees above eye level.
-export const BIRD_FLIGHT = { cruise: 9, minSpeed: 4, maxSpeed: 16, turnRate: 1.1, climbRate: 4, cruiseClearance: 10, watchClearance: 4, minClearance: 3, orbitRadius: 14, lookahead: 10, watchLookahead: 5, edgeMargin: 18 };
+export const BIRD_FLIGHT = { cruise: 9, minSpeed: 4, maxSpeed: 16, turnRate: 1.1, climbRate: 4, verticalAcceleration: 6, cruiseClearance: 10, watchClearance: 4, minClearance: 3, orbitRadius: 14, lookahead: 10, watchLookahead: 5, edgeMargin: 18 };
 // Drawn a little larger than life so a bird reads at a distance.
 export const BIRD_SCALE = 1.3, BIRD_WINGSPAN = 0.8 * BIRD_SCALE;
 // One bird keeps the player company: it circles the spot the player is looking
@@ -87,11 +87,12 @@ export function clearAltitude(environment, x, z, floor, ceiling) {
 }
 
 export function createBird(spec, position, heading = 0) {
-  return { ...spec, position: [...position], heading, pitch: 0, bank: 0, speed: BIRD_FLIGHT.cruise, flap: 0, mode: 'jev', target: null, phase: 'transit', until: 0, recent: [], lookYaw: 0, lookPitch: 0 };
+  return { ...spec, position: [...position], heading, pitch: 0, bank: 0, verticalSpeed: 0, blocked: false, hintIndex: 0, speed: BIRD_FLIGHT.cruise, flap: 0, mode: 'jev', target: null, phase: 'transit', until: 0, recent: [], lookYaw: 0, lookPitch: 0 };
 }
 
 // One flight step. control (manual only): { turn, climb, throttle } in -1..1.
-export function stepBird(bird, delta, { environment, interests = [], control = null, now = 0, random = Math.random }) {
+export function stepBird(bird, delta, { environment, interests = [], control = null, now = 0, random = Math.random, pathHints = {} }) {
+  if (!Number.isFinite(delta) || delta <= 0) return bird;
   const dt = clamp(delta, 0, .1), F = BIRD_FLIGHT, [x, y, z] = bird.position;
   // flightCeiling is a height above the ground; canFly takes absolute heights.
   const ground = environment.groundAt(x, z), ceiling = ground + (environment.flightCeiling ?? 40);
@@ -103,14 +104,19 @@ export function stepBird(bird, delta, { environment, interests = [], control = n
   } else {
     if (!bird.target || now > bird.until && bird.phase === 'watch') {
       const next = chooseInterest(bird, interests, { random, recent: bird.recent });
-      bird.target = next; bird.phase = 'transit'; bird.until = Infinity;
+      bird.target = next; bird.hintIndex = 0; bird.phase = 'transit'; bird.until = Infinity;
       if (next) bird.recent = [next.id, ...bird.recent].slice(0, 4);
     }
     if (bird.target) {
       const live = interests.find(item => item.id === bird.target.id);
       if (live) bird.target = live;
       const [east, north] = bird.target.position, distance = Math.hypot(east - x, -north - z), radius = bird.target.radius ?? F.orbitRadius;
-      if (bird.phase === 'transit' && distance < radius * 1.4) { bird.phase = 'watch'; bird.until = now + 12000 + random() * 8000; }
+      const hints = Array.isArray(pathHints[bird.target.id]) ? pathHints[bird.target.id].slice(0, 64).filter(p => Array.isArray(p) && p.length === 3 && p.every(Number.isFinite)) : [];
+      let hint = hints[bird.hintIndex];
+      const hintReach = Math.max(3, F.minSpeed / F.turnRate + .25);
+      if (hint && Math.hypot(hint[0] - x, hint[2] - z) < hintReach) hint = hints[++bird.hintIndex];
+      // A bird starts circling once it has passed its last path hint and reached the lap.
+      if (bird.phase === 'transit' && !hint && distance < radius * 1.4) { bird.phase = 'watch'; bird.until = now + 12000 + random() * 8000; }
       if (bird.phase === 'watch') {
         // Circle the scene by pursuit: aim at the point on the lap 0.9 rad ahead of
         // the bird's own angle around it. This converges onto the lap from inside or
@@ -120,7 +126,14 @@ export function stepBird(bird, delta, { environment, interests = [], control = n
         // Slow enough that the tightest turn (speed / turn rate) is well inside the
         // lap; at cruise a bird cannot hold a tight lap and spirals outward.
         desiredAltitude = environment.groundAt(east, -north) + F.watchClearance; desiredSpeed = Math.min(F.cruise * .8, radius * F.turnRate * .7);
-      } else desiredHeading = headingTo(bird.position, [east, 0, -north]);
+      } else {
+        desiredHeading = headingTo(bird.position, hint ?? [east, 0, -north]);
+        if (hint) {
+          desiredAltitude = hint[1];
+          // Slow into a node so the cruise turning circle cannot trap it inside.
+          desiredSpeed = Math.min(F.cruise, Math.max(F.minSpeed, Math.hypot(hint[0] - x, hint[2] - z) * .5));
+        }
+      }
     }
     // Stay inside the district: turn back toward the middle near its edge.
     const [west, southZ, east, northZ] = environment.bounds ?? [-Infinity, -Infinity, Infinity, Infinity];
@@ -140,20 +153,41 @@ export function stepBird(bird, delta, { environment, interests = [], control = n
   const [fx, fz] = forwardOf(bird.heading);
   // A slow, circling bird looks less far ahead than one crossing the district.
   const lookahead = bird.phase === 'watch' && bird.mode !== 'manual' ? F.watchLookahead : F.lookahead;
-  for (const reach of [lookahead * .5, lookahead]) {
-    if (environment.canFly && !environment.canFly(x + fx * reach, y, z + fz * reach)) { desiredAltitude = Math.max(desiredAltitude, y + 6); if (bird.mode !== 'manual') desiredSpeed = Math.min(desiredSpeed, F.cruise * .7); }
+  // Sample the corridor: two distant endpoints can both miss a narrow stem.
+  for (let reach = .5; reach <= lookahead; reach += .5) {
+    if (environment.canFly && !environment.canFly(x + fx * reach, y, z + fz * reach)) {
+      desiredAltitude = Math.max(desiredAltitude, y + 6);
+      if (bird.mode !== 'manual') desiredSpeed = Math.min(desiredSpeed, F.cruise * .7);
+      break;
+    }
   }
+  // A grazing contact may fall between forward samples. Keep climbing until
+  // the swept movement clears it, using the same bounded vertical controller.
+  if (bird.blocked) desiredAltitude = Math.max(desiredAltitude, y + 6);
   desiredAltitude = clamp(desiredAltitude, ground + F.minClearance, ceiling);
   const turn = clamp(wrap(desiredHeading - bird.heading), -F.turnRate * dt, F.turnRate * dt);
   bird.heading = wrap(bird.heading + turn);
   bird.bank += (clamp(-turn / Math.max(dt, 1e-3) * .55, -.7, .7) - bird.bank) * (1 - Math.exp(-4 * dt));
   bird.speed += (clamp(desiredSpeed, F.minSpeed, F.maxSpeed) - bird.speed) * (1 - Math.exp(-1.5 * dt));
-  const vertical = clamp(desiredAltitude - y, -F.climbRate, F.climbRate) * (1 - Math.exp(-2 * dt)) / Math.max(dt, 1e-3);
+  // Bound velocity and acceleration, not displacement before an exponential gain.
+  const error = desiredAltitude - y;
+  const wantedVertical = Math.sign(error) * Math.min(F.climbRate, Math.abs(error) * 2, Math.sqrt(2 * F.verticalAcceleration * Math.abs(error)));
+  bird.verticalSpeed += clamp(wantedVertical - bird.verticalSpeed, -F.verticalAcceleration * dt, F.verticalAcceleration * dt);
+  const vertical = bird.verticalSpeed;
   bird.pitch += (clamp(Math.atan2(vertical, bird.speed), -.6, .6) - bird.pitch) * (1 - Math.exp(-3 * dt));
   const [nx, nz] = forwardOf(bird.heading), step = bird.speed * dt;
   let next = [x + nx * step, clamp(y + vertical * dt, ground + F.minClearance, ceiling), z + nz * step];
   // Never fly into a building: hold position and climb instead.
-  if (environment.canFly && !environment.canFly(next[0], next[1], next[2])) next = [x, Math.min(ceiling, y + F.climbRate * dt), z];
+  const clearSegment = to => {
+    const steps = Math.max(1, Math.ceil(Math.hypot(to[0] - x, to[1] - y, to[2] - z) / .2));
+    for (let i = 1; i <= steps; i++) if (environment.canFly && !environment.canFly(x + (to[0] - x) * i / steps, y + (to[1] - y) * i / steps, z + (to[2] - z) * i / steps)) return false;
+    return true;
+  };
+  bird.blocked = !clearSegment(next);
+  if (bird.blocked) {
+    const rise = [x, Math.min(ceiling, y + Math.max(0, vertical) * dt), z];
+    next = clearSegment(rise) ? rise : [x, y, z];
+  }
   bird.position = next;
   bird.flap += dt * (vertical > .5 || bird.speed > F.cruise * 1.2 ? 15 : bird.phase === 'watch' ? 5 : 9);
   return bird;
@@ -183,7 +217,7 @@ function birdModel(spec) {
   return group;
 }
 
-export function createBirdCams({ scene, camera, host, getEnvironment, getInterests, now = () => performance.now(), random = Math.random }) {
+export function createBirdCams({ scene, camera, host, getEnvironment, getInterests, getPathHints = () => ({}), now = () => performance.now(), random = Math.random }) {
   const flock = [], models = [];
   let riding = null, companion = null, transition = 0, control = { turn: 0, climb: 0, throttle: 0 }, keys = new Set(), started = false;
   const from = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
@@ -258,7 +292,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       let changed = false;
       for (const bird of flock) {
         const before = `${bird.mode}:${bird.target?.id}:${bird.phase}`;
-        stepBird(bird, delta, { environment, interests: bird === companion ? nearby : interests, control: bird === riding && bird.mode === 'manual' ? control : null, now: time, random });
+        stepBird(bird, delta, { environment, interests: bird === companion ? nearby : interests, control: bird === riding && bird.mode === 'manual' ? control : null, now: time, random, pathHints: getPathHints() });
         if (`${bird.mode}:${bird.target?.id}:${bird.phase}` !== before) changed = true;
       }
       flock.forEach((bird, index) => {
