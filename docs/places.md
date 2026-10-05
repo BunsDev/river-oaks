@@ -32,6 +32,9 @@ map without hand-authored artwork.
   teleport into a building; the ordinary map point and travel checks still
   govern movement. Ownership is recorded by Jevica in the region studio and
   does not grant building or wish powers.
+- **Events.** Find scheduled gatherings across worlds, RSVP privately, or host
+  a gathering at a named outdoor meeting point. Times use your local time zone;
+  venue links use the same shared-world arrival checks. See [events](world-events.md).
 - **Go somewhere.** Every named place in the district, once each: the arrival
   point, the community meeting spots, and any storefront that is not already a
   meeting spot. In the shipped district the 30 spots *are* the 30 storefronts,

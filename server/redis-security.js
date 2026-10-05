@@ -78,7 +78,7 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   };
   return {
     async allow(scope, id, limit, windowMs) {
-      if (!['access', 'frames', 'social', 'groups', 'profile', 'inventory'].includes(scope)) return false;
+      if (!['access', 'frames', 'social', 'groups', 'events', 'profile', 'inventory'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {

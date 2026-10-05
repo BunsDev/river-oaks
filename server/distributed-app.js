@@ -11,6 +11,7 @@ import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
+import { eventAction } from './events-api.js';
 import { accountDesignCommand } from './design-commands.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
@@ -21,7 +22,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, groups = null, profiles = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, groups = null, profiles = null, events = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -193,6 +194,16 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
           readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000)});
+        return json(res,result.status,result.value);
+      }
+      if (path.startsWith('/api/events/') && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+          resolveVenue:async placeId=>{
+            const place=await room.resolvePlace(placeId);
+            return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
+          },allowWrite:id=>security.allow('events',id,12,60_000)});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {

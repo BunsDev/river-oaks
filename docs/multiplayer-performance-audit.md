@@ -241,3 +241,14 @@ ms before** and **98–107 ms after** across the full and shared casts with 1,
 Each run still had one step over 50 ms. Transport snapshot gaps varied in both
 directions, so this change is not evidence of better network delivery. The
 hosted multi-region soak and cold-start margin remain release gates.
+
+## Event calendar — 5 October 2026
+
+The calendar stores at most 128 events with 32 RSVP accounts each. Redis
+operations are atomic and occur on calendar HTTP requests, outside room ticks.
+The visible directory refreshes every 30 seconds and skips hidden tabs/panels.
+A local Redis 7 full-calendar sample on Apple M3 Max measured 100 list reads:
+1.97 ms median, 2.86 ms p95, 8.56 ms maximum; public response 44,592 bytes.
+Overflow was rejected. This is loopback storage evidence. Hosted multi-region
+latency, many simultaneous calendar readers, and full-calendar DOM rendering
+cost remain unmeasured. See [events](world-events.md) for limits and semantics.

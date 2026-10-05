@@ -119,6 +119,10 @@
     { "source": "/api/groups/leave", "destination": "/api/server?_river_path=/api/groups/leave" },
     { "source": "/api/groups/remove", "destination": "/api/server?_river_path=/api/groups/remove" },
     { "source": "/api/groups/send", "destination": "/api/server?_river_path=/api/groups/send" },
+    { "source": "/api/events/list", "destination": "/api/server?_river_path=/api/events/list" },
+    { "source": "/api/events/create", "destination": "/api/server?_river_path=/api/events/create" },
+    { "source": "/api/events/rsvp", "destination": "/api/server?_river_path=/api/events/rsvp" },
+    { "source": "/api/events/cancel", "destination": "/api/server?_river_path=/api/events/cancel" },
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },
     {
