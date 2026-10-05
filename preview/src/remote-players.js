@@ -54,7 +54,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
       for(const player of peers){
         let entry=entries.get(player.id);
         if(!entry){
-          const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.dataset.peerId=player.id;label.textContent=player.name;labels.append(label);scene.add(holder);
+          const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
         }
