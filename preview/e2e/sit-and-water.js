@@ -120,7 +120,10 @@ async page => {
     const target=sitting[0];
     await page.evaluate(id=>window.__riverSeatAndWater().goNear(id),target.seat.id);
     await page.evaluate(([x,north])=>window.__riverSeatAndWater().face(x,north),[target.position[0],target.position[1]]);
-    resident=await page.waitForFunction(id=>{const r=window.__riverSeatAndWater().residents().find(item=>item.id===id);return r&&r.visible&&Math.abs(r.hips-r.seat.height-0.025)<0.05?r:null;},target.id,{timeout:4000})
+    // Read how they are drawn and whether their place is held in one frame:
+    // a resident can stand up and walk on at any moment.
+    resident=await page.waitForFunction(id=>{const s=window.__riverSeatAndWater(),r=s.residents().find(item=>item.id===id);
+      return r&&r.visible&&Math.abs(r.hips-r.seat.height-0.025)<0.05?{...r,taken:s.taken,offered:s.offered}:null;},target.id,{timeout:4000})
       .then(handle=>handle.jsonValue(),()=>null);
   }
   check(Boolean(resident),'A resident on a bench is drawn with their hips on the seat');
@@ -140,9 +143,8 @@ async page => {
   await page.waitForTimeout(1200);
   await page.screenshot({path:'output/playwright/sit-resident-bench.png'});
   await press(page,'KeyH');await press(page,'KeyV');
-  const state=await page.evaluate(()=>({offered:window.__riverSeatAndWater().offered,taken:window.__riverSeatAndWater().taken}));
-  check(state.taken.includes(resident.seat.id),'Their place is held');
-  check(state.offered!==resident.seat.id,'so Z never offers it');
+  check(resident.taken.includes(resident.seat.id),'Their place is held');
+  check(resident.offered!==resident.seat.id,'so Z never offers it');
 
   await bob.context().close();
   check(errors.length===0,`No page errors: ${errors.join(' | ')}`);
