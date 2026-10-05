@@ -61,8 +61,8 @@ function makeLocals(world) {
   });
 }
 
-export function createCommunity(world, rooms = [], { carriage = true, sharedPopulation = false } = {}) {
-  const state = { wishes: createWishState(), locals: [...makeLocals(world), ...createStoreEncounters(rooms,{sharedPopulation}), ...(carriage ? createCarriageEncounter(world) : [])], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
+export function createCommunity(world, rooms = [], { carriage = true, sharedPopulation = false, outdoor = true } = {}) {
+  const state = { wishes: createWishState(), locals: [...(outdoor ? makeLocals(world) : []), ...createStoreEncounters(rooms,{sharedPopulation}), ...(outdoor && carriage ? createCarriageEncounter(world) : [])], generation: 0, selectedId: null, physicalVisits:world?.scene==='district' };
   chooseCommunityScenario(state, 'heatwave');
   return state;
 }

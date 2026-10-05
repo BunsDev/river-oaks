@@ -109,42 +109,9 @@ async page => {
   await bob.waitForFunction(()=>!window.__riverMultiplayer().remotes.find(remote=>remote.id==='alice')?.watering,null,{timeout:10000});
   check(true,'The watering animation ends by itself');
 
-  // Townspeople rest on benches; they are drawn seated, facing the street.
-  // A rest lasts a quarter of a minute, so go to whoever is sitting now and
-  // look again if they have moved on by the time we arrive.
-  let resident=null;
-  const deadline=Date.now()+180000;
-  while(!resident&&Date.now()<deadline){
-    const sitting=await page.evaluate(()=>window.__riverSeatAndWater().residents());
-    if(!sitting.length){await page.waitForTimeout(2000);continue;}
-    const target=sitting[0];
-    await page.evaluate(id=>window.__riverSeatAndWater().goNear(id),target.seat.id);
-    await page.evaluate(([x,north])=>window.__riverSeatAndWater().face(x,north),[target.position[0],target.position[1]]);
-    // Read how they are drawn and whether their place is held in one frame:
-    // a resident can stand up and walk on at any moment.
-    resident=await page.waitForFunction(id=>{const s=window.__riverSeatAndWater(),r=s.residents().find(item=>item.id===id);
-      return r&&r.visible&&Math.abs(r.hips-r.seat.height-0.025)<0.05?{...r,taken:s.taken,offered:s.offered}:null;},target.id,{timeout:4000})
-      .then(handle=>handle.jsonValue(),()=>null);
-  }
-  check(Boolean(resident),'A resident on a bench is drawn with their hips on the seat');
-  check(angle(resident.heading,resident.seat.heading)<1e-6,'and faces the way the bench faces');
-  const legs=resident.legs;
-  check(legs&&Math.abs(legs.knee-legs.hip)<0.2&&legs.kneeAhead>0.25&&legs.foot<0.25,
-    `Their legs bend at the knee with thighs along the seat and feet on the ground (${JSON.stringify(legs)})`);
-  // From in front of the bench, off to one side, through Alice's own eyes with
-  // the panels hidden, so the seated pose is in full view.
-  const h=resident.seat.heading;
-  for(const [side,ahead] of [[1.7,1.4],[-1.7,1.4],[1.2,2],[-1.2,2]]){
-    const spot=[resident.position[0]+Math.cos(h)*side+Math.sin(h)*ahead,resident.position[1]+Math.sin(h)*side-Math.cos(h)*ahead];
-    if((await page.evaluate(([x,north])=>window.__riverSeatAndWater().goTo(x,north),spot))?.ok)break;
-  }
-  await press(page,'KeyV');await press(page,'KeyH');
-  await page.evaluate(([x,north])=>window.__riverSeatAndWater().face(x,north),[resident.position[0],resident.position[1]]);
-  await page.waitForTimeout(1200);
-  await page.screenshot({path:'output/playwright/sit-resident-bench.png'});
-  await press(page,'KeyH');await press(page,'KeyV');
-  check(resident.taken.includes(resident.seat.id),'Their place is held');
-  check(resident.offered!==resident.seat.id,'so Z never offers it');
+  // Multiplayer streets contain real players; NPC bench poses belong to solo.
+  check((await page.evaluate(()=>window.__riverSeatAndWater().residents())).length===0,
+    'No outdoor NPCs are rendered on multiplayer benches');
 
   await bob.context().close();
   check(errors.length===0,`No page errors: ${errors.join(' | ')}`);

@@ -1,9 +1,9 @@
 // One predictable home for play actions. On small windows the native disclosure
 // preserves the world view; its contents remain scrollable when expanded.
-export function createPlayDock() {
+export function createPlayDock({creationToolsEnabled=false}={}) {
   const dock=document.createElement('details');dock.className='visit-tools';
   const toggle=document.createElement('summary');toggle.className='visit-tools-toggle';
-  toggle.innerHTML='<span>Play, build & rides</span><kbd class="rail-key-hint" aria-hidden="true"></kbd>';
+  toggle.innerHTML=`<span>${creationToolsEnabled?'Play, build & rides':'Play & rides'}</span><kbd class="rail-key-hint" aria-hidden="true"></kbd>`;
   toggle.querySelector('kbd').textContent=/Mac|iPhone|iPad/.test(navigator.platform)?'⌘⇧B':'Ctrl ⇧B';
   toggle.setAttribute('aria-keyshortcuts','Meta+Shift+B Control+Shift+B');
   const nav=document.createElement('nav');nav.className='play-rail-nav';nav.setAttribute('aria-label','Play activities');

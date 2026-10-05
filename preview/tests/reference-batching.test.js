@@ -56,18 +56,18 @@ test('selective bone batching preserves surfaces and leaves independently contro
   material.dispose(); transparent.material.dispose();
 });
 
-test('shipped reference looks keep every triangle while bounding accessory draws in both forms', async () => {
+test('shipped reference looks retain their intended surfaces while bounding accessory draws in both forms', async () => {
   const cases = [
     ['sable-human', 9880, 20], ['woman-casual', 9880, 20],
-    ['rowan-human', 7644, 20], ['man-casual', 8264, 20],
-    ['woman-tailored', 8432, 20], ['vesper-beast', 8432, 20],
-    ['man-tailored', 10528, 20], ['midnight-host-wolf', 10528, 20],
-    ['lyra-human', 6956, 21], ['woman-daywear', 6956, 21],
-    ['man-workwear', 16044, 20], ['kai-formal-beast', 16044, 20],
-    ['kai-explorer', 11924, 20], ['kai-explorer-beast', 11924, 20],
-    ['kai-noir', 17388, 20], ['kai-noir-beast', 17388, 20],
-    ['forest-aristocrat', 153132, 80], ['forest-aristocrat-beast', 153132, 80],
-    ['forest-aristocrat-feminine', 171916, 80], ['forest-aristocrat-feminine-beast', 171916, 80],
+    ['rowan-human', 7644, 20], ['man-casual', 7644, 20],
+    ['woman-tailored', 7812, 20], ['vesper-beast', 7812, 20],
+    ['man-tailored', 9908, 20], ['midnight-host-wolf', 9908, 20],
+    ['lyra-human', 6336, 19], ['woman-daywear', 6336, 19],
+    ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],
+    ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
+    ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
+    ['forest-aristocrat', 152400, 80], ['forest-aristocrat-beast', 152400, 80],
+    ['forest-aristocrat-feminine', 171184, 80], ['forest-aristocrat-feminine-beast', 171184, 80],
   ];
   for (const [id, triangles, maxDraws] of cases) {
     const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);

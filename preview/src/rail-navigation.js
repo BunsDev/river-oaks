@@ -62,7 +62,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Alien invasion', selector: '#invasion-toggle', run: () => showPlay('.invasion-controls') },
     { label: 'Graphics quality', selector: '[data-quality=auto]', run: () => openTab(2, '[data-quality=auto]') },
     { label: 'Light & atmosphere', selector: '#sun-hour', run: () => openTab(2, '#sun-hour') },
-    { label: 'Toggle clear view', keys: 'H', selector: '.clear-view-toggle', enabled: () => document.body.classList.contains('walking'), run: () => getClearView()?.set(!getClearView()?.active) },
+    { label: getClearView()?.active ? 'Show controls' : 'Clear view', keys: 'H', enabled: () => getClearView() && (document.body.classList.contains('walking') || getClearView().active), run: () => getClearView()?.set(!getClearView()?.active) },
     { label: 'Return to world', run: () => {
       if (document.querySelector('#community-dialogue')?.hidden === false) document.querySelector('#community-close')?.click();
       sidebar.setOpen(false); getDock()?.setOpen(false); focusWorld();

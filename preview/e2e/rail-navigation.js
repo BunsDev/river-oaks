@@ -1,4 +1,4 @@
-async page => {
+async (page, { worldMapEnabled = false } = {}) => {
   const checks = [], errors = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   page.on('pageerror', error => errors.push(error.message));
@@ -15,6 +15,9 @@ async page => {
   });
   await host.focus();
   const flight = await page.locator('#player-flight').getAttribute('aria-pressed');
+  check(await page.locator('.clear-view-toggle').count() === 0, 'Commands replaces the standalone Clear view button');
+  check(await page.locator('.world-map').count() === (worldMapEnabled ? 1 : 0), 'World map creation respects the environment flag');
+  check(await page.locator('.world-portal').count() === (worldMapEnabled ? 1 : 0), 'Worlds directory and publishing controls respect the environment flag');
   await page.keyboard.press('Control+b');
   check(await expanded() === 'true' && await focus() === 'rail-tab-0', 'Ctrl+B opens the left rail and focuses its selected tab');
   await page.keyboard.press('Meta+b');
@@ -42,6 +45,8 @@ async page => {
 
   await page.keyboard.press('Control+k');
   check(await menu.isVisible() && await focus() === 'rail-command-search', 'Commands open as a focused modal dialog');
+  check(await menu.getByRole('button', { name: 'World map', exact: true }).count() === (worldMapEnabled ? 1 : 0), 'Commands offers World map only when enabled');
+  if (!worldMapEnabled) check(await menu.getByRole('button', { name: 'Browse shared worlds', exact: true }).count() === 0, 'Commands omits shared worlds when disabled');
   check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === 0, 'Solo command list omits unavailable shared building');
   await search.fill('no such activity');
   check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), 'Command search explains an empty result');
@@ -88,8 +93,17 @@ async page => {
   check(await page.evaluate(() => document.body.classList.contains('clear-view')), 'Clear view remains available');
   await page.keyboard.press('Control+Shift+b');
   check(!await page.evaluate(() => document.body.classList.contains('clear-view')) && await dock.evaluate(node => node.open), 'Requesting hidden play controls recovers clear view');
+  await page.locator('.commands-toggle').click();
+  await menu.getByRole('button', { name: /^Clear view/ }).click();
+  check(await page.evaluate(() => document.body.classList.contains('clear-view')), 'Commands can hide the visit controls');
+  await page.locator('.commands-toggle').click();
+  await menu.getByRole('button', { name: /^Show controls/ }).click();
+  check(!await page.evaluate(() => document.body.classList.contains('clear-view')), 'Commands can restore the visit controls');
+  await dock.getByRole('button', { name: 'Rides', exact: true }).focus(); await page.keyboard.press('h');
+  check(await page.evaluate(() => document.activeElement.classList.contains('commands-toggle')), 'H hands focus to Commands before hiding a focused card');
+  await page.keyboard.press('h');
   check(!await dock.getByRole('button', { name: 'Build', exact: true }).isVisible(), 'Play navigation omits unavailable activities');
-  check(await page.evaluate(() => Boolean(document.querySelector('.bird-cams').compareDocumentPosition(document.querySelector('.shared-build-controls')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Play card order follows its stable activity navigation');
+  check(await page.evaluate(() => Boolean(document.querySelector('.bird-cams').compareDocumentPosition(document.querySelector('.invasion-controls')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Play card order follows its stable activity navigation');
   await dock.getByRole('button', { name: 'Birds', exact: true }).click();
   check(await page.evaluate(() => document.activeElement.closest('.bird-cams') !== null), 'Play activity jump reveals and focuses its destination');
   await page.keyboard.press('Escape');
@@ -112,8 +126,16 @@ async page => {
     check(fixedNav, `${width}×${height}: activity navigation remains above the scrolling cards`);
     await dock.locator('summary').first().focus(); await page.keyboard.press('Escape');
     await page.locator('.commands-toggle').click();
-    await search.fill('world map'); await page.keyboard.press('Enter');
-    check(await focus() === '' && await page.evaluate(() => document.activeElement.classList.contains('world-map-surface')), `${width}×${height}: command opens the map with keyboard focus`);
+    check(await menu.isVisible(), width+'×'+height+': Commands remains pointer-reachable');
+    if (worldMapEnabled) {
+      await search.fill('world map'); await page.keyboard.press('Enter');
+      check(await focus() === '' && await page.evaluate(() => document.activeElement.classList.contains('world-map-surface')), `${width}×${height}: command opens the map with keyboard focus`);
+    } else {
+      await search.fill('world map');
+      check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), `${width}×${height}: disabled World map is unavailable`);
+      await page.keyboard.press('Escape');
+      await host.focus(); await page.keyboard.press('Alt+2');
+    }
     check(!await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), `${width}×${height}: no page overflow`);
     await page.keyboard.press('Escape');
   }

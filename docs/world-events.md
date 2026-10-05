@@ -6,7 +6,8 @@ zone, and the number going. Filter to this world or events you have joined.
 **Visit meeting point** opens that world's existing place link; travel uses
 its usual server checks and never enters a private home.
 
-Approved residents can open **Host a gathering** and choose a meeting point
+With `VITE_CREATION_TOOLS=true`, approved residents can open **Host a gathering**
+and choose a meeting point
 in the world they are viewing. Use a start within 30 days and a duration from
 15 minutes to eight hours. The RSVP capacity is 2–32 and includes the host,
 who starts on the guest list. Each account may host five unexpired events;

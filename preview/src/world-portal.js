@@ -11,10 +11,11 @@ export function worldVisitUrl(id,base=location.href) {
   return url.href;
 }
 
-export function createWorldPortal({host,getCanPublish=()=>false}={}) {
+export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEnabled=false}={}) {
+  const canPublish=()=>creationToolsEnabled&&getCanPublish();
   const section=element('section',null,'world-portal');section.setAttribute('aria-label','Worlds');
   const heading=element('h3','Worlds');
-  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat. Jevica can publish a region and prepare private revision drafts.','quiet-note');
+  const intro=element('p','Visit a shared space. Each world keeps its own residents, creations, and chat.'+(creationToolsEnabled?' Jevica can publish a region and prepare private revision drafts.':''),'quiet-note');
   const status=element('p','Loading worlds…','world-portal-status');status.setAttribute('role','status');
   const list=element('ul',null,'world-portal-list');
   const form=element('form',null,'world-portal-form');form.hidden=true;
@@ -38,7 +39,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
   const versionSelect=element('select');versionSelect.setAttribute('aria-label','Previous published version');versionLabel.append(versionSelect);
   const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
   revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
-  section.append(heading,intro,status,list,revisionPanel,form);host.prepend(section);
+  section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,form);host.prepend(section);
   let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
@@ -177,7 +178,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       const visitors=Number.isSafeInteger(world.visitors)&&world.visitors>=0?world.visitors:0;
       const detail=element('small',`${world.id===currentId()?'Here now':world.description||'Shared world'} · ${visitors} ${visitors===1?'visitor':'visitors'} online`);
       row.append(link,detail);
-      if(getCanPublish() && world.template==='region-v1') {
+      if(canPublish() && world.template==='region-v1') {
         const edit=element('button','Edit draft');edit.type='button';edit.setAttribute('aria-label',`Edit revision draft for ${world.title}`);
         edit.addEventListener('click',()=>editRevision(world));row.append(edit);
       }
@@ -188,7 +189,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
       document.title=`${current.title} — ${current.template==='region-v1'?'Shared worlds':'River Oaks'}`;
       const view=document.querySelector('#view-name');if(view)view.textContent=current.title;
     }
-    form.hidden=!getCanPublish();
+    form.hidden=!canPublish();
   };
   function load() {
     if(loading)return loading;
@@ -207,7 +208,7 @@ export function createWorldPortal({host,getCanPublish=()=>false}={}) {
     return loading;
   }
   form.addEventListener('submit',async event=>{
-    event.preventDefault();if(!getCanPublish())return;
+    event.preventDefault();if(!canPublish())return;
     publish.disabled=true;status.textContent='Publishing world…';
     try {
       const session=await (await fetch('/auth/session',{credentials:'same-origin',cache:'no-store'})).json();

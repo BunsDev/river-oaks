@@ -12,13 +12,16 @@ function template(name) {
   }).catch(error=>{templates.delete(name);throw error;}));
   return templates.get(name);
 }
-function materialFrom(source, foliage = false) {
+function materialFrom(source, foliage = false, preserveTint = false) {
   const material=source.clone();
   material.transparent=false;material.depthWrite=true;material.alphaTest=foliage?0.45:0;
   material.side=foliage?THREE.DoubleSide:THREE.FrontSide;
   material.roughness=foliage?0.86:1;material.metalness=0;
   material.envMapIntensity=0.55;
-  if(foliage) {material.color.set('#f4ffea');material.emissive.set('#29421a');material.emissiveIntensity=0.16;}
+  if(foliage) {
+    if(!preserveTint)material.color.set('#f4ffea');
+    material.emissive.set('#29421a');material.emissiveIntensity=preserveTint?0.08:0.16;
+  }
   seeThroughNearCamera(material);
   return material;
 }
@@ -33,17 +36,15 @@ export function matureTreePlacements(world) {
   }));
 }
 
-// Crowns switch detail at these distances (m). Near crowns layer three leaf
-// shells for density; farther ones need fewer, since their shells overlap in a
-// few pixels while each still costs a full alpha-tested overdraw pass.
+// Crowns switch detail at these distances (m). EZ Tree's authored branch/leaf
+// clusters need one shell, avoiding overlapping alpha-tested overdraw passes.
 export const TREE_LOD_DISTANCES = [22, 60];
-export const TREE_LEAF_LAYERS = [3, 2, 2];
+export const TREE_LEAF_LAYERS = [1, 1, 1];
 export function treeDetailLevel(distance) {
   return distance < TREE_LOD_DISTANCES[0] ? 0 : distance < TREE_LOD_DISTANCES[1] ? 1 : 2;
 }
-// Sun shadows use the silhouette LOD, with all three overlapping leaf shells.
-// Fine leaf tessellation disappears in the filtered shadow map; keeping the
-// crown layers preserves its density with a quarter of the old proxy cost, and
+// Sun shadows use the silhouette LOD. Fine leaf tessellation disappears in
+// the filtered shadow map; keeping the branching silhouette costs less, and
 // every tree in the shadow frustum casts whatever its visible detail level.
 // Three builds the beauty render list before it renders shadows, so a proxy
 // shown as the light prepares its shadow and hidden after its own shadow draw
@@ -60,7 +61,7 @@ export function castShadowsFromProxies(light, proxies) {
 }
 function hideAfterShadow() { this.visible = false; }
 
-// Dense authored tree models replace only the visual crowns at existing stems.
+// Baked EZ Tree models replace only the visual crowns at existing stems.
 // Terrain, navigation, source vegetation records and all street fixtures stay put.
 export function buildMatureTrees(world) {
   const group=new THREE.Group();group.name='Mature urban shade trees';
@@ -70,7 +71,8 @@ export function buildMatureTrees(world) {
   group.userData.observedVoxels=world.vegetation?.voxels.length ?? 0;
   group.userData.treeCount=placements.length;
   group.userData.cancelLandscapeLoad=()=>{disposed=true;};
-  group.userData.ready=Promise.all(['shade-tree-high','shade-tree-mid','shade-tree-low'].map(template)).then(sources=>{
+  if(!placements.length)return group;
+  group.userData.ready=Promise.all(['ez-oak-high','ez-oak-mid','ez-oak-low'].map(template)).then(sources=>{
     if(disposed) return;
     const bounds=new THREE.Box3().setFromObject(sources[0]),size=bounds.getSize(new THREE.Vector3());
     // The source origin is the stem. Keep it, rather than moving it to the crown's center.
@@ -79,12 +81,12 @@ export function buildMatureTrees(world) {
       const out=[];source.traverse(item=>{if(item.isMesh){
         const geometry=item.geometry.clone().applyMatrix4(item.matrixWorld);
         const leafy=/leav/i.test(item.material.name);
-        if(!materials.has(item.material.name)) materials.set(item.material.name,materialFrom(item.material,leafy));
+        if(!materials.has(item.material.name)) materials.set(item.material.name,materialFrom(item.material,leafy,true));
         out.push({geometry,material:materials.get(item.material.name),leafy});
       }});return out;
     });
     // Twelve-meter batches limit offscreen instances without making each tree
-    // a separate draw call. Density, source meshes and stem positions stay fixed.
+    // a separate draw call. Stem positions stay fixed.
     const tiles=new Map();
     placements.forEach(tree=>{const key=`${Math.floor(tree.position[0]/12)}:${Math.floor(tree.position[2]/12)}`;if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push(tree);});
     const dummy=new THREE.Object3D();

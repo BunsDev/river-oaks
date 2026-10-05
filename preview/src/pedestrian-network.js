@@ -1,4 +1,4 @@
-import { STREET, isWalkway, streetSection } from './street-profile.js';
+import { STREET, isWalkway, streetSection, joinStreetSegments } from './street-profile.js';
 import { routeSegments, sampleRoute } from './geometry.js';
 
 export function createPedestrianNetwork(world) {
@@ -16,6 +16,7 @@ export function createPedestrianNetwork(world) {
     for(let d=35;d<route.length-12;d+=38)distances.push(d);
     for(const distance of distances){const sample=sampleRoute(route,distance);crossings.push({center:[sample.position[0],-sample.position[2]],direction:[sample.direction[0],-sample.direction[1]],width:road.width_m,road:road.id});}
   }
+  joinStreetSegments(segments);
   const crossingByRoad=new Map();for(const crossing of crossings){if(!crossingByRoad.has(crossing.road))crossingByRoad.set(crossing.road,[]);crossingByRoad.get(crossing.road).push(crossing);}
   const classify=point=>{
     let sidewalk=false,roadDistance=Infinity,nearest=null;

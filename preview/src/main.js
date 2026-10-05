@@ -113,6 +113,8 @@ let autoTownDecision = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const multiplayerMode = resolveMultiplayerMode(import.meta.env);
+const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
+const creationToolsEnabled = import.meta.env.VITE_CREATION_TOOLS === 'true';
 let playModeStorage = null;
 try { playModeStorage = window.localStorage; } catch { /* The current visit still plays solo. */ }
 if (!playModeStorage) try { playModeStorage = window.sessionStorage; } catch { /* Stay in single player. */ }
@@ -219,9 +221,11 @@ function initializeRenderer() {
     if (!document.hidden && !multiplayer && ['solo','off','unavailable','signed-out'].includes(host.dataset.multiplayer)) void refreshSoloPrivileges();
   });
   $('.panel-scroll').prepend($('#community-section'));
-  worldPortal=createWorldPortal({host:$('#explore-section'),getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
-  void worldPortal.load();
-  worldEvents=createWorldEvents({host:$('#explore-section')});
+  if (worldMapEnabled) {
+    worldPortal=createWorldPortal({host:$('#explore-section'),creationToolsEnabled,getCanPublish:()=>Boolean(multiplayer?.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild) || soloCanGrantWishes});
+    void worldPortal.load();
+  }
+  worldEvents=createWorldEvents({host:$('#explore-section'),creationToolsEnabled});
   void worldEvents.load();
   sidebarSections = setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, onManual: () => autoControls?.stop(), getSharedPopulation: () => Boolean(multiplayer), canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
@@ -229,6 +233,7 @@ function initializeRenderer() {
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
+    requestVehicleExit: position => multiplayer?multiplayer.travel({position:[position[0],-position[2]]}):Promise.resolve({ok:true}),
     getPortrait: id => portraits.portrait(id) });
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer });
   breakableGlass=createBreakableGlass({reducedMotion,
@@ -238,11 +243,11 @@ function initializeRenderer() {
   liftSparkles=createLiftSparkles({reducedMotion});scene.add(liftSparkles.object);
   autoControls = createAutoControls({ walking, community, getWorld: () => world, getStorm: () => $('#weather').value === 'overcast' });
   // Let content height determine spacing, including wrapped visit status text.
-  playDock = createPlayDock(); const visitTools = playDock.content;
-  buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
+  playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
+  if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   invasion = createInvasionControls({ scene, host, walking, getWorld: () => world, getLocals: () => community.state?.locals, getForm: () => playerAvatar?.form ?? 'visitor', onCast: () => playerAvatar?.cast(performance.now()) });
   playerAvatar.onChange(() => invasion.refreshGate());
-  visitTools.append($('.player-controls'),$('.auto-controls'),buildControls.panel, invasion.panel);
+  visitTools.append($('.player-controls'),$('.auto-controls'),...(buildControls?[buildControls.panel]:[]), invasion.panel);
   force=createForceControls({host,walking,isAvailable:()=>!multiplayer,
     getTargets:()=>[
       ...(localsGroup?.userData.models??[]).filter(person=>person.userData.avatar).map(object=>({object,id:object.userData.localId})),
@@ -257,12 +262,12 @@ function initializeRenderer() {
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? walkingEnvironment() : null, getInterests: birdInterests });
   birdCamsUI = createBirdCamsUI(birdCams);
-  visitTools.insertBefore(birdCamsUI.panel, buildControls.panel);
+  visitTools.insertBefore(birdCamsUI.panel, buildControls?.panel ?? invasion.panel);
   $('#viewport').append(playDock.element);
-  clearView = createClearView({ viewport: $('#viewport') });
+  clearView = createClearView();
   let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
   landmarks = createLandmarks({ storage });
-  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
+  placesUI = setupPlacesUI({ places: [], landmarks, worldMapEnabled, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
     isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
   if (multiplayerMode === 'choice') {
     createPlayMode({ viewport: $('#viewport'), storage: playModeStorage, active: playMode.mode, remembered: playMode.remembered });
@@ -305,6 +310,7 @@ function initializeRenderer() {
 // player's appearance; solo character choices stay on this device.
 function startMultiplayer() {
   if (multiplayer) return;
+  if (localsGroup) localsGroup.visible = false;
   landmarkAccountId = null;
   landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
   placesUI?.setLandmarks(landmarks);
@@ -317,6 +323,7 @@ function startMultiplayer() {
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
+    creationToolsEnabled,
     getPose: () => walking?.getPose(),
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
@@ -469,11 +476,11 @@ function populateWorld(data) {
   const furniture=buildStreetFurniture(data,streetSpace);
   seatAndWater?.load(data,streetSpace);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
-  localsGroup = buildLocals(data, community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
+  localsGroup = buildLocals(data, multiplayer ? [] : community.state.locals.filter(local => !local.indoor && !local.vehicleRole));
   storePeople = buildStorePeople(buildingMesh.userData.rooms ?? [], { reducedMotion, sharedPopulation: Boolean(multiplayer) });
   interiorsLayer = new THREE.Group(); interiorsLayer.name = 'Boutique interiors layer';
   interiorsLayer.add(buildingMesh.userData.interiors, storePeople);
-  layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data.trees) };
+  layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
   worldGroup.add(localsGroup);
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
@@ -726,7 +733,7 @@ function render(now) {
   breakableGlass?.update(delta);
   playerAvatar?.react(now);
   community?.update(delta, now);
-  if (localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
+  if (!multiplayer && localsGroup && community?.state) localsGroup.userData.update(community.state, camera, now, community.speakingId, walking?.getPosition());
   layers.trees?.userData.update?.(camera.position);
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   community?.updateSpeech(delta);
@@ -810,7 +817,7 @@ const BIRD_ACTIVITY = [[/held by the force|enchant|wish/i, 7], [/chatting|helpin
 function birdInterests() {
   const interests = [];
   for (const local of community?.state?.locals ?? []) {
-    if (local.indoor || !Array.isArray(local.position)) continue;
+    if (multiplayer || local.indoor || !Array.isArray(local.position)) continue;
     const status = String(local.status ?? ''), weight = BIRD_ACTIVITY.find(([pattern]) => pattern.test(status))?.[1] ?? 2;
     interests.push({ id: `local:${local.id}`, label: status ? `${local.name} (${status})` : local.name, position: [local.position[0], local.position[1]], weight: local.id === community.state.selectedId ? weight + 3 : weight });
   }

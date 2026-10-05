@@ -81,6 +81,16 @@ test('humanoid forms keep the human head; beast forms of the same style replace 
     const skins=[];avatar.model.traverse(mesh=>{if(mesh.isSkinnedMesh&&/^(young|middleage|old)_/.test(mesh.material?.name??''))skins.push([mesh,mesh.geometry]);});
     const look=createRomanceLook(avatar,root,appearance);
     try{
+      avatar.model.updateMatrixWorld(true);
+      const head=avatar.model.getObjectByName('head'),origin=head.getWorldPosition(new THREE.Vector3()),point=new THREE.Vector3();
+      head.traverse(mesh=>{
+        if(!mesh.isMesh||!(mesh.material?.metalness>=.1))return;
+        const positions=mesh.geometry.attributes.position;
+        for(let i=0;i<positions.count;i++){
+          point.fromBufferAttribute(positions,i).applyMatrix4(mesh.matrixWorld).sub(origin);
+          assert.ok(!(Math.abs(point.x)<.025&&point.y>-.11&&point.y<-.04&&point.z>.06),`${appearance.id} has no ornament suspended beneath its mouth`);
+        }
+      });
       const tail=root.getObjectByName(`${appearance.kind} tail`),face=avatar.model.getObjectByName(`${appearance.kind} face`);
       if(form==='beast'){
         assert.equal(look.beast,true,appearance.id);

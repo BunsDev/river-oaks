@@ -1,0 +1,141 @@
+{
+  "generator": "@dgreenheck/ez-tree",
+  "version": "1.1.0",
+  "license": "MIT",
+  "source": "https://github.com/dgreenheck/ez-tree",
+  "preset": "Oak Large",
+  "seed": 23399,
+  "options": {
+    "seed": 23399,
+    "type": "deciduous",
+    "bark": {
+      "type": "oak",
+      "tint": 16774097,
+      "flatShading": false,
+      "textured": true,
+      "textureScale": {
+        "x": 1,
+        "y": 10
+      }
+    },
+    "branch": {
+      "levels": 3,
+      "angle": {
+        "1": 54,
+        "2": 43,
+        "3": 32
+      },
+      "children": {
+        "0": 9,
+        "1": 5,
+        "2": 3
+      },
+      "force": {
+        "direction": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "strength": -0.025
+      },
+      "gnarliness": {
+        "0": -0.04,
+        "1": 0.16,
+        "2": -0.06,
+        "3": 0.09
+      },
+      "length": {
+        "0": 47.7,
+        "1": 29.39,
+        "2": 17.62,
+        "3": 7.16
+      },
+      "radius": {
+        "0": 3,
+        "1": 0.69,
+        "2": 0.69,
+        "3": 1.19
+      },
+      "sections": {
+        "0": 16,
+        "1": 9,
+        "2": 8,
+        "3": 3
+      },
+      "segments": {
+        "0": 12,
+        "1": 5,
+        "2": 3,
+        "3": 3
+      },
+      "start": {
+        "1": 0.35,
+        "2": 0.1,
+        "3": 0
+      },
+      "taper": {
+        "0": 0.73,
+        "1": 0.42,
+        "2": 0.69,
+        "3": 0.75
+      },
+      "twist": {
+        "0": -0.23,
+        "1": 0.42,
+        "2": 0,
+        "3": 0
+      }
+    },
+    "leaves": {
+      "type": "oak",
+      "billboard": "double",
+      "angle": 36,
+      "count": 16,
+      "start": 0.16,
+      "size": 3.2,
+      "sizeVariance": 0.7,
+      "tint": 14013901,
+      "alphaTest": 0.5
+    },
+    "trellis": {
+      "enabled": false,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -2
+      },
+      "width": 10,
+      "height": 20,
+      "spacing": 2,
+      "force": {
+        "strength": 0.02,
+        "maxDistance": 3,
+        "falloff": 1
+      },
+      "cylinderRadius": 0.05,
+      "visible": true,
+      "color": 9127187
+    }
+  },
+  "processing": "GLTFExporter; 512px maps; glTF Transform 4.3.0 weld, WebP quality 88, geometry-only simplified LODs",
+  "derivatives": [
+    {
+      "path": "/assets/landscape/ez-oak-high.glb",
+      "sha256": "ffaf007b54a0e8fa1be586c66b2f88ac7a39b2036a54c36e672581ddbf840e47",
+      "bytes": 1828192,
+      "triangles": 28326
+    },
+    {
+      "path": "/assets/landscape/ez-oak-mid.glb",
+      "sha256": "e97f9eb10f763fc0dcf690f677389ea00863b4bc9183aa9ede50a642fae7e9e6",
+      "bytes": 1209352,
+      "triangles": 20135
+    },
+    {
+      "path": "/assets/landscape/ez-oak-low.glb",
+      "sha256": "5ffa74e22b9b2db7ee95b71e16fdc8c93a959d0f65e0a6110599b617d8703ef7",
+      "bytes": 578880,
+      "triangles": 8891
+    }
+  ]
+}
