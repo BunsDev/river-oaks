@@ -41,10 +41,20 @@ async page=>{
   await page.locator('.region-editor-tools button[data-tool=road]').click();
   await clickMap(.183,.533);
   await clickMap(.317,.533);
+  await page.locator('.region-editor-tools button[data-tool=parcel]').click();
+  await clickMap(.1,.1);
+  await clickMap(.37,.35);
+  await page.locator('.region-editor-fields label').filter({hasText:'Name'}).locator('input').fill('Gallery Lot');
+  await page.locator('.region-editor-fields label').filter({hasText:'Name'}).locator('input').press('Tab');
+  const adminId=await page.evaluate(()=>window.__riverMultiplayer().selfId);
+  await page.waitForFunction(id=>[...document.querySelectorAll('.region-editor-fields label')].some(label=>label.textContent.includes('Owner')
+    &&[...label.querySelectorAll('option')].some(option=>option.value===id)),adminId);
+  await page.locator('.region-editor-fields label').filter({hasText:'Owner'}).locator('select').selectOption(adminId);
   await page.screenshot({path:'output/playwright/region-editor.png'});
   await page.locator('.region-editor [data-action=done]').click();
   check((await page.locator('.world-portal-region-source').textContent()).includes('ready to publish'),'The editor provides a publishable region draft');
-  check((await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-creator-region-draft-v1')))).buildings.length===2,'The region draft survives in local storage');
+  const localDraft=await page.evaluate(()=>JSON.parse(localStorage.getItem('river-oaks-creator-region-draft-v1')));
+  check(localDraft.buildings.length===2&&localDraft.parcels?.[0]?.owner_id===adminId,'Buildings and the assigned parcel survive in the local draft');
   await page.locator('.world-portal-form button[type=submit]').click();
   await page.locator('.world-portal-list a').filter({hasText:'Moon Garden'}).waitFor({state:'visible',timeout:15000}).catch(async()=>{
     throw new Error(`Publish result: ${await page.locator('.world-portal-status').textContent()}; links: ${await page.locator('.world-portal-list a').allTextContents()}`);
@@ -70,10 +80,27 @@ async page=>{
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
   check(authored.world.buildings.length===2&&authored.world.trees.length===1&&authored.world.communityLocations.some(place=>place.name==='Moon Arch')&&authored.world.roads.length===2&&authored.world.terrain.heights_m.includes(2),'The editor submits terrain, roads, buildings, trees, and places to the shared world');
+  check(authored.world.parcels.length===1&&authored.world.parcels[0].ownerId===adminId&&authored.world.parcels[0].name==='Gallery Lot',
+    'The published region retains its named parcel and Jevica account ownership');
   check(await page.locator('.world-map-road').count()===authored.world.roads.length
     &&await page.locator('.world-map-building').count()===authored.world.buildings.length
     &&(await page.locator('.world-map-place title').allTextContents()).includes('Moon Arch'),
   'The map renders the published region roads, buildings, and named place');
+  check(await page.locator('.world-map-parcel').count()===1
+    &&(await page.locator('.world-map-parcel-list').textContent()).includes('Gallery Lot · Your parcel'),
+  'The live world map shows the parcel boundary and its account ownership');
+  await page.locator('.world-map-parcel-list>summary').click();
+  await page.locator('.world-map-parcel-list button').click();
+  check((await page.locator('.world-map-hint').textContent()).includes('Gallery Lot · Your parcel')
+    &&await page.locator('.world-map-actions button',{hasText:'Go here'}).isDisabled(),
+  'Parcel selection shows its area and cannot teleport through its building');
+  const plotVisual=await page.locator('.world-map-parcel').evaluate(shape=>({
+    width:shape.getBoundingClientRect().width,height:shape.getBoundingClientRect().height,
+    stroke:getComputedStyle(shape).stroke,selected:shape.classList.contains('selected')}));
+  check(plotVisual.width>20&&plotVisual.height>20&&plotVisual.stroke!=='none'&&plotVisual.selected,
+    `The parcel boundary is visible and selected: ${JSON.stringify(plotVisual)}`);
+  await page.locator('.world-map-surface').screenshot({path:'output/playwright/world-parcel-surface.png'});
+  await page.locator('.world-map').screenshot({path:'output/playwright/world-parcels.png'});
   check(authored.world.stores.length===2&&authored.world.stores.some(store=>store.name==='Moon Gallery')&&authored.world.stores.some(store=>store.name==='Moon House'&&store.category==='home'&&store.access==='owner'),'The region package publishes a walk-in venue and Jevica-only home');
   check((await page.locator('#stores-count').textContent())==='2','Both creator interiors appear in the world directory');
   await page.locator('#enter-destination').click();

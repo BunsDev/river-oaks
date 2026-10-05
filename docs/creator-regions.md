@@ -2,7 +2,7 @@
 
 Jevica can publish a region from **Explore → Publish a world**. Choose
 **Design a region** to create one on a map, or upload a JSON file. The studio
-edits terrain height samples, roads, buildings, walk-in venues and homes, trees, arrival, and named
+edits terrain height samples, roads, buildings, walk-in venues and homes, named land parcels, trees, arrival, and named
 places. Click a tool and the map to add an item; choose **Select** and click
 an item to edit its fields or remove it. A road takes two clicks to start and
 more clicks to extend. **Use this region** attaches the draft to the publish
@@ -27,6 +27,7 @@ The package has `schema_version: 1` and these required fields:
 | `buildings[].interior` | Optional on up to eight buildings at least 6 × 6 m. `name` (1–64 characters), `category` (`art`, `clothes`, `restaurant`, or `wellness` for retail; `home` for residential), and `entrance` (`south`, `east`, `north`, or `west`) select a walk-in room and its door on that face of the building. Residential homes may set `access` to `owner` for Jevica and invited visitors, or `public` for everyone. Omitted `access` is public. |
 | `trees` | Up to 256 trees with unique slug `id`, `position`, `height_m`, and `crown_radius_m` |
 | `places` | 4–64 named spots with unique slug `id` and `position` |
+| `parcels` | Optional list of up to 32 named, nonoverlapping rectangular plots. Each has `id`, `name`, and `bounds_m: [west, south, east, north]`; each side is at least 6 m. `owner_id` may name an account. |
 
 All coordinates use the same local metre system. The terrain grid spans the
 full bounds. Points must stay at least one metre inside the bounds, and whole
@@ -34,7 +35,13 @@ building footprints must fit there. Height samples must be between -50 and
 500 m. The road, tree, and building dimension limits are checked on upload;
 the [compiler](../server/region-package.js) is the exact format authority.
 The complete publish request is limited to 128 KiB. Region IDs are unique
-across roads, buildings, trees, and places.
+across roads, buildings, parcels, trees, and places.
+The studio's **Parcel** tool takes two opposite corners. Jevica can assign an
+unassigned plot to her account or an accepted contact in the inspector. The
+owner account ID is stored with the published region and retained in revision
+drafts and version history. The world map shows parcel boundaries and tells
+the signed-in owner **Your parcel**. Ownership is descriptive for now: it does
+not grant building, furnishing, wish, home-entry, or publishing permission.
 The entrance face is chosen in the building's local footprint, then rotates
 with `yaw_deg`. Publication rejects an interior without a safe indoor arrival and
 an outdoor exit.
@@ -67,5 +74,5 @@ worlds where the local placement rules allow them. Older designs stored in one
 world can be copied into the account library from Saved designs.
 This entry rule does not hide the home or its residents from world data.
 Region packages do not yet support custom meshes, textures, scripts, multiple
-rooms per home, or parcel ownership. Live creations and
+rooms per home, or owner-managed parcel permissions. Live creations and
 wishes remain scoped to the published world and to Jevica's permissions.

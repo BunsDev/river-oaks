@@ -58,34 +58,50 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   surface.setAttribute('aria-label','World map. Click to choose a destination, or use arrow keys to move a destination. Tab to its action button.');
   const art=svg('svg',{viewBox:`0 0 ${SIZE} ${SIZE}`,'aria-hidden':'true',preserveAspectRatio:'none'});
   const ground=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-ground'});
-  const roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
+  const parcels=svg('g',{class:'world-map-parcels'}),roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
   const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
   const self=svg('circle',{class:'world-map-self',r:11,hidden:''});
   const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
   const north=node('span','N ↑','world-map-north');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target);art.append(ground,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
-  const legend=node('p','● You   ◉ Player   ◆ Saved place   • Destination','world-map-legend');
+  overlay.append(self,target);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
+  const legend=node('p','● You   ◉ Player   ◇ Parcel   ◆ Saved place   • Destination','world-map-legend');
+  const parcelDetails=node('details',null,'world-map-parcel-list'),parcelSummary=node('summary','Land parcels · 0'),parcelList=node('ul');
+  parcelDetails.append(parcelSummary,parcelList);parcelDetails.hidden=true;
   const peopleDetails=node('details',null,'world-map-player-list'),peopleSummary=node('summary','People here · 0'),peopleList=node('ul');
   peopleDetails.append(peopleSummary,peopleList);peopleDetails.hidden=true;
-  const instructions='Click the map or use arrow keys to choose a point. Shift moves 1 m. People in this world can be selected from the list.';
+  const instructions='Click the map or use arrow keys to choose a point. Shift moves 1 m. Parcels and people can be selected from their lists.';
   const hint=node('p',instructions,'world-map-hint');hint.setAttribute('aria-live','polite');
   const actions=node('div',null,'world-map-actions');
   const go=node('button','Go here'),link=node('button','Copy link'),clear=node('button','Clear');
   for(const button of [go,link,clear]){button.type='button';button.disabled=true;actions.append(button);}
   const status=node('p',null,'world-map-status');status.setAttribute('role','status');
-  section.append(summary,surface,legend,peopleDetails,hint,actions,status);
+  section.append(summary,surface,legend,parcelDetails,peopleDetails,hint,actions,status);
   host.querySelector('#places-here')?.after(section);
   section.hidden=true;
-  let world=null,projection=null,places=[],landmarks=[],selected=null,peers=[];
+  let world=null,projection=null,places=[],landmarks=[],selected=null,peers=[],selfId=null;
   const peerNodes=new Map();let peerListSignature='';
   const hereWorldId=()=>worldIdFromSearch(location.search);
   const currentMarks=()=>landmarks.filter(mark=>!mark.worldId||mark.worldId===hereWorldId());
   const mapPoint=position=>projection.toMap(position).map(value=>+value.toFixed(2));
   const points=positions=>positions.map(position=>mapPoint(position).join(',')).join(' ');
+  const authoredParcels=()=>world?.parcels?.filter(parcel=>typeof parcel.name==='string'
+    &&Array.isArray(parcel.bounds_m)&&parcel.bounds_m.length===4&&Array.isArray(parcel.ring))??[];
+  const ownerLabel=parcel=>!parcel.ownerId?'Unassigned':parcel.ownerId===selfId?'Your parcel':'Owned parcel';
+  const parcelSelection=parcel=>({kind:'parcel',id:parcel.id,name:parcel.name,
+    position:[(parcel.bounds_m[0]+parcel.bounds_m[2])/2,(parcel.bounds_m[1]+parcel.bounds_m[3])/2],
+    area:Math.round((parcel.bounds_m[2]-parcel.bounds_m[0])*(parcel.bounds_m[3]-parcel.bounds_m[1])),ownerId:parcel.ownerId});
   function renderStatic(){
-    roads.replaceChildren();buildings.replaceChildren();markers.replaceChildren();
+    parcels.replaceChildren();roads.replaceChildren();buildings.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
     if(!projection||!world)return;
+    const plots=authoredParcels();parcelDetails.hidden=!plots.length;parcelSummary.textContent=`Land parcels · ${plots.length}`;
+    for(const parcel of plots){
+      const shape=svg('polygon',{points:points(parcel.ring),class:'world-map-parcel','data-parcel-id':parcel.id});
+      if(selected?.kind==='parcel'&&selected.id===parcel.id)shape.classList.add('selected');
+      const title=svg('title');title.textContent=`${parcel.name} · ${ownerLabel(parcel)}`;shape.append(title);parcels.append(shape);
+      const item=node('li'),button=node('button',`${parcel.name} · ${ownerLabel(parcel)}`);
+      button.type='button';button.addEventListener('click',()=>select(parcelSelection(parcel)));item.append(button);parcelList.append(item);
+    }
     for(const road of world.roads??[]){
       if(!Array.isArray(road.points)||road.points.length<2||!road.points.every(finitePair))continue;
       const line=svg('polyline',{points:points(road.points),class:'world-map-road',
@@ -122,12 +138,14 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   }
   function select(next){
     selected=next;
+    for(const shape of parcels.children)shape.classList.toggle('selected',next?.kind==='parcel'&&shape.dataset.parcelId===next.id);
     const name=next?.name??'';
     hint.textContent=next?name==='Map point'?`Map point · ${next.position[0].toFixed(1)} east, ${next.position[1].toFixed(1)} north`
-      :next.kind==='peer'?`Selected: ${name} · live player`:`Selected: ${name}`
+      :next.kind==='peer'?`Selected: ${name} · live player`
+        :next.kind==='parcel'?`${name} · ${ownerLabel(next)} · ${next.area} m²`:`Selected: ${name}`
       :instructions;
     go.textContent=next?.kind==='peer'?'Meet nearby':'Go here';
-    go.disabled=clear.disabled=!next;link.disabled=!next||next.kind==='peer';
+    go.disabled=!next||next.kind==='parcel';clear.disabled=!next;link.disabled=!next||['peer','parcel'].includes(next.kind);
     status.textContent='';
     refresh();
     if(next&&section.open)actions.scrollIntoView({block:'nearest'});
@@ -141,6 +159,8 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     select(nearby??{id:'map-point',name:'Map point',kind:'link',position:position.map(value=>+value.toFixed(1)),yaw:getYaw?.()??0});
   }
   surface.addEventListener('click',event=>{
+    const parcelId=event.target.closest?.('[data-parcel-id]')?.dataset.parcelId;
+    if(parcelId){const parcel=authoredParcels().find(item=>item.id===parcelId);if(parcel){select(parcelSelection(parcel));return;}}
     const rect=surface.getBoundingClientRect();
     if(!rect.width||!rect.height)return;
     chooseMapPoint([(event.clientX-rect.left)/rect.width*SIZE,(event.clientY-rect.top)/rect.height*SIZE]);
@@ -192,8 +212,9 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     },
     setPlaces(next){places=next;renderStatic();},
     setLandmarks(next){landmarks=next;renderStatic();},
-    setPlayers(next,selfId){
-      peers=projection?(next??[]).filter(player=>player.id!==selfId&&typeof player.id==='string'
+    setPlayers(next,playerId){
+      if(selfId!==playerId){selfId=playerId;renderStatic();}
+      peers=projection?(next??[]).filter(player=>player.id!==playerId&&typeof player.id==='string'
         &&typeof player.name==='string'&&finitePair(player.position)&&projection.contains(player.position)
         &&isOutdoor(player.position)).map(player=>({id:`peer:${player.id}`,ref:player.id,name:player.name,kind:'peer',position:player.position.slice(0,2)})):[];
       const active=new Set(peers.map(peer=>peer.ref));

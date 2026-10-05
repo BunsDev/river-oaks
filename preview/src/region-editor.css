@@ -21,6 +21,7 @@
 .region-editor-map :is(rect,circle).region-map-item{stroke:#593e5b;stroke-width:2}
 .region-editor-map .region-map-item:hover,.region-editor-map .region-map-item.selected{filter:drop-shadow(0 0 5px #a93082)}
 .region-editor-map rect.region-map-item{fill:#c9a0aa}
+.region-editor-map rect.region-map-item[data-type="parcels"]{fill:#d9a9ce;fill-opacity:.24;stroke:#954d84;stroke-width:2;stroke-dasharray:7 4}
 .region-editor-map circle.region-map-item[data-type="trees"]{fill:#4f8e69;fill-opacity:.8}
 .region-editor-map circle.region-map-item[data-type="places"]{fill:#ecb154}
 .region-editor-map g[data-type="spawn"]{fill:#fff;stroke:#74375c;stroke-width:2;cursor:pointer}

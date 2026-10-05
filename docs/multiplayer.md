@@ -121,6 +121,10 @@ choosing **Meet nearby** sends their account ID to the server, which resolves
 their current position and searches for an outdoor arrival spot clear of other
 players. Indoor players are omitted from the map, and travel to one is refused.
 The map does not offer a link to another player's position.
+Creator regions can also show up to 32 named land parcels. Jevica assigns an
+owner from her account or accepted contacts in the region studio. Ownership is
+published with the region, survives compatible revisions, and appears as
+**Your parcel** to that account. It grants no build, wish, or home-entry rights.
 The Worlds directory shows an aggregate visitor count for each published world
 and refreshes while the directory is visible. Redis updates each count in the
 same fenced commit as the room; the count expires after 30 seconds if its room

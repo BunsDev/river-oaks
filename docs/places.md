@@ -26,6 +26,12 @@ map without hand-authored artwork.
   of other players. A peer selection cannot enter a private home or create
   a link to that player's current position. Players who leave or enter an
   interior disappear from this outdoor map.
+- **Land parcels.** Creator worlds can show up to 32 named plots as map
+  boundaries and in a keyboard-accessible list. Selecting one reports its area
+  and whether it belongs to your signed-in account. Parcel selection does not
+  teleport into a building; the ordinary map point and travel checks still
+  govern movement. Ownership is recorded by Jevica in the region studio and
+  does not grant building or wish powers.
 - **Go somewhere.** Every named place in the district, once each: the arrival
   point, the community meeting spots, and any storefront that is not already a
   meeting spot. In the shipped district the 30 spots *are* the 30 storefronts,
@@ -74,5 +80,5 @@ own facing for a bare position.
 
 ## Next
 
-Creator regions can now be published as separate worlds with their own named
-places. Parcels with owners remain future work.
+Owner-managed parcel permissions and an economy remain future work. Jevica
+continues to control all shared building and wish granting.

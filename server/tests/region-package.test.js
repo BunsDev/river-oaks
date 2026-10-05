@@ -7,8 +7,41 @@ import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { createStoreEncounters } from '../../preview/src/store-encounters.js';
 import { buildKind, buildRoads, checkBuildSite } from '../../preview/src/shared-build.js';
 import { evaluatePlacement } from '../../preview/src/builder-mode.js';
+import { editableRegion } from '../../preview/src/region-draft.js';
 
 const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+
+test('creator parcels retain named bounds and account ownership through publication and revisions',()=>{
+  const parcel={id:'moon-lot',name:'Moon Lot',bounds_m:[-50,-48,-20,-20],owner_id:'guest'};
+  const region={...sample,parcels:[parcel]};
+  assert.equal(editableRegion(region),true);
+  const world=compileRegionPackage(region,'Moon Garden');
+  assert.deepEqual(world.parcels,[{id:'moon-lot',name:'Moon Lot',bounds_m:[-50,-48,-20,-20],
+    ring:[[-50,-48],[-20,-48],[-20,-20],[-50,-20],[-50,-48]],ownerId:'guest'}]);
+  assert.deepEqual(editableRegionFromWorld(world).parcels,[parcel]);
+  const shared=createSharedWorld(world,{worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  shared.join({userId:'jevica',name:'Jevica'});shared.join({userId:'guest',name:'Guest'});
+  assert.equal(shared.command('guest',{type:'build',action:'place',kind:'seat',finish:'rose',position:[-35,-25],yaw:0}).error,'admin_only');
+  assert.equal(shared.command('guest',{type:'wish',localId:'local-00',kind:'dragon'}).error,'admin_only');
+  assert.equal(editableRegion(editableRegionFromWorld(compileRegionPackage(sample,'Legacy Moon'))),true,'older regions load with an empty parcel list');
+  const renamed=compileRegionPackage({...region,parcels:[{...parcel,name:'New Moon Lot'}]},'Moon Garden');
+  const migration=migrateWorldCheckpoint({fromData:world,toData:renamed,checkpoint:shared.checkpoint(),worldId:'moon-garden',isAdmin:id=>id==='jevica'});
+  assert.equal(migration.ok,true,'changing parcel metadata applies through the normal region revision path');
+  assert.equal(renamed.parcels[0].ownerId,'guest');
+});
+
+test('creator parcels reject overlap, undersized plots, invalid owners, and duplicate IDs',()=>{
+  const parcel={id:'moon-lot',name:'Moon Lot',bounds_m:[-50,-48,-20,-20],owner_id:'guest'};
+  const invalid=[
+    {...sample,parcels:[parcel,{id:'other',name:'Other',bounds_m:[-30,-30,0,0]}]},
+    {...sample,parcels:[{...parcel,bounds_m:[-50,-48,-46,-20]}]},
+    {...sample,parcels:[{...parcel,bounds_m:[-97,-48,-20,-20]}]},
+    {...sample,parcels:[{...parcel,owner_id:'guest id'}]},
+    {...sample,parcels:[parcel,{...parcel}]},
+    {...sample,parcels:Array.from({length:33},(_,index)=>({...parcel,id:`parcel-${index}`}))},
+  ];
+  for(const region of invalid){assert.equal(editableRegion(region),false);assert.throws(()=>compileRegionPackage(region,'Moon Garden'));}
+});
 
 test('a creator package becomes a distinct walkable and populated shared region',()=>{
   const world=compileRegionPackage(sample,'Moon Garden');

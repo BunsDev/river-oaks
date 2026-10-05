@@ -200,6 +200,11 @@ The two-browser shared journey verifies joining, meeting, and departure. Client
 frame cost at the 32-player limit and hosted multi-region latency remain
 unmeasured; the release gates above still apply.
 
+Creator-region parcels add at most 32 rectangular boundaries to the world
+package and map. Their owner IDs are static region metadata; displaying them
+adds no room-tick or Redis lookup. Client map rendering cost with all 32 plots
+is not yet measured in the hosted frame-time gate.
+
 ## Account design library — 4 October 2026
 
 Jevica's new saved designs live in an account-scoped Redis record rather than
