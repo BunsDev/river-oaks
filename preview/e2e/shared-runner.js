@@ -99,7 +99,7 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared','shared-seating']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin']:mode==='development-publish'?['world-publish']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names'];
+    const names=mode==='development'?['multiplayer-dev','groups','world-events','rail-shared','shared-seating']:mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin','solo-sit-and-water']:mode==='development-publish'?['world-publish']:['access-gate','multiplayer','multiplayer-exclusivity','multiplayer-gate','resident-names','sit-and-water'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();

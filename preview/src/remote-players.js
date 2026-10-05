@@ -46,7 +46,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   return {
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,position:entry.holder.position.toArray()};
+      return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
       const peers=players.filter(player=>player.id!==selfId);
@@ -74,6 +74,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         if(entry.heading===undefined)entry.heading=target.yaw+Math.PI;
         if(target.sitting)entry.heading=target.sitting.yaw;
         else if(target.vehicle)entry.heading=target.yaw;
+        // Watering: face the planter, which the server turned them toward
+        // (a player's yaw is the camera's, behind them).
+        else if(target.gesture==='water')entry.heading=target.yaw+Math.PI;
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
@@ -96,7 +99,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           }
         }
         entry.wasSitting=Boolean(target.sitting);
-        const point=holder.position.clone().add(new THREE.Vector3(0,2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
+        const point=holder.position.clone().add(new THREE.Vector3(0,target.sitting?1.75:2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
         if(!label.hidden)label.style.transform=`translate(${(point.x+1)*host.clientWidth/2}px,${(1-point.y)*host.clientHeight/2}px) translate(-50%,-100%)`;
       }
     },

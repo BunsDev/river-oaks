@@ -78,7 +78,13 @@ export function buildLocals(world, locals) {
       // the partner into that same pre-offset frame for matching eye direction.
       const lookTarget=visitor && state.selectedId===local.id ? [visitor[0],visitor[2]-wishLift(local.wish)-(local.force?.height??0),-visitor[1]] : null;
       if(person.userData.avatar) {
-        if(person.visible) {person.userData.avatar.update(now,action,speakingId===local.id,local.life,(x,z)=>groundSurfaceHeight(world,x,z),lookTarget);if(person.userData.avatar.carrying) visibleKits++;}
+        if(person.visible) {
+          // A resident resting on a bench sits at its height in the seated pose.
+          const seat=local.life?.seat,avatar=person.userData.avatar;
+          avatar.object.position.y=seat?seat.height-avatar.rig.hipHeight+.025:0;
+          const locomotion=seat?{...local.life,speed:0,riding:true,ridingKind:'bench',seatToFloor:seat.height}:local.life;
+          avatar.update(now,action,speakingId===local.id,locomotion,(x,z)=>groundSurfaceHeight(world,x,z),lookTarget);if(avatar.carrying) visibleKits++;
+        }
         else person.userData.avatar.suspend();
         if (local.wish && !person.userData.wishVisual) person.userData.wishVisual = createWishVisual(person, person.userData.avatar.object);
         if (person.userData.wishVisual) {
