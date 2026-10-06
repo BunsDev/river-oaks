@@ -296,9 +296,12 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
     if (!cursor) { marker.visible = false; box.innerHTML = '<dt>Cursor</dt><dd>No ground under the cursor</dd>'; return; }
     marker.visible = true; marker.position.set(cursor.x, cursor.ground + 0.03, cursor.z);
     marker.material.color.set(cursor.free ? '#4ee37a' : '#ff4d4d');
-    box.innerHTML = `<dt>Cursor</dt><dd>E ${fmt(cursor.x)} · N ${fmt(-cursor.z)}</dd>
-      <dt>Ground</dt><dd>${fmt(cursor.ground)} m (terrain ${fmt(cursor.terrain)}, ${cursor.ground - cursor.terrain >= 0 ? '+' : ''}${fmt(cursor.ground - cursor.terrain)})</dd>
-      <dt>Walk</dt><dd class="${cursor.free ? 'is-free' : 'is-blocked'}">${cursor.free ? 'free' : 'blocked'}${cursor.room ? ` · inside ${cursor.room}` : ''}</dd>`;
+    fillTermList(box, [
+      ['Cursor', `E ${fmt(cursor.x)} · N ${fmt(-cursor.z)}`],
+      ['Ground', `${fmt(cursor.ground)} m (terrain ${fmt(cursor.terrain)}, ${cursor.ground - cursor.terrain >= 0 ? '+' : ''}${fmt(cursor.ground - cursor.terrain)})`],
+      ['Walk', `${cursor.free ? 'free' : 'blocked'}${cursor.room ? ` · inside ${cursor.room}` : ''}`],
+    ]);
+    box.lastElementChild.className = cursor.free ? 'is-free' : 'is-blocked';
   }
 
   function renderHeavy() {
