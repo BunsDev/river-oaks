@@ -29,7 +29,11 @@
 - Enabled and read back Magic Auth in TypeSafe staging. Production already had
   Magic Auth enabled. No test email was sent.
 
-## Remaining delivery checks
+## Delivery
 
-- Changes are not committed, pushed, merged, or deployed.
+- Delivery is tracked in [PR #169](https://github.com/BunsDev/river-oaks/pull/169),
+  together with the follow-up [security review](security-review.md).
+- Updated the prior GitHub-only browser expectations for the new email form and
+  pending invite flow. Both affected gameplay journeys passed locally before
+  repeating the hosted suite.
 - Actual inbox delivery and the deployed end-to-end flow still need verification.
