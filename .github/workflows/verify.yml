@@ -53,6 +53,22 @@ jobs:
           REDIS_URL: redis://127.0.0.1:6379
       - run: npm run test:desktop
       - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Email access and content security browser regressions
+        id: security_browser
+        # Use the same Mesa path as shared journeys instead of headless SwiftShader.
+        env:
+          RIVER_OAKS_SECURITY_SOFTWARE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
+        run: xvfb-run -a npm run test:security:e2e
+      - name: Security browser failure evidence
+        if: ${{ failure() && steps.security_browser.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-browser-failure
+          retention-days: 7
+          path: output/playwright/security-*-failure.png
       - run: npm run test:reflections:webgl
       - name: Shared town journeys (local identities and authenticated fixtures)
         id: shared
@@ -72,9 +88,6 @@ jobs:
           path: |
             data/reports/shared-experience.json
             output/playwright/shared-*-failure.png
-      - run: npm run build
-      - name: Email access and content security browser regressions
-        run: npm run test:security:e2e
   verify:
     runs-on: ubuntu-latest
     strategy:
