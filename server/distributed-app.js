@@ -63,7 +63,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
   function publish(view) {
     if (!view) return;
@@ -87,7 +87,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
-      if (path === '/auth/login' && !(await signInStart(req))) return json(res, 429, { error: 'Too many sign-in attempts. Try again later.' });
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
@@ -230,6 +230,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid moderation action.' }); }
         if (!data || typeof data.userId !== 'string' || !data.userId.length || data.userId.length > 100
           || data.userId === identity.userId || typeof data.banned !== 'boolean') return json(res, 400, { error: 'Invalid moderation action.' });
+        if (data.banned) await waitlist.revokeInvites?.({ userId: data.userId, actorId: identity.userId });
         const ok = data.banned
           ? await security.ban({ userId: data.userId, actorId: identity.userId, reason: 'Moderator action' })
           : await security.unban({ userId: data.userId, actorId: identity.userId });

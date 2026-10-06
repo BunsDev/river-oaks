@@ -48,7 +48,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     connection?.ws.close(code,reason);world.leave(id);
   };
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned,
     onRevoke: async userId => {
       disconnectUser(userId, 4003, 'Waitlist approval ended');
       await onBan?.(userId);
@@ -65,7 +65,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       const pathname=new URL(req.url,'http://localhost').pathname;
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many requests. Try again shortly.'});
-      if (pathname==='/auth/login' && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many sign-in attempts. Try again later.'});
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(pathname) && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
@@ -189,6 +189,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if (!moderatorIds.has(identity.userId) || !moderation) return json(res,403,{error:'Moderator access required.'});
         const data=await body(req);
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
+        if(data.banned) await waitlist.revokeInvites?.({userId:data.userId,actorId:identity.userId});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
         if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await onBan?.(data.userId);}
         return json(res,200,{ok:true});

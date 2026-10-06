@@ -64,6 +64,30 @@
       "destination": "/api/server?_river_path=/auth/login"
     },
     {
+      "source": "/auth/email/start",
+      "destination": "/api/server?_river_path=/auth/email/start"
+    },
+    {
+      "source": "/auth/email/verify",
+      "destination": "/api/server?_river_path=/auth/email/verify"
+    },
+    {
+      "source": "/api/waitlist/invites",
+      "destination": "/api/server?_river_path=/api/waitlist/invites"
+    },
+    {
+      "source": "/api/waitlist/invite-issue",
+      "destination": "/api/server?_river_path=/api/waitlist/invite-issue"
+    },
+    {
+      "source": "/api/waitlist/invite-update",
+      "destination": "/api/server?_river_path=/api/waitlist/invite-update"
+    },
+    {
+      "source": "/api/waitlist/invite-redeem",
+      "destination": "/api/server?_river_path=/api/waitlist/invite-redeem"
+    },
+    {
       "source": "/auth/callback",
       "destination": "/api/server?_river_path=/auth/callback"
     },

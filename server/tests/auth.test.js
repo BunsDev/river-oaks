@@ -181,7 +181,7 @@ test('GitHub sign-in completes WorkOS email verification before issuing a sessio
   assert.equal((await post('123456')).status, 400);
 });
 
-test('desktop device credentials exchange only for GitHub sessions', async t => {
+test('desktop device credentials exchange for verified GitHub and Magic Auth sessions', async t => {
   const app = await fixture(t);
   const exchange = () => app.request('/auth/desktop/exchange', { method: 'POST', headers: {
     origin: config.origin, 'content-type': 'application/json',
@@ -194,7 +194,13 @@ test('desktop device credentials exchange only for GitHub sessions', async t => 
   const session = await app.request('/auth/session', { headers: { cookie: cookie(accepted, 'river_oaks_session') } });
   assert.equal((await session.json()).authenticated, true);
   app.workos.setAuthenticationMethod('MagicAuth');
+  const emailSession = await exchange();
+  assert.equal(emailSession.status, 200);
+  const emailIdentity = await (await app.request('/auth/session', { headers: { cookie: cookie(emailSession, 'river_oaks_session') } })).json();
+  assert.equal(emailIdentity.user.name, 'resident');
+  app.workos.setUser({ emailVerified: false });
   assert.equal((await exchange()).status, 403);
+  app.workos.setUser({ emailVerified: true });
   app.workos.setAuthenticationMethod('GoogleOAuth');
   assert.equal((await exchange()).status, 403);
 });
