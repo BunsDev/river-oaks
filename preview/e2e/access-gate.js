@@ -4,7 +4,8 @@ async page => {
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   await page.goto(origin, { waitUntil: 'commit' });
   await page.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
-  check(!await page.getByRole('link', { name: 'Continue with Google' }).count(), 'Anonymous players see only GitHub sign-in');
+  check(await page.locator('#access-email').isVisible(), 'Anonymous players can sign in with email');
+  check(!await page.getByRole('link', { name: 'Continue with Google' }).count(), 'Anonymous players see only supported sign-in methods');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Anonymous players cannot start either play mode');
   await page.route('**/auth/session', route => route.fulfill({ json: {
     authenticated: true, user: { id: 'pending', name: 'Pending' }, csrfToken: 'fixture-csrf',
@@ -13,7 +14,8 @@ async page => {
     status: 'pending', admin: false, user: { id: 'pending', name: 'Pending' },
   } }));
   await page.reload({ waitUntil: 'commit' });
-  await page.getByText('Your waitlist request is in.').waitFor({ state: 'visible' });
+  await page.getByText('You’re on the waitlist. An admin can approve you, or you can redeem an invite below.').waitFor({ state: 'visible' });
+  check(await page.locator('#access-invite-redeem').isEnabled(), 'Pending players can redeem an invitation');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Signed-in pending players cannot start either play mode');
   check(await page.locator('#access-gate-signout').isVisible(), 'Pending players can sign out');
   const adminContext = await page.context().browser().newContext();
