@@ -54,7 +54,7 @@ test('contact world invitations use the sender room and persist across gateway r
   const received=await post('guest','/api/social/messages?world=river-oaks',{peerId:admin});
   assert.equal(received.status,200);
   assert.deepEqual((await received.json()).messages,[message]);
-  const published=(await (await fetch(`${base}/api/world-data?world=moon-garden`)).json()).world;
+  const published=(await (await fetch(`${base}/api/world-data?world=moon-garden`,{headers:{Cookie:'test_session=admin'}})).json()).world;
   const place=placesOf(published).find(item=>item.kind==='spot')??placesOf(published)[0];
   assert.ok(place);
   assert.equal((await post('admin','/api/social/invite-place?world=moon-garden',{peerId:'guest-user',placeId:'spot:missing'})).status,409);

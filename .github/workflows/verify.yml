@@ -1,5 +1,8 @@
 name: Verify
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 8 * * 1'
   pull_request:
   push:
     branches: [main]
@@ -20,6 +23,7 @@ jobs:
           fail-on-severity: moderate
   preview:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Redis-backed server tests (auth, sessions, rooms, presence, designs, groups)
     # skip without REDIS_URL; this service runs them, as production uses Redis.
     services:
@@ -41,6 +45,8 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - name: Audit locked JavaScript dependencies
+        run: npm audit --audit-level=moderate
       - run: npm test
       - run: npm run test:server
         env:
@@ -67,6 +73,8 @@ jobs:
             data/reports/shared-experience.json
             output/playwright/shared-*-failure.png
       - run: npm run build
+      - name: Email access and content security browser regressions
+        run: npm run test:security:e2e
   verify:
     runs-on: ubuntu-latest
     strategy:
@@ -94,6 +102,10 @@ jobs:
           python3 scripts/check_secrets.py --all
           gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
       - run: uv sync --locked
+      - name: Audit locked Python runtime dependencies
+        run: |
+          uv export --frozen --all-extras --no-hashes --no-dev --no-emit-project --format requirements-txt --output-file "$RUNNER_TEMP/requirements-audit.txt" > /dev/null
+          uvx pip-audit==2.10.1 --no-deps --disable-pip -r "$RUNNER_TEMP/requirements-audit.txt"
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
