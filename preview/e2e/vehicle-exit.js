@@ -17,6 +17,8 @@ async page => {
   await page.waitForFunction(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId).vehicle === 'rolls'; });
   check(true, 'Jevica boards a vehicle accepted by the shared town');
   await page.locator('#player-chauffeur').click();
+  const driveStart=await page.evaluate(()=>{const c=window.__riverCarriage();return {riding:c.riding,chauffeur:c.chauffeur,placement:c.placement,princeVisible:c.princeVisible,companion:c.companion,status:document.querySelector('#player-status').textContent};});
+  check(driveStart.chauffeur.active,`The initial parked vehicle supports a scenic drive: ${JSON.stringify(driveStart)}`);
   await page.waitForFunction(()=>window.__riverCarriage().chauffeur.source==='jev');
   check(true,'Jev smart driving receives a valid decision');
   await page.locator('#player-drive-pause').click();
