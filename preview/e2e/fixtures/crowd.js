@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createCommunity } from '../../src/community.js';
 import { createResidentLife, stepResidentLife } from '../../src/resident-life.js';
-import { buildLocals } from '../../src/locals.js';
+import { buildLocals } from './local-models.js';
 import { pickPerson } from '../../src/people-picking.js';
 
 const renderer=new THREE.WebGLRenderer({antialias:true});

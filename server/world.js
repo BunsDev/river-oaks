@@ -269,7 +269,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     return true;
   }
   function reachable(player, local) {
-    if (!local || local.abducted || player.altitude > 1 || distance(player.position,local.position) > 4) return false;
+    if (!local || player.altitude > 1 || distance(player.position,local.position) > 4) return false;
     const room = environment.roomAt(player.position[0],-player.position[1]);
     if ((room?.storeId ?? null) !== (local.storeId ?? null)) return false;
     return environment.hasSightLine([player.position[0],player.position[1],player.position[2]+1.68+player.altitude],
@@ -558,7 +558,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const yaw=buildYaw(message.yaw);
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
       if([...players.values()].some(other=>blocksPlayer(collider,other))
-        || collider && state.locals.some(local=>!local.abducted && residentBlocked(collider,local)))
+        || collider && state.locals.some(local=>residentBlocked(collider,local)))
         return reject('blocked_build_site');
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
@@ -846,7 +846,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       nextLife?.navigation.setPlacedObjects(nextColliders);
       const repairedResidents=new Set();
       for(const local of nextState.locals){
-        if(local.abducted||!nextColliders.some(collider=>residentBlocked(collider,local)))continue;
+        if(!nextColliders.some(collider=>residentBlocked(collider,local)))continue;
         const original=[...local.position],roomId=recoveredEnvironment.roomAt(original[0],-original[1])?.storeId??null;
         let repaired=false;
         for(let radius=.25;radius<=4&&!repaired;radius+=.25)for(let i=0;i<32;i++){
@@ -858,7 +858,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || (recoveredEnvironment.roomAt(x,-north)?.storeId??null)!==roomId
             || nextColliders.some(collider=>residentBlocked(collider,candidate))
             || [...nextPlayers.values()].some(player=>Math.hypot(player.position[0]-x,player.position[1]-north)<.7)
-            || nextState.locals.some(other=>other!==local&&!other.abducted&&Math.abs(other.position[2]-ground)<1.8&&Math.hypot(other.position[0]-x,other.position[1]-north)<.7))continue;
+            || nextState.locals.some(other=>other!==local&&Math.abs(other.position[2]-ground)<1.8&&Math.hypot(other.position[0]-x,other.position[1]-north)<.7))continue;
           local.position=candidate.position;
           if(local.life){local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;}
           repairedResidents.add(local.id);repaired=true;break;

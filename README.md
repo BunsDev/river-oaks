@@ -19,9 +19,9 @@ See [world events](docs/world-events.md).
 
 ## Run the live showcase
 
-Players can choose single player or the shared town from the play-mode control after signing in with GitHub through WorkOS and receiving waitlist approval. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
+Players join the shared town after signing in with GitHub through WorkOS and receiving waitlist approval. Browser and desktop play require a town connection, even when only one player is online. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
 
-For the standalone showcase described below, start Vite with `VITE_MULTIPLAYER=off npm run dev`. Solo play supports the optional Jev auto visit, invasion, and local inference tools; those local simulations are disabled in shared play. `VITE_SINGLE_PLAYER=true` also selects solo play when `VITE_MULTIPLAYER` is unset. District geometry and visual assets are bundled; no GIS download or bridge is required to explore. For optional character services, scenarios, and speech, run the bridge in a separate terminal:
+District geometry and visual assets are bundled; no GIS download is required. `npm run dev` starts the shared town alongside Vite. For optional Jev chauffeur, companion, and speech services, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -30,16 +30,13 @@ uv run river-oaks serve
 
 ```sh
 npm ci
-VITE_MULTIPLAYER=off npm run dev
+npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. The default is a walkable retrofuturistic River Oaks District scene at 4444 Westheimer, with bundled OpenStreetMap geometry, 30 directory-matched storefront destinations, 24 outdoor residents and 169 indoor staff and guest encounters. It loads without downloading the full neighborhood; the bridge supplies reactions, economic scenarios, and optional speech. The larger neighborhood scene and its residential renderer have been removed.
+Open **http://127.0.0.1:5173/**. The walkable River Oaks District at 4444 Westheimer uses bundled OpenStreetMap geometry, 30 storefront destinations, and 98 indoor staff and guest encounters. Streets show connected players and Jevica's companion/chauffeur. The server owns residents, wishes, scenarios, and shared resources.
 
-Residents have consistent local identities, remember encounters, walk between public stops and pause to chat. Four labeled fictional encounters feature Ima Hogg, Barbara Jordan, Hakeem Olajuwon and Beyoncé. Resident route searches run in a Web Worker; immediate reactions are batched for Jev or local fallback. [Resident life and controls](docs/resident-life.md)
+The left rail groups controls into **People**, **Places**, and **Settings**. If the connection is lost, gameplay pauses behind a reconnect screen. There is no offline gameplay mode.
 
-Community dispatches recruit a visible resident carrying supplies. Use **Find volunteer** to watch them reach the recipient and help on site; only then is the request resolved. Conversations and storms can delay the visit, while an inaccessible route returns unused capacity.
-
-**Start Jev auto visit** lets Jev choose where the visitor walks, whom to meet, and how to help during a running community scenario. Movement and support follow the same physical and resource rules as manual play. Move, drag, or press Escape to take over. The left rail groups controls into **People**, **Places**, and **Settings**. [Auto controls, live model evaluation, and setup](docs/auto-mode.md)
 
 **Cmd/Ctrl+B** toggles exploration; **Cmd/Ctrl+Shift+B** toggles play controls.
 **Cmd/Ctrl+K** opens searchable commands, **?** shows contextual keyboard help,
@@ -113,8 +110,8 @@ See [verification results](data/reports/verification.md), [GIS layout](data/repo
 Copy `.env.example` to the ignored `.env` file and set `TYPESAFE_API_KEY` locally. Keep it out of Unreal assets and logs.
 
 You can also open **Settings → Jev API key** in the preview and select **Use key**.
-This manual override applies to resident reactions and auto visits in the running
-local bridge. It stays in server memory until the bridge restarts. The browser
+This manual override configures the running local bridge, including its independent
+Python and Unreal simulation tools; it does not run a browser-owned simulation. It stays in server memory until the bridge restarts. The browser
 does not save it, and the bridge never returns the key. Select **Use server key**
 to remove the override and restore the original server configuration. A configured
 key is validated by Jev on the next inference request.

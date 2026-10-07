@@ -1,106 +1,59 @@
-// Run through the browser harness with a live Vite preview. All model/voice calls are mocked.
+// Run against the real shared-town fixture; voice failures are controlled by this journey.
 async (page) => {
   await page.unrouteAll({behavior:'ignoreErrors'});
   const check = (value, message) => { if (!value) throw new Error(message); };
-  const errors = [], packets = [], screenshots = [];
-  let reactionMode = 'ok', voiceMode = 'fail';
+  const errors = [], screenshots = [];
+  let voiceMode = 'fail';
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.route('**/v1/decisions', async route => {
-    const packet = route.request().postDataJSON(); packets.push(packet);
-    const mode = reactionMode;
-    if (mode === 'slow') await page.waitForTimeout(900);
-    if (mode === 'fail') return route.fulfill({ status: 503, json: { error: 'Fixture unavailable' } });
-    await route.fulfill({ json: { schema_version: 1, tick: packet.tick, latency_ms: 0,
-      decisions: packet.agents.map(agent => ({ id: agent.id, action: 'greet', source: 'local_rules' })) } });
-  });
   await page.route('**/v1/voice', async route => {
     if (voiceMode === 'slow') await page.waitForTimeout(900);
     await route.fulfill({ status: 503, json: { error: 'Fixture voice unavailable' } });
   });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 60000 });
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined' && document.querySelector('#community-local').options.length>0);
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   await page.locator('[data-section=community-section]').click();
   await page.locator('#community-more > summary').click();
   const meet = async id => {
     await page.locator('#community-local').selectOption(id);
-    await page.locator('#community-meet').click();
+    if(await page.locator('#community-dialogue').isVisible())await page.locator('#community-close').click();
+    await page.waitForTimeout(1100);await page.locator('#community-meet').click();
+    await page.locator('#community-dialogue').waitFor({state:'visible'});
     if (!await page.locator('#community-activities').evaluate(el => el.open)) await page.locator('#community-activities > summary').click();
   };
   const settled = () => page.waitForFunction(() => document.querySelector('.community-topics').getAttribute('aria-busy') === 'false');
   const resources = () => page.locator('.community-mission-resources dd').allTextContents();
-  await meet('local-00');
+  await meet('store-osm-node-8172494969-person-2');
   check(await page.locator('#community-dialogue').getAttribute('aria-modal') === 'false', 'World controls remain available during conversation');
-  check(await page.locator('#community-supply').isDisabled(), 'Support starts gated');
-  check((await page.locator('#community-supply-reason').textContent()).includes('Start'), 'Explain paused prerequisites');
-  check((await resources())[0] === '12', 'Initial supply budget');
   await page.locator('#community-ask').click(); await settled();
-  check(await page.locator('#community-ask').isHidden(), 'Known needs do not require repeated asking');
-  check(await page.locator('#community-dialogue-run').evaluate(el => el === document.activeElement), 'Hiding Ask moves focus to the next action');
-  check((await resources())[0] === '12', 'Asking is free');
-  await page.locator('#community-dialogue-run').press('Enter');
-  await page.locator('#community-supply').click();
-  check((await resources())[0] === '10', 'One supply delivery costs exactly two kits');
-  check(await page.locator('#community-supply').isDisabled(), 'Cooldown blocks repeat delivery');
-  check(await page.locator('.community-support-card').evaluate(el => el === document.activeElement), 'Support action keeps focus within the dialog');
-  check((await page.locator('#community-supply-reason').textContent()).includes('Next delivery'), 'Cooldown is explained');
-  await page.waitForFunction(() => !document.querySelector('#community-supply').disabled);
-  await page.locator('#community-supply').click();
-  check((await resources())[0] === '8', 'Second delivery spends only two more kits');
-  check(await page.locator('#community-support-status').textContent() === 'Resolved', 'Supply path resolves needs');
-  check(await page.locator('#community-dispatch').isDisabled(), 'Resolved needs cannot spend visits');
-  check((await page.locator('.community-mission-progress').textContent()).startsWith('1 / 6'), 'Mission progress reflects resolution');
-
-  await page.locator('#community-run').click();
-  const pausedTime = (await resources())[2];
-  await page.waitForTimeout(1100);
-  check((await resources())[2] === pausedTime, 'Paused simulation freezes the visible clock');
-  check(await page.locator('#community-dialogue-run').textContent() === 'Resume scenario', 'Dialog offers resume');
+  await page.waitForFunction(()=>document.querySelector('#community-ask').hidden);
+  check(await page.locator('#community-supply').isDisabled(),'Indoor residents without requests cannot spend supplies');
+  check(await page.locator('#community-dispatch').isDisabled(),'Indoor residents without requests cannot spend visits');
+  check(await page.locator('#community-support-status').textContent()==='No request','Comfortable residents do not imply a support need');
   await page.locator('#community-dialogue-run').click();
-  await meet('local-03'); await page.locator('#community-ask').click(); await settled();
-  await page.locator('#community-dispatch').click();
-  check((await resources())[1] === '3', 'Dispatch reserves one visit');
-  check(await page.locator('#community-dispatch').isDisabled() && await page.locator('#community-supply').isDisabled(), 'Assigned visit prevents duplicate spending');
-  check(await page.locator('#community-support-status').textContent() === 'Visit assigned', 'Assignment has an explicit status');
+  await page.waitForFunction(()=>document.querySelector('#community-run').textContent.includes('Pause'));
+  const runningTime=(await resources())[2];
+  await page.waitForFunction(time=>document.querySelectorAll('.community-mission-resources dd')[2].textContent!==time,runningTime);
   await page.locator('#community-run').click();
-  await page.locator('#community-reset').click();
-  check((await resources()).join('|') === '12|4|60:00', 'Reset restores resources and clock');
-  check(await page.locator('#community-ask').isVisible(), 'Reset clears known needs');
-
-  // Which residents need help comes from the scenario's targets, so find a
-  // comfortable one by asking rather than assuming a fixed id.
-  let comfortable=null;
-  for (const id of await page.locator('#community-local option[value^=local-]').evaluateAll(options=>options.map(option=>option.value))) {
-    await meet(id); await page.locator('#community-ask').click(); await settled();
-    const status=await page.locator('#community-support-status').textContent();
-    if (status==='No request') { comfortable=id; break; }
-    check(status==='Needs support','A resident who was asked either needs support or has no request');
-  }
-  check(Boolean(comfortable),'Comfortable residents do not imply a support need');
-  reactionMode = 'slow';
+  await page.waitForFunction(()=>document.querySelector('#community-dialogue-run').textContent.includes('Resume'));
+  const pausedTime=(await resources())[2];await page.waitForTimeout(1100);
+  check((await resources())[2]===pausedTime,'Shared pause freezes the visible clock');
+  check(await page.locator('#community-reset').count()===0,'Solo reset control is absent');
+  check(await page.locator('#community-life').count()===0,'Solo life toggle is absent');
+  check((await page.locator('#community-scenario').textContent()).includes('Heatwave'),'Shared scenario title remains visible');
+  const comfortable=await page.locator('#community-local').inputValue();
   await page.locator('#community-about').click();
-  check(await page.locator('#community-about').getAttribute('aria-pressed') === 'true', 'Selected topic is exposed');
-  check(await page.locator('#community-district').getAttribute('aria-disabled') === 'true', 'Pending reaction blocks duplicate requests');
-  check(await page.locator('#community-about').evaluate(el => el === document.activeElement), 'Pending topic retains keyboard focus');
-  const requestsBeforeRepeat = packets.length;
-  await page.locator('#community-about').press('Enter');
-  check(packets.length === requestsBeforeRepeat, 'Busy topic cannot submit again');
-  await settled();
-  reactionMode = 'fail';
-  await page.locator('#community-district').click(); await settled();
-  check((await page.locator('#community-attribution').textContent()).includes('fallback'), 'Failed response is explicitly a fallback');
-  check((await page.locator('#community-speech').textContent()).length > 30, 'Authored dialogue survives provider failure');
-  reactionMode = 'slow';
+  check(await page.locator('#community-about').getAttribute('aria-pressed')==='true','Selected topic is exposed');
+  check((await page.locator('#community-attribution').textContent()).includes('shared town'),'Authored topic has shared-town attribution');
+  check((await page.locator('#community-speech').textContent()).length>30,'Indoor resident retains authored dialogue');
   await page.locator('#community-story').click();
-  await page.locator('#community-next').click();
-  const freshLine = await page.locator('#community-speech').textContent();
-  await page.waitForTimeout(1100);
-  check(await page.locator('#community-speech').textContent() === freshLine, 'Previous resident response cannot overwrite the next encounter');
-  check(await page.locator('#community-story').getAttribute('aria-pressed') === 'false', 'Next encounter clears topic selection');
-  reactionMode = 'ok';
+  await page.waitForTimeout(1100);await page.locator('#community-next').click();
+  await page.waitForFunction(id=>document.querySelector('#community-local').value!==id,comfortable);
+  check(await page.locator('#community-story').getAttribute('aria-pressed')==='false','Next encounter clears topic selection');
 
   await page.locator('.community-audio summary').click();
   check(await page.locator('#community-replay').isDisabled(), 'Muted playback is disabled');
@@ -115,9 +68,7 @@ async (page) => {
   check(!(await page.locator('#community-dialogue-voice-status').textContent()).includes('unavailable'), 'Late failure cannot overwrite mute status');
   await page.locator('.community-audio summary').click();
 
-  await meet('local-20');
-  check((await page.locator('.community-kicker').textContent()).includes('Fictional portrayal'), 'Named personas retain fictional disclosure');
-  check(await page.locator('.community-biography').isVisible(), 'Named personas retain public source');
+  await meet('store-osm-node-8172494969-person-2');
   await page.locator('#community-close').press('Escape');
   check(await page.locator('#community-dialogue').isHidden(), 'Escape closes conversation');
   check(await page.locator('#canvas-host').evaluate(el => el === document.activeElement), 'Escape restores walking focus');
@@ -133,7 +84,7 @@ async (page) => {
       // Measure an open conversation with whichever resident is reachable now:
       // one standing somewhere Jevica cannot reach is (rightly) declined.
       let opened=false;
-      for (const id of [comfortable, ...await page.locator('#community-local option[value^=local-]').evaluateAll(options=>options.map(option=>option.value))]) {
+      for (const id of [comfortable, ...await page.locator('#community-local option[value^=store-]').evaluateAll(options=>options.map(option=>option.value))]) {
         await meet(id);
         if (await page.locator('#community-dialogue').waitFor({ state: 'visible', timeout: 2500 }).then(()=>true,()=>false)) { opened=true; break; }
       }
@@ -163,5 +114,5 @@ async (page) => {
     await page.setViewportSize({ width:1440, height:1000 });
   }
   check(!errors.length, `Browser errors: ${errors.join('; ')}`);
-  return { support:'ask, start, supply, cooldown, resolve, pause, resume, dispatch, reset', reactions:'selected, busy, fallback, stale response', voice:'sync, failure, mute during generation', keyboard:'next-action focus, Escape, scroll, walking focus', layouts, screenshots, requests:packets.length, browserErrors:errors };
+  return { support:'ask, no-request spending gates, shared start and pause', reactions:'selected, authored shared-town dialogue, next encounter', voice:'sync, failure, mute during generation', keyboard:'Escape, scroll, walking focus', layouts, screenshots, browserErrors:errors };
 }

@@ -67,10 +67,10 @@ export function setupSidebarSections({ graphics = null } = {}) {
   const atmosphereChildren = [...atmosphere.children].slice(1);
   const aboutDetails = disclosure('About this district', [...about.children].slice(1));
   const appearance = panel.querySelector('.appearance-control');
-  const voice = ['#community-voice', '#community-voice-status', '#community-life', '#community-life-status'];
+  const voice = ['#community-voice', '#community-voice-status'];
   const voiceLabel = panel.querySelector('label[for="community-voice"]');
   settings.append(heading, appearance, ...(graphics ? [graphics] : []), disclosure('Light & atmosphere', atmosphereChildren, true),
-    createJevSettings(), createJevSettings('elevenlabs'), disclosure('Voices & resident walks', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
+    createJevSettings(), createJevSettings('elevenlabs'), disclosure('Voices', [voiceLabel, ...voice.map(id => panel.querySelector(id))]), layers, aboutDetails);
   atmosphere.remove(); about.remove();
   const more = panel.querySelector('#community-more');
   more.querySelector('summary').textContent = 'Help neighbors';

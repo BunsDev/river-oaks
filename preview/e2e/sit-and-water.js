@@ -109,8 +109,8 @@ async page => {
   await bob.waitForFunction(()=>!window.__riverMultiplayer().remotes.find(remote=>remote.id==='alice')?.watering,null,{timeout:10000});
   check(true,'The watering animation ends by itself');
 
-  // Multiplayer streets contain real players; NPC bench poses belong to solo.
-  check((await page.evaluate(()=>window.__riverSeatAndWater().residents())).length===0,
+  // Town streets contain real players; indoor NPC poses are checked separately.
+  check(await page.evaluate(()=>!window.__riverPeople().some(person=>person.id.startsWith('local-'))),
     'No outdoor NPCs are rendered on multiplayer benches');
 
   await bob.context().close();

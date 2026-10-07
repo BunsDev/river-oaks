@@ -54,7 +54,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     const seated=seatPose(lastCoach),start=[seated.position.x,-seated.position.z];
     for(const side of [1,-1]) {
       const point=lastCoach.localToWorld(new THREE.Vector3(driverSeat()[0],0,side*((vehicle()?.width/2||1.36)+.55/lastCoach.scale.x))),end=[point.x,-point.z];
-      if(!nav.free(end)||!base.canTravel(start,end)||(getLocals()??[]).some(p=>p.id!=='carriage-driver'&&!p.abducted&&Math.hypot(p.position[0]-point.x,p.position[1]+point.z)<.7))continue;
+      if(!nav.free(end)||!base.canTravel(start,end)||(getLocals()??[]).some(p=>p.id!=='carriage-driver'&&Math.hypot(p.position[0]-point.x,p.position[1]+point.z)<.7))continue;
       service?.dispose();navigation=nav;service=createRouteService(world,placement);follower=createCompanionRouteFollower(nav,service);
       exit=[point.x,nav.ground(end),point.z];body=createCompanionBody([point.x,point.z],object.rotation.y);
       transition={from:seated.position.toArray(),to:exit,progress:0};mode='stepping-down';return true;
@@ -65,7 +65,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     object,ready,
     get avatar(){return avatar;},
     get navigationDebug(){return {mode,position:object.position.toArray(),route:follower?.debug??null,sensing:mode==='flying'?flight?.sensing??null:null};},
-    get canDrive(){return Boolean(avatar&&object.visible&&!person()?.abducted&&mode==='seat'&&!wanted);},
+    get canDrive(){return Boolean(avatar&&object.visible&&mode==='seat'&&!wanted);},
     get companion(){return {...status,mode,position:mode==='seat'?null:[object.position.x,object.position.z]};},
     onCompanion(listener){listeners.add(listener);return ()=>listeners.delete(listener);},
     configure(nextWorld,nextPlacement){reset();world=nextWorld;placement=nextPlacement;},
@@ -84,9 +84,9 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     update(coach,now,visitor,{pose=null,environment=null}={}) {
       const local=person();if(identity!==local){reset();identity=local;}
       lastCoach=coach;lastPose=pose;
-      object.visible=Boolean(avatar&&coach.visible&&local&&!local.abducted);
+      object.visible=Boolean(avatar&&coach.visible&&local);
       const dt=previous===null?0:Math.min(.08,Math.max(0,(now-previous)/1000));previous=now;
-      if(!object.visible){avatar?.suspend();if(!local||local.abducted)reset();return;}
+      if(!object.visible){avatar?.suspend();if(!local)reset();return;}
       const speaking=getConversation()?.id===local.id,look=visitor&&speaking?[visitor[0],visitor[2],-visitor[1]]:null;
       const player=pose&&!pose.riding?[pose.position[0],pose.position[2]]:null;
       if(mode==='stepping-down'||mode==='stepping-up') {

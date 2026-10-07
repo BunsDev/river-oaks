@@ -1,6 +1,6 @@
 # Play controls and rendering cost
 
-The play dock keeps flight and Jev within reach while rides, camera settings, and optional scenarios stay in disclosures. Small windows start with the dock closed. You can close either the dock or exploration panel with Escape; focus returns to its trigger. H hides the floating controls and leaves a visible way to restore them. Compact conversations clear the competing controls until you close the conversation.
+The play dock keeps flight and Jev within reach while rides, camera settings, and bird controls stay in disclosures. Small windows start with the dock closed. You can close either the dock or exploration panel with Escape; focus returns to its trigger. H hides the floating controls and leaves a visible way to restore them. Compact conversations clear the competing controls until you close the conversation.
 
 Run the browser acceptance suite with:
 
@@ -10,7 +10,7 @@ npm run test:experience
 npm run test:experience -- experience
 ```
 
-The runner starts its own standalone Vite server and runs each flow in a fresh Chromium context. It writes results to `data/reports/experience.json` and screenshots to `output/playwright/`. It covers desktop, phone, and short landscape layouts; focus and Escape behavior; reduced motion; guided visits; vehicles; companion conversations; touch movement; telekinesis; loading progress; graphics preferences across reloads; clear view; and the invasion scenario. The UI-polish flow covers theme changes and interrupted panel motion; the unicorn flow checks retained artwork in its studio fixture. Provider decision checks use mocked replies. Optional services can be unavailable during the suite.
+The runner starts its own authenticated town fixture and Vite server and runs each flow in a fresh Chromium context. It writes results to `data/reports/experience.json` and screenshots to `output/playwright/`. It covers desktop, phone, and short landscape layouts; focus and Escape behavior; reduced motion; vehicles; companion conversations; touch movement; loading progress; graphics preferences across reloads; and clear view. The UI-polish flow covers theme changes and interrupted panel motion; the unicorn flow checks retained artwork in its studio fixture. Provider decision checks use mocked replies. Optional services can be unavailable during the suite.
 
 Run shared-play acceptance with:
 
@@ -20,17 +20,16 @@ npm run test:shared
 npm run test:shared -- development
 npm run test:shared -- development-world
 npm run test:shared -- development-publish
-npm run test:shared -- development-solo
 npm run test:shared -- required
 ```
 
 The runner owns its test servers on available loopback ports and temporary moderation state. It leaves existing services running. Ctrl+C, SIGTERM, and SIGHUP close the browser and servers, remove temporary state, and record an interrupted result. Results go to `data/reports/shared-experience.json`; screenshots go to `output/playwright/`.
 
-Shared acceptance covers two local development players, chat delivery and reconnect history, phone controls, authenticated peer actions, alternate-world admission, Jevica-only publishing, solo Jevica permissions, disconnect recovery, keyboard retry, and sign-out. A locked town now focuses its recovery title, keeps Tab within available actions, and restores game focus after reconnecting. Authenticated recovery hides the sign-in link. These use loopback identities and fixture sessions; they do not establish live WorkOS or hosted multiplayer acceptance.
+Shared acceptance covers two local development players, chat delivery and reconnect history, phone controls, authenticated peer actions, alternate-world admission, Jevica-only publishing, Jevica permissions, disconnect recovery, keyboard retry, and sign-out. A locked town now focuses its recovery title, keeps Tab within available actions, and restores game focus after reconnecting. Authenticated recovery hides the sign-in link. These use loopback identities and fixture sessions; they do not establish live WorkOS or hosted multiplayer acceptance.
 
 Manual driving takes over immediately on a movement key or pad press, including taps that end between animation frames. When Jev follows locally, he can choose a clear position beside or in front of you if a storefront blocks his preferred trailing position. Building and personal-space clearance still apply.
 
-Guided visits reconsider support as soon as they reach a moving neighbor. This avoids repeatedly pausing just outside speaking range while the neighbor walks away. Physical range checks and the pause between support interactions still apply.
+
 
 Run native window and renderer recovery checks with:
 
@@ -38,7 +37,7 @@ Run native window and renderer recovery checks with:
 RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
 ```
 
-For native vehicle checks, start `VITE_SINGLE_PLAYER=true npm run desktop:dev`, then run `node desktop/vehicles-e2e.js` in a second terminal. If Vite selected a port other than 5174, set `RIVER_OAKS_DEV_URL` to that URL with `?motion-debug=1`. The test covers both vehicles, immediate keyboard and movement-pad takeover, companion flight, and landing.
+For native vehicle checks, start `npm run desktop:dev`, then run `node desktop/vehicles-e2e.js` in a second terminal. If Vite selected a port other than 5174, set `RIVER_OAKS_DEV_URL` to that URL with `?motion-debug=1`. The test covers both vehicles, immediate keyboard and movement-pad takeover, companion flight, and landing.
 
 ## Rendering changes
 
@@ -53,7 +52,7 @@ The [September 28 comparison](../data/reports/experience-render-cost.json) used 
 | P2 | Shared recovery dialog | Locking the game left keyboard focus in its inert shell. Recovery now owns focus until reconnect and restores the previous usable control afterward. |
 | P2 | Shared sign-in link | CSS exposed an action marked hidden during authenticated recovery. A scoped hidden rule removes it visually and from Tab order. |
 | P2 | Shared acceptance | The development harness expected a removed character selector, and shared journeys required manual setup. Current character/control assertions run through an owned-process suite with failure and interruption receipts. |
-| P2 | Solo acceptance | Loading and graphics persistence had a standalone harness but were absent from the default suite. They now run with the other journeys. |
+| P2 | Loading acceptance | Loading and graphics persistence had a standalone harness but were absent from the default suite. They now run with the other journeys. |
 
 ## Remaining acceptance limits
 

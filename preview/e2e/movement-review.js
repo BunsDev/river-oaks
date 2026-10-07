@@ -22,10 +22,7 @@ async page => {
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
   await page.locator('[data-section=explore-section]').click();await page.locator('#destination').selectOption({label:'Dior'});
   await page.locator('#visit-destination').click();if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
-  await page.locator('#player-carriage').click();await page.locator('[data-section=community-section]').click();
-  if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
-  await page.locator('#community-local').selectOption('carriage-driver');await page.locator('#community-meet').click();
-  await page.locator('#community-dialogue').waitFor({state:'visible'});await page.locator('#community-close').click();
+  await page.locator('#player-carriage').click();
   await page.locator('#player-companion').click();await page.waitForFunction(()=>window.__riverCarriage().companion.mode==='walking');
   await page.keyboard.press('F3');await page.locator('[data-debug-layer="navigation"]').check();
   await page.waitForFunction(()=>window.__riverDebug().root.getObjectByName('Jev route')?.geometry.attributes.position.count>0);

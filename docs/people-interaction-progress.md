@@ -1,5 +1,8 @@
 # People interaction and movement goal
 
+> Historical implementation record. Solo gameplay and its browser journeys have
+> been retired. See [current testing](testing.md) and [town setup](multiplayer.md).
+
 Goal: people remain interactive wherever they are, occupations fit workers and
 other visitors, and character movement becomes hyper realistic end to end.
 

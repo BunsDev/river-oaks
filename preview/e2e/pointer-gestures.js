@@ -5,14 +5,13 @@ async page => {
   await page.setViewportSize({width:1440,height:1000});
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.charactersReady==='24');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
-  // Residents walk their routes, and one standing somewhere Jevica cannot reach is
-  // rightly declined; meet whichever resident is reachable now.
+  // Shared indoor residents are reached through server-confirmed directory travel.
   let met=null;
-  for(const id of await page.locator('#community-local option[value^=local-]').evaluateAll(options=>options.map(option=>option.value))){
+  for(const id of ['store-osm-node-8172494969-person-2']){
     await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
     if(await page.locator('#community-dialogue').waitFor({state:'visible',timeout:2500}).then(()=>true,()=>false)){met=id;break;}
   }

@@ -2,7 +2,7 @@ async page=>{
  // Start Playwright CLI from the repository root; fixture paths are cwd-relative.
  const root='.',profiles=['woman-casual','man-casual','woman-tailored','man-tailored','woman-daywear','man-workwear','jevica'],runs=[],errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
- const load=async()=>{await page.goto('http://127.0.0.1:5181/?motion-debug=1');await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleTotal===d.storePeopleReady;},null,{timeout:90000});};
+ const load=async()=>{await page.goto('http://127.0.0.1:5181/?motion-debug=1');await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleTotal===d.storePeopleReady;},null,{timeout:90000});};
  const measure=async modes=>page.evaluate(async modes=>{
   const src=await(await fetch('/src/render-pipeline.js')).text(),imports=[...src.matchAll(/from\s+["']([^"']+)["']/g)].map(m=>m[1]),{RenderPass}=await import(imports.find(u=>u.includes('RenderPass__js'))),original=RenderPass.prototype.render;
   let stats,sampling=false,mouths;const reset=()=>stats={frames:0,cpu:0,calls:0,triangles:0};reset();

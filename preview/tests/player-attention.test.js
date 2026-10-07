@@ -9,14 +9,12 @@ test('conversation attention follows standing, seated and magically elevated peo
  assert.deepEqual(attention.update(1/60,{...base,conversation:{...local,wish:{kind:'flight',age:2}}}).target.map(n=>Math.round(n*1e6)/1e6),[2,12.9,-4]);
  assert.deepEqual(attention.update(1/60,{...base,conversation:{...local,wish:{kind:'dog'}}}).target,[2,10.76,-4]);
  assert.deepEqual(attention.update(1/60,base).target,[2,11.1,-4]);
- assert.deepEqual(attention.update(1/60,{...base,conversation:{...local,force:{height:1.2}}}).target.map(n=>Math.round(n*1e6)/1e6),[2,12.3,-4]);
- assert.equal(attention.update(1/60,{...base,conversation:{...local,abducted:true}}).target,null);
+ assert.equal(attention.update(1/60,{...base,conversation:{...local,position:null}}).target,null);
  assert.equal(attention.update(1/60,{...base,conversation:{...local,position:[NaN,0,0]}}).target,null);
 });
 
-test('spell targeting has priority; walking, flying and riding retain control of body facing',()=>{
+test('walking, flying and riding retain control of body facing',()=>{
  const attention=createPlayerAttention();
- const spell=[-2,15,3];const active=attention.update(1/60,{...base,spell});assert.equal(active.mode,'spell');assert.deepEqual(active.target,spell);assert.equal(active.facing,null);
  for(const state of [{speed:1},{flying:true},{riding:true}]){const pose=attention.update(1/60,{...base,...state});assert.equal(pose.mode,'conversation');assert.equal(pose.facing,null);assert.deepEqual(pose.target,[2,11.1,-4]);}
  assert.deepEqual(attention.update(1/60,{...base,conversation:null}),{mode:'none',target:null,facing:null});
 });

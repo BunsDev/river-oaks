@@ -1,0 +1,1820 @@
+{
+  "createdAt": "2026-10-07T01:06:53.973Z",
+  "results": [
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 5.544,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "birds-visible",
+      "status": "passed",
+      "seconds": 68.181,
+      "result": {
+        "checks": [
+          "a bird keeps the player company (100% of samples)",
+          "a bird is in view at 24 px or more in 43% of 60 s (need 30%)",
+          "No uncaught errors: "
+        ],
+        "share": 0.42,
+        "largestWingspanPx": 91.8,
+        "errors": []
+      }
+    },
+    {
+      "name": "bird-cams",
+      "status": "passed",
+      "seconds": 12.791,
+      "result": {
+        "checks": [
+          "The Bird cams card lists three birds",
+          "Jev sends every bird to watch something",
+          "Ride along shows the ride bar",
+          "The play dock steps aside while riding",
+          "The camera is at the bird\u2019s eyes (0.43 m)",
+          "The view is from the air (23.9 m above the walking view)",
+          "Jev keeps flying while you ride along",
+          "A flight key takes the controls",
+          "Flight keys steer the bird, not the walker left on the ground",
+          "T gives the bird back to Jev",
+          "N moves to the next bird",
+          "Esc lands and hides the ride bar",
+          "Landing brings the play dock back",
+          "Landing returns to the walking view",
+          "No page errors"
+        ]
+      }
+    },
+    {
+      "name": "debug-tools",
+      "status": "passed",
+      "seconds": 24.925,
+      "result": {
+        "checks": [
+          "Debug tools are not loaded until asked for",
+          "F3 opens the debug panel",
+          "All mapped collision polygons are drawn (9)",
+          "The walkable grid samples free and blocked ground (6713 free, 2696 blocked)",
+          "Registered ground triangles around the visitor are drawn (2490)",
+          "Store rooms and mapped roads are drawn (30 rooms, 39 roads)",
+          "Nearby skeletons are drawn (24)",
+          "The stats line reports overlay counts",
+          "The cursor reads ground height and walkability (18.46 m, free)",
+          "The cursor readout is shown in the panel",
+          "Placement receipt uses world east/north coordinates",
+          "Clicking inspects the mesh under the cursor (Roads and walkways: 11632 tris)",
+          "Inspecting does not start a conversation",
+          "The selection panel lists polygon counts",
+          "Cursor, selection and bones stay on top through an X-ray toggle",
+          "X-ray switches only the depth-tested overlays",
+          "The heaviest meshes are listed",
+          "Wireframe shows the whole scene as polygons",
+          "Turning wireframe off restores every material",
+          "F3 closes the panel and hides the overlays",
+          "The desktop menu event opens the panel",
+          "The placement cursor finds the boutique floor",
+          "Indoor coordinate receipt includes the room ID and local fixture coordinates",
+          "No page errors: "
+        ],
+        "counts": {
+          "colliders": 9,
+          "free": 6713,
+          "blocked": 2696,
+          "groundTriangles": 2490,
+          "roads": 39,
+          "footprints": 9,
+          "stores": 30,
+          "rooms": 30,
+          "skeletons": 24
+        },
+        "cursor": {
+          "x": -2765.321977373157,
+          "z": 1295.7197609447499,
+          "ground": 18.462403362676056,
+          "terrain": 18.186781566151772,
+          "free": true,
+          "room": null
+        },
+        "selection": {
+          "name": "(unnamed)",
+          "path": "Roads and walkways",
+          "type": "Mesh",
+          "instanceId": null,
+          "triangles": 11632,
+          "vertices": 34896,
+          "instances": 1,
+          "drawnTriangles": 11632,
+          "materials": [
+            "MeshStandardMaterial"
+          ],
+          "skinned": false
+        }
+      }
+    },
+    {
+      "name": "movement-review",
+      "status": "passed",
+      "seconds": 13.617,
+      "result": {
+        "checks": [
+          "Local Silvan fits both bare arm vines to the shipped skin",
+          "Remote Silvan fits both bare arm vines to the shipped skin",
+          "F3 displays the current walking route in the district",
+          "F3 displays actual Jev flight sensing in the district",
+          "Turning sensing off disposes its geometry",
+          "No browser errors: "
+        ],
+        "views": [
+          {
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              1.0067135954366278,
+              2.364549993030275,
+              0.520210426508317
+            ],
+            "calls": 152,
+            "triangles": 562298
+          },
+          {
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.5202104265083171,
+              2.351301961607696,
+              1.006713595436628
+            ],
+            "calls": 152,
+            "triangles": 562298
+          },
+          {
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              1.0067135954366278,
+              2.364549993030275,
+              0.520210426508317
+            ],
+            "calls": 152,
+            "triangles": 562298
+          },
+          {
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.5202104265083171,
+              2.351301961607696,
+              1.006713595436628
+            ],
+            "calls": 152,
+            "triangles": 562298
+          }
+        ],
+        "probes": 1,
+        "errors": []
+      }
+    },
+    {
+      "name": "sable",
+      "status": "passed",
+      "seconds": 22.013,
+      "result": {
+        "checks": [
+          "Local avatar loads Sable's owned face, hair and pelvis tail",
+          "Local full has finite adult-scale bounds",
+          "Local portrait has finite adult-scale bounds",
+          "Local back has finite adult-scale bounds",
+          "Local profile has finite adult-scale bounds",
+          "Tail attachment moves with the walking skeleton",
+          "The visible fox eyes blink with the animated rig",
+          "Remote avatar loads Sable's owned face, hair and pelvis tail",
+          "Remote full has finite adult-scale bounds",
+          "Remote portrait has finite adult-scale bounds",
+          "Remote back has finite adult-scale bounds",
+          "Remote profile has finite adult-scale bounds",
+          "Tail attachment moves with the walking skeleton",
+          "The visible fox eyes blink with the animated rig",
+          "Sable selection retains the authenticated account name",
+          "Character card shows the actual rendered model",
+          "Rendered portrait uses its own aspect ratio",
+          "Original full reference stays available",
+          "Sable walks through the real district controls",
+          "Sable selection persists across reload",
+          "Keyboard exposes the mobile character selector",
+          "Character card fits the mobile viewport",
+          "Reduced motion keeps Sable eyes open",
+          "No uncaught browser errors: "
+        ],
+        "views": [
+          {
+            "remote": false,
+            "view": "full",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7920918603110125,
+              0.8284890309483983
+            ],
+            "calls": 97,
+            "triangles": 404766
+          },
+          {
+            "remote": false,
+            "view": "portrait",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7920918603110125,
+              0.8284890309483983
+            ],
+            "calls": 87,
+            "triangles": 397262
+          },
+          {
+            "remote": false,
+            "view": "back",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7642208814188565,
+              0.8050223693129466
+            ],
+            "calls": 97,
+            "triangles": 404766
+          },
+          {
+            "remote": false,
+            "view": "profile",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.8050223693129467,
+              1.7642209158730695,
+              0.7965863271797327
+            ],
+            "calls": 97,
+            "triangles": 404766
+          },
+          {
+            "remote": true,
+            "view": "full",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7920918603110125,
+              0.8284890309483983
+            ],
+            "calls": 97,
+            "triangles": 404766
+          },
+          {
+            "remote": true,
+            "view": "portrait",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7920918603110125,
+              0.8284890309483983
+            ],
+            "calls": 87,
+            "triangles": 397262
+          },
+          {
+            "remote": true,
+            "view": "back",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.7965863271797327,
+              1.7642208814188565,
+              0.8050223693129466
+            ],
+            "calls": 97,
+            "triangles": 404766
+          },
+          {
+            "remote": true,
+            "view": "profile",
+            "costumeUpdateMs": 0,
+            "profile": "jevica",
+            "bounds": [
+              0.8050223693129467,
+              1.7642209158730695,
+              0.7965863271797327
+            ],
+            "calls": 97,
+            "triangles": 404766
+          }
+        ],
+        "errors": [],
+        "scope": "Real local and remote avatar loader, Chromium WebGL views, walking, blink, selector, persistence, keyboard/mobile and reduced motion. Visual reference equivalence requires art review."
+      }
+    },
+    {
+      "name": "experience",
+      "status": "passed",
+      "seconds": 11.856,
+      "result": {
+        "checks": [
+          "Secondary character controls start closed",
+          "Flight is available without opening settings",
+          "Jev is available without opening settings",
+          "Retired local scenarios are absent",
+          "Rides can be discovered from the character card",
+          "Clear view moves focus to Commands outside hidden controls",
+          "Escape closes the exploration panel",
+          "Closing the panel restores world focus",
+          "Resizing preserves the chosen play dock state",
+          "Small-window play dock opens",
+          "Escape closes the play dock",
+          "Escape restores world focus",
+          "No horizontal overflow",
+          "Shared mode hides the unavailable companion action",
+          "Short landscape windows retain a full touch target and scrollable dock",
+          "Ride controls can be reached in landscape",
+          "The dock collapse indicator is not covered by Commands",
+          "Commands remains independently reachable in landscape",
+          "Conversation clears competing controls in compact windows",
+          "Conversation Escape returns focus to the world",
+          "Play controls return after conversation",
+          "Reduced motion removes dock transitions",
+          "No page errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "sidebar",
+      "status": "passed",
+      "seconds": 16.648,
+      "result": {
+        "open": {
+          "expanded": "true",
+          "inert": false,
+          "viewport": [
+            3840,
+            2160
+          ],
+          "buffer": [
+            3840,
+            2160
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "collapsed": {
+          "expanded": "false",
+          "inert": true,
+          "viewport": [
+            3840,
+            2160
+          ],
+          "buffer": [
+            3840,
+            2160
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "persisted": true,
+        "keyboard": true,
+        "walking": true,
+        "mobile": {
+          "expanded": "false",
+          "inert": true,
+          "viewport": [
+            390,
+            844
+          ],
+          "buffer": [
+            390,
+            844
+          ],
+          "overflow": false,
+          "walking": true
+        },
+        "browserErrors": []
+      }
+    },
+    {
+      "name": "rail-navigation",
+      "status": "passed",
+      "seconds": 22.665,
+      "result": {
+        "checks": [
+          "Commands replaces the standalone Clear view button",
+          "World map creation respects the environment flag",
+          "Worlds directory and publishing controls respect the environment flag",
+          "Ctrl+B opens the left rail and focuses its selected tab",
+          "Cmd+B closes the rail and returns to the world",
+          "Rail modifier chords never trigger B flight",
+          "Held shortcut repeats do not retrigger the rail",
+          "IME composition does not toggle a rail",
+          "Paste chord does not switch gameplay camera",
+          "Alt+2 opens Places directly",
+          "/ focuses destination search",
+          "Text fields retain rail chords and help characters",
+          "Composing Escape leaves the exploration rail and text focus intact",
+          "Escape from the left rail returns to the world",
+          "Commands open as a focused modal dialog",
+          "Commands offers World map only when enabled",
+          "Commands omits shared worlds when disabled",
+          "Command list omits disabled building tools",
+          "Command search explains an empty result",
+          "Arrow keys navigate filtered command actions",
+          "Executing a command reveals the play rail and nested rides controls",
+          "Play command focuses the revealed control",
+          "Composing Escape leaves the play rail and focus intact",
+          "Nested play controls are exposed below the persistent activity navigation",
+          "Escape closes the play rail with a safe focus handoff",
+          "Cmd+Shift+B opens the play rail",
+          "Ctrl+Shift+B closes the play rail",
+          "Help can be dismissed without losing previous focus",
+          "Other modal dialogs retain exclusive keyboard ownership",
+          "Plain modal keys do not toggle clear view",
+          "Settings has real scrollable content for navigation acceptance",
+          "Each tab restores its reading position",
+          "Home selects the first tab",
+          "End selects the last tab",
+          "Linear tab navigation wraps predictably",
+          "Clear view remains available",
+          "Requesting hidden play controls recovers clear view",
+          "Commands can hide the visit controls",
+          "Commands can restore the visit controls",
+          "H hands focus to Commands before hiding a focused card",
+          "Play navigation omits unavailable activities",
+          "Play card order follows its stable activity navigation",
+          "Play activity jump reveals and focuses its destination",
+          "Tab and both rail preferences survive reload",
+          "390\u00d7844: left rail opens",
+          "390\u00d7844: play rail has room without competing left rail",
+          "390\u00d7844: activity jump leaves its focused control exposed",
+          "390\u00d7844: activity navigation remains above the scrolling cards",
+          "390\u00d7844: Commands remains pointer-reachable",
+          "390\u00d7844: disabled World map is unavailable",
+          "390\u00d7844: no page overflow",
+          "844\u00d7390: left rail opens",
+          "844\u00d7390: play rail has room without competing left rail",
+          "844\u00d7390: activity jump leaves its focused control exposed",
+          "844\u00d7390: activity navigation remains above the scrolling cards",
+          "844\u00d7390: Commands remains pointer-reachable",
+          "844\u00d7390: disabled World map is unavailable",
+          "844\u00d7390: no page overflow",
+          "1024\u00d7600: left rail opens",
+          "1024\u00d7600: play rail has room without competing left rail",
+          "1024\u00d7600: activity jump leaves its focused control exposed",
+          "1024\u00d7600: activity navigation remains above the scrolling cards",
+          "1024\u00d7600: Commands remains pointer-reachable",
+          "1024\u00d7600: disabled World map is unavailable",
+          "1024\u00d7600: no page overflow",
+          "Requesting play controls dismisses a competing compact conversation",
+          "A native modal owns T, N and Escape without changing or landing the bird ride",
+          "Help shows keys for the current bird ride",
+          "Closing commands does not land a bird",
+          "Reading and dismissing the left rail does not interrupt the bird ride",
+          "Play rail can be explicitly requested during a bird ride",
+          "Escape dismisses requested play controls before landing",
+          "Escape in the world still lands the bird",
+          "Command dialog wraps focus at the last control",
+          "Command dialog wraps backward to its last control",
+          "No page errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "places",
+      "status": "passed",
+      "seconds": 40.028,
+      "result": {
+        "checks": [
+          "The Places tab says where you are on arrival",
+          "Every named place is listed once (31)",
+          "Go teleports beside the spot (0.0 m from Dior)",
+          "The location label follows the teleport",
+          "Saving here adds a named landmark",
+          "An unnamed landmark is refused",
+          "Landmarks survive a reload",
+          "A landmark returns to the saved spot (0.00 m)",
+          "Removing a landmark empties the list",
+          "A ?place= link lands beside MAD Houston",
+          "An ?at= link restores the exact position",
+          "A link outside the district preserves the server position",
+          "A link into a building is refused and preserves the server position",
+          "No page errors: "
+        ]
+      }
+    },
+    {
+      "name": "ui-polish",
+      "status": "passed",
+      "seconds": 16.52,
+      "result": {
+        "checks": [
+          "Arrow keys select Places and preserve tab focus",
+          "Places panel remains accessible",
+          "Keyboard selects Settings",
+          "Keyboard navigation does not wait on panel animation",
+          "Dark theme switches cleanly",
+          "Theme transition suppression clears",
+          "Conversation opens with a reachable close control",
+          "Conversation topics still produce dialogue",
+          "Wishes remain reachable in conversation",
+          "Conversation exit finishes without an invisible input blocker",
+          "Collapsed controls are inert",
+          "Closing the rail returns pointer play to the canvas",
+          "Rapid interrupted toggles settle in the requested state",
+          "Rail finishes its exit",
+          "Opening 1: focus works in the first animation frame",
+          "Opening 1: immediate keyboard navigation works",
+          "Opening 2: focus works in the first animation frame",
+          "Opening 2: immediate keyboard navigation works",
+          "Opening 3: focus works in the first animation frame",
+          "Opening 3: immediate keyboard navigation works",
+          "Opening 4: focus works in the first animation frame",
+          "Opening 4: immediate keyboard navigation works",
+          "Opening 5: focus works in the first animation frame",
+          "Opening 5: immediate keyboard navigation works",
+          "Pointer camera controls return focus to movement",
+          "Pointer press feedback reaches the shared restrained scale",
+          "Press feedback releases cleanly",
+          "Reduced motion removes UI transitions across the rail, ride controls and dialogue",
+          "Desktop UI has no horizontal overflow",
+          "No uncaught UI errors"
+        ],
+        "keyboardMotion": "0s",
+        "staticUI": [
+          "0s",
+          "0s",
+          "0s"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "hud-and-quality",
+      "status": "passed",
+      "seconds": 19.169,
+      "result": {
+        "checks": [
+          "every streamed file is counted (103/103)",
+          "no visual asset failed to load",
+          "Auto is the default graphics mode",
+          "Smoothest renders at 75% without AO",
+          "the canvas keeps native size",
+          "the readout names the scene resolution",
+          "Sharpest restores native resolution and AO",
+          "the graphics choice persists",
+          "H toggles clear view",
+          "H clears the visit cards",
+          "Commands stays visible as the way back",
+          "The standalone Clear view button is removed",
+          "typing H in a field does not clear the view",
+          "No browser page errors"
+        ],
+        "progress": {
+          "loaded": 103,
+          "total": 103,
+          "failed": 0,
+          "done": true
+        },
+        "auto": {
+          "mode": "auto",
+          "scale": 1,
+          "occlusion": true,
+          "fps": 50
+        },
+        "smooth": {
+          "samples": 4,
+          "ao": false,
+          "renderScale": 0.75,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "sharp": {
+          "samples": 4,
+          "ao": true,
+          "renderScale": 1,
+          "aoScale": 1,
+          "transmissionScale": 1
+        },
+        "cleared": {
+          "cards": "hidden",
+          "console": "hidden",
+          "commands": "visible"
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "player-forms",
+      "status": "passed",
+      "seconds": 80.235,
+      "result": {
+        "checks": [
+          "Authenticated character picker is available",
+          "A person with one style shows no style switch",
+          "The humanoid default offers no beast movement",
+          "jevica-beast: identity and 3D appearance update",
+          "jevica-beast: the picker shows the person and form",
+          "jevica-beast: beast movement is offered only in a beast form",
+          "jevica-beast: only Jevica is offered flight",
+          "jevica-beast: a studio portrait of the 3D form stands in for reference art",
+          "sable-human: identity and 3D appearance update",
+          "sable-human: the picker shows the person and form",
+          "sable-human: beast movement is offered only in a beast form",
+          "sable-human: only Jevica is offered flight",
+          "sable-human: a studio portrait of the 3D form stands in for reference art",
+          "woman-casual: identity and 3D appearance update",
+          "woman-casual: the picker shows the person and form",
+          "woman-casual: beast movement is offered only in a beast form",
+          "woman-casual: only Jevica is offered flight",
+          "woman-casual: reference portrait is visible",
+          "woman-casual: full reference is linked",
+          "rowan-human: identity and 3D appearance update",
+          "rowan-human: the picker shows the person and form",
+          "rowan-human: beast movement is offered only in a beast form",
+          "rowan-human: only Jevica is offered flight",
+          "rowan-human: a studio portrait of the 3D form stands in for reference art",
+          "man-casual: identity and 3D appearance update",
+          "man-casual: the picker shows the person and form",
+          "man-casual: beast movement is offered only in a beast form",
+          "man-casual: only Jevica is offered flight",
+          "man-casual: reference portrait is visible",
+          "man-casual: full reference is linked",
+          "woman-tailored: identity and 3D appearance update",
+          "woman-tailored: the picker shows the person and form",
+          "woman-tailored: beast movement is offered only in a beast form",
+          "woman-tailored: only Jevica is offered flight",
+          "woman-tailored: reference portrait is visible",
+          "woman-tailored: full reference is linked",
+          "vesper-beast: identity and 3D appearance update",
+          "vesper-beast: the picker shows the person and form",
+          "vesper-beast: beast movement is offered only in a beast form",
+          "vesper-beast: only Jevica is offered flight",
+          "vesper-beast: a studio portrait of the 3D form stands in for reference art",
+          "man-tailored: identity and 3D appearance update",
+          "man-tailored: the picker shows the person and form",
+          "man-tailored: beast movement is offered only in a beast form",
+          "man-tailored: only Jevica is offered flight",
+          "man-tailored: reference portrait is visible",
+          "man-tailored: full reference is linked",
+          "midnight-host-wolf: identity and 3D appearance update",
+          "midnight-host-wolf: the picker shows the person and form",
+          "midnight-host-wolf: beast movement is offered only in a beast form",
+          "midnight-host-wolf: only Jevica is offered flight",
+          "midnight-host-wolf: reference portrait is visible",
+          "midnight-host-wolf: full reference is linked",
+          "lyra-human: identity and 3D appearance update",
+          "lyra-human: the picker shows the person and form",
+          "lyra-human: beast movement is offered only in a beast form",
+          "lyra-human: only Jevica is offered flight",
+          "lyra-human: reference portrait is visible",
+          "lyra-human: full reference is linked",
+          "woman-daywear: identity and 3D appearance update",
+          "woman-daywear: the picker shows the person and form",
+          "woman-daywear: beast movement is offered only in a beast form",
+          "woman-daywear: only Jevica is offered flight",
+          "woman-daywear: reference portrait is visible",
+          "woman-daywear: full reference is linked",
+          "man-workwear: identity and 3D appearance update",
+          "man-workwear: the picker shows the person and form",
+          "man-workwear: beast movement is offered only in a beast form",
+          "man-workwear: only Jevica is offered flight",
+          "man-workwear: reference portrait is visible",
+          "man-workwear: full reference is linked",
+          "kai-formal-beast: identity and 3D appearance update",
+          "kai-formal-beast: the picker shows the person and form",
+          "kai-formal-beast: beast movement is offered only in a beast form",
+          "kai-formal-beast: only Jevica is offered flight",
+          "kai-formal-beast: a studio portrait of the 3D form stands in for reference art",
+          "kai-explorer: identity and 3D appearance update",
+          "kai-explorer: the picker shows the person and form",
+          "kai-explorer: beast movement is offered only in a beast form",
+          "kai-explorer: only Jevica is offered flight",
+          "kai-explorer: reference portrait is visible",
+          "kai-explorer: full reference is linked",
+          "kai-explorer-beast: identity and 3D appearance update",
+          "kai-explorer-beast: the picker shows the person and form",
+          "kai-explorer-beast: beast movement is offered only in a beast form",
+          "kai-explorer-beast: only Jevica is offered flight",
+          "kai-explorer-beast: a studio portrait of the 3D form stands in for reference art",
+          "kai-noir: identity and 3D appearance update",
+          "kai-noir: the picker shows the person and form",
+          "kai-noir: beast movement is offered only in a beast form",
+          "kai-noir: only Jevica is offered flight",
+          "kai-noir: reference portrait is visible",
+          "kai-noir: full reference is linked",
+          "kai-noir-beast: identity and 3D appearance update",
+          "kai-noir-beast: the picker shows the person and form",
+          "kai-noir-beast: beast movement is offered only in a beast form",
+          "kai-noir-beast: only Jevica is offered flight",
+          "kai-noir-beast: a studio portrait of the 3D form stands in for reference art",
+          "forest-aristocrat: identity and 3D appearance update",
+          "forest-aristocrat: the picker shows the person and form",
+          "forest-aristocrat: beast movement is offered only in a beast form",
+          "forest-aristocrat: only Jevica is offered flight",
+          "forest-aristocrat: reference portrait is visible",
+          "forest-aristocrat: full reference is linked",
+          "forest-aristocrat-beast: identity and 3D appearance update",
+          "forest-aristocrat-beast: the picker shows the person and form",
+          "forest-aristocrat-beast: beast movement is offered only in a beast form",
+          "forest-aristocrat-beast: only Jevica is offered flight",
+          "forest-aristocrat-beast: a studio portrait of the 3D form stands in for reference art",
+          "forest-aristocrat-feminine: identity and 3D appearance update",
+          "forest-aristocrat-feminine: the picker shows the person and form",
+          "forest-aristocrat-feminine: beast movement is offered only in a beast form",
+          "forest-aristocrat-feminine: only Jevica is offered flight",
+          "forest-aristocrat-feminine: reference portrait is visible",
+          "forest-aristocrat-feminine: full reference is linked",
+          "forest-aristocrat-feminine-beast: identity and 3D appearance update",
+          "forest-aristocrat-feminine-beast: the picker shows the person and form",
+          "forest-aristocrat-feminine-beast: beast movement is offered only in a beast form",
+          "forest-aristocrat-feminine-beast: only Jevica is offered flight",
+          "forest-aristocrat-feminine-beast: a studio portrait of the 3D form stands in for reference art",
+          "Person, style and form persist on the account",
+          "Legacy device appearance cannot replace the account profile",
+          "jevica: real model portrait loads",
+          "jevica: description updates",
+          "jevica: third-person camera",
+          "jevica: matching flight vehicle",
+          "jevica: completes ascent to cruising altitude",
+          "jevica: ascent changes real altitude",
+          "jevica: HUD reflects flight",
+          "jevica: landed at ground level",
+          "First-person toggle",
+          "V restores third person",
+          "Mobile character controls start collapsed",
+          "The chosen play-rail state survives a mobile reload",
+          "No mobile horizontal overflow",
+          "Keyboard expands character controls",
+          "44px flight target",
+          "Mobile portrait matches the current form",
+          "No uncaught browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "beast-movement",
+      "status": "passed",
+      "seconds": 24.983,
+      "result": {
+        "checks": [
+          "A humanoid form offers no beast movement",
+          "P in a humanoid form explains that beast movement needs a beast form",
+          "A humanoid form stays upright",
+          "A beast form offers beast movement, off until chosen",
+          "The form switch names the species",
+          "Without beast movement a beast form walks upright",
+          "Beast movement turns on",
+          "The status line says how the beast moves",
+          "The beast sprint actually travels faster than upright running",
+          "Beast movement eases fully in while moving",
+          "Standing still keeps the beast crouch",
+          "A humanoid form hides beast movement and walks upright",
+          "The beast movement choice returns with a beast form",
+          "Beast movement persists on the account",
+          "P turns beast movement off",
+          "The posture eases back to upright",
+          "No uncaught browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage",
+      "status": "passed",
+      "seconds": 19.51,
+      "result": {
+        "checks": [
+          "riding: both soles contact the actual transformed cabin floor",
+          "riding-slope: both soles contact the actual transformed cabin floor",
+          "The pink Rolls-Royce parks at its true size",
+          "Calling places a visible carriage near Jevica",
+          "All four parked tyres meet rendered paving",
+          "Flight cannot start while seated",
+          "A ridden carriage cannot be summoned elsewhere",
+          "Riding moves the real carriage and rider through the district",
+          "All four moving tyres follow the rendered road",
+          "Every rendered wheel spinner keeps turning after braking",
+          "Free-spinning centers leave tyre contact unchanged",
+          "Dismount preserves a clear third-person camera",
+          "Dismounted Jevica stands on the rendered pavement",
+          "Walking resumes after leaving the carriage",
+          "Boarding is unavailable in flight",
+          "No uncaught browser errors: "
+        ],
+        "contacts": [
+          {
+            "view": "riding",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.1725006163090275,
+                "minX": 0.19602348815286777,
+                "maxX": 0.5049414022658316
+              },
+              {
+                "side": "r",
+                "minY": 1.1725003498320707,
+                "minX": 0.19602373165565184,
+                "maxX": 0.504941750120151
+              }
+            ]
+          },
+          {
+            "view": "riding-slope",
+            "feet": [
+              {
+                "side": "l",
+                "minY": 1.172500606596924,
+                "minX": 0.19602349731649021,
+                "maxX": 0.504941413923545
+              },
+              {
+                "side": "r",
+                "minY": 1.1725003585107174,
+                "minX": 0.19602372411623642,
+                "maxX": 0.5049417380946915
+              }
+            ]
+          }
+        ],
+        "before": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "paused": false,
+            "label": "Jev is ready",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2768.0912699453415,
+            18.21329234894149,
+            1295.0399017054829
+          ],
+          "princeVisible": true,
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.3956419313604,
+              18.462294390991243,
+              1295.0133343366692
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.015001887053174272,
+            "roll": -0.0020945138733826337,
+            "distance": 0,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.0029902968317507828,
+            "speed": 0,
+            "steering": 0,
+            "wheelOffsets": [
+              -0.0015592997989273272,
+              0.000873349023500225,
+              0.000590662636000161,
+              -0.0007119591905535572
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            },
+            {
+              "rotation": 0
+            }
+          ],
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            0,
+            -3.552713678800501e-15,
+            -7.105427357601002e-15,
+            -7.105427357601002e-15
+          ],
+          "pose": {
+            "position": [
+              -2765.321977373157,
+              20.140092870626113,
+              1295.064162750871
+            ],
+            "riding": null,
+            "sitting": null,
+            "ground": 18.460092870626113,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 1.5542610866110522,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.321977373157,
+            18.460092870626113,
+            1295.064162750871
+          ],
+          "riderYaw": 1.9566079266455354
+        },
+        "driven": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "paused": false,
+            "label": "Manual directions",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2768.2279364760834,
+            18.22490974527496,
+            1303.3381216374755
+          ],
+          "princeVisible": true,
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.5328733280267,
+              18.47325717998263,
+              1303.3119068343176
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.017247662799611155,
+            "roll": -0.0006674139970349543,
+            "distance": 8.299707100550927,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.0029902968317507828,
+            "speed": 0.027260236548876302,
+            "steering": 0,
+            "wheelOffsets": [
+              0.006665177890727847,
+              0.0031151072531088175,
+              0.003180946506468274,
+              0.003995600488259754
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": -5.900037405416892
+            },
+            {
+              "rotation": -5.900037405416892
+            },
+            {
+              "rotation": -5.900037405416892
+            },
+            {
+              "rotation": -5.900037405416892
+            }
+          ],
+          "visible": true,
+          "riding": true,
+          "tyreClearances": [
+            0,
+            3.552713678800501e-15,
+            0,
+            0
+          ],
+          "pose": {
+            "position": [
+              -2768.830392770599,
+              19.75736350256288,
+              1302.4034163425674
+            ],
+            "riding": {
+              "kind": "rolls",
+              "seat": [
+                -2768.830392770599,
+                19.13736350256288,
+                1302.4034163425674
+              ],
+              "cameraTarget": [
+                -2768.570961083696,
+                19.723738294740382,
+                1304.3105791051364
+              ],
+              "seatToFloor": 0.39,
+              "yaw": -0.016535240183789046,
+              "quaternion": [
+                -0.0004049800406834428,
+                -0.008270095715877723,
+                0.008620670468994337,
+                0.9999285602225201
+              ],
+              "speed": 0.027260236548876302,
+              "distance": 8.299707100550927
+            },
+            "sitting": null,
+            "ground": 18.467392539944658,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 3.505057413406004,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2768.816122653784,
+            18.309437369600957,
+            1302.4042050512153
+          ],
+          "riderYaw": -0.016546747261794774
+        },
+        "after": {
+          "vehicle": "rolls",
+          "chauffeur": {
+            "active": false,
+            "paused": false,
+            "label": "Jev is ready",
+            "source": null,
+            "remaining": 0
+          },
+          "companion": {
+            "enabled": false,
+            "mode": "seat",
+            "stance": "seat",
+            "source": null,
+            "label": "Ready to drive",
+            "reason": null,
+            "decisions": 0,
+            "carrying": false,
+            "position": null
+          },
+          "princePosition": [
+            -2768.2280247093295,
+            18.22490033485742,
+            1303.3434573409988
+          ],
+          "princeVisible": true,
+          "wingsVisible": false,
+          "placement": {
+            "position": [
+              -2768.532961585425,
+              18.47324788172266,
+              1303.3172438813508
+            ],
+            "yaw": 1.5542610866111075,
+            "pitch": -0.017247662799605757,
+            "roll": -0.0006621149036399976,
+            "distance": 8.30504487727985,
+            "scale": 1,
+            "team": false,
+            "vehicle": "rolls",
+            "terrainError": 0.0029902968317507828,
+            "speed": 0,
+            "steering": 0,
+            "wheelOffsets": [
+              0.006627054468310689,
+              0.003077175863786863,
+              0.003127258386268039,
+              0.0039419123680808354
+            ]
+          },
+          "unicorns": [],
+          "spinners": [
+            {
+              "rotation": -1.9092153270097612
+            },
+            {
+              "rotation": -1.9092153270097612
+            },
+            {
+              "rotation": -1.9092153270097612
+            },
+            {
+              "rotation": -1.9092153270097612
+            }
+          ],
+          "visible": true,
+          "riding": false,
+          "tyreClearances": [
+            1.0658141036401503e-14,
+            3.552713678800501e-15,
+            -1.0658141036401503e-14,
+            3.552713678800501e-15
+          ],
+          "pose": {
+            "position": [
+              -2765.564787222061,
+              20.157405112173006,
+              1305.2665876039073
+            ],
+            "riding": null,
+            "sitting": null,
+            "ground": 18.477405112173006,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.851905895796223,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": null,
+            "showBody": true
+          },
+          "rider": [
+            -2765.564787222061,
+            18.477405112173006,
+            1305.2665876039073
+          ],
+          "riderYaw": -0.016546655927606523
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "unicorn-carriage",
+      "status": "passed",
+      "seconds": 2.883,
+      "result": {
+        "checks": [
+          "The studio renders both detailed unicorns",
+          "Both unicorns stand on the studio ground",
+          "Both unicorns blend into their contact-driven gait",
+          "The team follows the moving coach",
+          "Moving unicorns retain ground contact",
+          "The animated studio scene renders geometry",
+          "Gait blends back to idle after stopping",
+          "No uncaught runtime or shader errors"
+        ],
+        "before": [
+          {
+            "name": "Pearl",
+            "position": [
+              -4.446000000000001,
+              0,
+              -0.5928
+            ],
+            "walkWeight": 0,
+            "hooves": [
+              {
+                "swing": false,
+                "clearance": -0.00015022792462593415,
+                "foot": [
+                  -4.961543300970165,
+                  0.0284607458435574,
+                  -0.8764799912875806
+                ],
+                "anchor": [
+                  -4.961542567655055,
+                  0.018852018591105968,
+                  -0.8764748377243008
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.0004398558497010763,
+                "foot": [
+                  -4.961543254081572,
+                  0.025090173806624594,
+                  -0.3522631638619755
+                ],
+                "anchor": [
+                  -4.961542496449425,
+                  0.018851664137432222,
+                  -0.3522679485440079
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": 0.0002739972068460661,
+                "foot": [
+                  -3.806184032479641,
+                  0.048566649335993195,
+                  -0.3922026802994374
+                ],
+                "anchor": [
+                  -3.806184017787533,
+                  0.04735122669443348,
+                  -0.3922027002649727
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": 0.0002679247135876084,
+                "foot": [
+                  -3.8061839692816526,
+                  0.048713281568013134,
+                  -0.8365402255867934
+                ],
+                "anchor": [
+                  -3.8061839689694414,
+                  0.04752281415423265,
+                  -0.8365402358615748
+                ]
+              }
+            ],
+            "horn": true,
+            "triangles": 40672
+          },
+          {
+            "name": "Blossom",
+            "position": [
+              -4.446000000000001,
+              0,
+              0.5928
+            ],
+            "walkWeight": 0,
+            "hooves": [
+              {
+                "swing": false,
+                "clearance": -0.0001516807392090147,
+                "foot": [
+                  -4.961543292344443,
+                  0.028383596810416134,
+                  0.30912002803468885
+                ],
+                "anchor": [
+                  -4.961542567655055,
+                  0.018852018591105968,
+                  0.30912516227569925
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.000439270513112322,
+                "foot": [
+                  -4.961543244847949,
+                  0.02500191714871902,
+                  0.833336813619235
+                ],
+                "anchor": [
+                  -4.961542496449425,
+                  0.018851664137432222,
+                  0.8333320514559921
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": 0.00028586817358944305,
+                "foot": [
+                  -3.806184032442068,
+                  0.04861756673330142,
+                  0.7933973196759622
+                ],
+                "anchor": [
+                  -3.806184017787533,
+                  0.04735122669443348,
+                  0.7933972997350273
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": 0.00028653279162882406,
+                "foot": [
+                  -3.8061839692984316,
+                  0.04876887103403815,
+                  0.34905977440254193
+                ],
+                "anchor": [
+                  -3.8061839689694414,
+                  0.04752281415423265,
+                  0.34905976413842527
+                ]
+              }
+            ],
+            "horn": true,
+            "triangles": 40672
+          }
+        ],
+        "moving": {
+          "horses": [
+            {
+              "name": "Pearl",
+              "position": [
+                -10.445999999999987,
+                0,
+                -0.5928
+              ],
+              "walkWeight": 0.9999991684712809,
+              "hooves": [
+                {
+                  "swing": false,
+                  "clearance": 0.0023526062561904926,
+                  "foot": [
+                    -11.244344254163037,
+                    0.02872767347192484,
+                    -0.8764755928684705
+                  ],
+                  "anchor": [
+                    -11.24434256765504,
+                    0.018852018591105968,
+                    -0.8764748377243008
+                  ]
+                },
+                {
+                  "swing": true,
+                  "clearance": -0.00019236004945633045,
+                  "foot": [
+                    -10.555063395471196,
+                    0.07402658597194556,
+                    -0.3522618806218789
+                  ],
+                  "anchor": [
+                    -10.544342496449415,
+                    0.018851664137432222,
+                    -0.3522679485440079
+                  ]
+                },
+                {
+                  "swing": false,
+                  "clearance": -0.000180170993604456,
+                  "foot": [
+                    -10.088984047046244,
+                    0.08401960336286718,
+                    -0.3922026804258322
+                  ],
+                  "anchor": [
+                    -10.088984017787519,
+                    0.04735122669443348,
+                    -0.3922027002649727
+                  ]
+                },
+                {
+                  "swing": true,
+                  "clearance": 0.006513118021325814,
+                  "foot": [
+                    -9.399700909762633,
+                    0.08744441254506707,
+                    -0.8365402257178857
+                  ],
+                  "anchor": [
+                    -9.388983968969432,
+                    0.04752281415423265,
+                    -0.8365402358615748
+                  ]
+                }
+              ],
+              "horn": true,
+              "triangles": 40672
+            },
+            {
+              "name": "Blossom",
+              "position": [
+                -10.445999999999987,
+                0,
+                0.5928
+              ],
+              "walkWeight": 0.9999991684712809,
+              "hooves": [
+                {
+                  "swing": false,
+                  "clearance": 0.002861901299804903,
+                  "foot": [
+                    -11.244344366088647,
+                    0.02989273179546359,
+                    0.3091245533438228
+                  ],
+                  "anchor": [
+                    -11.24434256765504,
+                    0.018852018591105968,
+                    0.30912516227569925
+                  ]
+                },
+                {
+                  "swing": false,
+                  "clearance": -0.00019141518558007942,
+                  "foot": [
+                    -10.9943451653722,
+                    0.03739772794519669,
+                    0.8333376356768734
+                  ],
+                  "anchor": [
+                    -10.994342496449413,
+                    0.018851664137432222,
+                    0.8333320514559921
+                  ]
+                },
+                {
+                  "swing": false,
+                  "clearance": -0.00019468547604162278,
+                  "foot": [
+                    -10.08898404576821,
+                    0.08237768840756016,
+                    0.7933973198316047
+                  ],
+                  "anchor": [
+                    -10.088984017787519,
+                    0.04735122669443348,
+                    0.7933972997350273
+                  ]
+                },
+                {
+                  "swing": false,
+                  "clearance": -0.00019568233691613646,
+                  "foot": [
+                    -9.838983961909776,
+                    0.05803935455763165,
+                    0.349059778765588
+                  ],
+                  "anchor": [
+                    -9.83898396896943,
+                    0.04752281415423265,
+                    0.34905976413842527
+                  ]
+                }
+              ],
+              "horn": true,
+              "triangles": 40672
+            }
+          ],
+          "render": {
+            "calls": 147,
+            "triangles": 972346,
+            "bounds": [
+              7.020988969802857,
+              2.8548000613689424,
+              2.060350284576416
+            ]
+          }
+        },
+        "stopped": [
+          {
+            "name": "Pearl",
+            "position": [
+              -10.445999999999987,
+              0,
+              -0.5928
+            ],
+            "walkWeight": 7.582554122795105e-10,
+            "hooves": [
+              {
+                "swing": false,
+                "clearance": 0.0013588256211150007,
+                "foot": [
+                  -11.2443440973527,
+                  0.02570689311601182,
+                  -0.8764758325791187
+                ],
+                "anchor": [
+                  -11.24434256765504,
+                  0.018852018591105968,
+                  -0.8764748377243008
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": 0.003069875368625574,
+                "foot": [
+                  -11.294344003700617,
+                  0.031219755183692466,
+                  -0.3522682691827115
+                ],
+                "anchor": [
+                  -11.294342496449412,
+                  0.018851664137432222,
+                  -0.3522679485440079
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.0001708552338778313,
+                "foot": [
+                  -10.088984050809254,
+                  0.0889264438326739,
+                  -0.39220268149994264
+                ],
+                "anchor": [
+                  -10.088984017787519,
+                  0.04735122669443348,
+                  -0.3922027002649727
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.00025255909434507284,
+                "foot": [
+                  -10.138983947998433,
+                  0.09359084330516204,
+                  -0.8365402188232317
+                ],
+                "anchor": [
+                  -10.138983968969429,
+                  0.04752281415423265,
+                  -0.8365402358615748
+                ]
+              }
+            ],
+            "horn": true,
+            "triangles": 40672
+          },
+          {
+            "name": "Blossom",
+            "position": [
+              -10.445999999999987,
+              0,
+              0.5928
+            ],
+            "walkWeight": 7.582554122795105e-10,
+            "hooves": [
+              {
+                "swing": false,
+                "clearance": 0.002861901299804903,
+                "foot": [
+                  -11.244344366088647,
+                  0.02989273179546359,
+                  0.3091245533438228
+                ],
+                "anchor": [
+                  -11.24434256765504,
+                  0.018852018591105968,
+                  0.30912516227569925
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.00019141518558007942,
+                "foot": [
+                  -10.9943451653722,
+                  0.03739772794519669,
+                  0.8333376356768734
+                ],
+                "anchor": [
+                  -10.994342496449413,
+                  0.018851664137432222,
+                  0.8333320514559921
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.00019468547604162278,
+                "foot": [
+                  -10.08898404576821,
+                  0.08237768840756016,
+                  0.7933973198316047
+                ],
+                "anchor": [
+                  -10.088984017787519,
+                  0.04735122669443348,
+                  0.7933972997350273
+                ]
+              },
+              {
+                "swing": false,
+                "clearance": -0.00019568233691613646,
+                "foot": [
+                  -9.838983961909776,
+                  0.05803935455763165,
+                  0.349059778765588
+                ],
+                "anchor": [
+                  -9.83898396896943,
+                  0.04752281415423265,
+                  0.34905976413842527
+                ]
+              }
+            ],
+            "horn": true,
+            "triangles": 40672
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-driver",
+      "status": "passed",
+      "seconds": 28.271,
+      "result": {
+        "checks": [
+          "The shared-town coachman is rendered",
+          "provider_401: local companion fallback explains the unavailable guidance",
+          "provider_429: local companion fallback explains the unavailable guidance",
+          "provider_503: local companion fallback explains the unavailable guidance",
+          "transport_error: local companion fallback explains the unavailable guidance",
+          "Healthy local companion changes do not claim a service outage",
+          "Prince Jev walks with Jevica in companion mode",
+          "Companion activity is visible and its actual decision source remains inspectable",
+          "The same coachman identity travels with the moving carriage",
+          "No uncaught browser errors"
+        ],
+        "person": {
+          "id": "carriage-driver",
+          "visible": true,
+          "position": [
+            -2768.0912699453415,
+            -1295.0399017054829
+          ],
+          "reachable": true
+        },
+        "companion": {
+          "state": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "beside",
+            "source": "local",
+            "label": "Walk beside Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true
+          },
+          "prince": [
+            -2766.1478070045405,
+            -1291.1633383976787
+          ],
+          "rider": [
+            -2765.321977373157,
+            18.45383308222376,
+            1290.9098173831035
+          ]
+        },
+        "start": {
+          "id": "carriage-driver",
+          "visible": true,
+          "position": [
+            -2768.0912699453415,
+            -1295.0399017054829
+          ],
+          "reachable": true
+        },
+        "end": {
+          "id": "carriage-driver",
+          "visible": true,
+          "position": [
+            -2768.162316968006,
+            -1299.3942726542919
+          ],
+          "reachable": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-companion",
+      "status": "passed",
+      "seconds": 27.808,
+      "result": {
+        "checks": [
+          "Companionship is opt-in",
+          "The coach cannot depart or relocate while Jev is away",
+          "The companion state has an accessible announcement",
+          "Jev remains visible while accompanying Jevica",
+          "The blonde adult prince carries the bag while accompanying Jevica",
+          "Entering a shop never teleports Jev",
+          "Jev follows into the boutique and stays within reach at his rendered position",
+          "Dismissal returns him to the coach and puts the bag away",
+          "The invitation control resets after his return",
+          "No browser or shader errors"
+        ],
+        "outside": {
+          "companion": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "pause",
+            "source": "local",
+            "label": "Wait attentively near Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true,
+            "position": [
+              -2767.082768372503,
+              1295.0576369438866
+            ]
+          },
+          "person": {
+            "id": "carriage-driver",
+            "visible": true,
+            "position": [
+              -2767.082768372503,
+              -1295.0576369438866
+            ],
+            "reachable": true
+          }
+        },
+        "inside": {
+          "pose": {
+            "position": [
+              -2784.6718329341493,
+              20.171121621938177,
+              1285.4652578729838
+            ],
+            "riding": null,
+            "sitting": null,
+            "ground": 18.491121621938177,
+            "altitude": 0,
+            "flying": false,
+            "landing": false,
+            "yaw": 0.4344918962783212,
+            "speed": 0,
+            "velocity": [
+              0,
+              0
+            ],
+            "distance": 0,
+            "roomId": "osm-node-8172494958",
+            "showBody": true
+          },
+          "companion": {
+            "enabled": true,
+            "mode": "walking",
+            "stance": "trail",
+            "source": "local",
+            "label": "Walk a step behind Jevica",
+            "reason": "offline",
+            "decisions": 0,
+            "carrying": true,
+            "position": [
+              -2784.101777879179,
+              1288.790607558691
+            ]
+          },
+          "person": {
+            "id": "carriage-driver",
+            "visible": true,
+            "position": [
+              -2784.101777879179,
+              -1288.790607558691
+            ],
+            "reachable": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "carriage-mobile",
+      "status": "passed",
+      "seconds": 9.914,
+      "result": {
+        "checks": [
+          "Boarding has a 44px phone touch target",
+          "Holding the touch movement pad drives the mounted carriage",
+          "Releasing the touch pad brakes the carriage",
+          "Phone dismount retains a visible third-person body",
+          "Carriage controls do not overflow the phone viewport",
+          "No uncaught phone browser errors"
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "status": "passed",
+  "verification": "Latest results from the full default suite and focused reruns after migrating retained interactions to real town state."
+}

@@ -97,7 +97,7 @@ integration('email verification after GitHub OAuth survives another server insta
   assert.equal((await post('123456')).status, 400);
 });
 
-integration('a verified Jevica account has solo wish permission on every Redis auth edge', async t => {
+integration('a verified Jevica account has the publishing capability on every Redis auth edge', async t => {
   const f=await fixture(t);
   f.workos.setUserId(JEVICA_ADMIN_USER_IDS[0]);
   const {sessionCookie}=await f.login();

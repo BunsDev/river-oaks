@@ -8,7 +8,7 @@ export function createClearView({ onChange = () => {} } = {}) {
     active = Boolean(next);
     // H can be pressed from a focused card button, not just from the world.
     // Return focus to the visible way back before hiding that card.
-    if(active&&document.activeElement?.closest('.visit-tools, .auto-controls, .walking-console'))document.querySelector('.commands-toggle')?.focus({preventScroll:true});
+    if(active&&document.activeElement?.closest('.visit-tools, .walking-console'))document.querySelector('.commands-toggle')?.focus({preventScroll:true});
     document.body.classList.toggle('clear-view', active);
     onChange(active);
   };

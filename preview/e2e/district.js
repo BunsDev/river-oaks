@@ -7,10 +7,11 @@ async (page) => {
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   check(await page.locator('#walking-hud').isVisible(), 'District should start on foot');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined' && document.querySelector('#community-local').options.length>0);
   const toggle = page.locator('#panel-toggle');
   // The rail sidebar shows one section at a time; select the tab a control lives in first.
   const rail = section => page.locator(`[data-section=${section}]`).click();
-  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices' }).evaluate(details => { details.open = true; }); };
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   check(await page.locator('#destination option').count() === 30, 'Expected current mapped directory destinations');
   await rail('settings-section');
@@ -32,55 +33,26 @@ async (page) => {
   await page.locator('#visit-destination').click();
   check(await page.locator('#walking-hud').isVisible(), 'Store arrival must preserve walking');
   await rail('community-section');
-  await page.locator('#community-meet').click();
+  await page.locator('#community-local').selectOption('store-osm-node-8172494969-person-2');
+  await page.waitForTimeout(1100);await page.locator('#community-meet').click();
+  await page.locator('#community-dialogue').waitFor({state:'visible'});
   await page.locator('#community-about').click();
   await page.waitForFunction(() => !document.querySelector('#community-attribution').textContent.includes('checking'));
   check((await page.locator('#community-speech').textContent()).length > 40, 'Conversation must respond');
   check((await page.locator('#community-attribution').textContent()).includes('Authored dialogue'), 'Authored conversation must be attributed honestly');
   await page.locator('#community-close').click();
-  await page.keyboard.press('KeyE');
+  await page.waitForTimeout(1100);await page.keyboard.press('KeyE');
+  await page.locator('#community-dialogue').waitFor({state:'visible'});
   check(await page.locator('#community-dialogue').isVisible(), 'E must reopen a nearby local encounter');
   await page.locator('#community-close').click();
 
-  // Arrival, close and E in one browser task: no HUD timer may refresh in between.
-  const immediate=await page.evaluate(()=>{
-    document.querySelector('#community-local').value='local-10';
-    document.querySelector('#community-meet').click();
-    const expected=document.querySelector('#community-name').textContent;
-    document.querySelector('#community-close').click();
-    document.querySelector('#canvas-host').dispatchEvent(new KeyboardEvent('keydown',{code:'KeyE',bubbles:true}));
-    return {expected,actual:document.querySelector('#community-name').textContent,opened:!document.querySelector('#community-dialogue').hidden};
-  });
-  check(immediate.opened && immediate.actual===immediate.expected,'Immediate E must use the new arrival position, not the previous HUD neighbor');
-  await page.locator('#community-close').click();
-
+  // Shared arrival is asynchronous: the dialogue confirms authoritative travel.
   await rail('community-section');
-  await page.locator('#community-reset').click();
-  const targets = await page.locator('#community-local option').evaluateAll(options => options.filter(option => option.textContent.includes('request open')).map(option => option.value));
-  check(targets.length === 8, 'Community scenario needs eight priority neighbors');
-  await page.locator('#community-run').click();
-  for (const id of targets.slice(0, 6)) {
-    await page.locator('#community-local').selectOption(id);
-    await page.locator('#community-meet').click();
-    await page.locator('#community-activities').evaluate(details => { details.open = true; });
-    await page.locator('#community-ask').click();
-    await page.locator(targets.indexOf(id) < 4 ? '#community-dispatch' : '#community-supply').click();
-  }
-  await page.waitForTimeout(2300);
-  for (const id of targets.slice(4, 6)) {
-    await page.locator('#community-local').selectOption(id);
-    await page.locator('#community-meet').click();
-    await page.locator('#community-activities').evaluate(details => { details.open = true; });
-    await page.locator('#community-supply').click();
-  }
-  await page.waitForFunction(() => document.querySelector('#community-outcome').dataset.state === 'success', null, { timeout: 90000 });
-  const result = await page.locator('#community-outcome').textContent();
-  const resources = await page.locator('#community-resources').textContent();
-  check(result.includes('6 neighbors supported'), 'Interventions must actually complete the objective');
+  check(await page.locator('#community-reset').count()===0,'Solo reset control is absent');
+  await page.waitForFunction(()=>!document.querySelector('#community-run').disabled);
   await toggle.click();
   await page.waitForTimeout(400);
   await page.screenshot({ path: 'output/playwright/district-community-4k.png' });
-  await page.locator('#community-close').click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
   check(!await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), 'Mobile must not overflow horizontally');
@@ -94,7 +66,7 @@ async (page) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   check(await page.locator('#walking-hud').isVisible(), 'Reloading the district resumes walking');
   await page.waitForTimeout(1200);
-  check(page.workers().filter(worker=>worker.url().includes('navigation-worker')).length===1,'Reloading the district must use exactly one route worker');
+  check(page.workers().filter(worker=>worker.url().includes('/navigation-worker')).length===0,'Reloading the shared district must not start a solo route worker');
   check(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
-  return { uhd, movedMeters: Math.hypot(moved[0]-start[0], moved[2]-start[2]), destinations:30, nearbyConversation:true, immediateArrivalConversation:immediate, mission:result, resources, mobileNoOverflow:true, sceneSwitch:true, routeWorkerLifecycle:true, browserErrors:errors };
+  return { uhd, movedMeters: Math.hypot(moved[0]-start[0], moved[2]-start[2]), destinations:30, nearbyConversation:true,  mobileNoOverflow:true, sceneSwitch:true, routeWorkerLifecycle:true, browserErrors:errors };
 }

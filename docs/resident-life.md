@@ -1,5 +1,10 @@
 # District resident life
 
+> Historical implementation record. Browser and desktop now use only the shared
+> town. Descriptions of solo controls, local simulations, and retired mode flags
+> below document earlier behavior, not current setup instructions. Independent
+> Python and Unreal tools remain supported. See [current setup](multiplayer.md).
+
 The district's 24 outdoor residents walk between public storefront stops, pause when a visitor approaches, and remain still during a conversation. **Pause resident walks** freezes ambient strolls without disabling conversations or altering community resources. Reduced-motion preference starts those strolls paused; the user can explicitly resume them. Active volunteer visits follow the community scenario controls instead, so reduced motion does not disable the support objective.
 
 The 169 non-mannequin boutique workers and guests also have encounter identities, occupation-specific roles, dialogue and memory. Keyboard conversations stay within the visitor's room; the encounter directory can enter a worker's store. Indoor people remain at their work or guest stations and are not recruited into outdoor volunteer visits.

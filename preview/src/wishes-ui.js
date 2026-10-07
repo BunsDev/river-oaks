@@ -53,9 +53,9 @@ export function createWishPanel({ onGrant, onUndo, onSelect }) {
       card.hidden = !local;
       card.setAttribute('aria-busy', String(busy));
       label.hidden = choice.hidden = grant.hidden = !canGrant;
-      choice.disabled = grant.disabled = busy || !canGrant || Boolean(wish) || Boolean(local?.abducted) || Boolean(local?.force) || Boolean(local?.vehicleRole);
+      choice.disabled = grant.disabled = busy || !canGrant || Boolean(wish) || Boolean(local?.vehicleRole);
       undo.hidden = !wish; undo.disabled = busy || !canGrant;
-      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : !canGrant ? 'Only Jevica’s signed-in admin account can grant wishes.' : local?.vehicleRole?crewWishMessage(local):local?.force?'Lower this person before granting a wish.':'One wish at a time. You can undo it whenever you like.'));
+      write(status, busy ? 'Waiting for the wish to be confirmed…' : actionMessage || (wish ? `${definition.title} · ${wish.phase === 'gift' ? 'Granted' : wish.phase === 'trouble' ? 'The catch' : 'Please undo it'}\n“${wish.message}”` : !canGrant ? 'Only Jevica’s signed-in admin account can grant wishes.' : local?.vehicleRole?crewWishMessage(local):'One wish at a time. You can undo it whenever you like.'));
       card.dataset.phase = wish?.phase ?? 'ready'; card.dataset.kind = wish?.kind ?? '';
       const active = state.locals.filter(person => person.wish);
       journal.dataset.trouble = String(state.wishes.trouble);
@@ -70,13 +70,13 @@ export function createWishPanel({ onGrant, onUndo, onSelect }) {
             row.disabled = true;
             try { await onSelect(person.id); }
             catch(error) {write(summary, error.message || 'This neighbor could not be reached.');}
-            finally {row.disabled = Boolean(person.abducted);}
+            finally {row.disabled = false;}
           });
           rows.set(person.id, row); list.append(row);
         }
         const definition = wishFor(person.wish.kind);
         write(row, `${person.name} · ${person.wish.phase === 'gift' ? definition.title : definition.issue}${person.wish.phase === 'pleading' ? ' · Asking for help' : ''}`);
-        row.disabled = Boolean(person.abducted);
+        row.disabled = false;
       }
       if (!busy && pendingFocus && pendingFocus.id === local?.id && !pendingFocus.target.disabled && !pendingFocus.target.hidden && !card.closest('[hidden]')) {
         pendingFocus.target.focus({preventScroll:true}); pendingFocus = null;

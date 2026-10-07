@@ -17,7 +17,7 @@ async page=>{
  const load=async reduced=>{
   await page.emulateMedia({reducedMotion:reduced?'reduce':'no-preference'});
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
-  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});
+  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});
  };
  const meet=async id=>{
   if(await page.locator('#community-dialogue').isVisible()){
@@ -39,7 +39,7 @@ async page=>{
  try{
   await load(false);
   const worker=await page.evaluate(()=>window.__riverPeople().find(p=>p.task?.kind==='tray').id);
-  for(const id of ['local-00',worker]){
+  for(const id of [worker]){
    await meet(id);
    await page.locator('#community-dialogue-voice').selectOption('kokoro');
    await page.waitForFunction(()=>window.__riverConversation().speaking);

@@ -46,7 +46,7 @@ Also inspected the world studio's region inspector and the developer debug panel
 | H | Toggle clear view |
 
 All shortcuts have button alternatives. The Commands menu filters unavailable
-actions from the current solo/shared mode and server-confirmed capabilities.
+actions from server-confirmed capabilities.
 Clear view and Show controls live in Commands (?), with H as their shortcut;
 Commands remains visible when the visit cards are hidden.
 

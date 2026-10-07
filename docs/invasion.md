@@ -1,5 +1,8 @@
 # Alien invasion scenario
 
+> Historical implementation record. Solo gameplay and its browser journeys have
+> been retired. See [current testing](testing.md) and [town setup](multiplayer.md).
+
 An optional scenario in the preview: saucers land at the edge of the district and
 their crew walk toward the nearest neighbors to beam them aboard. Jevica fights back with magic. She is the only playable character; the retired
 Witch and Alien player forms are not required for this scenario.

@@ -3,7 +3,7 @@ async page=>{
  await page.goto('http://127.0.0.1:5181/?motion-debug=1');
  // Tree counts follow the vegetation data the page loads, not a fixed number.
  const trees=(await (await page.request.get(new URL('/data/district-vegetation.json',page.url()).href)).json()).branch_supports.length;
- await page.waitForFunction(trees=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleTotal===d.storePeopleReady&&Number(d.plantedBeds)>0&&d.matureTrees===String(trees);},trees,{timeout:90000});
+ await page.waitForFunction(trees=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleTotal===d.storePeopleReady&&Number(d.plantedBeds)>0&&d.matureTrees===String(trees);},trees,{timeout:90000});
  return await page.evaluate(async()=>{
   const source=await (await fetch('/src/render-pipeline.js')).text(),imports=[...source.matchAll(/from\s+["']([^"']+)["']/g)].map(m=>m[1]);
   const T=await import(imports.find(u=>/\/three\.js/.test(u)));

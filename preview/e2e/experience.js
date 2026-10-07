@@ -8,7 +8,7 @@ async page => {
   check(await page.locator('.player-settings').evaluate(el=>!el.open),'Secondary character controls start closed');
   check(await page.locator('#player-flight').isVisible(),'Flight is available without opening settings');
   check(await page.locator('#player-companion').isVisible(),'Jev is available without opening settings');
-  check(await page.locator('.invasion-controls').evaluate(el=>el.tagName==='DETAILS'&&!el.open),'Optional scenario starts collapsed');
+  check(await page.locator('.invasion-controls, .auto-controls, .force-controls').count()===0,'Retired local scenarios are absent');
   await page.locator('.player-settings summary').click();
   check(await page.locator('#player-vehicle').isVisible(),'Rides can be discovered from the character card');
   await page.locator('.player-settings summary').focus();await page.keyboard.press('h');
@@ -17,16 +17,17 @@ async page => {
   await page.locator('#panel-toggle').click();
   await page.locator('[data-section=settings-section]').focus();await page.keyboard.press('Escape');
   check(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false','Escape closes the exploration panel');
-  check(await page.locator('#panel-toggle').evaluate(el=>el===document.activeElement),'Closing the panel restores trigger focus');
+  check(await page.locator('#canvas-host').evaluate(el=>el===document.activeElement),'Closing the panel restores world focus');
   await page.screenshot({path:'output/playwright/aaa-hud-desktop.png'});
+  const dockBeforeResize=await page.locator('.visit-tools').evaluate(node=>node.open);
   await page.setViewportSize({width:390,height:844});
-  // The media-query change that collapses the dock is delivered after the resize, not during it.
-  check(await page.waitForFunction(()=>!document.querySelector('.visit-tools').open,null,{timeout:2000}).then(()=>true,()=>false),'Small windows start with a compact play dock');
+  check(await page.locator('.visit-tools').evaluate(node=>node.open)===dockBeforeResize,'Resizing preserves the chosen play dock state');
+  if(dockBeforeResize)await page.locator('.visit-tools-toggle').click();
   await page.locator('.visit-tools-toggle').click();
   check(await page.locator('#player-flight').isVisible(),'Small-window play dock opens');
   await page.locator('#player-flight').focus();await page.keyboard.press('Escape');
   check(await page.locator('.visit-tools').evaluate(el=>!el.open),'Escape closes the play dock');
-  check(await page.locator('.visit-tools-toggle').evaluate(el=>el===document.activeElement),'Escape restores dock focus');
+  check(await page.locator('#canvas-host').evaluate(el=>el===document.activeElement),'Escape restores world focus');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
   await page.screenshot({path:'output/playwright/aaa-hud-mobile.png'});
   // CSS must honor the runtime's shared-mode hidden flag.
@@ -38,21 +39,25 @@ async page => {
   if(await page.locator('.visit-tools').evaluate(el=>el.open))await page.locator('.visit-tools-toggle').click();
   await page.locator('#walking-controls-toggle').click();
   await page.locator('.visit-tools-toggle').click();
-  check(await page.locator('.visit-tools-content').evaluate(el=>el.clientHeight>=140),'Short landscape windows retain a usable scrolling dock');
-  await page.locator('.invasion-controls > summary').click();
-  await page.locator('#invasion-toggle').scrollIntoViewIfNeeded();
-  check(await page.locator('#invasion-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'The last disclosure action can be reached in landscape');
+  check(await page.locator('.visit-tools-content').evaluate(el=>el.clientHeight>=44&&el.scrollHeight>el.clientHeight),'Short landscape windows retain a full touch target and scrollable dock');
+  if(!await page.locator('.player-settings').evaluate(node=>node.open))await page.locator('.player-settings summary').click();
+  await page.locator('#player-camera').scrollIntoViewIfNeeded();
+  check(await page.locator('#player-camera').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'Ride controls can be reached in landscape');
   check(await page.locator('.visit-tools-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.right-12,r.top+r.height/2));}),'The dock collapse indicator is not covered by Commands');
   check(await page.locator('.commands-toggle').evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),'Commands remains independently reachable in landscape');
   await page.screenshot({path:'output/playwright/aaa-hud-landscape.png'});
   await page.setViewportSize({width:1440,height:1000});
-  await page.route('**/v1/auto',route=>{const packet=route.request().postDataJSON();return route.fulfill({json:{schema_version:1,tick:packet.tick,generation:packet.generation,source:'unavailable',reason:'not_configured',candidate_id:'wait',confidence:0}});});
-  await page.locator('#auto-toggle').click();
-  await page.waitForFunction(()=>document.querySelector('#auto-status').textContent.includes('Connect Jev in Settings'));
-  check(await page.locator('#auto-status').isVisible(),'Unavailable guided visits explain how to connect Jev');
-  await page.locator('#auto-toggle').click();await page.unroute('**/v1/auto');
   // Conversation stays clear of the play dock in a compact desktop window.
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=community-section]').click();
+  await page.locator('#community-more').evaluate(node=>{node.open=true;});
+  await page.locator('#community-local').selectOption('store-osm-node-8172494969-person-2');
+  await page.locator('#community-meet').click();
+  await page.locator('#community-dialogue').waitFor({state:'visible'});
+  await page.locator('#community-close').click();
+  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   await page.setViewportSize({width:960,height:640});
+  await page.waitForTimeout(1100); // Respect the town's travel command cooldown.
   await page.locator('#walking-talk').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
   await page.locator('.visit-tools').waitFor({state:'hidden'});

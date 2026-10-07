@@ -16,7 +16,7 @@ if (process.argv.includes('--dev')) {
   const townPort=socket.address().port;
   await new Promise(resolve=>socket.close(resolve));
   const fixture={RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_DEV_TOWN:'on',
-    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),VITE_MULTIPLAYER:'auto',MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
+    RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
   Object.assign(process.env,fixture);Object.assign(env,fixture);
   const { createServer } = await import('vite');
   vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), server: { port: 0 } });
@@ -230,7 +230,7 @@ try {
   throw error;
 } finally {
   await mkdir(join(root, 'data/reports'), { recursive: true });
-  await writeFile(join(root, `data/reports/desktop-${report.mode}.json`), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_DESKTOP_REPORT ?? `desktop-${report.mode}.json`), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
   await app.close();
   await vite?.close();

@@ -10,15 +10,27 @@ async page => {
   await page.reload();
   await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('.character-picker').isVisible(),'Solo character picker is available');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined');
+  if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
+  check(await page.locator('.character-picker').isVisible(),'Authenticated character picker is available');
   check(await page.locator('.character-option[data-option=variant]').isHidden(),'A person with one style shows no style switch');
   check(await page.locator('#player-beast-movement').isHidden(),'The humanoid default offers no beast movement');
   // Person, then style (where there is more than one), then form: each triple is one look.
   const choose=async (character,variant,form)=>{
+    const settled=async expected=>page.waitForFunction(async expected=>{
+      const {sharedAppearance}=await import('/src/shared-appearances.js');
+      const host=document.querySelector('#canvas-host'),current=sharedAppearance(host.dataset.playerAppearance);
+      return host.dataset.playerReady==='true'&&Object.entries(expected).every(([key,value])=>current[key]===value);
+    },expected);
     await page.locator(`input[name=player-character][value=${character}]`).check();
-    if(await page.locator('.character-option[data-option=variant]').isVisible())await page.locator(`input[name=player-variant][value=${variant}]`).check();
+    await settled({character});
+    if(await page.locator('.character-option[data-option=variant]').isVisible()){
+      await page.locator(`input[name=player-variant][value=${variant}]`).check();
+      await settled({character,variant});
+    }
     await page.locator(`input[name=player-form][value=${form}]`).check();
+    await settled({character,form});
   };
   const looks=[
     ['jevica-beast','jevica','signature','beast','Rose enchantress · beast',null],
@@ -59,11 +71,11 @@ async page => {
     }
   }
   await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
-  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-variant][value=feminine]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Solo person, style and form persist on this device');
+  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-variant][value=feminine]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Person, style and form persist on the account');
   await page.evaluate(()=>localStorage.setItem('river-oaks-character','midnight-host-hybrid'));
   await page.reload();
-  await page.waitForFunction(()=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance==='midnight-host-wolf';});
-  check(await page.locator('input[name=player-character][value=aurel]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'A saved wolf-eared host returns as his wolf form');
+  await page.waitForFunction(()=>{const host=document.querySelector('#canvas-host');return host.dataset.playerReady==='true'&&host.dataset.playerAppearance==='forest-aristocrat-feminine-beast';});
+  check(await page.locator('input[name=player-character][value=silvan]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Legacy device appearance cannot replace the account profile');
   await choose('jevica','signature','human');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true'&&document.querySelector('#canvas-host').dataset.playerAppearance==='jevica');
   for(const form of ['jevica']) {

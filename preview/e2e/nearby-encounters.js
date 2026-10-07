@@ -6,7 +6,7 @@ async page => {
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>{
     const d=document.querySelector('#canvas-host').dataset;
-    return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';
+    return (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';
   },null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();

@@ -2,16 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createResidentGestures } from '../src/resident-gestures.js';
 
-test('Force casting reaches with the free arm and eases back without disturbing the wand arm',()=>{
-  const motion=createResidentGestures();let pose;
-  for(let i=0;i<90;i++)pose=motion.update('force',1/60);
-  assert.ok(pose.upperarm_l[0]<-1);assert.ok(pose.hand_l[0]>.2);
-  assert.deepEqual(pose.upperarm_r,[0,0,0]);assert.deepEqual(pose.lowerarm_r,[0,0,0]);
-  const raised=pose.upperarm_l[0];motion.update('continue',1/60);
-  assert.ok(Math.abs(pose.upperarm_l[0]-raised)<.04);
-  for(let i=0;i<120;i++)pose=motion.update('continue',1/60);
-  assert.ok(Object.values(pose).flat().every(value=>Math.abs(value)<1e-6));
-});
 
 test('a wave raises the right arm and settles back into the walking pose',()=>{
   const motion=createResidentGestures();let pose;

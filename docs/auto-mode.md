@@ -1,5 +1,10 @@
 # Jev auto mode
 
+> Historical implementation record. Browser and desktop now use only the shared
+> town. Descriptions of solo controls, local simulations, and retired mode flags
+> below document earlier behavior, not current setup instructions. Independent
+> Python and Unreal tools remain supported. See [current setup](multiplayer.md).
+
 User objective: “thoroughly implement an auto mode controlled by a comprehensively well-trained jev model.” Scope confirmed: an autonomous player visit. Existing resident/store interaction work is preserved.
 
 ## Contract and acceptance ledger

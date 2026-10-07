@@ -8,7 +8,7 @@ async page => {
   await page.evaluate(() => { try { localStorage.removeItem('river-oaks-debug'); } catch {} });
   await page.reload();
   await page.locator('#loading').waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && document.querySelector('#canvas-host').dataset.charactersReady === '24');
+  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined'));
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
   check(await page.evaluate(() => window.__riverDebug() === null), 'Debug tools are not loaded until asked for');
 

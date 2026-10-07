@@ -1,5 +1,10 @@
 # Browser destruction, smoke and performance delivery
 
+> Historical implementation record. Browser and desktop now use only the shared
+> town. Descriptions of solo controls, local simulations, and retired mode flags
+> below document earlier behavior, not current setup instructions. Independent
+> Python and Unreal tools remain supported. See [current setup](multiplayer.md).
+
 Requested September 26, 2026. Browser only; retain the district layout and the
 ongoing people-interaction and movement work.
 
