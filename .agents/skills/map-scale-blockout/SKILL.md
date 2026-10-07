@@ -53,3 +53,10 @@ When edits are requested, change the smallest controlling dimension and repeat
 the affected measurement and route. Otherwise, return proposed corrections.
 Hand unresolved movement failures and reproducible routes to **Player Path &
 Collision**. Mark unsupported stairs/slopes or unavailable play as not tested.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [map-scale-blockout fixture](../../../docs/level-design/skill-suite-fixtures.md#map-scale-blockout)
+for successful-use and failure examples with explicit acceptance limits.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vegetation Placement & Collision"
+  short_description: "Check tree intersections, trunk collision and clear routes"
+  default_prompt: "Use $vegetation-placement-collision for the requested River Oaks review and report scoped evidence, gaps and the next action."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reference-to-Scene Comparison"
+  short_description: "Compare references and scenes under matched conditions"
+  default_prompt: "Use $reference-scene-comparison for the requested River Oaks review and report scoped evidence, gaps and the next action."

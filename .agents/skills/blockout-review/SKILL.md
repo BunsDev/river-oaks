@@ -57,3 +57,10 @@ Conclude with one of:
 Link the evidence and identify which revision was reviewed. Source review,
 automated traversal, rendered inspection, and human play are different proof
 levels; do not label one as another. Re-review affected routes after changes.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [blockout-review fixture](../../../docs/level-design/skill-suite-fixtures.md#blockout-review)
+for successful-use and failure examples with explicit acceptance limits.
