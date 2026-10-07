@@ -28,7 +28,12 @@
     "desktop:package": "node desktop/package.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
     "test:desktop:e2e": "node desktop/e2e.js",
-    "audit:multiplayer:render": "node preview/audit/rendered-multiplayer.js"
+    "audit:multiplayer:render": "node preview/audit/rendered-multiplayer.js",
+    "agent:doctor": "node scripts/agent.mjs doctor",
+    "agent:list": "node scripts/agent.mjs list",
+    "verify": "node scripts/agent.mjs verify",
+    "test:agent": "node --test scripts/tests/*.test.js",
+    "test:desktop:photo": "node desktop/photo-e2e.js"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",

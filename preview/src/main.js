@@ -44,6 +44,7 @@ import { createInvasionControls } from './invasion-ui.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
+import { createPhotoMode } from './photo-mode.js';
 import { storefrontSpot } from './arrival.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { waitForTown, resolveMultiplayerMode, activePlayMode, switchPlayMode } from './multiplayer-mode.js';
@@ -77,8 +78,8 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 setupUIMotion();
 setupThemeControls();
 const sidebar = setupSidebar();
-let sidebarSections, playDock, clearView;
-setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView });
+let sidebarSections, playDock, clearView, photoMode;
+setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView, getPhotoMode: () => photoMode });
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -271,6 +272,11 @@ function initializeRenderer() {
   visitTools.insertBefore(birdCamsUI.panel, buildControls?.panel ?? invasion.panel);
   $('#viewport').append(playDock.element);
   clearView = createClearView();
+  photoMode = createPhotoMode({ camera, canvas: renderer.domElement, host,
+    canOpen: () => Boolean(world && !loading && document.body.classList.contains('access-granted')),
+    onOpen: () => { autoControls?.stop(); walking?.halt(); },
+  });
+  visitTools.prepend(photoMode.panel);
   let storage = null; try { storage = window.localStorage; } catch { /* storage unavailable: landmarks last the session */ }
   landmarks = createLandmarks({ storage });
   placesUI = setupPlacesUI({ places: [], landmarks, worldMapEnabled, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
@@ -759,7 +765,7 @@ function render(now) {
   updateStoreLights();
   if (!multiplayer) autoControls?.update(delta);
   // Riding a bird pauses walking; the bird drives the camera below.
-  if (birdCams?.riding) walking?.halt();
+  if (photoMode?.active || birdCams?.riding) walking?.halt();
   else if (!multiplayer || multiplayer.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   birdCams?.update(delta);
@@ -767,6 +773,7 @@ function render(now) {
   multiplayer?.update(now);
   seatingControls?.update(now);
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
+  photoMode?.update();
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -791,6 +798,7 @@ function render(now) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     pipeline.render(delta);
+    photoMode?.afterRender();
   }
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});

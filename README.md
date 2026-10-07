@@ -1,7 +1,14 @@
 # River Oaks District
 
+For coding agents: start with [AGENTS.md](AGENTS.md), the [repository map](docs/architecture.md),
+and the [setup and verification workflow](docs/agent-workflow.md). Run `npm run agent:doctor`
+for prerequisites and `npm run verify` for the core gate.
+
 
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
+Compose and share a moment with **Commands → Photo mode**: creative lens controls,
+social crops, film looks, and clean PNG downloads. [Photo controls and sharing](docs/photo-mode.md).
+
 ## Play in the desktop app
 
 Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).

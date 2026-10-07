@@ -11,7 +11,7 @@ const stage = await mkdtemp(join(tmpdir(), 'river-oaks-package-'));
 try {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   await mkdir(join(stage, 'desktop'));
-  for (const file of ['main.js', 'runtime.js', 'auth.js']) await cp(join(root, 'desktop', file), join(stage, 'desktop', file));
+  for (const file of ['main.js', 'runtime.js', 'auth.js', 'photo-download.js']) await cp(join(root, 'desktop', file), join(stage, 'desktop', file));
   await writeFile(join(stage, 'package.json'), JSON.stringify({ name: 'river-oaks', productName: 'TypeSafe Place', version: pkg.version, type: 'module', main: 'desktop/main.js' }));
   const paths = await packager({ dir: stage, out: join(root, 'dist/desktop'), name: 'TypeSafe Place', executableName: 'TypeSafe Place', appBundleId: 'works.jev.river-oaks', appCategoryType: 'public.app-category.adventure-games', electronVersion: pkg.devDependencies.electron, platform: process.platform, arch: process.arch, asar: true, overwrite: true, prune: false });
   // The packaged app is a thin client: it spawns no Node child processes and its

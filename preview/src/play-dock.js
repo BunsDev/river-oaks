@@ -26,7 +26,7 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     if(event.key!=='Escape'||event.isComposing||!dock.open)return;
     event.preventDefault();event.stopPropagation();setOpen(false);
   });
-  const activities=[['Character','.player-controls'],['Rides','.player-settings'],['Jev','.auto-controls'],['Birds','.bird-cams'],['Build','.shared-build-controls'],['Magic','.force-controls'],['Invasion','.invasion-controls']];
+  const activities=[['Camera','.photo-tools'],['Character','.player-controls'],['Rides','.player-settings'],['Jev','.auto-controls'],['Birds','.bird-cams'],['Build','.shared-build-controls'],['Magic','.force-controls'],['Invasion','.invasion-controls']];
   const jump=selector=>{
     const target=content.querySelector(selector);if(!target||target.hidden)return;
     if(target.tagName==='DETAILS')target.open=true;
