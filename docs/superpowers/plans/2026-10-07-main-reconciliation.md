@@ -91,5 +91,13 @@ scan. The owned Redis process was stopped after the gate. Logs:
 These are local artifacts, not repository assets.
 
 Main advanced to `2161866` through PR #173 during this run. Its seven facade/data
-files do not overlap this patch. Next step: integrate that main revision, rerun
-core on the combined tree, then push and wait for hosted checks before squash merge.
+files do not overlap this patch. Integration completed without conflicts and
+`npm run verify` passed all 11 tasks again on the combined tree. Log:
+`/tmp/river-oaks-reconcile-integrated-core.log`. Native source is unchanged from
+the verified Editor/Game builds and 25-contract run. The full local browser run
+above predates PR #173's facade/data changes; the hosted preview job must verify
+the combined revision before merge.
+
+Next step: push the reviewed, verified integration and wait for hosted checks
+(`preview`, `verify (3.11)`, `verify (3.13)` and remaining checks), then squash merge
+and synchronize main. PR status provides the subsequent delivery receipt.

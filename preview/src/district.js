@@ -101,7 +101,7 @@ export function buildDistrictBuildings(world) {
     if (!batches.has(key)) batches.set(key, { material, geometry: material === glass ? pane : geometry, parts: [] });
     batches.get(key).parts.push({ position, scale, yaw, pitch, buildingIndex });
   };
-  // Photographed frontages (Hermès, IPIC, Bella Rinova) take over the edges they cover.
+  // Photographed frontages (reference-facades.js) take over the edges they cover.
   const reference = createReferenceFacades(world, { part, pane, plane: pane, glass });
   world.buildings.forEach((building, index) => {
     const shape = new THREE.Shape(building.ring.map(([x, y]) => new THREE.Vector2(x, y)));
