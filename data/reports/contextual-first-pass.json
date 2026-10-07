@@ -1,0 +1,11 @@
+{
+  "createdAt": "2026-10-07T09:49:21.845Z",
+  "results": [
+    {
+      "name": "contextual-first-visit",
+      "status": "failed",
+      "seconds": 91.547,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at visit (preview/e2e/contextual-first-visit.js:79:20)\n    at async eval (preview/e2e/contextual-first-visit.js:120:19)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks/preview/e2e/experience-runner.js:34:22"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "createdAt": "2026-10-07T10:30:40.715Z",
+  "status": "passed",
+  "modes": [
+    "development"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "rail-shared",
+      "status": "passed",
+      "seconds": 6.967,
+      "result": {
+        "checks": [
+          "Chat command opens People and focuses the live town composer",
+          "Nearby residents and meeting actions precede town tools",
+          "Public town chat precedes private contacts and groups",
+          "Typing town chat retains keyboard ownership",
+          "Commands reflect the server-confirmed building permission",
+          "Shared-play commands omit retired force controls",
+          "Shared character command focuses a visible choice without retired abilities",
+          "Build jump appears when the shared permission allows it",
+          "Dismissing the left rail does not cancel the builder",
+          "Keyboard help adapts to the active builder",
+          "Dismissing command help does not cancel the builder",
+          "Dismissing play controls does not cancel the builder",
+          "Escape in the world still leaves builder mode",
+          "The region editor keeps exclusive ownership of keyboard navigation",
+          "Events command focuses a live calendar filter",
+          "No shared navigation page errors: "
+        ],
+        "canBuild": true,
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

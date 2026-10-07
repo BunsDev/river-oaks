@@ -16,6 +16,11 @@ This copies the browser district’s geographic x/y into `unreal/Content/Data/di
 
 ## Build and open
 
+Android FileServer and its network access are disabled in `DefaultEngine.ini`.
+The empty `SecurityToken` setting prevents the editor from generating a credential
+in tracked configuration. Android file-server deployment is not configured; enable
+it only with a separate local credential setup.
+
 1. Install Unreal Engine **5.8.2** and its supported native toolchain. Generate project files for `unreal/RiverOaks.uproject`, then build the **RiverOaksEditor Development** target using the engine's `Build.bat` (Windows) or `Build.sh` (macOS/Linux). The module uses Engine, HTTP, Json and InputCore; no marketplace plugin is required.
 2. Run `uv run python scripts/export_district.py` to stage `unreal/Content/Data/district.json` from the bundled shopping footprint. Keep its source attribution. The loader accepts schema 1, EPSG:32615, local east/north/up meters; it converts to Unreal east/south/up centimeters. `center` on buildings and `position` on trees denote their base, not geometric center.
 3. Open the project. Before the map exists, the configured startup map cannot load; create/open an empty level. Save any current work. In the Python console run:

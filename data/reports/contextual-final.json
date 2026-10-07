@@ -1,0 +1,94 @@
+{
+  "createdAt": "2026-10-07T09:51:37.864Z",
+  "results": [
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 32.869,
+      "result": {
+        "desktop": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "On-screen movement buttons also work from the keyboard",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.8021519649833,20.05747069936846,1314.7065344616715]",
+          "errors": []
+        },
+        "touch": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "Releasing real touch input clears the held movement state",
+            "Touch test uses a coarse-pointer device context",
+            "Touch press turns the player using the on-screen pad",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.778972059098,20.05777201260362,1314.7351688078568]",
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "photo-mode",
+      "status": "failed",
+      "seconds": 6.134,
+      "error": "Error: photo mode visually hides the play dock, trigger and walking title\n    at check (preview/e2e/photo-mode.js:3:65)\n    at eval (preview/e2e/photo-mode.js:18:3)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks/preview/e2e/experience-runner.js:34:22"
+    },
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 35.701,
+      "result": {
+        "checks": [
+          "The town lists storefront benches as seats",
+          "Arrived beside bench:osm-node-8172494989:0",
+          "Beside a bench, the seats panel lists it and Z offers to sit",
+          "Contextual Sit sits on a place on that bench",
+          "The HUD says the player is sitting",
+          "The town records the seat, through the shared seating model",
+          "Arrived beside bench:osm-node-8172494989:1",
+          "Another player sees them seated on that place",
+          "and facing the way the bench faces",
+          "Bob can still sit beside her",
+          "A held place is never offered; Bob takes the one beside it",
+          "Standing up is the single primary contextual action while seated",
+          "Contextual Stand stands up, for everyone",
+          "Bob stands up too",
+          "Arrived beside planter:osm-node-8172494989:0",
+          "Beside a planter, the Z prompt offers to water it",
+          "Arrived beside planter:osm-node-8172494989:1",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.359906284623419,\"toward\":-0.7853981633975945})",
+          "The watering animation ends by itself",
+          "No outdoor NPCs are rendered on multiplayer benches",
+          "No page errors: "
+        ]
+      }
+    }
+  ]
+}

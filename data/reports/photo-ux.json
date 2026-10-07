@@ -1,0 +1,55 @@
+{
+  "createdAt": "2026-10-07T09:52:53.444Z",
+  "results": [
+    {
+      "name": "photo-mode",
+      "status": "passed",
+      "seconds": 8.378,
+      "result": {
+        "checks": [
+          "photo mode visually hides the play dock, trigger and walking title",
+          "photo mode focuses its shutter",
+          "pan exposes its numeric degrees",
+          "lens movement exposes meters",
+          "photo UI explains current graphics resolution",
+          "failed canvas encoding leaves the shutter usable",
+          "late capture cannot replace a newly opened camera session",
+          "reopening after an unfinished capture leaves the shutter usable",
+          "pan value follows framing changes",
+          "portrait PNG uses the selected aspect ratio",
+          "PNG contains a rendered scene (1913 sampled colors)",
+          "prospective dimensions match encoded PNG",
+          "photo output is bounded",
+          "download has a shareable PNG filename",
+          "PNG download succeeds",
+          "cancelled OS sharing preserves the downloadable photo",
+          "failed replacement preserves the retained photo",
+          "reopening offers the retained preview",
+          "reopening keeps the retained download",
+          "reopening clears pending share state",
+          "late share cannot rewrite the new session status",
+          "framing reset returns pan to zero",
+          "closing restores the live canvas look",
+          "closing restores the game HUD",
+          "closing restores the actual HUD visibility",
+          "narrow photo mode also hides underlying HUD subtrees",
+          "narrow composition shows dimensions and quality without scrolling",
+          "mobile grid control stays inside the panel",
+          "composition controls collapse for a clear view",
+          "mobile controls fit the viewport",
+          "mobile story photo uses 9:16 framing",
+          "successful replacement releases the previous URL",
+          "explicit discard returns to composition",
+          "explicit discard releases the captured URL",
+          "no page errors: "
+        ],
+        "image": {
+          "width": 720,
+          "height": 900,
+          "colors": 1913
+        },
+        "story": 0.5627705627705628
+      }
+    }
+  ]
+}
