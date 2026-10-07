@@ -53,6 +53,11 @@ CURRENT = {
     "Veronica Beard",
     "Amorino",
 }
+# Street-level photographs (Street View, 2024-2025) show these masses taller than
+# OSM's default levels: the IPIC theatre box over its podium, the two-storey
+# Bella Rinova salon, and the Hermès flagship. The flagship is the tallest part of
+# its mapped block; the renderer draws the rest of that block at two storeys.
+REFERENCE_HEIGHTS = {"625330798": 18.5, "625333009": 10.6, "625330792": 14.5}
 DISPLAY = {
     "Diptypque": "Diptyque",
     "de Bouille": "de Boulle",
@@ -116,6 +121,9 @@ def build():
                 )
             )
             height = float(tags.get("height", max(6.5, levels * 4)))
+            reference = "height" not in tags and REFERENCE_HEIGHTS.get(element.get("id"))
+            if reference:
+                height = reference
             bounds = polygon.bounds
             building = {
                 "id": f"osm-way-{element.get('id')}",
@@ -126,6 +134,8 @@ def build():
                 "kind": tags["building"],
                 "height_source": "OSM height"
                 if "height" in tags
+                else "street-level reference photographs (2024-2025), estimated"
+                if reference
                 else "estimated from tagged/default levels",
                 "source_version": element.get("version"),
             }
