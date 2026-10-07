@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { register } from 'node:module';
 register(`data:text/javascript,${encodeURIComponent("export async function load(url, context, next) { return url.endsWith('.css') ? {format:'module',source:'',shortCircuit:true} : next(url,context); }")}`, import.meta.url);
 const { createCommunityPanel } = await import('../src/community-ui.js');
+const { createCommunity } = await import('../src/community.js');
 const { createWishPanel } = await import('../src/wishes-ui.js');
 
 // Small DOM harness: exercise event promises and state ownership without WebGL.
@@ -34,22 +35,25 @@ const world = { communityLocations: [{ id: 'a', name: 'Plaza', position: [0, 0, 
 const rooms=[{index:0,storeId:'shop',name:'Café',theme:'dining',floor:0,toWorld:(a,d)=>[a,d],people:[{role:'staff',a:0,d:0},{role:'guest',a:1,d:0},{role:'guest',a:2,d:0}]}];
 function setup(options = {}) {
   const elements = dom(), commands = [];
-  const client = {identity:{id:'alice'},snapshot:{players:[{id:'alice',canGrantWishes:true}]},async command(command) { commands.push(command); return { ok: true, message: 'Confirmed by town' }; } };
+  const client = {connected:true,identity:{id:'alice'},snapshot:{players:[{id:'alice',canGrantWishes:true}]},async command(command) { commands.push(command); return { ok: true, message: 'Confirmed by town' }; } };
   const panel = createCommunityPanel({ host: elements.host, getVisitor: () => [0,0,0], getRoomId: () => 'shop', getPersona: () => 'jevica', getMultiplayer: () => client, ...options });
   panel.setWorld(world,rooms);
+  if (options.snapshot !== false) {
+    const state = createCommunity(world, rooms, {carriage:false,sharedPopulation:true,outdoor:false});
+    const {locals,wishes,scenario,...community}=state;
+    panel.applyRemote({community,locals:locals.map(({persona,...local})=>local),wishes});
+  }
   return { panel, commands, client, ...elements };
 }
 
-test('joining multiplayer removes street NPCs from an existing solo directory and rejects their selection',async()=>{
-  let shared=null;
-  const {panel,client,byId}=setup({getMultiplayer:()=>shared});
-  const outside=panel.state.locals.find(local=>!local.indoor);
-  assert.ok(outside);
-  shared=client;
-  panel.applyRemote({community:{},locals:panel.state.locals.map(local=>({id:local.id,indoor:Boolean(local.indoor)}))});
-  assert.ok(panel.state.locals.length>0&&panel.state.locals.every(local=>local.indoor));
-  assert.ok(byId('community-local').options.every(option=>option.value.startsWith('store-')));
-  assert.equal(await panel.selectLocal(outside.id),false);
+test('community waits for a server snapshot before offering residents or controls', async () => {
+  const {panel,byId,commands}=setup({snapshot:false});
+  assert.equal(panel.state,null);
+  assert.equal(byId('community-meet').disabled,true);
+  await byId('community-run').click();
+  panel.update(60,1000);
+  assert.equal(panel.state,null);
+  assert.deepEqual(commands,[]);
 });
 
 test('shared snapshots merge by id, keep personas/selection, and clear removed wishes', async () => {
@@ -67,7 +71,7 @@ test('shared snapshots merge by id, keep personas/selection, and clear removed w
   assert.equal(panel.state.elapsed, 42);
   panel.update(1, 1000);
   assert.equal(panel.state.elapsed, 42, 'render updates must not advance shared time');
-  assert.equal(panel.autoInteract(local.id, 'ask').ok, false);
+  assert.equal(panel.autoInteract, undefined);
   assert.equal(local.needKnown, false);
 });
 
@@ -98,9 +102,9 @@ test('shared controls send intentions without changing shared state and show rej
   assert.equal(local.wish, undefined);
   assert.deepEqual(commands.shift(), { type: 'wish', localId: local.id, kind: 'dog' });
   assert.match(byId('wish-status').textContent, /Only the wish owner/);
-  assert.equal(byId('community-reset').disabled, true);
-  assert.equal(byId('community-scenario').disabled, true);
-  assert.equal(byId('community-life').disabled, true);
+  assert.equal(byId('community-reset'), null);
+  assert.equal(byId('community-scenario').textContent, 'Heatwave support');
+  assert.equal(byId('community-life'), null);
 });
 
 test('shared guest sees wishes but cannot grant one through the panel', async () => {
@@ -116,24 +120,21 @@ test('shared guest sees wishes but cannot grant one through the panel', async ()
   assert.deepEqual(commands,[]);
 });
 
-test('solo wishes require an authenticated Jevica capability', async () => {
-  let allowed = false;
-  const {panel,byId} = setup({getMultiplayer:()=>null,getPersona:()=> 'another-look',getCanGrantWishes:()=>allowed});
+test('disconnect freezes snapshots and blocks scenario, support, wish and focus commands', async () => {
+  const {panel,byId,client,commands}=setup();
   const local=panel.state.locals[0];
-  assert.equal(await panel.selectLocal(local.id),true);
-  assert.equal(byId('wish-grant').hidden,true);
+  await panel.selectLocal(local.id);
+  commands.length=0;
+  client.connected=false;
+  panel.refresh();
+  const before=structuredClone(panel.state);
+  await byId('community-run').click();
+  await byId('community-ask').click();
   await byId('wish-grant').click();
-  assert.equal(local.wish,undefined);
-  allowed=true;panel.update(0,1000);
-  assert.equal(byId('wish-grant').hidden,false);
-  byId('wish-choice').value='dog';
-  await byId('wish-grant').click();
-  assert.equal(local.wish?.kind,'dog');
-  assert.equal(local.wish?.ownerName,'Jevica');
-  allowed=false;panel.update(0,1200);
-  assert.equal(byId('wish-undo').disabled,true);
-  await byId('wish-undo').click();
-  assert.equal(local.wish?.kind,'dog');
+  assert.equal(await panel.selectLocal(local.id),false);
+  panel.update(60,1000);
+  assert.deepEqual(panel.state,before);
+  assert.deepEqual(commands,[]);
 });
 
 test('wish actions stay busy until confirmation and restore focus after success', async () => {
@@ -148,14 +149,6 @@ test('wish actions stay busy until confirmation and restore focus after success'
   panel.update(state, state.locals[0], 'jevica');
   resolve({ ok: true }); await pending;
   assert.equal(document.activeElement, byId('wish-undo'));
-});
-
-test('solo scenario controls still mutate local state', async () => {
-  const { panel, byId } = setup({ getMultiplayer: () => null });
-  await byId('community-run').click();
-  assert.equal(panel.state.running, true);
-  panel.update(1, 1000);
-  assert.ok(panel.state.elapsed > 0);
 });
 
 test('nearby selection tries the next candidate after asynchronous refusal', async () => {
@@ -197,4 +190,26 @@ test('wish confirmation waits for snapshot before moving focus to undo', async (
   local.wish = {kind:'dog',phase:'gift',message:'Woof'};
   panel.update(state,local,'jevica');
   assert.equal(document.activeElement,byId('wish-undo'));
+});
+
+
+test('focus confirmation cannot open a conversation after disconnect', async () => {
+  const {panel,client,byId}=setup();
+  let confirm;
+  client.command=()=>new Promise(resolve=>{confirm=resolve;});
+  const selection=panel.selectLocal(panel.state.locals[0].id);
+  await Promise.resolve();
+  client.connected=false;
+  confirm({ok:true});
+  assert.equal(await selection,false);
+  assert.equal(panel.state.selectedId,null);
+  assert.equal(byId('community-dialogue').hidden,true);
+});
+
+
+test('snapshot updates preserve the resident chooser options when membership is unchanged', () => {
+  const {panel,byId}=setup();
+  const option=byId('community-local').options[0];
+  panel.applyRemote({community:{elapsed:12},locals:panel.state.locals,wishes:panel.state.wishes});
+  assert.equal(byId('community-local').options[0],option);
 });

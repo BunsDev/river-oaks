@@ -23,13 +23,12 @@ export const ENCOUNTER_NEAR = 1.0, ENCOUNTER_FAR = 4.5;
 // Indoor directory visits approach the chosen person, including staff behind a
 // counter, without stepping into fixtures or another room.
 export function indoorEncounterPosition(environment,local,visitor,locals=[]) {
-  if(local.abducted)return null;
   const target=personPosition(local);
   const valid=position=>{
     if(!environment.isFree(position[0],-position[1])||(environment.roomAt(position[0],-position[1])?.storeId??null)!==(local.storeId??null))return false;
     const eye=position===visitor?visitor:[position[0],position[1],environment.groundAt(position[0],-position[1])+1.68];
     if(personDistance(local,eye)>ENCOUNTER_FAR || !clearConversationLine(environment,eye,target,personEyeHeight(local)))return false;
-    return locals.every(person=>person.abducted||person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
+    return locals.every(person=>person.id===local.id||person.storeId!==local.storeId||Math.hypot(person.position[0]-position[0],person.position[1]-position[1])>=0.7);
   };
   const distance=visitor?Math.hypot(visitor[0]-target[0],visitor[1]-target[1]):Infinity;
   if(distance>=ENCOUNTER_NEAR&&distance<=ENCOUNTER_FAR&&valid(visitor))return visitor;
@@ -49,10 +48,9 @@ const insideStore = (environment, position) => {
 };
 
 export function encounterPosition(environment, local, visitor, locals = []) {
-  if (local.abducted) return null;
   const target = personPosition(local);
   if (!target?.slice(0, 3).every(Number.isFinite)) return null;
-  const others = locals.filter(person => !person.abducted && person.id !== local.id && person.position?.slice(0, 3).every(Number.isFinite));
+  const others = locals.filter(person => person.id !== local.id && person.position?.slice(0, 3).every(Number.isFinite));
   const validVisitor = visitor?.slice(0, 3).every(Number.isFinite);
   const side = insideStore(environment, validVisitor ? visitor : target);
   const comfortable = position => {

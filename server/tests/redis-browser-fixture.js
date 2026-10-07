@@ -5,7 +5,7 @@ import { createServer, request } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
 // The fixture supplies its own town and identities, and tests the sign-in gate.
-process.env.VITE_MULTIPLAYER='required';process.env.RIVER_OAKS_DEV_TOWN='off';
+process.env.RIVER_OAKS_DEV_TOWN='off';
 import { createServer as createViteServer } from 'vite';
 import { createRedisRoom } from '../redis-room.js';
 import { createRedisSecurity } from '../redis-security.js';

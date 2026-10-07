@@ -72,9 +72,6 @@ test('custom placement reserves a lifted resident’s grounded return volume',()
   assert.equal(world.command(owner,place()).error,'blocked_build_site');
   assert.deepEqual(world.snapshot(),before);
   assert.equal(world.command(owner,{type:'undoWish',localId:local.id}).ok,true);
-  // A physical Force lift also has to keep its grounded return space.
-  local.force={height:3};
-  assert.equal(world.command(owner,place()).error,'blocked_build_site');
 });
 
 test('an older checkpoint with an enclosed resident recovers to nearby free ground',()=>{

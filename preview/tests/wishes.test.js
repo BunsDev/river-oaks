@@ -7,12 +7,7 @@ const setup = () => ({ wishes: createWishState(), locals: [
   { id: 'theo', name: 'Theo', position: [3, 0, 0] },
   { id: 'far', name: 'June', position: [80, 0, 0] },
 ] });
-test('a Force-held recipient cannot receive a conflicting wish',()=>{
-  const state=setup();state.locals[0].force={height:1,mode:'lift'};
-  assert.equal(grantWish(state,'maya','flight','jevica').ok,false);
-  assert.equal(state.locals[0].wish,undefined);assert.equal(state.wishes.granted,0);
-  delete state.locals[0].force;assert.equal(grantWish(state,'maya','flight','jevica').ok,true);
-});
+
 test('the carriage crew travel with Jevica and cannot receive wishes',()=>{
   const state=setup();state.locals.push({id:'carriage-driver',name:'Prince Jev',position:[1,0,0],vehicleRole:'driver'});
   const result=grantWish(state,'carriage-driver','dragon','jevica');

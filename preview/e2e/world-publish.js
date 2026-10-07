@@ -75,7 +75,7 @@ async page=>{
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedWorldPlace=text;}}}));
   await page.locator('#places-list li').filter({hasText:'Moon Arch'}).locator('button[aria-label^="Copy a link"]').click();
   const sharedPlace=new URL(await page.evaluate(()=>window.__copiedWorldPlace));
-  check(sharedPlace.searchParams.get('world')==='moon-garden'&&sharedPlace.searchParams.get('play')==='multiplayer'
+  check(sharedPlace.searchParams.get('world')==='moon-garden'&&!sharedPlace.searchParams.has('play')
     &&sharedPlace.searchParams.get('place')?.startsWith('spot:'),'A published world place link keeps its world and shared play mode');
   check((await page.locator('.world-portal-design').textContent())==='Edit region draft','The saved draft is available after navigating to the published world');
   const authored=await (await page.request.get(`${origin}/api/world-data?world=moon-garden`)).json();
@@ -275,7 +275,7 @@ async page=>{
     button.click();await new Promise(resolve=>setTimeout(resolve,0));return window.__copiedLandmark;
   }));
   check(savedWorldLink.searchParams.get('world')==='moon-garden'&&savedWorldLink.searchParams.has('at'),'A landmark link includes its origin world and server-saved position');
-  await page.goto(`${origin}/?motion-debug=1&play=multiplayer`,{waitUntil:'commit'});
+  await page.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().snapshot.worldId==='river-oaks');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=explore-section]').click();

@@ -55,22 +55,20 @@ map without hand-authored artwork.
   The server saves the player's current pose, and landmarks remain private
   across devices and server instances. Existing landmarks stay in their
   original worlds and appear in the combined list without migration. Each
-  world allows up to 50 landmarks per account. Solo play keeps up to 50
-  landmarks in browser storage (`river-oaks-landmarks`).
+  world allows up to 50 landmarks per account. Old device-only landmarks
+  are ignored and are not imported into account storage.
 - **Shared links.** `?place=spot:<id>` or `?place=shop:<id>` lands a visitor
   beside a named place after the district loads; `?at=<x>,<north>[,<yaw>]`
   restores an exact position inside the district. A link outside the district
   is ignored; a link into a building is refused, never nudged through a wall.
-  Copied links include the current `world` ID and `play=multiplayer`, so a place
+  Copied links include the current `world` ID, so a place
   in a published creator world opens that same shared world for the recipient.
 
 ## How a teleport lands
 
 Nobody is ever placed inside a wall or a room. A spot is reached at the
 nearest clear outdoor point within 4 m of it; a landmark or link within 1.2 m,
-otherwise the request is refused with a message. The rule is the same in solo
-play (`openSpotNear` in `preview/src/places.js`) and in the shared town, where
-the server owns the decision: `travel` now accepts `placeId` (a community
+otherwise the request is refused with a message. The server owns the decision: `travel` now accepts `placeId` (a community
 location) and `position` (`[x, north]` inside `bounds_m`) alongside residents
 and stores, applies the usual one-second cooldown, and keeps the traveller's
 own facing for a bare position.
@@ -82,7 +80,7 @@ own facing for a bare position.
 - `preview/src/places-ui.js`: the tab's DOM and the status line.
 - `preview/src/world-map.js`: map projection, geometry, selection, and live
   player marker.
-- `preview/src/main.js`: `goToPlace` (solo and shared), the deep link on load.
+- `preview/src/main.js`: `goToPlace` (server-confirmed travel), the deep link on load.
 - `server/world.js`: `travel` destinations `placeId`, `position`, and `peerId`.
 - `server/landmarks.js`: private per-world account landmark storage; Redis
   persists shared play across edge instances.

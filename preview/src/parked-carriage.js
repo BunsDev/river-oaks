@@ -8,7 +8,7 @@ import { createWalkingEnvironment } from './walking.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { Vector3, Quaternion } from 'three';
 
-// Legacy public name keeps existing companion/force integrations compatible.
+// Public name retained for companion integrations.
 // Only road vehicles are constructed; the retired carriage and team never load.
 export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,requestExit=async()=>({ok:true}),requestChauffeur,reducedMotion=false}) {
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
@@ -23,7 +23,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  };
  const canOccupy=next=>{
   if(carriageFootprint(next).some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||!['road','crossing'].includes(network.classify([x,-z]))))return false;
-  if((getLocals()??[]).some(p=>!p.indoor&&!p.vehicleRole&&!p.abducted&&carriageContains(next,p.position[0],next.position[1]+1,-p.position[1],.65)))return false;
+  if((getLocals()??[]).some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(next,p.position[0],next.position[1]+1,-p.position[1],.65)))return false;
   return !(getWorld().vegetation?.branch_supports??[]).some(tree=>carriageContains(next,tree.position[0],next.position[1]+1,-tree.position[1],.6));
  };
  const ride={

@@ -6,7 +6,7 @@ import { createCarriageEncounter } from './carriage-encounter.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { turnToward } from './gait.js';
-import { VISITOR_FORMS, createVisitorReactions } from './visitor-persona.js';
+import { VISITOR_FORMS } from './visitor-persona.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, permittedAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
@@ -14,13 +14,13 @@ import { isGameplayKey } from './keyboard-input.js';
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
   const owner=isJevicaOwner(userId);
-  let sharedMode=false,crewLocal=null;
+  let crewLocal=null;
   const crewLocals=()=>{
     const locals=getLocals()??[];
     const current=locals.find(local=>local.id==='carriage-driver');
     if(current)crewLocal=current;
-    if(sharedMode&&owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
-    return sharedMode&&owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
+    if(owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
+    return owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
   const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,reducedMotion});
   const panel = document.createElement('section');panel.className = 'player-controls';panel.setAttribute('aria-label', 'Your character');
@@ -94,7 +94,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Jev, with a clear space beside the vehicle.';
   };
   companionButton.addEventListener('click',toggleCompanion);
-  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyJ'&&!event.repeat&&(!sharedMode||owner)){event.preventDefault();toggleCompanion();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyJ'&&!event.repeat&&owner){event.preventDefault();toggleCompanion();}});
   carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
     companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to your ride':'Walk with Jev';
@@ -103,23 +103,17 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0, forceTarget = null;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null;
-  // Solo choices stay on this device; in the shared town the account owns both
-  // the appearance and whether a beast form moves like its animal.
-  let soloAppearance=defaultAppearanceFor(userId),soloMovement=false;
-  try{
-    soloAppearance=permittedAppearance(userId,localStorage.getItem('river-oaks-character'));
-    soloMovement=localStorage.getItem('river-oaks-beast-movement')==='beast';
-  }catch{}
-  let appearance=soloAppearance,sharedName=null,sharedMovement='upright',sharedGesture=null,movement='upright',loadedAppearance=null,portraitWanted=null;
+  // Appearance and movement belong to the account and are confirmed by the town.
+  let appearance=defaultAppearanceFor(userId),sharedName=null,sharedMovement='upright',sharedGesture=null,movement='upright',loadedAppearance=null,portraitWanted=null;
   // Shared play: a choice the town has not confirmed yet, shown in the picker meanwhile.
   let wanted=null,sending=false,flushTimer=0,confirmedAt=-Infinity;
   const picker=panel.querySelector('.character-picker'),variantOption=picker.querySelector('[data-option=variant]'),variantList=picker.querySelector('[data-variants]');
   const beastButton=panel.querySelector('#player-beast-movement');
   const flightButton=panel.querySelector('#player-flight');
-  const movementFor=id=>sharedAppearance(id)?.form==='beast'&&(sharedMode?sharedMovement==='beast':soloMovement)?'beast':'upright';
+  const movementFor=id=>sharedAppearance(id)?.form==='beast'&&sharedMovement==='beast'?'beast':'upright';
   // The picker always shows the current appearance as character, style and form.
   const syncPicker=()=>{
     const current=sharedAppearance(wanted??appearance),person=sharedCharacter(current.character),worn=sharedAppearance(appearance);
@@ -160,7 +154,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const APPEARANCE_PACE=APPEARANCE_COOLDOWN_MS+100;
   const flushAppearance=async()=>{
     clearTimeout(flushTimer);
-    if(sending||!wanted||!sharedMode)return;
+    if(sending||!wanted)return;
     if(wanted===appearance){
       wanted=null;picker.removeAttribute('aria-busy');
       if(status.textContent==='Saving character…')status.textContent='';
@@ -187,10 +181,6 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(next!==appearance&&walking.getPose?.()?.flying){
       const message='Land before changing character or form.';status.textContent=message;walking.notify?.(message);syncPicker();return;
     }
-    if(!sharedMode){
-      if(next!==appearance){appearance=soloAppearance=next;try{localStorage.setItem('river-oaks-character',next);}catch{}load();}
-      syncPicker();return;
-    }
     wanted=next;picker.setAttribute('aria-busy','true');status.textContent='Saving character…';syncPicker();
     // A short pause lets person, style and form clicks arrive as one change.
     clearTimeout(flushTimer);flushTimer=setTimeout(flushAppearance,250);
@@ -207,10 +197,6 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(current.form!=='beast'){const message='Beast movement belongs to beast forms. Choose Beast under Form first.';status.textContent=message;walking.notify?.(message);return;}
     const next=movement==='beast'?'upright':'beast';
     const message=next==='beast'?`Beast movement on: ${person.name} prowls and lopes like a ${person.species.toLowerCase()}.`:'Beast movement off.';
-    if(!sharedMode){
-      soloMovement=next==='beast';try{localStorage.setItem('river-oaks-beast-movement',next);}catch{}
-      syncPicker();status.textContent=message;return;
-    }
     beastButton.disabled=true;
     try{
       const result=await requestMovement(next);
@@ -226,7 +212,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}});
   syncPicker();
   const listeners = new Set();
-  const reactions = createVisitorReactions(),attention=createPlayerAttention();
+  const attention=createPlayerAttention();
   // A refused take-off says so where the player is looking, not only in the dock.
   const refuseFlight=()=>{
     const hud=document.querySelector('#walking-hud')?.dataset??{};
@@ -271,9 +257,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
       loadedAppearance=chosenProfile;
       next = nextOutfit = nextVehicle = null;
-      reactions.reset();if(firstLoad)toggleCamera(true);
+      if(firstLoad)toggleCamera(true);
       panel.dataset.form = form;
-      panel.querySelector('#player-name').textContent = sharedMode?(sharedName??character.name):character.name;
+      panel.querySelector('#player-name').textContent = sharedName??character.name;
       panel.querySelector('#player-role').textContent = character.role;
       const portraitImage=panel.querySelector('.player-portrait img');
       if(hasPortrait)portraitImage.src=portrait.src;
@@ -298,6 +284,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     }
     finally {if (generation === version) panel.setAttribute('aria-busy', 'false');}
   };
+  carriage.setEnabled(owner);panel.querySelector('.vehicle-garage').hidden=!owner;companionButton.hidden=!owner;companionStatus.hidden=!owner;
   load();
   return {
     get carriage(){return carriage;},
@@ -305,14 +292,6 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get form() {return form;},
     // Residents greet and recognise the player as Jevica only on her accounts.
     get persona() {return owner?form:'visitor';},
-    setSharedMode(value){
-      if(sharedMode===value)return;
-      if(value&&owner)crewLocals();
-      sharedMode=value;const crewAllowed=!value||owner;
-      carriage.setEnabled(crewAllowed);panel.querySelector('.vehicle-garage').hidden=!crewAllowed;companionButton.hidden=!crewAllowed;companionStatus.hidden=!crewAllowed;
-      clearTimeout(flushTimer);wanted=null;picker.removeAttribute('aria-busy');
-      appearance=value?defaultAppearanceFor(userId):soloAppearance;sharedName=null;sharedMovement='upright';sharedGesture=null;syncPicker();load();
-    },
     setSharedIdentity(player){
       if(!player){sharedGesture=null;return;}
       sharedGesture=player.gesture??null;
@@ -329,24 +308,18 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     cast(now) { castUntil = now + 520; },
     water(now, target, duration) { waterUntil = now + duration; waterTarget = target; },
     get watering() { return performance.now() < waterUntil; },
-    setForceTarget(target) {forceTarget=target;},
     getWandTip(target) {return outfit?.getWandTip(target)??null;},
     onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
-    react(now) {
-      const pose = walking.getPose();
-      const visitorForm=sharedMode||!owner?null:form;
-      const reactionPeople = reactions.update(getLocals() ?? [], pose, visitorForm, now, position => walking.canSee(position));
-      host.dataset.visitorReactions = JSON.stringify(reactionPeople.map(local => ({id:local.id,form:visitorForm,action:local.visitorReaction.action})));
-    },
-    update(now,camera,viewportHeight) {
+    update(now,camera,viewportHeight,connected) {
       const pose = walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
-      carriage.update(now);carriage.updateOptics(camera,viewportHeight);
+      if (connected) carriage.update(now);
+      carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,away=prince.mode!=='seat';
-      carriageButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
-      companionButton.disabled=sharedMode&&!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=sharedMode&&!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
+      carriageButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
+      companionButton.disabled=!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
+      rideButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
       rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
-      vehicleSelect.disabled=sharedMode&&!owner||carriage.riding||away;driveButton.disabled=sharedMode&&!owner||!carriage.riding||away;
+      vehicleSelect.disabled=!owner||carriage.riding||away;driveButton.disabled=!owner||!carriage.riding||away;
       pauseDrive.textContent=carriage.chauffeur.paused?'Resume ride':'Pause ride';pauseDrive.disabled=!carriage.chauffeur.active&&!carriage.chauffeur.paused;
       for(const button of panel.querySelectorAll('[data-drive],#player-drive-park'))button.disabled=!carriage.riding;
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
@@ -367,18 +340,18 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!pose.riding){holder.rotation.x=0;holder.rotation.z=0;}
         vehicle.object.visible=pose.flying;
         const dt = previous === null ? 0 : Math.min(0.08, (now - previous) / 1000);
-        const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:seated,flying:pose.flying,conversation:getConversation(),spell:forceTarget});
+        const focus=attention.update(previous===null?0:(now-previous)/1000,{position:holder.position.toArray(),heading:holder.rotation.y,speed:pose.speed,riding:seated,flying:pose.flying,conversation:getConversation()});
         const travelHeading=pose.speed>.05?Math.atan2(pose.velocity[0],pose.velocity[1]):undefined;
         // Walking off, sitting, riding or flying ends watering.
         if(waterUntil&&(pose.speed>.3||seated||pose.flying))waterUntil=0;
         const watering=now<waterUntil&&waterTarget;
-        if(!seated&&(forceTarget||watering||previous===null||pose.speed>.05)) {
-          const aim=forceTarget??(watering?waterTarget:null);
+        if(!seated&&(watering||previous===null||pose.speed>.05)) {
+          const aim=watering?waterTarget:null;
           const facing=aim?Math.atan2(aim[0]-holder.position.x,aim[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
         if(!seated&&focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, forceTarget&&!seated?'force':now < castUntil ? 'amazed' : watering ? 'water' : sharedMode&&!pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,heading:forceTarget?travelHeading:undefined,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){

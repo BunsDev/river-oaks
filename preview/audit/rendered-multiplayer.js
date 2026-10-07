@@ -178,7 +178,7 @@ try {
   const proxy = Object.fromEntries(['/auth', '/api'].map(path => [path, town]));
   proxy['/multiplayer'] = { target: town.replace('http:', 'ws:'), ws: true };
   vite = await createViteServer({ configFile: false, root: `${root}/preview`, cacheDir: `${root}/.runtime/render-audit-vite`,
-    define: { 'import.meta.env.VITE_MULTIPLAYER': JSON.stringify('required') }, server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy } });
+    server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, args: process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
   report.browser = browser.version();
@@ -190,7 +190,7 @@ try {
     await context.route('**/v1/**', route => route.fulfill({ status: 503, json: { source: 'unavailable', reason: 'audit_fixture' } }));
     const page = await context.newPage(); page.setDefaultTimeout(90000);
     page.on('pageerror', error => errors.push(`Browser: ${error.message}`));
-    await page.goto(`${origin}/?play=multiplayer&motion-debug=1&render-audit=1`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${origin}/?motion-debug=1&render-audit=1`, { waitUntil: 'domcontentloaded' });
     await converge(page, 1);
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await page.locator('#panel-toggle').click();
     movementTimer = setInterval(() => {

@@ -1,7 +1,6 @@
 // Places: the named spots of a world, the player's own landmarks, and the
 // links that take someone straight to either. Positions are world [x, north]
 // metres, the same frame the server and the community data use.
-export const LANDMARK_KEY = 'river-oaks-landmarks';
 export const LANDMARK_LIMIT = 50;
 // The catalog has the original district and up to 16 published worlds; a local
 // fixture can configure one additional world without publishing it.
@@ -77,36 +76,6 @@ export function destinationFromSearch(search, places, bounds = null) {
 export function withinBounds(position, bounds) {
   return finitePair(position) && Array.isArray(bounds) && bounds.length === 4
     && position[0] >= bounds[0] && position[0] <= bounds[2] && position[1] >= bounds[1] && position[1] <= bounds[3];
-}
-
-// Landmarks are the player's own bookmarks: a name, a position and the way
-// they were facing. Solo play keeps these in browser storage; shared play
-// uses createAccountLandmarks below.
-export function createLandmarks({ storage = null, now = () => Date.now(), random = Math.random } = {}) {
-  let items = read();
-  function read() {
-    try {
-      const parsed = JSON.parse(storage?.getItem(LANDMARK_KEY) ?? '[]');
-      return Array.isArray(parsed) ? parsed.filter(item => item && textId(item.id) && cleanName(item.name) && finitePair(item.position)).map(item => ({
-        id: item.id, name: cleanName(item.name), position: [item.position[0], item.position[1]], yaw: Number.isFinite(item.yaw) ? item.yaw : 0, createdAt: Number.isFinite(item.createdAt) ? item.createdAt : 0,
-      })).slice(0, LANDMARK_LIMIT) : [];
-    } catch { return []; }
-  }
-  function write() { try { storage?.setItem(LANDMARK_KEY, JSON.stringify(items)); } catch { /* storage unavailable: the list still works for this session */ } }
-  return {
-    list() { return items.map(item => ({ ...item, position: [...item.position], kind: 'landmark' })); },
-    add({ name, position, yaw = 0 }) {
-      const clean = cleanName(name);
-      if (!clean) return { ok: false, reason: 'name' };
-      if (!finitePair(position)) return { ok: false, reason: 'position' };
-      if (items.length >= LANDMARK_LIMIT) return { ok: false, reason: 'limit' };
-      const item = { id: `lm-${now().toString(36)}-${Math.floor(random() * 1e6).toString(36)}`, name: clean, position: [position[0], position[1]], yaw: Number.isFinite(yaw) ? yaw : 0, createdAt: now() };
-      items = [...items, item]; write();
-      return { ok: true, landmark: { ...item, kind: 'landmark' } };
-    },
-    remove(id) { const before = items.length; items = items.filter(item => item.id !== id); if (items.length !== before) write(); return items.length !== before; },
-    rename(id, name) { const clean = cleanName(name), item = items.find(item => item.id === id); if (!item || !clean) return false; item.name = clean; write(); return true; },
-  };
 }
 
 // Shared-play bookmarks are private account data. The server records the

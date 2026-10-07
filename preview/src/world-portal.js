@@ -7,7 +7,6 @@ export function worldVisitUrl(id,base=location.href) {
   validateWorldId(id);
   const url=new URL('/',base);
   if(id!==DEFAULT_WORLD_ID)url.searchParams.set('world',id);
-  url.searchParams.set('play','multiplayer');
   return url.href;
 }
 

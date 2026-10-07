@@ -27,19 +27,12 @@ For a separate checkout while the default ports are in use, run
 auth, multiplayer, and landmark traffic to that checkout's own town on the
 chosen loopback port.
 
-- The default is `choice`: players begin in single player and can select
-  Multiplayer from the control in the viewport. The choice is remembered in
-  local storage across the WorkOS sign-in redirect. Multiplayer's sign-in
-  screen and People panel both offer a return to single player. Each tab keeps
-  the mode it loaded with, so choosing the other mode always switches that tab,
-  even after another tab changed the remembered choice. If the browser refuses
-  to store a choice, the reload carries it in the address bar as `?play=solo`
-  or `?play=multiplayer` for that visit only; a choice carried this way doesn't
-  survive the WorkOS sign-in redirect.
-- `VITE_MULTIPLAYER=auto` joins when the town answers with a session, otherwise
-  plays solo after approval. `off` disables the shared town. `required`
-  requires the shared town after approval.
-- `VITE_MULTIPLAYER=off npm run dev` plays solo with the invasion and auto visits.
+- Browser and desktop clients always join the town after approval. A valid town
+  snapshot is required before gameplay is unlocked. Disconnects show recovery
+  controls and never start a local simulation.
+- Play-mode flags, saved mode preferences, and `?play=` parameters are retired
+  and have no effect. Account appearance and landmarks remain server-owned;
+  old device-only gameplay data is not imported into accounts.
 - `npm run server -- --dev` runs the town as its own process for a separate
   `npm run dev`; the dev server then uses it instead of starting its own.
 
@@ -53,12 +46,10 @@ and human or beast forms. Appearance and beast movement belong to the signed-in
 account and follow it between worlds and server instances. Redis retains up to
 10,000 account preferences; each town checkpoint also keeps its room copy for
 recovery. A new account preference first takes the saved River Oaks appearance
-when one exists. The solo-only invasion and auto visit are hidden, since
-each would diverge from the shared town.
+when one exists.
 Multiplayer streets show real players and Jevica's companion/chauffeur.
 Other street residents are hidden; the NPC directory and nearby interactions
 keep building residents. Shop staff, guests, and indoor encounters remain.
-Single player retains its full outdoor cast.
 The People panel also has contacts and private messages. An invitation can be
 sent only to a player currently present in the same world; that player must
 accept before either can send a private message. Contacts and the latest 40
@@ -131,7 +122,8 @@ server's current player pose, and each record is labeled with its origin world.
 Redis stores them outside town checkpoints so reconnects and new server
 instances retain them. Opening a landmark in another world follows a link to
 that world and its saved position; arrival still passes the destination
-world's outdoor travel check. Solo landmarks remain in browser storage.
+world's outdoor travel check. Old device-only landmarks are ignored and are not
+imported into account storage.
 The world map shows outdoor players in the same shared room. Selecting one and
 choosing **Meet nearby** sends their account ID to the server, which resolves
 their current position and searches for an outdoor arrival spot clear of other
@@ -156,11 +148,8 @@ development auth, the first issued development identity is the owner fixture.
 Jevica can move or remove creations made before the restriction; their previous
 owners cannot keep building. Earlier guest design records remain private in the
 checkpoint but cannot be used while the restriction is active.
-Solo play remains a local sandbox. Its wish controls require a server-confirmed
-Jevica session and recheck that session before each wish action. An offline or
-signed-out solo player cannot grant wishes. Solo play has no building controls.
-Local simulation state is browser-owned; shared-world authority is enforced by
-the server.
+Shared-world authority is enforced by the server. Auto visits, invasion, and
+telekinesis are no longer part of browser or desktop play.
 
 With `VITE_CREATION_TOOLS=true`, Build & decorate lets the owner place, move,
 turn, and remove up to 24 owned
@@ -192,7 +181,7 @@ that copy as a new revision draft before applying it. Version reads verify the
 retained region hash, and applying still checks the current region and existing
 creations before changing the live world.
 
-Shared play uses 98 simulated residents, down from 193 in solo play (49%).
+The shared town uses 98 simulated indoor residents.
 Every outdoor scenario resident and at least one staff member per shop remains.
 The same roster drives the server, browser, room counts, and rendered people.
 Old full-population checkpoints migrate into this roster and preserve active
@@ -253,7 +242,7 @@ After configuring the private environment and WorkOS URLs below, run from the re
 
 ```sh
 npm ci
-VITE_MULTIPLAYER=required npm run build
+npm run build
 npm start
 ```
 
@@ -377,11 +366,9 @@ Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previou
 
 The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
 
-The current Dockerfile builds the production default, which starts in single
-player. A shell variable passed to `docker build` does not change that frontend
-bundle. For a shared-town container, build the frontend with
-`VITE_MULTIPLAYER=required` in the build stage and configure WorkOS and Redis
-for the runtime environment.
+The Dockerfile builds the town-only frontend. Configure WorkOS and Redis
+for the runtime environment; clients require admission and a valid town
+snapshot before gameplay begins.
 
 ```sh
 docker build -t river-oaks:local .

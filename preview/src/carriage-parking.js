@@ -55,7 +55,7 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
   candidates.sort((a,b)=>a.distance-b.distance);
   for(const placement of candidates) {
     if(carriageContains(placement,vx,placement.position[1]+1,vz,1))continue;
-    if(people.some(p=>!p.indoor&&!p.vehicleRole&&!p.abducted&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],1.1)))continue;
+    if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],1.1)))continue;
     if((world.vegetation?.branch_supports??[]).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6)))continue;
     const points=carriageFootprint(placement);
     if(points.some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||network.classify([x,-z])!=='road'))continue;

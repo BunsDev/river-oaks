@@ -20,7 +20,7 @@ async page => {
     const town = window.__riverMultiplayer?.();
     return town?.snapshot?.players.find(player => player.id === town.selfId)?.appearance === 'sable-human';
   }, null, { timeout: 30000 });
-  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: document.querySelector('.invasion-controls')?.hidden, roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
+  const state = tab => tab.evaluate(() => { const m = window.__riverMultiplayer(); return { self: m.selfId, players: m.snapshot.players.map(p => p.id), gate: document.querySelector('.multiplayer-gate')?.hidden, appearance: m.snapshot.players.find(p=>p.id===m.selfId)?.appearance, appearancePicker: Boolean(document.querySelector('.character-picker')?.checkVisibility()), invasion: !document.querySelector('.invasion-controls'), roster: document.querySelector('.multiplayer-roster strong')?.textContent }; });
   const [a, b] = [await state(page), await state(second)];
   check(a.self && b.self && a.self !== b.self, 'each browser is its own development player');
   check(a.players.includes(b.self) && b.players.includes(a.self), 'both players share one town');
@@ -80,7 +80,7 @@ async page => {
   const contactWorld=second.locator('.multiplayer-social-row').filter({hasText:'Online in River Oaks District'}).locator('a[aria-label^="Join "]');
   await contactWorld.waitFor({state:'attached',timeout:20000});
   const contactUrl=new URL(await contactWorld.getAttribute('href'));
-  check(contactUrl.searchParams.get('play')==='multiplayer' && !contactUrl.searchParams.has('world'),
+  check(!contactUrl.searchParams.has('play') && !contactUrl.searchParams.has('world'),
     'An accepted contact can join the sender\'s current world');
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).waitFor({state:'attached'});
   await second.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
@@ -109,11 +109,11 @@ async page => {
   const worldInvite=page.locator('.multiplayer-social-history a', {hasText:'Visit River Oaks District'});
   await worldInvite.waitFor({state:'attached'});
   const inviteUrl=new URL(await worldInvite.getAttribute('href'));
-  check(inviteUrl.searchParams.get('play')==='multiplayer' && !inviteUrl.searchParams.has('world'), 'A contact invitation offers a validated link to the sender\'s world');
+  check(!inviteUrl.searchParams.has('play') && !inviteUrl.searchParams.has('world'), 'A contact invitation offers a validated link to the sender\'s world');
   const placeInvite=page.locator('.multiplayer-social-history a', {hasText:'Meet at'});
   await placeInvite.waitFor({state:'attached'});
   const placeUrl=new URL(await placeInvite.getAttribute('href'));
-  check(placeUrl.searchParams.get('play')==='multiplayer' && placeUrl.searchParams.get('place')===meetingPlace,
+  check(!placeUrl.searchParams.has('play') && placeUrl.searchParams.get('place')===meetingPlace,
     'A named-place invitation offers a link to that place in the sender\'s world');
   check(await page.locator('.multiplayer-chat-history').getByText('A private hello').count()===0,'Private messages stay out of town chat');
   await page.reload();
@@ -126,7 +126,7 @@ async page => {
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
   check(await second.locator('#wish-grant').evaluate(button=>button.hidden),'A guest cannot access wish granting');
-  check(a.invasion === true && b.invasion === true, 'shared play hides the local invasion');
+  check(a.invasion === true && b.invasion === true, 'shared play hides the retired invasion');
   const spacing = await page.evaluate(() => { const [p, q] = window.__riverMultiplayer().snapshot.players; return Math.hypot(p.position[0] - q.position[0], p.position[1] - q.position[1]); });
   check(spacing >= 1.2, `players arrive on separate spots (${spacing.toFixed(2)} m apart)`);
   await page.screenshot({ path: 'output/playwright/multiplayer-dev.png' });
@@ -223,7 +223,7 @@ async page => {
   check(await page.locator('.visit-tools').evaluate(node=>!node.open),'Shared mobile play starts with a compact dock');
   await page.locator('.visit-tools-toggle').click();
   check(!await page.locator('#player-flight').isVisible()&&await page.locator('#player-beast-movement').isVisible(),'Shared mobile guests get beast movement without flight');
-  check(!await page.locator('#player-companion').isVisible()&&!await page.locator('.vehicle-garage').isVisible(),'Shared mobile play hides solo companion and vehicle actions');
+  check(!await page.locator('#player-companion').isVisible()&&!await page.locator('.vehicle-garage').isVisible(),'Shared mobile play hides private companion and vehicle actions');
   check(!await page.locator('.force-controls').isVisible()&&!await page.locator('.auto-controls').isVisible(),'Shared mobile play hides local-only scenarios');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Shared mobile controls stay within the viewport');
   await page.screenshot({path:'output/playwright/multiplayer-dev-mobile.png'});

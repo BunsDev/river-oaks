@@ -13,6 +13,8 @@ async page => {
   const ready=id=>page.waitForFunction(id=>{const data=document.querySelector('#canvas-host').dataset;return data.playerReady==='true'&&data.playerAppearance===id;},id);
   const motion=()=>data('beastMotion').then(Number);
   await ready('jevica');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined');
+  if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
 
   check(await button.isHidden(),'A humanoid form offers no beast movement');
@@ -32,6 +34,7 @@ async page => {
   await page.keyboard.up('KeyW');
 
   await button.click();
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerMovement==='beast');
   check(await button.getAttribute('aria-pressed')==='true'&&await data('playerMovement')==='beast','Beast movement turns on');
   check(/prowls and lopes like a snow leopard/.test(await status.textContent()),'The status line says how the beast moves');
   // Strafing turns the body to its travel, so the camera sees the gait in profile.
@@ -55,9 +58,10 @@ async page => {
   await page.locator('input[name=player-form][value=beast]').check();await ready('vesper-beast');
   check(await button.getAttribute('aria-pressed')==='true'&&await data('playerMovement')==='beast','The beast movement choice returns with a beast form');
   await page.reload();await ready('vesper-beast');
-  check(await button.getAttribute('aria-pressed')==='true','Beast movement persists on this device');
+  check(await button.getAttribute('aria-pressed')==='true','Beast movement persists on the account');
   await page.waitForFunction(()=>Number(document.querySelector('#canvas-host').dataset.beastMotion)>.95,null,{timeout:5000});
   await host.focus();await page.keyboard.press('KeyP');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerMovement==='upright');
   check(await data('playerMovement')==='upright'&&await button.getAttribute('aria-pressed')==='false','P turns beast movement off');
   await page.waitForFunction(()=>Number(document.querySelector('#canvas-host').dataset.beastMotion)===0,null,{timeout:5000});
   check(true,'The posture eases back to upright');

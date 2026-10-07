@@ -130,18 +130,3 @@ test('an in-flight recovery is bounded and cannot overwrite a newer redirect',as
   pending[0].resolve([[6,0]]);await Promise.resolve();
   assert.deepEqual(local.life.route,route,'The old route must not replace the redirect');
 });
-
-test('an abducted resident does not alter passing, clearance or arrival',()=>{
-  for(const hiddenPosition of [[-3.5,0,0],[-4.5,0,0],[5,0,0]]){
-    const baseline=walking([[-5,0,0]],[[[5,0]]]);
-    const crowded=walking([[-5,0,0],hiddenPosition],[[[5,0]],[[5,0]]]);
-    const hidden=crowded.state.locals[1];hidden.abducted=true;hidden.life.route=[];
-    for(let frame=0;frame<750;frame++){
-      stepResidentLife(baseline.life,1/60);stepResidentLife(crowded.life,1/60);
-      const a=baseline.state.locals[0],b=crowded.state.locals[0];
-      assert.deepEqual(b.position,a.position,`invisible obstacle at ${hiddenPosition}: frame ${frame}`);
-      assert.equal(b.life.visits,a.life.visits,'arrival should not stop short of an absent person');
-      if(a.life.visits){a.life.waitUntil=Infinity;b.life.waitUntil=Infinity;}
-    }
-  }
-});

@@ -32,7 +32,7 @@ async page => {
   check((await page.locator('.world-map-hint').textContent()).includes('Map point'),'Keyboard arrows choose an arbitrary destination');
   await page.locator('.world-map-actions button',{hasText:'Copy link'}).click();
   const shared=new URL(await page.evaluate(()=>window.__mapLink));
-  check(shared.searchParams.get('world')==='garden-2'&&shared.searchParams.has('at')&&shared.searchParams.get('play')==='multiplayer',
+  check(shared.searchParams.get('world')==='garden-2'&&shared.searchParams.has('at')&&!shared.searchParams.has('play'),
     'A selected map point shares its world and position');
   await page.waitForTimeout(1100);
   const world=await (await page.request.get(`${origin}/data/district.json`)).json();

@@ -1,20 +1,22 @@
 async (page) => {
   const check = (condition,message) => { if(!condition) throw new Error(message); };
-  const errors=[], packets=[], speechRequests=[];
+  const errors=[], speechRequests=[];
   page.on('pageerror',error=>errors.push(error.message));
   page.on('request',request=>{
-    if(request.method()==='POST' && request.url().endsWith('/v1/decisions')) packets.push(request.postDataJSON());
     if(request.url().endsWith('/v1/voice') && request.method()==='POST') speechRequests.push(request.url());
   });
   await page.setViewportSize({width:1920,height:1080});
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({state:'hidden'});
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined' && document.querySelector('#community-local').options.length>0);
   const toggle=page.locator('#panel-toggle');
   // The rail sidebar shows one section at a time; select the tab a control lives in first.
   const rail = section => page.locator(`[data-section=${section}]`).click();
-  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices & resident walks' }).evaluate(details => { details.open = true; }); };
+  const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices' }).evaluate(details => { details.open = true; }); };
   if(await toggle.getAttribute('aria-expanded')==='false') await toggle.click();
-  check(await page.locator('#community-local option[value^=local-]').count()===24,'Need 24 distinct local encounters');
+  const locals=await page.locator('#community-local option[value^=store-]').count();
+  check(locals>0,'Shared indoor encounters populate the directory');
+  check(await page.locator('#community-local option[value^=local-]').count()===0,'Solo street encounters are absent');
   check(await page.locator('#community-voice').inputValue()==='off','Speech must start muted');
   const palette=()=>page.evaluate(()=>{
     const style=getComputedStyle(document.documentElement);
@@ -33,23 +35,14 @@ async (page) => {
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
   await page.locator('button[data-theme-preference=dark]').click();
 
-  const meet=async id=>{ await rail('community-section'); await page.locator('#community-local').selectOption(id); await page.locator('#community-meet').click(); };
-  await meet('local-00');
-  check((await page.locator('#community-speech').textContent()).includes('I live here in River Oaks'),'Resident should speak from an in-world perspective');
-  await page.locator('#community-close').click(); await meet('local-00');
+  const meet=async id=>{ await rail('community-section');await page.locator('#community-more').evaluate(el=>{el.open=true;}); await page.locator('#community-local').selectOption(id); await page.waitForTimeout(1100);await page.locator('#community-meet').click();await page.locator('#community-dialogue').waitFor({state:'visible'}); };
+  await meet('store-osm-node-8172494969-person-2');
+  check((await page.locator('#community-speech').textContent()).length>30,'Resident should speak from an in-world perspective');
+  await page.locator('#community-close').click(); await meet('store-osm-node-8172494969-person-2');
   check((await page.locator('#community-speech').textContent()).includes('Welcome back'),'Resident must remember the earlier encounter');
   await page.locator('#community-about').click();
   await page.waitForFunction(()=>!document.querySelector('#community-attribution').textContent.includes('checking'));
-  check(packets.some(packet=>packet.agents.some(agent=>agent.role_context?.includes('Visitor encounters 2'))),'Reaction packet must include encounter memory');
-
-  const guests=[];
-  for(const [id,name,era] of [['local-20','Ima Hogg','heritage'],['local-21','Barbara Jordan','heritage'],['local-22','Hakeem Olajuwon','no endorsement'],['local-23','Beyoncé','no endorsement']]) {
-    await meet(id);
-    check(await page.locator('#community-name').textContent()===name,'Named Houston encounter must be selectable');
-    check((await page.locator('.community-kicker').textContent()).includes(era),'Portrayal disclosure must be visible');
-    check(await page.locator('.community-biography').isVisible(),'Public biography source must be available');
-    guests.push(name);
-  }
+  check((await page.locator('#community-attribution').textContent()).includes('shared town'),'Indoor authored dialogue is attributed to the shared town');
   await page.setViewportSize({width:3840,height:2160});
   await page.screenshot({path:'output/playwright/houston-persona-4k.png'});
   const responsePromise=page.waitForResponse(response=>response.url().endsWith('/v1/voice') && response.request().method()==='POST' && !(response.status()===503 && response.headers()['retry-after']==='1'),{timeout:25000});
@@ -71,7 +64,7 @@ async (page) => {
   check(await page.locator('#community-replay').isDisabled(),'Muted replay must be disabled');
   await page.locator('#community-close').click();
   await page.setViewportSize({width:390,height:844});
-  await meet('local-20');
+  await meet('store-osm-node-8172494969-person-2');
   await toggle.click();
   await page.waitForTimeout(400);
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'Mobile persona dialogue must not cause horizontal overflow');
@@ -80,5 +73,5 @@ async (page) => {
   await page.setViewportSize({width:1920,height:1080});
   await toggle.click();
   check(errors.length===0,`Browser errors: ${errors.join('; ')}`);
-  return {guests,locals:24,encounterMemory:true,rolePackets:true,light,dark,systemTheme:true,localVoice:{wavBytes:wav.length,requests:speechRequests.length,mutedAfterPlayback:true},mobileNoOverflow:true,browserErrors:errors};
+  return {locals,encounterMemory:true,light,dark,systemTheme:true,localVoice:{wavBytes:wav.length,requests:speechRequests.length,mutedAfterPlayback:true},mobileNoOverflow:true,browserErrors:errors};
 }

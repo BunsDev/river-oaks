@@ -5,7 +5,7 @@ async page=>{
   if(await page.locator('#community-dialogue').isVisible()){await page.locator('#community-close').click();await page.locator('#community-dialogue').waitFor({state:'hidden'});}
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
-  await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();await page.locator('#community-dialogue').waitFor({state:'visible'});
+  await page.locator('#community-local').selectOption(id);await page.waitForTimeout(1100);await page.locator('#community-meet').click();await page.locator('#community-dialogue').waitFor({state:'visible'});
  };
  const sample=async()=>page.evaluate(async()=>{
   const states=[],start=performance.now();let previous=null,maxSpeed=0,maxFootError=0,slip=0,steps=0;
@@ -20,13 +20,13 @@ async page=>{
  });
  try{
   await page.emulateMedia({reducedMotion:'no-preference'});await page.setViewportSize({width:1440,height:1000});
-  await page.goto('http://127.0.0.1:5181/?motion-debug=1');await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});
-  const worker=await page.evaluate(()=>window.__riverPeople().find(p=>p.task?.kind==='tray').id);
-  for(const id of ['local-00',worker]){
+  await page.goto('http://127.0.0.1:5181/?motion-debug=1');await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&document.querySelector('#canvas-host').dataset.multiplayer==='joined'&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});
+  const worker=await page.evaluate(()=>window.__riverPeople().find(p=>p.task && p.id!=='store-osm-node-8172494969-person-2').id);
+  for(const id of ['store-osm-node-8172494969-person-2',worker]){
    await meet(id);const r=await sample();runs.push({id,...r});
    check(r.last.mode==='conversation'&&r.eyeErrors.every(e=>e<.035),`${id}: Jevica turns and looks toward her conversation partner`);
    check(r.maxSpeed<1.7&&r.maxFootError<.005&&r.slip<.001,`${id}: turn speed, planted support and foot reach stay bounded`);
-   if(id==='local-00'){
+   if(id==='store-osm-node-8172494969-person-2'){
     const before=await page.evaluate(()=>window.__riverPlayerAttention().position);
     await page.locator('#canvas-host').focus();await page.keyboard.down('KeyW');await page.waitForTimeout(300);await page.keyboard.up('KeyW');
     check(await page.evaluate(()=>window.__riverCarriage().pose.speed===0&&window.__riverPlayerAttention().mode==='conversation'),'Dialogue retains its existing movement pause');
@@ -43,7 +43,7 @@ async page=>{
   await page.screenshot({path:'output/playwright/player-attention-worker.png'});
   await page.locator('#community-close').click();await page.locator('#community-dialogue').waitFor({state:'hidden'});await page.waitForTimeout(1200);
   const released=await page.evaluate(()=>window.__riverPlayerAttention());check(released.mode==='none'&&released.target===null&&released.eyes.every(e=>Math.abs(e.yaw)+Math.abs(e.pitch)<.001),'Closing the conversation releases Jevica eye contact');
-  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true',null,{timeout:90000});await meet('local-00');const reduced=await sample();
+  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.playerReady==='true'&&d.multiplayer==='joined'&&d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal;},null,{timeout:90000});await meet('store-osm-node-8172494969-person-2');const reduced=await sample();
   check(reduced.last.mode==='conversation'&&reduced.eyeErrors.every(e=>e<.035),'Reduced motion retains reciprocal conversation attention');
   check(!errors.length,'No uncaught player attention errors');return {checks,runs,released,reduced,errors};
  }catch(error){throw new Error(`${error.message}\n${JSON.stringify(runs)}`);}

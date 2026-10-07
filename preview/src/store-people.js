@@ -157,18 +157,12 @@ export function buildStorePeople(rooms, { reducedMotion = false, sharedPopulatio
       roomGroup.visible = distance < 32;
     }
     for (const figure of figures) {
-      if(figure.forceOffset){figure.holder.position.y-=figure.forceOffset;figure.forceOffset=0;}
       // Display mannequins have no encounter identity and never attend a visitor.
       if (figure.role==='mannequin' || !figure.holder.parent?.visible) {figure.suspended=true;continue;}
       const local = state?.locals.find(local => local.id === figure.id);
       // Facial life continues while a spell pauses the worker's task and pose.
       // Hidden rooms still skip this clock, and long frame gaps cannot catch up.
       figure.face.update(delta);
-      if(local?.force) {
-        figure.forceOffset=local.force.height;figure.holder.position.y+=figure.forceOffset;
-        figure.avatar.eyes.update(visitor?[visitor[0],visitor[2],-visitor[1]]:null,delta);
-        figure.suspended=true;continue;
-      }
       figure.wishKind = local?.wish?.kind;
       if (figure.task) figure.task.object.visible = figure.wishKind !== 'dog';
       if (local?.wish && !figure.wishVisual) figure.wishVisual = createWishVisual(figure.holder, figure.avatar.model, { groundOffset:figure.groundOffset });
@@ -176,8 +170,7 @@ export function buildStorePeople(rooms, { reducedMotion = false, sharedPopulatio
         figure.wishVisual.update(local?.wish, { reducedMotion });
         if (!local?.wish) { figure.wishVisual.dispose(); figure.wishVisual = null; }
       }
-      figure.reaction = local?.visitorReaction;
-      const attending = Boolean(visitor && figure.id && (figure.reaction || state?.selectedId === figure.id));
+      const attending = Boolean(visitor && figure.id && state?.selectedId === figure.id);
       const near = figure.holder.position.distanceToSquared(camera.position) < 16 * 16;
       // Keep the last displayed pose and both clocks together outside the motion
       // range. Resetting the pose while its task clock runs causes a return snap.

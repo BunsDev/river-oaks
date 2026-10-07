@@ -12,7 +12,7 @@ const modes = process.argv.slice(2);
 const selectedJourney = process.env.RIVER_OAKS_SHARED_JOURNEY;
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
-const supportedModes=['development','development-world','development-solo','development-publish','required','creator'];
+const supportedModes=['development','development-world','development-publish','required','creator'];
 if (modes.some(mode => !supportedModes.includes(mode))) throw new Error(`Choose ${supportedModes.join(', ')} shared play.`);
 const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : supportedModes, rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
@@ -53,7 +53,7 @@ async function start(mode, ports) {
   for (const port of Object.values(ports)) await unused(port);
   const args = development ? ['node_modules/vite/bin/vite.js', '--config', 'preview/vite.config.js', '--port', String(ports.web)] : ['server/tests/browser-fixture.js'];
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
-  const env = { ...process.env, RIVER_OAKS_TEST_CREATOR:mode==='creator'?'1':'0', NODE_ENV: 'development', VERCEL: '', VITE_SINGLE_PLAYER: 'false', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', VITE_MULTIPLAYER: mode==='development'?'auto':mode==='development-solo'?'choice':'required', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
+  const env = { ...process.env, RIVER_OAKS_TEST_CREATOR:mode==='creator'?'1':'0', NODE_ENV: 'development', VERCEL: '', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
   // Creation journeys explicitly opt in; the flag journey checks the default off.
   env.VITE_CREATION_TOOLS = process.env.VITE_CREATION_TOOLS ?? (['development', 'development-publish', 'creator'].includes(mode) && selectedJourney !== 'creation-tools' ? 'true' : 'false');
   creationToolsEnabled = env.VITE_CREATION_TOOLS === 'true';
@@ -81,7 +81,7 @@ async function start(mode, ports) {
 }
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
-  await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
   browser = await chromium.launch({
     headless: !softwareRendering, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false,
     args: softwareRendering ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [],
@@ -104,13 +104,13 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-solo'?['solo-admin','solo-sit-and-water']:mode==='development-publish'?['world-publish']:mode==='creator'?['creator-objects']:['access-gate','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-publish'?['world-publish']:mode==='creator'?['creator-objects']:['access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();
-      // Seating needs an empty town and the first loopback account's owner rights.
-      // A new browser context does not reset server-held accounts or creations.
-      if (name === 'shared-seating' && !selectedJourney) { await stop(); await start(mode, ports); }
+      // Seating and vehicle exit require their initial town layout and identities.
+      // Closing browser contexts does not reset simulation, ledgers or creations.
+      if (['shared-seating', 'vehicle-exit'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];
@@ -149,7 +149,7 @@ try {
         // Some older page-function harnesses create extra contexts. Close every
         // context before the next journey so a failed run cannot retain a peer.
         for (const active of browser.contexts()) await active.close().catch(error => { if (!interruption.signal.aborted) throw error; });
-        await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+        await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
       }
     }
     await stop();
@@ -160,5 +160,5 @@ try {
   try { await browser?.close(); } finally { await stop(); await rm(temporary, { recursive: true, force: true }); }
   report.status = interruption.signal.aborted ? 'interrupted' : process.exitCode ? 'failed' : 'passed';
   for (const [signal, handler] of signals) process.removeListener(signal, handler);
-  await writeFile(join(root, 'data/reports/shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
 }

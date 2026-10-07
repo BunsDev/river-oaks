@@ -18,11 +18,11 @@ async page => {
   const canBuild = await page.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId).canBuild; });
   await host.focus(); await page.keyboard.press('Control+k');
   check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === (canBuild ? 1 : 0), 'Commands reflect the server-confirmed building permission');
-  check(await menu.getByRole('button', { name: 'Force & telekinesis', exact: true }).count() === 0, 'Shared-play commands omit solo-only force controls');
+  check(await menu.getByRole('button', { name: 'Force & telekinesis', exact: true }).count() === 0, 'Shared-play commands omit retired force controls');
   await page.keyboard.press('Escape');
   await command('character & abilities');
   check(await page.evaluate(() => document.activeElement.matches('input[name=player-character]')
-    && document.activeElement.closest('.character-picker') !== null), 'Shared character command focuses a visible choice when solo abilities are unavailable');
+    && document.activeElement.closest('.character-picker') !== null), 'Shared character command focuses a visible choice without retired abilities');
   await page.keyboard.press('Escape');
   if (canBuild) {
     await command('build & decorate');

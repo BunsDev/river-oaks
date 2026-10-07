@@ -1,5 +1,8 @@
 # Multiplayer performance audit — updated 5 October 2026
 
+> Historical audit evidence. Single-player was subsequently removed; population
+> comparisons and recorded receipts below describe the audited revision.
+
 ## Scope and result
 
 The shared town now simulates **98 NPCs instead of 193**, a **49.2% reduction**.

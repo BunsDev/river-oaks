@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { LANDMARK_KEY, LANDMARK_LIMIT, createLandmarks, destinationFromSearch, nearestPlace, openSpotNear, placeLink, placesOf, positionLink } from '../src/places.js';
+import { LANDMARK_LIMIT, destinationFromSearch, nearestPlace, openSpotNear, placeLink, placesOf, positionLink } from '../src/places.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const memoryStorage = () => { const map = new Map(); return { getItem: k => map.has(k) ? map.get(k) : null, setItem: (k, v) => map.set(k, String(v)), map }; };
@@ -47,33 +47,6 @@ test('position links round-trip and are bounded to the world', () => {
   assert.equal(destinationFromSearch('?at=0,0', [], world.bounds_m), null, 'outside the district is refused');
   assert.equal(destinationFromSearch('?at=abc,1', [], world.bounds_m), null);
   assert.equal(destinationFromSearch('', [], world.bounds_m), null);
-});
-
-test('landmarks persist on the device, validate their names and positions, and are bounded', () => {
-  const storage = memoryStorage();
-  let t = 1000; const landmarks = createLandmarks({ storage, now: () => t++, random: () => .5 });
-  assert.deepEqual(landmarks.list(), []);
-  const added = landmarks.add({ name: '  My   bench ', position: [1, 2], yaw: .5 });
-  assert.equal(added.ok, true); assert.equal(added.landmark.name, 'My bench');
-  assert.equal(landmarks.add({ name: '   ', position: [1, 2] }).reason, 'name');
-  assert.equal(landmarks.add({ name: 'x', position: [1] }).reason, 'position');
-  const again = createLandmarks({ storage });
-  assert.equal(again.list().length, 1); assert.deepEqual(again.list()[0].position, [1, 2]); assert.equal(again.list()[0].yaw, .5); assert.equal(again.list()[0].kind, 'landmark');
-  assert.equal(again.rename(added.landmark.id, 'Bench by the oaks'), true);
-  assert.equal(createLandmarks({ storage }).list()[0].name, 'Bench by the oaks');
-  assert.equal(again.remove(added.landmark.id), true); assert.equal(again.remove('nope'), false);
-  assert.equal(createLandmarks({ storage }).list().length, 0);
-  const many = createLandmarks({ storage: memoryStorage() });
-  for (let i = 0; i < LANDMARK_LIMIT; i++) assert.equal(many.add({ name: `p${i}`, position: [i, i] }).ok, true);
-  assert.equal(many.add({ name: 'one more', position: [0, 0] }).reason, 'limit');
-  storage.setItem(LANDMARK_KEY, '{not json');
-  assert.deepEqual(createLandmarks({ storage }).list(), [], 'broken storage starts empty');
-  storage.setItem(LANDMARK_KEY, JSON.stringify([{ id: 'ok-1', name: 'kept', position: [3, 4] }, { id: 'bad', name: 'dropped', position: ['x', 4] }, { id: 'x y', name: 'dropped id', position: [1, 1] }]));
-  assert.deepEqual(createLandmarks({ storage }).list().map(l => l.name), ['kept']);
-  const throwing = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
-  const fragile = createLandmarks({ storage: throwing });
-  assert.equal(fragile.add({ name: 'session only', position: [0, 0] }).ok, true); assert.equal(fragile.list().length, 1);
-  assert.equal(createLandmarks({}).add({ name: 'no storage', position: [0, 0] }).ok, true);
 });
 
 test('account landmarks load and use server-returned positions without writing device storage', async () => {

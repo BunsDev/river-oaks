@@ -1,0 +1,73 @@
+{
+  "mode": "development",
+  "checks": [
+    "game assets and playable character loaded",
+    "Palo Alto street surfaces loaded with clear-path dimensions",
+    "sandbox and renderer isolation",
+    "keyboard movement",
+    "shop arrival, enter and exit",
+    "resident conversation",
+    "graphics preference survives reload",
+    "native fullscreen round trip",
+    "native minimize and restore",
+    "live CSS edits hot reload in the desktop window",
+    "external navigation blocked",
+    "renderer crash recovers to playable game"
+  ],
+  "readyMs": 9640,
+  "assets": {
+    "loaded": 103,
+    "total": 103,
+    "failed": 0,
+    "done": true
+  },
+  "streetProfile": {
+    "profile": "palo-alto",
+    "warningPanels": 467,
+    "crossingEndpoints": 136,
+    "constrainedPanels": 1117,
+    "sidewalkWidth": 3.81,
+    "clearWidth": 2.4384
+  },
+  "sharedTown": true,
+  "performance": {
+    "samples": 424,
+    "medianMs": 24.900000000001455,
+    "p95Ms": 29.100000000000364,
+    "meanFps": 42.38219947621999,
+    "canvas": [
+      2560,
+      1536
+    ],
+    "quality": {
+      "mode": "auto",
+      "scale": 1,
+      "occlusion": true,
+      "fps": 42
+    },
+    "renderer": {
+      "calls": 1151,
+      "triangles": 5806829,
+      "geometries": 231,
+      "textures": 146
+    }
+  },
+  "gpu": {
+    "2d_canvas": "enabled",
+    "direct_rendering_display_compositor": "disabled_off_ok",
+    "gpu_compositing": "enabled",
+    "multiple_raster_threads": "enabled_on",
+    "opengl": "enabled_on",
+    "rasterization": "enabled",
+    "raw_draw": "disabled_off_ok",
+    "skia_graphite": "enabled_on",
+    "trees_in_viz": "disabled_off",
+    "video_decode": "enabled",
+    "video_encode": "enabled",
+    "webgl": "enabled",
+    "webgpu": "enabled",
+    "webnn": "disabled_off"
+  },
+  "errors": [],
+  "status": "passed"
+}
