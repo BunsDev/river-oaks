@@ -1,6 +1,6 @@
 # Level design skills
 
-Use these nine repository skills to take a location from references to a tested
+Use these fourteen repository skills to take a location from references to a tested
 blockout. Each skill produces evidence the next one can reuse.
 
 In a skill-aware agent, start with:
@@ -18,9 +18,11 @@ They do not require a particular browser, DCC application, or MCP server.
 
 ## Build order
 
-Follow **Reference Board → Blockout Builder → Map Scale & Blockout → Player Path &
-Collision → Blockout Review**. Reuse current evidence when entering midway. Add
-the other four skills when their checks matter to the location.
+Follow **Reference Board → Map Scale & Blockout → Blockout Builder → Room Logic →
+Player Path & Collision → Camera & Framing → Blockout Review → detail**. Establish
+scale anchors before building and remeasure the built result. Reuse current
+evidence when entering midway. Use **World Workflow & Evidence** for all A–E
+compositions; add other skills when their checks matter to the location.
 
 | Skill | Use it for | Deliverable |
 | --- | --- | --- |
@@ -33,6 +35,11 @@ the other four skills when their checks matter to the location.
 | [Modular Kit Checker](../.agents/skills/modular-kit-checker/SKILL.md) | Checking reusable pieces before assembly or art replacement | Grid, pivot, naming, and seam audit |
 | [Camera & Framing](../.agents/skills/camera-framing/SKILL.md) | Checking entrances, reveals, and navigation cues | Reproducible camera stations and framing evidence |
 | [Developer View](../.agents/skills/developer-view/SKILL.md) | Inspecting the live world or extending its debug tools | Toggleable measurements, collision, paths, camera, and object layers |
+| [Shape Language & Depth](../.agents/skills/shape-language-depth/SKILL.md) | Purposeful facade masses and recesses | Two measured alternatives and route comparison |
+| [Reference-to-Scene Comparison](../.agents/skills/reference-scene-comparison/SKILL.md) | Matched reference and scene review | Capture conditions and discrepancy table |
+| [Lighting & PBR Diagnostics](../.agents/skills/lighting-pbr-diagnostics/SKILL.md) | Materials, exposure, light and time of day | Diagnosis, small correction and measured cost |
+| [Vegetation Placement & Collision](../.agents/skills/vegetation-placement-collision/SKILL.md) | Placed/instanced trees and routes | Intersection and traversal evidence |
+| [World Workflow & Evidence](../.agents/skills/world-workflow/SKILL.md) | Composing A–E and safe recovery | Scoped stage results and handoff |
 
 Example follow-up requests:
 
@@ -44,6 +51,22 @@ Use $player-path-collision to reproduce the snag at the boutique threshold.
 Record the controller settings and blocking object before proposing a fix.
 
 Use $blockout-review on the entrance-to-counter-to-exit route before art polish.
+```
+
+## Suite audit and validation
+
+Read the [30-topic coverage matrix](level-design/skill-suite-audit.md),
+[shared safety/acceptance contract](level-design/skill-suite-contract.md),
+[representative fixtures](level-design/skill-suite-fixtures.md) and
+[recorded validation with limits](level-design/skill-suite-validation.md).
+
+```text
+Use $shape-language-depth on this flat storefront; retain the baseline and
+compare a recessed entrance with a canopy variant before selecting one.
+Use $reference-scene-comparison to compare CAM-01 at the same lens and world time.
+Use $lighting-pbr-diagnostics to distinguish roughness from exposure problems.
+Use $vegetation-placement-collision to inspect tree instances by the entrance.
+Use $world-workflow for workflow C, stopping at any missing runtime evidence.
 ```
 
 ## Shared working contract

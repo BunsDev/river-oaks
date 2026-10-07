@@ -1,0 +1,33 @@
+{
+  "runtime": "unreal",
+  "scene": "fixture-storefront",
+  "revision": "synthetic-baseline",
+  "capture": "synthetic://baseline",
+  "station": "CAM-01",
+  "units": "cm",
+  "axes": "east-south-up",
+  "position": [
+    0,
+    -400,
+    160
+  ],
+  "rotation": [
+    0,
+    0,
+    0
+  ],
+  "projection": "perspective",
+  "fovAxis": "horizontal",
+  "fov": 80,
+  "aspect": 1.7777777777777777,
+  "resolution": [
+    1280,
+    720
+  ],
+  "exposure": "locked-fixture-1",
+  "time": "12:00",
+  "weather": "clear",
+  "occupancy": "one-scale-buddy",
+  "rotationConvention": "Unreal pitch-yaw-roll degrees",
+  "renderSettings": "fixture-high-ssao-lumen"
+}

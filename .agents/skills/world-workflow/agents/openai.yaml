@@ -1,0 +1,4 @@
+interface:
+  display_name: "World Workflow & Evidence"
+  short_description: "Compose world workflows with recovery and scoped evidence"
+  default_prompt: "Use $world-workflow for the requested River Oaks review and report scoped evidence, gaps and the next action."

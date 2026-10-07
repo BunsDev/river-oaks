@@ -55,3 +55,10 @@ Separate observed facts from proposed game adaptations.
 The board is ready for **Blockout Builder** when each major layout decision has
 an evidence source or a labeled assumption. Missing dimensional evidence can
 remain an assumption; missing core layout intent needs resolution before building.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [reference-board fixture](../../../docs/level-design/skill-suite-fixtures.md#reference-board)
+for successful-use and failure examples with explicit acceptance limits.

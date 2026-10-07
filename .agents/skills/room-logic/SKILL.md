@@ -53,3 +53,10 @@ Blockout** for dimensions and **Player Path & Collision** for traversal evidence
 
 State which findings are source review versus in-game observations. Do not claim
 fire, accessibility, or building-code compliance from this gameplay check.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [room-logic fixture](../../../docs/level-design/skill-suite-fixtures.md#room-logic)
+for successful-use and failure examples with explicit acceptance limits.

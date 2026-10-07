@@ -56,3 +56,19 @@ Return a route table with pass/fail/not-tested outcomes and a compact reproducti
 for each failure: expected behavior, actual behavior, blocker identity, evidence,
 cause confidence, proposed/applied fix, and rerun result. Hand unresolved blockers
 to **Blockout Review**; hand missing instrumentation to **Developer View**.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [player-path-collision fixture](../../../docs/level-design/skill-suite-fixtures.md#player-path-collision)
+for successful-use and failure examples with explicit acceptance limits.
+
+## Multiplayer boundary
+
+For shared-world movement changes, repeat the route with the authoritative server
+and two clients in the existing local acceptance harness, including disconnect
+and reconnect. Record server positions and both clients' observations; screenshots
+alone do not prove authority. Native local sweeps and the decision HTTP bridge do
+not establish replication. Mark absent native networking unsupported and do not
+substitute browser success for native acceptance. Use World Workflow E for handoff.

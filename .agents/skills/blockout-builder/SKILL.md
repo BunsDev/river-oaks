@@ -53,3 +53,10 @@ report the playable blockout as not built rather than presenting the plan as one
 
 Hand the geometry and its measurement table to **Map Scale & Blockout**. A camera
 that looks attractive from above is not evidence that the route works on foot.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [blockout-builder fixture](../../../docs/level-design/skill-suite-fixtures.md#blockout-builder)
+for successful-use and failure examples with explicit acceptance limits.

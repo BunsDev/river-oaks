@@ -50,3 +50,23 @@ coordinates and a capture plan, with framing and motion marked not tested.
 Use **Map Scale & Blockout** for proportion issues and **Player Path & Collision**
 for physical camera/pawn constraints. Pass remaining navigation cues and camera
 comfort concerns to **Blockout Review** before art polish.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [camera-framing fixture](../../../docs/level-design/skill-suite-fixtures.md#camera-framing)
+for successful-use and failure examples with explicit acceptance limits.
+
+## Wayfinding, occlusion and interiors
+
+Treat landmarks as navigation aids: test recognition at arrival, turns and return,
+including occupancy, alternate aspect ratios and low light. Do not rely on color
+alone or add decorative landmarks that compete with the destination. Check from
+outside through the entrance, inside looking out and during threshold crossing;
+separate physical occlusion, camera clipping, exposure and intentional privacy.
+If dithering/fading is proposed, first establish renderer/material support and
+compare motion, transparency, shadows and readability on the target platform.
+Do not claim an unimplemented fade solves camera collision. Preserve the baseline
+and obtain any missing approval before broad material changes. Use Lighting & PBR Diagnostics
+for exposure and Reference-to-Scene Comparison for matched captures.

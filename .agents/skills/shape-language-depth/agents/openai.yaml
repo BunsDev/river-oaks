@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shape Language & Depth"
+  short_description: "Give facades purposeful mass, recesses and depth"
+  default_prompt: "Use $shape-language-depth for the requested River Oaks review and report scoped evidence, gaps and the next action."

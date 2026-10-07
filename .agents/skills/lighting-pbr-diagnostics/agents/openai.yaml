@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lighting & PBR Diagnostics"
+  short_description: "Separate material, exposure, light and shadow problems"
+  default_prompt: "Use $lighting-pbr-diagnostics for the requested River Oaks review and report scoped evidence, gaps and the next action."

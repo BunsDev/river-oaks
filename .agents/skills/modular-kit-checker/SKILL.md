@@ -57,3 +57,25 @@ dimension audit separately from untested visual and collision seams.
 When repairs are requested, rerun the affected joins and dependency checks.
 Hand verified pieces to **Blockout Builder** and movement seams to **Player Path &
 Collision**. Do not replace the whole kit to repair a local mismatch.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [modular-kit-checker fixture](../../../docs/level-design/skill-suite-fixtures.md#modular-kit-checker)
+for successful-use and failure examples with explicit acceptance limits.
+
+## Asset inventory, provenance and import pilot
+
+Before reuse, record source/creator, license text or receipt, permitted uses,
+attribution, asset/version/hash and importer settings. Unknown rights block reuse;
+a reference board or locally present file is not a license. Inventory variants,
+materials, texture color spaces, LOD/Nanite choices and collision separately.
+For an authorized assembly/import pilot, build a small asset zoo in a recoverable
+test scene: one source and one placed
+instance, repeated join, rotated join and one deliberately incompatible piece.
+Verify units, normals, pivots, transforms, material slots and actual simple
+collision after import. Do not mass-import, download large packs or overwrite
+existing asset paths merely to conduct this review. Unreal replacement slots are
+not a general production importer; unsupported assets need an explicit proposal.
+Restore owned pilot assets/settings on regression and repeat the original joins.

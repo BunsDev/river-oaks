@@ -64,3 +64,10 @@ unmeasured costs. Do not claim zero overhead or target frame rate without eviden
 Return controls, implemented layers and data sources, unsupported fields, captures,
 validation results, and measured cost. Link reproducible movement failures to
 **Player Path & Collision** and spatial findings to **Blockout Review**.
+
+## Safety, acceptance and examples
+
+Apply the [shared skill contract](../../../docs/level-design/skill-suite-contract.md)
+for required inputs, inspection/edit boundaries, approval, rollback and evidence.
+Use the [developer-view fixture](../../../docs/level-design/skill-suite-fixtures.md#developer-view)
+for successful-use and failure examples with explicit acceptance limits.
