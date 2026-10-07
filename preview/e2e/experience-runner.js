@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile'];
+const suite = ['connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades'];
 const names = process.argv.slice(2);
 const selectable = [];
 for (const file of await readdir(join(root, 'preview/e2e'))) {

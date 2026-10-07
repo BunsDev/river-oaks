@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RETRO } from './retro-palette.js';
+import { referencePlan, visibleRoofHeight } from './reference-facades.js';
 
 // Space-age garden architecture follows the mapped facades and roof footprints.
 // Canopies, fins and orbital lights remain above the existing walking clearance.
@@ -20,7 +21,10 @@ export function buildDistrictFantasy(world) {
     if(!batches.has(key))batches.set(key,{geometry,material,parts:[]});
     batches.get(key).parts.push({position,scale,yaw,storeId});
   };
+  // Frontages rebuilt from photographs keep their own architecture.
+  const photographed=referencePlan(world).stores;
   for(const [index,store] of world.stores.entries()) {
+    if(photographed.has(store.id))continue;
     const [x,north,base]=store.facade,[nx,ny]=store.outward,yaw=Math.atan2(nx,-ny);
     const at=(across,height,depth=.35)=>[x-ny*across+nx*depth,base+height,-north-nx*across-ny*depth];
     const accent=accents[index%accents.length],building=world.buildings.find(b=>b.id===store.building_id);
@@ -29,7 +33,7 @@ export function buildDistrictFantasy(world) {
     add(ring,brass,at(0,5.08,.80),[3.50,1,1.25],yaw,store.id);
     add(ring,glow,at(0,4.98,.80),[3.20,1,1.07],yaw,store.id);
     // Cantilevered horizontal fins and a pastel ceramic panel repeat across the street.
-    const top=Math.min(8.0,(building?.size[2]??9)-.6);
+    const top=Math.min(8.0,(building?visibleRoofHeight(world,building):9)-.6);
     for(let i=0;i<3;i++)add(box,i===1?accent:ivory,at(0,top+i*.23,.28),[6.7,.085,.65-i*.1],yaw,store.id);
     for(const side of [-1,1]) {
       add(box,brass,at(side*3.25,3.16,.18),[.065,4.95,.11],yaw,store.id);
@@ -48,7 +52,7 @@ export function buildDistrictFantasy(world) {
   }
   for(const [index,building] of world.buildings.entries()) {
     if(building.kind==='parking')continue;
-    const [x,north,base]=building.center,roof=base+building.size[2];
+    const [x,north,base]=building.center,roof=base+visibleRoofHeight(world,building);
     const radius=Math.min(2.6,building.size[0]*.17,building.size[1]*.17);
     if(radius<1)continue;
     add(dome,accents[index%accents.length],[x,roof+.75,-north],[radius,.50,radius]);

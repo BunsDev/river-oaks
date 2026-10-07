@@ -10,6 +10,7 @@ import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
 import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
+import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
@@ -100,25 +101,27 @@ export function buildDistrictBuildings(world) {
     if (!batches.has(key)) batches.set(key, { material, geometry: material === glass ? pane : geometry, parts: [] });
     batches.get(key).parts.push({ position, scale, yaw, pitch, buildingIndex });
   };
+  // Photographed frontages (Hermès, IPIC, Bella Rinova) take over the edges they cover.
+  const reference = createReferenceFacades(world, { part, pane, plane: pane, glass });
   world.buildings.forEach((building, index) => {
     const shape = new THREE.Shape(building.ring.map(([x, y]) => new THREE.Vector2(x, y)));
-    const retailHeight=building.kind==='parking'?0:4.25;
+    const retailHeight=building.kind==='parking'?0:4.25, roofHeight=visibleRoofHeight(world,building);
     // The ground-floor wall is assembled around real openings. Upper massing and
     // roof keep the mapped polygon; rooms below are original display alcoves.
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth: building.size[2]-retailHeight, bevelEnabled: false, steps: 1, curveSegments: 1 });
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: roofHeight-retailHeight, bevelEnabled: false, steps: 1, curveSegments: 1 });
     geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
-    const mesh = new THREE.Mesh(geometry, building.kind === 'parking' ? roof : stone);
+    const mesh = new THREE.Mesh(geometry, building.kind === 'parking' ? roof : reference.massMaterial(building) ?? stone);
     mesh.position.y = building.center[2]+retailHeight; mesh.castShadow = mesh.receiveShadow = true;
     mesh.userData.districtBuilding = building.id; group.add(mesh);
     const roofGeometry = new THREE.ShapeGeometry(shape); roofGeometry.rotateX(-Math.PI / 2); geometries.add(roofGeometry);
-    const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + building.size[2] + 0.02; top.receiveShadow = true; group.add(top);
+    const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + roofHeight + 0.02; top.receiveShadow = true; group.add(top);
     const ring = building.ring;
     const winding=Math.sign(ring.slice(1).reduce((sum,b,i)=>sum+ring[i][0]*b[1]-b[0]*ring[i][1],0));
-    const levels = building.kind === 'parking' ? [] : upperWindowLevels(building.size[2]);
+    const levels = building.kind === 'parking' ? [] : upperWindowLevels(roofHeight);
     // Rooftop plant and a stair bulkhead, placed inside the footprint by pulling
     // each mapped corner toward the centroid; a membrane roof is never bare.
     const corners = ring.slice(0, -1), centroid = corners.reduce((sum, [x, y]) => [sum[0] + x / corners.length, sum[1] + y / corners.length], [0, 0]);
-    const roofTop = building.center[2] + building.size[2];
+    const roofTop = building.center[2] + roofHeight;
     corners.forEach(([x, y], corner) => {
       const f = corner % 2 ? 0.42 : 0.3, px = centroid[0] + (x - centroid[0]) * f, py = centroid[1] + (y - centroid[1]) * f;
       part(plant, [px, roofTop + 0.6, -py], corner % 2 ? [2.4, 1.2, 1.4] : [1.6, 1.0, 1.6], corner * 0.35, index);
@@ -128,22 +131,34 @@ export function buildDistrictBuildings(world) {
     for (let i = 1; i < ring.length; i++) {
       const a = ring[i-1], b = ring[i], dx = b[0]-a[0], dy = b[1]-a[1], length = Math.hypot(dx, dy);
       if (length < 1) continue;
-      const yaw = Math.atan2(dy, dx), cx = (a[0]+b[0])/2, cz = -(a[1]+b[1])/2, base = building.center[2];
+      const yaw = Math.atan2(dy, dx), base = building.center[2];
       const nxEdge=winding*dy/length, nzEdge=winding*dx/length;
-      const edgeAt=(depth,height)=>[cx-nxEdge*depth,base+height,cz-nzEdge*depth];
       const material = stone;
+      // A photographed frontage rebuilds its whole facade (full) or the storeys
+      // above the shopfronts; the shared kit keeps the runs it leaves.
+      const spans = reference.plan.spans.get(`${building.id}:${i}`) ?? [];
+      const rebuilt = (along, upper = false) => spans.some(span => (upper || span.full) && along >= span.lo - 0.01 && along <= span.hi + 0.01);
+      const runs = upper => spans.filter(span => upper || span.full).reduce((free, span) => free.flatMap(([p, q]) => [[p, Math.min(q, span.lo)], [Math.max(p, span.hi), q]].filter(([x, y]) => y - x > 0.05)), [[0, length]]);
+      const ground = runs(false), upper = runs(true);
+      // Horizontal runs overlap a little at the building's corners, never at a frontage.
+      const run = (segments, surface, depth, height, [h, d], extra = 0) => {
+        for (const [p0, q0] of segments) {
+          const p = p0 <= 0 ? p0 - extra / 2 : p0, q = q0 >= length ? q0 + extra / 2 : q0, c = (p + q) / 2;
+          part(surface, [a[0] + dx * c / length - nxEdge * depth, base + height, -(a[1] + dy * c / length) - nzEdge * depth], [q - p, h, d], yaw, index);
+        }
+      };
       // Fascia above the shopfronts, with a shadow reveal beneath it and a
       // stepped cornice at the parapet: the horizontals that read as masonry.
-      part(bulkhead, edgeAt(-0.06, 4.72), [length, 0.86, 0.28], yaw, index);
+      run(ground, bulkhead, -0.06, 4.72, [0.86, 0.28]);
       // Continuous enamel fascia and brass speed lines tie every block into
       // the space-age palette, including facades without a named storefront.
-      for(const height of [4.38,4.51,5.02])part(bronzeFrame,edgeAt(-.22,height),[length,.035,.035],yaw,index);
-      part(stone,edgeAt(-.28,5.12),[length+.12,.11,.64],yaw,index);
-      part(reveal, edgeAt(0.02, 4.2), [length, 0.18, 0.12], yaw, index);
-      part(stone, edgeAt(-0.02, 0.18), [length, 0.36, 0.30], yaw, index);
-      part(bulkhead, edgeAt(-0.1, building.size[2] - 0.15), [length + 0.2, 0.3, 0.36], yaw, index);
-      part(stone, edgeAt(-0.05, building.size[2] - 0.5), [length + 0.1, 0.12, 0.26], yaw, index);
-      for (const level of levels) part(stone, edgeAt(-0.02, level - 1.25), [length, 0.14, 0.2], yaw, index);
+      for(const height of [4.38,4.51,5.02])run(ground,bronzeFrame,-.22,height,[.035,.035]);
+      run(ground,stone,-.28,5.12,[.11,.64],.12);
+      run(ground, reveal, 0.02, 4.2, [0.18, 0.12]);
+      run(ground, stone, -0.02, 0.18, [0.36, 0.30]);
+      run(upper, bulkhead, -0.1, roofHeight - 0.15, [0.3, 0.36], 0.2);
+      run(upper, stone, -0.05, roofHeight - 0.5, [0.12, 0.26], 0.1);
+      for (const level of levels) run(upper, stone, -0.02, level - 1.25, [0.14, 0.2]);
       const bays = Math.floor(length / 3.2), span = length / Math.max(1, bays);
       const entries=world.stores.filter(store=>store.building_id===building.id).map(store=>{
         const sx=store.facade[0]-a[0],sy=store.facade[1]-a[1];
@@ -152,7 +167,7 @@ export function buildDistrictBuildings(world) {
       const entryAt=offset=>entries.some(entry=>Math.abs(entry.along-offset)<1.15);
       for (let k = 0; k < bays; k++) {
         const t = (k+0.5)/bays, x = a[0]+dx*t, z = -(a[1]+dy*t);
-        const nx=winding*dy/length, nz=winding*dx/length;
+        const nx=winding*dy/length, nz=winding*dx/length, rebuiltBay=rebuilt(t*length), rebuiltUpper=rebuilt(t*length,true);
         const at=(depth,height)=>[x-nx*depth,base+height,z-nz*depth];
         const along=(point,offset)=>{ const p=[...point]; p[0]+=dx/length*offset; p[2]-=dy/length*offset; return p; };
         // A boutique room behind this bay: its own storefront keeps the glazing;
@@ -171,7 +186,7 @@ export function buildDistrictBuildings(world) {
           if (hi <= left || lo >= right) return [[left, right]];
           return [[left, Math.min(right, lo)], [Math.max(left, hi), right]].filter(([a, b]) => b - a > 0.05);
         });
-        if (!fronting) {
+        if (!fronting && !rebuiltBay) {
           const [t0, t1] = open ?? [0, 0];
           const solid = [[0, t0], [t1, 1]].filter(([p, q]) => q - p > 0.01);
           for (const [p, q] of solid) if (span * (q - p) > 0.1) part(stone, shifted(0.15, 2.25, (p + q) / 2), [span * (q - p) + 0.02, 3.8, 0.3], yaw, index);
@@ -181,7 +196,7 @@ export function buildDistrictBuildings(world) {
             return kept;
           });
         }
-        for (const [left, right] of intervals) {
+        if (!rebuiltBay) for (const [left, right] of intervals) {
           const offset = (left + right) / 2 - t * length, width = right - left;
           // Honed stone bulkhead, glazing sheet, and a bronze frame with real
           // stiles, head and sill so the pane reads as a fitted unit.
@@ -192,14 +207,14 @@ export function buildDistrictBuildings(world) {
           for (const side of [-1, 1]) part(bronzeFrame, along(at(0.10, 2.29), offset + side * width / 2), [0.05, 3.6, 0.12], yaw, index);
         }
         const solidCenter = !fronting && (!open || open[0] > 0.5 || open[1] < 0.5);
-        if(!entryAt(t*length) && !solidCenter) part(dark, [x, base+2.29, z], [0.045, 3.55, 0.16], yaw, index);
-        if(!solidCenter) part(dark, at(0.10,3.5), [span-0.3, 0.05, 0.16], yaw, index);
-        if(!entryAt(k*span)) {
+        if(!rebuiltBay && !entryAt(t*length) && !solidCenter) part(dark, [x, base+2.29, z], [0.045, 3.55, 0.16], yaw, index);
+        if(!rebuiltBay && !solidCenter) part(dark, at(0.10,3.5), [span-0.3, 0.05, 0.16], yaw, index);
+        if(!entryAt(k*span) && !rebuilt(k*span)) {
           part(material, [a[0]+dx*k/bays, base+2.25, -(a[1]+dy*k/bays)], [0.3, 4.1, 0.54], yaw, index);
           part(reveal, [a[0]+dx*k/bays, base+2.25, -(a[1]+dy*k/bays)], [0.36, 4.1, 0.02], yaw, index);
         }
         // Recessed downlights in the fascia soffit wash the display glass at dusk.
-        if(!solidCenter) for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
+        if(!rebuiltBay && !solidCenter) for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
         if (retailHeight) {
           if (open) {
             const [t0, t1] = open, width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
@@ -241,7 +256,7 @@ export function buildDistrictBuildings(world) {
         const width = Math.min(2.2, span - 1.0), height = 1.6;
         // The ceramic diamond field above Van Cleef & Arpels needs blank stone behind it.
         const ceramicField = entries.some(entry => entry.name === 'Van Cleef & Arpels' && Math.abs(entry.along - t * length) < 4.4);
-        for (const level of levels) {
+        for (const level of rebuiltUpper ? [] : levels) {
           if (ceramicField && level === levels[0]) continue;
           part(upperGlass, at(-0.03, level), [width, height, 0.04], yaw, index);
           part(reveal, at(-0.05, level + height / 2 + 0.02), [width + 0.1, 0.05, 0.08], yaw, index);
@@ -262,15 +277,19 @@ export function buildDistrictBuildings(world) {
     const isDior = store.name === 'Dior', isCartier = store.name === 'Cartier', isVanCleef = store.name === 'Van Cleef & Arpels';
     const isHarry = store.name === 'Harry Winston', isSteak = store.name === 'Steak 48', isColonial = store.name === 'Le Colonial';
     const dining = ['restaurant','ice_cream'].includes(store.category), home = store.category === 'home';
-    const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial, home); materials.add(material); textures.push(material.map);
-    const geometry = new THREE.PlaneGeometry(home ? 4.5 : isColonial ? 4.5 : store.name.length > 17 ? 9 : 7, home || isColonial ? 0.5 : 0.85); geometries.add(geometry);
-    const label = new THREE.Mesh(geometry, material);
-    label.position.set(x+nx*(isColonial ? 1.4 : 0.3), base+(home || isColonial ? 3.97 : isSteak ? 5.35 : 4.72), -north-ny*(isColonial ? 1.4 : 0.3)); label.rotation.y = yaw;
-    label.userData.storeId = store.id; group.add(label);
+    // A photographed frontage carries its own lettering, door frame, canopy and lights.
+    const rebuilt = reference.plan.stores.has(store.id);
+    if (!rebuilt) {
+      const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial, home); materials.add(material); textures.push(material.map);
+      const geometry = new THREE.PlaneGeometry(home ? 4.5 : isColonial ? 4.5 : store.name.length > 17 ? 9 : 7, home || isColonial ? 0.5 : 0.85); geometries.add(geometry);
+      const label = new THREE.Mesh(geometry, material);
+      label.position.set(x+nx*(isColonial ? 1.4 : 0.3), base+(home || isColonial ? 3.97 : isSteak ? 5.35 : 4.72), -north-ny*(isColonial ? 1.4 : 0.3)); label.rotation.y = yaw;
+      label.userData.storeId = store.id; group.add(label);
+    }
     // Door hardware and source-specific frontage details provide pedestrian-scale cues.
     const entryFrame = isHarry ? stone : isCartier || isVanCleef ? gold : dark;
-    for(const side of [-1,1]) part(entryFrame,[x+nx*0.15-ny*side*0.82,base+1.8,-north-ny*0.15-nx*side*0.82],[0.065,3.2,0.16],yaw);
-    if (!isHarry) part(entryFrame,[x+nx*0.15,base+3.38,-north-ny*0.15],[1.7,0.06,0.16],yaw);
+    if (!rebuilt) for(const side of [-1,1]) part(entryFrame,[x+nx*0.15-ny*side*0.82,base+1.8,-north-ny*0.15-nx*side*0.82],[0.065,3.2,0.16],yaw);
+    if (!isHarry && !rebuilt) part(entryFrame,[x+nx*0.15,base+3.38,-north-ny*0.15],[1.7,0.06,0.16],yaw);
     const room = roomById.get(store.id);
     if (room) {
       // A single pivot leaf that swings inward as a visitor approaches, so the
@@ -290,6 +309,14 @@ export function buildDistrictBuildings(world) {
     // Threshold, entrance mat and a recessed downlight over every door.
     part(bulkhead, [x+nx*0.55, base+0.16, -north-ny*0.55], [1.9, 0.03, 0.9], yaw);
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
+    // Clipped boxwood in limestone planters flank each boutique entrance. They
+    // are also watering sites (world-interactions.js), so rebuilt frontages keep them.
+    if (!dining && !isColonial) for (const side of [-1, 1]) {
+      const across = side * 1.6;
+      part(planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
+      for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
+    }
+    if (rebuilt) continue;
     part(spot, [x+nx*0.45, base+4.11, -north-ny*0.45], [0.13, 0.015, 0.13], yaw, -1, 0, disc);
     if (!isDior && !isCartier && !isVanCleef && !isHarry && !isColonial && !dining && !home) {
       // A sloped fabric awning with a valance and tie rods; not a flat slab.
@@ -303,12 +330,6 @@ export function buildDistrictBuildings(world) {
       }
     }
     if (isColonial) part(navy, [x+nx*0.65, base+4.02, -north-ny*0.65], [4.6, 0.09, 1.4], yaw);
-    if (!dining && !isColonial) for (const side of [-1, 1]) {
-      // Clipped boxwood in limestone planters flank each boutique entrance.
-      const across = side * 1.6;
-      part(planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
-      for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
-    }
     if (isHarry) {
       const archGeometry=new THREE.TorusGeometry(0.94,0.10,8,28,Math.PI); geometries.add(archGeometry);
       const arch=new THREE.Mesh(archGeometry,stone);
@@ -354,16 +375,19 @@ export function buildDistrictBuildings(world) {
       tiles.castShadow=tiles.receiveShadow=true; group.add(tiles);
     }
   }
+  reference.build();
+  reference.materials.forEach(material => materials.add(material)); reference.geometries.forEach(item => geometries.add(item)); textures.push(...reference.textures);
   const dummy = new THREE.Object3D();
   for (const { material, geometry, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;
-    mesh.userData.breakableGlass = material === glass || material === upperGlass;
+    mesh.userData.breakableGlass = material === glass || material === upperGlass || material.userData.breakableGlass === true;
     mesh.userData.buildingIndices = parts.map(part => part.buildingIndex);
     parts.forEach((part, index) => { dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix); });
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
-  const reflectionMaterials = [glass, upperGlass];
+  group.add(reference.group);
+  const reflectionMaterials = [glass, upperGlass, ...reference.reflective];
   const interiorGroup = buildStoreInteriors(rooms, { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
