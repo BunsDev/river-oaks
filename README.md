@@ -9,6 +9,13 @@ An inhabited science-fantasy interpretation of Houston’s River Oaks District: 
 Compose and share a moment with **Commands → Photo mode**: creative lens controls,
 social crops, film looks, and clean PNG downloads. [Photo controls and sharing](docs/photo-mode.md).
 
+## Level design skills
+
+Use the [nine shared agent skills](docs/level-design-skills.md) to gather references,
+build and measure blockouts, test player routes, and review spaces before art
+polish. The guide includes the recommended build order and invocation examples;
+the skills live in [`.agents/skills`](.agents/skills).
+
 ## Play in the desktop app
 
 Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Scale & Blockout"
+  short_description: "Test blockout proportions at actual player height"
+  default_prompt: "Use $map-scale-blockout to audit this blockout with a scale buddy and record dimensions and player-height route observations."

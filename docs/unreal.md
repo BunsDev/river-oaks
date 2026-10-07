@@ -123,3 +123,8 @@ Run the automation tests after building:
 The C++ automation tests compile with the Editor target. Their execution status is recorded in [engine acceptance](engine-acceptance.md). They cover coordinate handedness/unit conversion, ground-centered building placement, bounded movement/population, stale response policy, action safety, and authoritative schedule/weather limits against external movement decisions. They do not establish that map bootstrap, rendering, or packaging works.
 
 For production acceptance, repeat the recorded native build, automation, bootstrap and play checks; inspect orientation and known intersections; test service absent/slow/invalid responses; verify no bounds or house collisions; package and verify JSON staging; profile 500 agents at 4K on named target hardware; attach frame timing, screenshots and a capture. Review the generated geometry and GIS acceptance report independently. World Partition/HLOD, production traffic/crowds, weather/audio effects, accurate ground/canopy and licensed photoreal assets remain separate delivery work.
+
+## In-game developer view
+
+Press F7 during native Development play for the edge-stuck diagnostics overlay.
+See [controls, diagnosis evidence and verification limits](native-diagnostics.md).

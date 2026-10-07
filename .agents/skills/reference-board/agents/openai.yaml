@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reference Board"
+  short_description: "Turn real and game references into spatial decisions"
+  default_prompt: "Use $reference-board to gather sourced real-world and game references for a location and extract layout, materials, scale, and mood lessons."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blockout Review"
+  short_description: "Review spatial usability before detailed art begins"
+  default_prompt: "Use $blockout-review to walk this blockout and report cramped, empty, tall, confusing, or blocked spaces before art polish."
