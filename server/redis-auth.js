@@ -1,3 +1,4 @@
+import { createMagicAuth, createMagicStore, normalizeAuthEmail } from './magic-auth.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { WorkOS } from '@workos-inc/node';
@@ -15,6 +16,7 @@ const REFRESH_LEASE = 30_000, COOKIE_GRACE = 30_000, REFRESH_WAIT = 25_000;
 // signing in over and over cannot fill the session table.
 export const MAX_PENDING_SIGN_INS = 20_000, MAX_SESSIONS = 10_000, MAX_SESSIONS_PER_USER = 10;
 const PROVIDERS = { github: 'GitHubOAuth' };
+const SESSION_METHODS = ['GitHubOAuth', 'MagicAuth'];
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -191,7 +193,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   // Sessions from before usernames were stored, or whose lookup failed, are
   // named from the per-user record, which is refreshed at most every 10 minutes.
   const named = async (user, record) => {
-    if (!user || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
+    if (!user || record.authMethod === 'MagicAuth' || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
     return { ...user, name: nameOf(record.userId, await github.known(record.userId).catch(() => null)) };
   };
   const transaction = data => redis.eval(TRANSACTION, keys.length, ...keys, JSON.stringify({ ...data, now: now() }));
@@ -205,7 +207,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     res.setHeader('Set-Cookie', [...(Array.isArray(previous) ? previous : previous ? [previous] : []), serialized]);
   }
   function identity(result, record) {
-    if (!result.authenticated || !Object.values(PROVIDERS).includes(result.authenticationMethod)
+    if (!result.authenticated || !SESSION_METHODS.includes(result.authenticationMethod)
       || result.authenticationMethod !== record.authMethod || result.user?.emailVerified !== true
       || result.user.id !== record.userId || result.sessionId !== record.sessionId) return null;
     try {
@@ -263,12 +265,13 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     return null;
   }
 
-  async function finishSignIn(result, provider, res) {
+  async function finishSignIn(result, provider, res, asJson = false) {
     if (typeof result.sealedSession !== 'string' || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return; }
     if (result.authenticationMethod !== provider) { json(res, 403, { error: 'unsupported_provider' }); return; }
     const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
     const verified = await session.authenticate();
-    if (!validId(verified.sessionId) || !validId(verified.user?.id) || verified.authenticationMethod !== provider) {
+    if (!validId(verified.sessionId) || !validId(verified.user?.id) || verified.authenticationMethod !== provider || verified.user?.id !== result.user?.id
+      || (verified.authenticationMethod === 'MagicAuth' && normalizeAuthEmail(verified.user?.email) !== normalizeAuthEmail(result.user?.email))) {
       logSessionRejection(verified, {}, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
@@ -280,24 +283,31 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       json(res, 403, { error: 'invalid_session' }); return;
     }
     // Only a verified session is looked up on GitHub.
-    const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+    const { githubId = null, login = null } = record.authMethod === 'GitHubOAuth'
+      ? await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }) : {};
     Object.assign(record, { githubId, login });
     if (!enabled) throw new Error('Auth closed');
     if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return; }
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
-    res.writeHead(302, { Location: returnPath }); res.end();
+    if (asJson) json(res, 200, { authenticated: true, redirectTo: returnPath });
+    else { res.writeHead(302, { Location: returnPath }); res.end(); }
   }
+
+  const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS });
+  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
 
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;
-    if (!['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange'].includes(path)) return false;
+    if (!['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange', '/auth/email/start', '/auth/email/verify'].includes(path)) return false;
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Referrer-Policy', 'no-referrer');
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
-    const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange'].includes(path) ? 'POST' : 'GET';
+    const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange', '/auth/email/start', '/auth/email/verify'].includes(path) ? 'POST' : 'GET';
     if (!method.split(', ').includes(req.method)) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     let phase = path;
     try {
-      if (path === '/auth/login') {
+      if (path === '/auth/email/start' || path === '/auth/email/verify') {
+        await handleMagic(req, res, path);
+      } else if (path === '/auth/login') {
         const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
         const provider = PROVIDERS[choice];
         if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
@@ -374,11 +384,12 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         phase = 'desktop.exchange';
         const result = await sdk.userManagement.authenticateWithRefreshToken({ clientId, refreshToken,
           session: { sealSession: true, cookiePassword } });
-        if (!Object.values(PROVIDERS).includes(result.authenticationMethod) || result.user?.emailVerified !== true
+        if (!SESSION_METHODS.includes(result.authenticationMethod) || result.user?.emailVerified !== true
           || typeof result.sealedSession !== 'string') { json(res, 403, { error: 'unsupported_provider' }); return true; }
         const verified = await sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword }).authenticate();
         if (!validId(verified.sessionId) || !validId(verified.user?.id)
-          || verified.authenticationMethod !== result.authenticationMethod) {
+          || verified.authenticationMethod !== result.authenticationMethod || verified.user?.id !== result.user?.id
+      || (verified.authenticationMethod === 'MagicAuth' && normalizeAuthEmail(verified.user?.email) !== normalizeAuthEmail(result.user?.email))) {
           logSessionRejection(verified, {}, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
@@ -389,7 +400,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
-        const { githubId, login } = await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken });
+        const { githubId = null, login = null } = record.authMethod === 'GitHubOAuth'
+          ? await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }) : {};
         Object.assign(record, { githubId, login });
         if (!await transaction({ op: 'session-put', record, ttl: SESSION_TTL })) { json(res, 503, { error: 'auth_busy' }); return true; }
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);

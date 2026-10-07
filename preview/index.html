@@ -18,12 +18,44 @@
         <h1 id="access-title" tabindex="-1">Your place in the district</h1>
         <p id="access-message" role="status">Checking your access…</p>
         <div id="access-providers" class="access-actions" hidden>
+          <form id="access-email-form" class="access-form">
+            <label for="access-email">Email address</label>
+            <input id="access-email" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com" />
+            <button type="submit">Email me a sign-in code</button>
+          </form>
+          <form id="access-email-verify" class="access-form" hidden>
+            <label for="access-email-code">Six-digit email code</label>
+            <input id="access-email-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required />
+            <button type="submit">Verify email</button>
+          </form>
+          <p id="access-email-status" role="status"></p>
           <a href="/auth/login?provider=github">Continue with GitHub</a>
         </div>
+        <form id="access-invite-form" class="access-form" hidden>
+          <label for="access-invite-code">Have an invite code?</label>
+          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required aria-describedby="access-invite-help" />
+          <p id="access-invite-help">Verify your email or sign in with GitHub, then redeem your invite to join.</p>
+          <button id="access-invite-redeem" type="submit" disabled>Redeem invite and join</button>
+          <p id="access-invite-status" role="status"></p>
+        </form>
         <button id="access-retry" type="button" hidden>Try again</button>
         <button id="access-gate-signout" type="button" hidden>Sign out</button>
       </div>
     </section>
+    <dialog id="access-invites" class="access-invites" aria-labelledby="access-invites-title">
+      <h2 id="access-invites-title">Your invitations</h2>
+      <p>Each newly accepted member receives two single-use invites. They expire 30 days after they are issued.</p>
+      <p id="access-invites-status" role="status"></p>
+      <form id="access-invite-issue" class="access-form" hidden>
+        <label for="access-invite-owner">Give an invitation to</label>
+        <select id="access-invite-owner" required></select>
+        <label for="access-invite-assignee">Only this user can redeem it (optional)</label>
+        <select id="access-invite-assignee"><option value="">Anyone with the code</option></select>
+        <button type="submit">Create 30-day invite</button>
+      </form>
+      <div id="access-invites-list"></div>
+      <button id="access-invites-close" type="button">Close</button>
+    </dialog>
     <section class="access-review" id="access-review" role="dialog" aria-modal="true" aria-labelledby="access-review-title" hidden>
       <div class="access-review-card">
         <h2 id="access-review-title" tabindex="-1">Waitlist requests</h2>
@@ -49,6 +81,7 @@
         </header>
         <div class="access-tools" id="access-tools" hidden>
           <button id="access-admin" type="button" hidden>Waitlist requests</button>
+          <button id="access-invites-open" type="button">Your invitations</button>
           <button id="access-signout" type="button">Sign out</button>
         </div>
         <nav class="experience-nav" aria-label="District experiences">

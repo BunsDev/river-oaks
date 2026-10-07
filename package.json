@@ -14,6 +14,7 @@
     "test": "node --test preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
     "test:shared": "node preview/e2e/shared-runner.js",
+    "test:security:e2e": "node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
     "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
     "test:trees:webgl": "node preview/e2e/landscape-trees.js",
     "assets:trees": "node scripts/prepare_ez_tree.js",

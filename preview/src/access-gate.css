@@ -27,3 +27,23 @@
 .access-request { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 0; border-top: 1px solid #738779; }
 .access-request span { flex: 1 1 100%; overflow-wrap: anywhere; }
 .access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: #d7e5d0; }
+.access-gate { overflow-y: auto; align-items: safe center; }
+.access-form { display: grid; gap: .5rem; margin-block: 1rem; }
+.access-form input, .access-form select, .access-invites select {
+  width: 100%; min-width: 0; padding: .7rem; border: 1px solid #aebfae; border-radius: .5rem;
+  background: #172922; color: #f2eee4; font: inherit;
+}
+.access-form p { margin: 0; font-size: .85rem; }
+.access-form input:focus-visible, .access-form select:focus-visible { outline: 3px solid #e8ba63; outline-offset: 2px; }
+.access-form button:disabled { opacity: .6; cursor: wait; }
+.access-invites {
+  width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto;
+  border: 1px solid #aebfae; border-radius: 1.25rem; padding: 1.5rem;
+  background: #273e32; color: #f2eee4; font: 1rem/1.5 system-ui, sans-serif;
+}
+.access-invites::backdrop { background: #0b1915dd; }
+.access-invites [hidden] { display: none !important; }
+.access-invites button { font: inherit; padding: .5rem .8rem; border-radius: .5rem; cursor: pointer; }
+.access-invites code { display: block; overflow-wrap: anywhere; }
+.access-invites article { padding-block: 1rem; border-top: 1px solid #aebfae; }
+.access-invites article p { margin-block: .35rem; }

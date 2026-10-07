@@ -45,11 +45,11 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal((await post('admin','/api/world-draft/save',{id:'moon-garden',baseRegionSha256:editable.world.regionSha256,expectedDraftVersion:0,region:changed})).status,200);
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.id),['river-oaks','moon-garden']);
   assert.deepEqual((await (await fetch(base+'/api/worlds')).json()).worlds.map(world=>world.visitors),[0,0]);
-  const publishedData=await (await fetch(base+'/api/world-data?world=moon-garden')).json();
+  const publishedData=await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json();
   assert.equal(publishedData.template,'region-v1');
   assert.equal(publishedData.world.buildings.length,4);
-  assert.equal((await fetch(base+'/api/world-data?world=missing-world')).status,404);
-  assert.equal((await fetch(base+'/api/world-data?world=moon-garden&world=river-oaks')).status,400);
+  assert.equal((await fetch(base+'/api/world-data?world=missing-world',{headers:{Cookie:'test_session=admin'}})).status,404);
+  assert.equal((await fetch(base+'/api/world-data?world=moon-garden&world=river-oaks',{headers:{Cookie:'test_session=admin'}})).status,400);
   assert.equal((await post('admin','/api/multiplayer/ticket?world=missing-world',{})).status,404);
   const open=async(worldId,user='admin')=>{
     const ticketResponse=await post(user,`/api/multiplayer/ticket?world=${worldId}`,{});
@@ -117,8 +117,8 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).appearance,'sable-human');
   assert.equal(adminAgain.snapshot.players.find(player=>player.id===admin).movement,'upright');
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
-  assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,'Hidden revision');
-  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.provenance.kind,'creator');
+  assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).world.communityLocations[0].name,'Hidden revision');
+  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).world.provenance.kind,'creator');
   const visitor=await open('moon-garden','guest');
   const visitorsAfterRestart=(await (await fetch(base+'/api/worlds')).json()).worlds;
   assert.equal(visitorsAfterRestart.find(world=>world.id==='moon-garden').visitors,2);
@@ -140,14 +140,14 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal((await post('admin','/api/moderation/ban',{userId:'guest-user',banned:true})).status,200);
   await closed;
   assert.equal((await post('guest','/api/multiplayer/ticket?world=moon-garden',{})).status,403);
-  const oldHash=(await (await fetch(base+'/api/world-data?world=moon-garden')).json()).regionSha256;
+  const oldHash=(await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).regionSha256;
   const revisionClosed=new Promise(resolve=>adminAgain.socket.once('close',resolve));
   assert.equal((await post('guest','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1})).status,403);
   const applied=await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1});
   assert.equal(applied.status,200);
   assert.equal((await applied.json()).world.revision,2);
   assert.equal(await revisionClosed,4000);
-  const live=await (await fetch(base+'/api/world-data?world=moon-garden')).json();
+  const live=await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json();
   assert.notEqual(live.regionSha256,oldHash);
   assert.equal(live.world.communityLocations[0].name,'Hidden revision');
   assert.equal((await open('moon-garden')).snapshot.regionSha256,live.regionSha256);
@@ -174,6 +174,6 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   const restored=await post('admin','/api/world-draft/apply',{id:'moon-garden',expectedDraftVersion:1});
   assert.equal(restored.status,200);
   assert.equal((await restored.json()).world.revision,3);
-  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden')).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
+  assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).world.communityLocations[0].name,editable.publishedRegion.places[0].name);
   assert.deepEqual((await (await post('admin','/api/world-draft/history',{id:'moon-garden'})).json()).versions.map(version=>version.revision),[2,1]);
 });

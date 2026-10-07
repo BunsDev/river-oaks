@@ -1,3 +1,4 @@
+import { createMagicAuth, createMagicStore, normalizeAuthEmail } from './magic-auth.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { WorkOS } from '@workos-inc/node';
 import { VERIFY_COOKIE, verificationPage, readVerificationCode } from './email-verification.js';
@@ -14,6 +15,7 @@ const SESSION_TTL = 7 * 24 * 60 * 60_000;
 const MAX_STATES = 20_000;
 const MAX_SESSIONS = 10_000, MAX_SESSIONS_PER_USER = 10;
 const PROVIDERS = { github: 'GitHubOAuth' };
+const SESSION_METHODS = ['GitHubOAuth', 'MagicAuth'];
 const token = () => randomBytes(32).toString('base64url');
 const digest = (value) => createHash('sha256').update(value).digest('base64url');
 
@@ -54,7 +56,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
   // A session whose lookup failed is renamed once GitHub answers again.
   const named = async (user, record) => {
-    if (!user || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
+    if (!user || record.authMethod === 'MagicAuth' || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;
     const account = await github.known(record.userId).catch(() => null);
     if (validGitHubLogin(account?.login)) Object.assign(record, account);
     return { ...user, name: nameOf(record.userId, account) };
@@ -88,13 +90,14 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   const timer = setInterval(cleanup, 60_000);
   timer.unref();
 
-  async function finishSignIn(result, provider, res) {
+  async function finishSignIn(result, provider, res, asJson = false) {
     if (!result.sealedSession || result.user?.emailVerified !== true) { json(res, 403, { error: 'verified_email_required' }); return; }
     if (result.authenticationMethod !== provider) { json(res, 403, { error: 'unsupported_provider' }); return; }
     const session = sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword });
     const verified = await session.authenticate();
     if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true
-      || verified.authenticationMethod !== provider) {
+      || verified.authenticationMethod !== provider || verified.user?.id !== result.user?.id
+      || (verified.authenticationMethod === 'MagicAuth' && normalizeAuthEmail(verified.user?.email) !== normalizeAuthEmail(result.user?.email))) {
       logSessionRejection(verified, {}, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
     }
@@ -113,14 +116,15 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     }
     // Only a verified session is looked up on GitHub. The cookie is not sent
     // until the lookup finishes, so no request sees the record without it.
-    Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
+    if (record.authMethod === 'GitHubOAuth') Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
     setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
-    res.writeHead(302, { Location: returnPath }); res.end();
+    if (asJson) json(res, 200, { authenticated: true, redirectTo: returnPath });
+    else { res.writeHead(302, { Location: returnPath }); res.end(); }
   }
 
   // Decode expiry only after the SDK has verified the sealed session and JWT.
   function identity(result, record) {
-    if (!result.authenticated || !Object.values(PROVIDERS).includes(result.authenticationMethod)
+    if (!result.authenticated || !SESSION_METHODS.includes(result.authenticationMethod)
       || result.authenticationMethod !== record.authMethod || result.user?.emailVerified !== true || result.user.id !== record.userId
       || result.sessionId !== record.sessionId || sessions.get(record.sessionId) !== record) return null;
     const claims = JSON.parse(Buffer.from(result.accessToken.split('.')[1], 'base64url').toString());
@@ -165,18 +169,23 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     } catch { return null; }
   }
 
+  const magicStore = createMagicStore({ now, maxStates });
+  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
+
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;
-    if (!['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange'].includes(path)) return false;
+    if (!['/auth/login', '/auth/callback', '/auth/verify', '/auth/session', '/auth/logout', '/auth/desktop/exchange', '/auth/email/start', '/auth/email/verify'].includes(path)) return false;
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Referrer-Policy', 'no-referrer');
     if (!enabled) { json(res, 503, { error: 'auth_unavailable' }); return true; }
-    const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange'].includes(path) ? 'POST' : 'GET';
+    const method = path === '/auth/verify' ? 'GET, POST' : ['/auth/logout', '/auth/desktop/exchange', '/auth/email/start', '/auth/email/verify'].includes(path) ? 'POST' : 'GET';
     if (!method.split(', ').includes(req.method)) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     cleanup();
     let phase = path;
     try {
-      if (path === '/auth/login') {
+      if (path === '/auth/email/start' || path === '/auth/email/verify') {
+        await handleMagic(req, res, path);
+      } else if (path === '/auth/login') {
         const choice = new URL(req.url, base).searchParams.get('provider') ?? 'github';
         const provider = PROVIDERS[choice];
         if (!provider) { json(res, 400, { error: 'unsupported_provider' }); return true; }
@@ -265,11 +274,12 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
         phase = 'desktop.exchange';
         const result = await sdk.userManagement.authenticateWithRefreshToken({ clientId, refreshToken,
           session: { sealSession: true, cookiePassword } });
-        if (!Object.values(PROVIDERS).includes(result.authenticationMethod) || result.user?.emailVerified !== true
+        if (!SESSION_METHODS.includes(result.authenticationMethod) || result.user?.emailVerified !== true
           || typeof result.sealedSession !== 'string') { json(res, 403, { error: 'unsupported_provider' }); return true; }
         const verified = await sdk.userManagement.loadSealedSession({ sessionData: result.sealedSession, cookiePassword }).authenticate();
         if (!verified.authenticated || !verified.sessionId || verified.user?.emailVerified !== true
-          || verified.authenticationMethod !== result.authenticationMethod) {
+          || verified.authenticationMethod !== result.authenticationMethod || verified.user?.id !== result.user?.id
+      || (verified.authenticationMethod === 'MagicAuth' && normalizeAuthEmail(verified.user?.email) !== normalizeAuthEmail(result.user?.email))) {
           logSessionRejection(verified, {}, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
@@ -285,7 +295,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
         }
-        Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
+        if (record.authMethod === 'GitHubOAuth') Object.assign(record, await github.resolve({ userId: record.userId, oauthAccessToken: result.oauthTokens?.accessToken }));
         setCookie(res, SESSION_COOKIE, result.sealedSession, SESSION_TTL / 1000);
         json(res, 200, { authenticated: true });
       } else if (path === '/auth/session') {
@@ -314,6 +324,6 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   return {
     handle,
     authenticate: (req, { refresh = false } = {}) => authenticateRequest(req, refresh ? req.res : undefined),
-    close() { enabled = false; clearInterval(timer); states.clear(); verifications.clear(); sessions.clear(); cookies.clear(); },
+    close() { enabled = false; clearInterval(timer); magicStore.close(); states.clear(); verifications.clear(); sessions.clear(); cookies.clear(); },
   };
 }

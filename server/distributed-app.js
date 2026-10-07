@@ -14,6 +14,7 @@ import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
 import { eventAction } from './events-api.js';
 import { accountDesignCommand } from './design-commands.js';
+import { securityHeaders } from './security-headers.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -40,11 +41,15 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   // Each sign-in start holds a pending slot until it completes or expires, so
   // one address may start only a few at a time.
   const signInStart = req => security.allow('login', rateLimitKey(address(req)), SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW);
-  const authorized = async (req, res) => {
+  const approvedIdentity = async (req, res) => {
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'Sign in to join the town.' }); return null; }
     if (await security.isBanned(identity.userId)) { json(res, 403, { error: 'This account cannot join the town.' }); return null; }
     if (!(await waitlist.isApproved(identity.userId))) { json(res, 403, { error: 'waitlist_approval_required' }); return null; }
+    return identity;
+  };
+  const authorized = async (req, res) => {
+    const identity = await approvedIdentity(req, res); if (!identity) return null;
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'Invalid request origin or security token.' }); return null;
     }
@@ -63,7 +68,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
   function publish(view) {
     if (!view) return;
@@ -81,16 +86,15 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     }
   }
   const server = createServer(async (req, res) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Referrer-Policy', 'same-origin');
-    res.setHeader('X-Frame-Options', 'DENY');
+    securityHeaders(res);
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
-      if (path === '/auth/login' && !(await signInStart(req))) return json(res, 429, { error: 'Too many sign-in attempts. Try again later.' });
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
+        if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
         const meta=await worldCatalog.get(ids[0]);
@@ -230,6 +234,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid moderation action.' }); }
         if (!data || typeof data.userId !== 'string' || !data.userId.length || data.userId.length > 100
           || data.userId === identity.userId || typeof data.banned !== 'boolean') return json(res, 400, { error: 'Invalid moderation action.' });
+        if (data.banned) await waitlist.revokeInvites?.({ userId: data.userId, actorId: identity.userId });
         const ok = data.banned
           ? await security.ban({ userId: data.userId, actorId: identity.userId, reason: 'Moderator action' })
           : await security.unban({ userId: data.userId, actorId: identity.userId });

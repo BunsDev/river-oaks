@@ -1,6 +1,7 @@
 import { accountName } from '../preview/src/resident-names.js';
 import { guardWaitlistRequest } from './name-guard.js';
 import { timingSafeEqual } from 'node:crypto';
+import { validInviteCode, validInviteId } from './invitations.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -9,29 +10,56 @@ const json = (res, status, value) => {
   res.end(JSON.stringify(value));
 };
 
-export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {} }) {
+export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {}, isBanned = async () => false }) {
   const adminIds = new Set(admins);
   return async (req, res, path) => {
-    if (!['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision'].includes(path)) return false;
-    const method = path === '/api/waitlist/decision' ? 'POST' : 'GET';
+    if (!['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/waitlist/invites',
+      '/api/waitlist/invite-issue', '/api/waitlist/invite-update', '/api/waitlist/invite-redeem'].includes(path)) return false;
+    const method = ['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/invites'].includes(path) ? 'GET' : 'POST';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     const identity = await auth.authenticate(req);
     if (!identity) { json(res, 401, { error: 'sign_in_required' }); return true; }
+    if (await isBanned(identity.userId)) { json(res, 403, { error: 'access_denied' }); return true; }
     if (path === '/api/waitlist/status') {
       const record = await waitlist.request(identity);
       json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) } });
       return true;
     }
-    if (!adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
+    if (path === '/api/waitlist/invites') {
+      json(res, 200, { invites: await waitlist.listInvites({ userId: identity.userId }) }); return true;
+    }
+    if (path !== '/api/waitlist/invite-redeem' && !adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
     if (path === '/api/waitlist/requests') { json(res, 200, { requests: (await waitlist.list()).map(guardWaitlistRequest) }); return true; }
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'invalid_origin_or_csrf' }); return true;
     }
+    if (req.headers['content-type']?.split(';')[0] !== 'application/json') { json(res, 415, { error: 'json_required' }); return true; }
     let data, size = 0, chunks = [];
     try {
       for await (const chunk of req) { size += chunk.length; if (size > 1024) throw new Error('Invalid body'); chunks.push(chunk); }
       data = JSON.parse(Buffer.concat(chunks).toString());
     } catch { json(res, 400, { error: 'invalid_decision' }); return true; }
+    if (path === '/api/waitlist/invite-redeem') {
+      if (!validInviteCode(data?.code)) { json(res, 400, { error: 'invalid_invite' }); return true; }
+      const owner = await waitlist.inviteOwner(data.code);
+      if (!owner || await isBanned(owner)) { json(res, 400, { error: 'invalid_invite' }); return true; }
+      await waitlist.request(identity);
+      const result = await waitlist.redeemInvite({ identity, code: data.code });
+      json(res, result.ok ? 200 : 400, result.ok ? { status: 'approved' } : { error: 'invalid_invite' }); return true;
+    }
+    const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
+    if (path === '/api/waitlist/invite-issue' || path === '/api/waitlist/invite-update') {
+      if (!data || (data.assignedUserId !== undefined && data.assignedUserId !== null && !validId(data.assignedUserId))
+        || (path.endsWith('invite-issue') ? !validId(data.ownerId) : !validInviteId(data.id))
+        || (data.expire !== undefined && typeof data.expire !== 'boolean')) {
+        json(res, 400, { error: 'invalid_invite' }); return true;
+      }
+      if (path.endsWith('invite-issue') && await isBanned(data.ownerId)) { json(res, 400, { error: 'invalid_invite' }); return true; }
+      const invite = path.endsWith('invite-issue')
+        ? await waitlist.issueInvite({ actorId: identity.userId, ownerId: data.ownerId, assignedUserId: data.assignedUserId ?? null })
+        : await waitlist.updateInvite({ actorId: identity.userId, id: data.id, assignedUserId: data.assignedUserId ?? null, expire: data.expire ?? false });
+      json(res, invite ? 200 : 400, invite ? { invite } : { error: 'invalid_invite' }); return true;
+    }
     if (!data || typeof data.userId !== 'string' || data.userId.length > 100 || typeof data.approved !== 'boolean'
       || data.userId === identity.userId || adminIds.has(data.userId)) { json(res, 400, { error: 'invalid_decision' }); return true; }
     const record = await waitlist.decide({ userId: data.userId, approved: data.approved, actorId: identity.userId });

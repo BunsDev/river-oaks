@@ -17,6 +17,7 @@ import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
 import { eventAction } from './events-api.js';
+import { securityHeaders } from './security-headers.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -33,11 +34,15 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
   const isBanned = id => moderation?.isBanned(id) ?? false;
   const send = (ws,value,options) => sendFrame(ws,value,options);
   const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{})});
-  const authorized = async (req,res) => {
+  const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
     if (isBanned(identity.userId)) {json(res,403,{error:'This account cannot join the town.'});return null;}
     if (!(await waitlist.isApproved(identity.userId))) {json(res,403,{error:'waitlist_approval_required'});return null;}
+    return identity;
+  };
+  const authorized = async (req,res) => {
+    const identity=await approvedIdentity(req,res);if(!identity)return null;
     if (req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],identity.csrfToken)) {json(res,403,{error:'Invalid request origin or security token.'});return null;}
     return identity;
   };
@@ -48,7 +53,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     connection?.ws.close(code,reason);world.leave(id);
   };
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin,
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned,
     onRevoke: async userId => {
       disconnectUser(userId, 4003, 'Waitlist approval ended');
       await onBan?.(userId);
@@ -59,16 +64,16 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     return JSON.parse(Buffer.concat(chunks).toString());
   }
   const server = createServer(async (req,res) => {
-    res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
-    res.setHeader('X-Frame-Options','DENY');
+    securityHeaders(res);
     try {
       const pathname=new URL(req.url,'http://localhost').pathname;
       if (pathname==='/health') return json(res,200,{ok:true,players:connections.size});
       if ((pathname.startsWith('/auth/') || pathname.startsWith('/api/')) && !access(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many requests. Try again shortly.'});
-      if (pathname==='/auth/login' && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many sign-in attempts. Try again later.'});
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(pathname) && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
+        if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
         const meta=await worldCatalog.get(ids[0]);
@@ -189,6 +194,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         if (!moderatorIds.has(identity.userId) || !moderation) return json(res,403,{error:'Moderator access required.'});
         const data=await body(req);
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
+        if(data.banned) await waitlist.revokeInvites?.({userId:data.userId,actorId:identity.userId});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
         if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await onBan?.(data.userId);}
         return json(res,200,{ok:true});
