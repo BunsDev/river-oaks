@@ -31,3 +31,24 @@ def test_export_rejects_neighborhood_and_oversized_scenes():
         district_manifest({**source, "scene": "neighborhood"})
     with pytest.raises(ValueError, match="district"):
         district_manifest({**source, "bounds_m": [0, 0, 4000, 4000]})
+
+
+def test_native_courtyard_crown_correction_preserves_every_other_tree_field():
+    source = json.loads(SOURCE.read_text())
+    original = json.loads(json.dumps(source))
+    exported = district_manifest(source)
+    for tree, native in zip(source["trees"], exported["trees"], strict=True):
+        expected = {**tree, "position": [*tree["position"][:2], 0]}
+        if tree["id"] == "osm-node-5904555939":
+            expected["crown_radius_m"] = 3.29
+        assert native == expected
+    assert source == original
+    assert district_manifest(exported) == exported
+
+
+def test_native_courtyard_correction_never_enlarges_a_smaller_crown():
+    source = json.loads(SOURCE.read_text())
+    tree = next(t for t in source["trees"] if t["id"] == "osm-node-5904555939")
+    tree["crown_radius_m"] = 3.0
+    result = district_manifest(source)
+    assert next(t for t in result["trees"] if t["id"] == tree["id"])["crown_radius_m"] == 3.0
