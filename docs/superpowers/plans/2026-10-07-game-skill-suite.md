@@ -38,8 +38,17 @@ Skill validator passed 14 folders; link/anchor checks passed 89 local links;
 exact commands, receipts, author walkthrough outputs and the completion audit.
 
 Native/editor, human visual judgment, live voice, target GPU performance, hosted
-auth and native multiplayer are not proven by skill validation. Full/Redis/browser
-and hosted CI were not run. No runtime scene changes were made. Work remains
-uncommitted on `main` in the original worktree; no commit/push/PR was requested.
-Next delivery step: user-directed commit/PR. Preserve this worktree while the edits
-are undelivered; rollback instructions are in `skill-suite-audit.md`.
+auth and native multiplayer are not proven by skill validation. The full
+Redis/browser profile was not run locally. No runtime scene changes were made.
+Rollback instructions are in `skill-suite-audit.md`.
+
+## Delivery
+
+At the user's direction the work was committed as `e77e3fd` on
+`codex/game-skill-suite`, after one trailing blank line was removed from this
+ledger. On base `9928280` (main plus PR #174's two preview files),
+`node --test scripts/tests/skill-views.test.js` passed 7/7, `npm run verify -- tooling`
+passed and `git diff --check` was clean; the full core gate was not rerun there.
+PR #176 passed all 11 hosted checks (CodeQL, dependency review, `preview`,
+`verify (3.11)`, `verify (3.13)` and Vercel among them) and merged at
+2026-10-07T09:17:58Z as `b058391`. The branch was then deleted.
