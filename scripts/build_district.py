@@ -53,11 +53,24 @@ CURRENT = {
     "Veronica Beard",
     "Amorino",
 }
-# Street-level photographs (Street View, 2024-2025) show these masses taller than
+# Street-level photographs (Street View, 2019-2025) show these masses taller than
 # OSM's default levels: the IPIC theatre box over its podium, the two-storey
-# Bella Rinova salon, and the Hermès flagship. The flagship is the tallest part of
-# its mapped block; the renderer draws the rest of that block at two storeys.
-REFERENCE_HEIGHTS = {"625330798": 18.5, "625333009": 10.6, "625330792": 14.5}
+# Bella Rinova salon, the Hermès flagship, the Equinox podium with four storeys
+# of curtain wall above it, the raised Etro and Brunello Cucinelli end of their
+# single-storey block, Dior's stone frame over Toulouse's two-storey building,
+# and the six-storey residences around the lawn. The flagship, the Etro end and
+# Dior are the tallest parts of their mapped blocks; the renderer draws the rest
+# of each block lower.
+REFERENCE_HEIGHTS = {
+    "625330798": 18.5,
+    "625333009": 10.6,
+    "625330792": 14.5,
+    "625330785": 28.0,
+    "625333006": 9.2,
+    "625333008": 13.5,
+    "878472795": 23.5,
+    "878472797": 23.5,
+}
 DISPLAY = {
     "Diptypque": "Diptyque",
     "de Bouille": "de Boulle",
