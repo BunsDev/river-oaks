@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { physicalSurface } from './materials.js';
+import { blockFacades, planBlocks } from './reference-blocks.js';
 
-// Three District buildings rebuilt from street-level photographs (Street View,
+// District buildings rebuilt from street-level photographs (Street View,
 // 2024–2025): the Hermès flagship, the IPIC Theaters block and the Bella Rinova
-// salon. Each frontage replaces the shared storefront kit along the mapped edge
-// it covers; every other facade keeps the space-age kit in district.js.
-// Dimensions are read off the photographs, not surveyed.
+// salon here, five more blocks in reference-blocks.js. Each frontage replaces
+// the shared storefront kit along the mapped edge it covers; every other facade
+// keeps the space-age kit in district.js. Dimensions are read off the
+// photographs, not surveyed.
 export const HERMES_BLOCK = 'osm-way-625330792', IPIC_BLOCK = 'osm-way-625330798', BELLA_BLOCK = 'osm-way-625333009';
 // The Hermès pavilion is the block's tallest part and sets its mapped (flight)
 // height; the neighbouring shops in the same OSM footprint stay two storeys.
@@ -71,10 +73,16 @@ export function referencePlan(world) {
     else if (edge.facing !== 'east') add('ipic-upper', ipic, edge, 0, edge.length, false);
   }
   const bella = building(BELLA_BLOCK);
-  if (bella && store('Bella Rinova', BELLA_BLOCK)) for (const edge of facadeEdges(bella)) {
-    const full = edge.facing === 'north' || edge.facing === 'east';
-    add(full ? `bella-${edge.facing}` : 'bella-upper', bella, edge, 0, edge.length, full);
+  if (bella && store('Bella Rinova', BELLA_BLOCK)) {
+    // Hopdoddy's face of the block is photographed separately (reference-blocks.js).
+    const hopdoddy = store('Hopdoddy Burger Bar', BELLA_BLOCK), burgers = hopdoddy && storeEdge(bella, hopdoddy)?.edge;
+    for (const edge of facadeEdges(bella)) {
+      const full = edge.facing === 'north' || edge.facing === 'east';
+      if (edge.index === burgers?.index && !full) add('hopdoddy', bella, edge, 0, edge.length, true);
+      else add(full ? `bella-${edge.facing}` : 'bella-upper', bella, edge, 0, edge.length, full);
+    }
   }
+  planBlocks(world, { building, store, add, plan, facadeEdges, storeEdge });
   for (const item of world?.stores ?? []) {
     const owner = world.buildings?.find(candidate => candidate.id === item.building_id), found = owner && storeEdge(owner, item);
     if (found && plan.spans.get(`${owner.id}:${found.edge.index}`)?.some(span => span.full && found.along >= span.lo && found.along <= span.hi)) plan.stores.add(item.id);
@@ -196,6 +204,8 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     gold: surface('blade-brass', { color: '#b89a55', roughness: 0.3, metalness: 0.78 }),
     lamp: surface('sconce-glow', { color: '#fff1d6', emissive: '#ffdcae', emissiveIntensity: 2.2 }),
     awning: keep(stripes(), 'awning'),
+    taupe: surface('amorino-canopy', { color: '#8c806e', roughness: 0.5, metalness: 0.3 }),
+    chequer: keep(cladding({ color: '#a9a8a4', panel: [0.6, 0.6], tone: 0.28, joint: 0.9, veins: 0.08, roughness: 0.5 }), 'chequer-stone'),
   };
   const sign = (material, f, s, h, d, width, height, yaw = f.yaw) => {
     if (!materials.includes(material)) keep(material, 'lettering');
@@ -233,6 +243,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     for (const h of new Set([h0, transom, h1])) if (h <= h1) box(f, mullion, s0, s1, h - 0.04, h + 0.04, d, d + depth);
   }
   const windowRow = (f, s0, s1, h0, h1, mullion, pitch) => storefront(f, s0, s1, h1, { h0, transom: h1, mullion, pitch, lower: m.shopGlass, d: 0.13, depth: 0.1 });
+  const blocks = blockFacades({ m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding });
 
   // The Hermès faces measure from their shared corner; the rest read left to
   // right as seen from the street.
@@ -311,14 +322,17 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
   // The IPIC block, west face: striped grey stone frames each shopfront below a
   // tan theatre box with vertical slot windows; the Tuck Room's glass box sits
   // over its terrace, and the violet IPIC blade stands beside the cinema door.
+  // Street order as photographed: Venus et Fleur's look (on MAD Houston), Amorino,
+  // Cos Bar, the IPIC entrance, Van Cleef & Arpels.
   function ipicWest(f, W, doors) {
     const at = name => doors.find(item => item.store.name === name)?.s;
     const mad = at('MAD Houston') ?? 9.4, amorino = at('Amorino') ?? 28.4, cinema = at('IPIC Theaters') ?? 42.1, vca = at('Van Cleef & Arpels') ?? 57.7;
     const doorS = doors.map(item => item.s), named = name => doors.find(item => item.store.name === name)?.store.name ?? name;
     const modules = [
-      { kind: 'letters', s0: 1.6, s1: Math.min(amorino - 8.8, mad + 10), name: named('MAD Houston') },
-      { kind: 'band', s0: amorino - 7, s1: amorino + 7, name: named('Amorino') },
-      { kind: 'cinema', s0: cinema - 5.5, s1: cinema + 4.4 },
+      { kind: 'letters', s0: 1.6, s1: Math.min(amorino - 4.0, mad + 15), name: named('MAD Houston') },
+      { kind: 'amorino', s0: amorino - 3.2, s1: amorino + 3.2, name: named('Amorino') },
+      { kind: 'band', s0: amorino + 4.0, s1: cinema - 4.4, name: 'COS BAR' },
+      { kind: 'cinema', s0: cinema - 3.8, s1: cinema + 4.4 },
       { kind: 'jeweller', s0: vca - 8.1, s1: vca + 8.1, name: named('Van Cleef & Arpels') },
       { kind: 'dark', s0: vca + 9.3, s1: vca + 22.3 },
       { kind: 'plain', s0: vca + 23.5, s1: W - 1.6 },
@@ -331,13 +345,34 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     for (const module of modules) {
       const { s0, s1, kind } = module;
       if (kind === 'letters') {
-        // As at Venus et Fleur: bronze letters on the stone band, a ledge, and a window row.
-        storefront(f, s0, s1, 4.2, { doors: doorS, mullion: m.bronze, pitch: 1.6 });
+        // As at Venus et Fleur: two shop bays under thin dark canopies, a
+        // clerestory row over each, the name in pale letters on the stone band
+        // above them and a projecting ledge.
+        let split = (s0 + s1) / 2;
+        for (const s of doorS) if (Math.abs(s - split) < 1.4) split = s + 1.6;
         box(f, m.greyStone, s0, s1, 4.2, 9.4, -0.05, 0.12);
-        sign(lettering(module.name.toUpperCase(), { width: 7, height: 0.62, family: 'Optima, Candara, "Gill Sans", sans-serif', weight: 500, color: '#4c3a2a', spacing: 0.12, metalness: 0.45, roughness: 0.4 }), f, (s0 + s1) / 2, 4.9, 0.13, 7, 0.62);
-        box(f, m.greyStone, s0 - 0.2, s1 + 0.2, 5.6, 5.82, -0.05, 0.75);
-        const count = Math.max(2, Math.round((s1 - s0 - 1) / 3.2)), step = (s1 - s0 - 1) / count;
-        for (let i = 0; i < count; i++) windowRow(f, s0 + 0.5 + i * step + 0.2, s0 + 0.5 + (i + 1) * step - 0.2, 6.4, 8.8, m.bronze, 1.4);
+        box(f, m.greyStone, split - 0.45, split + 0.45, 0, 4.2, -0.05, 0.25);
+        for (const [a, b] of [[s0, split - 0.45], [split + 0.45, s1]]) {
+          storefront(f, a, b, 4.2, { doors: doorS, mullion: m.charcoal, pitch: 1.6 });
+          box(f, m.charcoal, a - 0.1, b + 0.1, 4.22, 4.36, 0.05, 1.45);
+          windowRow(f, a + 0.2, b - 0.2, 4.6, 5.65, m.charcoal, 1.3);
+        }
+        sign(lettering(module.name.toUpperCase(), { width: 8, height: 0.62, family: 'Optima, Candara, "Gill Sans", sans-serif', weight: 500, color: '#e6e4de', spacing: 0.14, metalness: 0.6, roughness: 0.35 }), f, (s0 + s1) / 2, 6.35, 0.13, Math.min(8, s1 - s0 - 2), 0.62);
+        box(f, m.greyStone, s0 - 0.2, s1 + 0.2, 7.0, 7.22, -0.05, 0.7);
+      } else if (kind === 'amorino') {
+        // Amorino: a narrow portal of chequered stone standing proud of its
+        // neighbours, a taupe canopy box with the name, a dark band and a clerestory.
+        const middle = (s0 + s1) / 2;
+        for (const [a, b] of [[s0, s0 + 0.6], [s1 - 0.6, s1]]) {
+          box(f, m.greyStone, a, b, 0, 9.4, -0.05, 0.55);
+          box(f, m.charcoal, (a + b) / 2 - 0.08, (a + b) / 2 + 0.08, 3.0, 3.5, 0.55, 0.68);
+        }
+        storefront(f, s0 + 0.6, s1 - 0.6, 3.9, { doors: doorS, mullion: m.charcoal, pitch: 1.5, transom: 3.1 });
+        box(f, m.taupe, s0 + 0.5, s1 - 0.5, 3.9, 4.45, 0.0, 1.2);
+        sign(lettering(module.name, { width: 3.4, height: 0.46, family: '"Snell Roundhand", "Apple Chancery", Georgia, serif', weight: 600, color: '#3a2a1f' }), f, middle, 4.17, 1.205, Math.min(3.4, s1 - s0 - 1.6), 0.46);
+        box(f, m.charcoal, s0 + 0.6, s1 - 0.6, 4.45, 5.05, -0.05, 0.2);
+        windowRow(f, s0 + 0.6, s1 - 0.6, 5.05, 6.3, m.charcoal, 1.7);
+        box(f, m.chequer, s0 + 0.6, s1 - 0.6, 6.3, 9.4, -0.05, 0.55);
       } else if (kind === 'band') {
         // As at COS BAR: a two-storey stone frame around a white name band, a
         // clerestory and a thin white canopy over the shop glass.
@@ -347,8 +382,10 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
         box(f, m.whiteBand, s0 + 0.7, s1 - 0.7, 3.9, 4.04, 0.03, 1.75);
         box(f, m.whiteBand, s0 + 0.7, s1 - 0.7, 4.9, 6.6, 0.03, 0.45);
         box(f, m.greyStone, s0 + 0.7, s1 - 0.7, 6.6, 7.4, -0.05, 0.25);
-        sign(lettering(module.name.toUpperCase(), { width: 5.6, height: 0.82, family: '"Bodoni 72", Didot, Georgia, serif', weight: 500, color: '#18191b', spacing: 0.04 }), f, (s0 + s1) / 2, 5.93, 0.46, 5.6, 0.82);
-        box(f, m.charcoal, (s0 + s1) / 2 - 3.2, (s0 + s1) / 2 + 3.2, 5.38, 5.41, 0.45, 0.47);
+        const wide = Math.min(5.6, s1 - s0 - 1.8);
+        sign(lettering(module.name.toUpperCase(), { width: wide, height: 0.82, family: '"Bodoni 72", Didot, Georgia, serif', weight: 500, color: '#18191b', spacing: 0.04 }), f, (s0 + s1) / 2, 6.0, 0.46, wide, 0.82);
+        box(f, m.charcoal, (s0 + s1) / 2 - wide / 2 - 0.2, (s0 + s1) / 2 + wide / 2 + 0.2, 5.53, 5.56, 0.45, 0.47);
+        if (module.name === 'COS BAR') sign(lettering('BEAUTY ELEVATED', { width: wide * 0.62, height: 0.16, family: 'Futura, Avenir, sans-serif', weight: 600, color: '#18191b', spacing: 0.3 }), f, (s0 + s1) / 2, 5.3, 0.46, wide * 0.62, 0.16);
       } else if (kind === 'cinema') {
         // The cinema entrance: smooth grey panels, a slatted screen carrying the
         // IPIC name, glazed doors below.
@@ -487,6 +524,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
       else if (kind === 'bella-north') bellaNorth(f, width, doors.map(item => item.s));
       else if (kind === 'bella-east') bellaEast(f, width);
       else if (kind === 'bella-upper') bellaUpper(f, width);
+      else blocks.build(frontage, f, width, doors);
     }
     const hermes = plan.frontages.find(frontage => frontage.kind === 'hermes');
     if (hermes) hermesPavilion(hermes);
@@ -494,7 +532,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
 
   return {
     group, materials, textures, geometries, plan, build,
-    reflective: [m.blueGlass, m.shopGlass, m.tuckGlass, m.ribbon],
-    massMaterial: building => building.id === IPIC_BLOCK ? m.tan : building.id === BELLA_BLOCK ? m.cream : null,
+    reflective: [m.blueGlass, m.shopGlass, m.tuckGlass, m.ribbon, ...blocks.reflective],
+    massMaterial: building => building.id === IPIC_BLOCK ? m.tan : building.id === BELLA_BLOCK ? m.cream : blocks.massMaterial(building),
   };
 }
