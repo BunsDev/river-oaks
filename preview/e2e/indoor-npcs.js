@@ -6,7 +6,7 @@ async page => {
   await page.context().addCookies([{name:'fixture_session',value:'guest',url:origin}]);
   await page.goto(origin+'/?motion-debug=1',{waitUntil:'commit'});await ready(page);
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return Number(d.storePeopleTotal)>0&&d.storePeopleReady===d.storePeopleTotal;});
-  check(await page.locator('#canvas-host').getAttribute('data-characters-ready')==='0','Multiplayer creates no street resident models');
+  check(await page.locator('#canvas-host').getAttribute('data-characters-ready')===null,'The retired local street-model loader is absent');
   const options=await page.locator('#community-local option').evaluateAll(nodes=>nodes.map(node=>node.value));
   const indoor=await page.evaluate(()=>window.__riverMultiplayer().snapshot.locals.filter(local=>local.indoor).map(local=>local.id));
   check(options.length>0&&options.length===indoor.length&&options.every(id=>indoor.includes(id)),'The NPC directory contains only building residents');

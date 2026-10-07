@@ -56,11 +56,8 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Character & abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
     { label: 'Photo mode · take and share a picture', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
     { label: 'Rides & camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
-    { label: 'Guided visit with Jev', selector: '#auto-toggle', run: () => showPlay('.auto-controls') },
     { label: 'Bird cams', selector: '.bird-cams', run: () => showPlay('.bird-cams') },
     { label: 'Build & decorate', selector: '#build-mode', run: () => showPlay('.shared-build-controls') },
-    { label: 'Force & telekinesis', selector: '#force-toggle', run: () => showPlay('.force-controls') },
-    { label: 'Alien invasion', selector: '#invasion-toggle', run: () => showPlay('.invasion-controls') },
     { label: 'Graphics quality', selector: '[data-quality=auto]', run: () => openTab(2, '[data-quality=auto]') },
     { label: 'Light & atmosphere', selector: '#sun-hour', run: () => openTab(2, '#sun-hour') },
     { label: getClearView()?.active ? 'Show controls' : 'Clear view', keys: 'H', enabled: () => getClearView() && (document.body.classList.contains('walking') || getClearView().active), run: () => getClearView()?.set(!getClearView()?.active) },
@@ -89,9 +86,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
       ? 'Bird ride: T take / give controls · N next bird · WASD steer · Space climb · C dive · Esc land'
       : document.querySelector('#build-mode[aria-pressed=true]')
         ? 'Builder: R rotate · Shift+R reverse · Enter place · Esc finish'
-        : document.querySelector('#force-toggle[aria-pressed=true]')
-          ? 'Force: T toggle · G lift · R push · X lower · WASD move · arrows turn'
-        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · B flight · Space rise · C lower · J companion · P beast movement · V camera · Q cast (invasion)';
+        : 'WASD walk · arrows turn · Shift brisk walk · E talk · F enter / leave · Z sit / stand / water · B flight · Space rise · C lower · J companion · P beast movement · V camera';
   };
   const open = ({ help = false } = {}) => { returnFocus = document.activeElement; search.value = ''; dialog.querySelector('.commands-reference').open = help; render(); dialog.showModal(); search.focus(); };
   trigger.addEventListener('click', () => open());

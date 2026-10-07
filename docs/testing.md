@@ -2,9 +2,9 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
-Run `npm test` for browser simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse-control regressions, and `npm run build` for the production bundle. `npm run dev` starts with GitHub sign-in and waitlist approval, then offers single player and multiplayer. Choosing multiplayer joins the local shared town. Run the solo browser scripts below (character forms, invasion, auto visit, render budget) against `VITE_MULTIPLAYER=off npm run dev` with approved WorkOS access. `preview/e2e/multiplayer-dev.js` covers the town with two isolated acceptance identities; this explicit fixture has no live WorkOS sign-in. Production builds require the same login and approval for both play modes.
+Run `npm test` for simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse controls, `npm run test:desktop` for native contracts, and `npm run build` for the production bundle. `npm run dev` requires GitHub sign-in and waitlist approval, then joins the shared town. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
 
-Run `npm run test:experience` for the solo browser suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `npm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The current [shared receipt](../data/reports/shared-experience.json) records all three shared journeys.
+Run `npm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `npm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
 
 For an interactive two-player check, run `node server/tests/browser-fixture.js`, then:
 
@@ -45,7 +45,6 @@ Run the same browser scripts against the Redis fixture. The [Redis browser recei
 | Resident motion crosses geometry or stalls the render thread | Bounded routes avoid footprints/trunks; actual browser navigation runs in a worker; speed caps, passing pedestrians, pause and conversation holds preserve positions |
 | Old routes or reactions override a new situation | Weather, scene generation, request tick/age and current action fence late work; expired shelter reactions release residents |
 | A visit awards support without anyone arriving | District work requires the assigned helper within 1.5 m; real routes go around footprints; pause and storms hold visits; inaccessible paths return unused capacity once; reset discards late routes |
-| Invasion leaves unavailable neighbors interactive or breaks visits | Abduction blocks encounters, support, recruitment and inference; queued, traveling and assisting visits hold and resume without refunding capacity; world reload disposes old crew and releases residents |
 | Street furniture leaves the mapped streets or blocks a junction | Kerb strips sit at their own lane edge and clear joining lanes; lamps, planters and bins stay beside a lane, outside footprints and off inner bends; window rows fit under every mapped parapet |
 | Time of day only rotates shadows | Dusk lowers sun, sky, environment and exposure together and warms the light; every hour and weather stays finite and continuous |
 | Secret accidentally committed | Index scan catches a synthetic token despite a clean unstaged replacement; `.env` force-add is rejected; missing scanner fails closed; actual Git commit is blocked in a temporary repository |
@@ -56,11 +55,11 @@ The 500-agent timing script records measurements without enforcing host-dependen
 
 Unreal Editor/Game builds and native automation have run on UE 5.8.2. See [native resident validation](native-residents.md#animation-and-verification) and [engine acceptance](engine-acceptance.md) for measured results. Source-only hosts can run `RiverOaks.Contracts`; the full `RiverOaks` group additionally requires the imported resident assets. These checks do not establish packaging, complete collision integration or target performance.
 
-With both development servers running, the browser CLI scripts `preview/e2e/district.js`, `sidebar.js`, `personas-voice.js`, `resident-life.js`, `volunteer-visits.js`, and `visual-fidelity.js` operate real controls and record UHD/mobile screenshots. The voice script additionally needs the optional model and tests actual local synthesis/playback, alongside the hermetic unit tests. It does not run in dependency-only CI. None of these browser checks establishes target-GPU 60 fps or photographic accuracy.
+Run `node preview/e2e/experience-runner.js <name>` for an authenticated town fixture. The browser scripts `preview/e2e/district.js`, `sidebar.js`, `personas-voice.js`, and `visual-fidelity.js` operate real controls and record UHD/mobile screenshots. The voice script additionally needs the optional model and tests actual local synthesis/playback, alongside the hermetic unit tests. It does not run in dependency-only CI. None of these browser checks establishes target-GPU 60 fps or photographic accuracy.
 
 `preview/e2e/jev-voice-picker.js` drives **Settings → ElevenLabs → Jev's voice** with the bridge's voice endpoints stubbed: it checks the named voices are offered, that choosing one sends its ID to the bridge, that the custom-ID path validates before sending, and that a reload shows whatever voice the bridge reports. `preview/e2e/jev-settings.js` needs the real bridge on 8765 (`uv run river-oaks serve`) with no keys configured.
 
-`preview/e2e/places.js` drives the **Places** tab in solo play: the arrival label, one row per named place, a teleport beside a community spot, saving, reloading, returning to and removing a landmark, and the `?place=` and `?at=` links, including a link outside the district (ignored) and one into a building (refused).
+`preview/e2e/places.js` drives the **Places** tab in the shared town: the arrival label, one row per named place, a teleport beside a community spot, saving, reloading, returning to and removing a landmark, and the `?place=` and `?at=` links, including a link outside the district (ignored) and one into a building (refused).
 
 `preview/e2e/bird-cams.js` rides along with a bird Jev is flying: three birds listed and watching something, the camera at the bird's eyes and in the air, Jev still flying, a flight key taking the controls without moving the walker, T handing back, N switching birds, and Esc landing back in the walking view.
 
@@ -68,25 +67,17 @@ With both development servers running, the browser CLI scripts `preview/e2e/dist
 
 `preview/e2e/flight-refusal.js` presses B inside a shop and checks that the refusal is announced where the player is looking: a notice centred just above the walking console that names the reason (indoors, in a ride, or no room overhead), keeps Jevica on the ground, and dismisses itself.
 
-`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `VITE_MULTIPLAYER=off npm run dev`.
+`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `npm run dev`.
 
-For pointer regressions, start `npm run dev`, then run the Playwright CLI scripts:
+For pointer regressions, use the authenticated loopback runner:
 
 ```sh
-npx --yes --package @playwright/cli playwright-cli -s=river-oaks open http://127.0.0.1:5173/ --headed
-npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --filename preview/e2e/pointer-gestures.js
-npx --yes --package @playwright/cli playwright-cli -s=river-oaks run-code --filename preview/e2e/moving-people.js
+node preview/e2e/experience-runner.js pointer-gestures
 ```
 
 `pointer-gestures.js` meets whichever resident is reachable, rejects secondary
 clicks and camera drags that return to their starting point, then steps back
-within reach of that resident and verifies primary selection. `moving-people.js` uses
-the directory and keyboard to approach six rigs, clicks them while walking, and
-checks conversation holds, resumed motion, and unchanged visitor positions.
-The district simulation remains active. Read-only development diagnostics supply
-screen coordinates; no simulation state is injected. Both scripts save images
-under `output/playwright/` and work with the optional bridge offline. They don't
-verify live Jev responses or native Unreal behavior.
+within reach of that resident and verifies primary selection.
 
 `preview/e2e/resident-faces.js` checks each resident's baked face
 (`resident-face.js`) on all six rigs through the Jevica fixture, which takes
@@ -120,7 +111,7 @@ when a 60 Hz display misses refreshes, recovers gradually, settles on a
 borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
 streaming count and the capped wait for surface textures.
 
-`npm run test:experience -- hud-and-quality` starts its own solo server. It waits for the
+`npm run test:experience -- hud-and-quality` starts its own authenticated town fixture. It waits for the
 progress pill to count every file and step aside, switches Settings > Graphics
 between Auto, Smoothest and Sharpest while the canvas keeps native size,
 reloads to check the choice persists, and toggles Clear view with H and the
@@ -146,27 +137,13 @@ with the provider. Jev validates it on the next inference request.
 
 ## Jevica wishes
 
-Run `npm test` to check the five wish lifecycles, room boundaries, overlapping
-incidents, rendering restoration, and volunteer pause/resume rules. With the
-preview running, verify the controls and effects with:
-
-```sh
-npx --yes --package @playwright/cli playwright-cli -s=jevica-wishes open http://127.0.0.1:5173/ --headed
-npx --yes --package @playwright/cli playwright-cli -s=jevica-wishes run-code --filename preview/e2e/wishes.js
-```
-
-The script grants and undoes each wish through the conversation controls. It
-checks the loaded resident models, egg hatching, flight height, clothes-only
-invisibility, sadness, dog replacement, restored visibility, keyboard focus,
-and mobile controls. It uses read-only development diagnostics and doesn't
-inject simulation state. Results are recorded in
-[the wish receipt](../data/reports/jevica-wishes-e2e.json); screenshots go to
-`output/playwright/wish-*.png`. This covers the browser preview, not native Unreal
-or human accessibility acceptance.
+Run `npm run test:shared -- required` for shared wish grants, consequences,
+undo, and owner/visitor permissions through the real town transport. Earlier
+[solo wish receipts](../data/reports/jevica-wishes-e2e.json) are historical
+and do not establish current multiplayer acceptance.
 
 Run Playwright CLI from the repository root: speech and facial comparison scripts
 load generated candidates from `data/raw/` relative to that directory. Generate
-those optional candidates before running the comparison scripts. Solo directory
-and nearby encounter sweeps cover 194 people: 24 outdoor residents, 169 indoor
-residents, and Prince Jev, the carriage driver. Both wait for his model to load.
-Older dated reports with 193 people predate the carriage encounter.
+those optional candidates before running the comparison scripts. The shared NPC directory covers the 98 indoor residents.
+Older dated reports with outdoor residents and the carriage encounter describe
+retired browser simulation behavior.

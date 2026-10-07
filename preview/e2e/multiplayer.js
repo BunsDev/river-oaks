@@ -16,10 +16,10 @@ async page => {
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready),null,{timeout:60000});
     await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
     check(await page.locator('.character-picker').isVisible(),'Shared appearance picker is available');
-    check(await page.evaluate(()=>document.querySelector('.force-controls').hidden&&document.querySelector('.vehicle-garage').hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
-    check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the solo coachman');
+    check(await page.evaluate(()=>!document.querySelector('.force-controls')&&document.querySelector('.vehicle-garage').hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
+    check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the private coachman');
     await page.locator('#canvas-host').focus();await page.keyboard.press('KeyT');
-    check(await page.evaluate(()=>!window.__riverForce().enabled),'Force shortcut cannot bypass shared-mode gating');
+    check(await page.evaluate(()=>typeof window.__riverForce==='undefined'),'Force shortcut cannot bypass shared-mode gating');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.length===2),'Two accounts share the roster and rendered avatars');
     await page.locator('input[name=player-character][value=vesper]').check();
     await page.locator('input[name=player-form][value=human]').check();

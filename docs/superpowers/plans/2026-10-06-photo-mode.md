@@ -51,3 +51,14 @@ independent review found no important issues and confirmed Blob preview compatib
 with the updated content security policy. Browser/Electron acceptance is rerun on
 that integrated tree; the checked-in receipts record the results. See the repository
 PR for final commit, CI and merge status. Unrelated native work remains untouched.
+
+## Shared-only main integration
+
+Integrated main `772cab2` after PR #170 removed the solo runtime. Photo mode now
+requires a connected, non-traveling shared session; account landmarks and removed
+solo controls remain as on main. Independent integration review found no important
+issues. Fresh `npm run verify` passed: 10 tooling, 650 preview, 267 server (101
+Redis skips), 9 desktop and 139 Python tests, build, Ruff, offline pipeline and
+secret scan. Named photo-mode, rail-navigation and connection-required browser
+journeys passed. Development Electron photo acceptance passed again. The checked-in
+photo receipts record these new runs; manual acceptance limits above still apply.

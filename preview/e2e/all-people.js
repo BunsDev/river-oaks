@@ -3,12 +3,13 @@ async page => {
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
   const origin=page.url().startsWith('http')?await page.evaluate(()=>location.origin):'http://127.0.0.1:5181';
   await page.goto(`${origin}/?motion-debug=1`);
-  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.charactersReady==='24'&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';});
+  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   const ids=await page.locator('#community-local option').evaluateAll(options=>options.map(option=>option.value));
-  if(ids.length!==194)throw new Error(`Expected 194 encounters, got ${ids.length}`);
+  const expected=await page.evaluate(()=>Number(document.querySelector('#canvas-host').dataset.storePeopleTotal)+1);
+  if(ids.length!==expected)throw new Error(`Expected ${expected} indoor and companion encounters, got ${ids.length}`);
   if(!ids.includes('carriage-driver'))throw new Error('Missing carriage driver encounter');
   // Start indoors so the next outdoor visit also verifies leaving the room.
   // Outdoor-first ordering can pass every identity while missing that transition.

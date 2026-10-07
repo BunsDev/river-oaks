@@ -80,3 +80,14 @@ interrupted run is historical and no longer an outstanding core verification gap
 
 Hosted CI and PR state are the final delivery record. Native, live auth, packaging,
 real OS share completion and human acceptance limits remain as described above.
+
+## Shared-only main integration
+
+Integrated main `772cab2` after PR #170 removed the solo runtime. Photo mode now
+requires a connected, non-traveling shared session; account landmarks and removed
+solo controls remain as on main. Independent integration review found no important
+issues. Fresh `npm run verify` passed: 10 tooling, 650 preview, 267 server (101
+Redis skips), 9 desktop and 139 Python tests, build, Ruff, offline pipeline and
+secret scan. Named photo-mode, rail-navigation and connection-required browser
+journeys passed. Development Electron photo acceptance passed again. The checked-in
+photo receipts record these new runs; manual acceptance limits above still apply.

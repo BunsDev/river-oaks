@@ -61,8 +61,8 @@ async page => {
   await page.keyboard.down('KeyW');await page.waitForTimeout(650);await page.keyboard.up('KeyW');
   await page.waitForFunction(([x,z])=>Math.hypot(window.__riverCarriage().pose.position[0]-x,window.__riverCarriage().pose.position[2]-z)>.1,[x,z]);
   check(true,'Walking resumes after leaving the carriage');
-  await page.locator('#player-flight').click();
-  check(!(await page.evaluate(()=>window.__riverCarriage().pose.flying)),'Takeoff is rejected while the bubble overlaps the parked coach');
+  // The server chooses a clear exit position; it need not overlap the coach.
+  // Move into open space before checking the retained flight/boarding interlock.
   await page.locator('#canvas-host').focus();await page.keyboard.down('KeyS');await page.waitForTimeout(1000);await page.keyboard.up('KeyS');
   await page.locator('#player-flight').click();await page.waitForFunction(()=>window.__riverCarriage().pose.altitude>3);
   check(await page.locator('#player-ride').isDisabled(),'Boarding is unavailable in flight');

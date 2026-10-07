@@ -4,14 +4,14 @@ import { thirdPersonPose, createCameraBoom } from './third-person.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
-import { createWalkingEnvironment, createWalkingState, stepWalking, steerWalkingToward } from './walking.js';
+import { createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
 import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
 import './walking.css';
 
-export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onManual = () => {}, getSharedPopulation = () => false, canEnterStore = () => true, getInteraction = () => null }) {
+export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null }) {
   const $ = (selector) => document.querySelector(selector);
   const hud = document.createElement('section');
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
@@ -24,7 +24,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#viewport').append(hud);
   const keys = new Set();
   const placedObjects = [];
-  let autoInput = null, transport = null, sitting = null, seatedGround = 0;
+  let transport = null, sitting = null, seatedGround = 0;
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
@@ -59,14 +59,13 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const visitorPosition = () => [state.position[0], -state.position[2], state.position[1]];
   const canTalk = local => withinTalkingReach(local,{position:state.position,roomId:currentRoom()?.storeId??null},
     (point,eyeHeight)=>clearConversationLine(environment,visitorPosition(),point,eyeHeight));
-  const canMeet = local => canTalk(local) || !sitting && !transport && !flight.active && !local.abducted
+  const canMeet = local => canTalk(local) || !sitting && !transport && !flight.active
     && (local.storeId??null)===(currentRoom()?.storeId??null)
     && (local.indoor||local.stationary?indoorEncounterPosition:encounterPosition)(environment,local,visitorPosition(),getLocals()??[])!==null;
   const findNearest = () => {
     let result = null, distance = ENCOUNTER_FAR;
     const room = currentRoom();
     for (const local of getLocals() ?? []) {
-      if (local.abducted) continue;
       if ((local.storeId ?? null) !== (room?.storeId ?? null)) continue;
       const d = personDistance(local,visitorPosition());
       if (d < distance && canTalk(local)) { result = local; distance = d; }
@@ -88,7 +87,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const stepThrough = () => {
     if (!active || transport) return;
     if(sitting)return;
-    onManual();
+
     const room = currentRoom();
     if (room) { const store = stores.find(item => item.id === room.storeId); if (store) { clear(); onLeave?.(store); } return; }
     const store = doorway();
@@ -100,7 +99,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const interact = () => {
     if (!active) return;
     const interaction = getInteraction();
-    if (interaction && !interaction.disabled) { onManual(); clear(); interaction.run(); }
+    if (interaction && !interaction.disabled) {  clear(); interaction.run(); }
   };
   $('#walking-interact').addEventListener('click', interact);
   // The on-screen pad stays wherever the visitor last left it across visits.
@@ -121,7 +120,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   host.addEventListener('keydown', event => {
     if (!active || dialogueOpen() || !isGameplayKey(event)) return;
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'KeyZ', 'Escape'].includes(event.code)) {
-      onManual();
+
       // Cancel the chauffeur even when a quick tap ends before the next frame.
       // Repeated keydown events must not brake an ongoing manual drive.
       if (!event.repeat) transport?.takeOver?.();
@@ -138,7 +137,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   document.addEventListener('visibilitychange', clear);
   host.addEventListener('pointerdown', event => {
     if (!active || dialogueOpen() || !drag.begin(event,{captureTarget:host})) return;
-    onManual();
+
     host.setPointerCapture(event.pointerId); host.focus({ preventScroll: true });
   });
   host.addEventListener('pointermove', event => {
@@ -153,11 +152,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     const release = () => { keys.delete(button.dataset.walkKey); button.classList.remove('held'); };
     button.addEventListener('pointerdown', event => {
       if (!active || dialogueOpen()) return;
-      onManual();transport?.takeOver?.();
+      transport?.takeOver?.();
       event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(button.dataset.walkKey); button.classList.add('held');
     });
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, release);
-    button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) { onManual(); transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
+    button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) {  transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
   });
   return {
     setTraversal({canFly=false,kind=null}={}) {
@@ -170,7 +169,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     get riding() { return Boolean(transport); },
     mount(controller) {
       if(!active||flight.active||currentRoom()||transport||sitting)return false;
-      onManual();autoInput=null;clear();transport=controller;
+      clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];
       place();host.focus({preventScroll:true});return true;
@@ -184,11 +183,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.speed=0;place();host.focus({preventScroll:true});
     },
     get thirdPerson() { return thirdPerson; },
-    halt() { clear(); autoInput = null; },
+    halt() { clear(); if (state) { state.velocity = [0, 0]; state.speed = 0; } },
     applyServerPose(player) {
       transport?.stop();transport=null;
       if (!active || !state || !player) return;
-      clear(); autoInput = null;
+      clear();
       sitting=player.sitting??null;seatedGround=player.position[2];
       state.position = [player.position[0], player.position[2] + (sitting?sitting.height+.65:1.68) + player.altitude, -player.position[1]];
       state.yaw = player.yaw; state.speed = 0;
@@ -202,7 +201,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     toggleFlight() {
       if (!flightAllowed || !active || currentRoom() || transport || sitting) return false;
-      onManual();autoInput=null;clear();
+      clear();
       if (!flight.active) return beginFlight(state,environment,flight);
       else {flight.landing=!flight.landing;flight.target=flight.landing?0:Math.max(3.5,flight.altitude);}
       return true;
@@ -226,37 +225,6 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     getYaw() { return state ? state.yaw : 0; },
     setYaw(yaw) { if (state && Number.isFinite(yaw)) { state.yaw = yaw; place(); } },
     get roomId() { return active && state ? currentRoom()?.storeId ?? null : null; },
-    focusPerson(local) {
-      if (!state) return false;
-      if(sitting){if(!canTalk(local))return false;this.lookAt(personPosition(local),personEyeHeight(local));place();return true;}
-      const target=personPosition(local),eyeHeight=personEyeHeight(local);
-      if(canTalk(local)) {
-        // Stop where you stand: arriving at a run must not coast into the conversation.
-        clear();transport?.brake();state.velocity=[0,0];state.acceleration=[0,0];state.speed=0;this.lookAt(target,eyeHeight);place();return true;
-      }
-      // An airborne or mounted conversation never rebuilds grounded movement.
-      if(flight.active || transport)return false;
-      const visitor = this.getPosition();
-      const position = (local.indoor||local.stationary?indoorEncounterPosition:encounterPosition)(environment, local, visitor, getLocals() ?? []);
-      if (!position) return false;
-      clear();
-      // Already within talking range: turn toward them and stay put.
-      if (position === visitor) { state.velocity=[0,0];state.acceleration=[0,0];state.speed=0;this.lookAt(target,eyeHeight); place(); return true; }
-      const walked = state.distance;
-      state = createWalkingState(environment, position, state.yaw);
-      state.distance = walked;
-      this.lookAt(target,eyeHeight);
-      // Leave room for the conversation at the left on wide screens.
-      if (host.clientWidth > 900) state.yaw += 0.24;
-      state.pitch = host.clientWidth <= 650 ? -0.28 : -0.16;
-      place();
-      return true;
-    },
-    haltAuto() { autoInput = null; if (state) { state.velocity = [0, 0]; state.speed = 0; } },
-    steerTo(point, delta) {
-      if (!state || !active || transport || sitting) return;
-      autoInput = steerWalkingToward(state, point, delta);
-    },
     lookAt(position,eyeHeight=1.5) {
       if (!state) return;
       state.yaw = Math.atan2(state.position[0]-position[0], state.position[2]+position[1]);
@@ -264,7 +232,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       state.pitch=Math.max(-1.1,Math.min(1.1,Math.atan2(position[2]+eyeHeight-state.position[1],distance)));
     },
     enter(world, position = world.walkSpawn, lookAt, pitch = 0) {
-      onManual(); autoInput = null;sitting=null;transport?.stop();transport=null;
+       sitting=null;transport?.stop();transport=null;
       const creatorRegion = world.provenance?.kind === 'creator';
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
@@ -282,7 +250,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       place(); host.focus({ preventScroll: true });
     },
     exit() {
-      onManual(); autoInput = null;
+
       transport?.stop();transport=null;sitting=null;active = false; clear(); hud.hidden = true; nearest = null;
       document.body.classList.remove('walking', 'inside-store'); hud.dataset.inside = '';
       camera.fov = 42; camera.near = 0.5; camera.updateProjectionMatrix(); camera.rotation.z = 0;
@@ -293,7 +261,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-console').inert = dialogueOpen();
       if (dialogueOpen()) clear();
       else {
-        const input=autoInput ?? {forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
+        const input={forward:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),strafe:Number(pressed('KeyD'))-Number(pressed('KeyA')),turn:Number(pressed('ArrowLeft'))-Number(pressed('ArrowRight')),fast:pressed('ShiftLeft','ShiftRight'),lift:Number(pressed('Space'))-Number(pressed('KeyC'))};
         if(sitting) {
           state.yaw+=input.turn*1.8*delta;state.speed=0;state.velocity=[0,0];
         } else if(transport) {
@@ -327,7 +295,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
-      const roomSummary=room && (getSharedPopulation()?sharedRoomSummary(room):room.summary);
+      const roomSummary=room && sharedRoomSummary(room);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : transport ? 'W/S to ride or reverse · A/D or arrows to steer · Step out to leave your vehicle' : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         : `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`

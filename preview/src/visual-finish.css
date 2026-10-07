@@ -31,8 +31,7 @@
 body { -webkit-font-smoothing: antialiased; }
 :root[data-theme] .field-panel,
 :root[data-theme] #community-dialogue,
-:root[data-theme] .player-controls,
-:root[data-theme] .auto-controls {
+:root[data-theme] .player-controls {
   background: linear-gradient(145deg, var(--edge-light), transparent 38%), var(--glass);
   border: 1px solid var(--edge-light);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent), var(--surface-shadow);
@@ -143,28 +142,6 @@ body { -webkit-font-smoothing: antialiased; }
 .player-controls :is(#player-status,.player-companion-status):empty { display:none; }
 .player-controls[aria-busy=true] .player-portrait { opacity:.5; }
 :root[data-theme] .player-controls button:hover:not(:disabled) { box-shadow:inset 0 0 0 1px var(--accent); }
-:root[data-theme] .auto-controls { position:static; width:100%; max-width:none; transform:none; padding:10px; border-radius:20px; }
-.auto-controls button { width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-size:12px; font-weight:600; }
-.auto-controls button::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:8px; background:var(--muted); vertical-align:1px; }
-.auto-controls button[aria-pressed=true] { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
-.auto-controls p { color:var(--muted); font-size:11px; line-height:1.6; margin:8px 2px 2px; }
-.auto-controls:not([data-active=true]) p { display:none; }
-:root[data-theme] .invasion-controls { padding:10px 14px; border:1px solid var(--line); border-radius:20px; background:var(--glass); color:var(--ink); box-shadow:0 4px 16px #152b2814; font-family:inherit; }
-.invasion-controls > summary { display:flex; align-items:center; gap:8px; min-height:44px; list-style:none; font-size:12px; font-weight:600; cursor:pointer; }
-.invasion-controls > summary::-webkit-details-marker { display:none; }
-.invasion-controls > summary::after { content:''; flex:0 0 6px; height:6px; border:solid currentColor; border-width:0 1.5px 1.5px 0; transform:rotate(-45deg); }
-.invasion-controls[open] > summary::after { transform:rotate(45deg); }
-#invasion-summary { margin-left:auto; padding:3px 7px; border:1px solid var(--line); border-radius:20px; color:var(--muted); font-size:10px; font-weight:400; }
-.invasion-body { display:flex; flex-direction:column; }
-.invasion-body p, .invasion-counts { color:var(--muted); font-size:11px; line-height:1.6; }
-:root[data-theme] .invasion-controls button { min-height:44px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-size:12px; }
-:root[data-theme] .invasion-controls #invasion-cast { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-.invasion-controls #invasion-status { font-size:11px; line-height:1.6; padding-top:10px; margin-top:12px; }
-.invasion-controls #invasion-status:empty { display:none; }
-.invasion-counts { gap:8px; margin:12px 0 0; }
-.invasion-counts > span { flex:1; padding:8px; border-radius:10px; background:var(--soft); }
-:root[data-theme] .force-controls { padding:10px 14px; border-radius:20px; }
-:root[data-theme] :is(.force-controls,.invasion-controls) { backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
 :root[data-theme] .walking-console { background:linear-gradient(150deg,#ffffff0c,transparent 65%),#183337ed; border:1px solid #c4ae8055; box-shadow:inset 0 1px 0 #ffffff12,0 8px 30px #0a182033; border-radius:20px; padding:12px 12px 8px; }
 :root[data-theme] #walking-meet-nearby:not(.walking-secondary), :root[data-theme] #walking-talk:not(:disabled) { background:linear-gradient(#a24779,#883560); border:1px solid #d397b6; color:#fff; box-shadow:inset 0 1px 0 #ffffff26; font-size:13px; min-height:44px; }
 :root[data-theme] #walking-controls-toggle { color:#efd3e2; font-size:11px; }
@@ -250,11 +227,11 @@ body:has(#community-dialogue:not([hidden])) .walking-console { visibility:hidden
 }
 
 /* Clear view: the street without the visit cards. */
-body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-console, .compass, .asset-progress) {
+body.clear-view :is(.visit-tools, .walking-title, .walking-console, .compass, .asset-progress) {
   opacity: 0; visibility: hidden; pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
-  :is(.visit-tools, .auto-controls, .walking-title, .walking-console, .compass) { transition: opacity 200ms ease, visibility 200ms; }
+  :is(.visit-tools, .walking-title, .walking-console, .compass) { transition: opacity 200ms ease, visibility 200ms; }
 }
 
 /* Movement controls read as a legend, not a terminal. */
@@ -265,7 +242,6 @@ body.clear-view :is(.visit-tools, .auto-controls, .walking-title, .walking-conso
 :root[data-theme] .walking-pad button:hover { background: #ffffff1f; }
 :root[data-theme] #walking-controls-toggle, :root[data-theme] #walking-meet-nearby.walking-secondary { border-color: transparent; background: transparent; }
 :root[data-theme] #walking-controls-toggle:hover, :root[data-theme] #walking-meet-nearby.walking-secondary:hover { background: #ffffff0f; }
-@media (prefers-reduced-motion: reduce) { #viewport > .auto-controls { transition: none; } }
 .walking-pad button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
 /* A refused action says so just above the walking console, where the player is looking. */

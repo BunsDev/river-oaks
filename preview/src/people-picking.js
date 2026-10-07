@@ -3,7 +3,7 @@ import { Matrix3, Matrix4 } from 'three';
 import { ENCOUNTER_FAR } from './encounter.js';
 
 export function withinTalkingReach(local, pose, canSee) {
-  if (!local || local.abducted || !pose || (local.storeId ?? null) !== pose.roomId) return false;
+  if (!local || !pose || (local.storeId ?? null) !== pose.roomId) return false;
   return personDistance(local,[pose.position[0],-pose.position[2],pose.position[1]]) <= ENCOUNTER_FAR
     && canSee(personPosition(local),personEyeHeight(local));
 }

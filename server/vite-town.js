@@ -1,7 +1,7 @@
 import { loadEnv } from 'vite';
 import { fileURLToPath } from 'node:url';
 
-// `npm run dev` runs the WorkOS auth server for both play modes. The Vite proxy sends
+// `npm run dev` runs the WorkOS auth server and shared town. The Vite proxy sends
 // /auth, /api and /multiplayer to port 8787. If a town is already listening
 // there (for example `npm run server`), that one is used instead. Set
 // RIVER_OAKS_DEV_TOWN_PORT to isolate a second development checkout.

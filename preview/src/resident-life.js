@@ -12,7 +12,7 @@ const HELP_WAIT=30;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 // Collision avoidance is physical occupancy, not a projection of every visible
 // person onto the street. Low flight still overlaps a standing pedestrian.
-const sharesWalkingSpace=(local,other)=>other!==local && !other.abducted && !other.indoor
+const sharesWalkingSpace=(local,other)=>other!==local && !other.indoor
   && (local.storeId??null)===(other.storeId??null) && Math.abs(feetHeight(local)-feetHeight(other))<1.8;
 const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
   (pose.roomId??null)===(local.storeId??null) && Math.abs(feetHeight(local)-pose.ground-(pose.altitude??0))<1.8) ? visitor : null;
@@ -152,9 +152,9 @@ function turnResident(motion,target,dt,responsiveness=7.5) {
 
 function faceConversationPartners(state,visitor,storm,dt) {
   for(const local of state.locals) {
-    if(local.indoor || local.stationary || local.abducted) continue;
+    if(local.indoor || local.stationary) continue;
     const motion=local.life;
-    const greeting=!storm && !motion.visitId && local.visitorReaction && !local.visitorReaction.passive;
+    const greeting=!storm && !motion.visitId && local.visitorReaction?.sharedFocus;
     const visit=state.jobs.find(job=>job.phase==='assisting' && (job.helperId===local.id || job.localId===local.id));
     const partner=visit && state.selectedId!==local.id ? state.locals.find(other=>other.id===(visit.helperId===local.id?visit.localId:visit.helperId)) : null;
     const target=visitor && (state.selectedId===local.id || greeting || !storm && local.status==='aid_en_route') ? visitor : partner?.position;
@@ -166,7 +166,7 @@ function faceConversationPartners(state,visitor,storm,dt) {
 export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPose=null,obstacles=[],storm=false,humidity=0.72,hour=15,takenSeats=null}={}) {
   if(!life || !Number.isFinite(delta) || delta<=0) return;
   const {state}=life;
-  // Seats players hold: the server passes every seated player; solo play, the visitor's own seat.
+  // Seats held by the town's players.
   life.takenSeats=takenSeats ?? new Set(visitorPose?.sitting ? [`${visitorPose.sitting.buildId}:${visitorPose.sitting.slot}`] : []);
   if(life.storm!==storm || life.paused!==paused) {
     life.revision++;life.packet=null;life.paused=paused;
@@ -200,13 +200,12 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
     if(local.life.helpWait?.generation!==state.generation)local.life.helpWait={generation:state.generation,until:life.elapsed+HELP_WAIT};
     return life.elapsed<local.life.helpWait.until;
   };
-  const held=local=>awaitingHelp(local) || Boolean(local.abducted || local.force || local.wish || local.wishDisruption) || (!storm && !local.life.visitId && Boolean(local.visitorReaction) && !local.visitorReaction.passive) || state.selectedId===local.id || (!storm && local.status==='aid_en_route');
+  const held=local=>awaitingHelp(local) || Boolean(local.wish || local.wishDisruption) || (!storm && !local.life.visitId && local.visitorReaction?.sharedFocus) || state.selectedId===local.id || (!storm && local.status==='aid_en_route');
   // Rotate ownership of the route-search slot so inaccessible stops cannot starve others.
   let planned=planVolunteerVisit(life);const cursor=life.cursor;
   for(let offset=0;offset<state.locals.length;offset++) {
     const index=(cursor+offset)%state.locals.length,local=state.locals[index],motion=local.life;
     const visit=helperVisit(state,local);
-    if(local.abducted || visit && state.locals.find(person=>person.id===visit.localId)?.abducted) {motion.status='unavailable';continue;}
     if(paused && !visit) continue;
     if (local.indoor || local.stationary) { motion.status = state.selectedId === local.id ? 'chatting' : 'at work'; continue; }
     motion.blocked=false;
@@ -215,7 +214,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
       if(motion.destination?.shelter) {motion.routeVersion++;motion.route=[];motion.destination=null;motion.waitUntil=life.elapsed;}
       motion.action=hour<6 || hour>=22?'pause':humidity>0.85?'slow':'continue';motion.source='local_rules';
     }
-    if(held(local)) {motion.status=local.force?'held by the Force':local.wishDisruption ?? (local.wish ? 'enchanted' : state.selectedId===local.id?'chatting':'greeting visitor');continue;}
+    if(held(local)) {motion.status=local.wishDisruption ?? (local.wish ? 'enchanted' : state.selectedId===local.id?'chatting':'greeting visitor');continue;}
     if(visit && (!state.running || !storm && ['routing','assisting'].includes(visit.phase))) {motion.status=!state.running?'visit paused':visit.phase==='assisting'?'helping neighbor':'preparing visit';continue;}
     if(['pause','greet','stop'].includes(motion.action)) {motion.status=motion.action==='greet'?'greeting':'paused';continue;}
     if(!motion.route.length && life.elapsed>=motion.waitUntil && !planned && !life.planning && (!visit || storm || motion.action==='seek_shelter')) {
@@ -283,7 +282,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
 
 export function residentPacket(life,tick,{visitor=null,visitorPose=null,hour=15,humidity=0.72}={}) {
   if(!life || !Number.isInteger(tick) || tick<0) return null;
-  const agents=life.state.locals.filter(local=>!local.abducted && !local.indoor && !local.stationary && local.id!==life.state.selectedId && (!life.paused || life.state.running && helperVisit(life.state,local))).map(local=>{
+  const agents=life.state.locals.filter(local=>!local.indoor && !local.stationary && local.id!==life.state.selectedId && (!life.paused || life.state.running && helperVisit(life.state,local))).map(local=>{
     const nearby=life.state.locals.filter(other=>sharesWalkingSpace(local,other)).map(other=>({id:other.id,kind:'resident',distance_m:distance(local.position,other.position)})).filter(other=>other.distance_m<12);
     if(streetVisitor(local,visitor,visitorPose) && distance(visitor,local.position)<12) nearby.push({id:'visitor',kind:'pedestrian',distance_m:distance(visitor,local.position)});
     nearby.sort((a,b)=>a.distance_m-b.distance_m);
@@ -305,7 +304,7 @@ export function applyResidentDecisions(life,response) {
   }
   for(const decision of response.decisions) {
     const local=life.state.locals.find(l=>l.id===decision.id),motion=local.life;
-    if(local.abducted || local.force || local.id===life.state.selectedId || life.paused && (!life.state.running || !helperVisit(life.state,local))) continue;
+    if(local.id===life.state.selectedId || life.paused && (!life.state.running || !helperVisit(life.state,local))) continue;
     let action=life.storm?'seek_shelter':decision.action,source=life.storm?'safety_override':decision.source;
     if(action==='redirect' || action==='seek_shelter' && motion.action!=='seek_shelter') {
       motion.routeVersion++;motion.route=[];motion.destination=null;motion.waitUntil=life.elapsed;motion.visits++;motion.attempt=0;

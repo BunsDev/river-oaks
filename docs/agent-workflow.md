@@ -60,7 +60,7 @@ The shared runner uses temporary identities and owned servers; CPU rendering
 proves fixture behavior, not visual quality. On macOS, run the browser profile
 directly. Browser tasks have longer deadlines and require functioning WebGL2.
 
-For a changed solo interaction, also run its named journey, for example:
+For a changed browser interaction, also run its named journey, for example:
 `npm run test:experience -- hud-and-quality`. Desktop changes may require
 `npm run test:desktop:e2e`. Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run

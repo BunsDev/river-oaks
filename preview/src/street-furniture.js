@@ -132,15 +132,12 @@ export function buildStreetFurniture(world, isFree) {
     add(box,brass,[x,y+.59,z],[1.52,.025,.64],yaw);
   }
   group.add(buildPlanterPlanting(planters));
-  group.userData.forceObjects=[];
-  group.userData.forceObstacles=[...planters.map(([x,y,z])=>({x,z,radius:.86})),...lamps.map(([x,y,z])=>({x,z,radius:.2}))];
-  for (const [index,[x, y, z, yaw]] of bins.entries()) {
+  for (const [x, y, z, yaw] of bins) {
     const bin=new THREE.Group();bin.name='Street bin';bin.position.set(x,y,z);bin.rotation.y=yaw;
     for(const [material,height,width,depth]of [[bronze,.48,.5,.95],[grate,.98,.54,.05]]) {
       const mesh=new THREE.Mesh(post,material);mesh.position.y=height;mesh.scale.set(width,depth,width);mesh.castShadow=mesh.receiveShadow=true;bin.add(mesh);
     }
-    bin.userData.forceBody={id:`street-bin-${index}`,name:'Street bin',mass:18,radius:.28,height:1.01};
-    group.add(bin);group.userData.forceObjects.push(bin);
+    group.add(bin);
   }
   for (const [x, y, z, size, yaw] of treePits(world)) {
     add(box, pitStone, [x, y + 0.004, z], [size + TREE_FRAME * 2, 0.008, size + TREE_FRAME * 2], yaw);

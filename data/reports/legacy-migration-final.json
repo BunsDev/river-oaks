@@ -1,0 +1,945 @@
+{
+  "scope": "Standalone retained journeys migrated to authenticated shared town",
+  "results": [
+    {
+      "name": "interaction-lifecycle",
+      "status": "passed",
+      "seconds": 28.686,
+      "result": {
+        "checks": [
+          "store-osm-node-8172494969-person-2: visible and within reach",
+          "store-osm-node-8172494969-person-2: pointer selects the actual person",
+          "Interior layer hides the staff mesh",
+          "Hidden staff cannot be clicked",
+          "store-osm-node-8172494969-person-2: visible and within reach",
+          "store-osm-node-8172494969-person-2: pointer selects the actual person",
+          "Solo reset control is absent",
+          "store-osm-node-8172494969-person-2: visible and within reach",
+          "store-osm-node-8172494969-person-2: pointer selects the actual person",
+          "store-osm-node-8172494969-person-2: visible and within reach",
+          "store-osm-node-8172494969-person-2: pointer selects the actual person",
+          "No uncaught errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "pointer-gestures",
+      "status": "passed",
+      "seconds": 10.341,
+      "result": {
+        "checks": [
+          "a reachable resident opens a conversation (store-osm-node-8172494969-person-2)",
+          "right click does not start a conversation",
+          "middle click does not start a conversation",
+          "Camera drag returning to its starting point does not select a person",
+          "Secondary clicks and the drag do not move the visitor",
+          "Primary click still selects the actual mesh",
+          "Pointer gestures do not move the visitor",
+          "No uncaught browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "player-attention",
+      "status": "passed",
+      "seconds": 36.205,
+      "result": {
+        "checks": [
+          "store-osm-node-8172494969-person-2: Jevica turns and looks toward her conversation partner",
+          "store-osm-node-8172494969-person-2: turn speed, planted support and foot reach stay bounded",
+          "Dialogue retains its existing movement pause",
+          "Walking after conversation retains manual body facing",
+          "store-osm-node-8172495006-person-0: Jevica turns and looks toward her conversation partner",
+          "store-osm-node-8172495006-person-0: turn speed, planted support and foot reach stay bounded",
+          "Closing the conversation releases Jevica eye contact",
+          "Reduced motion retains reciprocal conversation attention",
+          "No uncaught player attention errors"
+        ],
+        "runs": [
+          {
+            "id": "store-osm-node-8172494969-person-2",
+            "last": {
+              "mode": "conversation",
+              "target": [
+                -2750.0078079975074,
+                19.988471310601195,
+                1312.197278229838
+              ],
+              "facing": -0.26179938779904605,
+              "position": [
+                -2749.541933716323,
+                18.438471310601194,
+                1310.4586117425176
+              ],
+              "bodyYaw": -0.26179938779904605,
+              "head": [
+                -0.03348466589753421,
+                -0.13045172930149074,
+                -0.004408339883989424,
+                0.9908792509796829
+              ],
+              "feet": [
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2749.446146118147,
+                    18.508438744129975,
+                    1310.5140532624596
+                  ],
+                  "actual": [
+                    -2749.4461461150427,
+                    18.508438831573383,
+                    1310.5140532995174
+                  ]
+                },
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2749.65223043426,
+                    18.508438796927027,
+                    1310.4677583325943
+                  ],
+                  "actual": [
+                    -2749.6522304596533,
+                    18.508438886135806,
+                    1310.46775835642
+                  ]
+                }
+              ],
+              "eyes": [
+                {
+                  "name": "gaze_eye_r",
+                  "yaw": 0.018100083285666327,
+                  "pitch": 0.017430795786963528,
+                  "position": [
+                    -2749.6016240913655,
+                    19.995695900417864,
+                    1310.56368838776
+                  ],
+                  "forward": [
+                    -0.24129479555673697,
+                    -0.004067816446610537,
+                    0.9704433391530818
+                  ]
+                },
+                {
+                  "name": "gaze_eye_l",
+                  "yaw": -0.01810007866936516,
+                  "pitch": 0.0174307574015708,
+                  "position": [
+                    -2749.542778658692,
+                    19.995695835861312,
+                    1310.579455972848
+                  ],
+                  "forward": [
+                    -0.27625424614885263,
+                    -0.004067778089115423,
+                    0.9610759827745653
+                  ]
+                }
+              ]
+            },
+            "eyeErrors": [
+              0.0002239914660099121,
+              0.00022399157158422468
+            ],
+            "maxSpeed": 1.3999775344551708,
+            "maxFootError": 0,
+            "slip": 0,
+            "steps": 84,
+            "frames": 293
+          },
+          {
+            "id": "store-osm-node-8172495006-person-0",
+            "last": {
+              "mode": "conversation",
+              "target": [
+                -2750.7825098680987,
+                20.064444615417436,
+                1215.3912731232388
+              ],
+              "facing": 4.71238898038469,
+              "position": [
+                -2748.9825098680985,
+                18.514444615417435,
+                1215.3912731232388
+              ],
+              "bodyYaw": 4.71238898038469,
+              "head": [
+                -0.02416037873387308,
+                -0.7066939124943122,
+                -0.02416037865166546,
+                0.7066938989884095
+              ],
+              "feet": [
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2749.0187211890334,
+                    18.584412032237914,
+                    1215.4958568998675
+                  ],
+                  "actual": [
+                    -2749.01872120543,
+                    18.584412121447926,
+                    1215.4958569228872
+                  ]
+                },
+                {
+                  "contact": true,
+                  "error": 0,
+                  "target": [
+                    -2749.011270609367,
+                    18.58441202959711,
+                    1215.284400087072
+                  ],
+                  "actual": [
+                    -2749.011270627269,
+                    18.584412118390173,
+                    1215.2844000635623
+                  ]
+                }
+              ],
+              "eyes": [
+                {
+                  "name": "gaze_eye_r",
+                  "yaw": 0.01809340336520856,
+                  "pitch": 0.018907200828469674,
+                  "position": [
+                    -2749.099066146816,
+                    20.071763356810877,
+                    1215.360812481195
+                  ],
+                  "forward": [
+                    -0.9998250696513964,
+                    -0.0047552237868857036,
+                    0.018089165319000955
+                  ]
+                },
+                {
+                  "name": "gaze_eye_l",
+                  "yaw": -0.01809335835862339,
+                  "pitch": 0.018907162853747682,
+                  "position": [
+                    -2749.0990661467595,
+                    20.0717632932513,
+                    1215.4217337556893
+                  ],
+                  "forward": [
+                    -0.9998250700203477,
+                    -0.004755186017899274,
+                    -0.018089154509940975
+                  ]
+                }
+              ]
+            },
+            "eyeErrors": [
+              0.00040855365178560463,
+              0.00040856892627186313
+            ],
+            "maxSpeed": 1.3998101218036842,
+            "maxFootError": 0,
+            "slip": 0,
+            "steps": 55,
+            "frames": 225
+          }
+        ],
+        "released": {
+          "mode": "none",
+          "target": null,
+          "facing": null,
+          "position": [
+            -2748.982509868091,
+            18.514444615417435,
+            1215.3912731232083
+          ],
+          "bodyYaw": 4.71238898038469,
+          "head": [
+            -0.019457611339472963,
+            -0.706839027262637,
+            -0.01945760985184231,
+            0.7068390147538918
+          ],
+          "feet": [
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2749.0187211890334,
+                18.584412032237914,
+                1215.4958568998675
+              ],
+              "actual": [
+                -2749.01872120543,
+                18.584412121447794,
+                1215.4958569228872
+              ]
+            },
+            {
+              "contact": true,
+              "error": 0,
+              "target": [
+                -2749.011270609367,
+                18.58441202959711,
+                1215.284400087072
+              ],
+              "actual": [
+                -2749.011270627269,
+                18.58441211839017,
+                1215.2844000635625
+              ]
+            }
+          ],
+          "eyes": [
+            {
+              "name": "gaze_eye_r",
+              "yaw": 2.3029834522953123e-16,
+              "pitch": 1.0223791320557574e-16,
+              "position": [
+                -2749.097947771617,
+                20.070704151445575,
+                1215.360812481212
+              ],
+              "forward": [
+                -0.9999996417379884,
+                0.0008464826614910422,
+                -1.6272047598242523e-08
+              ]
+            },
+            {
+              "name": "gaze_eye_l",
+              "yaw": -2.2859335234739064e-16,
+              "pitch": 1.0223763993045141e-16,
+              "position": [
+                -2749.09794777064,
+                20.070704087930753,
+                1215.4217337557063
+              ],
+              "forward": [
+                -0.9999996417379884,
+                0.0008464826614910422,
+                -1.6272048264376338e-08
+              ]
+            }
+          ]
+        },
+        "reduced": {
+          "last": {
+            "mode": "conversation",
+            "target": [
+              -2750.0078079975074,
+              19.988471310601195,
+              1312.197278229838
+            ],
+            "facing": -0.26179938779904605,
+            "position": [
+              -2749.541933716323,
+              18.438471310601194,
+              1310.4586117425176
+            ],
+            "bodyYaw": -0.26179938779904605,
+            "head": [
+              -0.03607470994943497,
+              -0.1304397592150315,
+              -0.004749326889151477,
+              0.990788336842815
+            ],
+            "feet": [
+              {
+                "contact": true,
+                "error": 0,
+                "target": [
+                  -2749.446146118147,
+                  18.508438744129975,
+                  1310.5140532624596
+                ],
+                "actual": [
+                  -2749.4461461150645,
+                  18.508438831514034,
+                  1310.5140532992277
+                ]
+              },
+              {
+                "contact": true,
+                "error": 0,
+                "target": [
+                  -2749.6526089696818,
+                  18.50843880798012,
+                  1310.4587317081239
+                ],
+                "actual": [
+                  -2749.6526089959207,
+                  18.50843889651266,
+                  1310.4587317329735
+                ]
+              }
+            ],
+            "eyes": [
+              {
+                "name": "gaze_eye_r",
+                "yaw": 0.018074611428936162,
+                "pitch": 0.02323244834507874,
+                "position": [
+                  -2749.6009846493175,
+                  19.996297394286994,
+                  1310.5613019598773
+                ],
+                "forward": [
+                  -0.24132093048078596,
+                  -0.004642304346314886,
+                  0.9704342623394125
+                ]
+              },
+              {
+                "name": "gaze_eye_l",
+                "yaw": -0.0180746112992907,
+                "pitch": 0.02323241001615112,
+                "position": [
+                  -2749.5421392167013,
+                  19.99629732957468,
+                  1310.5770695451777
+                ],
+                "forward": [
+                  -0.27622707483923936,
+                  -0.004642265954535013,
+                  0.961081189334442
+                ]
+              }
+            ]
+          },
+          "eyeErrors": [
+            6.322027276634106e-08,
+            2.4348698017549863e-07
+          ],
+          "maxSpeed": 0.5294374201745761,
+          "maxFootError": 0,
+          "slip": 0,
+          "steps": 26,
+          "frames": 317
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "visual-fidelity",
+      "status": "passed",
+      "seconds": 36.494,
+      "result": {
+        "canopy": "2018 LiDAR canopy",
+        "buffer": [
+          3840,
+          2160
+        ],
+        "uhd": {
+          "calls": 1552,
+          "triangles": 8182129,
+          "geometries": 285,
+          "textures": 173
+        },
+        "frame_sample": {
+          "samples": 120,
+          "median_ms": 33.30000000000109,
+          "p95_ms": 50
+        },
+        "frame_sample_scope": "Chrome animation-frame timing on this Mac; not a target-GPU or UE benchmark",
+        "baseline": {
+          "calls": 1477,
+          "triangles": 7944723,
+          "geometries": 213,
+          "textures": 143
+        },
+        "afterReloads": {
+          "calls": 1477,
+          "triangles": 7944723,
+          "geometries": 213,
+          "textures": 143
+        },
+        "errors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "name": "district",
+      "status": "passed",
+      "seconds": 33.559,
+      "result": {
+        "uhd": [
+          3840,
+          2160
+        ],
+        "movedMeters": 1.6604202414944211,
+        "destinations": 30,
+        "nearbyConversation": true,
+        "mobileNoOverflow": true,
+        "sceneSwitch": true,
+        "routeWorkerLifecycle": true,
+        "browserErrors": []
+      }
+    },
+    {
+      "name": "district-polish",
+      "status": "passed",
+      "seconds": 19.058,
+      "result": {
+        "checks": [
+          "Desktop movement pad starts collapsed",
+          "Default console leaves the street visible",
+          "Movement controls remain discoverable",
+          "Conversation topics lead the encounter",
+          "Support activities start collapsed",
+          "Keyboard opens optional support activities",
+          "Escape restores walking focus",
+          "Portrait conversation preserves the upper street view",
+          "No mobile horizontal overflow",
+          "No browser errors: ",
+          "Touch devices start with movement controls available",
+          "All six touch movement targets fit the narrow viewport at 44px or larger",
+          "Blocked placement cannot open or replace a conversation and announces the reason"
+        ],
+        "browserErrors": []
+      }
+    },
+    {
+      "name": "personas-voice",
+      "status": "failed",
+      "seconds": 14.067,
+      "error": "Error: Actual local voice synthesis must succeed; HTTP 502\n    at check (preview/e2e/personas-voice.js:2:63)\n    at eval (preview/e2e/personas-voice.js:51:3)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/remove-single-player/preview/e2e/experience-runner.js:34:22"
+    },
+    {
+      "name": "community-dialogue",
+      "status": "passed",
+      "seconds": 61.551,
+      "result": {
+        "support": "ask, no-request spending gates, shared start and pause",
+        "reactions": "selected, authored shared-town dialogue, next encounter",
+        "voice": "sync, failure, mute during generation",
+        "keyboard": "Escape, scroll, walking focus",
+        "layouts": [
+          {
+            "theme": "dark",
+            "width": 1440,
+            "height": 1000,
+            "dialog": {
+              "top": 80,
+              "bottom": 976,
+              "left": 360,
+              "right": 800,
+              "width": 440,
+              "height": 896
+            },
+            "close": {
+              "top": 101,
+              "bottom": 145,
+              "left": 735,
+              "right": 779,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 921,
+              "bottom": 965,
+              "left": 377,
+              "right": 783,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 197,
+              "bottom": 910,
+              "left": 361,
+              "right": 799,
+              "width": 438,
+              "height": 713
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "dark",
+            "width": 1280,
+            "height": 720,
+            "dialog": {
+              "top": 80,
+              "bottom": 696,
+              "left": 360,
+              "right": 800,
+              "width": 440,
+              "height": 616
+            },
+            "close": {
+              "top": 101,
+              "bottom": 145,
+              "left": 735,
+              "right": 779,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 641,
+              "bottom": 685,
+              "left": 377,
+              "right": 783,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 197,
+              "bottom": 630,
+              "left": 361,
+              "right": 799,
+              "width": 438,
+              "height": 433
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "dark",
+            "width": 390,
+            "height": 844,
+            "dialog": {
+              "top": 342.484375,
+              "bottom": 832,
+              "left": 12,
+              "right": 378,
+              "width": 366,
+              "height": 489.515625
+            },
+            "close": {
+              "top": 353.484375,
+              "bottom": 397.484375,
+              "left": 319,
+              "right": 363,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 779,
+              "bottom": 823,
+              "left": 25,
+              "right": 365,
+              "width": 340,
+              "height": 44
+            },
+            "body": {
+              "top": 439.484375,
+              "bottom": 770,
+              "left": 13,
+              "right": 377,
+              "width": 364,
+              "height": 330.515625
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "height": 568,
+            "dialog": {
+              "top": 226.5625,
+              "bottom": 556,
+              "left": 12,
+              "right": 308,
+              "width": 296,
+              "height": 329.4375
+            },
+            "close": {
+              "top": 237.5625,
+              "bottom": 281.5625,
+              "left": 249,
+              "right": 293,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 503,
+              "bottom": 547,
+              "left": 25,
+              "right": 295,
+              "width": 270,
+              "height": 44
+            },
+            "body": {
+              "top": 323.5625,
+              "bottom": 494,
+              "left": 13,
+              "right": 307,
+              "width": 294,
+              "height": 170.4375
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "dark",
+            "width": 844,
+            "height": 390,
+            "dialog": {
+              "top": 92,
+              "bottom": 378,
+              "left": 392,
+              "right": 832,
+              "width": 440,
+              "height": 286
+            },
+            "close": {
+              "top": 103,
+              "bottom": 147,
+              "left": 767,
+              "right": 811,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 329,
+              "bottom": 373,
+              "left": 409,
+              "right": 815,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 189,
+              "bottom": 324,
+              "left": 393,
+              "right": 831,
+              "width": 438,
+              "height": 135
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "light",
+            "width": 1440,
+            "height": 1000,
+            "dialog": {
+              "top": 80,
+              "bottom": 976,
+              "left": 360,
+              "right": 800,
+              "width": 440,
+              "height": 896
+            },
+            "close": {
+              "top": 101,
+              "bottom": 145,
+              "left": 735,
+              "right": 779,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 921,
+              "bottom": 965,
+              "left": 377,
+              "right": 783,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 197,
+              "bottom": 910,
+              "left": 361,
+              "right": 799,
+              "width": 438,
+              "height": 713
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "light",
+            "width": 1280,
+            "height": 720,
+            "dialog": {
+              "top": 80,
+              "bottom": 696,
+              "left": 360,
+              "right": 800,
+              "width": 440,
+              "height": 616
+            },
+            "close": {
+              "top": 101,
+              "bottom": 145,
+              "left": 735,
+              "right": 779,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 641,
+              "bottom": 685,
+              "left": 377,
+              "right": 783,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 197,
+              "bottom": 630,
+              "left": 361,
+              "right": 799,
+              "width": 438,
+              "height": 433
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "light",
+            "width": 390,
+            "height": 844,
+            "dialog": {
+              "top": 342.484375,
+              "bottom": 832,
+              "left": 12,
+              "right": 378,
+              "width": 366,
+              "height": 489.515625
+            },
+            "close": {
+              "top": 353.484375,
+              "bottom": 397.484375,
+              "left": 319,
+              "right": 363,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 779,
+              "bottom": 823,
+              "left": 25,
+              "right": 365,
+              "width": 340,
+              "height": 44
+            },
+            "body": {
+              "top": 439.484375,
+              "bottom": 770,
+              "left": 13,
+              "right": 377,
+              "width": 364,
+              "height": 330.515625
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "height": 568,
+            "dialog": {
+              "top": 226.5625,
+              "bottom": 556,
+              "left": 12,
+              "right": 308,
+              "width": 296,
+              "height": 329.4375
+            },
+            "close": {
+              "top": 237.5625,
+              "bottom": 281.5625,
+              "left": 249,
+              "right": 293,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 503,
+              "bottom": 547,
+              "left": 25,
+              "right": 295,
+              "width": 270,
+              "height": 44
+            },
+            "body": {
+              "top": 323.5625,
+              "bottom": 494,
+              "left": 13,
+              "right": 307,
+              "width": 294,
+              "height": 170.4375
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          },
+          {
+            "theme": "light",
+            "width": 844,
+            "height": 390,
+            "dialog": {
+              "top": 92,
+              "bottom": 378,
+              "left": 392,
+              "right": 832,
+              "width": 440,
+              "height": 286
+            },
+            "close": {
+              "top": 103,
+              "bottom": 147,
+              "left": 767,
+              "right": 811,
+              "width": 44,
+              "height": 44
+            },
+            "next": {
+              "top": 329,
+              "bottom": 373,
+              "left": 409,
+              "right": 815,
+              "width": 406,
+              "height": 44
+            },
+            "body": {
+              "top": 189,
+              "bottom": 324,
+              "left": 393,
+              "right": 831,
+              "width": 438,
+              "height": 135
+            },
+            "scrollable": true,
+            "overflow": false,
+            "minimumTarget": 44
+          }
+        ],
+        "screenshots": [
+          "output/playwright/dialogue-dark-1440x1000.png",
+          "output/playwright/dialogue-dark-1280x720.png",
+          "output/playwright/dialogue-dark-390x844.png",
+          "output/playwright/dialogue-dark-320x568.png",
+          "output/playwright/dialogue-dark-844x390.png",
+          "output/playwright/dialogue-light-1440x1000.png",
+          "output/playwright/dialogue-light-1280x720.png",
+          "output/playwright/dialogue-light-390x844.png",
+          "output/playwright/dialogue-light-320x568.png",
+          "output/playwright/dialogue-light-844x390.png"
+        ],
+        "browserErrors": []
+      }
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 1,
+    "gap": "personas-voice retained its real Kokoro WAV assertion; /v1/voice returned HTTP 502 from the external local decision/voice bridge. No synthesis success is claimed."
+  }
+}

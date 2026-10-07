@@ -7,15 +7,14 @@ export function createPlayerAttention() {
  let velocity=0,pose={mode:'none',target:null,facing:null};
  return {
   get pose(){return {...pose,target:pose.target?.slice()??null};},
-  update(delta,{position,heading,speed=0,flying=false,riding=false,conversation=null,spell=null}) {
+  update(delta,{position,heading,speed=0,flying=false,riding=false,conversation=null}) {
    let target=null,mode='none';
-   if(finitePoint(spell)){target=spell.slice();mode='spell';}
-   else if(conversation&&!conversation.abducted&&finitePoint(conversation.position)){
+   if(conversation&&finitePoint(conversation.position)){
     const point=personPosition(conversation);target=[point[0],point[2]+personEyeHeight(conversation),-point[1]];
     if(finitePoint(target))mode='conversation';else target=null;
    }
    pose={mode,target,facing:null};
-   if(mode==='spell'||speed>.05||riding||flying||!finitePoint(position)||!Number.isFinite(heading)){velocity=0;return pose;}
+   if(speed>.05||riding||flying||!finitePoint(position)||!Number.isFinite(heading)){velocity=0;return pose;}
    if(mode==='none'&&Math.abs(velocity)<1e-6){velocity=0;return pose;}
    pose.facing=heading;
    if(!Number.isFinite(delta)||delta<=0||delta>.25)return pose;

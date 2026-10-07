@@ -7,7 +7,7 @@ export function createJevSettings(provider = 'jev') {
   panel.className = 'rail-disclosure jev-settings';
   panel.innerHTML = `<summary>${name} API key</summary>
     <div class="rail-disclosure-body">
-      <p>${eleven ? "Jev speaks with your selected ElevenLabs voice. Only his dialogue text is sent to ElevenLabs." : "Use your own key for resident reactions and auto visits."} The override lasts until the local bridge restarts.</p>
+      <p>${eleven ? "Jev speaks with your selected ElevenLabs voice. Only his dialogue text is sent to ElevenLabs." : "Use your own key for Jev’s chauffeur and companion decisions."} The override lasts until the local bridge restarts.</p>
       <form>
         <label for="${provider}-api-key">Manual API key override</label>
         <input id="${provider}-api-key" name="api_key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="4096" required aria-describedby="${provider}-key-help">

@@ -26,7 +26,7 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     if(event.key!=='Escape'||event.isComposing||!dock.open)return;
     event.preventDefault();event.stopPropagation();setOpen(false);
   });
-  const activities=[['Camera','.photo-tools'],['Character','.player-controls'],['Rides','.player-settings'],['Jev','.auto-controls'],['Birds','.bird-cams'],['Build','.shared-build-controls'],['Magic','.force-controls'],['Invasion','.invasion-controls']];
+  const activities=[['Camera','.photo-tools'],['Character','.player-controls'],['Rides','.player-settings'],['Birds','.bird-cams'],['Build','.shared-build-controls']];
   const jump=selector=>{
     const target=content.querySelector(selector);if(!target||target.hidden)return;
     if(target.tagName==='DETAILS')target.open=true;
@@ -48,7 +48,6 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
     const activity=document.body.classList.contains('bird-riding')?'Bird ride · T control · N next · Esc land'
       :content.querySelector('#build-mode[aria-pressed=true]')?'Building · R rotate · Enter place · Esc finish'
       :content.querySelector('#player-flight[aria-pressed=true]')?'Flying · Space rise · C lower · B land'
-      :content.querySelector('#auto-toggle[aria-pressed=true]')?'Jev is guiding · movement takes over'
       :'Choose an activity · ? opens commands & keys';
     if(context.textContent!==activity)context.textContent=activity;
     if(shell.contains(document.activeElement)&&document.activeElement.closest('[hidden]'))toggle.focus({preventScroll:true});

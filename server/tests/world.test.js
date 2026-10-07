@@ -538,7 +538,7 @@ test('join capacity and duplicate identity preserve original player',()=>{
 test('district indoor resident identities match browser; server travel enables same-room wishes',async()=>{
   const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
   const world=createSharedWorld(district), expected=createCommunity(district,storeRoomsFor(district),{carriage:false,sharedPopulation:true});
-  assert.ok(!expected.locals.some(local=>local.vehicleRole),'shared towns exclude solo vehicle encounters');
+  assert.ok(!expected.locals.some(local=>local.vehicleRole),'shared towns exclude browser-owned vehicle encounters');
   assert.deepEqual(world.snapshot().locals.map(local=>local.id),expected.locals.map(local=>local.id));
   const indoor=expected.locals.find(local=>local.indoor);
   assert.ok(indoor);

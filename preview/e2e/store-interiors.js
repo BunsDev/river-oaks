@@ -6,7 +6,7 @@ async page => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.charactersReady === '24');
+  await page.waitForFunction(() => (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined'));
   await page.waitForFunction(() => { const d = document.querySelector('#canvas-host').dataset; return d.storePeopleTotal && d.storePeopleReady === d.storePeopleTotal; }, null, { timeout: 90000 });
   const host = () => page.locator('#canvas-host').evaluate(element => ({ ...element.dataset }));
   const toggle = page.locator('#panel-toggle');

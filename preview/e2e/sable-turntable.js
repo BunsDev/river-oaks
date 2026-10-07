@@ -3,22 +3,20 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { createServer } from 'vite';
+import { startBrowserFixture } from './fixture-server.js';
 import { chromium } from 'playwright';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const output=root+'output/playwright/sable-turntable/';
 await mkdir(output,{recursive:true});
-process.env.VITE_SINGLE_PLAYER='true';process.env.VITE_MULTIPLAYER='off';
-const vite=await createServer({configFile:root+'preview/vite.config.js',server:{port:0}});
+const fixture=await startBrowserFixture();
 let browser;
 const evidence=[];
 try{
-  await vite.listen();
   browser=await chromium.launch({headless:true,...(process.platform==='darwin'?{args:['--use-angle=metal']}:{})});
   const page=await browser.newPage({viewport:{width:720,height:900},reducedMotion:'reduce'});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   for(const remote of [false,true]){
-    await page.goto(`http://127.0.0.1:${vite.httpServer.address().port}/e2e/fixtures/jevica.html?appearance=woman-casual${remote?'&remote=1':''}`);
+    await page.goto(`${fixture.origin}/e2e/fixtures/jevica.html?appearance=woman-casual${remote?'&remote=1':''}`);
     await page.waitForFunction(()=>document.body.dataset.ready==='true');
     for(const [view,angle,elevation] of [['front',0,0],['right-quarter',45,0],['right-profile',90,0],['right-rear',135,0],['back',180,0],['left-rear',225,0],['left-profile',270,0],['left-quarter',315,0],['above',35,.35],['below',35,-.25]]){
       const result=await page.evaluate(({angle,elevation})=>{
@@ -38,4 +36,4 @@ try{
   assert.deepEqual(errors,[]);
   await writeFile(output+'results.json',JSON.stringify({passed:true,views:evidence,errors},null,2)+'\n');
   console.log(`Sable turntable: ${evidence.length} rendered views passed; ${output}results.json`);
-}finally{await browser?.close();await vite.close();}
+}finally{await browser?.close();await fixture.close();}

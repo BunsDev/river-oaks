@@ -47,7 +47,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await menu.isVisible() && await focus() === 'rail-command-search', 'Commands open as a focused modal dialog');
   check(await menu.getByRole('button', { name: 'World map', exact: true }).count() === (worldMapEnabled ? 1 : 0), 'Commands offers World map only when enabled');
   if (!worldMapEnabled) check(await menu.getByRole('button', { name: 'Browse shared worlds', exact: true }).count() === 0, 'Commands omits shared worlds when disabled');
-  check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === 0, 'Solo command list omits unavailable shared building');
+  check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === 0, 'Command list omits disabled building tools');
   await search.fill('no such activity');
   check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), 'Command search explains an empty result');
   await search.fill('rides'); await page.keyboard.press('ArrowDown');
@@ -103,7 +103,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await page.evaluate(() => document.activeElement.classList.contains('commands-toggle')), 'H hands focus to Commands before hiding a focused card');
   await page.keyboard.press('h');
   check(!await dock.getByRole('button', { name: 'Build', exact: true }).isVisible(), 'Play navigation omits unavailable activities');
-  check(await page.evaluate(() => Boolean(document.querySelector('.bird-cams').compareDocumentPosition(document.querySelector('.invasion-controls')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Play card order follows its stable activity navigation');
+  check(await page.evaluate(() => Boolean(document.querySelector('.player-settings').compareDocumentPosition(document.querySelector('.bird-cams')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Play card order follows its stable activity navigation');
   await dock.getByRole('button', { name: 'Birds', exact: true }).click();
   check(await page.evaluate(() => document.activeElement.closest('.bird-cams') !== null), 'Play activity jump reveals and focuses its destination');
   await page.keyboard.press('Escape');
@@ -112,6 +112,9 @@ async (page, { worldMapEnabled = false } = {}) => {
 
   for (const [width, height] of [[390, 844], [844, 390], [1024, 600]]) {
     await page.setViewportSize({ width, height });
+    // A breakpoint can expose a dock retained from the preceding viewport.
+    if(await dock.evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
+    if(await expanded()==='true')await trigger.click();
     await host.focus(); await page.keyboard.press('Control+b');
     check(await expanded() === 'true', `${width}×${height}: left rail opens`);
     await host.focus(); await page.keyboard.press('Control+Shift+b');
@@ -141,7 +144,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await host.focus(); await page.keyboard.press('Alt+1');
-  await page.locator('#community-local').selectOption('local-00'); await page.locator('#community-meet').click();
+  await page.locator('#community-local').selectOption(await page.locator('#community-local option').evaluateAll(options=>options.find(option=>option.value.startsWith('store-')).value)); await page.locator('#community-meet').click();
   await page.locator('#community-dialogue').waitFor({ state: 'visible' });
   await host.focus(); await page.keyboard.press('Control+Shift+b');
   check(!await page.locator('#community-dialogue').isVisible() && await dock.isVisible(), 'Requesting play controls dismisses a competing compact conversation');
@@ -178,19 +181,6 @@ async (page, { worldMapEnabled = false } = {}) => {
   await page.keyboard.press('Escape');
   check(!await page.evaluate(() => document.body.classList.contains('bird-riding')), 'Escape in the world still lands the bird');
   await page.keyboard.press('Control+Shift+b');
-  await dock.getByRole('button', {name:'Jev',exact:true}).click();
-  await page.locator('#auto-toggle').click();
-  await page.waitForFunction(() => document.querySelector('#auto-toggle').getAttribute('aria-pressed') === 'true');
-  await page.evaluate(() => {
-    const modal = document.createElement('dialog'); modal.id = 'auto-test-modal';
-    modal.innerHTML = '<button>Modal control</button>'; document.body.append(modal);
-    modal.showModal(); modal.querySelector('button').focus();
-  });
-  await page.keyboard.press('Escape');
-  check(await page.locator('#auto-toggle').getAttribute('aria-pressed') === 'true'
-    && !await page.locator('#auto-test-modal').evaluate(node => node.open), 'Dismissing another native modal preserves the guided visit');
-  await page.evaluate(() => document.querySelector('#auto-test-modal').remove());
-  await page.locator('#auto-toggle').click();
   await host.focus(); await page.keyboard.press('?');
   const reference = menu.locator('.commands-reference > summary');
   await reference.focus(); await page.keyboard.press('Tab');

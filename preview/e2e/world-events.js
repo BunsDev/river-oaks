@@ -31,7 +31,7 @@ async page=>{
     check(await page.evaluate(()=>document.activeElement?.dataset.action==='rsvp'),'RSVP updates retain keyboard focus on the action');
     check((await listed.textContent()).includes('2/2 going'),'A second account joins the persistent guest count');
     const link=await listed.getByRole('link',{name:'Visit meeting point'}).getAttribute('href');
-    check(new URL(link).searchParams.get('play')==='multiplayer'&&new URL(link).searchParams.get('place')==='arrival',
+    check(!new URL(link).searchParams.has('play')&&new URL(link).searchParams.get('place')==='arrival',
       'The event links to its shared world and server-checked outdoor destination');
     await listed.scrollIntoViewIfNeeded();
     await listed.screenshot({path:'output/playwright/world-events.png'});

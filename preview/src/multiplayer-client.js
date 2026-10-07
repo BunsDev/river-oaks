@@ -1,3 +1,4 @@
+import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
 import { createSocialUI } from './social-ui.js';
@@ -5,7 +6,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { accountName } from './resident-names.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, onPlaySolo = null, creationToolsEnabled = false }) {
+export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -16,13 +17,11 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
   const login=element('a','Sign in with GitHub','multiplayer-primary');login.href='/auth/login?provider=github';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
-  const playSolo=element('button','Play single player');playSolo.type='button';playSolo.hidden=!onPlaySolo;
   const gateLogout=element('button','Sign out');gateLogout.type='button';gateLogout.hidden=true;
-  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,playSolo,gateLogout);gate.append(card);document.body.append(gate);
+  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,gateLogout);gate.append(card);document.body.append(gate);
   const panel=element('section',null,'multiplayer-roster');panel.setAttribute('aria-label','Players in town');
   const summary=element('strong','Connecting'),list=element('div'),notice=element('p');notice.setAttribute('role','status');
   const logout=element('button','Sign out');logout.type='button';
-  const leaveTown=element('button','Play single player');leaveTown.type='button';leaveTown.hidden=!onPlaySolo;
   const chatSection=element('section',null,'multiplayer-chat');chatSection.setAttribute('aria-label','Town chat');
   const chatTitle=element('h3','Town chat'),chatHistory=element('div',null,'multiplayer-chat-history');
   chatHistory.setAttribute('role','log');chatHistory.setAttribute('aria-label','Town messages');chatHistory.setAttribute('aria-live','off');
@@ -44,7 +43,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     gestureControls.append(button);return button;
   });
   gestures.append(gestureTitle,gestureControls,gestureStatus);
-  panel.append(summary,list,notice,chatSection,gestures,leaveTown,logout);
+  panel.append(summary,list,notice,chatSection,gestures,logout);
   // Residents and the local meeting action lead; connected-town tools follow.
   document.querySelector('#community-more')?.before(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID,homeAccess=[];
@@ -62,7 +61,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   };
   gate.addEventListener('keydown',event=>{
     if(event.key!=='Tab')return;
-    const actions=[login,retry,playSolo,gateLogout].filter(node=>!node.hidden&&!node.disabled);
+    const actions=[login,retry,gateLogout].filter(node=>!node.hidden&&!node.disabled);
     const first=actions[0],last=actions.at(-1);
     if(!first){event.preventDefault();title.focus({preventScroll:true});}
     else if(event.shiftKey&&[title,first].includes(document.activeElement)){event.preventDefault();last.focus();}
@@ -90,7 +89,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const groups=creationToolsEnabled?createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
     request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
-  panel.append(leaveTown,logout);
+  panel.append(logout);
   const latestPlayers=new Map();
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);
@@ -167,6 +166,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
         try{
           const data=JSON.parse(event.data);
           if(data.type==='snapshot'){
+            if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
             if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
             if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
             // The server checks every name; checking again here means no
@@ -186,7 +186,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       });
       ws.addEventListener('close',event=>{
         clearTimeout(deadline);if(socket!==ws)return;
-        socket=null;connected=false;connecting=false;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
+        socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
         const terminal=[4000,4003,4009].includes(event.code);
@@ -212,8 +212,6 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     finally{chatSend.disabled=!connected;if(connected)chatInput.focus();}
   });
   retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
-  playSolo.addEventListener('click',()=>onPlaySolo?.());
-  leaveTown.addEventListener('click',()=>onPlaySolo?.());
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
     try{const result=await api('/auth/logout',{method:'POST'});stopped=true;clearTimeout(retryTimer);socket?.close();location.assign(result.url??'/');}

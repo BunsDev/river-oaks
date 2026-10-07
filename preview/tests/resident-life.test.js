@@ -12,7 +12,7 @@ const reply=(packet,action='continue')=>({schema_version:1,tick:packet.tick,late
 
 test('pedestrians pass a moved street object without walking through it',()=>{
   const {state,life}=create(),local=state.locals[0];
-  state.locals.slice(1).forEach(person=>{person.abducted=true;});
+  state.locals.splice(1);
   local.position=[-12,0,0];Object.assign(local.life,{heading:Math.PI,route:[[-12,12,0]],destination:{name:'Test walk'},waitUntil:Infinity});
   const obstacle=[-12,3,0];let closest=Infinity,lateral=0;
   for(let i=0;i<600;i++) {
@@ -22,21 +22,6 @@ test('pedestrians pass a moved street object without walking through it',()=>{
   }
   assert.ok(closest>=.69,`Object clearance: ${closest}`);
   assert.ok(lateral>.4&&local.life.distance>4,'Finds a way around the bin');
-});
-
-test('Force holds pause a walking route and release resumes without teleporting',()=>{
-  const {state,life}=create();step(life,180);
-  const local=state.locals.find(local=>local.life.speed>.1);assert.ok(local);
-  const before=[...local.position];local.force={height:1.2,mode:'lift'};
-  step(life,120);assert.deepEqual(local.position,before);assert.equal(local.life.speed,0);
-  assert.equal(local.life.status,'held by the Force');
-  delete local.force;let travel=0;
-  for(let i=0;i<240;i++) {
-    const p=[...local.position];step(life,1);
-    const distance=Math.hypot(local.position[0]-p[0],local.position[1]-p[1]);
-    assert.ok(distance<.025);travel+=distance;
-  }
-  assert.ok(travel>.2,'The route resumes after the hold');
 });
 
 test('residents walk between public stops without entering buildings or teleporting',()=>{
@@ -170,16 +155,6 @@ function passingVisitor() {
   local.life.route=[[5,0]];local.life.destination={id:'b',name:'East'};local.life.heading=Math.PI/2;
   return {state,life,local};
 }
-
-test('a passing nod keeps the route moving beside Jevica without owning body heading',()=>{
-  const {life,local}=passingVisitor();step(life,120);
-  const before=local.life.distance,heading=local.life.heading;
-  local.visitorReaction={action:'acknowledge',passive:true};
-  for(let i=0;i<60;i++)step(life,1,{visitor:[local.position[0],local.position[1]+2,0]});
-  assert.ok(local.life.distance>before+.9,'A visitor two metres alongside cannot freeze a walking route');
-  assert.ok(Math.abs(local.life.heading-heading)<.01,'A head-only greeting cannot steer the body');
-  assert.equal(local.life.status,'walking');
-});
 
 test('a stationary visitor is passed with clearance instead of freezing the sidewalk',()=>{
   const {life,local}=passingVisitor(),visitor=[0,0,0];let nearest=Infinity;

@@ -1,5 +1,8 @@
 # Resident dialogue UI follow-up
 
+> Historical implementation record. Solo gameplay and its browser journeys have
+> been retired. See [current testing](testing.md) and [town setup](multiplayer.md).
+
 Scope: the resident conversation overlay in the live district preview. Preserve the existing uncommitted resident-life, navigation, voice, and simulation work. Keep dialogue authorship, Jev reaction provenance, fictional portrayals, and simulated support explicit.
 
 - [x] Clarify resident identity and close control.

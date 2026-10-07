@@ -17,11 +17,11 @@ function record(state, local, message) {
 }
 export function refreshWishTrouble(state) {
   for (const local of state.locals) delete local.wishDisruption;
-  const incidents = state.locals.filter(local => local.wish && local.wish.phase !== 'gift' && !local.abducted);
+  const incidents = state.locals.filter(local => local.wish && local.wish.phase !== 'gift');
   for (const owner of incidents) {
     const definition = wishFor(owner.wish.kind);
     for (const local of state.locals) {
-      if (local.abducted || (local.storeId ?? null) !== (owner.storeId ?? null)) continue;
+      if ((local.storeId ?? null) !== (owner.storeId ?? null)) continue;
       if (Math.hypot(local.position[0] - owner.position[0], local.position[1] - owner.position[1]) <= definition.radius) local.wishDisruption = definition.issue;
     }
   }
@@ -33,7 +33,7 @@ export function grantWish(state, localId, kind, caster, casterName='Jevica') {
   const local = state?.locals.find(person => person.id === localId), definition = wishFor(kind);
   // The carriage crew travel with Jevica and have no wish visuals; wishes are for district residents.
   if (local?.vehicleRole) return { ok: false, message: crewWishMessage(local) };
-  if (!state?.wishes || caster !== 'jevica' || !local || local.abducted || !definition || local.wish || local.force) return { ok: false, message: 'Choose a resident without an active wish or Force hold.' };
+  if (!state?.wishes || caster !== 'jevica' || !local || !definition || local.wish) return { ok: false, message: 'Choose a resident without an active wish.' };
   local.wish = { kind, age: 0, phase: 'gift', message: definition.gift, ownerName:casterName };
   state.wishes.granted++;
   record(state, local, definition.gift);
@@ -54,7 +54,7 @@ export function stepWishes(state, delta) {
   if (!state?.wishes || !Number.isFinite(delta) || delta <= 0) return;
   for (const local of state.locals) {
     const wish = local.wish;
-    if (!wish || local.abducted) continue;
+    if (!wish) continue;
     const definition = wishFor(wish.kind);
     wish.age += delta;
     const phase = wish.age >= definition.pleaAfter ? 'pleading' : wish.age >= definition.twistAfter ? 'trouble' : 'gift';

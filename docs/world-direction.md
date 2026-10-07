@@ -18,11 +18,11 @@ rose, midnight velvet, stellar tailoring, botanical linen, gallery colors and
 pearl classics. Boutique staff retain their uniforms with restrained accents;
 guests wear the fuller palettes. Residents have no alien head replacements or
 Oz hats. Indoor staff retain occupations, shop identity, seated/work poses and
-duties. Mannequins are displays, not conversation targets. Alien anatomy is used only by enemies in the separate invasion scenario.
+duties. Mannequins are displays, not conversation targets.
 
 ## Player and flight
 
-Standalone play centers **Jevica**, a fictional celebrated magical visitor with a
+The shared town includes **Jevica**, a fictional celebrated magical visitor with a
 Glinda-inspired pink gown, blonde hair, gold filigree crown and luminous star wand. The character name is
 Jevica in her authored story. Shared-town players use their account names and select from 11 looks built on seven shipped rigs, including human, fox, wolf, lynx, and hybrid styles. The Witch and Alien player forms, their
 portraits, the broom, and the personal UFO were retired on September 23, 2026.

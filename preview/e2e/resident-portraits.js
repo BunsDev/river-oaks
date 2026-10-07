@@ -5,7 +5,7 @@ async page => {
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/Portrait failed/.test(m.text()))errors.push(m.text().slice(0,200));});
   await page.setViewportSize({width:1440,height:900});
   await page.goto('http://127.0.0.1:5173/');
-  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&d.charactersReady==='24';},null,{timeout:90000});
+  await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined');},null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await page.locator('[data-section=community-section]').click();
   await page.waitForFunction(()=>{const rows=[...document.querySelectorAll('.nearby-person')];return rows.length>0&&rows.every(row=>row.classList.contains('has-portrait'));},null,{timeout:15000});

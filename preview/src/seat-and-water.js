@@ -1,14 +1,13 @@
 import { groundSurfaceHeight } from './world-surface.js';
-import { seatYaw } from './shared-seating.js';
 import { SIT_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, buildSeats, lanePlanters, nearestPlanter, nearestSeat } from './world-interactions.js';
 
 // Z on foot: sit on the nearest free seat (a storefront bench place, or a
 // seat Jevica built), or water the nearest planter. Z while seated: stand up.
 // In the shared town the server decides through the shared seating commands,
-// and everyone sees it; in single player the browser seats the player itself.
+// and everyone sees the confirmed result.
 // Watering is only an animation; planters keep no state.
 export function createSeatAndWater({ walking, playerAvatar, getLocals = () => [], getMultiplayer = () => null }) {
-  let world = null, benches = [], staticPlanters = [], soloStandAt = null, busy = false, lastWater = -Infinity;
+  let world = null, benches = [], staticPlanters = [], busy = false, lastWater = -Infinity;
   const builds = () => getMultiplayer()?.snapshot?.builds ?? [];
   const seats = () => [...benches, ...buildSeats(builds())];
   const planters = () => [...staticPlanters, ...buildPlanters(builds())];
@@ -27,6 +26,7 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
 
   async function command(message) {
     const multiplayer = getMultiplayer();
+    if (!multiplayer?.connected) { notify('Reconnect before taking an action.'); return null; }
     busy = true;
     try {
       const result = await multiplayer.command(message);
@@ -40,35 +40,20 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
     if (busy) return;
     const pose = walking.getPose();
     if (!pose || pose.sitting) return;
-    if (getMultiplayer()) {
-      const result = await command({ type: 'sit', buildId: seat.buildId, slot: seat.slot });
-      if (result?.player) walking.applyServerPose(result.player);
-      return;
-    }
-    soloStandAt = [pose.position[0], -pose.position[2]];
-    walking.applyServerPose({ position: [seat.x, seat.north, ground(seat.x, seat.north)], yaw: seatYaw(seat.heading - Math.PI), altitude: 0,
-      sitting: { buildId: seat.buildId, slot: seat.slot, height: seat.height, yaw: seat.heading } });
+    const result = await command({ type: 'sit', buildId: seat.buildId, slot: seat.slot });
+    if (result?.player) walking.applyServerPose(result.player);
   }
 
   async function stand() {
-    if (busy) return;
-    const pose = walking.getPose();
-    if (!pose?.sitting) return;
-    if (getMultiplayer()) {
-      const result = await command({ type: 'stand' });
-      if (result?.player) walking.applyServerPose(result.player);
-      return;
-    }
-    const seat = seats().find(item => item.buildId === pose.sitting.buildId && item.slot === pose.sitting.slot);
-    const [x, north] = soloStandAt ?? seat?.approach ?? [pose.position[0], -pose.position[2]];
-    soloStandAt = null;
-    walking.applyServerPose({ position: [x, north, ground(x, north)], yaw: pose.yaw, altitude: 0, sitting: null });
+    if (busy || !walking.getPose()?.sitting) return;
+    const result = await command({ type: 'stand' });
+    if (result?.player) walking.applyServerPose(result.player);
   }
 
   async function water(planter) {
     const now = performance.now();
     if (busy || now - lastWater < 1500) return;
-    if (getMultiplayer() && !await command({ type: 'water', planterId: planter.id })) return;
+    if (!await command({ type: 'water', planterId: planter.id })) return;
     lastWater = performance.now();
     const target = [planter.x, ground(planter.x, planter.north), -planter.north];
     // Turn to the planter: the camera looks where the body faces.
@@ -82,19 +67,18 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
       world = next;
       benches = benchSeats(world);
       staticPlanters = [...boutiquePlanters(world), ...lanePlanters(world, isFree)];
-      soloStandAt = null;
     },
     // For the seats panel: storefront bench places, and whether a resident holds one.
     benches: () => benches,
     residentHolds: key => residentSeats().has(key),
     // What Z does right now, for the walking controls.
     interaction() {
-      if (!world || !walking.active) return null;
+      if (!world || !walking.active || !getMultiplayer()?.connected) return null;
       const pose = walking.getPose();
       if (!pose) return null;
       // In the shared town the seats panel already shows Sit down and Stand up;
       // Z stays a shortcut there and the HUD button is kept for watering.
-      const button = !getMultiplayer();
+      const button = false;
       if (pose.sitting) return { kind: 'stand', label: 'Stand up', run: stand, disabled: busy, button };
       if (pose.riding || pose.flying) return null;
       const position = [pose.position[0], -pose.position[2]];

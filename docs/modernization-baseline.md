@@ -1,5 +1,10 @@
 # Modernization baseline and first implementation
 
+> Historical implementation record. Browser and desktop now use only the shared
+> town. Descriptions of solo controls, local simulations, and retired mode flags
+> below document earlier behavior, not current setup instructions. Independent
+> Python and Unreal tools remain supported. See [current setup](multiplayer.md).
+
 Observed October 2, 2026 against `d6b0f5e9ecb7c307d586a1e940ec5b566b23a65d`.
 The primary checkout and freshly fetched `origin/main` matched and were clean.
 The assessment began on `cody/modernization-foundation`, isolated from the active

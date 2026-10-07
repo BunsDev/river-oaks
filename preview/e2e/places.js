@@ -48,6 +48,7 @@ async page => {
   const back = await hudPosition();
   check(Math.hypot(back[0] - here[0], back[2] - here[2]) < 1.3, `A landmark returns to the saved spot (${Math.hypot(back[0] - here[0], back[2] - here[2]).toFixed(2)} m)`);
   await page.locator('#landmarks-list li button[aria-label^="Remove"]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('#landmarks-list li').length===0);
   check(await page.locator('#landmarks-list li').count() === 0 && await page.locator('#landmarks-empty').isVisible(), 'Removing a landmark empties the list');
   const other = district.communityLocations[9];
   await page.goto(`${origin}/?place=spot:${encodeURIComponent(other.id)}`); await open();
@@ -60,10 +61,10 @@ async page => {
   check(Math.hypot(linked[0] - here[0], linked[2] - here[2]) < 1.3, 'An ?at= link restores the exact position');
   await page.goto(`${origin}/?at=0,0`); await open();
   await page.waitForTimeout(600);
-  check(gap(await hudPosition(), district.walkSpawn) < 3 && !(await page.locator('#places-status').textContent()).includes('Shared spot'), 'A link outside the district is ignored and you arrive normally');
+  check(Math.hypot(...(await hudPosition()).map((value, i) => value - linked[i])) < 3 && !(await page.locator('#places-status').textContent()).includes('Shared spot'), 'A link outside the district preserves the server position');
   await page.goto(`${origin}/?at=${district.stores[0].position[0].toFixed(2)},${district.stores[0].position[1].toFixed(2)}`); await open();
-  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('not reachable'));
-  check(gap(await hudPosition(), district.walkSpawn) < 3, 'A link into a building is refused, not nudged through a wall');
+  await page.waitForFunction(() => document.querySelector('#places-status')?.textContent==='destination_blocked');
+  check(Math.hypot(...(await hudPosition()).map((value, i) => value - linked[i])) < 3, 'A link into a building is refused and preserves the server position');
   await page.screenshot({ path: 'output/playwright/places.png' });
   check(errors.length === 0, `No page errors: ${errors.join('; ')}`);
   return { checks };

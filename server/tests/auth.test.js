@@ -205,7 +205,7 @@ test('desktop device credentials exchange for verified GitHub and Magic Auth ses
   assert.equal((await exchange()).status, 403);
 });
 
-test('a verified Jevica account receives solo wish access from the server', async t => {
+test('a verified Jevica account receives the publishing capability from the server', async t => {
   const app=await fixture(t);
   app.workos.setUser({id:JEVICA_ADMIN_USER_IDS[0]});
   const {sessionCookie}=await app.login();

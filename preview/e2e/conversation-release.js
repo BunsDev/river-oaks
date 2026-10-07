@@ -6,7 +6,7 @@ async page => {
   const samples=await page.evaluate(async()=>{
     const {createCommunity}=await import('/src/community.js');
     const {createResidentLife,stepResidentLife}=await import('/src/resident-life.js');
-    const {buildLocals}=await import('/src/locals.js');
+    const {buildLocals}=await import('/e2e/fixtures/local-models.js');
     const f=window.carriageFixture;f.carriage.object.visible=false;f.avatar.object.visible=false;
     const host=document.createElement('div');host.id='canvas-host';document.body.append(host);
     const world={scene:'district',bounds_m:[-25,-25,25,25],collisionPolygons:[],communityLocations:Array.from({length:6},(_,i)=>({id:`start-${i}`,name:`Start ${i}`,position:[0,i*3,0]}))};
