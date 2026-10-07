@@ -48,10 +48,13 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await menu.getByRole('button', { name: 'World map', exact: true }).count() === (worldMapEnabled ? 1 : 0), 'Commands offers World map only when enabled');
   if (!worldMapEnabled) check(await menu.getByRole('button', { name: 'Browse shared worlds', exact: true }).count() === 0, 'Commands omits shared worlds when disabled');
   check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === 0, 'Command list omits disabled building tools');
+  check(!(await menu.locator('.commands-results').textContent()).toLowerCase().includes('rail'), 'Commands describe player activities rather than interface rails');
+  check(await menu.getByRole('button', { name: /^Character ·/ }).count() === 1, 'Character is a discoverable player goal');
+  check(await menu.getByRole('button', { name: /^Camera · Photo mode/ }).count() === 1, 'Camera is a discoverable player goal');
   await search.fill('no such activity');
   check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), 'Command search explains an empty result');
   await search.fill('rides'); await page.keyboard.press('ArrowDown');
-  check(await page.evaluate(() => document.activeElement.textContent === 'Rides & camera'), 'Arrow keys navigate filtered command actions');
+  check(await page.evaluate(() => document.activeElement.textContent === 'Rides · driving and camera'), 'Arrow keys navigate filtered command actions');
   await page.keyboard.press('Enter');
   check(!await menu.isVisible() && await dock.evaluate(node => node.open) && await page.locator('.player-settings').evaluate(node => node.open), 'Executing a command reveals the play rail and nested rides controls');
   check(await focus() === 'player-camera', 'Play command focuses the revealed control');

@@ -2,7 +2,7 @@
 .photo-tools .photo-open { width: 100%; display: flex; justify-content: space-between; min-height: 44px; }
 .photo-tools p { font-size: 12px; opacity: .7; margin: 6px 0 0; }
 body.photographing #viewport > :not(#canvas-host), body.photographing #control-panel,
-body.photographing > :not(.app-shell):not(.photo-mode) { visibility: hidden !important; }
+body.photographing > :not(.app-shell):not(.photo-mode) { visibility: hidden !important; opacity: 0 !important; transition: none !important; }
 .photo-mode[open] { display: block; position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff9f4; overflow: hidden; color-scheme: dark; }
 .photo-mode::backdrop { background: transparent; }
 .photo-mode [hidden] { display: none !important; }
@@ -24,7 +24,7 @@ body.photographing > :not(.app-shell):not(.photo-mode) { visibility: hidden !imp
 .photo-sliders input { width: 100%; margin: 0; accent-color: #f7b8cf; min-height: 26px; }
 .photo-actions { justify-content: flex-end; flex-wrap: wrap; }
 .photo-mode .photo-capture, .photo-mode .photo-download { background: #f4bbd0; color: #27131d; border-color: transparent; font-weight: 600; }
-.photo-hint { margin: 10px 0 0; font-size: 11px; color: #c1b9be; }
+.photo-hint, .photo-output, .photo-quality { margin: 10px 0 0; font-size: 11px; color: #c1b9be; }
 .photo-status { position: absolute; margin: 0; bottom: max(12px, env(safe-area-inset-bottom)); left: 16px; right: 16px; text-align: center; font-size: 12px; text-shadow: 0 1px 4px #000; }
 .photo-result { position: absolute; inset: 88px 16px 42px; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 16px; border-radius: 16px; background: #171517f5; }
 .photo-result img { display: block; width: 100%; flex: 1; min-height: 0; object-fit: contain; }
@@ -44,3 +44,8 @@ body.photographing > :not(.app-shell):not(.photo-mode) { visibility: hidden !imp
 .photo-mode[open] .photo-sliders input { accent-color: #f7b8cf; }
 .photo-controls.compact .photo-options, .photo-controls.compact .photo-sliders,
 .photo-controls.compact .photo-hint, .photo-controls.compact .photo-reset { display: none; }
+
+.photo-sliders label > span { display: flex; justify-content: space-between; gap: 6px; }
+.photo-sliders output { font-variant-numeric: tabular-nums; white-space: nowrap; color: #fff9f4; }
+.photo-output { font-variant-numeric: tabular-nums; }
+.photo-controls.compact .photo-output, .photo-controls.compact .photo-quality { display: none; }

@@ -32,6 +32,7 @@ async page => {
   await page.keyboard.press('KeyE');
   check(await page.locator('#community-dialogue').isVisible(),'E reopens the nearby encounter');
   await page.locator('#community-close').click();
+  if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
   await page.locator('#walking-meet-nearby').click();
   check(await page.locator('#community-dialogue').isVisible(),'Primary Meet someone nearby action opens conversation');
   await page.locator('#community-close').click();
@@ -48,6 +49,7 @@ async page => {
   await page.screenshot({path:'output/playwright/street-level-desktop.png'});
   await page.setViewportSize({width:390,height:844});
   check(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),'Mobile has no horizontal overflow');
+  if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
   await page.locator('#walking-meet-nearby').click();
   check(await page.locator('#community-dialogue').isVisible(),'Mobile primary action opens conversation');
   await page.screenshot({path:'output/playwright/street-level-mobile.png'});

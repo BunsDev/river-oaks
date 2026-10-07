@@ -34,6 +34,7 @@ async page => {
   await page.locator('#store-previous').click();
   check(await page.locator('#destination').inputValue() === first, 'Previous stop returns to original selection');
   check(await page.locator('#walking-movement').isHidden(), 'Desktop HUD starts with the movement pad collapsed');
+  if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
   check(await page.locator('#walking-meet-nearby').isVisible(), 'Compact HUD retains the meet action');
   await page.locator('#walking-controls-toggle').click();
   check(await page.locator('#walking-movement').isVisible(), 'Movement controls can be shown');
@@ -65,6 +66,7 @@ async page => {
   await page.locator('#panel-toggle').click();
   await page.locator('#walking-controls-toggle').click();
   check(await page.locator('#walking-movement').isVisible(), 'Mobile toggle reveals the movement pad');
+  if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
   check(await page.locator('#walking-meet-nearby').isVisible(), 'Mobile compact HUD keeps the meet action reachable');
   await page.screenshot({ path: 'output/playwright/ui-mobile.png' });
   await page.setViewportSize({ width: 1440, height: 1000 });

@@ -32,7 +32,8 @@ async page => {
   await page.locator('#community-close').press('Escape');
   check(await page.locator('#canvas-host').evaluate(el => el === document.activeElement), 'Escape restores walking focus');
   await page.setViewportSize({width:390,height:844});
-  await page.waitForTimeout(1100);await page.locator('#walking-meet-nearby').click();
+  await page.waitForTimeout(1100);if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
+  await page.locator('#walking-meet-nearby').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
   const box = await page.locator('#community-dialogue').boundingBox();
   check(box.height <= 844 * .59 && box.y > 844 * .39, 'Portrait conversation preserves the upper street view');

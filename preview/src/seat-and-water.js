@@ -76,14 +76,13 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
       if (!world || !walking.active || !getMultiplayer()?.connected) return null;
       const pose = walking.getPose();
       if (!pose) return null;
-      // In the shared town the seats panel already shows Sit down and Stand up;
-      // Z stays a shortcut there and the HUD button is kept for watering.
-      const button = false;
-      if (pose.sitting) return { kind: 'stand', label: 'Stand up', run: stand, disabled: busy, button };
+      // The contextual HUD and seats panel share these authoritative actions.
+      // Z remains the direct shortcut in either presentation.
+      if (pose.sitting) return { kind: 'stand', label: 'Stand up', run: stand, disabled: busy };
       if (pose.riding || pose.flying) return null;
       const position = [pose.position[0], -pose.position[2]];
       const seat = nearestSeat(seats().filter(sameRoom), position, { reach: SIT_REACH, taken: taken() });
-      if (seat) return { kind: 'sit', targetId: seat.id, label: seat.kind === 'bench' ? 'Sit on the bench' : seat.kind === 'armchair' ? 'Sit in the chair' : 'Sit on the seat', run: () => sit(seat), disabled: busy, button };
+      if (seat) return { kind: 'sit', targetId: seat.id, label: seat.kind === 'bench' ? 'Sit on the bench' : seat.kind === 'armchair' ? 'Sit in the chair' : 'Sit on the seat', run: () => sit(seat), disabled: busy };
       const planter = nearestPlanter(planters().filter(sameRoom), position);
       if (planter) return { kind: 'water', targetId: planter.id, label: 'Water the planter', run: () => water(planter), disabled: busy || playerAvatar.watering };
       return null;

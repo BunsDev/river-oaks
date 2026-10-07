@@ -20,7 +20,7 @@ async page => {
   check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === (canBuild ? 1 : 0), 'Commands reflect the server-confirmed building permission');
   check(await menu.getByRole('button', { name: 'Force & telekinesis', exact: true }).count() === 0, 'Shared-play commands omit retired force controls');
   await page.keyboard.press('Escape');
-  await command('character & abilities');
+  await command('character');
   check(await page.evaluate(() => document.activeElement.matches('input[name=player-character]')
     && document.activeElement.closest('.character-picker') !== null), 'Shared character command focuses a visible choice without retired abilities');
   await page.keyboard.press('Escape');

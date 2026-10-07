@@ -26,7 +26,8 @@ async page => {
     await page.waitForTimeout(200);
     const room=await page.locator('#walking-hud').getAttribute('data-inside');
     if(!await page.locator('#walking-meet-nearby').isEnabled())throw new Error(`Nearby disabled beside reachable person ${id}`);
-    await page.locator('#walking-meet-nearby').click();
+    if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
+  await page.locator('#walking-meet-nearby').click();
     await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
     const selected=await page.locator('#community-local').inputValue();
     await page.waitForFunction(id=>window.__riverPeople().find(person=>person.id===id)?.reachable,selected,{timeout:5000});

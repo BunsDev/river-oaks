@@ -147,3 +147,11 @@ load generated candidates from `data/raw/` relative to that directory. Generate
 those optional candidates before running the comparison scripts. The shared NPC directory covers the 98 indoor residents.
 Older dated reports with outdoor residents and the carriage encounter describe
 retired browser simulation behavior.
+
+`npm run test:experience -- contextual-first-visit rail-navigation photo-mode
+connection-required sit-and-water` checks contextual actions, player-oriented
+commands, retained photos, fixture recovery and server-owned seat actions.
+The first-visit journey repeats destination search, arrival, entry, conversation,
+photo and walking at desktop and touch-enabled 390×844; it also exercises a real
+Chromium touch press/release. This is automated interaction evidence, not human
+keyboard/VoiceOver or physical-device acceptance.

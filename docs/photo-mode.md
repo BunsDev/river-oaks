@@ -10,13 +10,20 @@ and view. Escape or Close returns to play and restores the previous camera.
 **Take photo** opens a preview. **Download PNG** saves it locally; **Share photo**
 opens the device's share sheet when file sharing is supported. Otherwise, download
 and share the file yourself. Nothing is automatically uploaded or posted. Cancelling
-sharing keeps the photo available. Back to camera discards that preview so you can
-compose another; closing releases it too, so download anything you want to keep.
+sharing keeps the photo available. Back to camera lets you compose another while
+keeping the last photo; **View last photo** returns to it. Closing and reopening
+Photo mode also restores that preview and download. A successful new capture
+replaces the old one; a failed capture leaves it available. **Discard photo**
+explicitly removes it. Only one photo is held in memory for this page session;
+reloading or leaving the page loses it, so download anything you want to keep.
 
 Only the rendered world is captured, with a small River Oaks/OpenStreetMap credit.
 Chat, controls, account details and the composition grid are excluded. Output uses
 the selected crop at the current canvas resolution, capped at 2048 pixels on its
-longest edge, without upscaling. The current graphics quality still applies; use
+longest edge, without upscaling. Composition shows the next PNG dimensions,
+framing angles in degrees and lens movement in meters. The photo UI also shows
+the current graphics mode, scene resolution and ambient occlusion; these can
+limit image detail even when the PNG dimensions are larger. Use
 Settings → Graphics → Sharpest before opening the camera for the highest scene
 detail. The town keeps moving; photo mode holds your local walking input and camera,
 not the shared simulation. It does not move your character to the lens position.
@@ -33,7 +40,9 @@ npm run build
 
 The browser journey checks real rendered PNG pixels, output dimensions, successful
 download, failed encoding recovery, framing reset, cancelled share recovery,
-camera UI exit and narrow-screen composition. Native sharing is stubbed to cancel;
+camera UI exit, retained previews, failed replacement recovery, explicit discard,
+object URL release, late-share fencing, numeric framing values, prospective output
+dimensions, graphics limitations and narrow-screen composition. Native sharing is stubbed to cancel;
 it does not send an image. The camera module tests exact pose/lens restoration,
 resize preservation and bounded cropping. The fixture uses approved local identities.
 

@@ -1,0 +1,11 @@
+{
+  "createdAt": "2026-10-07T09:42:52.388Z",
+  "results": [
+    {
+      "name": "contextual-first-visit",
+      "status": "failed",
+      "seconds": 15.8,
+      "error": "Error: page.waitForFunction: Timeout 10000ms exceeded.; town replies [{\"ok\":true},{\"ok\":false,\"error\":\"travel_cooldown\",\"message\":\"travel_cooldown\"}]\n    at eval (preview/e2e/contextual-first-visit.js:26:154)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)\n    at async eval (preview/e2e/contextual-first-visit.js:26:3)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks/preview/e2e/experience-runner.js:34:22"
+    }
+  ]
+}

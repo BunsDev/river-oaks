@@ -107,6 +107,7 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-1');
   check(true,'Jevica can enter the creator venue in the shared world');
   await page.waitForTimeout(1100);
+  if(!await page.locator('#walking-enter').isVisible())await page.locator('.walking-more summary').click();
   await page.locator('#walking-enter').click();
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='');
   check(true,'Jevica can leave the creator venue');
@@ -133,6 +134,7 @@ async page=>{
   await page.locator('#build-mode').click();
   await page.screenshot({path:'output/playwright/creator-home.png'});
   await page.waitForTimeout(1100);
+  if(!await page.locator('#walking-enter').isVisible())await page.locator('.walking-more summary').click();
   await page.locator('#walking-enter').click();
   await page.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='');
   await page.locator('#store-clear').click();

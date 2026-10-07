@@ -33,11 +33,13 @@ async page => {
   await page.waitForFunction(id=>[...document.querySelectorAll('#nearby-seat option')].some(option=>option.value===id&&option.textContent.startsWith('Storefront bench')),bench.id,{timeout:10000});
   check(true,'Beside a bench, the seats panel lists it and Z offers to sit');
 
-  await press(page,'KeyZ');
+  await page.waitForFunction(()=>!document.querySelector('#walking-interact').hidden);
+  if(!await page.locator('#walking-interact').isVisible())await page.locator('.walking-more summary').click();
+  await page.locator('#walking-interact').click();
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000});
   const seatId=await page.evaluate(()=>document.querySelector('#canvas-host').dataset.playerSeat);
   const seat=seats.find(item=>item.id===seatId);
-  check(Boolean(seat)&&seat.id.startsWith(bench.id.slice(0,-1)),'Z sits on a place on that bench');
+  check(Boolean(seat)&&seat.id.startsWith(bench.id.slice(0,-1)),'Contextual Sit sits on a place on that bench');
   await page.waitForFunction(()=>document.querySelector('#walking-hud .walking-title strong')?.textContent==='Seated',null,{timeout:5000});
   check(true,'The HUD says the player is sitting');
   const recorded=(await self(page,'alice')).sitting;
@@ -73,11 +75,13 @@ async page => {
   await page.waitForTimeout(800);
   await page.screenshot({path:'output/playwright/sit-two-on-a-bench.png'});
 
-  // Stand up with Z, for everyone; the town stands them on open pavement in front.
-  await press(page,'KeyZ');
+  // The contextual primary stands up through the same server command as Z.
+  await page.waitForFunction(()=>document.querySelector('#walking-hud').dataset.primaryAction==='interact' && document.querySelector('#walking-interact').textContent.startsWith('Stand up'));
+  check(await page.locator('.walking-primary > #walking-interact').isVisible(),'Standing up is the single primary contextual action while seated');
+  await page.locator('#walking-interact').click();
   await page.waitForFunction(()=>!document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000});
   await bob.waitForFunction(()=>!window.__riverMultiplayer().remotes.find(remote=>remote.id==='alice')?.riderSeated,null,{timeout:20000});
-  check((await self(page,'alice')).sitting===null,'Z stands up, for everyone');
+  check((await self(page,'alice')).sitting===null,'Contextual Stand stands up, for everyone');
   await press(bob,'KeyZ');
   await bob.waitForFunction(()=>!document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000});
   check(true,'Bob stands up too');

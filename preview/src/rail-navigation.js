@@ -8,7 +8,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
   dialog.innerHTML = `<header><h2 id="rail-commands-title">Commands & keyboard</h2><button type="button" class="commands-close" aria-label="Close commands">Close <kbd>Esc</kbd></button></header>
     <label for="rail-command-search">Find a control or activity</label><input id="rail-command-search" type="search" autocomplete="off" placeholder="Try places, chat, rides…">
     <p class="commands-count" role="status"></p><div class="commands-results" role="group" aria-label="Available commands"></div>
-    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; arrow keys, Home and End select rail tabs. Shortcuts leave typing and modal dialogs alone.</small></details>`;
+    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; arrow keys, Home and End select People, Places and Settings tabs. Shortcuts leave typing and modal dialogs alone.</small></details>`;
   document.body.append(dialog);
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'commands-toggle';
   trigger.innerHTML = '<span>Commands</span><kbd>?</kbd>'; trigger.title = `Commands & keyboard (${primary}K or ?)`;
@@ -41,21 +41,21 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     const dock = getDock(); dock?.setOpen(true, { focus: true }); if (selector) dock?.jump(selector);
   };
   const actions = () => [
-    { label: 'Toggle exploration rail', keys: `${primary}B`, run: () => sidebar.toggle() },
-    { label: 'Toggle play rail', keys: `${primary}Shift+B`, run: () => {
+    { label: 'Explore · show or hide places and people', keys: `${primary}B`, run: () => sidebar.toggle() },
+    { id: 'activities', label: 'Activities · show or hide controls', keys: `${primary}Shift+B`, run: () => {
       const dock = getDock(); if (!dock) return;
       if (dock.element.open && dock.element.checkVisibility({ visibilityProperty: true })) { dock.setOpen(false); focusWorld(); } else showPlay();
     } },
-    ...['People', 'Places', 'Settings'].map((label, index) => ({ label: `Open ${label}`, keys: `Alt+${index + 1}`, run: () => openTab(index) })),
+    ...['People · nearby and chat', 'Explore · places and landmarks', 'Settings'].map((label, index) => ({ label, keys: `Alt+${index + 1}`, run: () => openTab(index) })),
     { label: 'Search destinations', keys: '/', selector: '#store-search', run: () => openTab(1, '#store-search') },
     { label: 'World map', selector: '.world-map-surface', run: () => openTab(1, '.world-map-surface') },
     { label: 'Save a landmark', selector: '#landmark-name', run: () => openTab(1, '#landmark-name') },
     { label: 'Browse shared worlds', selector: '.world-portal-list a', run: () => openTab(1, '.world-portal-list a') },
     { label: 'Events & gatherings', selector: '.world-events-filters select', run: () => openTab(1, '.world-events-filters select') },
     { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => openTab(0, '.multiplayer-chat-form input') },
-    { label: 'Character & abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
-    { label: 'Photo mode · take and share a picture', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
-    { label: 'Rides & camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
+    { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
+    { label: 'Camera · Photo mode', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
+    { label: 'Rides · driving and camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
     { label: 'Bird cams', selector: '.bird-cams', run: () => showPlay('.bird-cams') },
     { label: 'Build & decorate', selector: '#build-mode', run: () => showPlay('.shared-build-controls') },
     { label: 'Graphics quality', selector: '[data-quality=auto]', run: () => openTab(2, '[data-quality=auto]') },
@@ -65,7 +65,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
       if (document.querySelector('#community-dialogue')?.hidden === false) document.querySelector('#community-close')?.click();
       sidebar.setOpen(false); getDock()?.setOpen(false); focusWorld();
     } },
-  ].filter(action => (!action.selector || visibleTarget(action.selector)) && (!action.enabled || action.enabled()) && (action.label !== 'Toggle play rail' || getDock()));
+  ].filter(action => (!action.selector || visibleTarget(action.selector)) && (!action.enabled || action.enabled()) && (action.id !== 'activities' || getDock()));
   const close = (restore = true) => {
     dialog.close();
     if (restore) (returnFocus?.isConnected && returnFocus !== document.body && returnFocus.checkVisibility({ visibilityProperty: true }) && !returnFocus.closest('[inert]') ? returnFocus : host).focus({ preventScroll: true });
@@ -131,7 +131,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     event.preventDefault(); event.stopImmediatePropagation(); if (event.repeat) return;
     if (action === 'commands') open({ help: event.key === '?' });
     else if (action === 'rail') sidebar.toggle();
-    else if (action === 'play') actions().find(item => item.label === 'Toggle play rail')?.run();
+    else if (action === 'play') actions().find(item => item.id === 'activities')?.run();
     else if (action.startsWith('tab-')) openTab(Number(action.slice(-1)));
     else if (action === 'search' && visibleTarget('#store-search')) openTab(1, '#store-search');
   }, true);

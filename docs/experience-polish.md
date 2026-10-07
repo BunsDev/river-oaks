@@ -2,6 +2,13 @@
 
 The play dock keeps flight and Jev within reach while rides, camera settings, and bird controls stay in disclosures. Small windows start with the dock closed. You can close either the dock or exploration panel with Escape; focus returns to its trigger. H hides the floating controls and leaves a visible way to restore them. Compact conversations clear the competing controls until you close the conversation.
 
+The walking HUD emphasizes one available action. Standing up takes priority while
+seated; otherwise nearby conversation, doorway actions, then other interactions
+and meeting someone are offered in that order. **More actions** keeps alternatives
+reachable. E talks, F enters/leaves, and Z sits/stands/waters as before. Doorway
+refusals appear beside the action; an arrival cooldown needs a deliberate retry.
+Commands uses player goals such as Explore, People, Character and Camera.
+
 Run the browser acceptance suite with:
 
 ```sh

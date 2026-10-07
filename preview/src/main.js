@@ -195,6 +195,7 @@ function initializeRenderer() {
   $('#viewport').append(playDock.element);
   clearView = createClearView();
   photoMode = createPhotoMode({ camera, canvas: renderer.domElement, host,
+    getQuality: () => quality.stats,
     canOpen: () => Boolean(multiplayer?.connected && !multiplayer.traveling && world && !loading && document.body.classList.contains('access-granted')),
     onOpen: () => { walking?.halt(); },
   });

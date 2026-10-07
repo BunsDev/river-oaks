@@ -9,6 +9,7 @@ import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
+import { contextualAction } from './contextual-action.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null }) {
@@ -17,6 +18,36 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   hud.id = 'walking-hud'; hud.className = 'walking-hud'; hud.hidden = true;
   hud.setAttribute('aria-label', 'Walking controls');
   hud.innerHTML = `<div class="walking-title"><span>RIVER OAKS · GARDEN CITY</span><strong>On foot</strong><small>4444 Westheimer Rd · Houston</small></div><div class="walking-center" aria-hidden="true">·</div><div class="walking-console"><p class="walking-notice" id="walking-notice" role="status" aria-live="polite" hidden></p><button id="walking-meet-nearby">Meet someone nearby</button><button id="walking-talk" disabled>Find a local to talk to <kbd>E</kbd></button><button id="walking-enter" hidden>Step inside <kbd>F</kbd></button><button id="walking-interact" hidden>Sit down <kbd>Z</kbd></button><p id="walking-place">Explore the public walkways</p><button id="walking-controls-toggle" aria-expanded="false" aria-controls="walking-movement">Show movement controls</button><div id="walking-movement" hidden><div class="walking-pad" role="group" aria-label="Walk and turn"><button data-walk-key="ArrowLeft" aria-label="Turn left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3.5 8.5 7 12"/><path d="M3.5 8.5H12a4 4 0 0 1 0 8H9"/></svg></button><button data-walk-key="KeyA" aria-label="Walk left">←</button><button data-walk-key="KeyW" aria-label="Walk forward">↑</button><button data-walk-key="KeyS" aria-label="Walk backward">↓</button><button data-walk-key="KeyD" aria-label="Walk right">→</button><button data-walk-key="ArrowRight" aria-label="Turn right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 3.5 3.5L13 12"/><path d="M16.5 8.5H8a4 4 0 0 0 0 8h3"/></svg></button></div><p class="walking-help">WASD to walk · Drag to look · Shift for a brisk walk<br>Arrow keys to turn · E to talk · F steps inside · Z to sit or water<br>B to fly · Space to rise · C to lower · Escape closes conversations</p></div></div>`;
+  const primary = document.createElement('div'); primary.className = 'walking-primary';
+  const more = document.createElement('details'); more.className = 'walking-more';
+  more.innerHTML = '<summary>More actions</summary><div class="walking-other-actions"></div>';
+  const secondary = more.querySelector('div');
+  const actionButtons = Object.fromEntries(['talk', 'enter', 'interact', 'meet'].map(action =>
+    [action, hud.querySelector(action === 'meet' ? '#walking-meet-nearby' : `#walking-${action}`)]));
+  hud.querySelector('#walking-notice').after(primary, more);
+  for (const button of Object.values(actionButtons)) secondary.append(button);
+  const presentActions = () => {
+    const available = Object.fromEntries(Object.entries(actionButtons).map(([id, button]) => [id, !button.hidden && !button.disabled]));
+    const focused = Object.entries(actionButtons).find(([, button]) => button === document.activeElement);
+    // Keep a focused action in place while it remains available. An automatic
+    // context change must not swap the target beneath a keyboard user's finger.
+    const selected = focused && available[focused[0]] && focused[1].parentElement === primary
+      ? focused[0] : contextualAction({ ...available, seated: Boolean(sitting) });
+    for (const [id, button] of Object.entries(actionButtons)) {
+      const target = id === selected ? primary : secondary;
+      if (button.parentElement !== target) {
+        if (focused?.[0] === id && !button.hidden) more.open = true;
+        target.append(button);
+        if (focused?.[0] === id && !button.hidden && !button.disabled) button.focus({ preventScroll: true });
+      }
+    }
+    primary.hidden = !selected;
+    more.hidden = !Object.values(actionButtons).some(button => button.parentElement === secondary && !button.hidden);
+    if ((focused && (focused[1].hidden || focused[1].disabled)) || (more.hidden && more.contains(document.activeElement))) {
+      (selected ? actionButtons[selected] : host).focus({ preventScroll: true });
+    }
+    hud.dataset.primaryAction = selected ?? '';
+  };
   const sprintButton=document.createElement('button');
   sprintButton.id='walking-sprint';sprintButton.dataset.walkKey='ShiftLeft';
   sprintButton.setAttribute('aria-label','Hold to sprint');sprintButton.textContent='Hold to sprint';sprintButton.hidden=true;
@@ -24,7 +55,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#viewport').append(hud);
   const keys = new Set();
   const placedObjects = [];
-  let transport = null, sitting = null, seatedGround = 0;
+  let transport = null, sitting = null, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,beastKind=null;
   let thirdPerson = true, bodyVisible = true;
@@ -32,6 +63,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
   const clear = () => { keys.clear(); drag.cancel(); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
+  const notify = (text, ms = 3200) => {
+    const notice = $('#walking-notice');
+    clearTimeout(notice._timer); notice.textContent = text; notice.hidden = false;
+    notice._timer = setTimeout(() => { notice.hidden = true; }, ms);
+  };
   const dialogueOpen = () => !$('#community-dialogue')?.hidden;
   const place = (delta=0) => {
     if (thirdPerson) {
@@ -84,14 +120,21 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     }
     return result;
   };
-  const stepThrough = () => {
-    if (!active || transport) return;
-    if(sitting)return;
-
+  const stepThrough = async () => {
+    if (!active || transport || sitting || doorwayPending) return;
     const room = currentRoom();
-    if (room) { const store = stores.find(item => item.id === room.storeId); if (store) { clear(); onLeave?.(store); } return; }
-    const store = doorway();
-    if (store && canEnterStore(store)) { clear(); onEnter?.(store); }
+    const store = room ? stores.find(item => item.id === room.storeId) : doorway();
+    if (!store || (!room && !canEnterStore(store))) return;
+    const actionState = state;
+    clear(); doorwayPending = true;
+    try {
+      const result = await (room ? onLeave?.(store) : onEnter?.(store));
+      if (active && state === actionState && result?.ok === false) {
+        notify(result.error === 'travel_cooldown' ? 'Wait a moment before stepping through. Try again.' : result.message ?? 'Could not step through. Try again.');
+      }
+    } catch {
+      if (active && state === actionState) notify('Could not step through. Check your connection and try again.');
+    } finally { doorwayPending = false; }
   };
   $('#walking-enter').addEventListener('click', stepThrough);
   // Z sits on a nearby seat, stands up, or waters a nearby planter; the
@@ -208,11 +251,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     // The live walking model, including placed objects, for the debug overlays.
     // A short message where the player is looking, for an action that could not happen.
-    notify(text, ms = 3200) {
-      const notice = $('#walking-notice'); if (!notice) return;
-      clearTimeout(notice._timer); notice.textContent = text; notice.hidden = false;
-      notice._timer = setTimeout(() => { notice.hidden = true; }, ms);
-    },
+    notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
     getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
@@ -280,7 +319,6 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-meet-nearby').disabled = !nearby.length;
       $('#walking-talk').disabled = !nearest;
       $('#walking-talk').hidden = !nearest;
-      $('#walking-meet-nearby').classList.toggle('walking-secondary', Boolean(nearest));
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const interaction = getInteraction(), interactButton = $('#walking-interact');
       interactButton.hidden = !interaction || interaction.button === false;
@@ -291,8 +329,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title strong').textContent = sitting ? 'Seated' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = Boolean(sitting||transport)||(!room && !door);
-      enter.disabled = Boolean(door && !canEnterStore(door));
+      enter.disabled = doorwayPending || Boolean(door && !canEnterStore(door));
       enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
+      presentActions();
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       const roomSummary=room && sharedRoomSummary(room);
