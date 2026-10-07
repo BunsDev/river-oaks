@@ -25,6 +25,10 @@ def district_manifest(source):
         building["style"] = building["kind"]
     for tree in result["trees"]:
         tree["position"][2] = 0
+        # Native sphere crown clips retail corner 625333008; measured pilot leaves
+        # 4.36 cm clearance at 3.29 m. Keep trunk, location and browser data intact.
+        if tree["id"] == "osm-node-5904555939":
+            tree["crown_radius_m"] = min(tree["crown_radius_m"], 3.29)
     for key in ("walkSpawn", "walkLookAt"):
         result[key][2] = 0
     for store in result["stores"]:
