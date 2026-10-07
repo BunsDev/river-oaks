@@ -1,0 +1,4 @@
+interface:
+  display_name: "Camera & Framing"
+  short_description: "Check gameplay cameras, entrances, and visual priority"
+  default_prompt: "Use $camera-framing to place reproducible gameplay camera stations and review FOV, entrances, sightlines, and visual priority."

@@ -33,6 +33,9 @@ void ARiverStreetPawn::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     auto* PC = Cast<APlayerController>(Controller);
     if (!PC || !District) return;
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    if (PC->IsLocalController()) UpdateDeveloperView(PC, DeltaSeconds);
+#endif
     float MouseX = 0, MouseY = 0;
     PC->GetInputMouseDelta(MouseX, MouseY);
     FRotator Look = PC->GetControlRotation();
@@ -44,8 +47,17 @@ void ARiverStreetPawn::Tick(float DeltaSeconds)
     const float Side = PC->IsInputKeyDown(EKeys::D) - PC->IsInputKeyDown(EKeys::A);
     const FRotationMatrix Rotation(FRotator(0, Look.Yaw, 0));
     const FVector Direction = (Rotation.GetUnitAxis(EAxis::X) * Forward + Rotation.GetUnitAxis(EAxis::Y) * Side).GetClampedToMaxSize(1.);
-    const FVector Next = District->ConstrainVisitor(GetActorLocation() + Direction * 165.f * FMath::Min(DeltaSeconds, .05f));
+    const FVector Before = GetActorLocation();
+    const FVector Proposed = Before + Direction * 165.f * FMath::Min(DeltaSeconds, .05f);
+    const FVector Next = District->ConstrainVisitor(Proposed);
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    FHitResult MovementHit;
+    SetActorLocation(Next, true, Diagnostics.bEnabled ? &MovementHit : nullptr);
+    if (Diagnostics.bEnabled)
+        Diagnostics.Observe(DeltaSeconds, Direction, Before, Proposed, Next, GetActorLocation(), MovementHit);
+#else
     SetActorLocation(Next, true);
+#endif
     const bool bStillConversing = District->UpdateConversation(GetActorLocation());
     if (bConversationActive && !bStillConversing) Conversation.Empty();
     bConversationActive = bStillConversing;
@@ -60,6 +72,9 @@ void ARiverStreetPawn::Tick(float DeltaSeconds)
         Conversation = District->GreetNearby(GetActorLocation());
         bConversationActive = District->UpdateConversation(GetActorLocation());
         ConversationUntil = GetWorld()->GetTimeSeconds() + 10.;
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+        if (Diagnostics.bEnabled) Diagnostics.Record(TEXT("E input -> local proximity/visibility check -> ") + Conversation);
+#endif
     }
     if (GetWorld()->GetTimeSeconds() > ConversationUntil) Conversation.Empty();
 }
@@ -83,6 +98,9 @@ void ARiverStreetHUD::DrawHUD()
     if (!Canvas || !PlayerOwner) return;
     const auto* Visitor = Cast<ARiverStreetPawn>(PlayerOwner->GetPawn());
     if (!Visitor) return;
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    DrawDeveloperView(Visitor);
+#endif
     DrawRect(FLinearColor(0.06f, .05f, .08f, .8f), 16, 16, 440, 80);
     DrawText(TEXT("RIVER OAKS DISTRICT - ON FOOT"), FLinearColor::White, 30, 28);
     DrawText(TEXT("WASD walk | Mouse / arrows look | E greet"), FLinearColor::White, 30, 56);

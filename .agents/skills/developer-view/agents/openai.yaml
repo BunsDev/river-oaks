@@ -1,0 +1,4 @@
+interface:
+  display_name: "Developer View"
+  short_description: "Inspect live geometry with bounded toggleable overlays"
+  default_prompt: "Use $developer-view to inspect the existing developer tools and identify missing measurement, collision, route, camera, and object layers."

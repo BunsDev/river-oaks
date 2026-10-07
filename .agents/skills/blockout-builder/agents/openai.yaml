@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blockout Builder"
+  short_description: "Build simple geometry with clear routes and work zones"
+  default_prompt: "Use $blockout-builder to turn the approved sketch into a meter-based blockout with separate circulation and activity spaces."

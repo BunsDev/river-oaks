@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/HUD.h"
+#include "RiverDeveloperDiagnostics.h"
 #include "RiverStreetPawn.generated.h"
 
 class UCameraComponent;
@@ -18,6 +19,10 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     FString InteractionPrompt() const;
     FString Conversation;
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    FRiverDeveloperDiagnostics Diagnostics;
+    void UpdateDeveloperView(APlayerController* PC, float Dt);
+#endif
 protected:
     virtual void BeginPlay() override;
 private:
@@ -34,4 +39,7 @@ class RIVEROAKS_API ARiverStreetHUD : public AHUD
     GENERATED_BODY()
 public:
     virtual void DrawHUD() override;
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    void DrawDeveloperView(const ARiverStreetPawn* Visitor);
+#endif
 };

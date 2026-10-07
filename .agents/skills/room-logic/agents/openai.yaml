@@ -1,0 +1,4 @@
+interface:
+  display_name: "Room Logic"
+  short_description: "Check believable room connections and building use"
+  default_prompt: "Use $room-logic to review this building for believable room adjacency, doors, stairs, shared spaces, and usable exits."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Player Path & Collision"
+  short_description: "Reproduce route failures using actual movement collision"
+  default_prompt: "Use $player-path-collision to reproduce the stuck-player route, inspect authoritative collision, and report the cause and targeted fix."

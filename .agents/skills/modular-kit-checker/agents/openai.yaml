@@ -1,0 +1,4 @@
+interface:
+  display_name: "Modular Kit Checker"
+  short_description: "Audit grid fit, dimensions, pivots, names, and seams"
+  default_prompt: "Use $modular-kit-checker to audit this modular kit for consistent dimensions, grid fit, pivots, naming, and reusable joins."
