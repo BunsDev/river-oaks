@@ -42,7 +42,9 @@ are outside this task and remain preserved.
 - [x] Independent review rechecked both fixes and found no remaining important issues.
 - [x] Whitespace, local documentation links, skill metadata and staged secrets passed;
   README conflict markers are resolved and the source patch was reviewed.
-- [ ] Push a pull request, wait for the hosted gates, squash merge, and synchronize main.
+- [x] Push a pull request, wait for the hosted gates, squash merge, and synchronize main.
+  PR #175 head `6989a9f` passed all 10 hosted check runs and the Vercel status; it was
+  squash-merged at 2026-10-07T06:52:44Z as `5b26f3a`, and local main was synchronized.
 
 Native rendered/human edge-play acceptance, frame-cost profiling, native multiplayer
 causality, cooked packaging, live authentication, production deployment and human
@@ -98,6 +100,5 @@ the verified Editor/Game builds and 25-contract run. The full local browser run
 above predates PR #173's facade/data changes; the hosted preview job must verify
 the combined revision before merge.
 
-Next step: push the reviewed, verified integration and wait for hosted checks
-(`preview`, `verify (3.11)`, `verify (3.13)` and remaining checks), then squash merge
-and synchronize main. PR status provides the subsequent delivery receipt.
+Delivered through PR #175 (receipt in the checklist above). The hosted `preview`,
+`verify (3.11)` and `verify (3.13)` jobs verified the combined revision before merge.
