@@ -858,6 +858,7 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
       builder(frontage, f, W, doors);
       return true;
     },
+    wall,
     reflective: [n.royalGlass],
     massMaterial: building => ({ [EQUINOX_BLOCK]: n.royalGlass, [ETRO_BLOCK]: n.etroStone, [RESIDENCES_SOUTH]: n.white, [RESIDENCES_NORTH]: n.tile, [DIOR_BLOCK]: n.diorStone })[building.id] ?? null,
   };

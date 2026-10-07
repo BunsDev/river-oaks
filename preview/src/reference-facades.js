@@ -264,18 +264,20 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
       const b1 = Math.max(2.4, door - 6.6), b1e = b1 + 10.6, b2 = b1e + 2.8, b2e = W - 2.6;
       bays = [[b1, b1e, Math.round((b1e - b1) / 1.33)], [b2, b2e, Math.round((b2e - b2) / 1.42)]];
     } else bays = [[2.4, W - 2.4, Math.round((W - 4.8) / 1.36)]];
-    const lead = main ? -0.3 : 0, piers = [[lead, bays[0][0]], ...bays.slice(1).map((bay, i) => [bays[i][1], bay[0]]), [bays.at(-1)[1], W]];
+    // The stone frame stands REVEAL proud of the bronze glass, so the curtain
+    // walls read set back into it; the main face runs past the corner to close it.
+    const REVEAL = 0.6, lead = main ? -REVEAL : 0, piers = [[lead, bays[0][0]], ...bays.slice(1).map((bay, i) => [bays[i][1], bay[0]]), [bays.at(-1)[1], W]];
     for (const [s0, s1] of piers) {
-      box(f, m.limestone, s0, s1, 0.55, 12.2, -0.05, 0.3);
-      box(f, m.granite, s0 - (s0 === lead && main ? 0.04 : 0), s1, 0, 0.55, -0.05, 0.34);
+      box(f, m.limestone, s0, s1, 0.55, 12.2, -0.05, REVEAL);
+      box(f, m.granite, s0 - (s0 === lead && main ? 0.04 : 0), s1, 0, 0.55, -0.05, REVEAL + 0.04);
       // Bronze wall sconces on each pier, as photographed at door height.
       const s = s0 === lead ? s1 - 1.1 : (s0 + s1) / 2;
-      box(f, m.bronze, s - 0.08, s + 0.08, 3.0, 3.62, 0.3, 0.42);
-      box(f, m.lamp, s - 0.05, s + 0.05, 2.97, 3.0, 0.31, 0.41);
-      box(f, m.lamp, s - 0.05, s + 0.05, 3.62, 3.65, 0.31, 0.41);
+      box(f, m.bronze, s - 0.08, s + 0.08, 3.0, 3.62, REVEAL, REVEAL + 0.12);
+      box(f, m.lamp, s - 0.05, s + 0.05, 2.97, 3.0, REVEAL + 0.01, REVEAL + 0.11);
+      box(f, m.lamp, s - 0.05, s + 0.05, 3.62, 3.65, REVEAL + 0.01, REVEAL + 0.11);
     }
-    box(f, m.limestone, lead, W, 12.2, 14.1, -0.05, 0.3);
-    box(f, m.bronze, main ? -0.42 : 0, W + 0.12, 14.1, 14.5, -0.05, 0.42);
+    box(f, m.limestone, lead, W, 12.2, 14.1, -0.05, REVEAL);
+    box(f, m.bronze, main ? -REVEAL - 0.12 : 0, W + 0.12, 14.1, 14.5, -0.05, REVEAL + 0.12);
     for (const [s0, s1, columns] of bays) {
       const step = (s1 - s0) / columns, open = doors.filter(s => s > s0 && s < s1);
       let runs = [[s0, s1]];
@@ -296,7 +298,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     }
     if (main) {
       const middle = (bays[0][1] + bays[1][0]) / 2;
-      sign(lettering('HERMÈS', { width: 5.4, height: 0.95, family: 'Didot, "Bodoni 72", "Big Caslon", Georgia, serif', weight: 700, color: '#8a6a47', spacing: 0.1, metalness: 0.55, roughness: 0.38 }), f, middle, 13.15, 0.31, 5.4, 0.95);
+      sign(lettering('HERMÈS', { width: 5.4, height: 0.95, family: 'Didot, "Bodoni 72", "Big Caslon", Georgia, serif', weight: 700, color: '#8a6a47', spacing: 0.1, metalness: 0.55, roughness: 0.38 }), f, middle, 13.15, 0.61, 5.4, 0.95);
     }
   }
   // The pavilion's own mass rises over its two-storey neighbours.
@@ -350,15 +352,16 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
         // above them and a projecting ledge.
         let split = (s0 + s1) / 2;
         for (const s of doorS) if (Math.abs(s - split) < 1.4) split = s + 1.6;
-        box(f, m.greyStone, s0, s1, 4.2, 9.4, -0.05, 0.12);
+        const halves = [[s0, split - 0.45], [split + 0.45, s1]];
+        blocks.wall(f, m.greyStone, s0, s1, 4.2, 9.4, -0.05, 0.4, halves.map(([a, b]) => [a + 0.2, b - 0.2, 4.6, 5.65]));
         box(f, m.greyStone, split - 0.45, split + 0.45, 0, 4.2, -0.05, 0.25);
-        for (const [a, b] of [[s0, split - 0.45], [split + 0.45, s1]]) {
+        for (const [a, b] of halves) {
           storefront(f, a, b, 4.2, { doors: doorS, mullion: m.charcoal, pitch: 1.6 });
           box(f, m.charcoal, a - 0.1, b + 0.1, 4.22, 4.36, 0.05, 1.45);
           windowRow(f, a + 0.2, b - 0.2, 4.6, 5.65, m.charcoal, 1.3);
         }
-        sign(lettering(module.name.toUpperCase(), { width: 8, height: 0.62, family: 'Optima, Candara, "Gill Sans", sans-serif', weight: 500, color: '#e6e4de', spacing: 0.14, metalness: 0.6, roughness: 0.35 }), f, (s0 + s1) / 2, 6.35, 0.13, Math.min(8, s1 - s0 - 2), 0.62);
-        box(f, m.greyStone, s0 - 0.2, s1 + 0.2, 7.0, 7.22, -0.05, 0.7);
+        sign(lettering(module.name.toUpperCase(), { width: 8, height: 0.62, family: 'Optima, Candara, "Gill Sans", sans-serif', weight: 500, color: '#e6e4de', spacing: 0.14, metalness: 0.6, roughness: 0.35 }), f, (s0 + s1) / 2, 6.35, 0.41, Math.min(8, s1 - s0 - 2), 0.62);
+        box(f, m.greyStone, s0 - 0.2, s1 + 0.2, 7.0, 7.22, -0.05, 0.95);
       } else if (kind === 'amorino') {
         // Amorino: a narrow portal of chequered stone standing proud of its
         // neighbours, a taupe canopy box with the name, a dark band and a clerestory.
@@ -388,8 +391,12 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
         if (module.name === 'COS BAR') sign(lettering('BEAUTY ELEVATED', { width: wide * 0.62, height: 0.16, family: 'Futura, Avenir, sans-serif', weight: 600, color: '#18191b', spacing: 0.3 }), f, (s0 + s1) / 2, 5.3, 0.46, wide * 0.62, 0.16);
       } else if (kind === 'cinema') {
         // The cinema entrance: smooth grey panels, a slatted screen carrying the
-        // IPIC name, glazed doors below.
+        // IPIC name, glazed doors below, all inset between stone returns a
+        // metre deep, with a dark soffit over the doors.
         box(f, m.concrete, s0, s1, 5.6, 9.4, -0.05, 0.1);
+        for (const [a, b] of [[s0 - 0.3, s0], [s1, s1 + 0.3]]) box(f, m.greyStone, a, b, 0, 9.4, -0.05, 1.1);
+        box(f, m.charcoal, s0, s1, 3.55, 3.62, 0.1, 1.1);
+        for (const s of [s0 + (s1 - s0) * 0.25, (s0 + s1) / 2, s0 + (s1 - s0) * 0.75]) box(f, m.lamp, s - 0.1, s + 0.1, 3.53, 3.55, 0.55, 0.75);
         storefront(f, s0 + 0.5, s1 - 0.5, 3.6, { doors: doorS, mullion: m.charcoal, pitch: 1.4, transom: 3.0, upper: m.shopGlass });
         box(f, m.concrete, s0, s1, 3.6, 5.6, -0.05, 0.02);
         for (let i = 0; i < 8; i++) box(f, m.teak, s0 + 1.2, s1 - 1.2, 3.75 + i * 0.22, 3.86 + i * 0.22, 0.05, 0.2);
@@ -402,7 +409,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
         box(f, m.charcoal, s0 + 0.6, s1 - 0.6, 4.05, 5.2, -0.05, 0.32);
         box(f, m.greyStone, s0, s0 + 0.6, 0, 9.4, -0.05, 0.25); box(f, m.greyStone, s1 - 0.6, s1, 0, 9.4, -0.05, 0.25);
         storefront(f, s0 + 1.0, s1 - 1.0, 4.05, { doors: doorS, mullion: m.charcoal, pitch: 1.9, transom: 3.4, upper: glass });
-        box(f, m.greyStone, s0 + 0.6, s1 - 0.6, 5.2, 9.4, -0.05, 0.12);
+        blocks.wall(f, m.greyStone, s0 + 0.6, s1 - 0.6, 5.2, 9.4, -0.05, 0.4, [[s0 + 1.8, s1 - 1.8, 6.0, 8.9]]);
         windowRow(f, s0 + 1.8, s1 - 1.8, 6.0, 8.9, m.bronze, 2.1);
         sign(lettering(module.name, { width: 5.6, height: 0.62, family: '"Big Caslon", Baskerville, Georgia, serif', weight: 500, color: '#efe9dd', spacing: 0.01 }), f, (s0 + s1) / 2, 4.63, 0.33, 5.6, 0.62);
         sign(lettering(module.name, { width: 4.6, height: 0.5, family: '"Big Caslon", Baskerville, Georgia, serif', weight: 500, color: '#3a2d22', spacing: 0.01 }), f, (s0 + s1) / 2, 7.7, 0.25, 4.6, 0.5);
@@ -412,7 +419,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
         box(f, m.charcoal, s0, s0 + 0.4, 0, 4.5, -0.05, 0.4); box(f, m.charcoal, s1 - 0.4, s1, 0, 4.5, -0.05, 0.4);
       } else {
         storefront(f, s0, s1, 4.4, { doors: doorS, pitch: 1.6, transom: 3.5, upper: glass });
-        box(f, m.greyStone, s0, s1, 4.4, 9.4, -0.05, 0.12);
+        blocks.wall(f, m.greyStone, s0, s1, 4.4, 9.4, -0.05, 0.4, [[s0 + 1, s1 - 1, 6.2, 8.4]]);
         windowRow(f, s0 + 1, s1 - 1, 6.2, 8.4, m.aluminium, 1.6);
       }
     }
@@ -441,9 +448,10 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
       if (skip.some(([a, b]) => s > a - 0.4 && s < b + 0.4)) continue;
       const tall = i % 3 === 1 ? 5.4 : 6.6, h0 = 10.8, h1 = h0 + tall;
       sheet(f, m.shopGlass, s - 0.19, s + 0.19, h0, h1, 0.03);
-      for (const side of [-1, 1]) box(f, m.tan, s + side * 0.26 - 0.07, s + side * 0.26 + 0.07, h0 - 0.1, h1 + 0.1, -0.05, 0.16);
-      box(f, m.tan, s - 0.33, s + 0.33, h1, h1 + 0.12, -0.05, 0.16);
-      box(f, m.tan, s - 0.33, s + 0.33, h0 - 0.14, h0, -0.05, 0.2);
+      // Jambs, head and sill stand 0.42 m proud, so each slot reads cut deep into the box.
+      for (const side of [-1, 1]) box(f, m.tan, s + side * 0.26 - 0.07, s + side * 0.26 + 0.07, h0 - 0.1, h1 + 0.1, -0.05, 0.42);
+      box(f, m.tan, s - 0.33, s + 0.33, h1, h1 + 0.12, -0.05, 0.42);
+      box(f, m.tan, s - 0.33, s + 0.33, h0 - 0.14, h0, -0.05, 0.46);
     }
     box(f, m.tan, -0.1, W + 0.1, 18.25, 18.6, -0.05, 0.22);
   }
@@ -456,15 +464,16 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
   // Bella Rinova: cream tile below a salon ribbon window and a pale metal band
   // carrying the name; a slatted stair screen and blue-striped awnings at grade.
   function ribbon(f, W, { name = false, at = W / 2 } = {}) {
-    box(f, m.aluminium, -0.1, W + 0.1, 5.5, 5.62, -0.05, 0.16);
+    box(f, m.aluminium, -0.1, W + 0.1, 5.5, 5.62, -0.05, 0.5);
     sheet(f, m.ribbon, -0.05, W + 0.05, 5.62, 8.5, 0.04);
     const columns = Math.max(1, Math.round(W / 1.6));
     for (let i = 0; i <= columns; i++) { const s = i * W / columns; box(f, m.aluminium, s - 0.035, s + 0.035, 5.62, 8.5, 0.04, 0.16); }
     box(f, m.aluminium, -0.1, W + 0.1, 6.02, 6.07, 0.04, 0.15);
-    box(f, m.band, -0.14, W + 0.14, 8.5, 10.4, -0.05, 0.14);
-    for (let i = 1; i < Math.round(W / 2.4); i++) { const s = i * W / Math.round(W / 2.4); box(f, m.louver, s - 0.012, s + 0.012, 8.52, 10.38, 0.13, 0.145); }
-    box(f, m.aluminium, -0.2, W + 0.2, 10.4, 10.62, -0.05, 0.24);
-    if (name) sign(lettering('Bella Rinova salon', { width: 10.5, height: 1.0, family: '"Trajan Pro", Optima, Baskerville, Georgia, serif', weight: 600, color: '#1c1d1f', spacing: 0.06, smallCaps: true }), f, at, 9.45, 0.15, 10.5, 1.0);
+    // The metal band stands 0.45 m out, so the ribbon window reads recessed beneath it.
+    box(f, m.band, -0.45, W + 0.45, 8.5, 10.4, -0.05, 0.45);
+    for (let i = 1; i < Math.round(W / 2.4); i++) { const s = i * W / Math.round(W / 2.4); box(f, m.louver, s - 0.012, s + 0.012, 8.52, 10.38, 0.44, 0.455); }
+    box(f, m.aluminium, -0.5, W + 0.5, 10.4, 10.62, -0.05, 0.55);
+    if (name) sign(lettering('Bella Rinova salon', { width: 10.5, height: 1.0, family: '"Trajan Pro", Optima, Baskerville, Georgia, serif', weight: 600, color: '#1c1d1f', spacing: 0.06, smallCaps: true }), f, at, 9.45, 0.46, 10.5, 1.0);
   }
   const tile = (f, s0, s1, h0 = 0, h1 = 5.5) => box(f, m.cream, s0, s1, h0, h1, -0.12, 0.08);
   function awningWindow(f, s0, s1) {
