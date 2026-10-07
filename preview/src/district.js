@@ -103,7 +103,6 @@ export function buildDistrictBuildings(world) {
   };
   // Photographed frontages (Hermès, IPIC, Bella Rinova) take over the edges they cover.
   const reference = createReferenceFacades(world, { part, pane, plane: pane, glass });
-  reference.materials.forEach(material => materials.add(material)); reference.geometries.forEach(item => geometries.add(item)); textures.push(...reference.textures);
   world.buildings.forEach((building, index) => {
     const shape = new THREE.Shape(building.ring.map(([x, y]) => new THREE.Vector2(x, y)));
     const retailHeight=building.kind==='parking'?0:4.25, roofHeight=visibleRoofHeight(world,building);
@@ -377,6 +376,7 @@ export function buildDistrictBuildings(world) {
     }
   }
   reference.build();
+  reference.materials.forEach(material => materials.add(material)); reference.geometries.forEach(item => geometries.add(item)); textures.push(...reference.textures);
   const dummy = new THREE.Object3D();
   for (const { material, geometry, parts } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
