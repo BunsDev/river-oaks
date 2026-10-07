@@ -15,6 +15,8 @@ For shared-town development, use `npm run desktop:dev`; sign-in, approval, and a
 
 Use **View → Toggle Developer Tools** to inspect the renderer. **Game → Reload game** (⌘R / Ctrl+R) rebuilds the scene. **View → Toggle Full Screen** gives the game the display; **Help → Game controls** lists movement and interaction keys. **View → Debug tools** (F3) shows colliders, the walkable grid, ground triangles, the source map and a polygon inspector; see [debug tools](debug-tools.md).
 
+Use **Commands → Photo mode** to compose and save clean PNG images. The native Save dialog lets you choose a destination; other downloads remain blocked. See [photo controls and sharing](photo-mode.md).
+
 Appearance and graphics preferences persist locally. Development and packaged play use separate profiles. Window size, location, maximized state, and fullscreen restore when reopening; a removed display falls back to visible bounds. Closing the window quits the application.
 
 The **Play & rides** dock groups flight, Jev, vehicles, and optional scenarios. **Explore** opens people, places, and settings. See [play controls and rendering evidence](experience-polish.md) for keyboard behavior and the browser acceptance suite.

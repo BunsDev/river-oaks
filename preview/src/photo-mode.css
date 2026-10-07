@@ -1,0 +1,46 @@
+.photo-tools { padding: 12px 0; border-top: 1px solid var(--line, #ffffff24); }
+.photo-tools .photo-open { width: 100%; display: flex; justify-content: space-between; min-height: 44px; }
+.photo-tools p { font-size: 12px; opacity: .7; margin: 6px 0 0; }
+body.photographing #viewport > :not(#canvas-host), body.photographing #control-panel,
+body.photographing > :not(.app-shell):not(.photo-mode) { visibility: hidden !important; }
+.photo-mode[open] { display: block; position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff9f4; overflow: hidden; color-scheme: dark; }
+.photo-mode::backdrop { background: transparent; }
+.photo-mode [hidden] { display: none !important; }
+.photo-mode button, .photo-mode select, .photo-mode a { font: inherit; font-size: 13px; border: 1px solid #ffffff38; border-radius: 8px; min-height: 40px; padding: 8px 12px; color: #fff9f4; background: #272426; text-decoration: none; cursor: pointer; }
+.photo-mode button:active, .photo-mode a:active { transform: translateY(1px); }
+.photo-mode :focus-visible { outline: 2px solid #ffc4d9; outline-offset: 3px; }
+.photo-mode button:disabled { opacity: .55; cursor: wait; }
+.photo-frame { position: fixed; pointer-events: none; border: 1px solid #ffffffa6; box-shadow: 0 0 0 200vmax #111014b8; box-sizing: border-box; }
+.photo-frame::after { content: 'River Oaks · © OpenStreetMap contributors'; position: absolute; bottom: 8px; right: 8px; padding: 4px 6px; font: 10px sans-serif; background: #0009; }
+.photo-grid { position: absolute; inset: 0; background: linear-gradient(to right, transparent 33.2%, #fff5 33.2%, #fff5 33.4%, transparent 33.4%, transparent 66.5%, #fff5 66.5%, #fff5 66.7%, transparent 66.7%), linear-gradient(to bottom, transparent 33.2%, #fff5 33.2%, #fff5 33.4%, transparent 33.4%, transparent 66.5%, #fff5 66.5%, #fff5 66.7%, transparent 66.7%); }
+.photo-header { position: absolute; top: max(16px, env(safe-area-inset-top)); left: 20px; right: 20px; display: flex; align-items: start; justify-content: space-between; gap: 16px; text-shadow: 0 1px 12px #000; }
+.photo-header small { font-size: 10px; letter-spacing: .16em; }
+.photo-header h2 { font-size: clamp(18px, 3vw, 28px); line-height: 1.2; margin: 5px 0; font-weight: 500; }
+.photo-controls { position: absolute; bottom: max(44px, calc(env(safe-area-inset-bottom) + 28px)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 32px)); max-height: 48dvh; overflow: auto; padding: 16px; box-sizing: border-box; border: 1px solid #ffffff29; border-radius: 16px; background: #1b191bf0; box-shadow: 0 12px 40px #0005; }
+.photo-options, .photo-sliders, .photo-actions { display: flex; gap: 12px; align-items: center; }
+.photo-options label, .photo-sliders label { display: grid; gap: 6px; font-size: 11px; flex: 1; min-width: 0; }
+.photo-options .photo-grid-label { display: flex; flex: 0; gap: 6px; }
+.photo-sliders { display: grid; grid-template-columns: repeat(3, 1fr); margin: 14px 0; }
+.photo-sliders input { width: 100%; margin: 0; accent-color: #f7b8cf; min-height: 26px; }
+.photo-actions { justify-content: flex-end; flex-wrap: wrap; }
+.photo-mode .photo-capture, .photo-mode .photo-download { background: #f4bbd0; color: #27131d; border-color: transparent; font-weight: 600; }
+.photo-hint { margin: 10px 0 0; font-size: 11px; color: #c1b9be; }
+.photo-status { position: absolute; margin: 0; bottom: max(12px, env(safe-area-inset-bottom)); left: 16px; right: 16px; text-align: center; font-size: 12px; text-shadow: 0 1px 4px #000; }
+.photo-result { position: absolute; inset: 88px 16px 42px; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 16px; border-radius: 16px; background: #171517f5; }
+.photo-result img { display: block; width: 100%; flex: 1; min-height: 0; object-fit: contain; }
+@media (max-width: 600px) {
+  .photo-header { left: 16px; right: 16px; }
+  .photo-controls { padding: 12px; }
+  .photo-options { gap: 8px; }
+  .photo-options select { width: 100%; padding: 6px; font-size: 12px; }
+  .photo-sliders { grid-template-columns: repeat(2, 1fr); gap: 6px 14px; }
+  .photo-result { padding: 10px; }
+  .photo-actions { gap: 8px; }
+}
+.photo-mode[open] .photo-options select { background: #302b30; color: #fff9f4; }
+.photo-mode[open] label { color: #e4dce1; }
+.photo-options .photo-grid-label { flex: 0 0 auto; white-space: nowrap; }
+.photo-mode[open] .photo-grid-label input { width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: #f7b8cf; }
+.photo-mode[open] .photo-sliders input { accent-color: #f7b8cf; }
+.photo-controls.compact .photo-options, .photo-controls.compact .photo-sliders,
+.photo-controls.compact .photo-hint, .photo-controls.compact .photo-reset { display: none; }

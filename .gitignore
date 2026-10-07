@@ -185,3 +185,6 @@ unreal/**/Content/Data/district.json
 !.env.example
 .vercel
 .env*
+
+# Isolated local agent worktrees
+.worktrees/

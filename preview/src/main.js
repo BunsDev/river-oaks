@@ -38,6 +38,7 @@ import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
+import { createPhotoMode } from './photo-mode.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
@@ -67,8 +68,8 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 setupUIMotion();
 setupThemeControls();
 const sidebar = setupSidebar();
-let sidebarSections, playDock, clearView;
-setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView });
+let sidebarSections, playDock, clearView, photoMode;
+setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView, getPhotoMode: () => photoMode });
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -193,6 +194,11 @@ function initializeRenderer() {
   visitTools.insertBefore(birdCamsUI.panel, buildControls?.panel ?? null);
   $('#viewport').append(playDock.element);
   clearView = createClearView();
+  photoMode = createPhotoMode({ camera, canvas: renderer.domElement, host,
+    canOpen: () => Boolean(multiplayer?.connected && !multiplayer.traveling && world && !loading && document.body.classList.contains('access-granted')),
+    onOpen: () => { walking?.halt(); },
+  });
+  visitTools.prepend(photoMode.panel);
   landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
   placesUI = setupPlacesUI({ places: [], landmarks, worldMapEnabled, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
     isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
@@ -610,13 +616,14 @@ function render(now) {
   }
   updateStoreLights();
   // Riding a bird pauses walking; the bird drives the camera below.
-  if (birdCams?.riding) walking?.halt();
+  if (photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
+  photoMode?.update();
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
@@ -639,6 +646,7 @@ function render(now) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     pipeline.render(delta);
+    photoMode?.afterRender();
   }
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});

@@ -1,6 +1,6 @@
 import { railShortcut } from './keyboard-input.js';
 
-export function setupRailNavigation({ sidebar, getSections, getDock, getClearView }) {
+export function setupRailNavigation({ sidebar, getSections, getDock, getClearView, getPhotoMode }) {
   const host = document.querySelector('#canvas-host');
   const mac = /Mac|iPhone|iPad/.test(navigator.platform), primary = mac ? '⌘' : 'Ctrl+';
   const dialog = document.createElement('dialog'); dialog.className = 'rail-commands';
@@ -54,6 +54,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Events & gatherings', selector: '.world-events-filters select', run: () => openTab(1, '.world-events-filters select') },
     { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => openTab(0, '.multiplayer-chat-form input') },
     { label: 'Character & abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
+    { label: 'Photo mode · take and share a picture', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
     { label: 'Rides & camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
     { label: 'Bird cams', selector: '.bird-cams', run: () => showPlay('.bird-cams') },
     { label: 'Build & decorate', selector: '#build-mode', run: () => showPlay('.shared-build-controls') },

@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, dialog, net, screen, session, shell } from 'e
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { navigationAllowed, windowBounds } from './runtime.js';
+import { photoDownloadAllowed } from './photo-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 
 app.setName('TypeSafe Place');
@@ -121,7 +122,15 @@ else {
   app.whenReady().then(async () => {
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     session.defaultSession.setPermissionCheckHandler(() => false);
-    session.defaultSession.on('will-download', event => event.preventDefault());
+    session.defaultSession.on('will-download', (event, item, contents) => {
+      const allowed = contents === window?.webContents && photoDownloadAllowed({
+        url: item.getURL(), initiator: item.getInitiatorOrigin(), filename: item.getFilename(),
+        mime: item.getMimeType(), bytes: item.getTotalBytes(), userGesture: item.hasUserGesture(),
+      }, gameOrigin);
+      if (!allowed) { event.preventDefault(); return; }
+      item.setSaveDialogOptions({ title: 'Save your River Oaks photo', defaultPath: item.getFilename(),
+        filters: [{ name: 'PNG image', extensions: ['png'] }] });
+    });
     try {
       const state = JSON.parse(await readFile(stateFile, 'utf8'));
       if (state && typeof state === 'object') saved = state;

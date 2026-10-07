@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "profiles": {
+    "tooling": [
+      "agent-tests"
+    ],
+    "web": [
+      "agent-tests",
+      "preview-tests",
+      "server-tests",
+      "desktop-tests",
+      "build"
+    ],
+    "python": [
+      "python-lint",
+      "python-format",
+      "python-tests",
+      "demo",
+      "demo-verify"
+    ],
+    "security": [
+      "secrets",
+      "secret-history"
+    ],
+    "core": [
+      "agent-tests",
+      "preview-tests",
+      "server-tests",
+      "desktop-tests",
+      "build",
+      "python-lint",
+      "python-format",
+      "python-tests",
+      "demo",
+      "demo-verify",
+      "secrets"
+    ],
+    "browser": [
+      "build",
+      "security-browser",
+      "reflections",
+      "shared"
+    ],
+    "full": [
+      "dependency-audit",
+      "agent-tests",
+      "preview-tests",
+      "server-redis-tests",
+      "desktop-tests",
+      "build",
+      "python-lint",
+      "python-format",
+      "python-tests",
+      "demo",
+      "demo-verify",
+      "secrets",
+      "secret-history",
+      "security-browser",
+      "reflections",
+      "shared"
+    ],
+    "preview": [
+      "preview-tests"
+    ],
+    "server": [
+      "server-tests"
+    ],
+    "desktop": [
+      "desktop-tests"
+    ],
+    "build": [
+      "build"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "agent-tests",
+      "command": [
+        "npm",
+        "run",
+        "test:agent"
+      ]
+    },
+    {
+      "id": "preview-tests",
+      "command": [
+        "npm",
+        "test"
+      ]
+    },
+    {
+      "id": "server-tests",
+      "command": [
+        "npm",
+        "run",
+        "test:server"
+      ]
+    },
+    {
+      "id": "server-redis-tests",
+      "command": [
+        "npm",
+        "run",
+        "test:server"
+      ],
+      "requiresEnv": [
+        "REDIS_URL"
+      ]
+    },
+    {
+      "id": "desktop-tests",
+      "command": [
+        "npm",
+        "run",
+        "test:desktop"
+      ]
+    },
+    {
+      "id": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ]
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ]
+    },
+    {
+      "id": "python-format",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ]
+    },
+    {
+      "id": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q"
+      ]
+    },
+    {
+      "id": "demo",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "demo"
+      ]
+    },
+    {
+      "id": "demo-verify",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "river-oaks",
+        "verify",
+        "--config",
+        "data/generated/demo/config.json",
+        "--raw",
+        "data/generated/demo",
+        "--world",
+        "data/generated/demo/world.json",
+        "--output",
+        "data/generated/demo/report.json"
+      ],
+      "expectedExit": 2
+    },
+    {
+      "id": "secrets",
+      "command": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "scripts/check_secrets.py",
+        "--all"
+      ],
+      "requiresTools": [
+        "gitleaks"
+      ]
+    },
+    {
+      "id": "secret-history",
+      "command": [
+        "gitleaks",
+        "git",
+        "--log-opts=--all",
+        "--redact",
+        "--no-banner",
+        "--ignore-gitleaks-allow"
+      ]
+    },
+    {
+      "id": "reflections",
+      "command": [
+        "npm",
+        "run",
+        "test:reflections:webgl"
+      ],
+      "browser": true
+    },
+    {
+      "id": "shared",
+      "command": [
+        "npm",
+        "run",
+        "test:shared"
+      ],
+      "browser": true,
+      "timeoutMs": 1800000
+    },
+    {
+      "id": "dependency-audit",
+      "command": [
+        "npm",
+        "audit",
+        "--audit-level=moderate"
+      ]
+    },
+    {
+      "id": "security-browser",
+      "command": [
+        "npm",
+        "run",
+        "test:security:e2e"
+      ],
+      "browser": true
+    }
+  ]
+}

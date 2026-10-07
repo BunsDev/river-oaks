@@ -1,0 +1,9 @@
+{
+  "createdAt": "2026-10-07T04:52:41.414Z",
+  "scope": "Development Electron, loopback shared identities; save dialog path supplied by test. No live auth or OS sharing.",
+  "status": "passed",
+  "checks": [
+    "actual shared-world photo passes desktop policy and downloads a bounded square PNG",
+    "a non-photo blob download remains blocked"
+  ]
+}
