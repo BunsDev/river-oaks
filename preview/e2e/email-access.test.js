@@ -93,8 +93,10 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
     assert.equal(invitations.invites.length, 2);
-    // Opening through the actual button also works while the scene initializes.
-    if (!await page.locator('#access-invites-open').isVisible()) await page.locator('#panel-toggle').click();
+    // The access gate hides before main.js initializes the sidebar. Wait for
+    // its real state, then open it while the scene can still be initializing.
+    await page.locator('#panel-toggle[aria-keyshortcuts]').waitFor({ state: 'visible' });
+    if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
     await page.locator('#access-invites-open').click();
     await page.locator('#access-invites[open]').waitFor();
     await page.locator('#canvas-host canvas').waitFor({ state: 'visible' });
