@@ -142,6 +142,7 @@ function initializeRenderer() {
   quality = createQualityControl({ apply({ scale, occlusion }) {
     pipeline.setRenderScale(softwareAcceptance ? 0.25 : scale);
     if (debugOcclusion !== 'off') pipeline.setOcclusion(!softwareAcceptance && occlusion);
+    photoMode?.qualityChanged();
   } });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;

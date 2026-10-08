@@ -142,6 +142,44 @@ testRedis('default room upgrades a stored version-one checkpoint without losing 
   assert.equal((await restored.read()).snapshot.worldId,'river-oaks');
 });
 
+testRedis('default district recovers its historical heights through the fenced Redis commit without resetting wishes or accounts',async t=>{
+  const current=JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url)));
+  current.vegetation=JSON.parse(readFileSync(new URL('../../preview/public/data/district-vegetation.json',import.meta.url)));
+  const old=structuredClone(current),heights={
+    'osm-way-625330785':8,'osm-way-625333006':6.5,'osm-way-625333008':6.5,
+    'osm-way-878472795':6.5,'osm-way-878472797':20,
+    'osm-way-625330792':6.5,'osm-way-625330798':12,'osm-way-625333009':6.5,
+  };
+  for(const building of old.buildings)if(Object.hasOwn(heights,building.id)){
+    building.size[2]=heights[building.id];building.height_source='estimated from tagged/default levels';
+  }
+  const f=await setup(t,{world:old}),first=f.create();
+  assert.equal((await f.join(first,'alice')).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'chat',text:'Keep this town.'})).ok,true);
+  const local=(await first.read()).snapshot.locals[0];
+  assert.equal((await f.command(first,'alice',{type:'travel',localId:local.id})).ok,true);
+  assert.equal((await f.command(first,'alice',{type:'wish',localId:local.id,kind:'dog'})).ok,true);
+  const before=(await first.read()).snapshot,key=`${f.prefix}:state`;
+  assert.equal(JSON.parse(inflateSync(await f.redis.getBuffer(key))).checkpoint.worldFingerprint,
+    '3204c2d04a66d424621a5c0ab5c57fae8ede77512e07f43a3f55e9d91e5fcfc4');
+  await first.close();
+  const logs=[];t.mock.method(console,'info',message=>logs.push(JSON.parse(message)));
+  const restored=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  try{
+    assert.equal((await f.join(restored,'alice','replacement')).ok,true);
+    const after=(await restored.read()).snapshot;
+    assert.deepEqual(after.locals,before.locals);assert.deepEqual(after.chat,before.chat);
+    assert.deepEqual(after.players,before.players);assert.deepEqual(after.wishes,before.wishes);
+    const committed=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+    assert.equal(committed.checkpoint.worldFingerprint,createHash('sha256').update(JSON.stringify(current)).digest('hex'));
+    assert.deepEqual(logs,[{event:'district_height_checkpoint_migrated',from:'before_photo_facade_heights',to:'photographed_heights'}]);
+    await restored.close();
+    const next=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+    try{assert.equal((await f.join(next,'alice','third')).ok,true);assert.equal(logs.length,1,'migration is committed once');}
+    finally{await next.close();}
+  }finally{await restored.close();}
+});
+
 testRedis('authorization revocation and presence expiration remove residents and owned wishes',async t=>{
   const invalid=new Set(),f=await setup(t,{authorize:async identity=>!invalid.has(identity.sessionId)}),room=f.create();
   invalid.add('banned-session');

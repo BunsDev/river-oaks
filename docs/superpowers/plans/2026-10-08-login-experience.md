@@ -32,4 +32,7 @@ First deliver the verified entrance and safe diagnostics, then inspect the hoste
 Independent source review found no correctness, authorization or privacy blockers. Corrected small-text contrast for kickers, placeholders and reviewer identifiers; computed ratios meet 4.5:1. Redis propagation coverage and extra diagnostic categories were optional suggestions.
 
 ## Next step
-Independent review, commit/push/PR and exact-head hosted CI for the diagnostic stage; then inspect hosted safe recovery classification and complete its reproduced repair. The objective remains open.
+The entrance and diagnostic stage passed hosted CI at `9b4f280`. Live diagnostics
+identified join/checkpoint_invalid/invalid_envelope. The narrow state-preserving repair
+and final local verification are recorded in `2026-10-08-town-checkpoint-recovery.md`.
+Complete hosted repair and physical walking before declaring this objective complete.
