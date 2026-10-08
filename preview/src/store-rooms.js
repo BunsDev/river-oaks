@@ -71,7 +71,8 @@ export function planStoreRooms(world) {
       let best = null;
       for (const span of candidates) {
         const width = span.aMax - span.aMin;
-        if (width < 3 || span.aMin > -0.35 || span.aMax < 0.35) continue;
+        // Keep the whole rendered doorway inside the room, not only its center.
+        if (width < 3 || span.aMin > -DOOR_HALF_WIDTH || span.aMax < DOOR_HALF_WIDTH) continue;
         for (let depth = 9; depth >= 4.5; depth -= 0.5) {
           if (width * depth <= (best?.area ?? 0)) break;
           if (fits(span.aMin, span.aMax, depth)) { best = { ...span, width, depth, area: width * depth }; break; }
