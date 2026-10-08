@@ -329,7 +329,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-talk').hidden = !nearest;
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const interaction = getInteraction(), interactButton = $('#walking-interact');
-      interactButton.hidden = !interaction || interaction.button === false;
+      interactButton.hidden = !interaction;
       if (interaction) { interactButton.textContent = `${interaction.label} · Z`; setBusy(interactButton, interaction.disabled); }
       hud.dataset.interaction = interaction?.kind ?? '';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
@@ -337,7 +337,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title strong').textContent = sitting ? 'Seated' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = Boolean(sitting||transport)||(!room && !door);
-      enter.disabled = Boolean(door && !canEnterStore(door)); setBusy(enter, doorwayPending);
+      enter.disabled = Boolean(door && !canEnterStore(door));
       enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
       presentActions();
       hud.dataset.inside = room?.storeId ?? '';

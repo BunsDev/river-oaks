@@ -240,8 +240,8 @@ body.clear-view :is(.visit-tools, .walking-title, .walking-console, .compass, .a
 :root[data-theme] .walking-pad { gap: 6px; margin-top: 4px; }
 :root[data-theme] .walking-pad button { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; background: #ffffff12; border: 1px solid #ffffff22; box-shadow: inset 0 1px 0 #ffffff14; }
 :root[data-theme] .walking-pad button:hover { background: #ffffff1f; }
-:root[data-theme] #walking-controls-toggle, :root[data-theme] #walking-meet-nearby.walking-secondary { border-color: transparent; background: transparent; }
-:root[data-theme] #walking-controls-toggle:hover, :root[data-theme] #walking-meet-nearby.walking-secondary:hover { background: #ffffff0f; }
+:root[data-theme] #walking-controls-toggle { border-color: transparent; background: transparent; }
+:root[data-theme] #walking-controls-toggle:hover { background: #ffffff0f; }
 .walking-pad button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
 /* A refused action says so just above the walking console, where the player is looking. */
