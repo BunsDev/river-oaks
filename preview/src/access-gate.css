@@ -1,5 +1,6 @@
 :root {
   --entry-ceramic: #f7f7ee; --entry-ink: #153f42; --entry-glass: #507f80;
+  --entry-text: #466f70;
   --entry-brass: #b59a65; --entry-rose: #ecd4dc; --entry-mint: #d9e8df;
   --entry-font: "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
@@ -16,7 +17,7 @@
 .access-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; top: -1px; right: 1px; border-radius: 50%; background: var(--entry-brass); }
 .access-layout { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 980px); overflow: hidden; border: 1px solid #cad9d0; border-radius: 28px; background: #fffefa; box-shadow: 0 20px 70px #153f420b; }
 .access-scene { display: flex; flex-direction: column; justify-content: center; padding: 42px 36px 24px; background: var(--entry-ink); color: var(--entry-ceramic); }
-.access-kicker { font: 600 11px/1.5 var(--entry-font); letter-spacing: .16em; text-transform: uppercase; color: var(--entry-glass); }
+.access-kicker { font: 600 11px/1.5 var(--entry-font); letter-spacing: .16em; text-transform: uppercase; color: var(--entry-text); }
 .access-scene .access-kicker { color: var(--entry-mint); }
 .access-scene-title { font-size: clamp(32px, 4vw, 46px); font-weight: 500; letter-spacing: -.055em; line-height: 1.12; margin: 20px 0; }
 .access-scene-copy { color: #d9e8df; font-size: 14px; line-height: 1.7; margin: 0; }
@@ -45,7 +46,7 @@
   width: 100%; min-width: 0; min-height: 44px; padding: 11px 13px;
   border: 1px solid #b7cac1; border-radius: 10px; background: #fffefa; color: var(--entry-ink); font: inherit;
 }
-.access-form input::placeholder { color: #6e837c; }
+.access-form input::placeholder { color: #59716c; }
 .access-form p { margin: 0; font-size: 12px; color: #59716c; }
 .access-form input:focus-visible, .access-form select:focus-visible { outline: 3px solid #507f80; outline-offset: 2px; }
 .access-form button:disabled { opacity: .5; cursor: default; }
@@ -62,7 +63,7 @@
 .access-review-card h2 { margin-top: 0; }
 .access-request { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 0; border-top: 1px solid #c4d3ca; }
 .access-request span { flex: 1 1 100%; overflow-wrap: anywhere; }
-.access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: #507f80; }
+.access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: var(--entry-text); }
 .access-invites { width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid #c4d3ca; border-radius: 20px; padding: 28px; background: #fffefa; color: var(--entry-ink); font: 14px/1.5 var(--entry-font); }
 .access-invites::backdrop { background: #153f4280; }
 .access-invites [hidden] { display: none !important; }
