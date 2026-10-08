@@ -35,8 +35,8 @@ Also inspected the world studio's region inspector and the developer debug panel
 
 | Key | Action |
 | --- | --- |
-| Cmd/Ctrl+B | Toggle left exploration rail |
-| Cmd/Ctrl+Shift+B | Toggle right play rail |
+| Cmd/Ctrl+B | Toggle left exploration rail (Commands: “Explore · show or hide”, also found by “rail” or “sidebar”) |
+| Cmd/Ctrl+Shift+B | Toggle right play rail (Commands: “Activities · show or hide”, also found by “play” or “rail”) |
 | Cmd/Ctrl+K | Search commands |
 | ? | Commands with current gameplay keys expanded |
 | Alt+1 / Alt+2 / Alt+3 | People / Places / Settings |
@@ -44,6 +44,9 @@ Also inspected the world studio's region inspector and the developer debug panel
 | Arrow keys / Home / End | Select a tab while the tab row is focused |
 | Escape | Dismiss current rail/menu and return focus |
 | H | Toggle clear view |
+
+Command search lists rail show/hide toggles after the commands that open something,
+so typing a tab name such as “places” or “people” and pressing Enter opens that tab.
 
 All shortcuts have button alternatives. The Commands menu filters unavailable
 actions from server-confirmed capabilities.

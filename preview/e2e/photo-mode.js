@@ -99,10 +99,13 @@ async page => {
   await page.keyboard.press('Escape');
   await dialog.waitFor({ state: 'hidden' });
   await open();
-  check(await dialog.getByRole('button', { name: 'Share photo' }).isEnabled(), 'reopening clears pending share state');
+  // A second navigator.share() while the first sheet is open rejects with
+  // InvalidStateError, so Share stays unavailable until that sheet settles.
+  check(await dialog.getByRole('button', { name: 'Share photo' }).isDisabled(), 'reopening keeps Share unavailable while a share sheet is open');
   const reopenedStatus = await dialog.locator('.photo-status').textContent();
   await page.evaluate(() => window.__finishShare());
-  check(await dialog.locator('.photo-status').textContent() === reopenedStatus, 'late share cannot rewrite the new session status');
+  await page.waitForFunction(() => !document.querySelector('.photo-share').disabled);
+  check(await dialog.locator('.photo-status').textContent() === reopenedStatus, 'late share cannot rewrite the new session status, and Share returns');
   await dialog.getByRole('button', { name: 'Back to camera' }).click();
   await dialog.getByRole('button', { name: 'Reset framing' }).click();
   check(await dialog.locator('[name=yaw]').inputValue() === '0', 'framing reset returns pan to zero');

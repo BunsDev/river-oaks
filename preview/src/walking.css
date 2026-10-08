@@ -13,3 +13,5 @@
 #walking-hud .walking-other-actions { max-height: 28dvh; overflow-y: auto; padding: 3px; }
 :root[data-theme] #walking-hud :is(.walking-primary, .walking-more, button)[hidden] { display: none; }
 #walking-hud .walking-more :focus-visible, #walking-hud .walking-primary :focus-visible { outline: 2px solid #ffc4d9; outline-offset: 2px; }
+/* A busy action keeps its place and focus while its request or animation runs. */
+#walking-hud :is(.walking-primary, .walking-other-actions) > button[aria-disabled=true] { opacity: .72; cursor: progress; }

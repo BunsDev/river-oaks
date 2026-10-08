@@ -32,7 +32,9 @@ async page => {
   await page.locator('#community-close').press('Escape');
   check(await page.locator('#canvas-host').evaluate(el => el === document.activeElement), 'Escape restores walking focus');
   await page.setViewportSize({width:390,height:844});
-  await page.waitForTimeout(1100);if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
+  // Open More actions only when it is shown and closed: the HUD moves actions between
+  // the primary slot and More as context changes, and a second summary click closes it.
+  await page.waitForTimeout(1100);if(!await page.locator('.walking-more').evaluate(more=>more.open||more.hidden))await page.locator('.walking-more summary').click();
   await page.locator('#walking-meet-nearby').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
   const box = await page.locator('#community-dialogue').boundingBox();

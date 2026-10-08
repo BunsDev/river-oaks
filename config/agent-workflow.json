@@ -39,6 +39,7 @@
       "build",
       "security-browser",
       "reflections",
+      "experience",
       "shared"
     ],
     "full": [
@@ -57,6 +58,7 @@
       "secret-history",
       "security-browser",
       "reflections",
+      "experience",
       "shared"
     ],
     "preview": [
@@ -245,6 +247,20 @@
         "test:security:e2e"
       ],
       "browser": true
+    },
+    {
+      "id": "experience",
+      "command": [
+        "npm",
+        "run",
+        "test:experience",
+        "--",
+        "contextual-first-visit",
+        "photo-mode",
+        "rail-navigation"
+      ],
+      "browser": true,
+      "timeoutMs": 1200000
     }
   ]
 }

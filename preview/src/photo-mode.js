@@ -17,7 +17,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
       <label>Look<select name="look"><option value="natural">Natural</option><option value="warm">Warm film</option><option value="mono">Black & white</option></select></label>
       <label class="photo-grid-label"><input type="checkbox" name="grid" checked> Grid</label></div>
       <p class="photo-output"></p><p class="photo-quality"></p>
-      <div class="photo-sliders">${[['yaw','Pan',-180,180,1,0],['pitch','Tilt',-70,70,1,0],['roll','Roll',-30,30,1,0],['dolly','Move lens',-4,4,.1,0],['fov','Field of view',20,90,1,42]].map(([name,label,min,max,step,value]) => `<label for="photo-${name}"><span>${label} <output for="photo-${name}"></output></span><input id="photo-${name}" name="${name}" type="range" min="${min}" max="${max}" step="${step}" value="${value}"></label>`).join('')}</div>
+      <div class="photo-sliders">${[['yaw','Pan',-180,180,1,0],['pitch','Tilt',-70,70,1,0],['roll','Roll',-30,30,1,0],['dolly','Move lens',-4,4,.1,0],['fov','Field of view',20,90,1,42]].map(([name,label,min,max,step,value]) => `<label for="photo-${name}"><span>${label} <output for="photo-${name}" aria-hidden="true"></output></span><input id="photo-${name}" name="${name}" aria-label="${label}" type="range" min="${min}" max="${max}" step="${step}" value="${value}"></label>`).join('')}</div>
       <div class="photo-actions"><button type="button" class="photo-toggle" aria-expanded="true" aria-controls="photo-composition">Hide controls</button><button type="button" class="photo-view" hidden>View last photo</button><button type="button" class="photo-reset">Reset framing</button><button type="button" class="photo-capture">Take photo</button></div>
       <p class="photo-hint">Only the world is photographed. The town keeps moving.</p>
     </section>
@@ -27,7 +27,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   const get = selector => dialog.querySelector(selector);
   const controls = get('.photo-controls'), result = get('.photo-result'), frame = get('.photo-frame'), status = get('.photo-status');
   const capture = get('.photo-capture'), share = get('.photo-share'), download = get('.photo-download');
-  let pending = false, busy = false, generation = 0, url = null, file = null, returnFocus = null, previousFilter = '', initialFov = camera.fov, captureTimer = null, photoSummary = '', metadataKey = '';
+  let pending = false, busy = false, sharing = false, generation = 0, url = null, file = null, returnFocus = null, previousFilter = '', initialFov = camera.fov, captureTimer = null, photoSummary = '', metadataKey = '';
   const ratio = () => get('[name=format]').value === 'original' ? canvas.width / canvas.height : Number(get('[name=format]').value);
   const release = () => { get('.photo-view').hidden = true; photoSummary = ''; if (url) URL.revokeObjectURL(url); url = null; file = null; download.removeAttribute('href'); get('img').removeAttribute('src'); };
   const values = () => {
@@ -45,15 +45,15 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
     metadataKey = key;
     const crop = photoCrop(canvas.width, canvas.height, ratio());
     get('.photo-output').textContent = `Next photo: ${crop.outputWidth} × ${crop.outputHeight} px · PNG (max 2048 px)`;
-    get('.photo-quality').textContent = quality ? `${QUALITY_MODES[quality.mode]?.label ?? 'Current'} graphics · Scene resolution ${Math.round(quality.scale * 100)}% · Ambient occlusion ${quality.occlusion ? 'on' : 'off'}. For full detail: Settings → Graphics → Sharpest.` : 'Photos use current graphics quality. Settings → Graphics → Sharpest gives full scene detail.';
+    get('.photo-quality').textContent = quality ? `${QUALITY_MODES[quality.mode]?.label ?? 'Current'} graphics · Scene resolution ${Math.round(quality.scale * 100)}% · Ambient occlusion ${quality.occlusion ? 'on' : 'off'}.${quality.mode === 'sharp' ? '' : ' For full detail: Settings → Graphics → Sharpest.'}` : 'Photos use current graphics quality. Settings → Graphics → Sharpest gives full scene detail.';
   };
   const showPhoto = () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = false;
+    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing;
     controls.hidden = true; frame.hidden = true; result.hidden = false;
     status.textContent = photoSummary; download.focus();
   };
   const compose = () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = false;
+    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing;
     result.hidden = true; controls.hidden = false; frame.hidden = false;
     status.textContent = file ? 'Your last photo is kept until you discard it or successfully take another.' : '';
     capture.focus();
@@ -80,7 +80,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   };
   const close = () => { if (dialog.open) dialog.close(); };
   dialog.addEventListener('close', () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = false; framing.close();
+    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing; framing.close();
     canvas.style.filter = previousFilter; document.body.classList.remove('photographing');
     (returnFocus?.isConnected && returnFocus.checkVisibility() ? returnFocus : host).focus({ preventScroll: true });
   });
@@ -109,12 +109,14 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   get('.photo-retake').addEventListener('click', compose);
   get('.photo-view').addEventListener('click', showPhoto);
   get('.photo-discard').addEventListener('click', () => { release(); compose(); });
+  // One system share sheet at a time: navigating away and back must not re-enable
+  // Share while the first navigator.share() call is still open.
   share.addEventListener('click', async () => {
-    if (!file) return;
-    const token = generation; share.disabled = true;
+    if (!file || sharing) return;
+    const token = generation; sharing = true; share.disabled = true;
     try { await navigator.share({ files: [file], title: 'A moment in River Oaks' }); if (token === generation) status.textContent = 'Photo shared.'; }
     catch (error) { if (token === generation) status.textContent = error.name === 'AbortError' ? 'Sharing cancelled. Your photo is still here.' : 'Sharing is unavailable. Download the photo to share it.'; }
-    finally { if (token === generation) share.disabled = false; }
+    finally { sharing = false; share.disabled = false; }
   });
   const observer = new ResizeObserver(layout); observer.observe(host);
   window.addEventListener('resize', layout);
@@ -147,7 +149,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
           const nextUrl = URL.createObjectURL(nextFile);
           release(); file = nextFile; url = nextUrl; get('.photo-view').hidden = false; get('img').src = url; download.href = url; download.download = file.name;
           try { share.hidden = !navigator.canShare?.({ files: [file] }); } catch { share.hidden = true; }
-          share.disabled = false;
+          share.disabled = sharing;
           controls.hidden = true; frame.hidden = true; result.hidden = false; busy = false; capture.disabled = false;
           photoSummary = `${output.width} × ${output.height} · PNG${share.hidden ? ' · Download to share anywhere.' : ''}`;
           showPhoto();

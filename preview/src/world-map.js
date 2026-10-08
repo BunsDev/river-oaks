@@ -1,5 +1,6 @@
 import { placeLink, positionLink } from './places.js';
 import { worldIdFromSearch } from './world-contract.js';
+import { travelRefusal } from './travel-message.js';
 
 const SVG='http://www.w3.org/2000/svg', SIZE=1000, PAD=36;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -182,11 +183,8 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     try{
       const result=await onGo(destination);
       status.textContent=result?.ok===false
-        ? result.error==='destination_blocked'||result.message==='destination_blocked'
-          ? 'That point is blocked. Choose a nearby path or open space.'
-          : result.error==='travel_cooldown'||result.message==='travel_cooldown'
-            ? 'Wait a moment before travelling again.'
-            : result.message??'That point is not reachable right now.'
+        ? travelRefusal(result,{blocked:'That point is blocked. Choose a nearby path or open space.',
+          cooldown:'Wait a moment before travelling again.',fallback:'That point is not reachable right now.'})
         :destination.kind==='peer'?`You're near ${destination.name}.`:`You're at ${destination.name}.`;
       say(status.textContent,result?.ok===false?'error':'ok');
     }catch(error){status.textContent=error.message??'That point is not reachable right now.';say(status.textContent,'error');}

@@ -39,7 +39,9 @@ async page => {
     // The seats panel lists the bench beside Jevica's furniture; Z is its shortcut.
     await page.waitForFunction(id=>[...document.querySelectorAll('#nearby-seat option')].some(option=>option.value===id&&option.textContent.startsWith('Storefront bench')),candidate.id,{timeout:10000});
     await page.waitForFunction(()=>!document.querySelector('#walking-interact').hidden);
-    if(!await page.locator('#walking-interact').isVisible())await page.locator('.walking-more summary').click();
+    // Open More actions only when it is shown and closed: the HUD moves actions between
+    // the primary slot and More as context changes, and a second summary click closes it.
+    if(!await page.locator('.walking-more').evaluate(more=>more.open||more.hidden))await page.locator('.walking-more summary').click();
     await page.locator('#walking-interact').click();
     if(await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000}).then(()=>true,()=>false)){bench=candidate;break;}
     // The town's refusal (taken, blocked, out of reach) is the walking notice.

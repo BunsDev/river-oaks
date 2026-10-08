@@ -184,7 +184,7 @@ function initializeRenderer() {
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
     getPortrait: id => portraits.portrait(id) });
-  seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer });
+  seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
@@ -195,7 +195,8 @@ function initializeRenderer() {
   $('#viewport').append(playDock.element);
   clearView = createClearView();
   photoMode = createPhotoMode({ camera, canvas: renderer.domElement, host,
-    getQuality: () => quality.stats,
+    // What the pipeline actually renders: acceptance runs and ?ao=off override the selected mode.
+    getQuality: () => { const stats = quality.stats; return { ...stats, scale: softwareAcceptance ? 0.25 : stats.scale, occlusion: debugOcclusion !== 'off' && !softwareAcceptance && stats.occlusion }; },
     canOpen: () => Boolean(multiplayer?.connected && !multiplayer.traveling && world && !loading && document.body.classList.contains('access-granted')),
     onOpen: () => { walking?.halt(); },
   });
@@ -275,7 +276,7 @@ function startMultiplayer() {
   seatingControls=createSharedSeatingControls({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
-    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false});
+    getBenches:()=>seatAndWater?.benches()??[],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
   host.dataset.multiplayer = 'connecting';
 }
 

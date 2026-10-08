@@ -6,7 +6,7 @@ import { SIT_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, build
 // In the shared town the server decides through the shared seating commands,
 // and everyone sees the confirmed result.
 // Watering is only an animation; planters keep no state.
-export function createSeatAndWater({ walking, playerAvatar, getLocals = () => [], getMultiplayer = () => null }) {
+export function createSeatAndWater({ walking, playerAvatar, getLocals = () => [], getMultiplayer = () => null, isBusy = () => false }) {
   let world = null, benches = [], staticPlanters = [], busy = false, lastWater = -Infinity;
   const builds = () => getMultiplayer()?.snapshot?.builds ?? [];
   const seats = () => [...benches, ...buildSeats(builds())];
@@ -27,6 +27,8 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
   async function command(message) {
     const multiplayer = getMultiplayer();
     if (!multiplayer?.connected) { notify('Reconnect before taking an action.'); return null; }
+    // The seats panel sends seat commands too; one request at a time between them.
+    if (busy || isBusy()) return null;
     busy = true;
     try {
       const result = await multiplayer.command(message);
@@ -68,7 +70,9 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
       benches = benchSeats(world);
       staticPlanters = [...boutiquePlanters(world), ...lanePlanters(world, isFree)];
     },
-    // For the seats panel: storefront bench places, and whether a resident holds one.
+    // For the seats panel: whether a seat command is in flight, storefront bench
+    // places, and whether a resident holds one.
+    busy: () => busy,
     benches: () => benches,
     residentHolds: key => residentSeats().has(key),
     // What Z does right now, for the walking controls.
@@ -78,13 +82,13 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
       if (!pose) return null;
       // The contextual HUD and seats panel share these authoritative actions.
       // Z remains the direct shortcut in either presentation.
-      if (pose.sitting) return { kind: 'stand', label: 'Stand up', run: stand, disabled: busy };
+      if (pose.sitting) return { kind: 'stand', label: 'Stand up', run: stand, disabled: busy || isBusy() };
       if (pose.riding || pose.flying) return null;
       const position = [pose.position[0], -pose.position[2]];
       const seat = nearestSeat(seats().filter(sameRoom), position, { reach: SIT_REACH, taken: taken() });
-      if (seat) return { kind: 'sit', targetId: seat.id, label: seat.kind === 'bench' ? 'Sit on the bench' : seat.kind === 'armchair' ? 'Sit in the chair' : 'Sit on the seat', run: () => sit(seat), disabled: busy };
+      if (seat) return { kind: 'sit', targetId: seat.id, label: seat.kind === 'bench' ? 'Sit on the bench' : seat.kind === 'armchair' ? 'Sit in the chair' : 'Sit on the seat', run: () => sit(seat), disabled: busy || isBusy() };
       const planter = nearestPlanter(planters().filter(sameRoom), position);
-      if (planter) return { kind: 'water', targetId: planter.id, label: 'Water the planter', run: () => water(planter), disabled: busy || playerAvatar.watering };
+      if (planter) return { kind: 'water', targetId: planter.id, label: 'Water the planter', run: () => water(planter), disabled: busy || isBusy() || playerAvatar.watering };
       return null;
     },
     // For tests and the debug overlay.

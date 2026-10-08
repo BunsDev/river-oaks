@@ -26,7 +26,9 @@ async page => {
     await page.waitForTimeout(200);
     const room=await page.locator('#walking-hud').getAttribute('data-inside');
     if(!await page.locator('#walking-meet-nearby').isEnabled())throw new Error(`Nearby disabled beside reachable person ${id}`);
-    if(!await page.locator('#walking-meet-nearby').isVisible())await page.locator('.walking-more summary').click();
+    // Open More actions only when it is shown and closed: the HUD moves actions between
+    // the primary slot and More as context changes, and a second summary click closes it.
+    if(!await page.locator('.walking-more').evaluate(more=>more.open||more.hidden))await page.locator('.walking-more summary').click();
   await page.locator('#walking-meet-nearby').click();
     await page.locator('#community-dialogue').waitFor({state:'visible',timeout:5000});
     const selected=await page.locator('#community-local').inputValue();
