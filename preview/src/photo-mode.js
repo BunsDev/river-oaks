@@ -47,13 +47,15 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
     get('.photo-output').textContent = `Next photo: ${crop.outputWidth} × ${crop.outputHeight} px · PNG (max 2048 px)`;
     get('.photo-quality').textContent = quality ? `${QUALITY_MODES[quality.mode]?.label ?? 'Current'} graphics · Scene resolution ${Math.round(quality.scale * 100)}% · Ambient occlusion ${quality.occlusion ? 'on' : 'off'}.${quality.mode === 'sharp' ? '' : ' For full detail: Settings → Graphics → Sharpest.'}` : 'Photos use current graphics quality. Settings → Graphics → Sharpest gives full scene detail.';
   };
+  // Ends any capture in progress: its late callbacks see a new generation.
+  const cancelCapture = () => { generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing; };
   const showPhoto = () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing;
+    cancelCapture();
     controls.hidden = true; frame.hidden = true; result.hidden = false;
     status.textContent = photoSummary; download.focus();
   };
   const compose = () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing;
+    cancelCapture();
     result.hidden = true; controls.hidden = false; frame.hidden = false;
     status.textContent = file ? 'Your last photo is kept until you discard it or successfully take another.' : '';
     capture.focus();
@@ -80,7 +82,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   };
   const close = () => { if (dialog.open) dialog.close(); };
   dialog.addEventListener('close', () => {
-    generation++; clearTimeout(captureTimer); pending = false; busy = false; capture.disabled = false; share.disabled = sharing; framing.close();
+    cancelCapture(); framing.close();
     canvas.style.filter = previousFilter; document.body.classList.remove('photographing');
     (returnFocus?.isConnected && returnFocus.checkVisibility() ? returnFocus : host).focus({ preventScroll: true });
   });
@@ -122,7 +124,9 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   window.addEventListener('resize', layout);
   return {
     panel, open, get active() { return dialog.open; },
-    update() { trigger.disabled = !canOpen(); if (dialog.open && !canOpen()) close(); framing.update(); metadata(); },
+    update() { trigger.disabled = !canOpen(); if (dialog.open && !canOpen()) close(); framing.update(); },
+    // Photo details change with size, format (both through layout) and graphics quality.
+    qualityChanged() { metadata(); },
     // Called immediately after the composer's final draw: no preserveDrawingBuffer
     // overhead, no blank next-frame readback, and no DOM/chat/HUD in the PNG.
     afterRender() {
@@ -149,8 +153,6 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
           const nextUrl = URL.createObjectURL(nextFile);
           release(); file = nextFile; url = nextUrl; get('.photo-view').hidden = false; get('img').src = url; download.href = url; download.download = file.name;
           try { share.hidden = !navigator.canShare?.({ files: [file] }); } catch { share.hidden = true; }
-          share.disabled = sharing;
-          controls.hidden = true; frame.hidden = true; result.hidden = false; busy = false; capture.disabled = false;
           photoSummary = `${output.width} × ${output.height} · PNG${share.hidden ? ' · Download to share anywhere.' : ''}`;
           showPhoto();
         }, 'image/png');
