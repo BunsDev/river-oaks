@@ -148,3 +148,13 @@ test('software acceptance can disable MSAA without changing normal rendering',()
     for(const {pipeline,leaf} of [normal,software]){pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}
   }
 });
+
+test('CPU acceptance can render without bloom, and bloom stays on by default',()=>{
+  // Under the normal-colour override, bloom's blur spread one figure's invalid
+  // values across the whole Mesa frame; CPU acceptance turns it off.
+  const plain=fixture(),software=fixture({samples:0,bloom:false});
+  try {
+    assert.equal(plain.pipeline.stats.bloom,true);
+    assert.equal(software.pipeline.stats.bloom,false);
+  } finally {for(const {pipeline,leaf} of [plain,software]){pipeline.dispose();leaf.geometry.dispose();leaf.material.dispose();}}
+});

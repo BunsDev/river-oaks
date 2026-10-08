@@ -36,6 +36,7 @@ none of the files below overlap their edits.
    37758704097) also ran photo-mode and rail-navigation under Mesa: contextual-first-visit
    passed, but the scene stayed blank (photo-mode: one sampled colour) and rail-navigation's
    reload check failed, so both stay GPU-only (follow-up).
+   Follow-up: causes found and fixed in `2026-10-08-mesa-experience-journeys.md` (#182).
 8. Racy More pattern: nine journey sites and `reveal()` open More only when it is
    shown and closed, never toggling it shut.
 

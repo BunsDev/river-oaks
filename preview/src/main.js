@@ -133,7 +133,9 @@ function initializeRenderer() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
   configureMaterials(renderer);
-  pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4 });
+  // CPU acceptance also skips bloom: under the normal-colour override its blur spread
+  // one figure's invalid values across the whole Mesa frame (owner view, 2026-10-08).
+  pipeline = createRenderPipeline(renderer, scene, camera, { samples: softwareAcceptance ? 0 : 4, bloom: !softwareAcceptance });
   const debugOcclusion = new URLSearchParams(location.search).get('ao');
   // The storefront probe renders fixed-size cube faces outside the composer,
   // so quality changes never invalidate it.
