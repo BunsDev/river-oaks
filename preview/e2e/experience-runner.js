@@ -5,8 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades'];
+const suite = ['contextual-first-visit', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades'];
 const names = process.argv.slice(2);
+// Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
+// Chromium's headless SwiftShader path stalls on the district scene.
+const software = process.env.RIVER_OAKS_EXPERIENCE_SOFTWARE === '1';
+if (software && process.platform !== 'linux') throw new Error('Software experience acceptance requires Linux with Xvfb and Mesa.');
+if (software) process.env.VITE_SHARED_SOFTWARE_RENDERING = '1';
 const selectable = [];
 for (const file of await readdir(join(root, 'preview/e2e'))) {
   if (!file.endsWith('.js')) continue;
@@ -18,7 +23,8 @@ const results = [];
 let browser, fixture;
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
-  browser = await chromium.launch({ headless: true, ...(process.platform === 'darwin' ? { args: ['--use-angle=metal'] } : {}) });
+  browser = await chromium.launch({ headless: !software,
+    args: software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
   for (const name of names.length ? names : suite) {
     fixture = await startBrowserFixture();
     const { origin } = fixture;

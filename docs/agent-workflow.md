@@ -35,7 +35,7 @@ it is not an unattended test fixture.
 | `npm run verify -- python` | Ruff, Python tests, offline synthetic pipeline |
 | `npm run verify` | Web + Python + worktree secret guard; default `core` |
 | `npm run verify -- security` | Worktree and full local Git-history secret scan |
-| `npm run verify -- browser` | Build, security browser regressions, WebGL reflection and all shared-town journeys |
+| `npm run verify -- browser` | Build, security browser regressions, WebGL reflection, the contextual first-visit journey and all shared-town journeys |
 | `npm run verify -- full` | Core + mandatory Redis server tests + npm dependency audit + history scan + browser journeys |
 
 `npm run agent:doctor -- full` prints JSON prerequisite diagnostics, exits 2 when
@@ -52,7 +52,8 @@ the existing suite's Redis skips and is explicitly narrower.
 On Linux, use the same CPU browser setup as CI:
 
 ```sh
-RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 \
+RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 RIVER_OAKS_EXPERIENCE_SOFTWARE=1 \
+  LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 \
   xvfb-run -a npm run verify -- browser
 ```
 

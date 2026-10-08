@@ -9,7 +9,8 @@ import { beastTraversal } from './beast-traversal.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
-import { contextualAction } from './contextual-action.js';
+import { primaryAction } from './contextual-action.js';
+import { travelRefusal } from './travel-message.js';
 import './walking.css';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, canEnterStore = () => true, getInteraction = () => null }) {
@@ -26,25 +27,31 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     [action, hud.querySelector(action === 'meet' ? '#walking-meet-nearby' : `#walking-${action}`)]));
   hud.querySelector('#walking-notice').after(primary, more);
   for (const button of Object.values(actionButtons)) secondary.append(button);
+  // Busy actions (a request or animation in flight) use aria-disabled, so they
+  // keep focus and their slot; disabled means the action is unavailable here.
+  const setBusy = (button, busy) => button.setAttribute('aria-disabled', String(Boolean(busy)));
   const presentActions = () => {
-    const available = Object.fromEntries(Object.entries(actionButtons).map(([id, button]) => [id, !button.hidden && !button.disabled]));
+    const buttons = Object.fromEntries(Object.entries(actionButtons).map(([id, button]) =>
+      [id, { shown: !button.hidden, disabled: button.disabled, busy: button.getAttribute('aria-disabled') === 'true' }]));
     const focused = Object.entries(actionButtons).find(([, button]) => button === document.activeElement);
-    // Keep a focused action in place while it remains available. An automatic
-    // context change must not swap the target beneath a keyboard user's finger.
-    const selected = focused && available[focused[0]] && focused[1].parentElement === primary
-      ? focused[0] : contextualAction({ ...available, seated: Boolean(sitting) });
+    // A keyboard-focused action stays in place while it remains available: an
+    // automatic context change must not swap the target beneath the user's finger.
+    // Mouse and touch presses also leave focus behind, so they never pin.
+    const keyboard = document.documentElement.dataset.uiInput === 'keyboard';
+    const selected = primaryAction(buttons, { seated: Boolean(sitting), focused: focused?.[0], inPrimary: focused?.[1].parentElement === primary, keyboard });
     for (const [id, button] of Object.entries(actionButtons)) {
       const target = id === selected ? primary : secondary;
       if (button.parentElement !== target) {
-        if (focused?.[0] === id && !button.hidden) more.open = true;
+        const follow = keyboard && focused?.[0] === id && !button.hidden;
+        if (follow) more.open = true;
         target.append(button);
-        if (focused?.[0] === id && !button.hidden && !button.disabled) button.focus({ preventScroll: true });
+        if (follow && !button.disabled) button.focus({ preventScroll: true });
       }
     }
     primary.hidden = !selected;
     more.hidden = !Object.values(actionButtons).some(button => button.parentElement === secondary && !button.hidden);
     if ((focused && (focused[1].hidden || focused[1].disabled)) || (more.hidden && more.contains(document.activeElement))) {
-      (selected ? actionButtons[selected] : host).focus({ preventScroll: true });
+      (keyboard && selected ? actionButtons[selected] : host).focus({ preventScroll: true });
     }
     hud.dataset.primaryAction = selected ?? '';
   };
@@ -130,7 +137,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     try {
       const result = await (room ? onLeave?.(store) : onEnter?.(store));
       if (active && state === actionState && result?.ok === false) {
-        notify(result.error === 'travel_cooldown' ? 'Wait a moment before stepping through. Try again.' : result.message ?? 'Could not step through. Try again.');
+        notify(travelRefusal(result, { blocked: 'The way through is blocked right now. Try again in a moment.',
+          cooldown: 'Wait a moment before stepping through. Try again.', fallback: 'Could not step through. Try again.' }));
       }
     } catch {
       if (active && state === actionState) notify('Could not step through. Check your connection and try again.');
@@ -322,14 +330,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
       const interaction = getInteraction(), interactButton = $('#walking-interact');
       interactButton.hidden = !interaction || interaction.button === false;
-      if (interaction) { interactButton.textContent = `${interaction.label} · Z`; interactButton.disabled = Boolean(interaction.disabled); }
+      if (interaction) { interactButton.textContent = `${interaction.label} · Z`; setBusy(interactButton, interaction.disabled); }
       hud.dataset.interaction = interaction?.kind ?? '';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
       $('.walking-title strong').textContent = sitting ? 'Seated' : transport ? 'Riding with Jev' : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       enter.hidden = Boolean(sitting||transport)||(!room && !door);
-      enter.disabled = doorwayPending || Boolean(door && !canEnterStore(door));
+      enter.disabled = Boolean(door && !canEnterStore(door)); setBusy(enter, doorwayPending);
       enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
       presentActions();
       hud.dataset.inside = room?.storeId ?? '';

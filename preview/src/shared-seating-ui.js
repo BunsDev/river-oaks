@@ -5,14 +5,17 @@ import './shared-seating.css';
 // `getBenches` lists storefront bench places ({buildId, slot, x, north}) and
 // `isHeld(key)` says whether a resident sits on one, so the panel offers the
 // same seats as the Z key.
-export function createSharedSeatingControls({host,getTown,getPose,getEnvironment,request,onConfirmed,getBenches=()=>[],isHeld=()=>false}) {
+// Choosing a particular nearby seat. Standing up is the walking HUD's primary
+// action while seated (and Z), so this panel only shows when the player can sit.
+// isBusy shares one in-flight guard with the HUD's seat commands.
+export function createSharedSeatingControls({host,getTown,getPose,getEnvironment,request,onConfirmed,getBenches=()=>[],isHeld=()=>false,isBusy=()=>false}) {
   const panel=document.createElement('section');panel.className='shared-seating-controls';panel.hidden=true;panel.setAttribute('aria-label','Furniture seating');
-  panel.innerHTML='<label for="nearby-seat">Nearby seats</label><select id="nearby-seat"></select><button type="button" id="seat-sit">Sit down</button><button type="button" id="seat-stand" hidden>Stand up</button><p id="seat-status" role="status" aria-live="polite"></p>';
+  panel.innerHTML='<label for="nearby-seat">Nearby seats</label><select id="nearby-seat"></select><button type="button" id="seat-sit">Sit down</button><p id="seat-status" role="status" aria-live="polite"></p>';
   host.append(panel);
-  const select=panel.querySelector('select'),sit=panel.querySelector('#seat-sit'),stand=panel.querySelector('#seat-stand'),status=panel.querySelector('#seat-status'),label=panel.querySelector('label');
+  const select=panel.querySelector('select'),sit=panel.querySelector('#seat-sit'),status=panel.querySelector('#seat-status');
   let busy=false,lastPaint=-Infinity,signature='',choices=[];
   const send=async message=>{
-    if(busy)return;busy=true;sit.disabled=stand.disabled=true;
+    if(busy||isBusy())return;busy=true;sit.disabled=true;
     try{
       const result=await request(message);
       if(result.ok&&result.player){onConfirmed(result.player);status.textContent=result.player.sitting?'Seated. Drag to look around.':'You are standing.';}
@@ -25,8 +28,7 @@ export function createSharedSeatingControls({host,getTown,getPose,getEnvironment
     const choice=choices.find(item=>item.key===select.value);
     if(choice&&!choice.occupied)void send({type:'sit',buildId:choice.buildId,slot:choice.slot});
   });
-  stand.addEventListener('click',()=>void send({type:'stand'}));
-  return {panel,update(now){
+  return {panel,busy:()=>busy,update(now){
     if(now-lastPaint<200)return;lastPaint=now;
     const town=getTown(),pose=getPose(),environment=getEnvironment();
     if(!town||!pose||!environment){panel.hidden=true;return;}
@@ -44,8 +46,7 @@ export function createSharedSeatingControls({host,getTown,getPose,getEnvironment
       const occupied=isHeld(key)||town.snapshot.players.some(player=>player.sitting?.buildId===seat.buildId&&player.sitting.slot===seat.slot);
       return {key,buildId:seat.buildId,slot:seat.slot,distance,occupied,label:`Storefront bench · ${seat.slot===0?'left':'right'}${occupied?' · Occupied':''}`};
     }).filter(Boolean)).sort((a,b)=>a.distance-b.distance||a.key.localeCompare(b.key)).slice(0,8);
-    panel.hidden=!seated&&!choices.length;
-    label.hidden=select.hidden=sit.hidden=seated;stand.hidden=!seated;
+    panel.hidden=seated||!choices.length;
     const key=JSON.stringify(choices.map(({key,label,occupied})=>[key,label,occupied]));
     if(key!==signature) {
       signature=key;const previous=select.value;
@@ -54,8 +55,7 @@ export function createSharedSeatingControls({host,getTown,getPose,getEnvironment
       else select.value=choices.find(choice=>!choice.occupied)?.key??'';
     }
     const connected=Boolean(town.connected&&self);
-    select.disabled=busy||!connected||pose.flying||Boolean(pose.riding);
+    select.disabled=busy||isBusy()||!connected||pose.flying||Boolean(pose.riding);
     sit.disabled=select.disabled||!choices.some(choice=>choice.key===select.value&&!choice.occupied);
-    stand.disabled=busy||!connected;
   },dispose(){panel.remove();}};
 }

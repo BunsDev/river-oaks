@@ -9,8 +9,10 @@ async initialPage => {
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
   const host = page.locator('#canvas-host'), more = page.locator('.walking-more');
   const readyActions = () => page.waitForFunction(() => document.querySelectorAll('.walking-primary > button:not([hidden]):not(:disabled)').length === 1);
+  // Open More only when it is shown and closed: actions move between the primary
+  // slot and More as context changes, and a second summary click would close it.
   const reveal = async selector => {
-    if (!await page.locator(selector).isVisible()) await more.locator('summary').click();
+    if (!await more.evaluate(node => node.open || node.hidden)) await more.locator('summary').click();
     await page.locator(selector).waitFor({ state: 'visible' });
   };
   if (touch) {
@@ -44,7 +46,9 @@ async initialPage => {
     try { await page.waitForFunction(() => !document.querySelector('#walking-talk').disabled, null, { timeout: 5000 }); }
     finally { await page.keyboard.up('KeyD'); }
   }
-  await host.focus();
+  // A keyboard-focused action stays put until focus leaves it; a tap leaves focus on
+  // Step outside too, but must not pin it, so the touch run keeps that focus here.
+  if (!touch) await host.focus();
   await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.primaryAction === 'talk');
   check(await page.locator('.walking-primary > #walking-talk').isVisible(), 'Inside, the reachable conversation becomes primary');
   await page.screenshot({ path: `output/playwright/contextual-indoor-${touch ? 'touch' : 'desktop'}.png` });

@@ -90,16 +90,19 @@ async page => {
     check(connections>=2&&(await self(guest)).id===visitor.id&&(await self(guest)).sitting?.slot===1,'The same account recovers its seat on socket reconnect within the grace period');
     if(await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
     await guest.setViewportSize({width:390,height:844});
-    await guest.locator('#seat-stand').scrollIntoViewIfNeeded();
-    check(await guest.locator('#seat-stand').isVisible(),'The stand control is available at a phone-sized viewport');
+    // Standing up is the walking HUD's single primary action while seated.
+    await guest.waitForFunction(()=>document.querySelector('#walking-hud').dataset.primaryAction==='interact'&&document.querySelector('#walking-interact').textContent.startsWith('Stand up'));
+    await guest.locator('.walking-primary > #walking-interact').scrollIntoViewIfNeeded();
+    check(await guest.locator('.walking-primary > #walking-interact').isVisible(),'The stand control is available at a phone-sized viewport');
+    check(await guest.locator('#seat-sit').isHidden(),'The seats panel offers no second Stand up control while seated');
     await guest.screenshot({path:'output/playwright/shared-seating-phone.png'});
-    await guest.locator('#seat-stand').focus();await guest.keyboard.press('Enter');
+    await guest.locator('#walking-interact').focus();await guest.keyboard.press('Enter');
     await guest.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='On foot');
     const standing=await self(guest);
     check(!standing.sitting&&Math.hypot(standing.position[0]-build.position[0],standing.position[1]-build.position[1])>=1.28,'Keyboard standing reaches a clear ground position');
     await page.screenshot({path:'output/playwright/shared-seating-desktop.png'});
   }finally{await context.close();}
-  await page.locator('#seat-stand').click();await page.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='On foot');
+  await page.locator('.walking-primary > #walking-interact').click();await page.waitForFunction(()=>document.querySelector('#player-mode')?.textContent==='On foot');
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
   await page.locator('#build-list button',{hasText:'Remove'}).click();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.length===0);

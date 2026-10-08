@@ -1,4 +1,5 @@
 import { railShortcut } from './keyboard-input.js';
+import { matchCommands } from './command-search.js';
 
 export function setupRailNavigation({ sidebar, getSections, getDock, getClearView, getPhotoMode }) {
   const host = document.querySelector('#canvas-host');
@@ -41,8 +42,8 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     const dock = getDock(); dock?.setOpen(true, { focus: true }); if (selector) dock?.jump(selector);
   };
   const actions = () => [
-    { label: 'Explore · show or hide places and people', keys: `${primary}B`, run: () => sidebar.toggle() },
-    { id: 'activities', label: 'Activities · show or hide controls', keys: `${primary}Shift+B`, run: () => {
+    { label: 'Explore · show or hide places and people', keys: `${primary}B`, terms: 'sidebar left rail', toggle: true, run: () => sidebar.toggle() },
+    { id: 'activities', label: 'Activities · show or hide controls', keys: `${primary}Shift+B`, terms: 'play right rail dock', toggle: true, run: () => {
       const dock = getDock(); if (!dock) return;
       if (dock.element.open && dock.element.checkVisibility({ visibilityProperty: true })) { dock.setOpen(false); focusWorld(); } else showPlay();
     } },
@@ -71,7 +72,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     if (restore) (returnFocus?.isConnected && returnFocus !== document.body && returnFocus.checkVisibility({ visibilityProperty: true }) && !returnFocus.closest('[inert]') ? returnFocus : host).focus({ preventScroll: true });
   };
   const render = () => {
-    const query = search.value.trim().toLowerCase(), filtered = actions().filter(action => `${action.label} ${action.keys ?? ''}`.toLowerCase().includes(query));
+    const filtered = matchCommands(actions(), search.value);
     results.replaceChildren(...filtered.map(action => {
       const button = document.createElement('button'); button.type = 'button';
       const label = document.createElement('span'); label.textContent = action.label; button.append(label);

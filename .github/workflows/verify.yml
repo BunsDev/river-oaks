@@ -97,6 +97,29 @@ jobs:
           path: |
             data/reports/shared-experience.json
             output/playwright/shared-*-failure.png
+      - name: Contextual action journey
+        id: experience
+        # Also runs when only the shared journeys failed, so both regressions
+        # report. Same Mesa/Xvfb CPU path as the shared and security journeys.
+        # photo-mode and rail-navigation are GPU-only for now: under Mesa the
+        # experience fixture's scene stayed blank (single-colour photo) and the
+        # rail reload check failed, in this job's first run on #181.
+        if: ${{ !cancelled() && (success() || steps.shared.outcome == 'failure') }}
+        env:
+          RIVER_OAKS_EXPERIENCE_SOFTWARE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
+          RIVER_OAKS_E2E_REPORT: ci-experience.json
+        run: xvfb-run -a npm run test:experience -- contextual-first-visit
+      - name: Experience journey failure evidence
+        if: ${{ failure() && steps.experience.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: experience-failure
+          retention-days: 7
+          path: |
+            data/reports/ci-experience.json
+            output/playwright/experience-*-failure.png
   verify:
     runs-on: ubuntu-latest
     strategy:
