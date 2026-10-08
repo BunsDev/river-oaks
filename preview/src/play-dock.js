@@ -15,13 +15,16 @@ export function createPlayDock({creationToolsEnabled=false}={}) {
   const key='river-oaks-play-rail-open';let preference=null;
   try{preference=localStorage.getItem(key);}catch{/* Session choice still works. */}
   dock.open=preference===null?!compact.matches:preference==='true';
+  // The toggle event is queued, so a choice made in code is saved at once: a
+  // reload right after closing the rail must not bring it back open.
+  const remember=open=>{try{localStorage.setItem(key,String(open));}catch{/* Session choice still works. */}};
   const setOpen=(open,{focus=false}={})=>{
     if(!open&&shell.contains(document.activeElement))toggle.focus({preventScroll:true});
-    dock.open=open;
+    dock.open=open;remember(open);
     dock.classList.toggle('play-rail-requested',open&&document.body.classList.contains('bird-riding'));
     if(focus)toggle.focus({preventScroll:true});
   };
-  dock.addEventListener('toggle',()=>{try{localStorage.setItem(key,String(dock.open));}catch{/* Session choice still works. */}});
+  dock.addEventListener('toggle',()=>remember(dock.open));
   dock.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||event.isComposing||!dock.open)return;
     event.preventDefault();event.stopPropagation();setOpen(false);
