@@ -213,3 +213,32 @@ test('snapshot updates preserve the resident chooser options when membership is 
   panel.applyRemote({community:{elapsed:12},locals:panel.state.locals,wishes:panel.state.wishes});
   assert.equal(byId('community-local').options[0],option);
 });
+
+test('a meet refused by the travel cooldown says to wait, not that there is no place', async () => {
+  const cooldown = { ok: false, error: 'travel_cooldown', message: 'travel_cooldown' };
+  const { panel, byId } = setup({ onFocus: async () => cooldown });
+  assert.equal(await panel.selectLocal(panel.state.locals[0].id), false);
+  const notice = byId('community-encounter-notice').textContent;
+  assert.match(notice, /Wait a moment/);
+  assert.doesNotMatch(notice, /clear place|travel_cooldown/);
+});
+
+test('a blocked meet or a bare refusal keeps the no-clear-place message; written reasons show as written', async () => {
+  for (const reached of [false, { ok: false, error: 'destination_blocked', message: 'destination_blocked' }]) {
+    const { panel, byId } = setup({ onFocus: async () => reached });
+    assert.equal(await panel.selectLocal(panel.state.locals[0].id), false);
+    assert.match(byId('community-encounter-notice').textContent, /There isn't a clear place to meet/);
+  }
+  const written = { ok: false, error: 'private_home', message: 'This home is private. Jevica can invite you inside.' };
+  const { panel, byId } = setup({ onFocus: async () => written });
+  assert.equal(await panel.selectLocal(panel.state.locals[0].id), false);
+  assert.equal(byId('community-encounter-notice').textContent, written.message);
+});
+
+test('meeting someone nearby stops at a cooldown instead of trying every neighbor', async () => {
+  const attempted = [];
+  const { panel, byId } = setup({ onFocus: async local => { attempted.push(local.id); return { ok: false, error: 'travel_cooldown', message: 'travel_cooldown' }; } });
+  assert.equal(await panel.meetNearby(), false);
+  assert.equal(attempted.length, 1, 'the cooldown applies to every neighbor alike');
+  assert.match(byId('community-encounter-notice').textContent, /Wait a moment/);
+});
