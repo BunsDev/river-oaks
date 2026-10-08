@@ -43,8 +43,9 @@ calls, quality and pipeline stats, WebGL renderer, window/screen/canvas sizes).
 - [x] `npm test` 668 pass; agent tests 10; GPU journeys contextual-first-visit,
       photo-mode and rail-navigation pass; `npm run verify -- web`: agent 17,
       preview 668, server 267 (101 Redis skips), desktop 9, build.
-- [ ] Hosted CI: all three journeys under Mesa, and the 18 shared journeys with
-      bloom off in CPU mode.
+- [x] Hosted CI on `76a4cb4` (Verify 37767811704): contextual-first-visit,
+      photo-mode and rail-navigation pass under Mesa; all 18 shared journeys pass
+      with bloom off in CPU mode; all 10 check runs succeeded.
 
 ## Limits
 
