@@ -160,10 +160,11 @@ function initializeRenderer() {
     onWish: () => playerAvatar?.cast(performance.now()),
     getMultiplayer: () => multiplayer,
     getRoomId: () => walking?.roomId ?? null,
+    // Resolves to the town's travel result, so a refusal can say why.
     onFocus(local) {
       return multiplayer.travel({ localId: local.id }).then(result => {
         if (result.ok) walking.lookAt(local.position);
-        return result.ok;
+        return result;
       });
     } });
   $('.panel-scroll').prepend($('#community-section'));
