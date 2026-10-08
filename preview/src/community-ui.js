@@ -9,6 +9,7 @@ import { createLocalSpeech } from './speech.js';
 import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
 import { remainingVisitDistance } from './volunteer-visits.js';
+import { travelRefusal } from './travel-message.js';
 
 const time = (seconds) => `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.floor(Math.max(0, seconds)) % 60).padStart(2, '0')}`;
 const terminal = (state) => ['success', 'failed'].includes(state.status);
@@ -68,9 +69,11 @@ export function createCommunityPanel({ host, onFocus = () => {}, getVisitor = ()
   // People in the visitor's own space: the street, or the boutique they are standing in (same rule as the HUD).
   const sameSpace = local => (local.storeId ?? null) === (getRoomId() ?? null);
   // Try each nearby person in turn: the nearest may have no clear place to meet.
+  // A travel cooldown applies to every neighbor alike, so stop there.
   const meetNearby = async () => {
     for (const item of nearbyPeople((state?.locals ?? []).filter(sameSpace), getVisitor(), 40, Infinity)) {
       if (await selectLocal(item.local.id)) return true;
+      if (lastRefusal === 'travel_cooldown') return false;
     }
     return false;
   };
@@ -230,6 +233,13 @@ export function createCommunityPanel({ host, onFocus = () => {}, getVisitor = ()
   encounterNotice.setAttribute('role', 'status');
   (document.querySelector('#viewport') ?? host).append(encounterNotice);
   let noticeTimer = null;
+  // onFocus resolves to the town's travel result (or true/false). Say why a meeting
+  // was refused: a cooldown or a written server reason, else no clear place.
+  let lastRefusal = null;
+  const focusRefusal = (reached, noPlace) => {
+    lastRefusal = reached === false ? 'refused' : reached?.ok === false ? reached.error ?? reached.message ?? 'refused' : null;
+    return lastRefusal && travelRefusal(reached === false ? null : reached, { blocked: noPlace, cooldown: 'Wait a moment, then try again.', fallback: noPlace });
+  };
   const notify = message => {
     clearTimeout(noticeTimer);
     text(encounterNotice, message);
@@ -256,7 +266,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getVisitor = ()
           const current=state.jobs.find(current=>current.id===job.id),local=state.locals.find(local=>local.id===current?.helperId);
           if(!connected() || !local) return;
           // Ask for the placement before closing anything, so a refusal keeps the open conversation.
-          try { if(await onFocus(local)===false) {notify(`There isn't a clear place to reach ${local.name} right now.`);return;} }
+          try { const refused=focusRefusal(await onFocus(local),`There isn't a clear place to reach ${local.name} right now.`); if(refused) {notify(refused);return;} }
           catch(error) {notify(error.message || 'This neighbor could not be reached.');return;}
           if(!dialogue.hidden) closeDialogue();
           document.querySelector('#canvas-host')?.focus({preventScroll:true});
@@ -422,10 +432,8 @@ export function createCommunityPanel({ host, onFocus = () => {}, getVisitor = ()
     const currentState = state, epoch = selectionEpoch;
     selecting = true;
     try {
-      if (await onFocus(local) === false) {
-        notify(`There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
-        return false;
-      }
+      const refused = focusRefusal(await onFocus(local), `There isn't a clear place to meet ${local.name} right now. Try another neighbor.`);
+      if (refused) { notify(refused); return false; }
       if (!connected() || state !== currentState || epoch !== selectionEpoch) return false;
       if (!(await sharedCommand({type:'focus',localId:id})).ok) return false;
       if (!connected() || state !== currentState || epoch !== selectionEpoch) return false;
