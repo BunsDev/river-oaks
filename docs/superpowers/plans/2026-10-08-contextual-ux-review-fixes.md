@@ -30,9 +30,12 @@ none of the files below overlap their edits.
    in Sharpest, rendered scale/occlusion reported (acceptance and `?ao=off`), slider
    names exclude the live value (`aria-label`, `output aria-hidden`). `photo-mode.js`, `main.js`.
 7. Coverage: `contextual-first-visit` joins the default experience suite; new
-   `experience` task (contextual-first-visit, photo-mode, rail-navigation) in the
-   `browser` and `full` profiles; experience runner gains the Linux Mesa/Xvfb mode
-   (`RIVER_OAKS_EXPERIENCE_SOFTWARE=1`); hosted CI preview job runs the three journeys.
+   `experience` task (contextual-first-visit) in the `browser` and `full` profiles;
+   experience runner gains the Linux Mesa/Xvfb mode (`RIVER_OAKS_EXPERIENCE_SOFTWARE=1`);
+   hosted CI preview job runs contextual-first-visit. The first CI run (Verify
+   37758704097) also ran photo-mode and rail-navigation under Mesa: contextual-first-visit
+   passed, but the scene stayed blank (photo-mode: one sampled colour) and rail-navigation's
+   reload check failed, so both stay GPU-only (follow-up).
 8. Racy More pattern: nine journey sites and `reveal()` open More only when it is
    shown and closed, never toggling it shut.
 
@@ -50,7 +53,7 @@ none of the files below overlap their edits.
       `world-publish` (54) pass.
 - [x] `npm run verify -- web`: agent 17, preview 665, server 267 pass with 101 Redis
       skips, desktop 9, build.
-- [ ] Hosted CI, including the new experience step under Mesa.
+- [ ] Hosted CI, including the new contextual-first-visit step under Mesa (passed in the first run).
 
 ## Limits
 
