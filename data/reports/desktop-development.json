@@ -1,7 +1,7 @@
 {
   "mode": "development",
   "checks": [
-    "all bundled assets and playable character loaded",
+    "game assets and playable character loaded",
     "Palo Alto street surfaces loaded with clear-path dimensions",
     "sandbox and renderer isolation",
     "keyboard movement",
@@ -14,42 +14,42 @@
     "external navigation blocked",
     "renderer crash recovers to playable game"
   ],
-  "readyMs": 6887,
+  "readyMs": 18442,
   "assets": {
-    "loaded": 107,
-    "total": 107,
+    "loaded": 103,
+    "total": 103,
     "failed": 0,
     "done": true
   },
   "streetProfile": {
     "profile": "palo-alto",
-    "warningPanels": 459,
+    "warningPanels": 467,
     "crossingEndpoints": 136,
-    "constrainedPanels": 1157,
+    "constrainedPanels": 1117,
     "sidewalkWidth": 3.81,
     "clearWidth": 2.4384
   },
-  "sharedTown": false,
+  "sharedTown": true,
   "performance": {
-    "samples": 300,
-    "medianMs": 33.29999999999927,
-    "p95Ms": 41.70000000000073,
-    "meanFps": 29.999999999999993,
+    "samples": 402,
+    "medianMs": 25,
+    "p95Ms": 29.200000000000728,
+    "meanFps": 40.23339371678494,
     "canvas": [
       2560,
       1536
     ],
     "quality": {
       "mode": "auto",
-      "scale": 0.6,
-      "occlusion": false,
-      "fps": 35
+      "scale": 0.72,
+      "occlusion": true,
+      "fps": 42
     },
     "renderer": {
-      "calls": 1755,
-      "triangles": 10792262,
-      "geometries": 329,
-      "textures": 236
+      "calls": 1336,
+      "triangles": 5258707,
+      "geometries": 203,
+      "textures": 179
     }
   },
   "gpu": {

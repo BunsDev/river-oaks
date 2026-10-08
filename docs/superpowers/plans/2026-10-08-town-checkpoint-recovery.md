@@ -43,7 +43,10 @@ nine journeys passed with full rendering; receipt `data/reports/login-recovery-s
 The first expanded creation fixture failed due to placement/cooldown setup; corrected
 fixture setup retains all production rules, and the final runs above pass.
 
-Latest main `c64ef6f` is integrated, preserving the 0.1.5 release and Street View work.
+Latest main `2cb1028` is integrated, preserving the 0.1.5 release and Street View work.
+The final main advance changes only the release ledger and desktop development receipt;
+reviewed both diffs, parsed the JSON receipt and ran `git diff --cached --check`.
+Executable source is unchanged from the locally verified `78d7e77` tree.
 Final `npm run verify` on that combined source passed all 11 tasks: preview 2504
 passed / one pre-existing skip, server 276 passed / 102 Redis skips, tooling 17,
 desktop 9 and Python 141. The two Python warnings and build chunk advisory remain.
