@@ -33,12 +33,8 @@ jobs:
         run: |
           xvfb-run -a npm run test:experience -- photo-mode rail-navigation || echo "default screen exit $?"
           mkdir -p output/mesa-default && mv output/playwright/experience-*-failure.png output/mesa-default/ 2>/dev/null || true
-      - name: 1920x1200x24 Xvfb screen
-        env:
-          RIVER_OAKS_E2E_REPORT: mesa-wide.json
-        run: |
-          xvfb-run -a -s "-screen 0 1920x1200x24" npm run test:experience -- photo-mode rail-navigation || echo "wide screen exit $?"
-          mkdir -p output/mesa-wide && mv output/playwright/experience-*-failure.png output/mesa-wide/ 2>/dev/null || true
+      - name: Render probe variants
+        run: xvfb-run -a node preview/e2e/mesa-probe.mjs || echo "probe exit $?"
       - name: Diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -48,5 +44,5 @@ jobs:
           path: |
             data/reports/mesa-*.json
             output/mesa-default/
-            output/mesa-wide/
+            output/mesa-probe/
             output/playwright/photo-*.png
