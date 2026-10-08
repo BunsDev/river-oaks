@@ -1,3 +1,4 @@
+import { treeSupports } from '../src/tree-placements.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -42,7 +43,7 @@ test('lane fixtures follow the mapped lanes, keep out of footprints and avoid na
 
 test('every rendered tree gets exactly one flush square pit, squared to its street', () => {
   const pits = treePits({ ...world, vegetation });
-  assert.equal(pits.length, vegetation.branch_supports.length, 'scanned trunks, not the OSM points they replace');
+  assert.equal(pits.length, treeSupports({ ...world, vegetation }).length, 'one pit per effective rendered stem');
   const keys = new Set(pits.map(([x, , z]) => `${x.toFixed(2)}:${z.toFixed(2)}`));
   assert.equal(keys.size, pits.length, 'no tree has two pits');
   assert.ok(pits.every(([, , , size, yaw]) => size === TREE_GRATE && Number.isFinite(yaw)));

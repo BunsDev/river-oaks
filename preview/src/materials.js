@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createPaverTextures, PAVER_TILE } from './paver-textures.js';
+export { PAVER_TILE } from './paver-textures.js';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 
 const maps = new Map();
@@ -12,6 +14,10 @@ export function configureMaterials(renderer) {
 function texture(name, channel) {
   const key = `${name}-${channel}`;
   if (maps.has(key)) return maps.get(key);
+  if (name === 'district-paver') {
+    for (const [kind, map] of Object.entries(createPaverTextures(anisotropy))) maps.set(`${name}-${kind}`, map);
+    return maps.get(key);
+  }
   // Node unit tests build street geometry without a DOM: hand back an
   // unloaded texture so materials still construct.
   if (typeof document === 'undefined') { const map = new THREE.Texture(); maps.set(key, map); return map; }
@@ -30,12 +36,10 @@ function texture(name, channel) {
 // Optional low-frequency tone variation breaks the visible repeat of a tiled
 // texture over large ground planes; it multiplies albedo only. textureContrast
 // (< 1) quiets the photographed surface's high-frequency albedo at eye level.
-// High-street brick: clay pavers in herringbone with sand joints. One brick is
-// about 20 cm, so a texture repeat spans 1.15 m. The warm tint lifts the
-// photographed grey toward fired clay; low variation keeps it laid, not worn.
-export const PAVER_TILE = 1.15;
+// Gray running-bond stone with sparse terracotta strips, shared by the plaza
+// and pedestrian streets. All maps use the same metric joints and shallow relief.
 export function paverSurface(options = {}) {
-  return physicalSurface('paver', { tileSize: PAVER_TILE, color: '#f4d6c2', normalScale: new THREE.Vector2(0.75, 0.75), variation: 0.14, textureContrast: 0.9, ...options });
+  return physicalSurface('district-paver', { tileSize: PAVER_TILE, normalScale: new THREE.Vector2(0.65, 0.65), variation: 0.06, ...options });
 }
 
 export function physicalSurface(name, { tileSize = 4, instanced = false, variation = 0, textureContrast = 1, ...options } = {}) {

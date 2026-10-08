@@ -1,0 +1,37 @@
+{
+  "createdAt": "2026-10-08T18:00:55.618Z",
+  "results": [
+    {
+      "name": "street-level",
+      "status": "passed",
+      "seconds": 19.292,
+      "result": {
+        "passed": 21,
+        "checks": [
+          "Starts on foot",
+          "No alternate view or scene controls",
+          "Camera remains at human eye height",
+          "Walking advances along the street",
+          "Scrolling cannot zoom into an aerial view",
+          "People precede shop navigation",
+          "Meeting a local opens the conversation",
+          "Nearby card retains keyboard focus across refreshes",
+          "Keyboard opens nearby conversation",
+          "Conversation answers a topic",
+          "Closing returns focus to walking",
+          "E reopens the nearby encounter",
+          "Primary Meet someone nearby action opens conversation",
+          "Escape never enters an aerial mode",
+          "Shop arrival stays on foot at the Cartier pavement",
+          "Reload stays on foot",
+          "Mobile has no horizontal overflow",
+          "Reload returns to the Cartier pavement",
+          "F steps inside the arrival shop",
+          "Mobile primary action opens conversation",
+          "No page errors: "
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

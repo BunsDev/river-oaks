@@ -11,14 +11,14 @@ const facing = (plan, id) => plan.frontages.filter(frontage => frontage.building
 
 test('photographed frontages take over the street faces they were photographed from', () => {
   const plan = referencePlan(world), names = [...plan.stores].map(id => world.stores.find(store => store.id === id).name).sort();
-  assert.deepEqual(names, ['Alice + Olivia', 'Amorino', 'Baccarat', 'Bella Rinova', 'Brunello Cucinelli', 'Dior', 'Diptyque', 'Dolce & Gabbana', 'Equinox', 'Hermès', 'Hopdoddy Burger Bar',
+  assert.deepEqual(names, ['Alice + Olivia', 'Amorino', 'Baccarat', 'Bella Rinova', 'Brunello Cucinelli', 'Cartier', 'Dior', 'Diptyque', 'Dolce & Gabbana', 'Equinox', 'Hermès', 'Hopdoddy Burger Bar',
     'IPIC Theaters', 'Jo Malone London', 'Kiton', 'Laura Rathe Fine Art', 'Le Colonial', 'MAD Houston', 'Moreau', 'Oliver Peoples', 'Saint Bernard', 'Steak 48', 'Toulouse', 'Van Cleef & Arpels', 'Veronica Beard', 'Vilebrequin', 'Vince', 'Zadig & Voltaire', 'de Boulle']);
-  assert.deepEqual(facing(plan, IPIC_BLOCK), ['north:upper', 'north:upper', 'south:upper', 'west:full']);
+  assert.deepEqual(facing(plan, IPIC_BLOCK), ['north:upper', 'north:upper', 'south:full', 'south:upper', 'west:full', 'west:full']);
   assert.deepEqual(facing(plan, BELLA_BLOCK), ['east:full', 'north:full', 'south:full', 'west:upper']);
   assert.deepEqual(facing(plan, HERMES_BLOCK), ['north:full', 'west:full']);
   assert.equal(plan.frontages.find(frontage => frontage.building.id === BELLA_BLOCK && frontage.edge.facing === 'south').kind, 'hopdoddy');
   // Unphotographed storefronts keep the shared storefront kit.
-  for (const name of ['Cartier', 'Harry Winston']) assert.ok(!plan.stores.has(world.stores.find(store => store.name === name).id), name);
+  for (const name of ['Harry Winston']) assert.ok(!plan.stores.has(world.stores.find(store => store.name === name).id), name);
 });
 
 test('the Equinox, Etro and Dior blocks are rebuilt on every face', () => {
@@ -87,4 +87,19 @@ test('worlds without the photographed buildings are left to the shared kit', () 
   const plan = referencePlan({ buildings: [{ ...building(IPIC_BLOCK), id: 'creator-hall' }], stores: [] });
   assert.equal(plan.spans.size, 0);
   assert.equal(plan.stores.size, 0);
+});
+
+
+test('Cartier replaces two contiguous corner spans while retaining its mapped doorway', () => {
+  const plan = referencePlan(world), cartier = world.stores.find(store => store.name === 'Cartier');
+  const fronts = plan.frontages.filter(frontage => frontage.kind === 'cartier');
+  assert.equal(fronts.length, 2);
+  assert.ok(plan.stores.has(cartier.id));
+  assert.deepEqual(fronts.map(f => f.edge.facing).sort(), ['south', 'west']);
+  assert.equal(fronts[0].corner, fronts[1].corner);
+  for (const front of fronts) {
+    assert.ok(front.full && front.hi - front.lo >= 18 && front.hi - front.lo <= 24);
+    const spans = plan.spans.get(`${front.building.id}:${front.edge.index}`).toSorted((a,b) => a.lo - b.lo);
+    for (let i = 1; i < spans.length; i++) assert.ok(spans[i].lo >= spans[i-1].hi, 'no duplicate facade surfaces');
+  }
 });
