@@ -11,6 +11,13 @@ async page => {
     await page.locator('.rail-commands').getByRole('button', { name: /Photo mode/ }).click();
     await page.locator('.photo-mode').waitFor({ state: 'visible' });
   };
+  // The dialog hides as soon as it closes, but photo mode restores the canvas look,
+  // HUD and focus in its queued close event. Wait for that before checking or
+  // reopening, or a late close handler can act on the next session.
+  const closed = async () => {
+    await page.locator('.photo-mode').waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => !document.body.classList.contains('photographing'), null, { timeout: 5000 }).catch(() => {});
+  };
   const hudSelectors = ['.visit-tools', '.visit-tools-toggle', '.walking-title'];
   const visibleHud = () => page.evaluate(selectors => selectors.map(selector => document.querySelector(selector).checkVisibility({ opacityProperty: true, visibilityProperty: true })), hudSelectors);
   const initialHud = await visibleHud();
@@ -38,7 +45,7 @@ async page => {
   await dialog.getByRole('button', { name: 'Take photo', exact: true }).click();
   await page.waitForFunction(() => typeof window.__finishPhoto === 'function');
   await page.keyboard.press('Escape');
-  await dialog.waitFor({ state: 'hidden' });
+  await closed();
   await open();
   await page.evaluate(() => window.__finishPhoto());
   check(await dialog.locator('.photo-result').isHidden(), 'late capture cannot replace a newly opened camera session');
@@ -90,14 +97,14 @@ async page => {
   await dialog.getByRole('button', { name: 'View last photo' }).click();
   check(await dialog.locator('img').getAttribute('src') === retainedUrl, 'failed replacement preserves the retained photo');
   await page.keyboard.press('Escape');
-  await dialog.waitFor({ state: 'hidden' });
+  await closed();
   await open();
   check(await dialog.locator('.photo-result').isVisible(), 'reopening offers the retained preview');
   check(await dialog.locator('.photo-download').getAttribute('href') === retainedUrl, 'reopening keeps the retained download');
   await page.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: () => new Promise(resolve => { window.__finishShare = resolve; }) }));
   await dialog.getByRole('button', { name: 'Share photo' }).click();
   await page.keyboard.press('Escape');
-  await dialog.waitFor({ state: 'hidden' });
+  await closed();
   await open();
   // A second navigator.share() while the first sheet is open rejects with
   // InvalidStateError, so Share stays unavailable until that sheet settles.
@@ -110,7 +117,7 @@ async page => {
   await dialog.getByRole('button', { name: 'Reset framing' }).click();
   check(await dialog.locator('[name=yaw]').inputValue() === '0', 'framing reset returns pan to zero');
   await page.keyboard.press('Escape');
-  await dialog.waitFor({ state: 'hidden' });
+  await closed();
   check(await page.locator('#canvas-host canvas').evaluate(canvas => canvas.style.filter === ''), 'closing restores the live canvas look');
   check(!(await page.evaluate(() => document.body.classList.contains('photographing'))), 'closing restores the game HUD');
   // The HUD fades back in through its own opacity transition, which a CPU-bound

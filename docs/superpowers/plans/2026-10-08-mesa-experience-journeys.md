@@ -40,6 +40,12 @@ calls, quality and pipeline stats, WebGL renderer, window/screen/canvas sizes).
    "closing restores the actual HUD visibility": the HUD fades back in through its
    opacity transition, and the instant `checkVisibility` read raced it on the slow
    runner. The journey now waits (bounded, 5 s) for the starting visibility.
+5. After the squash merge, main's Verify (37773030973, `2ab8008`) failed photo-mode at
+   "closing restores the live canvas look". Same family: the dialog hides at once,
+   but photo mode restores the canvas filter, HUD and focus in its queued `close`
+   event, and every close in the journey checked or reopened right after the hide.
+   A `closed()` helper now waits for that handler (the `photographing` class clears)
+   at all four closes, as contextual-first-visit already did (fix/photo-close-race).
 
 ## Checks
 
