@@ -32,11 +32,11 @@ async page => {
    await page.getByRole('link',{name:'Continue with GitHub'}).waitFor({state:'visible'});
    check(await page.locator('#access-title').evaluate(node=>node===document.activeElement),'Signed-out gate starts with accessible title focus');
    await page.keyboard.press('Tab');
+   check(await page.getByRole('link',{name:'Continue with GitHub'}).evaluate(node=>node===document.activeElement),'GitHub sign-in link is reachable by keyboard');
+   await page.keyboard.press('Tab');
    check(await page.locator('#access-email').evaluate(node=>node===document.activeElement),'Email sign-in field is reachable by keyboard');
    await page.keyboard.press('Tab');
    check(await page.getByRole('button',{name:'Email me a sign-in code'}).evaluate(node=>node===document.activeElement),'Email code button is reachable by keyboard');
-   await page.keyboard.press('Tab');
-   check(await page.getByRole('link',{name:'Continue with GitHub'}).evaluate(node=>node===document.activeElement),'GitHub sign-in link is reachable by keyboard');
    check(!await page.getByRole('link',{name:'Continue with Google'}).count(),'Anonymous gate exposes only supported sign-in methods');
    await page.screenshot({path:'output/playwright/multiplayer-sign-in-mobile.png'});
    if(errors.length)throw new Error(errors.join('; '));

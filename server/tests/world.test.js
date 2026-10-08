@@ -872,3 +872,15 @@ test('travel reaches community places and bare positions outdoors, and refuses a
   assert.equal(quick.ok,true);
   assert.equal(world.command('a',{type:'travel',placeId:'c'}).ok,false,'the travel cooldown still applies');
 });
+
+test('checkpoint diagnostics preserve rejection and report only fixed validation reasons',()=>{
+  const {world}=setup(),before=world.snapshot(),reasons=[];
+  const corrupt=world.checkpoint();corrupt.payload.players[0].position=[0,0,0];
+  assert.equal(world.restore(resign(corrupt),{onFailure:reason=>reasons.push(reason)}).error,'invalid_checkpoint');
+  assert.deepEqual(world.snapshot(),before);
+  assert.deepEqual(reasons,['invalid_player_position']);
+  const hostile={toJSON(){throw new Error('private-password private-session');}};
+  assert.equal(world.restore(hostile,{onFailure:reason=>reasons.push(reason)}).error,'invalid_checkpoint');
+  assert.deepEqual(reasons,['invalid_player_position','unknown']);
+  assert.doesNotMatch(JSON.stringify(reasons),/private-/);
+});

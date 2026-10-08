@@ -1,5 +1,6 @@
 import {validAssembly} from '../preview/src/creator-object.js';
 import { createServer } from 'node:http';
+import { safeCheckpointReason } from './recovery-diagnostics.js';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
@@ -279,18 +280,35 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         connections.set(connectionId, connection);
         const lifetime = setTimeout(() => ws.close(1012, 'Reconnecting to the town.'), connectionLifetime);
         lifetime.unref();
+        let admissionStage = 'join';
         const ready = (async () => {
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
           connection.joined = true;
+          admissionStage = 'snapshot';
           const view = await room.read();
           if (!view) throw new Error('No committed town');
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
+          admissionStage = 'presence';
           if (presence) await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
           if (ws.readyState !== WebSocket.OPEN) return false;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;
-        })().catch(() => { ws.close(1013, 'Town temporarily unavailable.'); return false; });
+        })().catch(error => {
+          // Fixed classifications only: storage/provider errors can contain
+          // credentials. Never log the error, request, identity or ticket.
+          const reasons = new Map([
+            ['Invalid durable town checkpoint', 'checkpoint_invalid'],
+            ['Invalid durable town region', 'region_invalid'],
+            ['Invalid durable town presence', 'presence_invalid'],
+            ['Invalid durable town roster', 'roster_invalid'],
+            ['No committed town', 'snapshot_missing'],
+          ]);
+          console.warn(JSON.stringify({ event: 'town_admission_failed', stage: admissionStage,
+            reason: reasons.get(error?.message) ?? 'unavailable',
+            ...(error?.message === 'Invalid durable town checkpoint' ? { checkpoint: safeCheckpointReason(error.checkpointReason) } : {}) }));
+          ws.close(1013, 'Town temporarily unavailable.'); return false;
+        });
         let queue = ready, waitingPose = null;
         ws.on('pong', () => { connection.alive = true; });
         ws.on('message', (raw, binary) => {

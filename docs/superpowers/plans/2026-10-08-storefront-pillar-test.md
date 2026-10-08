@@ -176,3 +176,14 @@ Its `docs/superpowers/plans/2026-10-08-storefront-traversal-execution.md` record
 the red/green tests, passing core gate, and passing two-client physical entry/exit
 journey including the affected left-edge routes. This does not close the other
 pillars' visual/human/production evidence gaps. No commit or deployment occurred.
+
+## Delivered doorway and hosted follow-up
+
+The doorway correction was merged in PR #184. The login/connection follow-up in
+PR #187 demonstrated live approved town admission after state-preserving checkpoint
+recovery, followed by physical entry/exit at Hermès, Vince centerline and Steak 48,
+plus a blocked glass route and retreat. See `login-hosted-walking-20261008.json`
+and the traversal execution ledger for exact positions and retained failures.
+This closes representative hosted movement proof for mapped doors; exact REF-01
+identity and the broader visual/occupancy/human/native/performance pillars remain
+unproven. Historical baseline statements above describe their recorded revisions.

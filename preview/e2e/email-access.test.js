@@ -59,6 +59,14 @@ test('email access: browser verification, invitation, member controls and revoca
       await page.locator('#access-email').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#access-invite-redeem').isDisabled(), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      assert.equal(await page.evaluate(() => {
+        const brand=document.querySelector('.access-brand').getBoundingClientRect();
+        const panel=document.querySelector('.access-layout').getBoundingClientRect();
+        const footer=document.querySelector('.access-footer').getBoundingClientRect();
+        return brand.bottom<=panel.top && panel.bottom<=footer.top;
+      }), true, 'the login panel never overlaps its brand or footer on short screens');
+      await mkdir('output/playwright', { recursive: true });
+      await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }
     const request = context.request;
     assert.equal(await page.evaluate(() => {

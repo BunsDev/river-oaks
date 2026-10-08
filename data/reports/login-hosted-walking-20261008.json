@@ -1,0 +1,474 @@
+{
+  "sourceCommit": "c7c0850b651d27998e952748fcb4776a8fd51490",
+  "scope": "Live approved account, existing on-foot controller driven by synthetic WASD events through native Chrome DevTools UI; diagnostics closed during movement. Server snapshots inspected only for own position. Not human acceptance.",
+  "units": "Browser east/up/south meters; recorded east/north meters excludes eye height.",
+  "controller": {
+    "footprintRadiusMeters": 0.35,
+    "eyeHeightMeters": 1.68,
+    "walkSpeedMetersPerSecond": 2.5,
+    "briskSpeedMetersPerSecond": 6.1,
+    "substepHz": 120,
+    "source": "preview/src/walking.js",
+    "collisionDisabled": false,
+    "poseAssigned": false,
+    "activeMode": "beast, snow leopard, on foot",
+    "observedMaxSpeedMetersPerSecond": 2.5,
+    "humanoidWalkSpeedMetersPerSecond": 1.65,
+    "humanoidBriskSpeedMetersPerSecond": 3.2,
+    "turnRadiansPerSecond": 2.35,
+    "groundCandidateToleranceMeters": 0.4,
+    "skinMargin": "No separate skin parameter; conservative 0.35 m footprint clearance.",
+    "slopeSolver": "No universal slope-angle solver; ground support and per-candidate height difference govern walking."
+  },
+  "routes": [
+    {
+      "label": "Hermes exterior alignment",
+      "start": [
+        -2758.720806239987,
+        -1314.807021567264
+      ],
+      "end": [
+        -2759.6103379243273,
+        -1313.7081750784546
+      ],
+      "server": [
+        -2759.6102486393797,
+        -1313.7082853729517,
+        18.393134647980137
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        2,
+        2
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 15
+    },
+    {
+      "label": "Hermes physical entry",
+      "start": [
+        -2759.6103380057134,
+        -1313.7081749779165
+      ],
+      "end": [
+        -2755.5034192386715,
+        -1313.8032028902903
+      ],
+      "server": [
+        -2755.5034011186112,
+        -1313.8032052506007,
+        18.438471310601194
+      ],
+      "inside": "osm-node-8172494969",
+      "reached": true,
+      "travel": [
+        2,
+        2
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 43
+    },
+    {
+      "label": "Hermes physical exit",
+      "start": [
+        -2755.503419333291,
+        -1313.8032028779664
+      ],
+      "end": [
+        -2759.4558633830325,
+        -1313.7247381484135
+      ],
+      "server": [
+        -2759.4559399993545,
+        -1313.7248001704033,
+        18.396459088981455
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        2,
+        2
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 199
+    },
+    {
+      "label": "Vince exterior alignment",
+      "start": [
+        -2827.223112143366,
+        -1380.3727611042345
+      ],
+      "end": [
+        -2826.3886784558076,
+        -1381.4063525144516
+      ],
+      "server": [
+        -2826.3886903920225,
+        -1381.4063377293721,
+        18.4307344410955
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        3,
+        3
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 15,
+      "maxSpeed": 2.49
+    },
+    {
+      "label": "Vince physical entry",
+      "start": [
+        -2826.3886784558076,
+        -1381.4063525144516
+      ],
+      "end": [
+        -2830.4840355181705,
+        -1381.2160786976563
+      ],
+      "server": [
+        -2830.4838500811543,
+        -1381.2163083966263,
+        18.418216797160575
+      ],
+      "inside": "osm-node-8172494987",
+      "reached": true,
+      "travel": [
+        3,
+        3
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 58,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Vince coarse-steering exit attempt",
+      "start": [
+        -2830.484035577889,
+        -1381.2160786236836
+      ],
+      "end": [
+        -2827.043255609233,
+        -1381.6693658999404
+      ],
+      "server": [
+        -2827.043255609233,
+        -1381.6693644925374,
+        18.418216797160575
+      ],
+      "inside": "osm-node-8172494987",
+      "reached": false,
+      "travel": [
+        3,
+        3
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 367,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Vince centerline return",
+      "steps": 6,
+      "allWaypointsReached": true,
+      "end": [
+        -2826.304151191506,
+        -1381.42170891132
+      ],
+      "server": [
+        -2826.3041516369503,
+        -1381.4217089034644,
+        18.43127718166804
+      ],
+      "inside": "",
+      "travel": [
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "corrections": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "label": "Steak 48 exterior alignment",
+      "start": [
+        -2880.8311327576334,
+        -1422.9068780815599
+      ],
+      "end": [
+        -2881.8713002852446,
+        -1423.746306702017
+      ],
+      "server": [
+        -2881.8712737808446,
+        -1423.746285312623,
+        18.191533088620996
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 15,
+      "maxSpeed": 2.49
+    },
+    {
+      "label": "Steak 48 physical entry",
+      "start": [
+        -2881.8713002852446,
+        -1423.746306702017
+      ],
+      "end": [
+        -2881.758136194124,
+        -1419.806614903621
+      ],
+      "server": [
+        -2881.7581321997286,
+        -1419.8065830831995,
+        18.189917283824386
+      ],
+      "inside": "osm-node-8172494999",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 39,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Steak 48 exit throat",
+      "start": [
+        -2881.7581362048727,
+        -1419.8066149892456
+      ],
+      "end": [
+        -2881.9127660567588,
+        -1422.08485594632
+      ],
+      "server": [
+        -2881.912758438705,
+        -1422.0848653861344,
+        18.189917283824386
+      ],
+      "inside": "osm-node-8172494999",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 73,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Steak 48 physical exit",
+      "start": [
+        -2881.9127660567588,
+        -1422.08485594632
+      ],
+      "end": [
+        -2881.740894410575,
+        -1423.6893805488069
+      ],
+      "server": [
+        -2881.741097602792,
+        -1423.6893588480898,
+        18.196748764650952
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 56,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Steak 48 glass approach",
+      "start": [
+        -2881.740894410575,
+        -1423.6893805488069
+      ],
+      "end": [
+        -2880.749261768402,
+        -1424.2794325184439
+      ],
+      "server": [
+        -2880.7492598761137,
+        -1424.2794148002304,
+        18.23816828073986
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 66,
+      "maxSpeed": 2.49
+    },
+    {
+      "label": "Steak 48 glass negative",
+      "start": [
+        -2880.749261768402,
+        -1424.2794325184439
+      ],
+      "end": [
+        -2879.923612600196,
+        -1422.0710545483455
+      ],
+      "server": [
+        -2879.923615268769,
+        -1422.0710545483455,
+        18.258006869036528
+      ],
+      "inside": "",
+      "reached": false,
+      "expected": "Blocked by glazing; remain outside",
+      "passed": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ],
+      "samples": 367,
+      "maxSpeed": 2.5
+    },
+    {
+      "label": "Steak 48 retreat from glass",
+      "end": [
+        -2880.6066586656943,
+        -1424.238306346783
+      ],
+      "server": [
+        -2880.606779435067,
+        -1424.2382934005618,
+        18.24390162838328
+      ],
+      "inside": "",
+      "reached": true,
+      "travel": [
+        4,
+        4
+      ],
+      "corrections": [
+        0,
+        0
+      ]
+    }
+  ],
+  "findings": [
+    "Vince coarse eight-direction steering stopped at the exterior corner. Public static query at local [-0.294,-1.4] is free, but 5 cm outward is blocked by mapped footprint; recentering through six recorded normal-input waypoints passed. Collision was retained. This does not establish every arbitrary diagonal exit.",
+    "Closing native DevTools during movement resumed rendered HUD updates; stale-frame first probe is not traversal evidence."
+  ],
+  "transport": {
+    "snapshotsObserved": 7831,
+    "closeCodes": [
+      1012,
+      1012,
+      4001,
+      1012,
+      4001,
+      1012,
+      4001,
+      1012,
+      4001,
+      1012,
+      4001
+    ],
+    "admissionUnavailable1013Observed": false,
+    "scope": "Observed close codes followed by continued snapshots and successful commands. Reasons were not recorded; server source uses 1012 for restarts/lifetime and 4001 for session expiry/reauth."
+  },
+  "acceptance": {
+    "hostedAdmission": "passed",
+    "recognizedCheckpointMigration": "passed",
+    "representativePhysicalDoorways": "passed: Herm\u00e8s, Vince centerline, Steak 48, both directions",
+    "wallNegativeAndRetreat": "passed: Steak 48",
+    "arbitraryDiagonalRoutes": "not established; retain recorded Vince coarse-steering failure",
+    "humanKeyboardAccessibility": "not tested",
+    "nativeUnrealTraversal": "not tested",
+    "targetGPUPerformance": "not tested"
+  },
+  "deploymentTimeline": {
+    "migrationDeployment": "dpl_DeBqppbur7Qp1ZnSkNRGdE8pBkce",
+    "browserAssetSourceCommit": "c7c0850b651d27998e952748fcb4776a8fd51490",
+    "publicAliasAtEnd": {
+      "deployment": "dpl_6BvY7GQqjRiZptitNi5dr367QMs8",
+      "gitCommit": "c64ef6f1d0d528f3260f930c0289dada1a19e1f1"
+    },
+    "scope": "The browser retained the verified repair build during walking. Public alias received concurrent main deployments; later transport reconnects may use the current backend. Public world geometry and walking rules at these three doors were unchanged."
+  },
+  "recordedAt": "2026-10-08T19:11:27.877452+00:00",
+  "authorityPositionToleranceMeters": 0.001
+}

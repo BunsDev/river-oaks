@@ -154,3 +154,31 @@ test('compresses public snapshots without leaking private view fields and bounds
   assert.equal(code, 1009, 'Payload limit applies after decompression');
   assert.equal(commands, 0, 'Oversized compressed input never reaches the room');
 });
+
+for (const [message, stage, reason] of [
+  ['Invalid durable town checkpoint', 'join', 'checkpoint_invalid'],
+  ['Invalid durable town region', 'join', 'region_invalid'],
+  ['No committed town', 'snapshot', 'snapshot_missing'],
+  [['rediss:', '//private-user:', 'private-password', '@example.test/session-token'].join(''), 'join', 'unavailable'],
+]) {
+  test(`town admission reports only safe ${reason} diagnostics`, { timeout: 3000 }, async t => {
+    const identity={userId:'resident',sessionId:'private-session',name:'Resident',expiresAt:Date.now()+60000};
+    const warnings=[];t.mock.method(console,'warn',value=>warnings.push(value));
+    const room={
+      async request(command){if(command.type==='join' && stage==='join')throw new Error(message);return {ok:true};},
+      async read(){return null;},async tick(){return null;},
+    };
+    const auth={authenticate:async()=>identity,handle:async()=>false};
+    const security={allow:async()=>true,isBanned:async()=>false,consumeTicket:async()=>true};
+    const app=createDistributedServer({auth,security,room,waitlist:approvedWaitlist,origin:'http://localhost'});
+    t.after(()=>app.close());
+    await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+    const ws=new WebSocket(`ws://127.0.0.1:${app.server.address().port}/multiplayer?protocol=2&ticket=private-ticket`,{origin:'http://localhost'});
+    t.after(()=>ws.terminate());
+    const [code,closeReason]=await once(ws,'close');
+    assert.equal(code,1013);assert.equal(closeReason.toString(),'Town temporarily unavailable.');
+    assert.deepEqual(warnings.map(value=>JSON.parse(value)),[{event:'town_admission_failed',stage,reason,
+      ...(reason==='checkpoint_invalid'?{checkpoint:'unknown'}:{})}]);
+    assert.doesNotMatch(JSON.stringify(warnings),/private-|rediss:|example\.test/);
+  });
+}

@@ -1,49 +1,85 @@
+:root {
+  --entry-ceramic: #f7f7ee; --entry-ink: #153f42; --entry-glass: #507f80;
+  --entry-text: #466f70;
+  --entry-brass: #b59a65; --entry-rose: #ecd4dc; --entry-mint: #d9e8df;
+  --entry-font: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
 .access-gate, .access-review {
   position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center;
-  padding: 1.5rem; background: #172922; color: #f2eee4;
+  padding: clamp(20px, 4vw, 56px); background: var(--entry-ceramic); color: var(--entry-ink);
+  font: 15px/1.5 var(--entry-font); box-sizing: border-box;
 }
-.access-card, .access-review-card {
-  width: min(100%, 28rem); padding: clamp(1.5rem, 5vw, 3rem);
-  border: 1px solid #aebfae; border-radius: 1.25rem;
-  background: #273e32; box-shadow: 0 1.5rem 5rem #0c1c15aa;
-  font: 1rem/1.5 system-ui, sans-serif;
-}
-.access-kicker { color: #b9d5b5; letter-spacing: .12em; text-transform: uppercase; font-size: .75rem; }
-.access-card h1 { margin: .5rem 0 1rem; font: 600 clamp(2rem, 6vw, 3rem)/1.1 Georgia, serif; }
-.access-card p { margin-bottom: 1.5rem; }
-.access-actions { display: grid; gap: .75rem; }
+.access-gate { overflow-y: auto; grid-template-rows: max-content max-content max-content; align-content: safe center; gap: 28px; }
+.access-gate *, .access-review *, .access-invites * { box-sizing: border-box; }
+.access-brand { display: flex; align-items: center; gap: 12px; justify-self: start; width: min(100%, 980px); margin-inline: auto; color: var(--entry-ink); text-decoration: none; font-size: 17px; font-weight: 650; letter-spacing: -.025em; }
+.access-orbit { display: inline-block; width: 24px; height: 24px; border: 1.5px solid currentColor; border-radius: 50%; position: relative; }
+.access-orbit::before { content: ''; position: absolute; inset: 6px -5px; border: 1.5px solid currentColor; border-radius: 50%; transform: rotate(-32deg); }
+.access-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; top: -1px; right: 1px; border-radius: 50%; background: var(--entry-brass); }
+.access-layout { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 980px); overflow: hidden; border: 1px solid #cad9d0; border-radius: 28px; background: #fffefa; box-shadow: 0 20px 70px #153f420b; }
+.access-scene { display: flex; flex-direction: column; justify-content: center; padding: 42px 36px 24px; background: var(--entry-ink); color: var(--entry-ceramic); }
+.access-kicker { font: 600 11px/1.5 var(--entry-font); letter-spacing: .16em; text-transform: uppercase; color: var(--entry-text); }
+.access-scene .access-kicker { color: var(--entry-mint); }
+.access-scene-title { font-size: clamp(32px, 4vw, 46px); font-weight: 500; letter-spacing: -.055em; line-height: 1.12; margin: 20px 0; }
+.access-scene-copy { color: #d9e8df; font-size: 14px; line-height: 1.7; margin: 0; }
+.access-district { display: block; width: 100%; height: auto; margin: 18px 0 0; }
+.access-scene-caption { color: #bfd4ca; font-size: 11px; letter-spacing: .05em; }
+.access-card { padding: 38px; min-width: 0; font: 14px/1.5 var(--entry-font); }
+.access-card h1 { margin: 10px 0 10px; font: 600 clamp(23px, 3vw, 29px)/1.18 var(--entry-font); letter-spacing: -.045em; }
+.access-card #access-message { margin: 0 0 24px; color: #59716c; font-size: 13px; }
+.access-actions { display: grid; gap: 0; }
 .access-actions a, .access-card button, .access-tools button, .access-review button {
-  display: inline-block; padding: .7rem 1rem; border: 1px solid #d7e5d0; border-radius: .6rem;
-  background: #e7eadb; color: #172922; font: 600 1rem/1.25 system-ui, sans-serif;
-  text-align: center; text-decoration: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px;
+  padding: 11px 16px; border: 1px solid #c4d3ca; border-radius: 10px;
+  background: #f2f5ee; color: var(--entry-ink); font: 600 13px/1.3 var(--entry-font);
+  text-align: center; text-decoration: none; cursor: pointer; transition: background .15s, border-color .15s;
 }
-.access-actions a:hover, .access-card button:hover, .access-tools button:hover, .access-review button:hover { background: #fff6de; }
-.access-actions a:focus-visible, .access-card button:focus-visible, .access-tools button:focus-visible, .access-review button:focus-visible { outline: 3px solid #e8ba63; outline-offset: 3px; }
+.access-actions .access-github { color: #fffefa; background: var(--entry-ink); border-color: var(--entry-ink); }
+.access-actions .access-github:hover { background: #24585b; border-color: #24585b; }
+.access-card button:hover, .access-tools button:hover, .access-review button:hover { background: var(--entry-mint); border-color: #8da99a; }
+.access-brand:focus-visible, .access-actions a:focus-visible, .access-card button:focus-visible, .access-tools button:focus-visible, .access-review button:focus-visible { outline: 3px solid #507f80; outline-offset: 3px; }
+.access-card h1:focus { outline: none; }
+.access-divider { display: flex; align-items: center; gap: 12px; color: #59716c; font-size: 11px; margin: 20px 0; }
+.access-divider::before, .access-divider::after { content: ''; height: 1px; background: #dde4db; flex: 1; }
+.access-form { display: grid; gap: 8px; margin: 0 0 14px; }
+.access-form label { font-size: 12px; font-weight: 600; }
+.access-form input, .access-form select, .access-invites select {
+  width: 100%; min-width: 0; min-height: 44px; padding: 11px 13px;
+  border: 1px solid #b7cac1; border-radius: 10px; background: #fffefa; color: var(--entry-ink); font: inherit;
+}
+.access-form input::placeholder { color: #59716c; }
+.access-form p { margin: 0; font-size: 12px; color: #59716c; }
+.access-form input:focus-visible, .access-form select:focus-visible { outline: 3px solid #507f80; outline-offset: 2px; }
+.access-form button:disabled { opacity: .5; cursor: default; }
+#access-email-status:empty, #access-invite-status:empty { display: none; }
+#access-email-status { margin: 0 0 14px; font-size: 12px; color: #59716c; }
+#access-invite-form { padding-top: 18px; margin-top: 8px; border-top: 1px solid #dde4db; }
+#access-invite-help { margin: 2px 0 4px; }
+#access-gate-signout, #access-retry { margin-top: 12px; width: 100%; }
+.access-footer { margin: 0; color: #59716c; font-size: 12px; text-align: center; }
 .access-tools { display: flex; gap: .5rem; padding: .5rem 1rem; }
 .access-tools button { padding: .45rem .7rem; font-size: .8rem; }
-.access-review { background: #0b1915dd; }
-.access-review-card { max-height: 80vh; overflow: auto; width: min(100%, 40rem); }
+.access-review { background: #153f4280; backdrop-filter: blur(8px); }
+.access-review-card { max-height: 80vh; overflow: auto; width: min(100%, 40rem); padding: 28px; border: 1px solid #c4d3ca; border-radius: 20px; background: #fffefa; }
 .access-review-card h2 { margin-top: 0; }
-.access-request { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 0; border-top: 1px solid #738779; }
+.access-request { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 0; border-top: 1px solid #c4d3ca; }
 .access-request span { flex: 1 1 100%; overflow-wrap: anywhere; }
-.access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: #d7e5d0; }
-.access-gate { overflow-y: auto; align-items: safe center; }
-.access-form { display: grid; gap: .5rem; margin-block: 1rem; }
-.access-form input, .access-form select, .access-invites select {
-  width: 100%; min-width: 0; padding: .7rem; border: 1px solid #aebfae; border-radius: .5rem;
-  background: #172922; color: #f2eee4; font: inherit;
-}
-.access-form p { margin: 0; font-size: .85rem; }
-.access-form input:focus-visible, .access-form select:focus-visible { outline: 3px solid #e8ba63; outline-offset: 2px; }
-.access-form button:disabled { opacity: .6; cursor: wait; }
-.access-invites {
-  width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto;
-  border: 1px solid #aebfae; border-radius: 1.25rem; padding: 1.5rem;
-  background: #273e32; color: #f2eee4; font: 1rem/1.5 system-ui, sans-serif;
-}
-.access-invites::backdrop { background: #0b1915dd; }
+.access-request-id { min-width: 11rem; overflow-wrap: anywhere; font-size: .82rem; color: var(--entry-text); }
+.access-invites { width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid #c4d3ca; border-radius: 20px; padding: 28px; background: #fffefa; color: var(--entry-ink); font: 14px/1.5 var(--entry-font); }
+.access-invites::backdrop { background: #153f4280; }
 .access-invites [hidden] { display: none !important; }
-.access-invites button { font: inherit; padding: .5rem .8rem; border-radius: .5rem; cursor: pointer; }
+.access-invites button { font: inherit; min-height: 44px; padding: .5rem .8rem; border: 1px solid #c4d3ca; border-radius: 10px; background: #f2f5ee; color: var(--entry-ink); cursor: pointer; }
 .access-invites code { display: block; overflow-wrap: anywhere; }
-.access-invites article { padding-block: 1rem; border-top: 1px solid #aebfae; }
+.access-invites article { padding-block: 1rem; border-top: 1px solid #c4d3ca; }
 .access-invites article p { margin-block: .35rem; }
+@media (max-width: 700px) {
+  .access-gate { padding: 20px 16px; gap: 20px; }
+  .access-layout { grid-template-columns: 1fr; max-width: 440px; border-radius: 22px; }
+  .access-brand { max-width: 440px; }
+  .access-scene { padding: 22px 26px; position: relative; overflow: hidden; }
+  .access-scene-title { font-size: 29px; margin: 10px 0; }
+  .access-scene-copy, .access-scene-caption { display: none; }
+  .access-district { position: absolute; width: 185px; right: -20px; bottom: -28px; opacity: .3; margin: 0; }
+  .access-card { padding: 26px; }
+  .access-footer { max-width: 300px; }
+}
+@media (prefers-reduced-motion: reduce) { .access-actions a, .access-card button { transition: none; } }
