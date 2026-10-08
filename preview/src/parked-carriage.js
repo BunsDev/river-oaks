@@ -1,3 +1,4 @@
+import { treeSupports } from './tree-placements.js';
 import { createCarriageDriver } from './carriage-driver.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind, drivingInput } from './vehicle-config.js';
@@ -24,7 +25,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  const canOccupy=next=>{
   if(carriageFootprint(next).some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||!['road','crossing'].includes(network.classify([x,-z]))))return false;
   if((getLocals()??[]).some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(next,p.position[0],next.position[1]+1,-p.position[1],.65)))return false;
-  return !(getWorld().vegetation?.branch_supports??[]).some(tree=>carriageContains(next,tree.position[0],next.position[1]+1,-tree.position[1],.6));
+  return !(treeSupports(getWorld())).some(tree=>carriageContains(next,tree.position[0],next.position[1]+1,-tree.position[1],.6));
  };
  const ride={
   get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},

@@ -1,3 +1,4 @@
+import { treeSupports } from './tree-placements.js';
 import { STREET } from './street-profile.js';
 import { VEHICLES } from './vehicle-config.js';
 import { createWalkingEnvironment } from './walking.js';
@@ -56,7 +57,7 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
   for(const placement of candidates) {
     if(carriageContains(placement,vx,placement.position[1]+1,vz,1))continue;
     if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],1.1)))continue;
-    if((world.vegetation?.branch_supports??[]).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6)))continue;
+    if((treeSupports(world)).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6)))continue;
     const points=carriageFootprint(placement);
     if(points.some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||network.classify([x,-z])!=='road'))continue;
     const [x,y,z]=placement.position,c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);

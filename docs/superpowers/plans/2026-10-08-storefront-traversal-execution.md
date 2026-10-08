@@ -107,3 +107,21 @@ Full Redis, live hosted authentication, native,
 human accessibility, unfamiliar-user entrance identification and target-device
 performance remain outside these automated checks. Preserve worktree until
 the patch and evidence are delivered.
+
+## Hosted continuation after admission repair
+
+PR #184 delivered the doorway patch. The separate login repair in PR #187 recovered
+a rejected historical town checkpoint without resetting saved state. Live approved
+Chrome then physically entered and exited Hermès, Vince along the centerline, and
+Steak 48. Server positions match within 1 mm and travel counters are unchanged;
+no F entry action replaced those crossings. Steak 48 glazing blocked a negative
+attempt and allowed retreat. The account's existing snow-leopard beast movement
+uses 2.5 m/s walking with the same 0.35 m clearance.
+
+Receipt: `data/reports/login-hosted-walking-20261008.json`. It retains the failed
+coarse-steering Vince exterior attempt, its mapped-corner query and six-waypoint
+normal-input passing return. Closing diagnostics during movement avoided stale
+HUD frames. This is synthetic control through native Chrome UI, not human play
+or native Unreal acceptance. The image-specific visual, occupancy, human and
+performance pillars remain open; this does not identify the pictured display as
+a door or prove every arbitrary exterior diagonal.

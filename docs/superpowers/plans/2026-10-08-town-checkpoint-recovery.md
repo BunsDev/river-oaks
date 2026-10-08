@@ -43,10 +43,31 @@ nine journeys passed with full rendering; receipt `data/reports/login-recovery-s
 The first expanded creation fixture failed due to placement/cooldown setup; corrected
 fixture setup retains all production rules, and the final runs above pass.
 
-Latest main `79e391f` is integrated without altering its review-cleanup changes.
-Next: complete physical walking and exact-head hosted CI before merging PR #187.
-The first hosted route attempt is not passing evidence: browser HUD frames stayed
-stale while server-approved exterior arrival updated, and the probe observed a
-normal 1012 reconnect. Continue with the active rendered browser; do not treat
-server travel as physical traversal or change collision rules to bypass it.
-Human accessibility and native/target-GPU acceptance remain unproven.
+Latest main `c64ef6f` is integrated, preserving the 0.1.5 release and Street View work.
+Final `npm run verify` on that combined source passed all 11 tasks: preview 2504
+passed / one pre-existing skip, server 276 passed / 102 Redis skips, tooling 17,
+desktop 9 and Python 141. The two Python warnings and build chunk advisory remain.
+`REDIS_URL=redis://127.0.0.1:16495 npm run test:server`: 389 passed, zero skips;
+the owned loopback Redis service was stopped afterward.
+
+## Hosted walking
+`data/reports/login-hosted-walking-20261008.json` records physical entry/exit at
+Hermès, Vince and Steak 48 using the existing on-foot controller and synthetic
+WASD input through native Chrome UI. The existing account used snow-leopard
+beast movement (2.5 m/s walk); player clearance stayed 0.35 m. Server XY positions
+match within 1 mm. Every physical segment retained its travel counter and had
+zero corrections. Steak 48 glazing blocked its negative attempt; retreat passed.
+No F entry, direct pose assignment, collision bypass or production fixture identity
+was used for these segments. Exterior arrival is separately server validated.
+
+The first probe had stale HUD frames with DevTools open; closing diagnostics while
+walking resumed rendering. A coarse eight-direction Vince exit hit its exterior
+corner; public static queries confirm an outward neighbor is blocked. Recentring
+through six recorded centerline waypoints passed. Preserve both receipts: this
+does not establish every arbitrary diagonal exterior route. Initial admission
+used source `c7c0850`; the browser retained that build while the public backend
+received concurrent main deployments, recorded in the receipt timeline.
+
+Next: final exact-head hosted CI and authorized merge of PR #187, then verify the
+main production deployment and clean reload. Human accessibility, complete image-
+specific pillar signoff, native traversal and target-GPU performance remain open.

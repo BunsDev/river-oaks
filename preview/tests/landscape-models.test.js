@@ -1,3 +1,4 @@
+import { treeSupports } from '../src/tree-placements.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,15 +11,16 @@ const read = path => readFileSync(new URL(path, import.meta.url));
 const world = JSON.parse(read('../public/data/district.json'));
 world.vegetation = JSON.parse(read('../public/data/district-vegetation.json'));
 
-test('mature crowns retain every existing stem and leave source layout untouched', () => {
+test('mature crowns use shared placements and leave source layout untouched', () => {
   const before = structuredClone(world);
   const placements = matureTreePlacements(world);
-  assert.equal(placements.length, world.vegetation.branch_supports.length);
+  assert.equal(placements.length, treeSupports(world).length);
   placements.forEach((tree, index) => {
-    const [east, north] = world.vegetation.branch_supports[index].position;
+    const [east, north] = treeSupports(world)[index].position;
     assert.deepEqual(tree.position, [east, groundSurfaceHeight(world, east, -north), -north]);
     assert.ok(tree.height >= 7.5 && tree.height <= 16);
-    assert.ok(tree.radius >= 3.1 && tree.radius <= 5.2);
+    if (treeSupports(world)[index].referencePlacement) assert.equal(tree.radius, treeSupports(world)[index].radius_m);
+    else assert.ok(tree.radius >= 3.1 && tree.radius <= 5.2);
   });
   assert.deepEqual(world, before);
   const fallback = matureTreePlacements({ ...world, vegetation: undefined });

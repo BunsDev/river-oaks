@@ -10,5 +10,6 @@
   ],
   "signedInUI": "District ready; Walking controls; no admission gate",
   "scope": "Live WorkOS-approved browser admission and fixed server migration diagnostics; no raw identity, credential, snapshot or request data retained.",
-  "hostedPhysicalTraversal": "Pending; first probe had stale HUD frames and is not traversal evidence."
+  "hostedPhysicalTraversal": "Passed representative Herm\u00e8s, Vince centerline and Steak 48 entry/exit, with server positions and unchanged travel counters; separate receipt retains one coarse-steering failed attempt.",
+  "walkingReceipt": "data/reports/login-hosted-walking-20261008.json"
 }

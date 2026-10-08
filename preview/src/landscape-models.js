@@ -1,3 +1,4 @@
+import { treeSupports } from './tree-placements.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { groundSurfaceHeight } from './world-surface.js';
@@ -27,11 +28,10 @@ function materialFrom(source, foliage = false, preserveTint = false) {
 }
 
 export function matureTreePlacements(world) {
-  const supports=world.vegetation?.branch_supports;
-  return (supports?.length?supports:(world.trees ?? []).map(tree=>({position:tree.position,height_m:tree.height_m,radius_m:tree.crown_radius_m}))).map((tree,index)=>({
+  return treeSupports(world).map((tree,index)=>({
     position:[tree.position[0],groundSurfaceHeight(world,tree.position[0],-tree.position[1]),-tree.position[1]],
     height:Math.max(7.5,Math.min(16,tree.height_m)),
-    radius:Math.max(3.1,Math.min(5.2,tree.radius_m*1.3)),
+    radius:tree.referencePlacement ? tree.radius_m : Math.max(3.1,Math.min(5.2,(tree.radius_m ?? tree.crown_radius_m)*1.3)),
     yaw:index*2.399963,
   }));
 }

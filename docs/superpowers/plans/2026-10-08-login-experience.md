@@ -36,4 +36,7 @@ The entrance and diagnostic stage passed hosted CI at `9b4f280`. Live diagnostic
 identified join/checkpoint_invalid/invalid_envelope. The narrow state-preserving repair
 and final local verification are recorded in `2026-10-08-town-checkpoint-recovery.md`.
 Hosted signed-in admission now passes after a recognized, state-preserving migration.
-Physical hosted walking and exact-head CI remain separate delivery checks.
+Representative physical hosted walking now passes in both directions at Hermès,
+Vince (centerline) and Steak 48; negative glass collision and retreat also pass.
+The repair ledger and walking receipt retain the failed coarse-steering attempt
+and all proof limits. Final exact-head hosted CI and main deployment are next.
