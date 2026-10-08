@@ -26,7 +26,7 @@ async function checkAccess() {
       if (entered) location.reload();
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false;
       inviteForm.hidden = false; redeemButton.disabled = true;
-      message.textContent = 'Join with your email or GitHub. Access is waitlist only unless you have an invite.';
+      message.textContent = 'Sign in with email or GitHub. Entry is by invitation or waitlist approval.';
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
       gateState = 'signed-out';
       return;

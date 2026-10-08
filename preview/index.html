@@ -13,11 +13,33 @@
   </head>
   <body>
     <section class="access-gate" id="access-gate" aria-labelledby="access-title">
+      <a class="access-brand" href="/" aria-label="TypeSafe Place home"><span class="access-orbit" aria-hidden="true"></span>TypeSafe Place</a>
+      <div class="access-layout">
+      <aside class="access-scene" aria-label="About the district">
+        <span class="access-kicker">A shared garden district</span>
+        <p class="access-scene-title">A little world.<br>A place for you.</p>
+        <p class="access-scene-copy">Wander the streets. Find your people.<br>Make a little magic along the way.</p>
+        <svg class="access-district" viewBox="0 0 440 270" aria-hidden="true" focusable="false">
+          <ellipse cx="220" cy="170" rx="192" ry="72" fill="#507f80"/>
+          <ellipse cx="220" cy="170" rx="159" ry="53" fill="none" stroke="#b59a65" stroke-width="2"/>
+          <path d="M66 163h102l53 50h121" fill="none" stroke="#f7f7ee" stroke-width="13"/>
+          <path d="M148 118v62l72 25v-66z" fill="#d9e8df"/><path d="M220 139v66l83-36v-62z" fill="#a6c7be"/>
+          <path d="m136 117 88-40 92 29-96 41z" fill="#f7f7ee"/><path d="m145 116 78-33 82 23-85 34z" fill="#ecd4dc"/>
+          <path d="M161 133v39m19-32v39m20-32v39m36-44v43m22-51v43m22-52v42" stroke="#153f42" stroke-width="8"/>
+          <path d="M105 131v58m230-69v66m-72-4v52" stroke="#b59a65" stroke-width="5"/>
+          <ellipse cx="105" cy="124" rx="24" ry="33" fill="#d9e8df"/><ellipse cx="335" cy="111" rx="22" ry="29" fill="#d9e8df"/><ellipse cx="263" cy="183" rx="20" ry="26" fill="#d9e8df"/>
+          <path d="M366 119V74m-14 0h28" stroke="#b59a65" stroke-width="3"/><ellipse cx="366" cy="73" rx="17" ry="6" fill="#f7f7ee"/>
+          <circle cx="81" cy="62" r="5" fill="#ecd4dc"/><path d="M321 44v16m-8-8h16" stroke="#b59a65" stroke-width="2"/>
+        </svg>
+        <span class="access-scene-caption">River Oaks · Houston, reimagined</span>
+      </aside>
       <div class="access-card">
-        <span class="access-kicker">TypeSafe Place</span>
-        <h1 id="access-title" tabindex="-1">Your place in the district</h1>
+        <span class="access-kicker">Step inside</span>
+        <h1 id="access-title" tabindex="-1">Welcome to the district</h1>
         <p id="access-message" role="status">Checking your access…</p>
         <div id="access-providers" class="access-actions" hidden>
+          <a class="access-github" href="/auth/login?provider=github"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.79c.85 0 1.71.11 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.85v2.77c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>Continue with GitHub</a>
+          <div class="access-divider"><span>or continue with email</span></div>
           <form id="access-email-form" class="access-form">
             <label for="access-email">Email address</label>
             <input id="access-email" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com" />
@@ -29,11 +51,10 @@
             <button type="submit">Verify email</button>
           </form>
           <p id="access-email-status" role="status"></p>
-          <a href="/auth/login?provider=github">Continue with GitHub</a>
         </div>
         <form id="access-invite-form" class="access-form" hidden>
           <label for="access-invite-code">Have an invite code?</label>
-          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required aria-describedby="access-invite-help" />
+          <input id="access-invite-code" name="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="32" required placeholder="Your invite code" aria-describedby="access-invite-help" />
           <p id="access-invite-help">Verify your email or sign in with GitHub, then redeem your invite to join.</p>
           <button id="access-invite-redeem" type="submit" disabled>Redeem invite and join</button>
           <p id="access-invite-status" role="status"></p>
@@ -41,6 +62,8 @@
         <button id="access-retry" type="button" hidden>Try again</button>
         <button id="access-gate-signout" type="button" hidden>Sign out</button>
       </div>
+      </div>
+      <p class="access-footer">A place to explore, meet and make yourself at home.</p>
     </section>
     <dialog id="access-invites" class="access-invites" aria-labelledby="access-invites-title">
       <h2 id="access-invites-title">Your invitations</h2>

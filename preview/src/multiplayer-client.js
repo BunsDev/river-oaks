@@ -13,13 +13,15 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
   };
   const gate=element('section',null,'multiplayer-gate');gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','multiplayer-title');
-  const title=element('h1','A little magic, together');title.id='multiplayer-title';title.tabIndex=-1;
-  const description=element('p','Sign in, choose your character, and meet other players in a shared town of residents, wishes, and consequences.');
+  const orbit=element('span',null,'access-orbit');orbit.setAttribute('aria-hidden','true');
+  const brand=element('div','TypeSafe Place','access-kicker');
+  const title=element('h1','Your district is just ahead');title.id='multiplayer-title';title.tabIndex=-1;
+  const description=element('p','Connecting you to your people and places.');
   const status=element('p','Connecting to the town…');status.id='multiplayer-status';status.setAttribute('role','status');
   const login=element('a','Sign in with GitHub','multiplayer-primary');login.href='/auth/login?provider=github';login.hidden=true;
   const retry=element('button','Try again');retry.type='button';retry.hidden=true;
   const gateLogout=element('button','Sign out');gateLogout.type='button';gateLogout.hidden=true;
-  const card=element('div',null,'multiplayer-welcome');card.append(title,description,status,login,retry,gateLogout);gate.append(card);document.body.append(gate);
+  const card=element('div',null,'multiplayer-welcome');card.append(orbit,brand,title,description,status,login,retry,gateLogout);gate.append(card);document.body.append(gate);
   const panel=element('section',null,'multiplayer-roster');panel.setAttribute('aria-label','Players in town');
   const summary=element('strong','Connecting'),list=element('div'),notice=element('p');notice.setAttribute('role','status');
   const logout=element('button','Sign out');logout.type='button';

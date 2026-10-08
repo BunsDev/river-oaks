@@ -16,6 +16,7 @@ import { objectCollider, blocksPlayer } from '../preview/src/creator-object.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { checkpointFailureReason } from './recovery-diagnostics.js';
 
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
@@ -656,7 +657,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
     return {...envelope,checksum:digest(envelope)};
   }
-  function restore(value) {
+  function restore(value, { onFailure } = {}) {
     try {
       // Clone before validation. A rejected restore never changes the live world.
       const serialized=JSON.stringify(value);
@@ -891,7 +892,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
       return {ok:true};
-    } catch { return reject('invalid_checkpoint'); }
+    } catch (error) {
+      onFailure?.(checkpointFailureReason(error));
+      return reject('invalid_checkpoint');
+    }
   }
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {

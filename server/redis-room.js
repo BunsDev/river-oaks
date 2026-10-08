@@ -121,10 +121,16 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     let world=cached?.world??createSharedWorld(currentData,{now,isAdmin,worldId});
     if(!cached && previous) {
+      let checkpointReason = 'unknown';
       if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || previous.version===2 && previous.worldId===worldId)
         || !Number.isSafeInteger(previous.revision) || previous.revision<0
         || (previous.regionSha256!==undefined && (worldId===DEFAULT_WORLD_ID || !/^[a-f0-9]{64}$/.test(previous.regionSha256)))
-        || !Number.isFinite(previous.lastTick) || !Array.isArray(previous.connections) || !world.restore(previous.checkpoint).ok) throw new Error('Invalid durable town checkpoint');
+        || !Number.isFinite(previous.lastTick) || !Array.isArray(previous.connections)
+        || !world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
+        const error = new Error('Invalid durable town checkpoint');
+        error.checkpointReason = checkpointReason;
+        throw error;
+      }
       for(const connection of previous.connections) {
         if(!record(connection) || !validIdentity(connection.identity) || !id(connection.connectionId) || !Number.isFinite(connection.lastSeen)
           || !(connection.leftAt===null || Number.isFinite(connection.leftAt)) || connections.has(connection.identity.userId)
