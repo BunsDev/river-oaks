@@ -51,6 +51,10 @@ town:
       not added to hosted CI: nearby-encounters alone takes about five minutes.
 - [x] `npm run verify -- web`: agent 17, preview 668, server 267 (101 Redis skips),
       desktop 9, build.
+- [x] Rebased onto `62123f0` (#184, boutique doorway clearance) and rerun: ui-improvements
+      26 checks, nearby-encounters 74 visits (280 s), street-level 21 checks twice. One
+      street-level run had failed its first eye-height read before the HUD's first
+      paint; that check now waits (bounded, 5 s) for the painted value.
 
 ## Limits and follow-ups
 

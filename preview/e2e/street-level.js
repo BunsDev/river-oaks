@@ -16,7 +16,8 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:120000});
   check(await page.locator('#walking-hud').isVisible(),'Starts on foot');
   check(await page.locator('#overview,#street,#ride,#walk,#flight-hud,#scene-select,#economy-hud').count()===0,'No alternate view or scene controls');
-  check(await page.locator('#walking-hud').getAttribute('data-eye-height')==='1.68','Camera remains at human eye height');
+  // The HUD repaints every 150 ms, so read the eye height once it has painted.
+  check(await page.waitForFunction(()=>document.querySelector('#walking-hud').dataset.eyeHeight==='1.68',null,{timeout:5000}).then(()=>true,()=>false),'Camera remains at human eye height');
   const before=JSON.parse(await page.locator('#walking-hud').getAttribute('data-position'));
   await page.locator('#canvas-host').focus();
   await page.keyboard.down('KeyW'); await page.waitForTimeout(1000); await page.keyboard.up('KeyW');
