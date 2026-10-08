@@ -32,6 +32,10 @@ try {
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
+    // Kept for failure reports: page errors and console errors from every tab.
+    const pageErrors = [], consoleErrors = [];
+    const watch = tab => { tab.on('pageerror', error => pageErrors.push(error.message)); tab.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text().slice(0, 500)); }); };
+    watch(page); context.on('page', watch);
     const started = Date.now();
     try {
       console.log(`Running ${name}`);
@@ -42,7 +46,19 @@ try {
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);
     } catch (error) {
-      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack });
+      // What the page was rendering when it failed: a blank scene and a slow one
+      // look alike in a screenshot, so record draw work, quality and sizes.
+      const diagnostics = await Promise.all(context.pages().map(active => active.evaluate(() => {
+        const host = document.querySelector('#canvas-host'), canvas = document.querySelector('#viewport canvas');
+        const probe = document.createElement('canvas').getContext('webgl2'), info = probe?.getExtension('WEBGL_debug_renderer_info');
+        const gl = probe ? (info ? probe.getParameter(info.UNMASKED_RENDERER_WEBGL) : probe.getParameter(probe.RENDERER)) : null;
+        probe?.getExtension('WEBGL_lose_context')?.loseContext();
+        return { url: location.href, ready: host?.dataset.playerReady, assets: document.querySelector('#viewport')?.dataset.assetProgress,
+          renderStats: host?.dataset.renderStats, quality: host?.dataset.quality, pipeline: host?.dataset.pipeline, renderer: gl,
+          window: [innerWidth, innerHeight, devicePixelRatio], screen: [screen.width, screen.height, screen.colorDepth],
+          canvas: canvas && [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight] };
+      }).catch(failure => ({ unavailable: failure.message }))));
+      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, consoleErrors: consoleErrors.slice(-20), diagnostics });
       console.error(`Failed ${name}: ${error.message}`);
       await page.screenshot({ path: join(root, `output/playwright/experience-${name}-failure.png`) }).catch(() => {});
       process.exitCode = 1;
