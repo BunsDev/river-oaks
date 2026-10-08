@@ -35,4 +35,5 @@ Independent source review found no correctness, authorization or privacy blocker
 The entrance and diagnostic stage passed hosted CI at `9b4f280`. Live diagnostics
 identified join/checkpoint_invalid/invalid_envelope. The narrow state-preserving repair
 and final local verification are recorded in `2026-10-08-town-checkpoint-recovery.md`.
-Complete hosted repair and physical walking before declaring this objective complete.
+Hosted signed-in admission now passes after a recognized, state-preserving migration.
+Physical hosted walking and exact-head CI remain separate delivery checks.

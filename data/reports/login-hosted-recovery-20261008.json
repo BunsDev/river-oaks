@@ -1,0 +1,14 @@
+{
+  "deployment": "dpl_DeBqppbur7Qp1ZnSkNRGdE8pBkce",
+  "sourceCommit": "c7c0850b651d27998e952748fcb4776a8fd51490",
+  "migrationEvents": [
+    {
+      "event": "district_height_checkpoint_migrated",
+      "from": "before_photo_facade_heights",
+      "to": "photographed_heights"
+    }
+  ],
+  "signedInUI": "District ready; Walking controls; no admission gate",
+  "scope": "Live WorkOS-approved browser admission and fixed server migration diagnostics; no raw identity, credential, snapshot or request data retained.",
+  "hostedPhysicalTraversal": "Pending; first probe had stale HUD frames and is not traversal evidence."
+}

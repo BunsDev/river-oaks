@@ -12,8 +12,13 @@ passed hosted CI. The updated branch has the same tree. Vercel staged build
 401 before promotion. Live fixed diagnostics show join/checkpoint_invalid/invalid_envelope.
 Historical public district comparisons show only building heights and height provenance
 changed in `297d9bb` and `9dd65d2`; mapped XY geometry, entrances, terrain and vegetation match.
-These revisions changed the full-data checkpoint fingerprint. This is a candidate cause,
-pending a successful recognized migration and signed-in town snapshot.
+These revisions changed the full-data checkpoint fingerprint. Hosted deployment
+`dpl_DeBqppbur7Qp1ZnSkNRGdE8pBkce`, source `c7c0850`, passed staged anonymous
+session 200/false and ticket 401 before promotion. Signed-in Chrome then opened
+the town and walking controls. Fixed success diagnostics recorded
+`district_height_checkpoint_migrated` from `before_photo_facade_heights` to
+`photographed_heights`, confirming the cause and successful fenced recovery.
+No namespaces or saved state were reset. Safe receipt: `data/reports/login-hosted-recovery-20261008.json`.
 
 ## Implementation and checks
 Test exact historical public fingerprints, complete payload preservation, source and
@@ -39,6 +44,9 @@ The first expanded creation fixture failed due to placement/cooldown setup; corr
 fixture setup retains all production rules, and the final runs above pass.
 
 Latest main `79e391f` is integrated without altering its review-cleanup changes.
-Next: stage this verified source, prove hosted recognized recovery and town admission,
-then record physical walking and exact-head hosted CI before merging PR #187.
+Next: complete physical walking and exact-head hosted CI before merging PR #187.
+The first hosted route attempt is not passing evidence: browser HUD frames stayed
+stale while server-approved exterior arrival updated, and the probe observed a
+normal 1012 reconnect. Continue with the active rendered browser; do not treat
+server travel as physical traversal or change collision rules to bypass it.
 Human accessibility and native/target-GPU acceptance remain unproven.
