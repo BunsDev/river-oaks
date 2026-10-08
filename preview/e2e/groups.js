@@ -13,15 +13,18 @@ async page => {
       if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
       await tab.locator('[data-section=community-section]').click();
     }
-    await page.locator('.multiplayer-person button[aria-label^="Add "]').click();
+    // Earlier development journeys' residents can still be listed in this town,
+    // so add the second player by id rather than the first Add button.
+    const secondId=await second.evaluate(()=>window.__riverMultiplayer().selfId);
+    await page.locator(`.multiplayer-person[data-peer-id="${secondId}"] button[aria-label^="Add "]`).click();
     await second.locator('.multiplayer-social-row button',{hasText:'Accept'}).click();
     await page.locator('.multiplayer-social-row button',{hasText:'Message'}).waitFor({state:'attached'});
     await page.locator('.multiplayer-groups-create input[name=name]').fill('Moon Garden Friends');
     await page.locator('.multiplayer-groups-create button').click();
     await page.locator('.multiplayer-group-row').filter({hasText:'Moon Garden Friends'}).waitFor({state:'attached'});
     await page.locator('.multiplayer-group-row').filter({hasText:'Moon Garden Friends'}).getByRole('button',{name:'Open'}).click();
-    const [chosen]=await page.locator('.multiplayer-group-invite select').selectOption({index:1});
-    check(Boolean(chosen),'An accepted contact appears in the group invitation picker');
+    const [chosen]=await page.locator('.multiplayer-group-invite select').selectOption({value:secondId});
+    check(chosen===secondId,'An accepted contact appears in the group invitation picker');
     await page.locator('.multiplayer-group-invite button').click();
     await page.waitForFunction(()=>document.querySelector('.multiplayer-group-status')?.textContent.includes('Group invitation sent'),null,{timeout:10000})
       .catch(async()=>{throw new Error(`Group invite failed: ${await page.locator('.multiplayer-group-status').textContent()}; selected ${await page.locator('.multiplayer-group-invite select').inputValue()}`);});

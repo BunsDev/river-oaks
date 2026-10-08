@@ -72,7 +72,7 @@ async page => {
   await second.locator('.multiplayer-chat-form button').click();
   await page.locator('.multiplayer-chat-message').filter({hasText:'Hello back'}).waitFor({state:'attached'});
   check(await page.locator('.multiplayer-chat-message').count()===2,'A reply reaches the reconnected player through the live chat UI');
-  await page.locator('.multiplayer-person button[aria-label^="Add "]').click();
+  await page.locator(`.multiplayer-person[data-peer-id="${b.self}"] button[aria-label^="Add "]`).click();
   await second.locator('.multiplayer-social-row button', {hasText:'Accept'}).waitFor({state:'attached',timeout:20000});
   check(await second.locator('.multiplayer-social-contacts').getByText('Online in River Oaks District').count()===0,
     'A pending contact cannot see the sender\'s online world');

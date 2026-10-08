@@ -23,20 +23,30 @@ async page => {
   await open('alice',page);
   const bob=await open('bob');
 
-  // A bench whose two places are free and reachable.
+  // A bench whose two places are free and reachable. Townspeople rest on benches
+  // too, and the town has run through earlier journeys, so a place can be taken
+  // between choosing a bench and sitting; then Alice tries another free bench.
   const {seats,planters}=await sites(page);
-  const bench=seats.find(seat=>seat.kind==='bench'&&seat.id.endsWith(':0'));
-  check(Boolean(bench),'The town lists storefront benches as seats');
-  await goNear(page,bench.id);
-  await page.waitForFunction(()=>window.__riverSeatAndWater().interaction==='sit',null,{timeout:15000});
-  // The seats panel lists the bench beside Jevica's furniture; Z is its shortcut.
-  await page.waitForFunction(id=>[...document.querySelectorAll('#nearby-seat option')].some(option=>option.value===id&&option.textContent.startsWith('Storefront bench')),bench.id,{timeout:10000});
+  const benches=seats.filter(seat=>seat.kind==='bench'&&seat.id.endsWith(':0'));
+  check(benches.length>0,'The town lists storefront benches as seats');
+  const bothFree=async bench=>{const {taken}=await sites(page);return ![bench.id,bench.id.replace(/:0$/,':1')].some(id=>taken.includes(id));};
+  let bench=null;const refused=[];
+  for(const candidate of benches){
+    if(refused.length>=3)break;
+    if(!await bothFree(candidate))continue;
+    await goNear(page,candidate.id);
+    if(!await page.waitForFunction(()=>window.__riverSeatAndWater().interaction==='sit',null,{timeout:15000}).then(()=>true,()=>false)){refused.push(`${candidate.id}: Sit never offered`);continue;}
+    // The seats panel lists the bench beside Jevica's furniture; Z is its shortcut.
+    await page.waitForFunction(id=>[...document.querySelectorAll('#nearby-seat option')].some(option=>option.value===id&&option.textContent.startsWith('Storefront bench')),candidate.id,{timeout:10000});
+    await page.waitForFunction(()=>!document.querySelector('#walking-interact').hidden);
+    if(!await page.locator('#walking-interact').isVisible())await page.locator('.walking-more summary').click();
+    await page.locator('#walking-interact').click();
+    if(await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000}).then(()=>true,()=>false)){bench=candidate;break;}
+    // The town's refusal (taken, blocked, out of reach) is the walking notice.
+    refused.push(`${candidate.id}: ${await page.locator('#walking-notice').textContent()}`);
+  }
+  check(Boolean(bench),`Contextual Sit seats Alice on a free storefront bench${refused.length?` (refused: ${refused.join('; ')})`:''}`);
   check(true,'Beside a bench, the seats panel lists it and Z offers to sit');
-
-  await page.waitForFunction(()=>!document.querySelector('#walking-interact').hidden);
-  if(!await page.locator('#walking-interact').isVisible())await page.locator('.walking-more summary').click();
-  await page.locator('#walking-interact').click();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000});
   const seatId=await page.evaluate(()=>document.querySelector('#canvas-host').dataset.playerSeat);
   const seat=seats.find(item=>item.id===seatId);
   check(Boolean(seat)&&seat.id.startsWith(bench.id.slice(0,-1)),'Contextual Sit sits on a place on that bench');
@@ -63,7 +73,8 @@ async page => {
   const bobPrompt=await bob.evaluate(()=>window.__riverSeatAndWater().interaction);
   check(bobPrompt==='sit','Bob can still sit beside her');
   await press(bob,'KeyZ');
-  await bob.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000});
+  await bob.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerSeat,null,{timeout:15000})
+    .catch(async()=>{throw new Error(`Z did not seat Bob: ${await bob.locator('#walking-notice').textContent()}`);});
   const bobSeat=await bob.evaluate(()=>document.querySelector('#canvas-host').dataset.playerSeat);
   check(bobSeat&&bobSeat!==seat.id,'A held place is never offered; Bob takes the one beside it');
   const bobSeen=await page.waitForFunction(()=>window.__riverMultiplayer().remotes.find(remote=>remote.id==='bob')?.riderSeated,null,{timeout:20000}).then(()=>true,()=>false);
