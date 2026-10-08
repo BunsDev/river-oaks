@@ -36,6 +36,10 @@ calls, quality and pipeline stats, WebGL renderer, window/screen/canvas sizes).
    and MSAA; `pipeline.stats.bloom` reports it. GPU rendering is unchanged. The
    specific owner-only object was not identified.
 3. The hosted CI step and the `experience` profile task run all three journeys again.
+4. The next hosted run (Verify 37769572012, ledger-only commit) failed photo-mode at
+   "closing restores the actual HUD visibility": the HUD fades back in through its
+   opacity transition, and the instant `checkVisibility` read raced it on the slow
+   runner. The journey now waits (bounded, 5 s) for the starting visibility.
 
 ## Checks
 

@@ -113,6 +113,10 @@ async page => {
   await dialog.waitFor({ state: 'hidden' });
   check(await page.locator('#canvas-host canvas').evaluate(canvas => canvas.style.filter === ''), 'closing restores the live canvas look');
   check(!(await page.evaluate(() => document.body.classList.contains('photographing'))), 'closing restores the game HUD');
+  // The HUD fades back in through its own opacity transition, which a CPU-bound
+  // runner can still be playing when the dialog has closed.
+  await page.waitForFunction(([selectors, expected]) => JSON.stringify(selectors.map(selector => document.querySelector(selector).checkVisibility({ opacityProperty: true, visibilityProperty: true }))) === expected,
+    [hudSelectors, JSON.stringify(initialHud)], { timeout: 5000 }).catch(() => {});
   check(JSON.stringify(await visibleHud()) === JSON.stringify(initialHud), 'closing restores the actual HUD visibility');
   await page.setViewportSize({ width: 390, height: 844 });
   await open();
