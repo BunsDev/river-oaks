@@ -37,6 +37,8 @@ buildings.add(fantasy);
 // Street-level stations matching each reference photograph: [camera, target], east/north/height above the frontage.
 const base = world.stores.find(store => store.name === 'Hermès').facade[2];
 const views = {
+  cartier: { label: 'CARTIER · SOUTH-WEST CORNER', camera: [-2770, -1300, 1.8], target: [-2749, -1281, 6.2] },
+  'cartier-entry': { label: 'CARTIER · MAPPED SOUTH ENTRANCE', camera: [-2746, -1301, 1.8], target: [-2746, -1284.8, 6] },
   hermes: { label: 'HERMÈS · WEST FRONTAGE', camera: [-2772, -1305.5, 2.0], target: [-2757.5, -1318, 8.0] },
   corner: { label: 'HERMÈS · NORTH-WEST CORNER', camera: [-2776, -1287, 2.0], target: [-2750, -1311, 7.0] },
   ipic: { label: 'IPIC THEATERS · WEST FRONTAGE', camera: [-2773, -1223, 2.0], target: [-2755.5, -1232, 8.5] },
@@ -80,6 +82,6 @@ function view(name, { hour = 15, fantasyVisible = true } = {}) {
   document.querySelector('#label').textContent = label;
   return { draws: renderer.info.render.calls, triangles: renderer.info.render.triangles };
 }
-window.facadeFixture = { view, views, world, scene, camera, renderer };
+window.facadeFixture = { THREE, view, views, world, scene, camera, renderer };
 view('hermes');
 document.body.dataset.ready = 'true';

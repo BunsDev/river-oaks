@@ -1,0 +1,216 @@
+{
+  "createdAt": "2026-10-08T17:59:33.788Z",
+  "results": [
+    {
+      "name": "streetview-realism",
+      "status": "passed",
+      "seconds": 4.965,
+      "result": {
+        "captures": [
+          {
+            "station": "bella",
+            "draws": 929,
+            "triangles": 1965370,
+            "position": [
+              -2797,
+              20.010636806322427,
+              1170
+            ],
+            "quaternion": [
+              0.004512637121199864,
+              0.992786774438652,
+              -0.03962345702998432,
+              0.11306652138852787
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "bari",
+            "draws": 471,
+            "triangles": 1533174,
+            "position": [
+              -2814,
+              20.010636806322427,
+              1295
+            ],
+            "quaternion": [
+              0.048148552578779584,
+              0.754356174282904,
+              -0.05567951918906333,
+              0.6523252795566827
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "dolce",
+            "draws": 466,
+            "triangles": 1506512,
+            "position": [
+              -2818,
+              20.010636806322427,
+              1299
+            ],
+            "quaternion": [
+              0.08075140664896163,
+              0.5094557406882627,
+              -0.048096507247380633,
+              0.8553483410836724
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "toulouse",
+            "draws": 697,
+            "triangles": 1707616,
+            "position": [
+              -2818,
+              20.010636806322427,
+              1297
+            ],
+            "quaternion": [
+              0.055980540688200436,
+              -0.22153143235061068,
+              0.012739534785463354,
+              0.9734617135760365
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "cartier",
+            "draws": 588,
+            "triangles": 1606324,
+            "position": [
+              -2770,
+              20.010636806322427,
+              1300
+            ],
+            "quaternion": [
+              0.0703734603386338,
+              -0.40443535607619335,
+              0.031231086611892285,
+              0.9113200524867923
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "cartier-entry",
+            "draws": 672,
+            "triangles": 1691024,
+            "position": [
+              -2746,
+              20.010636806322427,
+              1301
+            ],
+            "quaternion": [
+              0.12649723679630115,
+              0,
+              0,
+              0.9919669596730026
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          },
+          {
+            "station": "hopdoddy",
+            "draws": 534,
+            "triangles": 2027565,
+            "position": [
+              -2797,
+              20.010636806322427,
+              1238
+            ],
+            "quaternion": [
+              0.08043979607121132,
+              0.12178131470182323,
+              -0.009902591419903503,
+              0.9892424825494949
+            ],
+            "fov": 62,
+            "aspect": 1.6,
+            "exposure": 0.95,
+            "hour": 15,
+            "weather": "clear",
+            "size": [
+              1600,
+              1000
+            ],
+            "axes": "east/up/south metres",
+            "scope": "isolated facade fixture, no crowd or full landscape"
+          }
+        ],
+        "geometry": {
+          "bellaScreenHeight": 6.319999999999997
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "reference-facades",
+      "status": "passed",
+      "seconds": 2.374,
+      "result": {
+        "textures": 68,
+        "errors": []
+      }
+    }
+  ]
+}

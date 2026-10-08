@@ -67,9 +67,18 @@ export function referencePlan(world) {
       plan.roofs.set(HERMES_BLOCK, PODIUM[HERMES_BLOCK]);
     }
   }
-  const ipic = building(IPIC_BLOCK);
+  const ipic = building(IPIC_BLOCK), cartierStore = ipic && store('Cartier', IPIC_BLOCK);
+  const cartierEntry = cartierStore && storeEdge(ipic, cartierStore);
+  const cartierWidth = 20;
   if (ipic && store('IPIC Theaters', IPIC_BLOCK)) for (const edge of facadeEdges(ipic)) {
-    if (edge.facing === 'west') add('ipic', ipic, edge, 0, edge.length, true);
+    const corner = cartierEntry?.edge.b;
+    if (corner && edge.index === cartierEntry.edge.index) {
+      add('ipic-upper', ipic, edge, 0, edge.length - cartierWidth, false);
+      add('cartier', ipic, edge, edge.length - cartierWidth, edge.length, true, { corner });
+    } else if (corner && edge.a === corner) {
+      add('cartier', ipic, edge, 0, cartierWidth, true, { corner });
+      add('ipic', ipic, edge, cartierWidth, edge.length, true);
+    } else if (edge.facing === 'west') add('ipic', ipic, edge, 0, edge.length, true);
     else if (edge.facing !== 'east') add('ipic-upper', ipic, edge, 0, edge.length, false);
   }
   const bella = building(BELLA_BLOCK);
@@ -198,6 +207,8 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     slat: surface('wood-slat', { color: '#b29b7b', roughness: 0.72 }),
     teak: surface('screen-slat', { color: '#8d6c4d', roughness: 0.6 }),
     cream: keep(cladding({ color: '#e7dfcf', panel: [0.75, 0.375], bond: true, tone: 0.04, joint: 0.86 }), 'cream-tile'),
+    cartierStone: keep(cladding({ color: '#ded5c3', panel: [0.8, 0.32], bond: true, tone: 0.16, joint: 0.96, roughness: 0.65 }), 'cartier-limestone'),
+    cartierCanvas: surface('cartier-canvas', { color: '#e7e2d8', roughness: 0.96 }),
     band: surface('metal-band', { color: '#dcddd9', roughness: 0.42, metalness: 0.3 }),
     ribbon: glazing('ribbon-glass', { color: '#7f979c', roughness: 0.04, metalness: 0.7, envMapIntensity: 2.2 }),
     louver: surface('louver', { color: '#38393b', roughness: 0.55, metalness: 0.35 }),
@@ -338,7 +349,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
       { kind: 'jeweller', s0: vca - 8.1, s1: vca + 8.1, name: named('Van Cleef & Arpels') },
       { kind: 'dark', s0: vca + 9.3, s1: vca + 22.3 },
       { kind: 'plain', s0: vca + 23.5, s1: W - 1.6 },
-    ].filter(item => item.s1 - item.s0 > 3);
+    ].map(item => ({ ...item, s1: Math.min(item.s1, W - 1.6) })).filter(item => item.s1 - item.s0 > 3);
     const blade = cinema + 6.5;
     // Piers fill every gap between shopfront modules, full podium height.
     let last = -0.25;
@@ -461,6 +472,37 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     theatreBox(f, W);
   }
 
+  // June 2024 Cartier corner: tall cream canvas shades over three bronze
+  // display/entry bays, dark stone surrounds and small-course limestone.
+  // Heights are photo estimates; the doorway stays at its mapped along-edge s.
+  function cartier(f, W, doors) {
+    const door = doors.find(item => item.store.name === 'Cartier')?.s;
+    const center = door ?? W / 2, centers = [center - 6.0, center, center + 6.0];
+    const bays = centers.map((s, i) => [s - (i === 1 ? 2.1 : 1.5), s + (i === 1 ? 2.1 : 1.5)]);
+    blocks.wall(f, m.cartierStone, -0.12, W + 0.12, 0, 11.8, -0.05, 0.48,
+      bays.map(([a, b]) => [a - 0.22, b + 0.22, 0, 9.8]));
+    box(f, m.cartierStone, -0.18, W + 0.18, 11.8, 12.0, -0.05, 0.6);
+    box(f, m.bronze, -0.2, W + 0.2, 12.0, 12.1, 0.0, 0.66);
+    const logo = (s, h, width, height, d) => sign(lettering('Cartier', {
+      width, height, family: '"Snell Roundhand", "Apple Chancery", "Brush Script MT", cursive',
+      weight: 500, color: '#eee9de', metalness: 0.35, roughness: 0.5,
+    }), f, s, h, d, width, height);
+    for (const [a, b] of bays) {
+      for (const [lo, hi] of [[a - 0.22, a], [b, b + 0.22]]) box(f, m.granite, lo, hi, 0, 9.8, 0.1, 0.51);
+      box(f, m.granite, a - 0.22, b + 0.22, 9.58, 9.8, 0.1, 0.51);
+      sheet(f, m.bronze, a, b, 4.25, 9.58, 0.15);
+      storefront(f, a, b, 3.65, { doors: door === undefined ? [] : [door], mullion: m.bronze,
+        pitch: b - a, transom: 3.2, d: 0.13, depth: 0.12 });
+      box(f, m.bronze, a, b, 3.65, 4.25, 0.08, 0.28);
+      logo((a + b) / 2, 3.94, Math.min(1.8, b - a - 0.3), 0.42, 0.29);
+      // A tall sloping canvas, shallow enough to stay above the door landing.
+      const h0 = 4.4, h1 = 9.4, projection = 0.85, length = Math.hypot(h1 - h0, projection);
+      box(f, m.cartierCanvas, a + 0.06, b - 0.06, (h0 + h1) / 2 - length / 2,
+        (h0 + h1) / 2 + length / 2, 0.52, 0.56, -Math.atan2(projection, h1 - h0));
+    }
+    if (door === undefined) logo(W / 2, 10.85, 4.2, 0.85, 0.49);
+  }
+
   // Bella Rinova: cream tile below a salon ribbon window and a pale metal band
   // carrying the name; a slatted stair screen and blue-striped awnings at grade.
   function ribbon(f, W, { name = false, at = W / 2 } = {}) {
@@ -473,7 +515,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     box(f, m.band, -0.45, W + 0.45, 8.5, 10.4, -0.05, 0.45);
     for (let i = 1; i < Math.round(W / 2.4); i++) { const s = i * W / Math.round(W / 2.4); box(f, m.louver, s - 0.012, s + 0.012, 8.52, 10.38, 0.44, 0.455); }
     box(f, m.aluminium, -0.5, W + 0.5, 10.4, 10.62, -0.05, 0.55);
-    if (name) sign(lettering('Bella Rinova salon', { width: 10.5, height: 1.0, family: '"Trajan Pro", Optima, Baskerville, Georgia, serif', weight: 600, color: '#1c1d1f', spacing: 0.06, smallCaps: true }), f, at, 9.45, 0.46, 10.5, 1.0);
+    if (name) sign(lettering('BELLA RINOVA SALON', { width: 10.5, height: 1.0, family: '"Trajan Pro", Optima, Baskerville, Georgia, serif', weight: 600, color: '#1c1d1f', spacing: 0.06, smallCaps: true }), f, at, 9.45, 0.46, 10.5, 1.0);
   }
   const tile = (f, s0, s1, h0 = 0, h1 = 5.5) => box(f, m.cream, s0, s1, h0, h1, -0.12, 0.08);
   function awningWindow(f, s0, s1) {
@@ -485,12 +527,14 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     box(f, m.awning, s0, s1, 3.95 - drop * 2 - 0.22, 3.95 - drop * 2, edge - 0.015, edge + 0.015);
   }
   function louvredBay(f, s0, s1) {
-    box(f, m.aluminium, s0 - 0.08, s1 + 0.08, 4.95, 5.05, -0.05, 0.12);
-    for (const s of [s0, s1]) box(f, m.aluminium, s - 0.08, s + 0.08, 0, 5.05, -0.05, 0.12);
-    sheet(f, m.louver, s0, s1, 0, 4.95, 0.0);
-    for (let h = 2.7; h < 4.85; h += 0.21) box(f, m.charcoal, s0, s1, h, h + 0.05, 0.02, 0.14, -0.35);
+    // Jan 2025 reference: glass below a recessed charcoal spandrel, with a
+    // short louvre bank in its upper half, rather than a solid service door.
+    storefront(f, s0, s1, 2.7, { mullion: m.charcoal, pitch: 1.5, transom: 2.7, d: 0.09, depth: 0.08 });
+    box(f, m.louver, s0, s1, 2.7, 4.95, -0.02, 0.08);
+    for (let h = 3.5; h < 4.3; h += 0.14) box(f, m.charcoal, s0, s1, h, h + 0.055, 0.08, 0.2, -0.25);
   }
-  function stairScreen(f, s0, s1, depth = 0.75, top = 9.0) {
+
+  function stairScreen(f, s0, s1, depth = 0.75, top = 6.2) {
     sheet(f, m.charcoal, s0, s1, 0.3, 5.5, 0.13);
     for (let h = 0.45; h < top - 0.1; h += 0.28) {
       box(f, m.slat, s0, s1, h, h + 0.11, depth - 0.06, depth);
@@ -516,9 +560,19 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     ribbon(f, W, { name: true, at: Math.max(6, door - 7.5) });
   }
   function bellaEast(f, W) {
-    tile(f, -0.12, 1.0); awningWindow(f, 1.0, 3.8); tile(f, 3.8, 4.4); awningWindow(f, 4.4, 7.2); tile(f, 7.2, 8.6);
-    storefront(f, 8.6, W - 0.6, 4.4, { mullion: m.charcoal, pitch: 1.6, transom: 3.4, d: 0.09, depth: 0.08 });
-    tile(f, 8.6, W - 0.6, 4.4, 5.5); tile(f, W - 0.6, W + 0.12);
+    // Repeated limestone piers and dark louvred shop bays turn the corner.
+    // The supplied view has no striped awnings on this street-facing wall.
+    const count = Math.max(1, Math.round(W / 4.1)), pitch = W / count;
+    let last = -0.12;
+    for (let i = 0; i < count; i++) {
+      const s0 = i * pitch + 0.55, s1 = (i + 1) * pitch - 0.55;
+      tile(f, last, s0); louvredBay(f, s0, s1); tile(f, s0, s1, 4.95, 5.5);
+      const center = s0 - 0.28;
+      box(f, m.charcoal, center - 0.11, center + 0.11, 2.15, 2.35, 0.08, 0.16);
+      box(f, m.lamp, center - 0.085, center + 0.085, 2.19, 2.31, 0.16, 0.17);
+      last = s1;
+    }
+    tile(f, last, W + 0.12);
     ribbon(f, W, { name: true });
   }
   function bellaUpper(f, W) { ribbon(f, W); }
@@ -528,6 +582,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     for (const frontage of plan.frontages) {
       const { kind } = frontage, f = frames.get(frontage), width = frontage.hi - frontage.lo, doors = doorsOn(frontage, f);
       if (kind === 'hermes' || kind === 'hermes-side') hermesFace(frontage, f, doors.map(item => item.s));
+      else if (kind === 'cartier') cartier(f, width, doors);
       else if (kind === 'ipic') ipicWest(f, width, doors);
       else if (kind === 'ipic-upper') ipicUpper(f, width);
       else if (kind === 'bella-north') bellaNorth(f, width, doors.map(item => item.s));

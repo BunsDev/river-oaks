@@ -1,3 +1,4 @@
+import { treeSupports } from './tree-placements.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { createWalkingEnvironment } from './walking.js';
 
@@ -21,7 +22,7 @@ export function createResidentNavigation(world,{allowRoads=false,placedObjects=[
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;
   if(width<2 || height<2 || size>80000) return null;
   const environment=createWalkingEnvironment(world), trunks=new Map(), wideTrunks=[], pedestrian=createPedestrianNetwork(world);
-  for(const support of world.vegetation?.branch_supports ?? []) {
+  for(const support of treeSupports(world)) {
     const [x,y]=support.position,radius=0.4+Math.max(0.065,(support.height_m ?? 20)*0.014);
     if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(radius))continue;
     const stem=[x,y,radius*radius],left=Math.floor((x-radius)/4),right=Math.floor((x+radius)/4);

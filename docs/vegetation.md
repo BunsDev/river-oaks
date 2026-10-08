@@ -55,3 +55,16 @@ npm run test:trees:webgl
 ```
 
 Tests cover additive traversal, incomplete data, budgets, class/quality filtering, missing ground, vertical-offset invariance, runtime frame checks, hash/accounting and spatial batch coverage. Browser checks cover actual foliage, conversations, source disclosure, UHD resolution and resources across scene changes. These checks do not establish current botanical accuracy or target-hardware UE5 performance.
+
+## Street View placement corrections, October 2026
+
+`preview/src/tree-placements.js` selects three photo-aligned stems along
+Hopdoddy's south frontage in place of four older inferred supports. The user's
+June 2024 Street View screenshot (`2026-10-08 at 12.48.26.png`) shows two smaller
+trees along the shops and a larger corner tree. The authored local coordinates
+are placement estimates against the mapped frontage, not surveyed measurements.
+The original canopy voxels, source records and independent comparison remain
+unchanged. Rendering, tree pits, resident/companion navigation, NPC flight and
+vehicle parking share the selector. The smaller crowns retain an authored 2.1 m
+radius; their existing oak assets do not reproduce the pictured multi-stem species.
+This does not add player trunk collision to the existing movement contract.
