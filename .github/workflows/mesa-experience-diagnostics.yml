@@ -27,12 +27,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Default Xvfb screen
-        env:
-          RIVER_OAKS_E2E_REPORT: mesa-default.json
-        run: |
-          xvfb-run -a npm run test:experience -- photo-mode rail-navigation || echo "default screen exit $?"
-          mkdir -p output/mesa-default && mv output/playwright/experience-*-failure.png output/mesa-default/ 2>/dev/null || true
       - name: Render probe variants
         run: xvfb-run -a node preview/e2e/mesa-probe.mjs || echo "probe exit $?"
       - name: Diagnostics

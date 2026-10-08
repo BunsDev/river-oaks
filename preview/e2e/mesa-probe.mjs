@@ -1,16 +1,18 @@
 // Temporary Mesa diagnostic for fix/mesa-experience-journeys; removed before merge.
-// Loads the experience fixture under CPU rendering in several variants and counts
-// the distinct colours in each screenshot, to find what makes the scene uniform.
+// The owner's (Jevica's) view renders as one flat colour under CPU rendering while
+// alice's renders normally. Each variant patches one suspect module in flight and
+// counts the distinct colours in a HUD-free screenshot.
 import { chromium } from 'playwright';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 
 process.env.VITE_SHARED_SOFTWARE_RENDERING = '1';
 const variants = [
-  { name: 'owner-plain', identity: 'owner', query: '' },
-  { name: 'owner-motion-debug', identity: 'owner', query: '?motion-debug=1' },
-  { name: 'alice-motion-debug', identity: 'alice', query: '?motion-debug=1' },
-  { name: 'owner-walked', identity: 'owner', query: '?motion-debug=1', walk: true },
+  { name: 'owner-baseline', patches: [] },
+  { name: 'owner-no-bloom', patches: [['/src/render-pipeline.js', 'composer.addPass(bloom);', '']] },
+  { name: 'owner-no-glow', patches: [['/src/jevica-costume.js', 'hand.add(glow);', '']] },
+  { name: 'owner-flat-normals', patches: [['/src/main.js', 'new THREE.MeshNormalMaterial()', 'new THREE.MeshNormalMaterial({ flatShading: true })']] },
+  { name: 'alice-baseline', identity: 'alice', patches: [] },
 ];
 await mkdir('output/mesa-probe', { recursive: true });
 const browser = await chromium.launch({ headless: false, args: ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] });
@@ -26,26 +28,26 @@ const colours = async (page, buffer) => page.evaluate(async data => {
 for (const variant of variants) {
   const fixture = await startBrowserFixture();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  await context.addCookies([{ name: 'fixture_session', value: variant.identity, url: fixture.origin }]);
+  await context.addCookies([{ name: 'fixture_session', value: variant.identity ?? 'owner', url: fixture.origin }]);
+  const applied = [];
+  for (const [path, from, to] of variant.patches) {
+    await context.route(url => new URL(url).pathname === path, async route => {
+      const response = await route.fetch(), body = await response.text();
+      applied.push({ path, found: body.includes(from) });
+      await route.fulfill({ response, body: body.replace(from, to) });
+    });
+  }
   const page = await context.newPage(); page.setDefaultTimeout(90000);
   try {
-    await page.goto(`${fixture.origin}/${variant.query}`);
+    await page.goto(`${fixture.origin}/?motion-debug=1`);
     await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
     await page.waitForTimeout(6000);
-    if (variant.walk) { await page.locator('#canvas-host').focus(); await page.keyboard.down('KeyW'); await page.waitForTimeout(3000); await page.keyboard.up('KeyW'); await page.waitForTimeout(3000); }
+    await page.evaluate(() => { for (const node of document.querySelectorAll('#walking-hud,.visit-tools,.commands-toggle,#control-panel')) node.style.visibility = 'hidden'; });
+    await page.waitForTimeout(2500);
     const shot = await page.screenshot({ path: `output/mesa-probe/${variant.name}.png` });
-    // The canvas alone, without HUD panels, from a 2D copy taken right after a draw.
-    const state = await page.evaluate(() => {
-      const host = document.querySelector('#canvas-host'), hud = document.querySelector('#walking-hud');
-      return { renderStats: host.dataset.renderStats, pipeline: host.dataset.pipeline, position: hud?.dataset.position, yaw: hud?.dataset.yaw,
-        eyeHeight: hud?.dataset.eyeHeight, inside: hud?.dataset.inside, title: document.querySelector('.walking-title strong')?.textContent,
-        clearColor: getComputedStyle(document.body).backgroundColor };
-    });
-    const hudless = await page.evaluate(() => { document.body.classList.add('clear-view'); for (const node of document.querySelectorAll('#walking-hud,.visit-tools,.commands-toggle,#control-panel,.rail-toggle')) node.style.visibility = 'hidden'; });
-    await page.waitForTimeout(1500);
-    const bare = await page.screenshot({ path: `output/mesa-probe/${variant.name}-bare.png` });
-    report.push({ ...variant, colours: await colours(page, shot), bareColours: await colours(page, bare), state, hudless });
-  } catch (error) { report.push({ ...variant, error: error.message }); }
+    const renderStats = await page.evaluate(() => document.querySelector('#canvas-host').dataset.renderStats);
+    report.push({ name: variant.name, applied, colours: await colours(page, shot), renderStats });
+  } catch (error) { report.push({ name: variant.name, applied, error: error.message }); }
   finally { await context.close(); await fixture.close(); }
 }
 await browser.close();
