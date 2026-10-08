@@ -255,10 +255,12 @@
         "run",
         "test:experience",
         "--",
-        "contextual-first-visit"
+        "contextual-first-visit",
+        "photo-mode",
+        "rail-navigation"
       ],
       "browser": true,
-      "timeoutMs": 600000
+      "timeoutMs": 1200000
     }
   ]
 }

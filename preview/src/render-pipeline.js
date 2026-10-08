@@ -46,7 +46,7 @@ export function composeFrame(render) {
 
 // Visit only visible branches so new props and room visibility changes apply
 // immediately; excluded groups and hidden rooms prune their entire subtree.
-export function createRenderPipeline(renderer, scene, camera, { samples = 4 } = {}) {
+export function createRenderPipeline(renderer, scene, camera, { samples = 4, bloom: bloomEnabled = true } = {}) {
   const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(samples, renderer.capabilities.maxSamples) });
   const composer = new EffectComposer(renderer, target);
   const render = new RenderPass(scene, camera);
@@ -93,6 +93,7 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4 } = 
     }
   };
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.055, 0.2, 2.0);
+  bloom.enabled = bloomEnabled;
   const output = new OutputPass();
   composer.addPass(render); composer.addPass(occlusion); composer.addPass(bloom); composer.addPass(output);
   let size = { width: 1, height: 1, pixelRatio: 1 }, renderScale = 1, sized = false;
@@ -117,7 +118,7 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4 } = 
       renderScale = next; applySize();
     },
     setOcclusion(enabled) { occlusion.enabled = enabled; },
-    get stats() { return { samples: target.samples, ao: occlusion.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
+    get stats() { return { samples: target.samples, ao: occlusion.enabled, bloom: bloom.enabled, renderScale, aoScale: aoResolutionScale(size.width * size.pixelRatio * renderScale, size.height * size.pixelRatio * renderScale), transmissionScale:renderer.transmissionResolutionScale }; },
     render(delta) { if(sized)composeFrame(() => composer.render(delta)); },
     dispose() { occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
   };
