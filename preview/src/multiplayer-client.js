@@ -4,6 +4,7 @@ import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './w
 import { createSocialUI } from './social-ui.js';
 import { createGroupsUI } from './groups-ui.js';
 import { accountName } from './resident-names.js';
+import { travelRefusal } from './travel-message.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
@@ -228,7 +229,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
-      try{const result=await command({type:'travel',...target});if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=result.message;return result;}
+      // Refusals carry a code; the town notice never shows it bare (travel-message.js).
+      try{const result=await command({type:'travel',...target});if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=travelRefusal(result,{blocked:'That spot is blocked. Try a nearby path or open space.',cooldown:'Wait a moment before travelling again.',fallback:'That place is not reachable right now.'});return result;}
       catch(error){notice.textContent=error.message;return {ok:false,message:error.message};}
       finally{traveling=false;}
     },

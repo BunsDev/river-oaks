@@ -3,9 +3,19 @@ async page => {
   const check = (condition, message) => { if (!condition) throw new Error(message); checks.push(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
+  // In the shared town the server confirms each arrival and conversation, refuses a
+  // second travel within one second, and a closed dialogue fades out.
+  const position = () => page.locator('#walking-hud').getAttribute('data-position');
+  const movedFrom = from => page.waitForFunction(from => document.querySelector('#walking-hud').dataset.position !== from, from, { timeout: 15000 }).then(() => true, () => false);
+  const opened = () => page.locator('#community-dialogue').waitFor({ state: 'visible', timeout: 15000 }).then(() => true, () => false);
+  const close = async () => { await page.locator('#community-close').click(); await page.locator('#community-dialogue').waitFor({ state: 'hidden', timeout: 10000 }); };
+  let lastTravel = 0;
+  const travel = async action => { await page.waitForTimeout(Math.max(0, 1100 - (Date.now() - lastTravel))); await action(); lastTravel = Date.now(); };
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
+  // The loading overlay can be hidden before loading starts; wait for the player.
+  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:120000});
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
@@ -24,14 +34,14 @@ async page => {
   const diningCount = await page.locator('#destination option').count();
   check(diningCount > 1 && diningCount < 30, 'Category filter narrows destinations');
   const first = await page.locator('#destination').inputValue();
-  await page.locator('#visit-destination').click();
-  await page.waitForTimeout(200);
-  const firstPosition = await page.locator('#walking-hud').getAttribute('data-position');
-  await page.locator('#store-next').click();
-  await page.waitForTimeout(200);
+  const startPosition = await position();
+  await travel(() => page.locator('#visit-destination').click());
+  check(await movedFrom(startPosition), 'Visiting a dining destination moves the visitor');
+  const firstPosition = await position();
+  await travel(() => page.locator('#store-next').click());
   check(await page.locator('#destination').inputValue() !== first, 'Next stop advances filtered selection');
-  check(await page.locator('#walking-hud').getAttribute('data-position') !== firstPosition, 'Next stop actually moves the visitor');
-  await page.locator('#store-previous').click();
+  check(await movedFrom(firstPosition), 'Next stop actually moves the visitor');
+  await travel(() => page.locator('#store-previous').click());
   check(await page.locator('#destination').inputValue() === first, 'Previous stop returns to original selection');
   check(await page.locator('#walking-movement').isHidden(), 'Desktop HUD starts with the movement pad collapsed');
   // Open More actions only when it is shown and closed: the HUD moves actions between
@@ -49,9 +59,14 @@ async page => {
     await page.locator('#community-scenario').selectOption(option);
     check(Number(await page.locator('#community-objective').getAttribute('max')) > 0, `${option} community example updates its target`);
   }
-  await page.locator('#community-next-request').click();
-  check(await page.locator('#community-dialogue').isVisible(), 'Open-request shortcut starts a conversation');
-  await page.locator('#community-close').click();
+  // The shortcut finds a request with no volunteer yet. The shared town dispatches
+  // volunteers itself, so there may be none; then the shortcut is unavailable.
+  const nextRequest = page.locator('#community-next-request');
+  if (await nextRequest.isEnabled()) {
+    await travel(() => nextRequest.click());
+    check(await opened(), 'Open-request shortcut starts a conversation');
+    await close();
+  } else check(true, 'No unassigned open request: the open-request shortcut is unavailable');
   await page.locator('[data-section=settings-section]').click();
   await page.locator('[data-atmosphere=mist]').click();
   check(await page.locator('#weather').inputValue() === 'haze', 'Mist preset changes actual weather');
@@ -64,7 +79,7 @@ async page => {
   check(!await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), 'Mobile panel has no horizontal overflow');
   await page.locator('#store-clear').click();
   await page.locator('#destination').selectOption({ label: 'Dior' });
-  await page.locator('#visit-destination').click();
+  await travel(() => page.locator('#visit-destination').click());
   await page.locator('#panel-toggle').click();
   await page.locator('#walking-controls-toggle').click();
   check(await page.locator('#walking-movement').isVisible(), 'Mobile toggle reveals the movement pad');
