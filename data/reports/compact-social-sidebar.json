@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-09T12:50:26.820Z",
+  "createdAt": "2026-10-09T13:06:08.510Z",
   "results": [
     {
       "name": "compact-social-sidebar",
       "status": "passed",
-      "seconds": 6.995,
+      "seconds": 8.021,
       "result": {
         "passed": true,
         "emptyHistory": true,

@@ -1,0 +1,209 @@
+/* In-game panels as smoked glass, loaded last: one translucent sheet per surface
+   (Explore rail, Play dock, walking console), borderless tiles inside, and keycap
+   glyphs wherever a shortcut exists. The world stays visible behind every panel;
+   opacity and backdrop tone keep text at 4.5:1 or better over bright and dark
+   scenes. Reduced transparency, or no backdrop blur, makes the glass near opaque. */
+:root {
+  /* "SFMono-Regular" alone fell back to Courier on macOS; name the system faces. */
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --hud-glass: rgb(251 250 246 / .8);
+  --hud-filter: blur(24px) saturate(1.3) brightness(1.16);
+  --hud-tile: rgb(24 36 30 / .05);
+  --hud-tile-hover: rgb(24 36 30 / .09);
+  --hud-raised: rgb(255 255 255 / .92);
+  --hud-hairline: rgb(24 36 30 / .11);
+  --hud-highlight: rgb(255 255 255 / .8);
+  --hud-shadow: 0 1px 2px rgb(16 28 22 / .07), 0 12px 32px rgb(16 28 22 / .13), 0 32px 72px rgb(16 28 22 / .1);
+  --hud-muted: #4c534f;
+  --hud-key-bg: rgb(255 255 255 / .75);
+  --hud-key-edge: rgb(24 36 30 / .2);
+  --hud-action: #2c7466;
+  --hud-on-action: #f4fbf8;
+  --hud-focus: #1f5f53;
+  --hud-sheet-radius: 20px;
+  --hud-tile-radius: 12px;
+  --hud-control-radius: 9px;
+}
+:root[data-theme=dark] {
+  --hud-glass: rgb(15 21 19 / .76);
+  --hud-filter: blur(24px) saturate(1.5) brightness(.78);
+  --hud-tile: rgb(255 255 255 / .055);
+  --hud-tile-hover: rgb(255 255 255 / .1);
+  --hud-raised: rgb(255 255 255 / .13);
+  --hud-hairline: rgb(255 255 255 / .1);
+  --hud-highlight: rgb(255 255 255 / .09);
+  --hud-shadow: 0 1px 2px rgb(0 0 0 / .2), 0 12px 32px rgb(0 0 0 / .24), 0 32px 72px rgb(0 0 0 / .2);
+  --hud-muted: #bac3bb;
+  --hud-key-bg: rgb(255 255 255 / .1);
+  --hud-key-edge: rgb(255 255 255 / .24);
+  --hud-action: #3f8f7f;
+  --hud-on-action: #f4fbf8;
+  --hud-focus: #a8ecd6;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --hud-glass: rgb(251 250 246 / .97); --hud-filter: none; }
+  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .97); }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --hud-glass: rgb(251 250 246 / .96); }
+  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .96); }
+}
+
+/* The material: one rule for every floating sheet. */
+:root[data-theme] :is(#control-panel, .visit-tools[open], .visit-tools:not([open]) > .visit-tools-toggle, #walking-hud .walking-console, .panel-trigger, .commands-toggle) {
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: var(--hud-filter);
+  backdrop-filter: var(--hud-filter);
+  border: 1px solid var(--hud-hairline);
+  box-shadow: inset 0 1px 0 var(--hud-highlight), var(--hud-shadow);
+  color: var(--ink);
+}
+
+/* Only the sheets blur. A control with its own backdrop filter inside a sheet
+   frosts a second, lighter patch (legacy HUD buttons did this). */
+:root[data-theme] :is(#control-panel, .visit-tools[open], #walking-hud .walking-console) :is(button, select, input, textarea, summary, section, details) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* One focus ring for every control on the glass, clear in either theme. */
+:root[data-theme] :is(#control-panel, .visit-tools, #walking-hud) :focus-visible,
+:root[data-theme] :is(.panel-trigger, .commands-toggle):focus-visible {
+  outline: 2px solid var(--hud-focus);
+  outline-offset: 2px;
+}
+
+/* Keycaps: the same glyph for every shortcut in the HUD. */
+:root[data-theme] :is(.panel-trigger .rail-key-hint, .visit-tools-toggle .rail-key-hint, .commands-toggle kbd) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--hud-key-edge);
+  border-radius: 6px;
+  background: var(--hud-key-bg);
+  box-shadow: inset 0 -1px 0 var(--hud-key-edge);
+  color: var(--ink);
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0;
+  opacity: 1;
+}
+/* Separate rule: an ID inside the :is() list above would raise every keycap's
+   specificity and defeat the touch and narrow-screen hiding below. */
+:root[data-theme] #walking-hud .walking-console button kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--hud-key-edge);
+  border-radius: 6px;
+  background: var(--hud-key-bg);
+  box-shadow: inset 0 -1px 0 var(--hud-key-edge);
+  color: var(--ink);
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0;
+  opacity: 1;
+}
+
+/* Explore rail */
+:root[data-theme] #control-panel { border-radius: var(--hud-sheet-radius); overflow: hidden; }
+:root[data-theme] #control-panel .identity { padding: 18px 20px 10px; background: transparent; border: 0; }
+:root[data-theme] #control-panel .identity .eyebrow { font: 500 10px/1.4 var(--font-mono); letter-spacing: .14em; color: var(--hud-muted); }
+:root[data-theme] #control-panel .identity h1 { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 2px; font: 400 23px/1.15 var(--font-display); letter-spacing: -.4px; }
+:root[data-theme] #control-panel .identity .district-word { font: 600 9.5px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--hud-muted); }
+:root[data-theme] #control-panel .identity .preview-label { margin: 0; font-size: 12px; color: var(--hud-muted); }
+:root[data-theme] #control-panel .access-tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 12px; background: transparent; border: 0; }
+:root[data-theme] #control-panel .access-tools button { min-height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 500; line-height: 1; box-shadow: none; }
+:root[data-theme] #control-panel .access-tools button:hover { background: var(--hud-tile-hover); }
+:root[data-theme] #control-panel .access-tools button[hidden] { display: none; }
+:root[data-theme] #control-panel .experience-nav { margin: 0 14px 6px; padding: 4px; gap: 2px; border: 0; border-radius: var(--hud-tile-radius); background: var(--hud-tile); }
+:root[data-theme] #control-panel .experience-nav button { min-height: 36px; padding: 0 6px; border: 0; border-radius: var(--hud-control-radius); background: transparent; color: var(--hud-muted); font-size: 12.5px; font-weight: 600; line-height: 1; }
+:root[data-theme] #control-panel .experience-nav button:hover { background: var(--hud-tile-hover); color: var(--ink); }
+:root[data-theme] #control-panel .experience-nav button[aria-selected=true] { background: var(--hud-raised); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .12), inset 0 1px 0 var(--hud-highlight); }
+:root[data-theme] #control-panel .experience-nav button[aria-selected=true]::before { box-shadow: 0 0 0 3px color-mix(in srgb, var(--section-color) 28%, transparent); }
+:root[data-theme] #control-panel .panel-scroll { background: transparent; }
+:root[data-theme] #control-panel .panel-footer { min-height: 42px; background: transparent; border-top: 1px solid var(--hud-hairline); color: var(--hud-muted); font-size: 11px; }
+:root[data-theme] #control-panel :is(select, textarea, input:not([type]), input[type=text], input[type=search], input[type=email]) { border: 1px solid var(--hud-hairline); border-radius: 10px; background: var(--hud-tile); color: var(--ink); box-shadow: none; }
+/* Tiles replace cards inside the sheet: no nested borders or shadows. */
+:root[data-theme] #control-panel :is(.multiplayer-roster, .wish-journal, .world-portal, .world-events) { border: 0; border-radius: var(--hud-tile-radius); background: var(--hud-tile); box-shadow: none; }
+:root[data-theme] #control-panel .community-primary { border: 0; border-radius: 10px; box-shadow: inset 0 1px 0 rgb(255 255 255 / .25); }
+:root[data-theme] #control-panel .experience-nav button:focus-visible,
+:root[data-theme] #control-panel .access-tools button:focus-visible { outline: 2px solid var(--section-color, var(--accent)); outline-offset: 2px; }
+
+/* Explore / close trigger and Commands: glass keycap buttons. */
+:root[data-theme] .panel-trigger { border-radius: 14px; }
+:root[data-theme] .commands-toggle { border-radius: 14px; font-size: 12px; font-weight: 600; }
+
+/* Play dock: one sheet when open; its header is a quiet row inside it. */
+:root[data-theme] .visit-tools[open] { padding: 6px; border-radius: var(--hud-sheet-radius); }
+:root[data-theme] .visit-tools > .visit-tools-toggle { border-radius: 16px; font-size: 12.5px; font-weight: 600; }
+:root[data-theme] .visit-tools[open] > .visit-tools-toggle { min-height: 40px; padding: 0 10px; border: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-theme] .visit-tools .play-rail-shell { margin-top: 2px; gap: 6px; }
+:root[data-theme] .visit-tools .play-rail-nav { padding: 4px; gap: 2px; border: 0; border-radius: var(--hud-tile-radius); background: var(--hud-tile); }
+:root[data-theme] .visit-tools .play-rail-nav button { min-height: 32px; padding: 0 8px; border: 0; border-radius: var(--hud-control-radius); color: var(--hud-muted); font-size: 12px; font-weight: 600; line-height: 1; }
+:root[data-theme] .visit-tools .play-rail-nav button:hover { background: var(--hud-tile-hover); color: var(--ink); }
+:root[data-theme] .visit-tools .play-rail-context { padding: 2px 8px; background: transparent; color: var(--hud-muted); font-size: 11.5px; }
+:root[data-theme] .visit-tools .visit-tools-content { gap: 6px; padding: 0; }
+:root[data-theme] .visit-tools .visit-tools-content > :is(section, details) { border: 0; border-radius: 14px; background: var(--hud-tile); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-theme] .visit-tools .photo-tools { padding: 10px 14px 12px; }
+:root[data-theme] .visit-tools .photo-tools .photo-open { align-items: center; min-height: 32px; padding: 0; border: 0; background: transparent; box-shadow: none; color: var(--ink); font-size: 13px; font-weight: 600; }
+:root[data-theme] .visit-tools .photo-tools p { margin: 0; color: var(--hud-muted); opacity: 1; }
+
+/* Walking console: a compact capsule with one emphasized, keycapped prompt. */
+:root[data-theme] #walking-hud .walking-console { padding: 8px; border-radius: 20px; }
+:root[data-theme] #walking-hud .walking-primary > button {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 46px; border: 0; border-radius: 14px;
+  background: var(--hud-action); color: var(--hud-on-action);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), 0 6px 18px rgb(0 0 0 / .18);
+  font-size: 14px; font-weight: 600; line-height: 1.2;
+}
+:root[data-theme] #walking-hud .walking-other-actions > button {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  border: 0; border-radius: 12px; background: var(--hud-tile); color: var(--ink);
+  font-size: 12.5px; font-weight: 500; line-height: 1.2;
+}
+:root[data-theme] #walking-hud .walking-other-actions > button:hover:not(:disabled) { background: var(--hud-tile-hover); }
+/* The key reads first, as in games; in the DOM it follows the label. */
+:root[data-theme] #walking-hud .walking-console button kbd { order: -1; }
+:root[data-theme] #walking-hud .walking-primary > button kbd { border-color: rgb(255 255 255 / .35); background: rgb(255 255 255 / .16); box-shadow: inset 0 -1px 0 rgb(0 0 0 / .18); color: var(--hud-on-action); }
+:root[data-theme] #walking-hud .walking-more > summary { color: var(--hud-muted); font-size: 12px; }
+:root[data-theme] #walking-hud #walking-place { color: var(--hud-muted); font-size: 11px; }
+:root[data-theme] #walking-hud #walking-controls-toggle { border: 0; background: transparent; color: var(--hud-muted); font-size: 11px; }
+:root[data-theme] #walking-hud #walking-controls-toggle:hover { color: var(--ink); }
+:root[data-theme] #walking-hud .walking-notice { border-radius: 12px; background: var(--hud-tile); color: var(--ink); }
+
+/* With a mouse the idle console stays short: its quiet rows sit close together. */
+@media (pointer: fine) {
+  :root[data-theme] #walking-hud .walking-more { margin-top: 0; }
+  :root[data-theme] #walking-hud .walking-more > summary { min-height: 30px; padding-block: 4px; }
+  :root[data-theme] #walking-hud #walking-place { margin: 2px 0 0; line-height: 1.5; }
+  :root[data-theme] #walking-hud #walking-controls-toggle { min-height: 26px; margin: 0; padding: 2px 8px; }
+}
+
+/* People in town: the name on its own line, actions as compact pills below. */
+:root[data-theme] #control-panel .multiplayer-person { gap: 6px; margin: 0; padding: 10px 0; border-top: 1px solid var(--hud-hairline); }
+:root[data-theme] #control-panel .multiplayer-person:first-child { border-top: 0; }
+:root[data-theme] #control-panel .multiplayer-person .multiplayer-person-name { flex: 1 1 100%; font-size: 13px; font-weight: 600; }
+:root[data-theme] #control-panel .multiplayer-person button { min-height: 28px; padding: 0 11px; border: 0; border-radius: 999px; background: var(--hud-raised); color: var(--ink); font-size: 11.5px; font-weight: 500; line-height: 1; box-shadow: none; }
+:root[data-theme] #control-panel .multiplayer-person button:hover { background: var(--hud-tile-hover); }
+/* Town chat: a compact composer with the send action as a pill. */
+:root[data-theme] #control-panel .multiplayer-chat-form { align-items: center; }
+:root[data-theme] #control-panel .multiplayer-chat-form input { min-height: 36px; padding: 0 12px; font-size: 13px; }
+:root[data-theme] #control-panel .multiplayer-chat-form button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--hud-action); color: var(--hud-on-action); font-size: 12.5px; font-weight: 600; line-height: 1; box-shadow: none; }
+:root[data-theme] #control-panel .multiplayer-chat-form button:disabled { background: var(--hud-tile); color: var(--hud-muted); }
+
+/* Touch keeps 44px targets throughout, and keyboard keycaps are hidden. */
+@media (pointer: coarse) {
+  :root[data-theme] :is(#control-panel .experience-nav button, #control-panel .access-tools button, #control-panel .multiplayer-person button, #control-panel .multiplayer-chat-form :is(input, button), .visit-tools .play-rail-nav button, .visit-tools .photo-tools .photo-open, #walking-hud .walking-more > summary, #walking-hud #walking-controls-toggle) { min-height: 44px; }
+  :root[data-theme] #walking-hud .walking-console button kbd { display: none; }
+}
+@media (pointer: coarse), (max-width: 700px) {
+  :root[data-theme] :is(.panel-trigger .rail-key-hint, .visit-tools-toggle .rail-key-hint, .commands-toggle kbd) { display: none; }
+}

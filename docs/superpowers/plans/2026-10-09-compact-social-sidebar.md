@@ -36,3 +36,8 @@ Isolated delivery verification (2026-10-09):
 - Focused browser journey: passed (7.0s); receipt refreshed from this worktree.
 - `git diff --check`: passed.
 Next: commit, push, and merge the isolated branch after hosted checks.
+
+Main integration: PR #194 (ab914a6) landed during CI. Merged its glass-panel
+changes without conflicts; reran `npm run verify` (all 11 tasks passed) and the
+focused browser journey (passed), and inspected the combined dark card screenshot.
+Hosted checks must pass on the updated branch before PR #196 can merge.

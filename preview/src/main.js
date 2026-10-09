@@ -64,6 +64,8 @@ import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
 import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
+// Panel material last, so it applies over the earlier interface layers.
+import './hud-glass.css';
 
 setupUIMotion();
 setupThemeControls();
