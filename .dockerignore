@@ -12,6 +12,9 @@
 !preview/**
 !server/
 !server/**
+!src/
+!src/river_oaks/
+!src/river_oaks/chauffeur-policy.json
 !Dockerfile
 !.dockerignore
 **/node_modules

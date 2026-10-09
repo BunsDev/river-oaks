@@ -50,3 +50,18 @@ Script argument contract: https://github.com/pnpm/pnpm.io/blob/main/docs/cli/run
 Earlier task ledgers retain focused Redis and two-client route receipts. Hosted
 required checks remain the merge gate. Container build, live auth, production,
 native runtime, human accessibility and pixel-perfect scenery remain unclaimed.
+
+## Rebase and container follow-up
+
+Rebased cleanly onto 9c31050 after the landing mockup and glass panels merged.
+`pnpm run verify` and the 11-assertion intro journey passed again on that base.
+`docker build -t river-oaks-pnpm-check:20261009 .` exposed the omitted chauffeur
+policy JSON; included that exact build/runtime input. The image now builds, and
+`docker run --rm --network none --entrypoint node ...` successfully imports
+`server/chauffeur.js` and `server/town.js` with production dependencies.
+
+The first hosted preview run passed install/audit/unit/Redis/build checks but its
+security journey attempted the sidebar while the connection modal blocked input.
+The harness now requires the real roster's connected state and a non-inert app
+before clicking, and reports safe gate state on failure. Local security browser
+rerun: 2 passed, zero skipped. Hosted rerun remains pending; no auth gate bypass.

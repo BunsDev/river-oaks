@@ -132,8 +132,11 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
     assert.equal(invitations.invites.length, 2);
-    // The access gate hides before main.js initializes the sidebar. Wait for
-    // its real state, then open it while the scene can still be initializing.
+    // Admission and town connection are separate gates. Do not attempt a
+    // sidebar action while the connection dialog still makes the app inert.
+    await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached' });
+    await page.locator('.multiplayer-gate').waitFor({ state: 'hidden' });
+    await page.locator('.app-shell:not([inert])').waitFor({ state: 'visible' });
     await page.locator('#panel-toggle[aria-keyshortcuts]').waitFor({ state: 'visible' });
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
     await page.locator('#access-invites-open').click();
@@ -150,6 +153,12 @@ test('email access: browser verification, invitation, member controls and revoca
     await page.waitForFunction(() => document.querySelector('#access-message').textContent.includes('has not been approved'));
     assert.equal(await page.locator('#access-invite-form').isVisible(), false);
   } catch (error) {
+    console.error('Access gate state:', await page.evaluate(() => ({
+      connectionMessage: document.querySelector('#multiplayer-status')?.textContent,
+      connectionHidden: document.querySelector('.multiplayer-gate')?.hidden,
+      appInert: document.querySelector('.app-shell')?.inert,
+      playerReady: document.querySelector('#canvas-host')?.dataset.playerReady,
+    })).catch(() => ({ unavailable: true })));
     await mkdir('output/playwright', { recursive: true });
     await page.screenshot({ path: 'output/playwright/security-access-failure.png', timeout: 5000 }).catch(() => {});
     throw error;

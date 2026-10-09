@@ -7,6 +7,7 @@ RUN pnpm install --frozen-lockfile
 COPY preview ./preview
 # vite.config.js loads the shared-town dev plugin from server/.
 COPY server ./server
+COPY src/river_oaks/chauffeur-policy.json ./src/river_oaks/chauffeur-policy.json
 COPY scripts ./scripts
 COPY landing-page ./landing-page
 RUN pnpm run build
@@ -21,6 +22,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/preview/src ./preview/src
 COPY --from=build /app/preview/public/data ./preview/public/data
 COPY server ./server
+COPY --from=build /app/src/river_oaks/chauffeur-policy.json ./src/river_oaks/chauffeur-policy.json
 RUN mkdir -p /app/.runtime && chown node:node /app/.runtime
 USER node
 EXPOSE 8787
