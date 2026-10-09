@@ -11,7 +11,7 @@ inference and speech. Read `docs/data.md` and the relevant bridge/feature doc.
   fences. Local physics/schedule constraints remain authoritative over inference.
 - Tests use synthetic geometry and mocked transports. Do not call paid providers,
   acquire live GIS, or fetch optional speech weights during unit verification.
-- From root run `npm run verify -- python` or a focused `uv run --locked pytest`
+- From root run `pnpm run verify python` or a focused `uv run --locked pytest`
   command while iterating. Python tests live in `tests/` at the repository root.
 
 See root AGENTS.md and `docs/testing.md`.

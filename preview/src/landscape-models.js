@@ -174,3 +174,49 @@ export function buildPlanterPlanting(planters) {
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   return group;
 }
+
+// Reuses the shipped CC0 ground-cover models; no new asset acquisition. Each
+// instance follows the same ground support as feet, rather than flattening the DEM.
+export function buildReferenceBedPlanting(bed, world) {
+  const group=new THREE.Group();group.name='Harry Winston reference planting';let disposed=false;
+  group.userData.cancelLandscapeLoad=()=>{disposed=true;};
+  // Lance-shaped foliage supplies the dense grass/purple ground-cover layer
+  // visible in REF-HW-01. Authored geometry, not a claim of identified species.
+  const leafPositions=[],leafIndices=[];
+  for(let row=0;row<=8;row++) {
+    const t=row/8,w=Math.sin(t*Math.PI)*.045;
+    leafPositions.push(-w,t*.4,t*t*.16,w,t*.4,t*t*.16);
+    if(row<8){const a=row*2;leafIndices.push(a,a+1,a+2,a+1,a+3,a+2);}
+  }
+  const leafGeometry=new THREE.BufferGeometry();leafGeometry.setAttribute('position',new THREE.Float32BufferAttribute(leafPositions,3));leafGeometry.setIndex(leafIndices);leafGeometry.computeVertexNormals();
+  const leafMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.85,side:THREE.DoubleSide});
+  const leaves=new THREE.InstancedMesh(leafGeometry,leafMaterial,bed.groundcover.length*36),leaf=new THREE.Object3D();
+  bed.groundcover.forEach(({position:[x,n],kind},i)=>{
+    for(let j=0;j<36;j++) {
+      const angle=j*2.399963+i,spread=.04+(j%6)*.036,px=x+Math.cos(angle)*spread,pn=n+Math.sin(angle)*spread;
+      leaf.position.set(px,groundSurfaceHeight(world,px,-pn)+.03,-pn);leaf.rotation.set((j%3)*.18,angle,0);leaf.scale.set(kind==='purple'?1.5:.75,kind==='purple'?.65:1+(j%4)*.08,1.4);leaf.updateMatrix();
+      leaves.setMatrixAt(i*36+j,leaf.matrix);leaves.setColorAt(i*36+j,new THREE.Color().setHSL(kind==='purple'?.76:.24,kind==='purple'?.22:.34,.18+(j%5)*.025));
+    }
+  });leaves.castShadow=leaves.receiveShadow=true;leaves.computeBoundingSphere();group.add(leaves);
+  // Dense low foliage volume beneath the scanned leaf-and-twig detail.
+  const fillGeometry=new THREE.IcosahedronGeometry(1,2),fillMaterial=new THREE.MeshStandardMaterial({color:'#344a28',roughness:1});
+  const fills=new THREE.InstancedMesh(fillGeometry,fillMaterial,bed.shrubs.length),volume=new THREE.Object3D();
+  bed.shrubs.forEach(({position:[x,n],scale},i)=>{
+    volume.position.set(x,groundSurfaceHeight(world,x,-n)+.28,-n);volume.scale.set(scale[0]*.48,.27,scale[2]*.48);volume.updateMatrix();fills.setMatrixAt(i,volume.matrix);
+  });fills.castShadow=fills.receiveShadow=true;group.add(fills);
+  group.userData.ready=Promise.all([template('boxwood-source'),template('fountain-grass-source')]).then(([shrub,grass])=>{
+    if(disposed)return;
+    for(const kind of ['shrub','grass','purple']) {
+      const source=normalizedParts(kind==='shrub'?shrub:grass,kind==='shrub'?0:2);
+      if(kind==='purple'){source.material.color.set('#66516f');source.material.emissive.set('#211528');source.material.emissiveIntensity=.05;}
+      const records=[...bed.shrubs,...bed.groundcover].filter(item=>item.kind===kind).flatMap(record =>
+        Array.from({length:kind==='shrub'?5:3},(_,i)=>({...record,position:[record.position[0]+Math.cos(i*2.4)*.13,record.position[1]+Math.sin(i*2.4)*.13]})));
+      const mesh=new THREE.InstancedMesh(source.geometry,source.material,records.length),dummy=new THREE.Object3D();
+      records.forEach(({position:[x,n],scale},i)=>{
+        dummy.position.set(x,groundSurfaceHeight(world,x,-n)+.055,-n);dummy.rotation.set(0,i*2.399963,0);dummy.scale.fromArray(scale);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+      });
+      mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();group.add(mesh);
+    }
+  }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
+  return group;
+}

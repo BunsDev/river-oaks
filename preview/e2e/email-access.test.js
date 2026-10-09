@@ -58,6 +58,27 @@ test('email access: browser verification, invitation, member controls and revoca
       await page.goto(`${origin}/play`);
       await page.locator('#access-email').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#access-invite-redeem').isDisabled(), true);
+      assert.equal(await page.evaluate(() => {
+        const luminance = value => {
+          const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => {
+            v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+          });
+          return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+        };
+        return ['#access-email', '#access-invite-code'].every(selector => {
+          const style = getComputedStyle(document.querySelector(selector));
+          const border = luminance(style.borderTopColor), fill = luminance(style.backgroundColor);
+          return (Math.max(border, fill) + .05) / (Math.min(border, fill) + .05) >= 3;
+        });
+      }), true, 'input boundaries remain distinguishable against dark fields');
+      await page.locator('.access-github').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('#access-email').evaluate(node => node === document.activeElement), true);
+      assert.equal(await page.locator('#access-email').evaluate(node => {
+        const style = getComputedStyle(node);
+        return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
+      }), true, 'keyboard focus is visible on the email field');
+
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
         const brand=document.querySelector('.access-brand').getBoundingClientRect();
@@ -65,6 +86,16 @@ test('email access: browser verification, invitation, member controls and revoca
         const footer=document.querySelector('.access-footer').getBoundingClientRect();
         return brand.bottom<=panel.top && panel.bottom<=footer.top;
       }), true, 'the login panel never overlaps its brand or footer on short screens');
+      await page.evaluate(() => document.fonts.ready);
+      if (width <= 700) {
+        assert.equal(await page.locator('.access-scene-copy').isVisible(), false, 'compact scene keeps copy clear of the heading');
+        await page.locator('#access-invite-redeem').scrollIntoViewIfNeeded();
+        assert.equal(await page.locator('#access-invite-redeem').evaluate(element => {
+          const rect = element.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= innerHeight;
+        }), true, 'the invitation action remains reachable on short screens');
+        await page.locator('.access-brand').scrollIntoViewIfNeeded();
+      }
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }

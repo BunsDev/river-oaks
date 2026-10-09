@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { physicalSurface } from './materials.js';
+import { harryWinstonFacade } from './harry-winston-facade.js';
 import { blockFacades, planBlocks } from './reference-blocks.js';
 
 // District buildings rebuilt from street-level photographs (Street View,
@@ -66,6 +67,13 @@ export function referencePlan(world) {
       add('hermes-side', hermes, side, side.a === corner ? 0 : side.length - sideWidth, side.a === corner ? sideWidth : side.length, true, { corner, width: sideWidth });
       plan.roofs.set(HERMES_BLOCK, PODIUM[HERMES_BLOCK]);
     }
+  }
+  const harry = hermes && store('Harry Winston', HERMES_BLOCK), harryEntry = harry && storeEdge(hermes, harry);
+  if (harryEntry) {
+    const { edge, along } = harryEntry;
+    const lo = Math.max(0, Math.floor((along - 10) / edge.span) * edge.span);
+    const hi = Math.min(edge.length, Math.ceil((along + 10) / edge.span) * edge.span);
+    add('harry-winston', hermes, edge, lo, hi, true);
   }
   const ipic = building(IPIC_BLOCK), cartierStore = ipic && store('Cartier', IPIC_BLOCK);
   const cartierEntry = cartierStore && storeEdge(ipic, cartierStore);
@@ -254,6 +262,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     for (const h of new Set([h0, transom, h1])) if (h <= h1) box(f, mullion, s0, s1, h - 0.04, h + 0.04, d, d + depth);
   }
   const windowRow = (f, s0, s1, h0, h1, mullion, pitch) => storefront(f, s0, s1, h1, { h0, transom: h1, mullion, pitch, lower: m.shopGlass, d: 0.13, depth: 0.1 });
+  const harryWinston = harryWinstonFacade({ m, keep, surface, sign, box, sheet, lettering, cladding, group, geometries });
   const blocks = blockFacades({ m, keep, surface, glazing, sign, box, sheet, storefront, lettering, cladding });
 
   // The Hermès faces measure from their shared corner; the rest read left to
@@ -582,6 +591,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     for (const frontage of plan.frontages) {
       const { kind } = frontage, f = frames.get(frontage), width = frontage.hi - frontage.lo, doors = doorsOn(frontage, f);
       if (kind === 'hermes' || kind === 'hermes-side') hermesFace(frontage, f, doors.map(item => item.s));
+      else if (kind === 'harry-winston') harryWinston(f, width, doors);
       else if (kind === 'cartier') cartier(f, width, doors);
       else if (kind === 'ipic') ipicWest(f, width, doors);
       else if (kind === 'ipic-upper') ipicUpper(f, width);

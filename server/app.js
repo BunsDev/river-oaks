@@ -183,7 +183,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
-        const result=await profileAction({action:pathname.slice('/api/profile/'.length),identity,profiles,social,readBody:()=>body(req),
+        const result=await profileAction({action:pathname.slice('/api/profile/'.length),identity,worldId,profiles,social,readBody:()=>body(req),
           visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? snapshot().players.find(player=>player.id===peerId) : null,
           allowWrite:id=>socialWrites(id)});

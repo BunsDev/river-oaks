@@ -2,6 +2,7 @@ async page => {
   const origin = 'http://127.0.0.1:5173', routes = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.context().route('**/v1/**', route => route.fulfill({ status: 503, json: {} }));
+  await page.context().addCookies([{ name: 'fixture_session', value: 'alice', url: origin }]);
   const peerContext = await page.context().browser().newContext();
   await peerContext.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
   await peerContext.route('**/v1/**', route => route.fulfill({ status: 503, json: {} }));
@@ -12,6 +13,13 @@ async page => {
     const samples = [], started = Date.now(); let held = [];
     try {
       while (Date.now() - started < 15000) {
+        // First-arrival presentation is covered by store-intro.js. Resume this
+        // collision journey through its real Skip button if it appears mid-walk.
+        if (await page.locator('.store-intro').isVisible()) {
+          for (const key of held) await page.keyboard.up(key);
+          held = [];
+          await page.locator('.store-intro button').click();
+        }
         const pose = await page.evaluate(() => window.__riverCarriage().pose);
         samples.push({ ms: Date.now() - started, position: pose.position, yaw: pose.yaw, speed: pose.speed });
         const dx = target[0] - pose.position[0], dz = -target[1] - pose.position[2];
@@ -48,7 +56,7 @@ async page => {
     await page.goto(`${origin}/?motion-debug=1`); await ready(page);
     await peer.goto(`${origin}/?motion-debug=1`); await ready(peer);
     const selfId = await page.evaluate(() => window.__riverMultiplayer().selfId);
-    for (const [index, name] of ['Hermès', 'Vince', 'Steak 48'].entries()) {
+    for (const [index, name] of ['Harry Winston', 'Hermès', 'Vince', 'Steak 48'].entries()) {
       if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
       await page.locator('[data-section=explore-section]').click();
       await page.locator('#destination').selectOption({ label: name });

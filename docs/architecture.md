@@ -7,8 +7,8 @@
 | Decision, speech, GIS and world exports | `src/river_oaks/`, `scripts/*.py`, `config/river-oaks.json` | `tests/`; [data contracts](data.md), [auto mode](auto-mode.md) |
 | Native world and contracts | `unreal/Source/RiverOaks/`, `unreal/Config/`, `unreal/Content/Python/` | native automation; [Unreal](unreal.md), [engine acceptance](engine-acceptance.md) |
 | Desktop lifecycle, packaging, IPC | `desktop/` | `desktop/tests/`, `desktop/e2e.js`; [desktop](desktop.md) |
-| Public landing page | `landing-page/`, `scripts/build_landing_page.js` | `npm run build`; [landing page](../landing-page/README.md) |
-| Tooling, checks and agent workflow | `scripts/agent.mjs`, `config/agent-workflow.json`, `.github/workflows/verify.yml` | `npm run test:agent`; [workflow](agent-workflow.md) |
+| Public landing page | `landing-page/`, `scripts/build_landing_page.js` | `pnpm run build`; [landing page](../landing-page/README.md) |
+| Tooling, checks and agent workflow | `scripts/agent.mjs`, `config/agent-workflow.json`, `.github/workflows/verify.yml` | `pnpm run test:agent`; [workflow](agent-workflow.md) |
 
 ## Runtime boundaries
 

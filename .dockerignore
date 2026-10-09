@@ -1,7 +1,13 @@
 # Only application build inputs enter the image context.
 **
 !package.json
-!package-lock.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc
+!scripts/
+!scripts/**
+!landing-page/
+!landing-page/**
 !preview/
 !preview/**
 !server/

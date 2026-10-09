@@ -1,5 +1,5 @@
 async page => {
-  // `npm run dev` with no WorkOS configuration: two browsers join one town as
+  // `pnpm run dev` with no WorkOS configuration: two browsers join one town as
   // local development identities and see each other.
   const checks=[];
   const check = (condition, message) => { if (!condition) throw new Error(message);checks.push(message); };

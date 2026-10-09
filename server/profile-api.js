@@ -1,11 +1,18 @@
 import { accountName } from '../preview/src/resident-names.js';
 
 /** A profile is readable through an in-world encounter or an accepted contact. */
-export async function profileAction({action,identity,profiles,social,readBody,visiblePlayer,allowWrite}) {
+export async function profileAction({action,identity,worldId,profiles,social,readBody,visiblePlayer,allowWrite}) {
   if(!profiles)return {status:503,value:{error:'Profiles are unavailable.'}};
-  if(!['view','save'].includes(action))return {status:404,value:{error:'Not found.'}};
+  if(!['view','save','claim-intro'].includes(action))return {status:404,value:{error:'Not found.'}};
   let data;
   try {data=await readBody();} catch {return {status:400,value:{error:'Invalid profile request.'}};}
+  if(action==='claim-intro') {
+    if(!data || typeof data!=='object' || Array.isArray(data) || Object.keys(data).some(key=>key!=='storeId')
+      || typeof data.storeId!=='string' || !data.storeId || data.storeId.length>160 || /[\u0000-\u001f\u007f]/.test(data.storeId))
+      return {status:400,value:{error:'Invalid store intro.'}};
+    if(!await allowWrite(identity.userId))return {status:429,value:{error:'Please wait before starting another intro.'}};
+    return {status:200,value:await profiles.claimStoreIntro(identity.userId,worldId,data.storeId)};
+  }
   if(action==='save') {
     if(!await allowWrite(identity.userId))return {status:429,value:{error:'Please wait before saving your profile again.'}};
     const result=await profiles.save(identity.userId,data);

@@ -104,7 +104,7 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-publish'?['world-publish']:mode==='creator'?['creator-objects']:['access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating']):mode==='development-world'?['world-boundary','world-map']:mode==='development-publish'?['world-publish']:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water'];
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();

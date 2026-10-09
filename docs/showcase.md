@@ -1,6 +1,6 @@
 # Interactive development showcase
 
-Start `uv run --extra voice river-oaks serve` and `npm run dev` in separate terminals, then open http://127.0.0.1:5173/. Both servers bind to loopback. The bundled shopping district is the only scene. It opens directly on foot, with nearby people and conversations as the main interaction. No neighborhood, aerial, orbit or flight view is available.
+Start `uv run --extra voice river-oaks serve` and `pnpm run dev` in separate terminals, then open http://127.0.0.1:5173/. Both servers bind to loopback. The bundled shopping district is the only scene. It opens directly on foot, with nearby people and conversations as the main interaction. No neighborhood, aerial, orbit or flight view is available.
 
 ## Walk, meet residents, and play a community scenario
 

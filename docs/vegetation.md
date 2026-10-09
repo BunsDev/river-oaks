@@ -49,9 +49,9 @@ uv run --extra voice python scripts/fetch_visual_assets.py
 uv run --extra voice pytest -q tests/test_lidar.py
 python scripts/fetch_landscape_assets.py
 python scripts/prepare_landscape_assets.py # legacy trees and current ground cover
-npm run assets:trees
+pnpm run assets:trees
 node --test preview/tests/vegetation.test.js preview/tests/landscape-models.test.js
-npm run test:trees:webgl
+pnpm run test:trees:webgl
 ```
 
 Tests cover additive traversal, incomplete data, budgets, class/quality filtering, missing ground, vertical-offset invariance, runtime frame checks, hash/accounting and spatial batch coverage. Browser checks cover actual foliage, conversations, source disclosure, UHD resolution and resources across scene changes. These checks do not establish current botanical accuracy or target-hardware UE5 performance.

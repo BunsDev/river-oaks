@@ -1,8 +1,8 @@
 # River Oaks District
 
 For coding agents: start with [AGENTS.md](AGENTS.md), the [repository map](docs/architecture.md),
-and the [setup and verification workflow](docs/agent-workflow.md). Run `npm run agent:doctor`
-for prerequisites and `npm run verify` for the core gate.
+and the [setup and verification workflow](docs/agent-workflow.md). Run `pnpm run agent:doctor`
+for prerequisites and `pnpm run verify` for the core gate.
 
 
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
@@ -18,7 +18,7 @@ the skills live in [`.agents/skills`](.agents/skills).
 
 ## Play in the desktop app
 
-Run `npm ci` then `npm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `npm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
+Run `pnpm install --frozen-lockfile` then `pnpm run desktop:dev` to open River Oaks in its dedicated desktop window with live reload. Use `pnpm run desktop:package` to build the desktop app; it requires online GitHub sign-in and waitlist approval, and opens the hosted game. Native fullscreen, window restoration, graphics preferences, and renderer recovery are included. See [desktop development and verification](docs/desktop.md).
 
 
 Jev's garage offers a compact pink four-wheel glass-canopy car and rose motorcycle, with
@@ -35,7 +35,7 @@ See [world events](docs/world-events.md).
 
 Players join the shared town after signing in with GitHub through WorkOS and receiving waitlist approval. Browser and desktop play require a town connection, even when only one player is online. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
 
-District geometry and visual assets are bundled; no GIS download is required. `npm run dev` starts the shared town alongside Vite. For optional Jev chauffeur, companion, and speech services, run the bridge in a separate terminal:
+District geometry and visual assets are bundled; no GIS download is required. `pnpm run dev` starts the shared town alongside Vite. For optional Jev chauffeur, companion, and speech services, run the bridge in a separate terminal:
 
 ```sh
 uv sync --locked
@@ -43,8 +43,8 @@ uv run river-oaks serve
 ```
 
 ```sh
-npm ci
-npm run dev
+pnpm install --frozen-lockfile
+pnpm run dev
 ```
 
 Open **http://127.0.0.1:5173/**. The walkable River Oaks District at 4444 Westheimer uses bundled OpenStreetMap geometry, 30 storefront destinations, and 98 indoor staff and guest encounters. Streets show connected players and Jevica's companion/chauffeur. The server owns residents, wishes, scenarios, and shared resources.
@@ -146,8 +146,8 @@ A 60 fps frame is 16.67 ms. A 300 ms network classification cannot finish in tha
 uv run ruff check .
 uv run ruff format --check .
 uv run pytest -q
-npm test
-npm run build
+pnpm test
+pnpm run build
 python3 scripts/check_secrets.py --all
 gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
 ```
@@ -157,8 +157,8 @@ The installed Git hook scans the **staged index**, blocks credential filenames e
 Tests target observable failure modes: missing ArcGIS pages, coordinate/containment corruption, mismatched canopy placement, malformed Jev answers, bounded timeouts, overloaded HTTP requests, schedule preservation, and real secret-guard rejection in temporary Git repositories. They do not substitute for Unreal compilation, visual inspection, privacy review, or GPU profiling. [Testing approach](docs/testing.md)
 
 For multiplayer capacity evidence, see the [performance audit](docs/multiplayer-performance-audit.md).
-`npm run audit:multiplayer` probes local simulation and transport;
-`npm run audit:multiplayer:render` measures a real hardware browser with up to
+`pnpm run audit:multiplayer` probes local simulation and transport;
+`pnpm run audit:multiplayer:render` measures a real hardware browser with up to
 32 synthetic connected players. Local results do not establish global readiness.
 
 ## Work without downloads

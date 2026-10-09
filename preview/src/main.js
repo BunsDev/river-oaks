@@ -1,3 +1,4 @@
+import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
 import { buildDesignatedSidewalks } from './sidewalks.js';
@@ -74,6 +75,7 @@ let sidebarSections, playDock, clearView, photoMode;
 setupRailNavigation({ sidebar, getSections: () => sidebarSections, getDock: () => playDock, getClearView: () => clearView, getPhotoMode: () => photoMode });
 const $ = (selector) => document.querySelector(selector);
 const host = $('#canvas-host');
+let storeIntros;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Shared browser acceptance on CPU-only runners still draws the real scene,
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
@@ -179,6 +181,10 @@ function initializeRenderer() {
   void worldEvents.load();
   sidebarSections = setupSidebarSections({ graphics: quality.element });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
+  storeIntros = createStoreIntros({ camera, host,
+    claim: storeId => multiplayer.claimStoreIntro(storeId),
+    onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
+  });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
@@ -346,6 +352,7 @@ function buildGround(data) {
 
 
 function populateWorld(data) {
+  storeIntros?.reset();
   walking?.exit();
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
@@ -624,7 +631,14 @@ function render(now) {
   }
   updateStoreLights();
   // Riding a bird pauses walking; the bird drives the camera below.
-  if (photoMode?.active || birdCams?.riding) walking?.halt();
+  const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
+  const introRoom = self && multiplayer?.connected && world
+    ? storeRoomsFor(world).find(room => room.category !== 'home' && room.contains(self.position[0], self.position[1], .2)) : null;
+  storeIntros?.observe({ room: introRoom, accountId: multiplayer?.identity?.id,
+    worldId: worldIdFromSearch(location.search),
+    canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
+  });
+  if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   if (multiplayer?.connected) birdCams?.update(delta);
@@ -632,6 +646,7 @@ function render(now) {
   seatingControls?.update(now);
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   photoMode?.update();
+  storeIntros?.update(now);
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();

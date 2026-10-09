@@ -75,9 +75,9 @@ collection or ignores invite revocation during moderation.
 Run with an isolated local Redis database:
 
 ```sh
-REDIS_URL=redis://127.0.0.1:16389 npm run test:server
-npm test
-npm run build
+REDIS_URL=redis://127.0.0.1:16389 pnpm run test:server
+pnpm test
+pnpm run build
 ```
 
 Tests exercise the real WorkOS SDK against a local signed-token fixture and real

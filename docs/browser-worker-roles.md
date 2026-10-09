@@ -18,7 +18,7 @@ turn when she is standing on foot. Closing dialogue releases attention and
 returns manual walking control.
 
 ```sh
-npm run dev -- --host 127.0.0.1 --port 5181 --strictPort
+pnpm run dev --host 127.0.0.1 --port 5181 --strictPort
 ```
 
 ## Role and task index

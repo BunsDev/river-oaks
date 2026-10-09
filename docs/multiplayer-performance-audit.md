@@ -22,7 +22,7 @@ unverified.
 
 ## Repeatable measurements
 
-Run `REDIS_URL=redis://127.0.0.1:<test-port> npm run audit:multiplayer`
+Run `REDIS_URL=redis://127.0.0.1:<test-port> pnpm run audit:multiplayer`
 against an isolated test Redis instance to regenerate
 [`data/reports/multiplayer-performance-audit.json`](../data/reports/multiplayer-performance-audit.json).
 The probe uses the shipped district and vegetation, Node 24.18.1 on an Apple M3
@@ -260,7 +260,7 @@ cost remain unmeasured. See [events](world-events.md) for limits and semantics.
 
 ## Rendered crowd follow-up — 5 October 2026
 
-`npm run audit:multiplayer:render` now exercises the real district in a hardware
+`pnpm run audit:multiplayer:render` now exercises the real district in a hardware
 Chromium browser with 1, 8, 16 and 32 authenticated **synthetic** guest accounts.
 One browser renders the scene; the other accounts are real WebSocket transport
 actors using mixed shipped humanoid looks, bounded movement and periodic waves.
@@ -339,10 +339,10 @@ group or calendar UI polls; add that traffic to the hosted soak.
 ### Reproduce and remaining gates
 
 ```sh
-npm ci
-npx playwright install chromium
-npm run audit:multiplayer:render
-npm run audit:multiplayer:render -- --players=32 --seconds=30 --warmup=20 \
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+pnpm run audit:multiplayer:render
+pnpm run audit:multiplayer:render --players=32 --seconds=30 --warmup=20 \
   --quality=auto --output=data/reports/rendered-multiplayer-auto-audit.json
 ```
 
@@ -414,7 +414,7 @@ accessory and batching modules as well as the original audit sources. To repeat
 on a chosen revision (use a distinct output path for each):
 
 ```sh
-npm run audit:multiplayer:render -- --players=1,32 --seconds=15 --warmup=10 \
+pnpm run audit:multiplayer:render --players=1,32 --seconds=15 --warmup=10 \
   --output=data/reports/crowded-avatar-batched.json
 ```
 

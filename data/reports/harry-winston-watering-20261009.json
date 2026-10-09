@@ -1,0 +1,43 @@
+{
+  "createdAt": "2026-10-09T12:25:09.362Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "sit-and-water",
+      "status": "passed",
+      "seconds": 32.611,
+      "result": {
+        "checks": [
+          "The town lists storefront benches as seats",
+          "Arrived beside bench:osm-node-8172494989:0",
+          "Contextual Sit seats Alice on a free storefront bench",
+          "Beside a bench, the seats panel lists it and Z offers to sit",
+          "Contextual Sit sits on a place on that bench",
+          "The HUD says the player is sitting",
+          "The town records the seat, through the shared seating model",
+          "Arrived beside bench:osm-node-8172494989:1",
+          "Another player sees them seated on that place",
+          "and facing the way the bench faces",
+          "Bob can still sit beside her",
+          "A held place is never offered; Bob takes the one beside it",
+          "Standing up is the single primary contextual action while seated",
+          "Contextual Stand stands up, for everyone",
+          "Bob stands up too",
+          "Arrived beside planter:osm-node-8172494989:0",
+          "Beside a planter, the Z prompt offers to water it",
+          "Arrived beside planter:osm-node-8172494989:1",
+          "Another player sees them turn to the planter and pour from a watering can ({\"seen\":5.329311705409103,\"toward\":-0.7853981633975945})",
+          "The watering animation ends by itself",
+          "No outdoor NPCs are rendered on multiplayer benches",
+          "No page errors: "
+        ]
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

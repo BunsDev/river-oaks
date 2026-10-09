@@ -9,9 +9,9 @@ behavior. `src/` uses plain JavaScript ESM, Three.js, and CSS; match nearby modu
   commands, movement contracts, account appearance or permissions.
 - Preserve existing input, focus recovery, reduced motion and responsive behavior.
   Browser automation is not human accessibility acceptance.
-- Inspect `tests/` for the matching risk. Run `npm test` and `npm run build` from
-  the root; use `npm run test:experience -- <journey>` for browser changes and
-  `npm run test:shared` for shared changes. Runners own their fixture servers.
+- Inspect `tests/` for the matching risk. Run `pnpm test` and `pnpm run build` from
+  the root; use `pnpm run test:experience <journey>` for browser changes and
+  `pnpm run test:shared` for shared changes. Runners own their fixture servers.
 - Public assets need provenance and license receipts. Do not regenerate or
   download models/textures just to satisfy a source-only change.
 

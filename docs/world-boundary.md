@@ -46,7 +46,7 @@ The bundled district still needs an explicit migration before replacement.
 A missing or altered region package fails room load
 instead of substituting River Oaks.
 
-Run `npm run test:server` with a test Redis instance and `npm run test:shared`
+Run `pnpm run test:server` with a test Redis instance and `pnpm run test:shared`
 for the isolated-room, publishing, and browser admission journeys. These tests
 cover local behavior, including a creator geography browser journey; they do
 not measure global latency.

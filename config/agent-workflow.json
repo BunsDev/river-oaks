@@ -78,7 +78,7 @@
     {
       "id": "agent-tests",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:agent"
       ]
@@ -86,14 +86,14 @@
     {
       "id": "preview-tests",
       "command": [
-        "npm",
+        "pnpm",
         "test"
       ]
     },
     {
       "id": "server-tests",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:server"
       ]
@@ -101,7 +101,7 @@
     {
       "id": "server-redis-tests",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:server"
       ],
@@ -112,7 +112,7 @@
     {
       "id": "desktop-tests",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:desktop"
       ]
@@ -120,7 +120,7 @@
     {
       "id": "build",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "build"
       ]
@@ -215,7 +215,7 @@
     {
       "id": "reflections",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:reflections:webgl"
       ],
@@ -224,7 +224,7 @@
     {
       "id": "shared",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:shared"
       ],
@@ -234,7 +234,7 @@
     {
       "id": "dependency-audit",
       "command": [
-        "npm",
+        "pnpm",
         "audit",
         "--audit-level=moderate"
       ]
@@ -242,7 +242,7 @@
     {
       "id": "security-browser",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:security:e2e"
       ],
@@ -251,10 +251,9 @@
     {
       "id": "experience",
       "command": [
-        "npm",
+        "pnpm",
         "run",
         "test:experience",
-        "--",
         "contextual-first-visit",
         "photo-mode",
         "rail-navigation"

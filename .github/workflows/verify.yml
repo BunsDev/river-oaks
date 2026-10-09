@@ -40,14 +40,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Audit locked JavaScript dependencies
-        run: npm audit --audit-level=moderate
-      - run: npm run verify -- tooling
+        run: pnpm audit --audit-level=moderate
+      - run: pnpm run verify tooling
       - name: Agent tooling receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -56,13 +57,13 @@ jobs:
           retention-days: 7
           path: .runtime/agent/tooling.json
           include-hidden-files: true
-      - run: npm test
-      - run: npm run test:server
+      - run: pnpm test
+      - run: pnpm run test:server
         env:
           REDIS_URL: redis://127.0.0.1:6379
-      - run: npm run test:desktop
-      - run: npx playwright install --with-deps chromium
-      - run: npm run build
+      - run: pnpm run test:desktop
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
       - name: Email access and content security browser regressions
         id: security_browser
         # Use the same Mesa path as shared journeys instead of headless SwiftShader.
@@ -70,7 +71,7 @@ jobs:
           RIVER_OAKS_SECURITY_SOFTWARE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
-        run: xvfb-run -a npm run test:security:e2e
+        run: xvfb-run -a pnpm run test:security:e2e
       - name: Security browser failure evidence
         if: ${{ failure() && steps.security_browser.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -78,7 +79,7 @@ jobs:
           name: security-browser-failure
           retention-days: 7
           path: output/playwright/security-*-failure.png
-      - run: npm run test:reflections:webgl
+      - run: pnpm run test:reflections:webgl
       - name: Shared town journeys (local identities and authenticated fixtures)
         id: shared
         # Mesa under Xvfb avoids Chromium headless-shell's SwiftShader stalls.
@@ -87,7 +88,7 @@ jobs:
           RIVER_OAKS_SHARED_SOFTWARE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
-        run: xvfb-run -a npm run test:shared
+        run: xvfb-run -a pnpm run test:shared
       - name: Shared town failure evidence
         if: ${{ failure() && steps.shared.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -107,7 +108,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
           RIVER_OAKS_E2E_REPORT: ci-experience.json
-        run: xvfb-run -a npm run test:experience -- contextual-first-visit photo-mode rail-navigation
+        run: xvfb-run -a pnpm run test:experience contextual-first-visit photo-mode rail-navigation
       - name: Experience journey failure evidence
         if: ${{ failure() && steps.experience.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

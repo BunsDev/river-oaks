@@ -12,8 +12,8 @@ Read the scoped AGENTS.md in the subsystem you change.
    never copy `.env`, private `.runtime` state, or credentials into it.
 2. Read the owning module, its callers, tests, and linked subsystem docs before
    editing. Keep patches small; do not reformat large unrelated files.
-3. Run `npm run agent:doctor` after installing dependencies. Use
-   `npm run agent:list` for machine-readable verification profiles.
+3. Run `pnpm run agent:doctor` after installing dependencies. Use
+   `pnpm run agent:list` for machine-readable verification profiles.
 4. For multi-step work, create/update a task-specific ledger in
    `docs/superpowers/plans/`: objective, files owned, checks, results, gaps, next step.
    Historical reports are evidence of their recorded revision, not today's status.
@@ -24,8 +24,8 @@ Read the scoped AGENTS.md in the subsystem you change.
   framework migration to solve a local problem. Keep authority on the server.
 - Add a focused behavioral regression for changed behavior. Prefer real local
   transports and synthetic fixtures; avoid tests that merely match source text.
-- Run focused checks while iterating, then `npm run verify` for the core gate.
-  Run `npm run verify -- full` with an isolated Redis service and browser prerequisites
+- Run focused checks while iterating, then `pnpm run verify` for the core gate.
+  Run `pnpm run verify full` with an isolated Redis service and browser prerequisites
   for Redis, dependency audit, and browser coverage. The hosted CI matrix remains
   a separate merge gate. See the workflow for Linux rendering setup.
 - Core success excludes Redis, browser, native, live auth, and production acceptance.

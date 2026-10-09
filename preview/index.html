@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#e9ece5" />
+    <meta name="theme-color" content="#0c1015" />
     <title>TypeSafe Place — Your place in the town</title>
     <style>
       body:not(.access-granted) .app-shell { display: none !important; }
@@ -17,19 +17,34 @@
       <div class="access-layout">
       <aside class="access-scene" aria-label="About the district">
         <span class="access-kicker">A shared garden district</span>
-        <p class="access-scene-title">A little world.<br>A place for you.</p>
+        <p class="access-scene-title">A little world.<br><em>A place for you.</em></p>
         <p class="access-scene-copy">Wander the streets. Find your people.<br>Make a little magic along the way.</p>
         <svg class="access-district" viewBox="0 0 440 270" aria-hidden="true" focusable="false">
-          <ellipse cx="220" cy="170" rx="192" ry="72" fill="#507f80"/>
-          <ellipse cx="220" cy="170" rx="159" ry="53" fill="none" stroke="#b59a65" stroke-width="2"/>
-          <path d="M66 163h102l53 50h121" fill="none" stroke="#f7f7ee" stroke-width="13"/>
-          <path d="M148 118v62l72 25v-66z" fill="#d9e8df"/><path d="M220 139v66l83-36v-62z" fill="#a6c7be"/>
-          <path d="m136 117 88-40 92 29-96 41z" fill="#f7f7ee"/><path d="m145 116 78-33 82 23-85 34z" fill="#ecd4dc"/>
-          <path d="M161 133v39m19-32v39m20-32v39m36-44v43m22-51v43m22-52v42" stroke="#153f42" stroke-width="8"/>
-          <path d="M105 131v58m230-69v66m-72-4v52" stroke="#b59a65" stroke-width="5"/>
-          <ellipse cx="105" cy="124" rx="24" ry="33" fill="#d9e8df"/><ellipse cx="335" cy="111" rx="22" ry="29" fill="#d9e8df"/><ellipse cx="263" cy="183" rx="20" ry="26" fill="#d9e8df"/>
-          <path d="M366 119V74m-14 0h28" stroke="#b59a65" stroke-width="3"/><ellipse cx="366" cy="73" rx="17" ry="6" fill="#f7f7ee"/>
-          <circle cx="81" cy="62" r="5" fill="#ecd4dc"/><path d="M321 44v16m-8-8h16" stroke="#b59a65" stroke-width="2"/>
+          <defs>
+            <linearGradient id="entry-glass" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#f386a1" stop-opacity=".48"/><stop offset=".5" stop-color="#bac2cc" stop-opacity=".08"/><stop offset="1" stop-color="#9386d0" stop-opacity=".4"/>
+            </linearGradient>
+            <linearGradient id="entry-roof" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#f9d2dc" stop-opacity=".8"/><stop offset="1" stop-color="#f386a1" stop-opacity=".15"/>
+            </linearGradient>
+          </defs>
+          <g fill="none" stroke="#bac2cc" stroke-opacity=".18">
+            <ellipse cx="220" cy="180" rx="192" ry="64"/>
+            <ellipse cx="220" cy="180" rx="160" ry="48"/>
+            <path d="m51 164 177 64 166-67M91 139l178 65M142 120l176 64M115 205l171-78M169 224l175-79"/>
+          </g>
+          <path d="M66 173h102l53 40h121" fill="none" stroke="#9386d0" stroke-opacity=".7" stroke-width="2"/>
+          <g stroke="#d6dee8" stroke-opacity=".6" stroke-width="1">
+            <path d="M148 118v62l72 25v-66zM220 139v66l83-36v-62z" fill="url(#entry-glass)"/>
+            <path d="m136 117 88-40 92 29-96 41z" fill="url(#entry-roof)"/>
+            <path d="M161 133v39m19-32v39m20-32v39m36-44v43m22-51v43m22-52v42" fill="none"/>
+          </g>
+          <g stroke="#69d3c6" stroke-opacity=".65" fill="url(#entry-glass)">
+            <path d="M105 131v58m230-69v66m-72-4v52"/>
+            <ellipse cx="105" cy="124" rx="24" ry="33"/><ellipse cx="335" cy="111" rx="22" ry="29"/><ellipse cx="263" cy="183" rx="20" ry="26"/>
+          </g>
+          <path d="M366 119V74m-14 0h28" stroke="#f386a1"/>
+          <ellipse cx="366" cy="73" rx="17" ry="6" fill="url(#entry-roof)" stroke="#f386a1"/>
         </svg>
         <span class="access-scene-caption">River Oaks · Houston, reimagined</span>
       </aside>

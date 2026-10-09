@@ -6,43 +6,45 @@ the repository root and use existing suites without external account credentials
 
 ## Bootstrap
 
-Use Node >=22.12 (CI: Node 24), Python >=3.11 (CI: 3.11/3.13), uv, Git and Gitleaks.
+Use pnpm 10.34.5 (the only supported JavaScript package manager), Node >=22.12 (CI: Node 24), Python >=3.11 (CI: 3.11/3.13), uv, Git and Gitleaks.
 
 ```sh
-npm ci
+corepack enable
+corepack prepare pnpm@10.34.5 --activate
+pnpm install --frozen-lockfile
 uv sync --locked
 sh scripts/install-hooks.sh
-npm run agent:doctor
-npm run agent:list
+pnpm run agent:doctor
+pnpm run agent:list
 ```
 
 Install Gitleaks before committing; the guard fails closed without it. Bootstrap
 downloads locked dependencies. Browser installation is separate and explicit:
-`npx playwright install chromium` (Linux CI uses `--with-deps`). Optional voice,
+`pnpm exec playwright install chromium` (Linux CI uses `--with-deps`). Optional voice,
 GIS, native assets and provider keys are not required for the core gate.
 
 Do not load/copy `.env` into test sessions. Use the existing fixture runners for
-approved test identities. Normal `npm run dev` follows the actual access gate;
+approved test identities. Normal `pnpm run dev` follows the actual access gate;
 it is not an unattended test fixture.
 
 ## Choose a gate
 
 | Command | Scope |
 | --- | --- |
-| `npm run verify -- tooling` | Agent runner failure/timeout/prerequisite regressions and catalog consistency |
-| `npm run verify -- preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
-| `npm run verify -- web` | Agent, preview, server, desktop unit tests; production web/landing build |
-| `npm run verify -- python` | Ruff, Python tests, offline synthetic pipeline |
-| `npm run verify` | Web + Python + worktree secret guard; default `core` |
-| `npm run verify -- security` | Worktree and full local Git-history secret scan |
-| `npm run verify -- browser` | Build, security browser regressions, WebGL reflection, contextual action/photo/command journeys and all shared-town journeys |
-| `npm run verify -- full` | Core + mandatory Redis server tests + npm dependency audit + history scan + browser journeys |
+| `pnpm run verify tooling` | Agent runner failure/timeout/prerequisite regressions and catalog consistency |
+| `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
+| `pnpm run verify web` | Agent, preview, server, desktop unit tests; production web/landing build |
+| `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
+| `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
+| `pnpm run verify security` | Worktree and full local Git-history secret scan |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, contextual action/photo/command journeys and all shared-town journeys |
+| `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
-`npm run agent:doctor -- full` prints JSON prerequisite diagnostics, exits 2 when
+`pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when
 something is missing, and does not start services/install packages or read env
 files. It checks presence, not service health or dependency freshness. The actual
 suite proves connectivity and behavior. `agent:list` prints the task catalog. For JSON-only output, use
-`npm run --silent agent:list` or `npm run --silent agent:doctor`.
+`pnpm run --silent agent:list` or `pnpm run --silent agent:doctor`.
 
 For full verification, start a disposable Redis service separately and set
 `REDIS_URL` to that isolated test service in the invoking environment. Never point
@@ -54,7 +56,7 @@ On Linux, use the same CPU browser setup as CI:
 ```sh
 RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 RIVER_OAKS_EXPERIENCE_SOFTWARE=1 \
   LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 \
-  xvfb-run -a npm run verify -- browser
+  xvfb-run -a pnpm run verify browser
 ```
 
 The shared runner uses temporary identities and owned servers; CPU rendering
@@ -62,8 +64,8 @@ proves fixture behavior, not visual quality. On macOS, run the browser profile
 directly. Browser tasks have longer deadlines and require functioning WebGL2.
 
 For a changed browser interaction, also run its named journey, for example:
-`npm run test:experience -- hud-and-quality`. Desktop changes may require
-`npm run test:desktop:e2e`. Native changes require the build and automation
+`pnpm run test:experience hud-and-quality`. Desktop changes may require
+`pnpm run test:desktop:e2e`. Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
 `full`, which covers the listed local runtime checks. The hosted Python-version matrix and
@@ -101,3 +103,5 @@ results, and remaining work. Review `git diff --check`, `git diff --stat`, and t
 actual diff. Verify before any commit. Deliver a handoff with branch/worktree,
 changes, tests, proof gaps and next action. Commit/push/merge/deploy require the
 user's task authorization; successful local verification alone grants none.
+
+`pnpm-lock.yaml` is the sole JavaScript lockfile. Install and public-script guards reject other package managers and versions; CI uses frozen installs. Electron and esbuild are the only approved dependency build scripts. Historical reports retain the commands actually run at their recorded revision.

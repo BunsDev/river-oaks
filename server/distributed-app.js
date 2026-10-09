@@ -219,7 +219,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
-        const result = await profileAction({ action: path.slice('/api/profile/'.length), identity, profiles, social, readBody: () => body(req),
+        const result = await profileAction({ action: path.slice('/api/profile/'.length), identity, worldId, profiles, social, readBody: () => body(req),
           visiblePlayer: async (user, peerId) => {
             const view = await room.read();
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
