@@ -8,6 +8,8 @@ import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
+import { warnIfSoftwareRendering } from './hardware-acceleration.js';
+import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -130,7 +132,12 @@ function showError(message) {
 
 function initializeRenderer() {
   // The composer antialiases the scene before the fullscreen output pass.
-  renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  } catch {
+    throw new Error('WebGL is unavailable. Check that hardware or graphics acceleration is enabled in your browser settings, then restart your browser. If it is already enabled, check your graphics driver or try another browser.');
+  }
+  warnIfSoftwareRendering({ gl: renderer.getContext(), viewport: $('#viewport'), focusTarget: host });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.info.autoReset = false;
   renderer.shadowMap.enabled = !softwareAcceptance;
@@ -247,6 +254,7 @@ function startMultiplayer() {
   multiplayer = createMultiplayer({
     creationToolsEnabled,
     getPose: () => walking?.getPose(),
+    getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,

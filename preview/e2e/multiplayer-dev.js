@@ -53,7 +53,7 @@ async page => {
     await tab.locator('[data-section=community-section]').click();
   };
   await openPeople(page);
-  await page.getByRole('button',{name:'Wave',exact:true}).click();
+  await page.getByRole('region',{name:'Avatar gestures'}).getByRole('button',{name:'Wave',exact:true}).click();
   await second.waitForFunction(id=>{
     const town=window.__riverMultiplayer(),player=town.snapshot?.players.find(person=>person.id===id),remote=town.remotes?.find(person=>person.id===id);
     return player?.gesture==='wave'&&remote?.gesture==='wave'&&remote.rightArmMotion>.4;

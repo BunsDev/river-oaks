@@ -62,3 +62,10 @@ Added a failing roundtrip regression and bounded stored names after applying the
 name rule in join/rename; public guards still reconstruct the complete unique
 name from the account ID. Focused regression and post-rebase core verification
 are required before landing.
+
+Final integration (2026-10-09): both reviewed patches are combined for landing
+in PR #205, with current main 397733a (including greetings). All local core
+tasks passed on the combined tree. Independent review approved the hardware
+warning and the corrected long-name checkpoint behavior. Required hosted checks
+and refreshed named browser journeys must finish before the main merge. PR #204
+will be closed as superseded after delivery.
