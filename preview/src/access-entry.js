@@ -26,7 +26,7 @@ async function checkAccess() {
       if (entered) location.reload();
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false;
       inviteForm.hidden = false; redeemButton.disabled = true;
-      message.textContent = 'Sign in with email or GitHub. Entry is by invitation or waitlist approval.';
+      message.textContent = 'Sign in with email or GitHub.\nEntry is by invitation or waitlist approval.';
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
       gateState = 'signed-out';
       return;
@@ -53,9 +53,13 @@ async function checkAccess() {
     if (!entered) {
       entered = true;
       document.body.dataset.accountId = session.user.id;
+      // The game's stylesheets arrive with main.js. The page is laid out underneath, but the
+      // gate stays over it until main.js starts, so the district never shows as unstyled HTML.
+      message.textContent = 'Opening the district…';
+      document.addEventListener('river-oaks:styled', () => { gate.hidden = true; }, { once: true });
       document.body.classList.add('access-granted');
-      gate.hidden = true;
       await import('./main.js');
+      gate.hidden = true;
     }
   } catch {
     if (entered) location.reload();
