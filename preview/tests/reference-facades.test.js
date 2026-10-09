@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { BELLA_BLOCK, HERMES_BLOCK, IPIC_BLOCK, facadeEdges, referencePlan, visibleRoofHeight } from '../src/reference-facades.js';
-import { DIOR_BLOCK, EQUINOX_BLOCK, ETRO_BLOCK, RESIDENCES_NORTH, RESIDENCES_SOUTH } from '../src/reference-blocks.js';
+import { BELLA_BLOCK, HERMES_BLOCK, IPIC_BLOCK, SIGN_GUTTER, SIGN_PAGE, facadeEdges, letteringCanvasSize, referencePlan, shelfPack, visibleRoofHeight } from '../src/reference-facades.js';
+import { DIOR_BLOCK, EQUINOX_BLOCK, ETRO_BLOCK, RESIDENCES_NORTH, RESIDENCES_SOUTH, WING_HEIGHT, WING_WIDTH, clipRing } from '../src/reference-blocks.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const building = id => world.buildings.find(item => item.id === id);
@@ -102,4 +102,55 @@ test('Cartier replaces two contiguous corner spans while retaining its mapped do
     const spans = plan.spans.get(`${front.building.id}:${front.edge.index}`).toSorted((a,b) => a.lo - b.lo);
     for (let i = 1; i < spans.length; i++) assert.ok(spans[i].lo >= spans[i-1].hi, 'no duplicate facade surfaces');
   }
+});
+
+test('the Equinox block steps down to Le Colonial\'s two-storey wing on Kettering Drive', () => {
+  const plan = referencePlan(world), block = building(EQUINOX_BLOCK), step = plan.steps.get(EQUINOX_BLOCK);
+  assert.equal(step.height, WING_HEIGHT);
+  // The tower keeps the whole footprint east of a strip WING_WIDTH wide along the west face.
+  const west = Math.min(...block.ring.map(([east]) => east)), towerWest = Math.min(...step.ring.map(([east]) => east));
+  assert.ok(Math.abs(towerWest - west - WING_WIDTH) < 0.3, `tower starts ${towerWest - west} m in`);
+  assert.equal(step.ring.length, 5);
+  assert.deepEqual(step.ring[0], step.ring.at(-1));
+  // The mapped (flight) height is still the tower's.
+  assert.equal(visibleRoofHeight(world, block), 28);
+  assert.equal(plan.steps.size, 1);
+});
+
+test('clipping a ring keeps the part beyond the inset and closes it', () => {
+  const square = [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]];
+  // The west edge's outward normal is -east; keep everything at least 4 m inside it.
+  assert.deepEqual(clipRing(square, [0, 0], [-1, 0], 4), [[4, 0], [10, 0], [10, 10], [4, 10], [4, 0]]);
+});
+
+test('sign canvases follow the sign size instead of a fixed 2048-texel width', () => {
+  assert.deepEqual(letteringCanvasSize(7, 0.85), [1792, 218]);
+  // Small print keeps 64 texels on its short side; proportions never change.
+  assert.deepEqual(letteringCanvasSize(1, 0.13), [492, 64]);
+  // Caps: a page less its gutters wide (2032), and 1024 tall.
+  assert.deepEqual(letteringCanvasSize(12, 0.72), [2032, 122]);
+  assert.deepEqual(letteringCanvasSize(0.5, 6), [85, 1024]);
+  // The vertical EQUINOX pylon sign fits without hitting a cap.
+  assert.deepEqual(letteringCanvasSize(0.55, 3.9), [141, 998]);
+  for (const [w, h] of [[7, 0.85], [1, 0.13], [12, 0.72], [0.5, 6], [0.55, 3.9]]) {
+    const [cw, ch] = letteringCanvasSize(w, h);
+    assert.ok(Math.abs(cw / ch - w / h) / (w / h) < 0.02, `${w}x${h} keeps its aspect`);
+  }
+});
+
+test('signs pack onto pages with a clear gutter around each one', () => {
+  const sizes = [[2032, 218], [1792, 218], [900, 190], [640, 160], [400, 128], [300, 96], [2032, 122], [1200, 64], [500, 64], [140, 998], [85, 1024]].map(([w, h]) => ({ w, h }));
+  const order = sizes.map((rect, i) => [rect, i]).sort(([a], [b]) => b.h - a.h || b.w - a.w);
+  const spots = shelfPack(order.map(([rect]) => rect));
+  const placed = order.map(([rect], k) => ({ ...rect, ...spots[k] }));
+  for (const item of placed) {
+    assert.ok(item.x >= SIGN_GUTTER && item.y >= SIGN_GUTTER, 'inside the leading gutter');
+    assert.ok(item.x + item.w + SIGN_GUTTER <= SIGN_PAGE && item.y + item.h + SIGN_GUTTER <= SIGN_PAGE, 'inside the trailing gutter');
+  }
+  for (const a of placed) for (const b of placed) {
+    if (a === b || a.page !== b.page) continue;
+    const apart = a.x + a.w + SIGN_GUTTER * 2 <= b.x || b.x + b.w + SIGN_GUTTER * 2 <= a.x || a.y + a.h + SIGN_GUTTER * 2 <= b.y || b.y + b.h + SIGN_GUTTER * 2 <= a.y;
+    assert.ok(apart, `signs ${JSON.stringify(a)} and ${JSON.stringify(b)} keep a double gutter between them`);
+  }
+  assert.throws(() => shelfPack([{ w: SIGN_PAGE, h: 10 }]), /does not fit/);
 });

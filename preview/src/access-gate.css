@@ -151,6 +151,9 @@
 .access-invites .access-form label { font-size: 12px; font-weight: 600; }
 .access-invites select:focus-visible { outline: 3px solid #507f80; outline-offset: 2px; }
 .access-invites button:disabled { opacity: .5; cursor: default; }
+.access-footer .access-report-link { display: inline-block; min-height: 24px; margin: 0; padding: 2px 4px; border: 0; background: none; color: var(--gate-muted); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.access-footer .access-report-link:hover { color: var(--gate-ink); }
+.access-footer .access-report-link:focus-visible { outline: 2px solid var(--gate-pink); outline-offset: 2px; border-radius: 4px; }
 .access-tools { display: flex; gap: .5rem; padding: .5rem 1rem; }
 .access-tools button { padding: .45rem .7rem; font-size: .8rem; }
 .access-review { background: #153f4280; backdrop-filter: blur(8px); }

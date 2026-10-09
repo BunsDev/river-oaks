@@ -8,6 +8,8 @@ import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
+import { warnIfSoftwareRendering } from './hardware-acceleration.js';
+import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
 import { createRenderAudit } from './render-audit.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -66,6 +68,7 @@ import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
+import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
 document.dispatchEvent(new Event('river-oaks:styled'));
@@ -100,6 +103,8 @@ const creationToolsEnabled = import.meta.env.VITE_CREATION_TOOLS === 'true';
 let layers = {}, loading = false;
 let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, assetProgress = null;
 let lastSoftwareDraw = -Infinity;
+// A problem report's picture: the next drawn frame is handed over while it is still on the canvas.
+let pendingCapture = null;
 
 const scene = new THREE.Scene();
 // Keep geometry, skinning and simulation intact without compiling every PBR
@@ -123,6 +128,7 @@ function showError(message) {
   const panel = $('#loading');
   panel.hidden = false;
   panel.classList.add('error');
+  panel.querySelector('.loading-report').hidden = false;
   panel.querySelector('h2').textContent = 'Preview unavailable';
   panel.querySelector('p').textContent = message;
   $('#connection').textContent = 'Local data unavailable';
@@ -130,7 +136,12 @@ function showError(message) {
 
 function initializeRenderer() {
   // The composer antialiases the scene before the fullscreen output pass.
-  renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  } catch {
+    throw new Error('WebGL is unavailable. Check that hardware or graphics acceleration is enabled in your browser settings, then restart your browser. If it is already enabled, check your graphics driver or try another browser.');
+  }
+  warnIfSoftwareRendering({ gl: renderer.getContext(), viewport: $('#viewport'), focusTarget: host });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.info.autoReset = false;
   renderer.shadowMap.enabled = !softwareAcceptance;
@@ -236,6 +247,28 @@ function initializeRenderer() {
   updateAtmosphere();
   bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
     resetTime: () => { clock.reset(); lastFrame = null; } });
+  registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
+  registerDiagnosticSource('scene', () => describeScene(scene));
+  registerDiagnosticSource('game', gameDiagnostics);
+  setScreenshotCapture(capture => { pendingCapture = capture; });
+}
+$('.loading-report').addEventListener('click', () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem')));
+
+// Where the player is and what the game is doing, for problem reports. Positions
+// are rounded to 10 cm; nothing here names another player.
+function gameDiagnostics() {
+  const pose = walking?.active ? walking.getPose() : null, round = value => Math.round(value * 10) / 10, loadingPanel = $('#loading');
+  return {
+    worldId: worldIdFromSearch(location.search), loaded: Boolean(world), walking: Boolean(walking?.active),
+    position: pose?.position ? pose.position.map(round) : null, yaw: Number.isFinite(pose?.yaw) ? round(pose.yaw) : null,
+    room: pose?.roomId ?? walking?.roomId ?? null, flying: Boolean(pose?.flying), riding: Boolean(pose?.riding),
+    camera: [camera.position.x, camera.position.y, camera.position.z].map(round),
+    place: $('#walking-place')?.textContent?.trim() || null,
+    multiplayer: { state: host.dataset.multiplayer ?? null, connected: Boolean(multiplayer?.connected) },
+    panels: { sidebar: !document.body.classList.contains('panel-collapsed'), clearView: Boolean(clearView?.active), debugTools: Boolean(debugTools) },
+    loading: loadingPanel ? { shown: !loadingPanel.hidden, error: loadingPanel.classList.contains('error') ? loadingPanel.querySelector('p')?.textContent ?? null : null } : null,
+    connection: $('#connection')?.textContent?.trim() || null,
+  };
 }
 
 // The town owns gameplay state from startup through reconnect.
@@ -247,6 +280,7 @@ function startMultiplayer() {
   multiplayer = createMultiplayer({
     creationToolsEnabled,
     getPose: () => walking?.getPose(),
+    getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
@@ -610,6 +644,7 @@ function followSunShadow() {
 }
 
 function render(now) {
+  noteFrame(now);
   const auditStart = renderAudit ? performance.now() : 0;
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
@@ -658,6 +693,7 @@ function render(now) {
     renderer.info.reset();
     pipeline.render(delta);
     photoMode?.afterRender();
+    if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
   if (now-lastRenderStats>1000) {
     host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});

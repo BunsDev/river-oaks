@@ -384,3 +384,14 @@ Revalidated the isolated worktree at e059ee0; earlier edits remain intact.
   Branch: `fix/memory-performance-20261009`, base e059ee0. No commit/push/merge.
   Next delivery step is review/commit when requested, followed by hosted CI before
   any merge. Do not archive/remove this worktree with its undelivered edits.
+
+## Authorized delivery
+- User requested commit, push and merge to main. Audit patch committed as acb73c8.
+- Integrated origin/main 7d0ac8a. Three textual conflicts resolved by retaining
+  both the lifecycle guards and main's greetings/environment/hardware behavior.
+  Independent review of staged integration found no correctness issues.
+- Combined tree passed preview, Redis server, desktop unit, build, Python lint,
+  format/tests, demo, secret and security browser stages before integration commit.
+  Remaining full browser journeys and hosted CI gate must pass before merge.
+  Terminal delivery evidence belongs to the PR and final handoff; historical audit
+  reports keep their original source hashes and results.

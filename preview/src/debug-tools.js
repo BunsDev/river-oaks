@@ -49,6 +49,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
     <fieldset>${DEBUG_LAYERS.map(layer => `<label title="${layer.hint}"><input type="checkbox" data-debug-layer="${layer.id}"> ${layer.label}</label>`).join('')}</fieldset>
     <dl class="debug-readout" data-debug-cursor><dt>Cursor</dt><dd>Move over the scene</dd></dl>
     <button type="button" data-debug-copy>Copy placement coordinates</button><p data-debug-copy-status role="status"></p>
+    <button type="button" data-debug-report>Report a problem…</button>
     <dl class="debug-readout" data-debug-selection hidden></dl>
     <details data-debug-heavy><summary>Heaviest meshes</summary><ol></ol></details>
     <p class="debug-stats" data-debug-stats></p>`;
@@ -56,6 +57,7 @@ export function createDebugTools({ scene, camera, host, renderer, getWorld, getE
   document.body.append(panel);
   for (const type of ['pointerdown', 'pointerup', 'click', 'wheel']) panel.addEventListener(type, event => event.stopPropagation());
   const $ = selector => panel.querySelector(selector);
+  $('[data-debug-report]').addEventListener('click', () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem')));
   for (const input of panel.querySelectorAll('[data-debug-layer]')) {
     input.checked = state[input.dataset.debugLayer];
     input.addEventListener('change', () => set(input.dataset.debugLayer, input.checked));

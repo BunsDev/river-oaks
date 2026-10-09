@@ -20,8 +20,12 @@ first approver. That account is automatically approved and can review requests
 from the Waitlist requests control. Verified email sign-in also creates a pending
 request; a valid invitation can approve it. See [email access and invitations](email-access.md)
 for issuance, assignment, expiration, and security limits. Each player must use a separate WorkOS
-account. The automated acceptance runner uses isolated temporary local
-identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
+account. Players normally appear under their verified GitHub handle. Email-only
+accounts, unavailable GitHub lookups, and disallowed names (including Resident)
+receive a stable `Visitor #<account ID>` name automatically. The full public
+account ID keeps fallbacks unique across accounts and separate from valid GitHub
+handles; existing stored names are checked again before being displayed.
+The automated acceptance runner uses isolated temporary local identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
 auth, multiplayer, and landmark traffic to that checkout's own town on the
@@ -104,6 +108,23 @@ The People panel also offers **Wave** and **Bow**. These short gestures are
 validated by the shared world and shown on every nearby player's avatar. They
 expire after a few seconds, have a brief cooldown, and do not change building
 or wish permissions.
+
+When another player is within 2.6 meters, on foot and in sight in the same room,
+**Say hello** appears over the world. Choose the person, wave, or invite them to
+**Shake hands** or **Dance together**. The recipient chooses **Accept** or
+**Decline**; the sender can cancel. Invitations expire after 15 seconds.
+
+An accepted handshake checks clear ground before bringing both people within
+arm's reach. Both avatars face each other and use a shared palm target. Dancing
+uses a shared rhythm. Handshakes last 4.2 seconds; dancing lasts 14 seconds.
+Either participant can choose **Stop**, walk away, or travel to end the activity.
+Sitting, watering, changing appearance or movement mode, and leaving also end it.
+Seated, riding, flying, and all-fours movement cannot start paired greetings.
+The town validates consent, reach, sight lines, alignment and timing; checkpoint
+recovery retains the invitation or activity with its original expiration.
+Reduced-motion clients retain the invitation controls and activity text without
+the gesture animation. These interactions are between signed-in players;
+shop-resident conversations keep their existing behavior.
 
 The People panel lets each signed-in resident edit a short profile with a
 tagline, bio, pronouns, and up to eight interests. A profile is readable only
@@ -455,11 +476,11 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 4 and read valid versions 1 (original
-district only), 2, 3 and 4. Seat reservations require version 3 or later; custom
-assemblies require version 4. The version-4 coordinator atomically takes over
+Private world checkpoints write version 5 and read valid versions 1 (original
+district only), 2, 3, 4 and 5. Seat reservations require version 3 or later; custom
+assemblies require version 4; paired interactions require version 5. The version-5 coordinator atomically takes over
 older leases. Commit fencing prevents an older writer from publishing or
-trimming commands. Do not roll back older code against version-4 checkpoints.
+trimming commands. Do not roll back older code against version-5 checkpoints.
 Browser protocol 2 is required: version-1 and unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.

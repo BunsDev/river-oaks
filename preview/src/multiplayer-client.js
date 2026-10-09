@@ -1,3 +1,4 @@
+import { createGreetingsUI } from './greetings-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
@@ -7,7 +8,7 @@ import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
+export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
   const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
@@ -97,6 +98,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   const groups=creationToolsEnabled?createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
     request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(logout);
+  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
+  let activeGreeting=null;
   const latestPlayers=new Map();
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);
@@ -184,6 +187,9 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void refreshHomeAccess();}
+            const self=data.players.find(player=>player.id===selfId);
+            if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
+            activeGreeting=self?.interaction?.id??null;
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
@@ -242,8 +248,9 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       finally{traveling=false;}
     },
     update(now){
+      greetings.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
     dispose(){
@@ -252,7 +259,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
-      social.dispose();groups?.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+      social.dispose();groups?.dispose();greetings.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
     },
   };
 }

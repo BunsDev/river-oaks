@@ -69,14 +69,22 @@ const views = {
   steak: { label: 'STEAK 48 · WESTHEIMER CORNER', camera: [-2872, -1434, 1.8], target: [-2885, -1420, 6] },
   'grey-house': { label: 'GREY HOUSE · FROM WESTHEIMER', camera: [-2812, -1452, 1.8], target: [-2860, -1418, 9] },
   west: { label: 'OVERVIEW · FROM THE SOUTH-EAST', camera: [-2735, -1460, 60], target: [-2820, -1320, 0] },
+  // Registered to user-supplied Street View screenshots (1908 x 1146): position, aim and lens
+  // fitted so the frontage lines up with the photograph; compare at that size.
+  'sv-davidoff': { label: 'DAVIDOFF OF GENEVA AND LE COLONIAL · STREET VIEW 2023', camera: [-2751.7, -1376.8, 2.26], target: [-2758.3, -1394.8, 7.9], fov: 90.8, roll: -1.0 },
+  'sv-equinox': { label: 'EQUINOX ENTRANCE AND OFFICE LOBBY · STREET VIEW 2023', camera: [-2730.05, -1373.85, 2.2], target: [-2734.4, -1391.4, 10.8], fov: 87.4 },
+  'sv-saint-bernard': { label: 'SAINT BERNARD · STREET VIEW 2023', camera: [-2685.8, -1403.25, 2.2], target: [-2704.5, -1396.2, 3.1], fov: 90 },
 };
 function view(name, { hour = 15, fantasyVisible = true } = {}) {
-  const { label, camera: [cx, cn, ch], target: [tx, tn, th] } = views[name];
+  const { label, camera: [cx, cn, ch], target: [tx, tn, th], fov = 62, roll = 0 } = views[name];
+  if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
   const sky = atmosphereFor(hour, 'clear');
   sun.position.set(tx + Math.cos(sky.angle) * 450, base + Math.max(30, Math.sin(sky.angle) * 550), -tn + 190); sun.target.position.set(tx, base, -tn);
   sun.intensity = sky.sunIntensity; sun.color.copy(sky.sunColor);
   fantasy.visible = fantasyVisible;
-  camera.position.set(cx, base + ch, -cn); camera.lookAt(tx, base + th, -tn); camera.updateMatrixWorld();
+  camera.position.set(cx, base + ch, -cn); camera.lookAt(tx, base + th, -tn);
+  if (roll) camera.rotateZ(roll * Math.PI / 180);
+  camera.updateMatrixWorld();
   buildings.userData.updateDoors?.([], 0.016);
   renderer.render(scene, camera);
   document.querySelector('#label').textContent = label;

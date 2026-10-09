@@ -1,3 +1,5 @@
+import { createArmContacts } from './arm-contact.js';
+import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
 import { createConversationGaze } from './conversation-gaze.js';
 import { createConversationMotion } from './conversation-motion.js';
@@ -158,6 +160,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const noMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gaze=createConversationGaze(),gazeOrigin=new THREE.Vector3(),gazeRotation=new THREE.Quaternion(),gazeForward=new THREE.Vector3();
   const gazeHead=model.getObjectByName('head'),gazeNeck=model.getObjectByName('neck_01');
+  const greetingArm=createArmContacts(model,root).find(arm=>arm.side==='r');
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const conversationBody=createConversationBody(avatar);
@@ -185,7 +188,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       walkingSpeed+=((locomotion?.speed ?? 0)-walkingSpeed)*(1-Math.exp(-18*dt));
       // Ask keeps the greeting action active while talking. Let its initial
       // wave settle into conversation phrases once attention is established.
-      const gesture=gestures.update(action==='greet'&&(speaking||lookTarget)?'continue':action,elapsed,t);
+      const gesture=gestures.update(action==='greet'&&(speaking||lookTarget)?'continue':action,elapsed,locomotion?.gestureTime??t);
       const conversationPose=conversation.update(elapsed,{attending:(id!=='player'||conversing)&&Boolean(lookTarget)&&action!=='startled',speaking,
         gesturing:walkingSpeed<.1&&!locomotion?.flying&&!locomotion?.riding&&!locomotion?.carrying&&!locomotion?.visitId&&(action==='continue'||action==='greet'||action==='acknowledge')});
       const strength = Math.min(1,walkingSpeed/0.65);
@@ -210,6 +213,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         const pose=gesture[bone.name];if(!pose)continue;
         for(const [i,axis] of ['x','y','z'].entries())if(pose[i]){adjustment.setFromAxisAngle(avatar.axes.get(bone)[axis],pose[i]);bone.quaternion.multiply(adjustment);}
       }
+      if(!noMotion&&action==='handshake'&&!locomotion?.flying&&!locomotion?.riding)applyHandshakeContact(greetingArm,root,{target:locomotion?.handshakeTarget,elapsed:locomotion?.gestureTime??0});
       if(gazeHead) {
         gazeHead.getWorldPosition(gazeOrigin);
         root.getWorldQuaternion(gazeRotation);

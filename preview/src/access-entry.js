@@ -1,4 +1,9 @@
 import './access-gate.css';
+import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
+
+// Problem reports start collecting with the sign-in page, so a failure before the
+// game loads is still in the report.
+installDiagnostics();
 
 const $ = selector => document.querySelector(selector);
 const gate = $('#access-gate'), message = $('#access-message'), providers = $('#access-providers');
@@ -8,6 +13,14 @@ const review = $('#access-review'), reviewList = $('#access-review-list'), revie
 let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
 const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem');
 let reviewGeneration = 0;
+
+registerDiagnosticSource('access', () => ({ gate: gate.hidden ? 'entered' : gateState || 'checking', signedIn: Boolean(session?.authenticated), entered, admin: isAdmin }));
+// Every "Report a problem" control dispatches one event; the dialog loads on first use.
+const reportSession = () => ({ signedIn: Boolean(session?.authenticated), csrfToken: session?.csrfToken ?? null });
+window.addEventListener('river-oaks:report-problem', () => { void import('./debug-report-ui.js').then(({ openReportDialog }) => openReportDialog({ getSession: reportSession })); });
+const reportProblem = () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem'));
+for (const id of ['#access-report', '#access-gate-report']) $(id).addEventListener('click', reportProblem);
+$('#access-reports').addEventListener('click', () => { void import('./debug-report-ui.js').then(({ openReportInbox }) => openReportInbox()); });
 
 async function api(path, options = {}) {
   const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...options });
@@ -39,6 +52,7 @@ async function checkAccess() {
     const access = await api('/api/waitlist/status');
     isAdmin = access.admin;
     adminButton.hidden = !access.admin;
+    $('#access-reports').hidden = !access.admin;
     if (access.status !== 'approved') {
       if (entered) location.reload();
       providers.hidden = true;

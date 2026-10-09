@@ -11,6 +11,7 @@ export { storefrontBenchSpots };
 import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
+import { finishKey } from './material-finish.js';
 
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
@@ -108,19 +109,27 @@ export function buildDistrictBuildings(world) {
     const retailHeight=building.kind==='parking'?0:4.25, roofHeight=visibleRoofHeight(world,building);
     // The ground-floor wall is assembled around real openings. Upper massing and
     // roof keep the mapped polygon; rooms below are original display alcoves.
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth: roofHeight-retailHeight, bevelEnabled: false, steps: 1, curveSegments: 1 });
-    geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
-    const mesh = new THREE.Mesh(geometry, building.kind === 'parking' ? roof : reference.massMaterial(building) ?? stone);
-    mesh.position.y = building.center[2]+retailHeight; mesh.castShadow = mesh.receiveShadow = true;
-    mesh.userData.districtBuilding = building.id; group.add(mesh);
-    const roofGeometry = new THREE.ShapeGeometry(shape); roofGeometry.rotateX(-Math.PI / 2); geometries.add(roofGeometry);
-    const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + roofHeight + 0.02; top.receiveShadow = true; group.add(top);
+    // A stepped block keeps its whole footprint up to the step and only the
+    // tower's ring above it (reference-blocks.js), so a low wing has sky over it.
+    const step = reference.plan.steps.get(building.id), towerShape = step ? new THREE.Shape(step.ring.map(([x, y]) => new THREE.Vector2(x, y))) : shape;
+    const massMaterial = building.kind === 'parking' ? roof : reference.massMaterial(building) ?? stone;
+    for (const [outline, from, to] of step ? [[shape, retailHeight, step.height], [towerShape, step.height, roofHeight]] : [[shape, retailHeight, roofHeight]]) {
+      const geometry = new THREE.ExtrudeGeometry(outline, { depth: to-from, bevelEnabled: false, steps: 1, curveSegments: 1 });
+      geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
+      const mesh = new THREE.Mesh(geometry, massMaterial);
+      mesh.position.y = building.center[2]+from; mesh.castShadow = mesh.receiveShadow = true;
+      mesh.userData.districtBuilding = building.id; group.add(mesh);
+    }
+    for (const [outline, height] of step ? [[shape, step.height], [towerShape, roofHeight]] : [[shape, roofHeight]]) {
+      const roofGeometry = new THREE.ShapeGeometry(outline); roofGeometry.rotateX(-Math.PI / 2); geometries.add(roofGeometry);
+      const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + height + 0.02; top.receiveShadow = true; group.add(top);
+    }
     const ring = building.ring;
     const winding=Math.sign(ring.slice(1).reduce((sum,b,i)=>sum+ring[i][0]*b[1]-b[0]*ring[i][1],0));
     const levels = building.kind === 'parking' ? [] : upperWindowLevels(roofHeight);
     // Rooftop plant and a stair bulkhead, placed inside the footprint by pulling
     // each mapped corner toward the centroid; a membrane roof is never bare.
-    const corners = ring.slice(0, -1), centroid = corners.reduce((sum, [x, y]) => [sum[0] + x / corners.length, sum[1] + y / corners.length], [0, 0]);
+    const corners = (step?.ring ?? ring).slice(0, -1), centroid = corners.reduce((sum, [x, y]) => [sum[0] + x / corners.length, sum[1] + y / corners.length], [0, 0]);
     const roofTop = building.center[2] + roofHeight;
     corners.forEach(([x, y], corner) => {
       const f = corner % 2 ? 0.42 : 0.3, px = centroid[0] + (x - centroid[0]) * f, py = centroid[1] + (y - centroid[1]) * f;
@@ -378,12 +387,28 @@ export function buildDistrictBuildings(world) {
   reference.build();
   reference.materials.forEach(material => materials.add(material)); reference.geometries.forEach(item => geometries.add(item)); textures.push(...reference.textures);
   const dummy = new THREE.Object3D();
-  for (const { material, geometry, parts } of batches.values()) {
+  // Plain-colour batches with the same finish and geometry draw together: one
+  // shared material, each box keeping its colour as an instance colour.
+  const special = new Set([glass, upperGlass, light, spot, ...reference.reflective]), finishes = new Map(), drawn = [];
+  for (const batch of batches.values()) {
+    const key = finishKey(batch.material, special);
+    if (!key) { drawn.push(batch); continue; }
+    const id = `${batch.geometry.uuid}|${key}`;
+    if (!finishes.has(id)) {
+      const material = batch.material.clone(); material.color.set('#ffffff'); material.name = `finish:${key}`; materials.add(material);
+      finishes.set(id, { material, geometry: batch.geometry, parts: [] }); drawn.push(finishes.get(id));
+    }
+    for (const part of batch.parts) finishes.get(id).parts.push({ ...part, color: batch.material.color });
+  }
+  for (const { material, geometry, parts } of drawn) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;
     mesh.userData.breakableGlass = material === glass || material === upperGlass || material.userData.breakableGlass === true;
     mesh.userData.buildingIndices = parts.map(part => part.buildingIndex);
-    parts.forEach((part, index) => { dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix); });
+    parts.forEach((part, index) => {
+      dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix);
+      if (part.color) mesh.setColorAt(index, part.color);
+    });
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
   group.add(reference.group);

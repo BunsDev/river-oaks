@@ -108,7 +108,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null;
   // Appearance and movement belong to the account and are confirmed by the town.
-  let appearance=defaultAppearanceFor(userId),sharedName=null,sharedMovement='upright',sharedGesture=null,movement='upright',loadedAppearance=null,portraitWanted=null;
+  let appearance=defaultAppearanceFor(userId),sharedName=null,sharedMovement='upright',sharedGesture=null,sharedInteraction=null,interactionAt=0,movement='upright',loadedAppearance=null,portraitWanted=null;
   // Shared play: a choice the town has not confirmed yet, shown in the picker meanwhile.
   let wanted=null,sending=false,flushTimer=0,confirmedAt=-Infinity;
   const picker=panel.querySelector('.character-picker'),variantOption=picker.querySelector('[data-option=variant]'),variantList=picker.querySelector('[data-variants]');
@@ -300,8 +300,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     get persona() {return owner?form:'visitor';},
     setSharedIdentity(player){
       if(disposed)return;
-      if(!player){sharedGesture=null;return;}
-      sharedGesture=player.gesture??null;
+      if(!player){sharedGesture=null;sharedInteraction=null;return;}
+      sharedGesture=player.gesture??null;sharedInteraction=player.interaction??null;interactionAt=performance.now();
       sharedName=player.name;panel.querySelector('#player-name').textContent=sharedName;
       if(!applySharedPlayer(player))panel.querySelector('#player-description').textContent=sharedAppearance(appearance).description;
     },
@@ -358,8 +358,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
           const facing=aim?Math.atan2(aim[0]-holder.position.x,aim[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
-        if(!seated&&focus.facing!==null)holder.rotation.y=focus.facing;
-        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast'}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
+        if(sharedInteraction&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
+        avatar.update(now, now < castUntil ? 'amazed' : watering ? 'water' : !pose.flying&&!pose.riding ? (sharedGesture??'continue') : 'continue', false, {speed:pose.flying||seated?0:pose.speed,flightSpeed:pose.flying?pose.speed:0,distance:pose.distance,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,vehicle:form,beast:movement==='beast',handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         host.dataset.beastMotion=(avatar.beastMotion??0).toFixed(2);
         if(portraitWanted&&getPortrait){

@@ -1,0 +1,34 @@
+{
+  "createdAt": "2026-10-09T17:17:13.289Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "greetings",
+      "status": "passed",
+      "seconds": 42.175,
+      "result": {
+        "checks": [
+          "Nearest person is selected without opening People",
+          "Invitation leaves both avatars at rest until accepted",
+          "Keyboard focus moves from Accept to Stop after confirmation",
+          "Keyboard acceptance starts a visible shared handshake",
+          "Local avatar turns toward their partner",
+          "Both dancers use the same server phase",
+          "Greeting controls fit a phone viewport",
+          "Either participant can stop from mobile controls",
+          "Declining clears the invitation on both clients",
+          "Walking away cancels both dancers through the actual movement transport",
+          "No browser errors: "
+        ],
+        "errors": [],
+        "scope": "Two authenticated local fixture accounts; keyboard acceptance and phone viewport; no human accessibility or art-quality acceptance."
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}
