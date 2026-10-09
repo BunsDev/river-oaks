@@ -1,0 +1,24 @@
+{
+  "createdAt": "2026-10-09T13:50:48.789Z",
+  "results": [
+    {
+      "name": "compact-social-sidebar",
+      "status": "passed",
+      "seconds": 7.957,
+      "result": {
+        "passed": true,
+        "emptyHistory": true,
+        "sentMessage": true,
+        "profile": true,
+        "themes": [
+          "dark",
+          "light"
+        ],
+        "widths": [
+          1440,
+          390
+        ]
+      }
+    }
+  ]
+}
