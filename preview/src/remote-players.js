@@ -58,7 +58,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
         }
-        entry.target=player;entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
+        entry.target=player;entry.syncedAt=performance.now();entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
       }
     },
     update(now,camera){
@@ -76,6 +76,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         else if(target.vehicle)entry.heading=target.yaw;
         // Watering: face the planter, which the server turned them toward
         // (a player's yaw is the camera's, behind them).
+        else if(target.interaction)entry.heading=target.interaction.heading;
         else if(target.gesture==='water')entry.heading=target.yaw+Math.PI;
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         if(target.sitting)holder.rotation.y=entry.heading;
@@ -89,7 +90,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast),handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){

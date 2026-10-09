@@ -254,6 +254,7 @@ function startMultiplayer() {
   multiplayer = createMultiplayer({
     creationToolsEnabled,
     getPose: () => walking?.getPose(),
+    getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
     getRegionSha256: () => worldRegionSha256,
