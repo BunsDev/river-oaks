@@ -43,7 +43,7 @@ function storeEdge(building, store) {
 // data, shared by the facade renderer and the decorative layer.
 export function referencePlan(world) {
   if (world && plans.has(world)) return plans.get(world);
-  const plan = { spans: new Map(), frontages: [], stores: new Set(), roofs: new Map() };
+  const plan = { spans: new Map(), frontages: [], stores: new Set(), roofs: new Map(), steps: new Map() };
   const building = id => world?.buildings?.find(item => item.id === id && item.ring?.length > 3);
   const store = (name, id) => world?.stores?.find(item => item.name === name && item.building_id === id);
   // full: the frontage replaces the whole facade; otherwise only above the shopfronts.
@@ -127,11 +127,29 @@ function cladding({ color, panel, bond = false, tone = 0.04, joint = 0.8, veins 
 
 // Applied lettering: one canvas per sign, alpha-tested so it never sorts
 // against the glazing behind it.
-function lettering(text, { width, height, family = 'Georgia, serif', weight = 600, color = '#1b1c1e', spacing = 0, smallCaps = false, metalness = 0, roughness = 0.5, emissive = 0, background = null }) {
-  const canvas = document.createElement('canvas'), w = 2048, h = Math.max(64, Math.min(1024, Math.round(w * height / width)));
+// A sign's canvas in texels, sized to the sign rather than one fixed width:
+// 256 texels a metre, at least 64 on the short side for small print, and at most
+// 2048 wide or 1024 tall. The canvas keeps the sign's proportions, so the text
+// is never stretched.
+export function letteringCanvasSize(width, height) {
+  let scale = 256;
+  scale = Math.max(scale, 64 / Math.min(width, height));
+  scale = Math.min(scale, 2048 / width, 1024 / height);
+  return [Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale))];
+}
+
+// `vertical` stacks the characters top to bottom, as on a pylon.
+function lettering(text, { width, height, family = 'Georgia, serif', weight = 600, color = '#1b1c1e', spacing = 0, smallCaps = false, metalness = 0, roughness = 0.5, emissive = 0, background = null, vertical = false }) {
+  const canvas = document.createElement('canvas'), [w, h] = letteringCanvasSize(width, height);
   canvas.width = w; canvas.height = h;
   const context = canvas.getContext('2d');
   if (background) { context.fillStyle = background; context.fillRect(0, 0, w, h); }
+  if (vertical) {
+    const characters = [...text], pitch = h / characters.length, size = Math.min(pitch * 0.86, w * 0.9);
+    context.font = `${weight} ${size}px ${family}`; context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillStyle = color;
+    characters.forEach((character, i) => context.fillText(character, w / 2, pitch * (i + 0.53)));
+    return letteringMaterial(canvas, { background, metalness, roughness, emissive });
+  }
   let size = h * 0.82;
   const fit = () => {
     context.font = `${weight} ${size}px ${family}`;
@@ -143,10 +161,12 @@ function lettering(text, { width, height, family = 'Georgia, serif', weight = 60
   if (measured > w * 0.97) { size *= w * 0.97 / measured; fit(); }
   context.textAlign = 'center'; context.textBaseline = 'middle';
   context.fillStyle = color; context.fillText(text, w / 2 + spacing * size / 2, h * 0.53);
+  return letteringMaterial(canvas, { background, metalness, roughness, emissive });
+}
+function letteringMaterial(canvas, { background, metalness, roughness, emissive }) {
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
-  const material = new THREE.MeshStandardMaterial({ map: texture, alphaTest: background ? 0 : 0.45, transparent: false, metalness, roughness,
+  return new THREE.MeshStandardMaterial({ map: texture, alphaTest: background ? 0 : 0.45, transparent: false, metalness, roughness,
     emissive: emissive ? '#ffffff' : '#000000', emissiveMap: emissive ? texture : null, emissiveIntensity: emissive });
-  return material;
 }
 
 // The IPIC blade: an orange IPIC head on brass over stacked THEATERS on violet.
