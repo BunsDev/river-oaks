@@ -20,8 +20,12 @@ first approver. That account is automatically approved and can review requests
 from the Waitlist requests control. Verified email sign-in also creates a pending
 request; a valid invitation can approve it. See [email access and invitations](email-access.md)
 for issuance, assignment, expiration, and security limits. Each player must use a separate WorkOS
-account. The automated acceptance runner uses isolated temporary local
-identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
+account. Players normally appear under their verified GitHub handle. Email-only
+accounts, unavailable GitHub lookups, and disallowed names (including Resident)
+receive a stable `Visitor #<account ID>` name automatically. The full public
+account ID keeps fallbacks unique across accounts and separate from valid GitHub
+handles; existing stored names are checked again before being displayed.
+The automated acceptance runner uses isolated temporary local identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
 `RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
 auth, multiplayer, and landmark traffic to that checkout's own town on the

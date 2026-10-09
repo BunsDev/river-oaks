@@ -21,7 +21,7 @@ async page => {
     await tab.locator('[data-section=community-section]').click();
   };
   const named=async(tab,id)=>tab.evaluate(id=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===id)?.name,id);
-  const waitForPlayer=(tab,id)=>tab.waitForFunction(id=>window.__riverMultiplayer().snapshot.players.some(player=>player.id===id),id,{timeout:60000});
+  const waitForPlayer=(tab,id)=>tab.waitForFunction(id=>window.__riverMultiplayer?.().snapshot?.players.some(player=>player.id===id),id,{timeout:60000});
   // Every name surface: roster rows and their button labels, nameplates, chat,
   // contacts, the profile card, the map's player list and the player's own name.
   // Whatever reads as Jevica, under any disguise, must belong to the owner.
@@ -52,25 +52,25 @@ async page => {
   // Each browser must have received the other players before it is asked.
   for(const tab of [page,owner,impostor])for(const id of [ownerId,'impostor'])await waitForPlayer(tab,id);
   check(await named(page,ownerId)==='Jevica','The admin account is Jevica');
-  check(await named(page,'impostor')==='resident','A non-admin session claiming Jevica is not shown as Jevica');
-  check(await named(impostor,'impostor')==='resident'&&await named(owner,'impostor')==='resident','Every viewer, including the impostor, sees the same name');
-  await impostor.waitForFunction(()=>document.querySelector('#player-name')?.textContent==='resident');
+  check(await named(page,'impostor')==='Visitor #impostor','A non-admin session claiming Jevica is not shown as Jevica');
+  check(await named(impostor,'impostor')==='Visitor #impostor'&&await named(owner,'impostor')==='Visitor #impostor','Every viewer, including the impostor, sees the same name');
+  await impostor.waitForFunction(()=>document.querySelector('#player-name')?.textContent==='Visitor #impostor');
   check(true,'The impostor’s own character panel does not call them Jevica');
 
   // Roster rows and their button labels.
   await openPeople(page);
   const row=page.locator('.multiplayer-person[data-peer-id="impostor"]');
   await row.waitFor({state:'attached'});
-  check(await row.locator('.multiplayer-person-name').textContent()==='resident','The roster names the impostor by their safe name');
+  check(await row.locator('.multiplayer-person-name').textContent()==='Visitor #impostor','The roster names the impostor by their safe name');
   check(await page.locator(`.multiplayer-person[data-peer-id="${ownerId}"] .multiplayer-person-name`).textContent()==='Jevica','The roster names the admin Jevica');
   const labels=await row.locator('button').evaluateAll(buttons=>buttons.map(button=>button.getAttribute('aria-label')));
-  check(labels.includes('View profile for resident')&&labels.includes('Add resident as a contact')&&labels.includes('Report disruption by resident'),
+  check(labels.includes('View profile for Visitor #impostor')&&labels.includes('Add Visitor #impostor as a contact')&&labels.includes('Report disruption by Visitor #impostor'),
     `Roster buttons are labelled with the safe name (${labels.join(' | ')})`);
 
   // Nameplates over avatars.
   await page.waitForFunction(ownerId=>{
     const labels=Object.fromEntries([...document.querySelectorAll('.remote-player-label')].map(label=>[label.dataset.peerId,label.textContent]));
-    return labels.impostor?.startsWith('resident')&&labels[ownerId]?.startsWith('Jevica');
+    return labels.impostor?.startsWith('Visitor #impostor')&&labels[ownerId]?.startsWith('Jevica');
   },ownerId,{timeout:60000});
   check(true,'Nameplates show the impostor safely and the admin as Jevica');
 
@@ -82,14 +82,14 @@ async page => {
   }
   await page.waitForFunction(()=>document.querySelectorAll('.multiplayer-chat-message').length>=2,null,{timeout:30000});
   const authors=await page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('.multiplayer-chat-message')].map(row=>[row.dataset.authorId,row.querySelector('strong').textContent])));
-  check(authors.impostor==='resident'&&authors[ownerId]==='Jevica',`Chat shows the impostor safely and the admin as Jevica (${JSON.stringify(authors)})`);
+  check(authors.impostor==='Visitor #impostor'&&authors[ownerId]==='Jevica',`Chat shows the impostor safely and the admin as Jevica (${JSON.stringify(authors)})`);
 
   // Profile card and contact invitation.
-  await row.getByRole('button',{name:'View profile for resident'}).click();
-  await page.waitForFunction(()=>document.querySelector('.multiplayer-profile h4')?.textContent==='resident',null,{timeout:30000});
+  await row.getByRole('button',{name:'View profile for Visitor #impostor'}).click();
+  await page.waitForFunction(()=>document.querySelector('.multiplayer-profile h4')?.textContent==='Visitor #impostor',null,{timeout:30000});
   check(true,'The impostor’s profile card does not call them Jevica');
-  await row.getByRole('button',{name:'Add resident as a contact'}).click();
-  const listed=await page.waitForFunction(()=>[...document.querySelectorAll('.multiplayer-social-row span')].some(span=>span.textContent==='resident'),null,{timeout:30000})
+  await row.getByRole('button',{name:'Add Visitor #impostor as a contact'}).click();
+  const listed=await page.waitForFunction(()=>[...document.querySelectorAll('.multiplayer-social-row span')].some(span=>span.textContent==='Visitor #impostor'),null,{timeout:30000})
     .then(()=>true,()=>false);
   const social=await page.evaluate(()=>({status:document.querySelector('.multiplayer-social-status')?.textContent,
     rows:[...document.querySelectorAll('.multiplayer-social-row span')].map(span=>span.textContent)}));
@@ -112,14 +112,22 @@ async page => {
   await sweep(owner,'The admin’s view');
 
   // A lookalike spelling is caught the same way.
+  const impostorName=await named(page,'impostor');
   await impostor.context().close();
   const lookalike=await open('lookalike');
   await waitForPlayer(page,'lookalike');
-  check(await named(page,'lookalike')==='resident','A lookalike spelling of Jevica is not shown as Jevica');
-  await page.waitForFunction(()=>document.querySelector('.multiplayer-person[data-peer-id="lookalike"] .multiplayer-person-name')?.textContent==='resident');
+  check(await named(page,'lookalike')==='Visitor #lookalike','A lookalike spelling of Jevica is not shown as Jevica');
+  await page.waitForFunction(()=>document.querySelector('.multiplayer-person[data-peer-id="lookalike"] .multiplayer-person-name')?.textContent==='Visitor #lookalike');
   await sweep(page,'Alice’s view with the lookalike');
   await sweep(lookalike,'The lookalike’s own view');
-  await lookalike.context().close();await owner.context().close();
+  check(await named(page,'lookalike') !== impostorName, 'Different accounts receive distinct fallback names');
+  await lookalike.context().close();
+  const unnamed=await open('unnamed');
+  await waitForPlayer(page,'unnamed');
+  check(await named(page,'unnamed')==='Visitor #unnamed', 'A Resident session receives its own unique fallback');
+  await unnamed.reload();await ready(unnamed);
+  check(await named(unnamed,'unnamed')==='Visitor #unnamed', 'The automatic fallback survives reconnecting');
+  await unnamed.context().close();await owner.context().close();
   check(errors.length===0,`No page errors: ${errors.join(' | ')}`);
   return {checks};
 }

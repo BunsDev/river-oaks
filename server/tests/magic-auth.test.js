@@ -44,14 +44,14 @@ for (const mode of ['memory', 'redis']) {
     assert.equal((await f.request('/auth/email/verify', { code: '123456' }, state)).status, 400);
     assert.equal(f.attempts(), 1);
     const profile = await f.peer('/auth/session', undefined, cookie(verified, 'river_oaks_session'));
-    const data = await profile.json(); assert.equal(data.user.name, 'resident');
+    const data = await profile.json(); assert.equal(data.user.name, 'Visitor #user_email');
     assert.equal(JSON.stringify(data).includes('private@'), false); assert.equal(f.identityCalls(), 0);
   });
-  run('desktop exchange accepts only verified Magic Auth and keeps identity generic', async t => {
+  run('desktop exchange accepts only verified Magic Auth and assigns an account fallback', async t => {
     const f = await fixture(t, mode);
     const accepted = await f.request('/auth/desktop/exchange', { refreshToken: 'private-desktop-refresh' }); assert.equal(accepted.status, 200);
     const profile = await f.peer('/auth/session', undefined, cookie(accepted, 'river_oaks_session'));
-    const data = await profile.json(); assert.equal(data.user.name, 'resident'); assert.equal(f.identityCalls(), 0);
+    const data = await profile.json(); assert.equal(data.user.name, 'Visitor #user_email'); assert.equal(f.identityCalls(), 0);
     f.user({ emailVerified: false }); assert.equal((await f.peer('/auth/desktop/exchange', { refreshToken: 'private-desktop-refresh' })).status, 403);
   });
   run('cooldown is shared and case normalized; expired state cannot authenticate', async t => {
@@ -134,7 +134,7 @@ for (const mode of ['memory', 'redis']) {
     assert.equal(requests.some(r => r.endsWith('/identities')), false);
     if (verified.status === 200) {
       const profile = await f.peer('/auth/session', undefined, cookie(verified, 'river_oaks_session'));
-      assert.equal((await profile.json()).user.name, 'resident');
+      assert.equal((await profile.json()).user.name, 'Visitor #user_sdk');
     } else assert.equal(cookie(verified, 'river_oaks_session'), undefined);
   });
 }
