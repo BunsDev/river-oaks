@@ -28,14 +28,14 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const district = JSON.parse(await readFile(new URL('../public/data/district.json', import.meta.url)));
 district.vegetation = JSON.parse(await readFile(new URL('../public/data/district-vegetation.json', import.meta.url)));
 const appearances = SHARED_APPEARANCES.filter(look => look.character !== 'jevica' && look.form === 'human');
-const sourceFiles = ['package-lock.json', 'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/render-pipeline.js',
+const sourceFiles = ['pnpm-lock.yaml', 'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/render-pipeline.js',
   'preview/src/remote-players.js', 'preview/src/avatars.js', 'preview/src/romance-look.js',
   'preview/src/reference-archetypes.js', 'preview/src/costume-batching.js', 'server/app.js', 'server/world.js',
   'preview/audit/rendered-multiplayer.js', 'preview/audit/metrics.js'];
 const source = { baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sha256: Object.fromEntries(await Promise.all(sourceFiles.map(async file => [file, createHash('sha256').update(await readFile(`${root}/${file}`)).digest('hex')]))) };
-const lock = JSON.parse(await readFile(`${root}/package-lock.json`));
-const dependencies = Object.fromEntries(['three', 'ws', 'vite', 'playwright'].map(name => [name, lock.packages[`node_modules/${name}`].version]));
+const dependencies = Object.fromEntries(await Promise.all(['three', 'ws', 'vite', 'playwright'].map(async name =>
+  [name, JSON.parse(await readFile(`${root}/node_modules/${name}/package.json`)).version])));
 const report = { source, dependencies, createdAt: new Date().toISOString(), status: 'running', options,
   machine: { node: process.version, platform: `${platform()}/${arch()}`, cpu: cpus()[0]?.model, logicalCPUs: cpus().length, loadAverageAtStart: loadavg() },
   scope: 'Loopback in-memory authority; synthetic approved guest accounts; one Chromium renderer plus transport actors. Phone viewport uses the host GPU. No Redis, live WorkOS, hosted network, geographic load, or global readiness proof.', results: [] };

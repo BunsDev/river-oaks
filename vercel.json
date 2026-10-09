@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "corepack pnpm run build",
+  "installCommand": "corepack pnpm install --frozen-lockfile",
   "outputDirectory": "dist/preview",
   "cleanUrls": true,
   "headers": [
@@ -182,6 +183,7 @@
     { "source": "/api/events/rsvp", "destination": "/api/server?_river_path=/api/events/rsvp" },
     { "source": "/api/events/cancel", "destination": "/api/server?_river_path=/api/events/cancel" },
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
+    { "source": "/api/profile/claim-intro", "destination": "/api/server?_river_path=/api/profile/claim-intro" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },
     {
       "source": "/multiplayer",

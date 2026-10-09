@@ -11,7 +11,7 @@ and existing shared creations remain available with creation tools off.
 
 ## Develop locally with WorkOS
 
-`npm run dev` starts WorkOS authentication and the shared town inside the Vite
+`pnpm run dev` starts WorkOS authentication and the shared town inside the Vite
 dev server. Configure the Staging WorkOS application and enable GitHub
 social login and Magic Auth email codes in its dashboard, and register
 `http://127.0.0.1:5173/auth/callback`. Both play modes require sign-in and
@@ -23,7 +23,7 @@ for issuance, assignment, expiration, and security limits. Each player must use 
 account. The automated acceptance runner uses isolated temporary local
 identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
-`RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
+`RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run dev --port 5179`. The preview proxies
 auth, multiplayer, and landmark traffic to that checkout's own town on the
 chosen loopback port.
 
@@ -33,8 +33,8 @@ chosen loopback port.
 - Play-mode flags, saved mode preferences, and `?play=` parameters are retired
   and have no effect. Account appearance and landmarks remain server-owned;
   old device-only gameplay data is not imported into accounts.
-- `npm run server -- --dev` runs the town as its own process for a separate
-  `npm run dev`; the dev server then uses it instead of starting its own.
+- `pnpm run server --dev` runs the town as its own process for a separate
+  `pnpm run dev`; the dev server then uses it instead of starting its own.
 
 Development identities exist only for the explicit acceptance fixture on a
 loopback `http` origin, outside `NODE_ENV=production`, and never on Vercel.
@@ -189,7 +189,7 @@ indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://typesafe.place`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
-Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
+Run `pnpm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
 ## Resident names
 
@@ -232,7 +232,7 @@ The local Redis tests exercise cross-instance logout and ban enforcement; the ho
 
 ## Run the Redis API locally
 
-Use Node 22.12 or newer and configure `REDIS_URL`, `REDIS_NAMESPACE=river-oaks:development:v1`, WorkOS credentials, and a localhost `PUBLIC_ORIGIN` in private `.env`. Run `npm run server:redis` and `npm run dev` in separate terminals. The Redis server exposes APIs and WebSockets; Vite serves the frontend. The standalone server below remains available for development without Redis.
+Use Node 22.12 or newer and configure `REDIS_URL`, `REDIS_NAMESPACE=river-oaks:development:v1`, WorkOS credentials, and a localhost `PUBLIC_ORIGIN` in private `.env`. Run `pnpm run server:redis` and `pnpm run dev` in separate terminals. The Redis server exposes APIs and WebSockets; Vite serves the frontend. The standalone server below remains available for development without Redis.
 
 ## Run the current standalone server
 
@@ -241,12 +241,12 @@ The implementation below serves the frontend, WorkOS authentication, and multipl
 After configuring the private environment and WorkOS URLs below, run from the repository root:
 
 ```sh
-npm ci
-npm run build
-npm start
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm start
 ```
 
-`npm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
+`pnpm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
 
 ## Session verification boundary
 
@@ -285,7 +285,7 @@ REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test
 ```
 
 Every Redis-backed server test skips without `REDIS_URL`. CI's `preview` job runs a
-pinned Redis 7.4 service and sets `REDIS_URL` for `npm run test:server`, so all of
+pinned Redis 7.4 service and sets `REDIS_URL` for `pnpm run test:server`, so all of
 them run there without skips when Redis is healthy.
 
 These are local cryptographic boundary tests, not proof of WorkOS's hosted key
@@ -406,14 +406,14 @@ Use a WorkOS development environment and register `http://127.0.0.1:5173/auth/ca
 Start the Vite preview and its local town server:
 
 ```sh
-npm run dev
+pnpm run dev
 ```
 
 Open `http://127.0.0.1:5173/` consistently. Vite starts the town server on port `8787` and proxies authentication, multiplayer API requests, waitlist requests, moderation requests, and WebSocket connections there. Leave `PUBLIC_ORIGIN` unset for this flow so the callback and cookies use the Vite origin. Vite's `/health` route belongs to the optional sidecar; check town health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`. Both the standalone server and the default `npm run dev` flow use WorkOS. Run the automated server tests with `npm run test:server`; they don't replace a live GitHub sign-in check.
+Local HTTP cookies omit `Secure`. Both the standalone server and the default `pnpm run dev` flow use WorkOS. Run the automated server tests with `pnpm run test:server`; they don't replace a live GitHub sign-in check.
 
-On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.
+On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `pnpm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.
 
 ## Scheduled gatherings
 
@@ -424,8 +424,8 @@ not alter building, wish, home-entry, or publishing permissions.
 
 ## Measure browser capacity
 
-Run `npm run audit:multiplayer:render` on a machine with hardware WebGL2 after
-installing Chromium with `npx playwright install chromium`. It creates its own
+Run `pnpm run audit:multiplayer:render` on a machine with hardware WebGL2 after
+installing Chromium with `pnpm exec playwright install chromium`. It creates its own
 ephemeral loopback town and synthetic guests, exercises dynamic joins, movement,
 gestures, reconnects and ordinary departures, then closes its owned services.
 The default tests 1/8/16/32 players at fixed Sharpest quality in desktop and

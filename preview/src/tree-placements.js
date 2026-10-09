@@ -11,14 +11,23 @@ const corrections = new Map([
 const cache = new WeakMap();
 export function treeSupports(world) {
   const source = world?.vegetation?.branch_supports?.length ? world.vegetation.branch_supports : world?.trees ?? [];
-  if (!world?.buildings?.some(building => building.id === 'osm-way-625333009')) return source;
-  if (cache.has(source)) return cache.get(source);
+  const hopdoddy=world?.buildings?.some(building=>building.id==='osm-way-625333009');
+  const winston=world?.stores?.some(store=>store.name==='Harry Winston' && store.building_id==='osm-way-625330792');
+  if (!hopdoddy && !winston) return source;
+  if (cache.has(world)) return cache.get(world);
   const result = source.flatMap(tree => {
     const key = tree.position.join(',');
-    if (!corrections.has(key)) return [tree];
+    if (winston) {
+      // 2025 Street View and the official 2016 exterior: one larger right-hand
+      // tree, left tree beyond the windows. This middle support is an inferred
+      // canopy duplicate, not an OSM survey tree. Preserve the source records.
+      if (key==='-2761,-1355') return [];
+      if (key==='-2761,-1365') return [{...tree,id:'winston-south',height_m:12,radius_m:2.6,referencePlacement:true,endpoints:[],basis:'REF-HW-01/02 photo-estimated crown; original inferred stem retained'}];
+    }
+    if (!hopdoddy || !corrections.has(key)) return [tree];
     const replacement = corrections.get(key);
     return replacement ? [{ ...tree, ...replacement, basis: 'Street View placement estimate, June 2024', referencePlacement: true, endpoints: [] }] : [];
   });
-  cache.set(source, result);
+  cache.set(world, result);
   return result;
 }

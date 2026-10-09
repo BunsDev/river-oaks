@@ -60,7 +60,7 @@ recoverable copy without credentials before editing those assets.
 
 Handoff includes file/artifact paths, branch/worktree, exact commands/results,
 skips, runtime/hardware, cause confidence, unresolved risks and next owner/check.
-Use `npm run agent:list` for existing gates, `npm run verify` for core and
+Use `pnpm run agent:list` for existing gates, `pnpm run verify` for core and
 `docs/agent-workflow.md` for full/Redis/browser/native boundaries. Do not create
 new fake native multiplayer integrations: web authority lives in the Node service;
 native local simulation and HTTP decisions are a different boundary.

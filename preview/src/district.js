@@ -1,3 +1,5 @@
+import { buildReferenceLandscape } from './reference-landscape.js';
+import { decorateWinstonDoor } from './harry-winston-facade.js';
 import * as THREE from 'three';
 import { RETRO } from './retro-palette.js';
 import { createRetailInteriors } from './retail-interiors.js';
@@ -299,7 +301,8 @@ export function buildDistrictBuildings(world) {
       const leaf = new THREE.Mesh(pane, glass); leaf.position.set(0.85, 1.8, 0); leaf.scale.set(1.7, 3.0, 1); leaf.userData.storeId = store.id; leaf.userData.breakableGlass = true; leaf.userData.breakableGlassDynamic = true;
       const pull = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); pull.position.set(1.52, 1.45, 0.06); pull.scale.set(0.03, 0.9, 0.03); pull.userData.storeId = store.id;
       const rail = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); rail.position.set(0.85, 0.32, 0); rail.scale.set(1.68, 0.06, 0.05); rail.userData.storeId = store.id;
-      pivot.add(leaf, pull, rail); pivot.userData.storeId = store.id; group.add(pivot);
+      pivot.add(leaf, pull, rail);
+      if (isHarry && rebuilt) decorateWinstonDoor(pivot, box, gold, dark); pivot.userData.storeId = store.id; group.add(pivot);
       doors.push({ pivot, yaw, angle: 0, hinge: new THREE.Vector3(x+nx*0.2, base+1.2, -north-ny*0.2) });
     } else {
       part(glass, [x+nx*0.26, base+1.8, -north-ny*0.26], [1.5, 3.0, 0.09], yaw);
@@ -311,7 +314,7 @@ export function buildDistrictBuildings(world) {
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
     // Clipped boxwood in limestone planters flank each boutique entrance. They
     // are also watering sites (world-interactions.js), so rebuilt frontages keep them.
-    if (!dining && !isColonial) for (const side of [-1, 1]) {
+    if (!dining && !isColonial && !(isHarry && rebuilt)) for (const side of [-1, 1]) {
       const across = side * 1.6;
       part(planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
       for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
@@ -438,5 +441,6 @@ export function buildDistrictDetail(world) {
     parts.forEach((p,i) => { dummy.position.fromArray(p.p); dummy.scale.fromArray(p.s); dummy.rotation.set(0,p.yaw,0); dummy.updateMatrix(); mesh.setMatrixAt(i,dummy.matrix); });
     mesh.castShadow = mesh.receiveShadow = true; group.add(mesh);
   }
+  group.add(buildReferenceLandscape(world));
   return group;
 }

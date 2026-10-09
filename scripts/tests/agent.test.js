@@ -50,7 +50,7 @@ test('a timed out process fails rather than hanging verification', async t => {
   assert.equal(result.results[0].error, 'ETIMEDOUT');
 });
 
-test('catalog profiles resolve and npm commands refer to real scripts', () => {
+test('catalog profiles resolve and pnpm commands refer to real scripts', () => {
   const config = JSON.parse(readFileSync(new URL('../../config/agent-workflow.json', import.meta.url)));
   const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url)));
   assert.equal(new Set(config.tasks.map(t => t.id)).size, config.tasks.length);
@@ -59,10 +59,10 @@ test('catalog profiles resolve and npm commands refer to real scripts', () => {
     assert.ok(tasks.length > 0);
     for (const task of tasks) {
       assert.ok(task.command.length > 0);
-      // Built-in npm commands (for example audit) do not need package scripts.
-      if (task.command[0] === 'npm' && ['run', 'test'].includes(task.command[1])) {
+      // Built-in pnpm commands (for example audit) do not need package scripts.
+      if (task.command[0] === 'pnpm' && ['run', 'test'].includes(task.command[1])) {
         const script = task.command[1] === 'run' ? task.command[2] : task.command[1];
-        assert.ok(Object.hasOwn(pkg.scripts, script), `Missing npm script: ${script}`);
+        assert.ok(Object.hasOwn(pkg.scripts, script), `Missing pnpm script: ${script}`);
       }
     }
   }

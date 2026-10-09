@@ -58,6 +58,27 @@ test('email access: browser verification, invitation, member controls and revoca
       await page.goto(`${origin}/play`);
       await page.locator('#access-email').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#access-invite-redeem').isDisabled(), true);
+      assert.equal(await page.evaluate(() => {
+        const luminance = value => {
+          const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => {
+            v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+          });
+          return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+        };
+        return ['#access-email', '#access-invite-code'].every(selector => {
+          const style = getComputedStyle(document.querySelector(selector));
+          const border = luminance(style.borderTopColor), fill = luminance(style.backgroundColor);
+          return (Math.max(border, fill) + .05) / (Math.min(border, fill) + .05) >= 3;
+        });
+      }), true, 'input boundaries remain distinguishable against dark fields');
+      await page.locator('.access-github').focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('#access-email').evaluate(node => node === document.activeElement), true);
+      assert.equal(await page.locator('#access-email').evaluate(node => {
+        const style = getComputedStyle(node);
+        return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
+      }), true, 'keyboard focus is visible on the email field');
+
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
         const box=selector=>document.querySelector(selector).getBoundingClientRect();
@@ -113,8 +134,11 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
     assert.equal(invitations.invites.length, 2);
-    // The access gate hides before main.js initializes the sidebar. Wait for
-    // its real state, then open it while the scene can still be initializing.
+    // Admission and town connection are separate gates. Wait for the real
+    // connected roster before interacting with the previously inert app.
+    await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached' });
+    await page.locator('.multiplayer-gate').waitFor({ state: 'hidden' });
+    await page.locator('.app-shell:not([inert])').waitFor({ state: 'visible' });
     await page.locator('#panel-toggle[aria-keyshortcuts]').waitFor({ state: 'visible' });
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
     await page.locator('#access-invites-open').click();
@@ -131,6 +155,12 @@ test('email access: browser verification, invitation, member controls and revoca
     await page.waitForFunction(() => document.querySelector('#access-message').textContent.includes('has not been approved'));
     assert.equal(await page.locator('#access-invite-form').isVisible(), false);
   } catch (error) {
+    console.error('Access gate state:', await page.evaluate(() => ({
+      connectionMessage: document.querySelector('#multiplayer-status')?.textContent,
+      connectionHidden: document.querySelector('.multiplayer-gate')?.hidden,
+      appInert: document.querySelector('.app-shell')?.inert,
+      playerReady: document.querySelector('#canvas-host')?.dataset.playerReady,
+    })).catch(() => ({ unavailable: true })));
     await mkdir('output/playwright', { recursive: true });
     await page.screenshot({ path: 'output/playwright/security-access-failure.png', timeout: 5000 }).catch(() => {});
     throw error;

@@ -2,16 +2,16 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
-Run `npm test` for simulation and UI contracts, `npm run test:server` for authentication, shared state, transport, and abuse controls, `npm run test:desktop` for native contracts, and `npm run build` for the production bundle. `npm run dev` requires GitHub sign-in and waitlist approval, then joins the shared town. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
+Run `pnpm test` for simulation and UI contracts, `pnpm run test:server` for authentication, shared state, transport, and abuse controls, `pnpm run test:desktop` for native contracts, and `pnpm run build` for the production bundle. `pnpm run dev` requires GitHub sign-in and waitlist approval, then joins the shared town. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
 
-Run `npm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `npm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
+Run `pnpm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `pnpm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
 
 For an interactive two-player check, run `node server/tests/browser-fixture.js`, then:
 
 ```sh
-npx --yes --package @playwright/cli playwright-cli -s=multiplayer open 'http://127.0.0.1:5180/?motion-debug=1' --headed
-npx --yes --package @playwright/cli playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer.js
-npx --yes --package @playwright/cli playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer-gate.js
+pnpm --package=@playwright/cli dlx playwright-cli -s=multiplayer open 'http://127.0.0.1:5180/?motion-debug=1' --headed
+pnpm --package=@playwright/cli dlx playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer.js
+pnpm --package=@playwright/cli dlx playwright-cli -s=multiplayer run-code --filename preview/e2e/multiplayer-gate.js
 ```
 
 This loopback fixture injects test identities in isolated browser contexts and uses the real WebSocket transport, world simulation, and rendered game. It checks peer avatars, shared wish consequences and undo, reconnect, movement, mobile layout, duplicate-account replacement, and logout. The [local acceptance report](../data/reports/multiplayer-e2e.json) records the checked scope. It does not establish live WorkOS sign-in, container deployment, or production proxy behavior. The fixture is excluded from the container image; production has no test login route. See [deployment acceptance](multiplayer.md).
@@ -67,7 +67,7 @@ Run `node preview/e2e/experience-runner.js <name>` for an authenticated town fix
 
 `preview/e2e/flight-refusal.js` presses B inside a shop and checks that the refusal is announced where the player is looking: a notice centred just above the walking console that names the reason (indoors, in a ride, or no room overhead), keeps Jevica on the ground, and dismisses itself.
 
-`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `npm run dev`.
+`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `pnpm run dev`.
 
 For pointer regressions, use the authenticated loopback runner:
 
@@ -111,7 +111,7 @@ when a 60 Hz display misses refreshes, recovers gradually, settles on a
 borderline GPU and ignores tab switches. `asset-progress.test.js` covers the
 streaming count and the capped wait for surface textures.
 
-`npm run test:experience -- hud-and-quality` starts its own authenticated town fixture. It waits for the
+`pnpm run test:experience hud-and-quality` starts its own authenticated town fixture. It waits for the
 progress pill to count every file and step aside, switches Settings > Graphics
 between Auto, Smoothest and Sharpest while the canvas keeps native size,
 reloads to check the choice persists, and toggles Clear view with H and the
@@ -137,7 +137,7 @@ with the provider. Jev validates it on the next inference request.
 
 ## Jevica wishes
 
-Run `npm run test:shared -- required` for shared wish grants, consequences,
+Run `pnpm run test:shared required` for shared wish grants, consequences,
 undo, and owner/visitor permissions through the real town transport. Earlier
 [solo wish receipts](../data/reports/jevica-wishes-e2e.json) are historical
 and do not establish current multiplayer acceptance.
@@ -148,7 +148,7 @@ those optional candidates before running the comparison scripts. The shared NPC 
 Older dated reports with outdoor residents and the carriage encounter describe
 retired browser simulation behavior.
 
-`npm run test:experience -- contextual-first-visit rail-navigation photo-mode
+`pnpm run test:experience contextual-first-visit rail-navigation photo-mode
 connection-required sit-and-water` checks contextual actions, player-oriented
 commands, retained photos, fixture recovery and server-owned seat actions.
 The first-visit journey repeats destination search, arrival, entry, conversation,

@@ -1,7 +1,7 @@
 import { createTown } from './town.js';
 
-// `npm start` serves the built frontend and the town from this one process.
-// `npm run server -- --dev` pairs it with a separate Vite dev server instead.
+// `pnpm start` serves the built frontend and the town from this one process.
+// `pnpm run server --dev` pairs it with a separate Vite dev server instead.
 const dev = process.argv.includes('--dev');
 // In --dev, a production PUBLIC_ORIGIN copied from .env.example never points
 // the local town at the live site; only a loopback origin is honoured.

@@ -39,6 +39,8 @@ test('authenticated profiles persist across worlds and gateway replacement', {sk
     return socket;
   };
   await open('admin');await open('guest');
+  assert.equal((await (await post('admin','/api/profile/claim-intro?world=moon-garden',{storeId:'shop'})).json()).firstVisit,true);
+  assert.equal((await (await post('admin','/api/profile/claim-intro?world=moon-garden',{storeId:'shop'})).json()).firstVisit,false);
   const profile={tagline:'Moonlit host',bio:'Come meet me beneath the arch.',pronouns:'she/her',interests:['Gardens','Art'],expectedVersion:0};
   assert.equal((await post('admin','/api/profile/save?world=moon-garden',profile)).status,200);
   assert.equal((await (await post('guest','/api/profile/view?world=moon-garden',{peerId:admin})).json()).profile.bio,profile.bio);
@@ -55,4 +57,7 @@ test('authenticated profiles persist across worlds and gateway replacement', {sk
   await new Promise(resolve=>gateway.server.listen(0,'127.0.0.1',resolve));
   base=`http://127.0.0.1:${gateway.server.address().port}`;
   assert.equal((await (await post('admin','/api/profile/view?world=moon-garden',{})).json()).profile.bio,profile.bio);
+  assert.equal((await (await post('admin','/api/profile/claim-intro?world=moon-garden',{storeId:'shop'})).json()).firstVisit,false);
+  assert.equal((await post('missing','/api/profile/claim-intro?world=moon-garden',{storeId:'shop'})).status,401);
+  assert.equal((await fetch(base+'/api/profile/claim-intro?world=moon-garden',{method:'POST',headers:{Origin:origin,Cookie:'test_session=admin','Content-Type':'application/json'},body:JSON.stringify({storeId:'shop'})})).status,403);
 });

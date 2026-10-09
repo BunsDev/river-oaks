@@ -41,9 +41,10 @@ test('lane fixtures follow the mapped lanes, keep out of footprints and avoid na
   assert.deepEqual([blocked.lamps.length, blocked.planters.length, blocked.bins.length], [0, 0, 0]);
 });
 
-test('every rendered tree gets exactly one flush square pit, squared to its street', () => {
+test('rendered trees get one flush square pit unless rooted in the reference bed', () => {
   const pits = treePits({ ...world, vegetation });
-  assert.equal(pits.length, treeSupports({ ...world, vegetation }).length, 'one pit per effective rendered stem');
+  assert.equal(pits.length, treeSupports({ ...world, vegetation }).length - 1, 'one pit per stem except the Winston planted bed');
+  assert.ok(!pits.some(([x,,z])=>x===-2761 && z===1365), 'no grate overlaps the planted soil');
   const keys = new Set(pits.map(([x, , z]) => `${x.toFixed(2)}:${z.toFixed(2)}`));
   assert.equal(keys.size, pits.length, 'no tree has two pits');
   assert.ok(pits.every(([, , , size, yaw]) => size === TREE_GRATE && Number.isFinite(yaw)));

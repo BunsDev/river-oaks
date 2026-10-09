@@ -3,13 +3,14 @@
 # the repository's security settings).
 version: 2
 updates:
+  # GitHub calls the pnpm lockfile ecosystem "npm".
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
-      npm-minor-and-patch:
+      pnpm-minor-and-patch:
         update-types: [minor, patch]
   - package-ecosystem: uv
     directory: /
