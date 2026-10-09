@@ -395,3 +395,7 @@ Revalidated the isolated worktree at e059ee0; earlier edits remain intact.
   Remaining full browser journeys and hosted CI gate must pass before merge.
   Terminal delivery evidence belongs to the PR and final handoff; historical audit
   reports keep their original source hashes and results.
+- PR #207 hosted preview failed twice before checkout: Docker Hub unauthenticated
+  pull rate limit. Switched only the Redis registry to mirror.gcr.io/library/redis;
+  retained the exact tag and sha256 pin. Downloaded and hashed both mirrored index
+  and Linux amd64 child manifests successfully. No service/version/test changes.
