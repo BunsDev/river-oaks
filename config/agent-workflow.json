@@ -255,6 +255,8 @@
         "run",
         "test:experience",
         "--",
+        "player-lifecycle",
+        "multiplayer-lifecycle",
         "contextual-first-visit",
         "photo-mode",
         "rail-navigation"

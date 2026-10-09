@@ -335,3 +335,36 @@ test('invalid WebSocket key cannot admit a player before the handshake is valida
   assert.deepEqual(alice.messages[0].players.map(player=>player.id),['alice']);
   assert.equal(f.world.players.size,1);
 });
+
+test('a stalled authorization cannot accumulate unbounded acknowledged commands',async t=>{
+  let block=false,release,started;
+  const blocked=new Promise(resolve=>{release=resolve;});
+  const entered=new Promise(resolve=>{started=resolve;});
+  const waitlist={...approvedWaitlist,async isApproved(){if(block){block=false;started();await blocked;}return true;}};
+  const f=await fixture(t,{waitlist}),alice=await connect(f,'alice-session');
+  t.after(()=>release());
+  block=true;
+  alice.ws.send(JSON.stringify({type:'inventory',requestId:'blocked'}));await entered;
+  const closing=closed(alice.ws);
+  for(let i=0;i<8;i++)alice.ws.send(JSON.stringify({type:'inventory',requestId:`queued-${i}`}));
+  const result=await closing;
+  assert.equal(result.code,4008,'queue overflow must stop retaining command payloads');
+  assert.equal(result.reason,'Too many pending commands.');
+  release();
+});
+
+for(const state of ['connected','departed'])test(`server shutdown releases ${state} players without a disconnect grace timer`,async t=>{
+  const f=await fixture(t),alice=await connect(f,'alice-session');
+  if(state==='departed'){const leaving=closed(alice.ws);alice.ws.close();await leaving;await new Promise(resolve=>setImmediate(resolve));}
+  assert.equal(f.world.players.size,1,'normal disconnect retains the reconnect grace before shutdown');
+  const timers=[],schedule=globalThis.setTimeout;
+  t.mock.method(globalThis,'setTimeout',(fn,ms,...args)=>{const timer=schedule(fn,ms,...args);if(ms===10000)timers.push(timer);return timer;});
+  t.after(()=>timers.forEach(clearTimeout));
+  const closing=state==='connected'?closed(alice.ws):Promise.resolve();
+  await f.app.close();
+  assert.equal(f.world.players.size,0,'close resolves only after player references are released');
+  await closing;
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(timers.filter(timer=>!timer._destroyed).length,0,'closed server must not retain its world through a new grace timer');
+  assert.equal(f.world.players.size,0,'shutdown releases departed players immediately');
+});

@@ -42,6 +42,7 @@ public:
 
     const FRiverHumanPoseLedger& Ledger() const { return PoseLedger; }
     int32 NumLiveComponents() const;
+    SIZE_T GetAllocatedSize() const { return Humans.GetAllocatedSize() + PoseLedger.GetAllocatedSize(); }
 
 private:
     struct FAssets
@@ -64,5 +65,5 @@ private:
     // The owning actor's reflected map retains assets; this snapshot does not outlive them.
     TMap<FName, FAssets> Appearances;
     FRiverHumanPoseLedger PoseLedger;
-    TArray<FHuman> Humans; // indexed by monotonically allocated handle
+    TMap<int32, FHuman> Humans; // live records keyed by non-reusable handle
 };

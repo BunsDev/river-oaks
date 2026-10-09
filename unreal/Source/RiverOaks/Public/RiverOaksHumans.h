@@ -62,10 +62,12 @@ public:
     // Accepts only a live handle with a sequence greater than the last accepted one.
     bool Accept(int32 Handle, uint64 Sequence);
     uint64 LastSequence(int32 Handle) const;
-    int32 Num() const { return Entries.Num(); }
+    // Total issued handles stays monotonic; storage contains only live handles.
+    int32 Num() const { return NextHandle; }
+    SIZE_T GetAllocatedSize() const { return Entries.GetAllocatedSize(); }
 private:
-    struct FEntry { uint64 LastSequence = 0; bool bLive = false; };
-    TArray<FEntry> Entries;
+    TMap<int32, uint64> Entries;
+    int32 NextHandle = 0;
 };
 
 // Backend discovery gate. Discovery is enabled: URiverAppearanceCatalogue resolves every recipe

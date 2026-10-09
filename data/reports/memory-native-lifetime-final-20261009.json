@@ -1,0 +1,220 @@
+{
+  "scope": "Final native CPU/component lifetime regressions and NullRHI contracts; no native rendered GPU soak.",
+  "baseCommit": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
+  "sourceSha256": {
+    "unreal/Source/RiverOaks/Private/RiverMarkerBackend.cpp": "c2a5f09b63e19e14d937431e1d5f5b1bf21777ec4cca2b1962a06d5f4f6cf0f6",
+    "unreal/Source/RiverOaks/Private/RiverOaksHumans.cpp": "8ad094b75d9220e28d89f059779c086d825bcf6fc5764031b78ffd3da2fc8fea",
+    "unreal/Source/RiverOaks/Private/RiverSkeletalBackend.cpp": "59c242866affa692418ce2ee9bc27966d41d23f6cf457180004fae3cb5d59834",
+    "unreal/Source/RiverOaks/Public/RiverMarkerBackend.h": "920ee56ece99e5b6403684b5d50fac1ba43f426ae818aa298fd6e43c2906d696",
+    "unreal/Source/RiverOaks/Public/RiverOaksHumans.h": "a2c23c0b03848fbcb055e62690e1be45fdcf28a2285dd51df1cd4ceb7b08e264",
+    "unreal/Source/RiverOaks/Public/RiverSkeletalBackend.h": "b91fa17535dc4cdba8fcb9616c2d75bb71cbc923e344b14d203b720f2d25be6e",
+    "unreal/Source/RiverOaks/Private/Tests/RiverHumanLifetimeTests.cpp": "0450c465eef139e77d46879308f1f2882bfd2cce93ed3611a2fca5d897c2fe99"
+  },
+  "editorBuild": {
+    "result": "Succeeded",
+    "seconds": 20.13,
+    "log": "/tmp/river-oaks-native-lifetime-final-build.log"
+  },
+  "gameBuild": {
+    "result": "Succeeded",
+    "seconds": 95.93,
+    "log": "/tmp/river-oaks-native-lifetime-game-build.log"
+  },
+  "contracts": {
+    "reportCreatedOn": "2026.10.09-20.25.26",
+    "succeeded": 28,
+    "succeededWithWarnings": 0,
+    "failed": 0,
+    "notRun": 0,
+    "totalDuration": 2.8830459117889404
+  },
+  "tests": [
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.BoundsAndFiniteInput",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.FrameStepIndependent",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.IndependentInstances",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.InterruptsContinuously",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.SettlesAfterStop",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.StartsContinuously",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Lifetime.Marker",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Lifetime.PoseLedger",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Lifetime.Skeletal",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Coordinates",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperCamera",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperCollision",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperDiagnostics",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperInputTrace",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanAuthority",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanBackendSelection",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanPoseSequence",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Locomotion",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeConversationInput",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeEncounters",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeGroundContact",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.PortrayalRecipe",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.ProceduralGait",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.Safety",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.ScheduleAuthority",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalBackend",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalConfiguration",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalLocomotion",
+      "state": "Success",
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "redReproduction": {
+    "report": "/tmp/river-oaks-native-lifetime-red/index.json",
+    "succeeded": 0,
+    "failed": 3,
+    "notRun": 0
+  },
+  "workloads": {
+    "poseLedgerReplacements": 4096,
+    "markerReplacements": 1024,
+    "skeletalReplacements": 256,
+    "markerPeakLive": 2,
+    "markerFinalAllocatedInstances": 2
+  },
+  "pythonAfterNativeEdits": {
+    "command": "uv run --locked pytest -q",
+    "passed": 141,
+    "warnings": 2,
+    "seconds": 6.93
+  }
+}

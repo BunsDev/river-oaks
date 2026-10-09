@@ -12,6 +12,7 @@ import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
+  const lifetime = new AbortController();
   const holder = new THREE.Group();holder.name = 'Player character';scene.add(holder);
   const owner=isJevicaOwner(userId);
   let crewLocal=null;
@@ -79,7 +80,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     button.addEventListener('keyup',event=>{if(['Space','Enter'].includes(event.code))release();});button.addEventListener('blur',release);
   }
   const holdRide=()=>{carriage.setControls({});carriage.pauseTour();};
-  window.addEventListener('blur',holdRide);document.addEventListener('visibilitychange',()=>{if(document.hidden)holdRide();});
+  window.addEventListener('blur',holdRide,{signal:lifetime.signal});document.addEventListener('visibilitychange',()=>{if(document.hidden)holdRide();},{signal:lifetime.signal});
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
     if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
@@ -94,8 +95,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(!carriage.prince.setCompanion(next))status.textContent='Walk closer to Jev, with a clear space beside the vehicle.';
   };
   companionButton.addEventListener('click',toggleCompanion);
-  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyJ'&&!event.repeat&&owner){event.preventDefault();toggleCompanion();}});
-  carriage.prince.onCompanion(value=>{
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyJ'&&!event.repeat&&owner){event.preventDefault();toggleCompanion();}},{signal:lifetime.signal});
+  const removeCompanionListener=carriage.prince.onCompanion(value=>{
     companionButton.setAttribute('aria-pressed',String(value.enabled));
     companionButton.querySelector('[data-companion-label]').textContent=value.enabled?'Send Jev to your ride':'Walk with Jev';
     const unavailable=value.source==='local'&&value.enabled&&(['offline','timeout','not_configured','unavailable','transport_error','invalid_answer','low_confidence','busy'].includes(value.reason)||/^provider_\d{3}$/.test(value.reason??''));
@@ -154,7 +155,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const APPEARANCE_PACE=APPEARANCE_COOLDOWN_MS+100;
   const flushAppearance=async()=>{
     clearTimeout(flushTimer);
-    if(sending||!wanted)return;
+    if(disposed||sending||!wanted)return;
     if(wanted===appearance){
       wanted=null;picker.removeAttribute('aria-busy');
       if(status.textContent==='Saving character…')status.textContent='';
@@ -165,17 +166,19 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     const next=wanted;sending=true;
     try{
       const result=await requestAppearance(next);
+      if(disposed)return;
       if(result?.ok){confirmedAt=performance.now();if(result.player)applySharedPlayer(result.player);}
       else if(result?.error==='appearance_cooldown')confirmedAt=performance.now();
       else{if(wanted===next)wanted=null;status.textContent=result?.message??'Character could not be saved.';}
     }
-    catch(error){if(wanted===next)wanted=null;status.textContent=error.message;}
+    catch(error){if(!disposed){if(wanted===next)wanted=null;status.textContent=error.message;}}
     finally{
       sending=false;
-      if(wanted)flushAppearance();else{picker.removeAttribute('aria-busy');syncPicker();}
+      if(!disposed){if(wanted)flushAppearance();else{picker.removeAttribute('aria-busy');syncPicker();}}
     }
   };
   const choose=id=>{
+    if(disposed)return;
     const next=sharedAppearance(id)?.id;
     if(!next||!canUseAppearance(userId,next)){syncPicker();return;}
     if(next!==appearance&&walking.getPose?.()?.flying){
@@ -193,6 +196,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     else if(input.name==='player-form')choose(appearanceFor(current.character,{variant:current.variant,form:input.value})?.id);
   });
   const toggleBeastMovement=async()=>{
+    if(disposed)return;
     const current=sharedAppearance(appearance),person=sharedCharacter(current.character);
     if(current.form!=='beast'){const message='Beast movement belongs to beast forms. Choose Beast under Form first.';status.textContent=message;walking.notify?.(message);return;}
     const next=movement==='beast'?'upright':'beast';
@@ -200,16 +204,17 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     beastButton.disabled=true;
     try{
       const result=await requestMovement(next);
+      if(disposed)return;
       if(result?.ok){sharedMovement=result.player?.movement??next;status.textContent=message;}
       // A town server from before beast movement does not know the command.
       else status.textContent=result?.error==='invalid_command'?'This town does not support beast movement yet.':result?.message??'Movement could not be saved.';
     }
-    catch(error){status.textContent=error.message;}
-    finally{beastButton.disabled=false;syncPicker();}
+    catch(error){if(!disposed)status.textContent=error.message;}
+    finally{if(!disposed){beastButton.disabled=false;syncPicker();}}
   };
   beastButton.addEventListener('click',toggleBeastMovement);
   // P for prowl; Force mode already uses X to lower what it holds.
-  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyP'&&!event.repeat){event.preventDefault();toggleBeastMovement();}},{signal:lifetime.signal});
   syncPicker();
   const listeners = new Set();
   const attention=createPlayerAttention();
@@ -220,7 +225,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     status.textContent=message;walking.notify?.(message);
   };
   flightButton.addEventListener('click',()=>{if(!walking.toggleFlight())refuseFlight();});
-  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())refuseFlight();}});
+  host.addEventListener('keydown',event=>{if(isGameplayKey(event)&&event.code==='KeyB'&&!event.repeat){event.preventDefault();if(!walking.toggleFlight())refuseFlight();}},{signal:lifetime.signal});
   for(const button of panel.querySelectorAll('[data-flight-key]')) {
     const release=()=>host.dispatchEvent(new KeyboardEvent('keyup',{code:button.dataset.flightKey,bubbles:true}));
     button.addEventListener('pointerdown',event=>{event.preventDefault();button.setPointerCapture(event.pointerId);host.focus();host.dispatchEvent(new KeyboardEvent('keydown',{code:button.dataset.flightKey,bubbles:true}));});
@@ -228,8 +233,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   }
   const toggleCamera = enabled => { walking.setThirdPerson(enabled);cameraButton.querySelector('[data-camera-label]').textContent = enabled ? 'Third person' : 'First person';cameraButton.setAttribute('aria-pressed', String(enabled)); };
   cameraButton.addEventListener('click', () => toggleCamera(!walking.thirdPerson));
-  host.addEventListener('keydown', event => {if (isGameplayKey(event) && event.code === 'KeyV' && !event.repeat) {event.preventDefault();toggleCamera(!walking.thirdPerson);} });
+  host.addEventListener('keydown', event => {if (isGameplayKey(event) && event.code === 'KeyV' && !event.repeat) {event.preventDefault();toggleCamera(!walking.thirdPerson);} },{signal:lifetime.signal});
   const load = async () => {
+    if(disposed)return;
     const generation = ++version;
     panel.setAttribute('aria-busy', 'true');status.textContent = 'Loading appearance…';
     host.dataset.playerReady = 'false';
@@ -293,6 +299,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     // Residents greet and recognise the player as Jevica only on her accounts.
     get persona() {return owner?form:'visitor';},
     setSharedIdentity(player){
+      if(disposed)return;
       if(!player){sharedGesture=null;sharedInteraction=null;return;}
       sharedGesture=player.gesture??null;sharedInteraction=player.interaction??null;interactionAt=performance.now();
       sharedName=player.name;panel.querySelector('#player-name').textContent=sharedName;
@@ -309,8 +316,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     water(now, target, duration) { waterUntil = now + duration; waterTarget = target; },
     get watering() { return performance.now() < waterUntil; },
     getWandTip(target) {return outfit?.getWandTip(target)??null;},
-    onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    onChange(listener) { if(disposed)return ()=>{};listeners.add(listener); return () => listeners.delete(listener); },
     update(now,camera,viewportHeight,connected) {
+      if(disposed)return;
       const pose = walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       if (connected) carriage.update(now);
       carriage.updateOptics(camera,viewportHeight);
@@ -372,6 +380,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       // No flashing or camera shake: character motion respects reduced motion.
       holder.userData.reducedMotion = reducedMotion;
     },
-    dispose() {disposed = true;version++;carriage.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.removeFromParent();panel.remove();},
+    dispose() {
+      if(disposed)return;
+      disposed=true;version++;lifetime.abort();clearTimeout(flushTimer);wanted=null;
+      removeCompanionListener();listeners.clear();carriage.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();
+      outfit=vehicle=avatar=null;holder.clear();holder.removeFromParent();panel.remove();
+    },
   };
 }

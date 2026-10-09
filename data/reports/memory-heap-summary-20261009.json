@@ -1,0 +1,283 @@
+{
+  "scope": "Shallow heap node counts, warm cycle 2 vs final cycle 18; excludes retained-size attribution and external GPU bytes.",
+  "counts": [
+    {
+      "name": "object: Group",
+      "warm": 328,
+      "final": 328,
+      "delta": 0
+    },
+    {
+      "name": "object: Mesh",
+      "warm": 589,
+      "final": 589,
+      "delta": 0
+    },
+    {
+      "name": "object: SkinnedMesh",
+      "warm": 535,
+      "final": 535,
+      "delta": 0
+    },
+    {
+      "name": "object: Bone",
+      "warm": 5374,
+      "final": 5374,
+      "delta": 0
+    },
+    {
+      "name": "object: Skeleton",
+      "warm": 188,
+      "final": 188,
+      "delta": 0
+    },
+    {
+      "name": "object: BufferGeometry",
+      "warm": 650,
+      "final": 650,
+      "delta": 0
+    },
+    {
+      "name": "object: InstancedMesh",
+      "warm": 1677,
+      "final": 1677,
+      "delta": 0
+    },
+    {
+      "name": "object: MeshStandardMaterial",
+      "warm": 306,
+      "final": 306,
+      "delta": 0
+    },
+    {
+      "name": "object: Texture",
+      "warm": 111,
+      "final": 111,
+      "delta": 0
+    },
+    {
+      "name": "object: Vector3",
+      "warm": 79357,
+      "final": 79357,
+      "delta": 0
+    },
+    {
+      "name": "object: Map",
+      "warm": 843,
+      "final": 843,
+      "delta": 0
+    }
+  ],
+  "largestGrowth": [
+    {
+      "name": "code: system / InstructionStream",
+      "count": 430,
+      "bytes": 1316032,
+      "total": 3565
+    },
+    {
+      "name": "code: system / TrustedByteArray",
+      "count": 978,
+      "bytes": 457412,
+      "total": 8002
+    },
+    {
+      "name": "native: system / WeakArrayList",
+      "count": 658,
+      "bytes": 169460,
+      "total": 3082
+    },
+    {
+      "name": "code: system / ProtectedFixedArray",
+      "count": 222,
+      "bytes": 134916,
+      "total": 986
+    },
+    {
+      "name": "code: system / Code",
+      "count": 430,
+      "bytes": 30960,
+      "total": 3565
+    },
+    {
+      "name": "code: system / FeedbackVector",
+      "count": 205,
+      "bytes": 30768,
+      "total": 2559
+    },
+    {
+      "name": "code: system / WeakArrayList",
+      "count": 512,
+      "bytes": 18816,
+      "total": 1072
+    },
+    {
+      "name": "native: PerformanceLongAnimationFrameTiming",
+      "count": 84,
+      "bytes": 14784,
+      "total": 111
+    },
+    {
+      "name": "native: blink::NetworkResourcesData::ResourceData",
+      "count": 50,
+      "bytes": 14400,
+      "total": 380
+    },
+    {
+      "name": "native: blink::ScriptTimingInfo",
+      "count": 103,
+      "bytes": 14008,
+      "total": 144
+    },
+    {
+      "name": "code: system / TrustedWeakFixedArray",
+      "count": 222,
+      "bytes": 13776,
+      "total": 986
+    },
+    {
+      "name": "code: system / AllocationSite",
+      "count": 465,
+      "bytes": 12720,
+      "total": 2623
+    },
+    {
+      "name": "native: PerformanceScriptTiming",
+      "count": 104,
+      "bytes": 12480,
+      "total": 144
+    },
+    {
+      "name": "object: Object",
+      "count": 347,
+      "bytes": 10404,
+      "total": 177278
+    },
+    {
+      "name": "native: TaskAttributionTiming",
+      "count": 71,
+      "bytes": 8520,
+      "total": 96
+    },
+    {
+      "name": "code: system / LoadHandler",
+      "count": 453,
+      "bytes": 7384,
+      "total": 6433
+    },
+    {
+      "name": "native: PerformanceLongTaskTiming",
+      "count": 71,
+      "bytes": 7384,
+      "total": 96
+    },
+    {
+      "name": "object: Array",
+      "count": 255,
+      "bytes": 4080,
+      "total": 195389
+    },
+    {
+      "name": "native: system / ProtectedFixedArray",
+      "count": 222,
+      "bytes": 4020,
+      "total": 987
+    },
+    {
+      "name": "code: system / CodeWrapper",
+      "count": 430,
+      "bytes": 3440,
+      "total": 6093
+    },
+    {
+      "name": "native: LayoutShift",
+      "count": 16,
+      "bytes": 2432,
+      "total": 25
+    },
+    {
+      "name": "native: blink::HashTrieNode<blink::CSSVariableData>",
+      "count": 8,
+      "bytes": 2176,
+      "total": 152
+    },
+    {
+      "name": "native: blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::PerformanceScriptTiming, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+      "count": 84,
+      "bytes": 2016,
+      "total": 111
+    },
+    {
+      "name": "native: WebGLVertexArrayObject",
+      "count": 15,
+      "bytes": 1800,
+      "total": 1776
+    },
+    {
+      "name": "native: DOMRectReadOnly",
+      "count": 32,
+      "bytes": 1792,
+      "total": 68
+    },
+    {
+      "name": "native: system / SharedFunctionInfoWrapper",
+      "count": 222,
+      "bytes": 1776,
+      "total": 986
+    },
+    {
+      "name": "native: blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::TaskAttributionTiming, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+      "count": 71,
+      "bytes": 1704,
+      "total": 96
+    },
+    {
+      "name": "native: blink::ComputedStyleBase::StyleSurroundData",
+      "count": 5,
+      "bytes": 1560,
+      "total": 292
+    },
+    {
+      "name": "code: system / StoreHandler",
+      "count": 80,
+      "bytes": 1556,
+      "total": 786
+    },
+    {
+      "name": "native: blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::WebGLBuffer, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+      "count": 15,
+      "bytes": 1080,
+      "total": 1778
+    },
+    {
+      "name": "native: blink::Font",
+      "count": 5,
+      "bytes": 840,
+      "total": 478
+    },
+    {
+      "name": "native: blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::PerformanceEntry, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+      "count": 0,
+      "bytes": 784,
+      "total": 7
+    },
+    {
+      "name": "code: system / WeakFixedArray",
+      "count": 26,
+      "bytes": 728,
+      "total": 2363
+    },
+    {
+      "name": "native: blink::ComputedStyleBase::StyleMisc2Data",
+      "count": 2,
+      "bytes": 688,
+      "total": 71
+    },
+    {
+      "name": "native: blink::ComputedStyleBase::StyleInheritedData",
+      "count": 5,
+      "bytes": 680,
+      "total": 298
+    }
+  ]
+}

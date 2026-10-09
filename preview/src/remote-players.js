@@ -10,6 +10,7 @@ import { traversalForAppearance } from './beast-traversal.js';
 export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   let disposed=false,previous=null;
+  const next=new THREE.Vector3(),before=new THREE.Vector3(),point=new THREE.Vector3();
   const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
@@ -49,8 +50,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
       return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
-      const peers=players.filter(player=>player.id!==selfId);
-      for(const [id,entry]of entries)if(!peers.some(player=>player.id===id)){remove(entry);entries.delete(id);}
+      if(disposed)return;
+      const peers=players.filter(player=>player.id!==selfId),ids=new Set(peers.map(player=>player.id));
+      for(const [id,entry]of entries)if(!ids.has(id)){remove(entry);entries.delete(id);}
       for(const player of peers){
         let entry=entries.get(player.id);
         if(!entry){
@@ -62,10 +64,12 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
       }
     },
     update(now,camera){
+      if(disposed)return;
+      const width=host.clientWidth,height=host.clientHeight;
       const delta=previous===null?0:Math.min(0.1,(now-previous)/1000);previous=now;
       for(const entry of entries.values()){
-        const {holder,target,avatar,label}=entry;const next=new THREE.Vector3(target.position[0],target.position[2]+target.altitude,-target.position[1]);
-        const before=holder.position.clone();if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
+        const {holder,target,avatar,label}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
+        before.copy(holder.position);if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
         const moved=holder.position.distanceTo(before);entry.distance+=moved;
         // Face the way they walk, as the local avatar does; a player standing
         // still keeps their last heading. Facing the camera yaw while moving
@@ -100,8 +104,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           }
         }
         entry.wasSitting=Boolean(target.sitting);
-        const point=holder.position.clone().add(new THREE.Vector3(0,target.sitting?1.75:2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
-        if(!label.hidden)label.style.transform=`translate(${(point.x+1)*host.clientWidth/2}px,${(1-point.y)*host.clientHeight/2}px) translate(-50%,-100%)`;
+        point.copy(holder.position);point.y+=target.sitting?1.75:2.2;point.project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
+        if(!label.hidden)label.style.transform=`translate(${(point.x+1)*width/2}px,${(1-point.y)*height/2}px) translate(-50%,-100%)`;
       }
     },
     dispose(){disposed=true;for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},

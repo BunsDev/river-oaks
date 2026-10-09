@@ -1,0 +1,165 @@
+{
+  "scope": "Current isolated source build and NullRHI Contracts automation; no native rendered-memory or target-GPU acceptance.",
+  "engineVersion": {
+    "MajorVersion": 5,
+    "MinorVersion": 8,
+    "PatchVersion": 2,
+    "Changelist": 56702186,
+    "CompatibleChangelist": 55116800,
+    "IsLicenseeVersion": 0,
+    "IsPromotedBuild": 1,
+    "BranchName": "++UE5+Release-5.8"
+  },
+  "build": {
+    "result": "Succeeded",
+    "seconds": 124.57,
+    "log": "/tmp/river-oaks-memory-native-build.log"
+  },
+  "contracts": {
+    "reportCreatedOn": "2026.10.09-19.42.45",
+    "succeeded": 25,
+    "succeededWithWarnings": 0,
+    "failed": 0,
+    "notRun": 0,
+    "totalDuration": 0.2593529224395752
+  },
+  "tests": [
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.BoundsAndFiniteInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.FrameStepIndependent",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.IndependentInstances",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.InterruptsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.SettlesAfterStop",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.GaitBlend.StartsContinuously",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Coordinates",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperCamera",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperCollision",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperDiagnostics",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.DeveloperInputTrace",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanBackendSelection",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.HumanPoseSequence",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Locomotion",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeConversationInput",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeEncounters",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.NativeGroundContact",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.PortrayalRecipe",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ProceduralGait",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.Safety",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.ScheduleAuthority",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalBackend",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalConfiguration",
+      "state": "Success"
+    },
+    {
+      "name": "RiverOaks.Contracts.SkeletalLocomotion",
+      "state": "Success"
+    }
+  ],
+  "sourceSha256": {
+    "unreal/Source/RiverOaks/Private/RiverAppearanceCatalogue.cpp": "0ace2922fc6d74f74910acc3c9baa3c0bc5712e4fb6771e566efb0479a8a2acd",
+    "unreal/Source/RiverOaks/Private/RiverDeveloperDiagnostics.cpp": "59d8c2157324d4fc4571dc03c7be14cee5a4c91a7cbaf37a76875b38a65fb369",
+    "unreal/Source/RiverOaks/Private/RiverDeveloperView.cpp": "d58fca54b638aeb16d37575da777e8f7f42cbbab71c74ff6544678c54295976c",
+    "unreal/Source/RiverOaks/Private/RiverLocomotionAnimInstance.cpp": "c463a0c76d3d791a7b394ccf9f587d47afd63f47f2450f7c4a21e6a1f9925189",
+    "unreal/Source/RiverOaks/Private/RiverMarkerBackend.cpp": "e6eee3b79da6a68c66318421438d0544901bba883bebfa4c2cce7c883f330234",
+    "unreal/Source/RiverOaks/Private/RiverOaks.cpp": "91c5ce23e4ae07450f18b265591981641584f3d6d6bbd03fb2a7a420b2950d47",
+    "unreal/Source/RiverOaks/Private/RiverOaksGameMode.cpp": "f373e704a9e0026c3428e768324bcf116060b50c4ec838f35f4d2104aef13fe2",
+    "unreal/Source/RiverOaks/Private/RiverOaksHumans.cpp": "f94f046d83d45cc6f2dc4e10f408b946214d9a15f44fc25d0866813865e54e78",
+    "unreal/Source/RiverOaks/Private/RiverOaksWorld.cpp": "349a0c3d91eca3b4ba073ac8754c988897be419c2edb7dc5a141f6227cc728e1",
+    "unreal/Source/RiverOaks/Private/RiverProceduralAnimInstance.cpp": "aed8027cfebc53a866eec830eaef62ec50fcde4ad04c368ca5fafb607d746b12",
+    "unreal/Source/RiverOaks/Private/RiverSkeletalBackend.cpp": "6d72588f62e1463778ab8ca0923c003d3a2c85e858b85b2f486add51060ca45e",
+    "unreal/Source/RiverOaks/Private/RiverStreetPawn.cpp": "953cfa8cb18cf2c790c92a8c01c469a937d51bda47ed10f00d1ad79b29fc7eb5",
+    "unreal/Source/RiverOaks/Private/Tests/RiverAppearanceCatalogueTests.cpp": "1bc57a5623bec0e3ddba94b767391252776d64d3488ae0ecf6e5149e2065e030",
+    "unreal/Source/RiverOaks/Private/Tests/RiverDeveloperCollisionTests.cpp": "914af39ac114897f326968491d0581750ebc53a80edc2b08b34d56228b6c0f83",
+    "unreal/Source/RiverOaks/Private/Tests/RiverDeveloperDiagnosticsTests.cpp": "ce3b480596dc4c74dc95ae171fa02b092c4818a17caf5bb2023b9a421c9c90d6",
+    "unreal/Source/RiverOaks/Private/Tests/RiverGaitBlendTests.cpp": "e2f508ba298514a5c39480b50d9127ef5db5f996e23611849d4d654d10dfe791",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeEncounterTests.cpp": "73a0722b56637904b55b08ce5d120c786ed218c06aead00482f28242776e64d4",
+    "unreal/Source/RiverOaks/Private/Tests/RiverNativeGroundTests.cpp": "772a818d8b66b2bf95dc61430eb50838805a9602ffe038256a77a25aa13784bb",
+    "unreal/Source/RiverOaks/Private/Tests/RiverOaksHumansTests.cpp": "3a7550ace8a788303446d5a70e9755df770d12a9cbbccc47a3c55bb2a28a0c6a",
+    "unreal/Source/RiverOaks/Private/Tests/RiverOaksRulesTests.cpp": "9e8c1d5f60ec8e4bcafed87500f6fcc14aba44827dee936cf3184cff3c94fef1",
+    "unreal/Source/RiverOaks/Private/Tests/RiverProceduralGaitTests.cpp": "e343e27ea89ba95cb72628b079163678a95cde21e15e1e5f3890dcf1cf3aad4f",
+    "unreal/Source/RiverOaks/Private/Tests/RiverResidentAssetTests.cpp": "298a270b10691822137c35092be9e577d11d8c1f46d57e9f8274097e55ec879f",
+    "unreal/Source/RiverOaks/Private/Tests/RiverSkeletalBackendTests.cpp": "4fb4d23551c5e702399803847337d75d0f687de443d7f5dd69480f53946b2f3c",
+    "unreal/Source/RiverOaks/Public/RiverAppearanceCatalogue.h": "e2f4d14f065ad6586b86af88c581ff07b47f8c0268f09aa47c308b84edaea07d",
+    "unreal/Source/RiverOaks/Public/RiverDeveloperDiagnostics.h": "b531a5d3eb35775aec9d3587399672fa56ce0edaf97b77a5cb8505fdf4c3b343",
+    "unreal/Source/RiverOaks/Public/RiverGaitBlend.h": "19de18afc29b141990879fdddee738a21df2f7be3f21f88ac7cfaa14cf2fed04",
+    "unreal/Source/RiverOaks/Public/RiverLocomotionAnimInstance.h": "6daa1fe6c6cc1152def63cbaae6401dead17ed1b29e17646f3df1bcbdf38509d",
+    "unreal/Source/RiverOaks/Public/RiverMarkerBackend.h": "16410c6768719aec9b2a2bf5fe77e9617da776a1bd9b562ae3edd8c8330a39f6",
+    "unreal/Source/RiverOaks/Public/RiverOaksGameMode.h": "941944a4e6f16e756b313cf586a2b1b165356c4aa377df78e8350362021e2e0a",
+    "unreal/Source/RiverOaks/Public/RiverOaksHumans.h": "f720ed9001ca34af1eb3319dbda17a9cd9902f4a244685ce76e2bd6ca2a39246",
+    "unreal/Source/RiverOaks/Public/RiverOaksRules.h": "4f3d916e2c0525b830f7d402756ab3f6b83e39a1e5805184dfba51cbce2681e3",
+    "unreal/Source/RiverOaks/Public/RiverOaksWorld.h": "92f060d4e2ccd0d37cfcbb21f48b51755f0d72992388969a75cb4187fcc99b77",
+    "unreal/Source/RiverOaks/Public/RiverProceduralAnimInstance.h": "39e9ffd25d05c1c3c09aa939b5a6cc4cfb0448e31bbe2431007aa9851e871f2e",
+    "unreal/Source/RiverOaks/Public/RiverSkeletalBackend.h": "7db157125510c3ae2e2ee67bdfb9a2c5dbd128d3c03437ff09e2876dacbb738c",
+    "unreal/Source/RiverOaks/Public/RiverStreetPawn.h": "82b65e4eaf79847e65cc8b85ed7ba5a91006086c72063651226085c5506db391"
+  }
+}
