@@ -242,7 +242,9 @@ export async function buildDebugReport({ description = '', screenshot = null } =
 // A readable summary first, then the full report, for pasting into an issue or chat.
 export function reportMarkdown(report) {
   const env = report.environment ?? {}, renderer = report.renderer ?? {}, frames = report.performance?.frames ?? {}, game = report.game ?? {};
-  const row = (label, value) => (value === undefined || value === null || value === '' ? '' : `| ${label} | ${String(value).replace(/\|/g, '\\|')} |\n`);
+  // A table cell: backslashes first, then pipes, and no line breaks, so no value can end the cell early.
+  const cell = value => String(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
+  const row = (label, value) => (value === undefined || value === null || value === '' ? '' : `| ${label} | ${cell(value)} |\n`);
   const { screenshot, ...rest } = report;
   const top = report.errors?.slice(-5).map(error => `- \`${error.type}\` ${error.message}${error.count > 1 ? ` (×${error.count})` : ''}`).join('\n');
   return `# TypeSafe Place problem report\n\nReport \`${report.id}\` · ${report.createdAt}\n\n${report.description ? `> ${report.description.replace(/\n/g, '\n> ')}\n\n` : ''}`

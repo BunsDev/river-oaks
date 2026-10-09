@@ -52,3 +52,10 @@ test('the copied report leads with a readable summary and leaves the picture out
   assert.ok(!text.includes('AAAA'), 'the picture travels only in the download or the sent report');
   assert.match(text, /```json\n\{/);
 });
+
+test('summary table cells escape backslashes and pipes and stay on one line', () => {
+  const text = reportMarkdown({ id: 'r2', createdAt: '2026-10-09T15:00:00.000Z', app: { version: '1', commit: 'c', host: 'h', path: '/p' },
+    environment: { browser: 'Weird \\| Browser\\', platform: 'line\nbreak' }, errors: [], console: [], network: [] });
+  assert.match(text, /\| Browser \| Weird \\\\\\\| Browser\\\\ \|/);
+  assert.match(text, /\| Platform \| line break \|/);
+});
