@@ -40,6 +40,11 @@ async page => {
   const bounds = await notice.boundingBox();
   check(bounds.x >= 0 && bounds.x + bounds.width <= 390, 'warning fits a narrow viewport');
   await page.screenshot({ path: 'output/playwright/hardware-acceleration-mobile.png' });
+  // A warning must not block the controls beneath its noninteractive message.
+  if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+  await page.locator('[data-section=explore-section]').click({ timeout: 5000 });
+  check(await page.locator('[data-section=explore-section]').getAttribute('aria-selected') === 'true', 'mobile navigation remains usable while the warning is visible');
+  await page.locator('#panel-toggle').click();
   const dismiss = notice.getByRole('button', { name: 'Dismiss graphics performance warning' });
   await dismiss.focus();
   await page.keyboard.press('Enter');

@@ -55,3 +55,11 @@ tasks passed on the combined tree. Independent review approved the hardware
 warning and the corrected long-name checkpoint behavior. Required hosted checks
 and refreshed named browser journeys must finish before the main merge. PR #204
 will be closed as superseded after delivery.
+
+Hosted software-rendering follow-up: the warning paragraph intercepted pointer
+and touch actions on underlying mobile/navigation/greeting controls. Reproduced
+in the dedicated local browser journey by clicking Places at 390px while the
+software warning is visible. The advisory body now permits pointer events to
+pass through; Dismiss remains interactive. The new regression failed before the
+CSS fix and passed afterward (13 checks total), as did the production build.
+Independent follow-up review approved the fix. Hosted checks rerun on this head.

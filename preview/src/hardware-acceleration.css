@@ -1,5 +1,7 @@
 .hardware-acceleration-warning {
   position: absolute;
+  /* Keep the advisory message from blocking the world and navigation beneath it. */
+  pointer-events: none;
   z-index: 25;
   top: 76px;
   left: 50%;
@@ -22,6 +24,7 @@
 .hardware-acceleration-warning strong { font-size: 14px; }
 .hardware-acceleration-warning p { margin: 6px 0 0; }
 .hardware-acceleration-warning button {
+  pointer-events: auto;
   flex-shrink: 0;
   min-height: 44px;
   padding: 8px;
