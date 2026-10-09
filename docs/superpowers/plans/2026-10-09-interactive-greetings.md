@@ -72,3 +72,11 @@ Val authorized commit, push and merge on 2026-10-09. Delivery is in progress
 through a PR; refresh main and require the hosted verification matrix before
 merging. No production account/database operations are part of delivery.
 Keep the worktree until the PR merge and clean-state evidence are confirmed.
+
+PR #203 rebased cleanly onto main `941550e`; core and the 11-check greetings
+journey passed again on `1774cc2`. The first hosted run passed the new greetings
+journey, but exposed an ambiguous unscoped Wave locator in `multiplayer-dev`:
+the People panel and new nearby card both offer Wave. Scoped that regression to
+the intended Avatar gestures region; both user-facing controls remain.
+`RIVER_OAKS_SHARED_JOURNEY=multiplayer-dev npm run test:shared -- development`
+passed locally after the correction; receipt `.runtime/greetings-delivery-development.json`.
