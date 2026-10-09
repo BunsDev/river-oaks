@@ -163,3 +163,18 @@ test('the Redis waitlist also keeps each request named as its owner signs in now
   assert.equal((await waitlist.list())[0].name, 'val-dev');
   assert.equal((await waitlist.request({ userId: 'user_1', name: 'val-dev' })).decidedBy, 'admin');
 });
+
+test('long fallback names survive checkpoint roundtrips without losing account uniqueness', () => {
+  const ids = ['user_' + 'a'.repeat(100), 'user_' + 'a'.repeat(99) + 'b'];
+  const world = createSharedWorld(data, { now: () => 1_000_000 });
+  for (const userId of ids) {
+    assert.equal(world.join(identity(userId, 'Resident')).ok, true);
+    assert.equal(world.rename(identity(userId, 'Resident')).name, `Visitor #${userId}`);
+    assert.equal(world.command(userId, { type: 'chat', text: 'hello' }).ok, true);
+  }
+  const restored = createSharedWorld(data, { now: () => 1_000_000 });
+  assert.equal(restored.restore(world.checkpoint()).ok, true);
+  const snapshot = restored.snapshot();
+  assert.deepEqual(snapshot.players.map(player => player.name), ids.map(id => `Visitor #${id}`));
+  assert.deepEqual(snapshot.chat.map(entry => entry.authorName), ids.map(id => `Visitor #${id}`));
+});

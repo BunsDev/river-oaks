@@ -55,3 +55,10 @@ Implementation and scoped verification complete. Val authorized commit, push
 and merge on 2026-10-09. Delivery: refresh against current main, review, commit,
 push and merge through a checked PR. Pre-commit focused suite: 64 passed / 22
 Redis skips (the separate 114-test Redis run above passed without skips).
+
+Delivery review (2026-10-09): reviewer found full fallbacks for long supported
+account IDs could exceed the checkpoint's 80-character stored-name bound.
+Added a failing roundtrip regression and bounded stored names after applying the
+name rule in join/rename; public guards still reconstruct the complete unique
+name from the account ID. Focused regression and post-rebase core verification
+are required before landing.

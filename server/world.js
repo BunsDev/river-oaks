@@ -232,11 +232,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     return [x0, north0];
   }
   // A resident who is still in the world when they sign in again keeps their
-  // place but takes the name their current session carries.
+  // place but takes the name their current session carries. Keep stored copies
+  // within checkpoint bounds; publicPlayer reconstructs full account fallbacks.
   function rename(identity) {
     const player=identity && players.get(identity.userId);
     if (!player || typeof identity.name!=='string') return null;
-    const name=accountName(identity.userId,identity.name.slice(0,80));
+    const name=accountName(identity.userId,identity.name).slice(0,80);
     if (player.name!==name) {player.name=name;revision++;}
     return publicPlayer(player);
   }
@@ -252,7 +253,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     const spawn = createWalkingState(environment).position, [x,north] = arrivalSpot(spawn[0],-spawn[2]);
     const appearance=permittedAppearance(identity.userId,appearanceByUser.get(identity.userId));
-    const player = {id:identity.userId,name:accountName(identity.userId,identity.name.slice(0,80)),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
+    const player = {id:identity.userId,name:accountName(identity.userId,identity.name).slice(0,80),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,
       poseAt:time,moveBudget:0.1,liftBudget:0.1,gesture:null,gestureUntil:0};
     players.set(player.id,player);
     rememberAppearance(player.id,appearance);
