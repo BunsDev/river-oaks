@@ -1,0 +1,7 @@
+{
+  "mode": "development",
+  "checks": [],
+  "status": "failed",
+  "error": "electronApplication.firstWindow: Timeout 30000ms exceeded while waiting for event \"window\"\n    at /Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/desktop/e2e.js:36:26",
+  "errors": []
+}

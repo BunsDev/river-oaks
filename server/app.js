@@ -270,7 +270,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         }
         clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);
         const old=connections.get(identity.userId);
-        const connection={ws,identity,token,alive:true};connections.set(identity.userId,connection);
+        const connection={ws,identity,token,alive:true,pending:0};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve(),waitingPose=null;
@@ -288,8 +288,9 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           // place between the latest pose before it and the latest pose after.
           const coalescible=message?.type==='pose' && message.requestId===undefined;
           if(coalescible && waitingPose){waitingPose.message=message;return;}
+          if(!coalescible && connection.pending>=8)return ws.close(4008,'Too many pending commands.');
           const slot={message};
-          if(coalescible)waitingPose=slot;else waitingPose=null;
+          if(coalescible)waitingPose=slot;else{waitingPose=null;connection.pending++;}
           messageQueue = messageQueue.then(async()=>{
           if(waitingPose===slot)waitingPose=null;
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
@@ -313,12 +314,13 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
-          }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
+          }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
         });
         ws.on('close',()=>{
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
+          if(stopped){world.leave(identity.userId);return;}
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
@@ -364,8 +366,11 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     connections.clear();world=next;regionSha256=hash;
   },async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
-    for(const timer of departures.values())clearTimeout(timer);
+    for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
+    departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
+    for(const id of connections.keys())world.leave(id);
+    connections.clear();
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));

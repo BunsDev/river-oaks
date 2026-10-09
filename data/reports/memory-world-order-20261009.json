@@ -1,0 +1,56 @@
+{
+  "createdAt": "2026-10-09T19:56:15.670Z",
+  "status": "passed",
+  "modes": [
+    "development-world"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "world-boundary",
+      "status": "passed",
+      "seconds": 11.908,
+      "result": {
+        "passed": true,
+        "checks": [
+          "An alternate world joins with its own versioned snapshot",
+          "Jevica retains building permission in the alternate world",
+          "An unqualified link still joins the original River Oaks world",
+          "An unknown world cannot join this server",
+          "A missing world shows a clear connection gate",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 31.786,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The map draws the active world roads and buildings",
+          "Named destinations and the live player position appear on the map",
+          "Selecting a map marker previews it before travel",
+          "Go here uses the shared server travel path",
+          "A saved landmark appears in its world map",
+          "Keyboard arrows choose an arbitrary destination",
+          "A selected map point shares its world and position",
+          "The active world contains a broad blocked building footprint",
+          "A building click remains an arbitrary point, not a storefront shortcut",
+          "The server refuses an indoor map destination",
+          "A player in the same world appears as a live map marker",
+          "The keyboard-accessible player list offers server-checked meeting without sharing another player position",
+          "Meet nearby arrives beside Bob rather than on top of him",
+          "A departed selected player leaves the map and clears the meeting action",
+          "Another world omits map landmarks saved in the configured alternate world",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

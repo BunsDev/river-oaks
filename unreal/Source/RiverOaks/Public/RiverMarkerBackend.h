@@ -29,6 +29,7 @@ public:
 private:
     TWeakObjectPtr<UInstancedStaticMeshComponent> Instances;
     FRiverHumanPoseLedger PoseLedger;
-    TArray<int32> InstanceOfHandle;
+    TMap<int32, int32> InstanceOfHandle;
+    TArray<int32> FreeInstances;
     bool bDirty = false;
 };

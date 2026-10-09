@@ -1,0 +1,112 @@
+{
+  "startedAt": "2026-10-09T19:41:29.276Z",
+  "scope": "33 loopback server lifetimes, eight synthetic authenticated players each; forced-GC process diagnostics, no Redis or live providers.",
+  "samples": [
+    {
+      "cycle": 3,
+      "rss": 166264832,
+      "heapTotal": 50577408,
+      "heapUsed": 15155376,
+      "external": 7242746,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 6,
+      "rss": 167723008,
+      "heapTotal": 50839552,
+      "heapUsed": 15414488,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 9,
+      "rss": 168050688,
+      "heapTotal": 51101696,
+      "heapUsed": 15698688,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 12,
+      "rss": 186335232,
+      "heapTotal": 84918272,
+      "heapUsed": 15853776,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 15,
+      "rss": 192741376,
+      "heapTotal": 84918272,
+      "heapUsed": 15854560,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 18,
+      "rss": 193314816,
+      "heapTotal": 84918272,
+      "heapUsed": 15904928,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 21,
+      "rss": 193757184,
+      "heapTotal": 85704704,
+      "heapUsed": 15954920,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 24,
+      "rss": 187482112,
+      "heapTotal": 85180416,
+      "heapUsed": 15975360,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 27,
+      "rss": 183877632,
+      "heapTotal": 85180416,
+      "heapUsed": 16025320,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 30,
+      "rss": 184123392,
+      "heapTotal": 85180416,
+      "heapUsed": 16082040,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 33,
+      "rss": 184205312,
+      "heapTotal": 85442560,
+      "heapUsed": 16117568,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    }
+  ],
+  "sha256": {
+    "server/app.js": "63ce6726e0574401ee5de621ea69e2fbdf09b8ff605e5805b41014dcc62780dc",
+    "server/world.js": "ff6ec8782755ae2e1317e0d5a1eb9ca6ad17906b3d8cbc7bbfae716b25d7c440",
+    ".runtime/memory/server-churn.mjs": "2dd979dc90804098004e6d44f052ab5a588835d248aac1c41324b0ed3e47d6bc"
+  },
+  "status": "passed",
+  "finishedAt": "2026-10-09T19:41:33.011Z"
+}

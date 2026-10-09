@@ -83,7 +83,9 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     entry.world=next;entry.meta=candidate.world;
     return {ok:true,world:candidate.world,disconnectedPlayers:migrated.disconnectedPlayers,clearedWishes:migrated.clearedWishes};
   }
+  let closed=false,closing=null;
   async function worldFor(id) {
+    if(closed)return null;
     if(games.has(id))return games.get(id);
     if(pending.has(id))return pending.get(id);
     const load=(async()=>{
@@ -106,8 +108,15 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,
     security:{isBanned:id=>moderation.isBanned(id),allow:(_scope,id)=>drivingLimit(id)},...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
-  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,async close(){
-    for(const {game} of games.values())await game.close();
-    await router.close();auth.close();
+  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
+    if(closing)return closing;
+    closed=true;
+    closing=(async()=>{
+      await Promise.allSettled([...pending.values()]);
+      for(const {game} of games.values())await game.close();
+      games.clear();landmarkStores.clear();
+      await router.close();auth.close();
+    })();
+    return closing;
   }};
 }

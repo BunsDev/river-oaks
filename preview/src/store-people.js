@@ -107,7 +107,8 @@ export function buildStorePeople(rooms, { reducedMotion = false, sharedPopulatio
         const avatar = instantiateAvatar(source, { targetHeight, id, face: id === undefined ? undefined : residentFaceFor(id) });
         dress(avatar, spot, room.theme, seed);
         if(spot.role!=='mannequin') {
-          await applyResidentHairstyle(avatar,storePersonId(room,spotIndex),profile,loadAvatarTemplate);
+          try { await applyResidentHairstyle(avatar,storePersonId(room,spotIndex),profile,loadAvatarTemplate); }
+          catch(error) { avatar.dispose(); throw error; }
           if (disposed) { avatar.dispose(); return; }
           applyResidentStyle(avatar,storePersonId(room,spotIndex),{staff:spot.role==='staff'});
         }

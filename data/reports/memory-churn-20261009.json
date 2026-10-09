@@ -1,0 +1,93 @@
+{
+  "createdAt": "2026-10-09T19:18:19.145Z",
+  "results": [
+    {
+      "name": "memory-churn",
+      "status": "passed",
+      "seconds": 30.921,
+      "result": {
+        "scope": "Local Chromium full-render in-page reload diagnostic; no global leak-free or device-performance claim.",
+        "samples": [
+          {
+            "cycle": 0,
+            "heapBytes": 74433092,
+            "nodes": 3221,
+            "listeners": 362,
+            "calls": 1368,
+            "triangles": 5132538,
+            "geometries": 232,
+            "textures": 189,
+            "people": 88
+          },
+          {
+            "cycle": 1,
+            "heapBytes": 75763076,
+            "nodes": 3221,
+            "listeners": 362,
+            "calls": 1368,
+            "triangles": 5132538,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          },
+          {
+            "cycle": 2,
+            "heapBytes": 77195792,
+            "nodes": 3221,
+            "listeners": 362,
+            "calls": 1377,
+            "triangles": 5134052,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          },
+          {
+            "cycle": 3,
+            "heapBytes": 77532308,
+            "nodes": 3224,
+            "listeners": 362,
+            "calls": 1386,
+            "triangles": 5135566,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          },
+          {
+            "cycle": 4,
+            "heapBytes": 78618492,
+            "nodes": 3224,
+            "listeners": 362,
+            "calls": 1386,
+            "triangles": 5135566,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          },
+          {
+            "cycle": 5,
+            "heapBytes": 78931268,
+            "nodes": 3221,
+            "listeners": 362,
+            "calls": 1404,
+            "triangles": 5138594,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          },
+          {
+            "cycle": 6,
+            "heapBytes": 79872164,
+            "nodes": 3226,
+            "listeners": 362,
+            "calls": 1386,
+            "triangles": 5135566,
+            "geometries": 232,
+            "textures": 187,
+            "people": 88
+          }
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

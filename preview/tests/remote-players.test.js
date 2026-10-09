@@ -165,3 +165,39 @@ test('confirmed furniture seating pins peer hips and facing even during arrival 
     players.dispose();
   }finally{globalThis.document=previousDocument;}
 });
+
+test('disposed remote layers ignore late snapshots without recreating scene resources',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  globalThis.__remoteAvatarAttempts=[];
+  try{
+    const scene=new THREE.Scene(),players=createRemotePlayers(scene,new Element());
+    const peer={id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'};
+    players.sync([peer],'self');await new Promise(resolve=>setImmediate(resolve));
+    players.dispose();
+    const attempts=globalThis.__remoteAvatarAttempts.length;
+    for(let i=0;i<100;i++)players.sync([peer],'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(scene.children.length,0,'late snapshots cannot resurrect a removed holder');
+    assert.equal(players.stats().length,0);
+    assert.equal(globalThis.__remoteAvatarAttempts.length,attempts,'no asset work after teardown');
+  }finally{globalThis.document=previousDocument;delete globalThis.__remoteAvatarAttempts;}
+});
+
+test('crowded remote frames reuse scratch vectors and measure the label viewport once',async()=>{
+  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+  const clone=THREE.Vector3.prototype.clone;let clones=0,widthReads=0,heightReads=0;
+  let players;
+  try{
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.position.set(0,2,10);camera.lookAt(0,2,0);camera.updateMatrixWorld();
+    const host=new Element();
+    Object.defineProperties(host,{clientWidth:{get(){widthReads++;return 800;}},clientHeight:{get(){heightReads++;return 600;}}});
+    players=createRemotePlayers(scene,host);
+    players.sync(Array.from({length:31},(_,i)=>({id:`peer-${i}`,name:'Peer',position:[i/100,0,0],altitude:0,yaw:0,appearance:'sable-human'})),'self');
+    await new Promise(resolve=>setImmediate(resolve));
+    THREE.Vector3.prototype.clone=function(){clones++;return clone.call(this);};
+    for(let frame=0;frame<60;frame++)players.update(frame*1000/60,camera);
+    assert.equal(clones,0,'interpolation and label projection must reuse scratch vectors');
+    assert.equal(widthReads,60,'read layout once per frame, not per visible peer');
+    assert.equal(heightReads,60);
+  }finally{THREE.Vector3.prototype.clone=clone;players?.dispose();globalThis.document=previousDocument;}
+});

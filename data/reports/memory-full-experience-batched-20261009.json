@@ -1,0 +1,344 @@
+{
+  "createdAt": "2026-10-09T20:15:21.336Z",
+  "results": [
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 9.015,
+      "result": {
+        "checks": [
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "disposal cancels queued appearance request"
+          },
+          {
+            "passed": true,
+            "message": "late appearance reply cannot mutate the disposed controller"
+          },
+          {
+            "passed": true,
+            "message": "late reply cannot schedule the next queued appearance"
+          },
+          {
+            "passed": true,
+            "message": "late identity snapshots stay inert"
+          }
+        ],
+        "queuedRequests": 0,
+        "requests": [
+          "rowan-human"
+        ],
+        "errors": []
+      }
+    },
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "passed",
+      "seconds": 2.582,
+      "result": {
+        "checks": [
+          {
+            "passed": true,
+            "message": "/auth/session: disposed connect cannot create a WebSocket"
+          },
+          {
+            "passed": true,
+            "message": "/auth/session: late completion cannot publish a snapshot"
+          },
+          {
+            "passed": true,
+            "message": "/auth/session: disposal aborts the owned HTTP request"
+          },
+          {
+            "passed": true,
+            "message": "disposal during session read prevents requesting a ticket"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: disposed connect cannot create a WebSocket"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: late completion cannot publish a snapshot"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: disposal aborts the owned HTTP request"
+          },
+          {
+            "passed": true,
+            "message": "connected state and snapshot are cleared synchronously"
+          },
+          {
+            "passed": true,
+            "message": "disposal rejects pending command promises"
+          },
+          {
+            "passed": true,
+            "message": "disposed client refuses new commands"
+          },
+          {
+            "passed": true,
+            "message": "socket close and queued frames cannot publish after disposal"
+          },
+          {
+            "passed": true,
+            "message": "late callbacks cannot relock the application"
+          }
+        ]
+      }
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 31.546,
+      "result": {
+        "desktop": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "On-screen movement buttons also work from the keyboard",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.770125033619,20.057887014186544,1314.7460976179873]",
+          "errors": []
+        },
+        "touch": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "Releasing real touch input clears the held movement state",
+            "Touch test uses a coarse-pointer device context",
+            "Touch press turns the player using the on-screen pad",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.798848589471,20.05751363961021,1314.7106151511473]",
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "photo-mode",
+      "status": "passed",
+      "seconds": 10.22,
+      "result": {
+        "checks": [
+          "photo mode visually hides the play dock, trigger and walking title",
+          "photo mode focuses its shutter",
+          "pan exposes its numeric degrees",
+          "lens movement exposes meters",
+          "photo UI explains current graphics resolution",
+          "failed canvas encoding leaves the shutter usable",
+          "late capture cannot replace a newly opened camera session",
+          "reopening after an unfinished capture leaves the shutter usable",
+          "pan value follows framing changes",
+          "portrait PNG uses the selected aspect ratio",
+          "PNG contains a rendered scene (1931 sampled colors)",
+          "prospective dimensions match encoded PNG",
+          "photo output is bounded",
+          "download has a shareable PNG filename",
+          "PNG download succeeds",
+          "cancelled OS sharing preserves the downloadable photo",
+          "failed replacement preserves the retained photo",
+          "reopening offers the retained preview",
+          "reopening keeps the retained download",
+          "reopening keeps Share unavailable while a share sheet is open",
+          "late share cannot rewrite the new session status, and Share returns",
+          "framing reset returns pan to zero",
+          "closing restores the live canvas look",
+          "closing restores the game HUD",
+          "closing restores the actual HUD visibility",
+          "narrow photo mode also hides underlying HUD subtrees",
+          "narrow composition shows dimensions and quality without scrolling",
+          "mobile grid control stays inside the panel",
+          "composition controls collapse for a clear view",
+          "mobile controls fit the viewport",
+          "mobile story photo uses 9:16 framing",
+          "successful replacement releases the previous URL",
+          "explicit discard returns to composition",
+          "explicit discard releases the captured URL",
+          "no page errors: "
+        ],
+        "image": {
+          "width": 720,
+          "height": 900,
+          "colors": 1931
+        },
+        "story": 0.5627705627705628
+      }
+    },
+    {
+      "name": "rail-navigation",
+      "status": "passed",
+      "seconds": 18.27,
+      "result": {
+        "checks": [
+          "Commands replaces the standalone Clear view button",
+          "World map creation respects the environment flag",
+          "Worlds directory and publishing controls respect the environment flag",
+          "Ctrl+B opens the left rail and focuses its selected tab",
+          "Cmd+B closes the rail and returns to the world",
+          "Rail modifier chords never trigger B flight",
+          "Held shortcut repeats do not retrigger the rail",
+          "IME composition does not toggle a rail",
+          "Paste chord does not switch gameplay camera",
+          "Alt+2 opens Places directly",
+          "/ focuses destination search",
+          "Text fields retain rail chords and help characters",
+          "Composing Escape leaves the exploration rail and text focus intact",
+          "Escape from the left rail returns to the world",
+          "Commands open as a focused modal dialog",
+          "Commands offers World map only when enabled",
+          "Commands omits shared worlds when disabled",
+          "Command list omits disabled building tools",
+          "Commands describe player activities rather than interface rails",
+          "Character is a discoverable player goal",
+          "Camera is a discoverable player goal",
+          "Command search explains an empty result",
+          "Arrow keys navigate filtered command actions",
+          "Executing a command reveals the play rail and nested rides controls",
+          "Play command focuses the revealed control",
+          "Composing Escape leaves the play rail and focus intact",
+          "Nested play controls are exposed below the persistent activity navigation",
+          "Escape closes the play rail with a safe focus handoff",
+          "Cmd+Shift+B opens the play rail",
+          "Ctrl+Shift+B closes the play rail",
+          "Help can be dismissed without losing previous focus",
+          "Other modal dialogs retain exclusive keyboard ownership",
+          "Plain modal keys do not toggle clear view",
+          "Settings has real scrollable content for navigation acceptance",
+          "Each tab restores its reading position",
+          "Home selects the first tab",
+          "End selects the last tab",
+          "Linear tab navigation wraps predictably",
+          "Clear view remains available",
+          "Requesting hidden play controls recovers clear view",
+          "Commands can hide the visit controls",
+          "Commands can restore the visit controls",
+          "H hands focus to Commands before hiding a focused card",
+          "Play navigation omits unavailable activities",
+          "Play card order follows its stable activity navigation",
+          "Play activity jump reveals and focuses its destination",
+          "Tab and both rail preferences survive reload",
+          "390×844: left rail opens",
+          "390×844: play rail has room without competing left rail",
+          "390×844: activity jump leaves its focused control exposed",
+          "390×844: activity navigation remains above the scrolling cards",
+          "390×844: Commands remains pointer-reachable",
+          "390×844: disabled World map is unavailable",
+          "390×844: no page overflow",
+          "844×390: left rail opens",
+          "844×390: play rail has room without competing left rail",
+          "844×390: activity jump leaves its focused control exposed",
+          "844×390: activity navigation remains above the scrolling cards",
+          "844×390: Commands remains pointer-reachable",
+          "844×390: disabled World map is unavailable",
+          "844×390: no page overflow",
+          "1024×600: left rail opens",
+          "1024×600: play rail has room without competing left rail",
+          "1024×600: activity jump leaves its focused control exposed",
+          "1024×600: activity navigation remains above the scrolling cards",
+          "1024×600: Commands remains pointer-reachable",
+          "1024×600: disabled World map is unavailable",
+          "1024×600: no page overflow",
+          "Requesting play controls dismisses a competing compact conversation",
+          "A native modal owns T, N and Escape without changing or landing the bird ride",
+          "Help shows keys for the current bird ride",
+          "Closing commands does not land a bird",
+          "Reading and dismissing the left rail does not interrupt the bird ride",
+          "Play rail can be explicitly requested during a bird ride",
+          "Escape dismisses requested play controls before landing",
+          "Escape in the world still lands the bird",
+          "Command dialog wraps focus at the last control",
+          "Command dialog wraps backward to its last control",
+          "No page errors: "
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

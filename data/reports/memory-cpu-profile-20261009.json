@@ -1,0 +1,158 @@
+{
+  "scope": "Eight-second CDP CPU sampling at 32 visible players. Profiling adds overhead; frame timing conclusions use the separate unprofiled render report.",
+  "durationMs": 8236.206,
+  "profileSha256": "e3e0826d5f79b67fccab3f3fa4c24c3b6b9a4e343b46c8105c3528454b22b280",
+  "driverSha256": "e1305258b553312cf0230a00bb64d2a12878bdc0b075ce15c7dd5bb9fef04a15",
+  "topSelfSamples": [
+    {
+      "function": "uniformMatrix4fv",
+      "module": "",
+      "selfMs": 1673.17
+    },
+    {
+      "function": "update",
+      "module": "three",
+      "selfMs": 741.96
+    },
+    {
+      "function": "(program)",
+      "module": "",
+      "selfMs": 561.61
+    },
+    {
+      "function": "WebGLRenderer.renderBufferDirect",
+      "module": "three",
+      "selfMs": 435.91
+    },
+    {
+      "function": "uniformMatrix3fv",
+      "module": "",
+      "selfMs": 370.49
+    },
+    {
+      "function": "renderObject",
+      "module": "three",
+      "selfMs": 350.72
+    },
+    {
+      "function": "projectObject",
+      "module": "three",
+      "selfMs": 333.47
+    },
+    {
+      "function": "updateWorldMatrix",
+      "module": "three",
+      "selfMs": 290.43
+    },
+    {
+      "function": "bindVertexArray",
+      "module": "",
+      "selfMs": 242.29
+    },
+    {
+      "function": "updateMatrixWorld",
+      "module": "three",
+      "selfMs": 191.76
+    },
+    {
+      "function": "getParameters",
+      "module": "three",
+      "selfMs": 188.38
+    },
+    {
+      "function": "multiplyMatrices",
+      "module": "three",
+      "selfMs": 183.55
+    },
+    {
+      "function": "getProgram",
+      "module": "three",
+      "selfMs": 164.66
+    },
+    {
+      "function": "drawArrays",
+      "module": "",
+      "selfMs": 122.95
+    },
+    {
+      "function": "setValue",
+      "module": "three",
+      "selfMs": 122.38
+    },
+    {
+      "function": "setProgram",
+      "module": "three",
+      "selfMs": 120.06
+    },
+    {
+      "function": "render",
+      "module": "three",
+      "selfMs": 116.63
+    },
+    {
+      "function": "refreshMaterialUniforms",
+      "module": "three",
+      "selfMs": 93.69
+    },
+    {
+      "function": "supportHeight",
+      "module": "/src/foot-placement.js",
+      "selfMs": 87.31
+    },
+    {
+      "function": "update",
+      "module": "/src/remote-players.js",
+      "selfMs": 84.73
+    },
+    {
+      "function": "copyArray",
+      "module": "three",
+      "selfMs": 75.46
+    },
+    {
+      "function": "occlusion._overrideVisibility",
+      "module": "/src/render-pipeline.js",
+      "selfMs": 69.33
+    },
+    {
+      "function": "sort",
+      "module": "three",
+      "selfMs": 65.58
+    },
+    {
+      "function": "arraysEqual",
+      "module": "three",
+      "selfMs": 64.04
+    },
+    {
+      "function": "uniform3f",
+      "module": "",
+      "selfMs": 56.98
+    },
+    {
+      "function": "upload",
+      "module": "three",
+      "selfMs": 56.74
+    },
+    {
+      "function": "bindTexture",
+      "module": "",
+      "selfMs": 55.25
+    },
+    {
+      "function": "drawElements",
+      "module": "",
+      "selfMs": 52.56
+    },
+    {
+      "function": "displayChat",
+      "module": "/src/multiplayer-client.js",
+      "selfMs": 49.02
+    },
+    {
+      "function": "uniform1f",
+      "module": "",
+      "selfMs": 42.28
+    }
+  ]
+}

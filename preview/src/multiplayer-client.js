@@ -8,6 +8,7 @@ import { travelRefusal } from './travel-message.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
+  const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -71,8 +72,11 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   });
   const api=async(path,options={})=>{
-    const response=await fetch(path,{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
+    lifetime.signal.throwIfAborted();
+    const signal=options.signal?AbortSignal.any([lifetime.signal,options.signal]):lifetime.signal;
+    const response=await fetch(path,{...options,signal,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
     const data=await response.json();
+    lifetime.signal.throwIfAborted();
     if(!response.ok){
       const message=data.error==='auth_unavailable'?'Sign-in is not configured yet. Please try again later.':data.error??'Online play is unavailable. Please try again.';
       const error=new Error(message);error.status=response.status;throw error;
@@ -142,7 +146,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     const current=socket;
     try{
       const result=await command({type:'homeAccess',action:'list'});
-      if(current!==socket||!result.ok)return;
+      if(stopped||current!==socket||!result.ok)return;
       homeAccess=result.homes??[];onHomeAccess(homeAccess);social.refreshHomeAccess();
     }catch{ /* Reconnect and retry on the next refresh. */ }
   }
@@ -154,18 +158,19 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     try{
       worldId=worldIdFromSearch(location.search);
       const session=await api('/auth/session');
+      if(stopped)return;
       if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
       identity=session.user;csrfToken=session.csrfToken;
-      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});moderator=access.moderator;
+      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return;moderator=access.moderator;
       if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
         const error=new Error('This world needs a newer client. Refresh the page to join.');error.status=426;throw error;
       }
       const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
       url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
       const ws=new WebSocket(url);socket=ws;
-      const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);
+      const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);connectionDeadline=deadline;
       ws.addEventListener('message',event=>{
-        if(socket!==ws)return;
+        if(stopped||socket!==ws)return;
         try{
           const data=JSON.parse(event.data);
           if(data.type==='snapshot'){
@@ -188,7 +193,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
         }catch{notice.textContent='A town update could not be read.';}
       });
       ws.addEventListener('close',event=>{
-        clearTimeout(deadline);if(socket!==ws)return;
+        clearTimeout(deadline);if(lifetime.signal.aborted||socket!==ws)return;
         socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
@@ -196,11 +201,11 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
         setStatus(event.code===4000?'This world changed. Refresh the page to join.':event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=event.code===4000;
         if(!terminal)schedule();
       });
-      ws.addEventListener('error',()=>{status.textContent='The town connection is unavailable.';});
-    }catch(error){connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
+      ws.addEventListener('error',()=>{if(!stopped&&socket===ws)status.textContent='The town connection is unavailable.';});
+    }catch(error){if(stopped)return;connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
   }
   function command(message){
-    if(!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
+    if(stopped||!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
     return new Promise((resolve,reject)=>{
       const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('The town did not confirm this action. Please try again.'));},8000);
@@ -232,7 +237,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
       // Refusals carry a code; the town notice never shows it bare (travel-message.js).
-      try{const result=await command({type:'travel',...target});if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=travelRefusal(result,{blocked:'That spot is blocked. Try a nearby path or open space.',cooldown:'Wait a moment before travelling again.',fallback:'That place is not reachable right now.'});return result;}
+      try{const result=await command({type:'travel',...target});if(stopped)return result;if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=travelRefusal(result,{blocked:'That spot is blocked. Try a nearby path or open space.',cooldown:'Wait a moment before travelling again.',fallback:'That place is not reachable right now.'});return result;}
       catch(error){notice.textContent=error.message;return {ok:false,message:error.message};}
       finally{traveling=false;}
     },
@@ -241,6 +246,13 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);clearInterval(homeAccessTimer);socket?.close();clearPending();social.dispose();groups?.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){
+      if(lifetime.signal.aborted)return;
+      stopped=true;lifetime.abort();clearTimeout(retryTimer);clearTimeout(connectionDeadline);clearInterval(homeAccessTimer);
+      const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
+      current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
+      identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
+      social.dispose();groups?.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+    },
   };
 }

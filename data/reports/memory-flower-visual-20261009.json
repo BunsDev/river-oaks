@@ -1,0 +1,30 @@
+{
+  "scope": "Matched textured rig/reference outfits, before vs after blossom material sharing; hardware Chromium, rest and articulated poses.",
+  "status": "failed",
+  "results": [
+    {
+      "id": "forest-aristocrat",
+      "pose": "rest",
+      "changedPixels": 1,
+      "maxChannelDelta": 44,
+      "meanChannelDelta": 0.00004991319444444445,
+      "before": {
+        "draws": 59,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-rest-before.png"
+      },
+      "after": {
+        "draws": 43,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-rest-after.png"
+      }
+    }
+  ],
+  "error": "page.evaluate: TypeError: Cannot read properties of null (reading 'precision')\n    at getMaxPrecision (http://127.0.0.1:51066/@fs/Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=edbd87dd:43231:68)\n    at new WebGLCapabilities (http://127.0.0.1:51066/@fs/Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=edbd87dd:43240:23)\n    at initGLContext (http://127.0.0.1:51066/@fs/Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=edbd87dd:51289:19)\n    at new WebGLRenderer (http://127.0.0.1:51066/@fs/Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/node_modules/.vite/deps/three.module-Bj7iJlUn.js?v=edbd87dd:51277:4)\n    at Module.capture (http://127.0.0.1:51066/@fs/Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/.runtime/memory/flower-scene.mjs:9:58)\n    at /Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/.runtime/memory/flower-visual.mjs:15:29",
+  "sha256": {
+    "preview/src/reference-archetypes.js": "daf9ac7e2f68102aca6b1dd13eead9f4f841c854633cf020f11fd1d5f6eec48b",
+    ".runtime/memory/reference-baseline.mjs": "d70b9a6aded9a244fab4db5b02332af74f8952e16b0770082fab1e1c10aa5754",
+    ".runtime/memory/flower-scene.mjs": "d9ef0621e15d50074898d318d4e5e05388ccb90201a76e0fa18687b970ef8c3c",
+    ".runtime/memory/flower-visual.mjs": "998074b05f7797db11efd2d96178cf8b5fdd5b13c01286a489228882d4d05af4"
+  }
+}
