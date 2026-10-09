@@ -7,6 +7,7 @@ import { sendFrame } from './backpressure.js';
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
+import { createDebugReportRoutes } from './debug-report-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
@@ -25,7 +26,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], landmarks, social = null, groups = null, profiles = null, events = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -71,6 +72,8 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   }
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
+  const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
+    allow: id => security.allow('debug-report', id, 3, 600_000) });
   function publish(view) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
@@ -94,6 +97,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
+      if (await handleDebugReports(req, res, path)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');

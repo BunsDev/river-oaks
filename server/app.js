@@ -9,6 +9,8 @@ import { sendFrame } from './backpressure.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
+import { createDebugReportRoutes } from './debug-report-routes.js';
+import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -22,7 +24,7 @@ import { securityHeaders } from './security-headers.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -58,6 +60,8 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       disconnectUser(userId, 4003, 'Waitlist approval ended');
       await onBan?.(userId);
     } });
+  const debugReportSends = createRateLimiter(3,600000);
+  const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned, allow: id => debugReportSends(id) });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -72,6 +76,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(pathname) && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
+      if (await handleDebugReports(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');

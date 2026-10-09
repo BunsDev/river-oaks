@@ -1,0 +1,43 @@
+/* "Report a problem" and the admin report list: one dark panel that reads the
+   same over the sign-in screen and either game theme. */
+.report-dialog {
+  --report-bg: #17181b; --report-ink: #f4f3ee; --report-muted: #b4b6ba; --report-line: #3b3d42; --report-field: #1f2024;
+  --report-accent: #f68ca4; --report-on-accent: #361b26; --report-ok: #8fd8b8; --report-error: #ffb4a8;
+  width: min(640px, calc(100vw - 32px)); max-height: min(86vh, 860px); padding: 0; overflow: hidden;
+  border: 1px solid var(--report-line); border-radius: 16px; background: var(--report-bg); color: var(--report-ink);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .45); font: 400 14.5px/1.5 'TypeSafe Outfit', 'Avenir Next', Avenir, 'Segoe UI', system-ui, sans-serif;
+}
+.report-dialog[open] { display: flex; flex-direction: column; gap: 12px; padding: 20px 22px 18px; overflow-y: auto; box-sizing: border-box; }
+.report-dialog::backdrop { background: rgb(8 8 10 / .55); }
+.report-dialog * { box-sizing: border-box; }
+.report-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.report-head h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.report-close { width: 36px; height: 36px; border: 1px solid var(--report-line); border-radius: 50%; background: transparent; color: var(--report-ink); font-size: 20px; line-height: 1; cursor: pointer; }
+.report-intro, .report-status, .report-meta { margin: 0; color: var(--report-muted); font-size: 13.5px; }
+.report-label { font-weight: 600; font-size: 14px; }
+.report-dialog textarea { width: 100%; min-height: 96px; padding: 10px 12px; border: 1px solid #6a6d70; border-radius: 8px; background: var(--report-field); color: var(--report-ink); font: inherit; resize: vertical; }
+.report-dialog textarea::placeholder { color: #8e9094; }
+.report-check { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 14px; }
+.report-check input { width: 18px; height: 18px; accent-color: var(--report-accent); }
+.report-details summary { cursor: pointer; color: var(--report-muted); font-size: 13.5px; min-height: 28px; }
+.report-preview { max-height: 260px; margin: 8px 0 0; padding: 10px 12px; overflow: auto; border: 1px solid var(--report-line); border-radius: 8px; background: #0f1012;
+  color: #d6d8dc; font: 12px/1.45 Menlo, Consolas, 'Liberation Mono', monospace; white-space: pre-wrap; word-break: break-word; }
+.report-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.report-dialog button:not(.report-close) { min-height: 44px; padding: 0 18px; border: 1px solid var(--report-line); border-radius: 8px; background: #2a2b2e; color: var(--report-ink); font: 600 14px/1 inherit; cursor: pointer; }
+.report-dialog button:not(.report-close):hover { background: #343539; }
+.report-dialog .report-primary { background: var(--report-accent); border-color: var(--report-accent); color: var(--report-on-accent); }
+.report-dialog .report-primary:hover { background: #f9a3b7; }
+.report-dialog :is(button, textarea, input, summary, .report-preview):focus-visible { outline: 2px solid var(--report-accent); outline-offset: 2px; }
+.report-dialog[aria-busy=true] button { opacity: .6; cursor: progress; }
+.report-status[data-tone=ok] { color: var(--report-ok); }
+.report-status[data-tone=error] { color: var(--report-error); }
+.report-status:empty { display: none; }
+.report-list { display: grid; gap: 10px; }
+.report-item { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--report-line); border-radius: 10px; background: var(--report-field); }
+.report-item header { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.report-item time { color: var(--report-muted); font-size: 13px; }
+.report-item p { margin: 0; overflow-wrap: anywhere; }
+.report-error { color: var(--report-error); font: 12.5px/1.4 Menlo, Consolas, monospace; }
+.report-item button { justify-self: start; }
+@media (max-width: 520px) { .report-dialog[open] { padding: 16px; } .report-actions button { flex: 1 1 auto; } }
+@media (prefers-reduced-motion: reduce) { .report-dialog * { transition: none; } }
