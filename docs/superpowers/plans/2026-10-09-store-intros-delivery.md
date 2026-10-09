@@ -70,3 +70,21 @@ Vercel's first preview used pnpm 10.28.0 despite the 10.34.5 pin and was correct
 rejected by strict version enforcement. Repository install/build commands now
 invoke `corepack pnpm` explicitly. Both exact commands passed locally; no production
 project environment or account setting was modified. Hosted preview will recheck.
+
+## Latest-main reconciliation
+
+PR #197 merged while this delivery was running (main 8b23f24). Preserved its newer
+Jev/Jevica sign-in art, type, layout and styled-entry synchronization; the earlier
+IBM Plex draft is superseded and its now-unused fonts were removed. Retained our
+field-contrast, keyboard-focus and confirmed-town-connection regressions alongside
+its laptop/mobile layout checks. Final PR therefore does not replace the new design.
+
+Vercel also installs function dependencies separately. Enabled pnpm's own pinned
+version management while retaining strict checks: invoking pnpm 10.28.0 via
+`pnpm --package=pnpm@10.28.0 dlx pnpm --version` returned 10.34.5. This selects the
+required version rather than weakening enforcement; no project secrets/settings
+were changed. Frozen install passed again.
+
+After conflict resolution: `pnpm run verify` passed; `pnpm run test:security:e2e`
+passed 2 tests, zero skips. `git diff --check origin/main` passed. Upstream OFL
+license whitespace is preserved verbatim. Hosted checks must rerun on the new head.

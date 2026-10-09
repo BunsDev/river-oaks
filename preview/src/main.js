@@ -68,6 +68,9 @@ import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
 
+// Every stylesheet above is applied by now, so the sign-in gate can lift.
+document.dispatchEvent(new Event('river-oaks:styled'));
+
 setupUIMotion();
 setupThemeControls();
 const sidebar = setupSidebar();

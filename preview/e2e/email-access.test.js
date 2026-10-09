@@ -53,7 +53,7 @@ test('email access: browser verification, invitation, member controls and revoca
   page.setDefaultTimeout(60_000);
   page.on('pageerror', error => console.error('Access browser error:', error.message));
   try {
-    for (const [width, height] of [[1440, 900], [390, 844], [320, 568]]) {
+    for (const [width, height] of [[1440, 900], [1280, 720], [390, 844], [320, 568]]) {
       await page.setViewportSize({ width, height });
       await page.goto(`${origin}/play`);
       await page.locator('#access-email').waitFor({ state: 'visible' });
@@ -81,21 +81,14 @@ test('email access: browser verification, invitation, member controls and revoca
 
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
-        const brand=document.querySelector('.access-brand').getBoundingClientRect();
-        const panel=document.querySelector('.access-layout').getBoundingClientRect();
-        const footer=document.querySelector('.access-footer').getBoundingClientRect();
-        return brand.bottom<=panel.top && panel.bottom<=footer.top;
-      }), true, 'the login panel never overlaps its brand or footer on short screens');
-      await page.evaluate(() => document.fonts.ready);
-      if (width <= 700) {
-        assert.equal(await page.locator('.access-scene-copy').isVisible(), false, 'compact scene keeps copy clear of the heading');
-        await page.locator('#access-invite-redeem').scrollIntoViewIfNeeded();
-        assert.equal(await page.locator('#access-invite-redeem').evaluate(element => {
-          const rect = element.getBoundingClientRect();
-          return rect.top >= 0 && rect.bottom <= innerHeight;
-        }), true, 'the invitation action remains reachable on short screens');
-        await page.locator('.access-brand').scrollIntoViewIfNeeded();
-      }
+        const box=selector=>document.querySelector(selector).getBoundingClientRect();
+        const brand=box('.access-brand'), story=box('.access-scene-text'), card=box('.access-card'), footer=box('.access-footer');
+        return brand.bottom<=story.top && card.bottom<=footer.top;
+      }), true, 'the brand never overlaps the headline, nor the sign-in form its footer, on short screens');
+      if (width >= 860) assert.equal(await page.evaluate(() => {
+        const panel=document.querySelector('.access-panel');
+        return panel.scrollHeight<=panel.clientHeight && document.querySelector('#access-gate').scrollHeight<=innerHeight;
+      }), true, 'beside the artwork, the whole sign-in column fits a laptop screen without scrolling');
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }
@@ -125,15 +118,24 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-issue', { ownerId: 'user_sdk' })).status(), 403);
     await page.setViewportSize({ width: 800, height: 600 });
     await page.locator('#access-invite-code').fill(invite.code);
+    await page.evaluate(() => {
+      const gate = document.querySelector('#access-gate');
+      new MutationObserver((_, observer) => {
+        if (!gate.hidden) return;
+        window.__styledWhenGateLifted = getComputedStyle(document.querySelector('.app-shell')).getPropertyValue('--panel-width').trim() !== '';
+        observer.disconnect();
+      }).observe(gate, { attributes: true, attributeFilter: ['hidden'] });
+    });
     await page.locator('#access-invite-redeem').click();
     await page.locator('#access-gate').waitFor({ state: 'hidden' });
+    assert.equal(await page.evaluate(() => window.__styledWhenGateLifted), true, 'the game is styled before the sign-in gate lifts, never shown as raw HTML');
     assert.equal((await post('/api/multiplayer/ticket', {})).status(), 200);
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 200);
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
     assert.equal(invitations.invites.length, 2);
-    // Admission and town connection are separate gates. Do not attempt a
-    // sidebar action while the connection dialog still makes the app inert.
+    // Admission and town connection are separate gates. Wait for the real
+    // connected roster before interacting with the previously inert app.
     await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached' });
     await page.locator('.multiplayer-gate').waitFor({ state: 'hidden' });
     await page.locator('.app-shell:not([inert])').waitFor({ state: 'visible' });
