@@ -65,3 +65,8 @@ security journey attempted the sidebar while the connection modal blocked input.
 The harness now requires the real roster's connected state and a non-inert app
 before clicking, and reports safe gate state on failure. Local security browser
 rerun: 2 passed, zero skipped. Hosted rerun remains pending; no auth gate bypass.
+
+Vercel's first preview used pnpm 10.28.0 despite the 10.34.5 pin and was correctly
+rejected by strict version enforcement. Repository install/build commands now
+invoke `corepack pnpm` explicitly. Both exact commands passed locally; no production
+project environment or account setting was modified. Hosted preview will recheck.
