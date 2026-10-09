@@ -30,6 +30,19 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // Busy actions (a request or animation in flight) use aria-disabled, so they
   // keep focus and their slot; disabled means the action is unavailable here.
   const setBusy = (button, busy) => button.setAttribute('aria-disabled', String(Boolean(busy)));
+  // An action label with its key as a keycap. The keycap reads first in the HUD
+  // (CSS order) but follows the label in the DOM, so the accessible name and text
+  // start with the action; aria-keyshortcuts announces the key.
+  const setAction = (button, text, key = null) => {
+    const signature = `${text}|${key ?? ''}`;
+    if (button.dataset.action === signature) return;
+    button.dataset.action = signature;
+    button.replaceChildren(text);
+    if (key) {
+      const cap = document.createElement('kbd'); cap.textContent = key; cap.setAttribute('aria-hidden', 'true');
+      button.append(cap); button.setAttribute('aria-keyshortcuts', key);
+    } else button.removeAttribute('aria-keyshortcuts');
+  };
   const presentActions = () => {
     const buttons = Object.fromEntries(Object.entries(actionButtons).map(([id, button]) =>
       [id, { shown: !button.hidden, disabled: button.disabled, busy: button.getAttribute('aria-disabled') === 'true' }]));
@@ -327,10 +340,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('#walking-meet-nearby').disabled = !nearby.length;
       $('#walking-talk').disabled = !nearest;
       $('#walking-talk').hidden = !nearest;
-      $('#walking-talk').textContent = nearest ? `Talk to ${nearest.name} · E` : 'Find a local to talk to · E';
+      setAction($('#walking-talk'), nearest ? `Talk to ${nearest.name}` : 'Find a local to talk to', 'E');
       const interaction = getInteraction(), interactButton = $('#walking-interact');
       interactButton.hidden = !interaction;
-      if (interaction) { interactButton.textContent = `${interaction.label} · Z`; setBusy(interactButton, interaction.disabled); }
+      if (interaction) { setAction(interactButton, interaction.label, 'Z'); setBusy(interactButton, interaction.disabled); }
       hud.dataset.interaction = interaction?.kind ?? '';
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
@@ -338,7 +351,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const enter = $('#walking-enter');
       enter.hidden = Boolean(sitting||transport)||(!room && !door);
       enter.disabled = Boolean(door && !canEnterStore(door));
-      enter.textContent = room ? 'Step outside · F' : door ? canEnterStore(door) ? `Step inside ${door.name} · F` : `${door.name} · Invitation required` : '';
+      if (room) setAction(enter, 'Step outside', 'F');
+      else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
+      else setAction(enter, '');
       presentActions();
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
