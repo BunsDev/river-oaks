@@ -46,3 +46,9 @@ Second main integration: PR #195 (9c31050) landed after all updated PR checks
 passed. Its changes are confined to landing-page files and its ledger; merged
 without conflicts. `npm run build` and `git diff --check` passed on the combined
 tree. Sidebar source and browser harness are unchanged from the verified revision.
+
+Third main integration: PR #197 (8b23f24) landed during the CI retry. Merged
+without conflicts; `npm run verify` passed all 11 tasks and the compact sidebar
+browser journey passed. The prior hosted contextual-first-visit timeout also passed
+locally on desktop and touch without source changes; its superseded CI retry was
+cancelled when main advanced. Required checks must pass on this new revision.

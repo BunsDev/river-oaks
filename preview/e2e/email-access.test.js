@@ -53,18 +53,21 @@ test('email access: browser verification, invitation, member controls and revoca
   page.setDefaultTimeout(60_000);
   page.on('pageerror', error => console.error('Access browser error:', error.message));
   try {
-    for (const [width, height] of [[1440, 900], [390, 844], [320, 568]]) {
+    for (const [width, height] of [[1440, 900], [1280, 720], [390, 844], [320, 568]]) {
       await page.setViewportSize({ width, height });
       await page.goto(`${origin}/play`);
       await page.locator('#access-email').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#access-invite-redeem').isDisabled(), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
-        const brand=document.querySelector('.access-brand').getBoundingClientRect();
-        const panel=document.querySelector('.access-layout').getBoundingClientRect();
-        const footer=document.querySelector('.access-footer').getBoundingClientRect();
-        return brand.bottom<=panel.top && panel.bottom<=footer.top;
-      }), true, 'the login panel never overlaps its brand or footer on short screens');
+        const box=selector=>document.querySelector(selector).getBoundingClientRect();
+        const brand=box('.access-brand'), story=box('.access-scene-text'), card=box('.access-card'), footer=box('.access-footer');
+        return brand.bottom<=story.top && card.bottom<=footer.top;
+      }), true, 'the brand never overlaps the headline, nor the sign-in form its footer, on short screens');
+      if (width >= 860) assert.equal(await page.evaluate(() => {
+        const panel=document.querySelector('.access-panel');
+        return panel.scrollHeight<=panel.clientHeight && document.querySelector('#access-gate').scrollHeight<=innerHeight;
+      }), true, 'beside the artwork, the whole sign-in column fits a laptop screen without scrolling');
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }
@@ -94,8 +97,17 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-issue', { ownerId: 'user_sdk' })).status(), 403);
     await page.setViewportSize({ width: 800, height: 600 });
     await page.locator('#access-invite-code').fill(invite.code);
+    await page.evaluate(() => {
+      const gate = document.querySelector('#access-gate');
+      new MutationObserver((_, observer) => {
+        if (!gate.hidden) return;
+        window.__styledWhenGateLifted = getComputedStyle(document.querySelector('.app-shell')).getPropertyValue('--panel-width').trim() !== '';
+        observer.disconnect();
+      }).observe(gate, { attributes: true, attributeFilter: ['hidden'] });
+    });
     await page.locator('#access-invite-redeem').click();
     await page.locator('#access-gate').waitFor({ state: 'hidden' });
+    assert.equal(await page.evaluate(() => window.__styledWhenGateLifted), true, 'the game is styled before the sign-in gate lifts, never shown as raw HTML');
     assert.equal((await post('/api/multiplayer/ticket', {})).status(), 200);
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 200);
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
