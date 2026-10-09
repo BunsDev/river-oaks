@@ -53,18 +53,21 @@ test('email access: browser verification, invitation, member controls and revoca
   page.setDefaultTimeout(60_000);
   page.on('pageerror', error => console.error('Access browser error:', error.message));
   try {
-    for (const [width, height] of [[1440, 900], [390, 844], [320, 568]]) {
+    for (const [width, height] of [[1440, 900], [1280, 720], [390, 844], [320, 568]]) {
       await page.setViewportSize({ width, height });
       await page.goto(`${origin}/play`);
       await page.locator('#access-email').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#access-invite-redeem').isDisabled(), true);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
-        const brand=document.querySelector('.access-brand').getBoundingClientRect();
-        const panel=document.querySelector('.access-layout').getBoundingClientRect();
-        const footer=document.querySelector('.access-footer').getBoundingClientRect();
-        return brand.bottom<=panel.top && panel.bottom<=footer.top;
-      }), true, 'the login panel never overlaps its brand or footer on short screens');
+        const box=selector=>document.querySelector(selector).getBoundingClientRect();
+        const brand=box('.access-brand'), story=box('.access-scene-text'), card=box('.access-card'), footer=box('.access-footer');
+        return brand.bottom<=story.top && card.bottom<=footer.top;
+      }), true, 'the brand never overlaps the headline, nor the sign-in form its footer, on short screens');
+      if (width >= 860) assert.equal(await page.evaluate(() => {
+        const panel=document.querySelector('.access-panel');
+        return panel.scrollHeight<=panel.clientHeight && document.querySelector('#access-gate').scrollHeight<=innerHeight;
+      }), true, 'beside the artwork, the whole sign-in column fits a laptop screen without scrolling');
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }
