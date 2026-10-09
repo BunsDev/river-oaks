@@ -53,9 +53,13 @@ async function checkAccess() {
     if (!entered) {
       entered = true;
       document.body.dataset.accountId = session.user.id;
+      // The game's stylesheets arrive with main.js. The page is laid out underneath, but the
+      // gate stays over it until main.js starts, so the district never shows as unstyled HTML.
+      message.textContent = 'Opening the district…';
+      document.addEventListener('river-oaks:styled', () => { gate.hidden = true; }, { once: true });
       document.body.classList.add('access-granted');
-      gate.hidden = true;
       await import('./main.js');
+      gate.hidden = true;
     }
   } catch {
     if (entered) location.reload();

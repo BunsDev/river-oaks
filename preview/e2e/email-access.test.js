@@ -97,8 +97,17 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-issue', { ownerId: 'user_sdk' })).status(), 403);
     await page.setViewportSize({ width: 800, height: 600 });
     await page.locator('#access-invite-code').fill(invite.code);
+    await page.evaluate(() => {
+      const gate = document.querySelector('#access-gate');
+      new MutationObserver((_, observer) => {
+        if (!gate.hidden) return;
+        window.__styledWhenGateLifted = getComputedStyle(document.querySelector('.app-shell')).getPropertyValue('--panel-width').trim() !== '';
+        observer.disconnect();
+      }).observe(gate, { attributes: true, attributeFilter: ['hidden'] });
+    });
     await page.locator('#access-invite-redeem').click();
     await page.locator('#access-gate').waitFor({ state: 'hidden' });
+    assert.equal(await page.evaluate(() => window.__styledWhenGateLifted), true, 'the game is styled before the sign-in gate lifts, never shown as raw HTML');
     assert.equal((await post('/api/multiplayer/ticket', {})).status(), 200);
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 200);
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);

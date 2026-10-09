@@ -49,6 +49,35 @@ give the CSS sizes.
   light styling, with form rules scoped to `.access-gate`. The `.access-orbit` used
   by the multiplayer welcome card is unchanged.
 
+## Follow-up: no unstyled flash after sign-in
+
+The user reported raw, unstyled HTML right after sign-in. The cause, present since #98:
+- `access-entry.js` added `access-granted` and hid the gate before
+  `await import('./main.js')`.
+- The game's stylesheets arrive with that module, so the shell showed unstyled until
+  they loaded. This is long in dev (one request per module), and in production on a
+  slow connection.
+
+The fix:
+- The shell is still laid out first, but the gate stays over it, reading "Opening the
+  district…".
+- `main.js` dispatches `river-oaks:styled` as its first statement, when every
+  imported stylesheet has applied. The gate lifts on that event, and also once the
+  import settles.
+
+Regression: the access browser test records, at the instant the gate's `hidden`
+attribute flips, whether `.app-shell` has `style.css`'s `--panel-width`. With the
+old order it fails ("the game is styled before the sign-in gate lifts"); with the
+fix it passes.
+
+Checks after the fix, on `f3255d1` plus this patch:
+- `npm run build`
+- the access browser test: 1 pass
+- `npm run verify` (core) passed: preview 2504 pass, 1 skipped; server 276 pass,
+  102 Redis-only skips; desktop 9 pass
+- experience journeys contextual-first-visit, rail-navigation and hud-and-quality: passed
+- shared sit-and-water (required): passed
+
 ## Checks
 
 - [x] A render at 1440 × 900 at 1.1× against the mockup:
