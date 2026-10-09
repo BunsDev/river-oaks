@@ -19,9 +19,9 @@ const identity=req=>{
   // Residents carry their GitHub username; the owner is a Jevica account. The
   // impostors are non-admin sessions that claim Jevica, as a stale or forged
   // record would, so journeys can prove no surface ever shows them as Jevica.
-  const fixtureId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob|guest|owner|impostor|lookalike)/)?.[1];
+  const fixtureId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob|guest|owner|impostor|lookalike|unnamed)/)?.[1];
   const userId=fixtureId==='owner'?'user_01M40Y914S1H4EJCEHH91DKTAY':fixtureId;
-  const name={owner:'Jevica',alice:'alice',bob:'bob',guest:'guest',impostor:'Jevica',lookalike:'J\u0435v1ca'}[fixtureId];
+  const name={owner:'Jevica',alice:'alice',bob:'bob',guest:'guest',unnamed:'Resident',impostor:'Jevica',lookalike:'J\u0435v1ca'}[fixtureId];
   return userId?{userId,name,sessionId:userId,csrfToken:'fixture-'+fixtureId,expiresAt:Date.now()+3600000}:null;
 };
 const auth={authenticate:async req=>identity(req),async handle(req,res){

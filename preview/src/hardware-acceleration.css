@@ -1,0 +1,39 @@
+.hardware-acceleration-warning {
+  position: absolute;
+  /* Keep the advisory message from blocking the world and navigation beneath it. */
+  pointer-events: none;
+  z-index: 25;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 24px));
+  max-height: calc(100% - 100px);
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #94743a;
+  border-radius: 16px;
+  background: #fff5de;
+  color: #483815;
+  box-shadow: 0 8px 28px #171c2326;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.hardware-acceleration-warning strong { font-size: 14px; }
+.hardware-acceleration-warning p { margin: 6px 0 0; }
+.hardware-acceleration-warning button {
+  pointer-events: auto;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  color: inherit;
+}
+[data-theme=dark] .hardware-acceleration-warning { background: #302a1c; color: #ffe4a7; }
+@media (max-width: 480px) {
+  .hardware-acceleration-warning { flex-direction: column; padding: 12px; }
+  .hardware-acceleration-warning button { align-self: flex-end; }
+}

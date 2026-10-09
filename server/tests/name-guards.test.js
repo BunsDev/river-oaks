@@ -21,7 +21,7 @@ import { reservedName } from '../../preview/src/resident-names.js';
 // checkpoint or a bug would. None may reach a client as Jevica; the admin
 // account always does.
 const ADMIN = JEVICA_ADMIN_USER_IDS[1];
-const CLAIMS = ['Jevica', 'jevica', 'Jеvica', 'J e v i c a', 'Jev1ca', 'Je​vica', 'Ｊｅｖｉｃａ', 'jevica-official'];
+const CLAIMS = ['Jevica', 'jevica', 'Jеvica', 'J e v i c a', 'Jev1ca', 'Je​vica', 'Ｊｅｖｉｃａ', 'jevica-official', 'Resident', ' resident ', 'RESIDENT'];
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
 const identity = (userId, name) => ({ userId, name, sessionId: `${userId}-session`, csrfToken: 'csrf', expiresAt: Date.now() + 3_600_000 });
 
@@ -34,7 +34,7 @@ test('the world never shows a non-admin player, chat line or build owner as Jevi
   const names = Object.fromEntries(world.snapshot().players.map(player => [player.id, player.name]));
   assert.equal(names[ADMIN], 'Jevica');
   assert.equal(names.octocat, 'octocat');
-  for (let index = 0; index < CLAIMS.length; index++) assert.equal(names[`resident-${index}`], 'resident', CLAIMS[index]);
+  for (let index = 0; index < CLAIMS.length; index++) assert.equal(names[`resident-${index}`], `Visitor #resident-${index}`, CLAIMS[index]);
 
   // A name stored before this change, then a chat line under it.
   world.players.get('octocat').name = 'Jevica';
@@ -42,15 +42,15 @@ test('the world never shows a non-admin player, chat line or build owner as Jevi
   time += 5000;
   assert.equal(world.command(ADMIN, { type: 'chat', text: 'hello from the admin' }).ok, true);
   const snapshot = world.snapshot();
-  assert.equal(snapshot.players.find(player => player.id === 'octocat').name, 'resident');
-  assert.deepEqual(snapshot.chat.map(entry => [entry.authorId, entry.authorName]), [['octocat', 'resident'], [ADMIN, 'Jevica']]);
+  assert.equal(snapshot.players.find(player => player.id === 'octocat').name, 'Visitor #octocat');
+  assert.deepEqual(snapshot.chat.map(entry => [entry.authorId, entry.authorName]), [['octocat', 'Visitor #octocat'], [ADMIN, 'Jevica']]);
 
   // The stale record survives a checkpoint and is still never shown as Jevica.
   const restored = createSharedWorld(data, { now: () => time, isAdmin: id => id === ADMIN });
   assert.equal(restored.restore(world.checkpoint()).ok, true);
   const again = restored.snapshot();
-  assert.equal(again.players.find(player => player.id === 'octocat').name, 'resident');
-  assert.equal(again.chat[0].authorName, 'resident');
+  assert.equal(again.players.find(player => player.id === 'octocat').name, 'Visitor #octocat');
+  assert.equal(again.chat[0].authorName, 'Visitor #octocat');
   for (const player of again.players) if (player.id !== ADMIN) assert.equal(reservedName(player.name), false, player.id);
 });
 
@@ -61,7 +61,7 @@ test('a resident still in the world takes their current name when they sign in a
   assert.equal(world.rename(identity('user_1', 'val-dev')).name, 'val-dev');
   assert.equal(world.snapshot().players[0].name, 'val-dev');
   assert.ok(world.snapshot().revision > before, 'clients see the new name');
-  assert.equal(world.rename(identity('user_1', 'Jevica')).name, 'resident');
+  assert.equal(world.rename(identity('user_1', 'Jevica')).name, 'Visitor #user_1');
   assert.equal(world.rename(identity('nobody', 'x')), null);
 });
 
@@ -73,10 +73,10 @@ test('contacts and private messages never show a non-admin as Jevica', async () 
   await social.send(admin, 'alice', 'hello');
   const call = (action, data) => socialAction({ action, identity: alice, social, readBody: async () => data, allowWrite: async () => true });
   const contacts = Object.fromEntries((await call('list')).value.contacts.map(item => [item.peer.id, item]));
-  assert.equal(contacts.impostor.peer.name, 'resident');
-  assert.equal(contacts.impostor.latest.authorName, 'resident');
+  assert.equal(contacts.impostor.peer.name, 'Visitor #impostor');
+  assert.equal(contacts.impostor.latest.authorName, 'Visitor #impostor');
   assert.equal(contacts[ADMIN].peer.name, 'Jevica');
-  assert.deepEqual((await call('messages', { peerId: 'impostor' })).value.messages.map(message => message.authorName), ['resident']);
+  assert.deepEqual((await call('messages', { peerId: 'impostor' })).value.messages.map(message => message.authorName), ['Visitor #impostor']);
   assert.deepEqual((await call('messages', { peerId: ADMIN })).value.messages.map(message => message.authorName), ['Jevica']);
 });
 
@@ -86,18 +86,18 @@ test('groups never show a non-admin member, inviter or author as Jevica, but kee
   await social.request(impostor, { userId: 'alice', name: 'alice' }); await social.accept('alice', 'impostor');
   const call = (who, action, data = {}) => groupAction({ action, identity: who, groups, social, readBody: async () => data, allowWrite: async () => true });
   const created = await call(impostor, 'create', { name: 'Jevica fans', description: 'A club about Jevica' });
-  assert.equal(created.value.group.ownerName, 'resident');
+  assert.equal(created.value.group.ownerName, 'Visitor #impostor');
   assert.equal(created.value.group.name, 'Jevica fans', 'a group title is not a resident name');
   await call(impostor, 'invite', { groupId: 'group-1', peerId: 'alice' });
   await call(alice, 'accept', { groupId: 'group-1' });
   await call(impostor, 'send', { groupId: 'group-1', text: 'welcome' });
   const read = (await call(alice, 'read', { groupId: 'group-1' })).value.group;
-  assert.deepEqual(read.members.map(member => [member.id, member.name]), [['impostor', 'resident'], ['alice', 'alice']]);
-  assert.deepEqual(read.messages.map(message => message.authorName), ['resident']);
+  assert.deepEqual(read.members.map(member => [member.id, member.name]), [['impostor', 'Visitor #impostor'], ['alice', 'alice']]);
+  assert.deepEqual(read.messages.map(message => message.authorName), ['Visitor #impostor']);
   const listed = (await call(alice, 'list')).value.groups[0];
-  assert.equal(listed.ownerName, 'resident'); assert.equal(listed.latest.authorName, 'resident');
+  assert.equal(listed.ownerName, 'Visitor #impostor'); assert.equal(listed.latest.authorName, 'Visitor #impostor');
   const ownerView = (await call(impostor, 'read', { groupId: 'group-1' })).value.group;
-  assert.ok(ownerView.members.every(member => member.id === 'alice' ? member.name === 'alice' : member.name === 'resident'));
+  assert.ok(ownerView.members.every(member => member.id === 'alice' ? member.name === 'alice' : member.name === 'Visitor #impostor'));
 });
 
 test('event hosts are never shown as Jevica unless the admin hosts', async () => {
@@ -106,10 +106,10 @@ test('event hosts are never shown as Jevica unless the admin hosts', async () =>
     resolveVenue: async id => ({ worldId: 'moon-garden', worldTitle: 'Moon Garden', placeId: id, placeName: 'Arrival' }),
     allowWrite: async () => true, isAdmin: id => id === ADMIN });
   const draft = { title: "Jevica's tea", description: 'All welcome', placeId: 'arrival', startsAt: 1000, endsAt: 3_601_000, capacity: 4 };
-  assert.equal((await call(identity('impostor', 'Jevica'), 'create', draft)).value.event.hostName, 'resident');
+  assert.equal((await call(identity('impostor', 'Jevica'), 'create', draft)).value.event.hostName, 'Visitor #impostor');
   assert.equal((await call(identity(ADMIN, 'BunsDev'), 'create', draft)).value.event.hostName, 'Jevica');
   const listed = (await call(identity('alice', 'alice'), 'list')).value.events;
-  assert.deepEqual(listed.map(event => event.hostName).sort(), ['Jevica', 'resident']);
+  assert.deepEqual(listed.map(event => event.hostName).sort(), ['Jevica', 'Visitor #impostor']);
   assert.ok(listed.every(event => event.title === "Jevica's tea"), 'an event title is not a resident name');
 });
 
@@ -117,8 +117,8 @@ test('a profile is never shown as Jevica unless it is the admin', async () => {
   const profiles = { get: async () => ({ tagline: '' }) };
   const view = (viewer, peer) => profileAction({ action: 'view', identity: viewer, profiles, social: null,
     readBody: async () => (peer ? { peerId: peer.userId } : {}), visiblePlayer: async () => peer ? { id: peer.userId, name: peer.name } : null });
-  assert.equal((await view(identity('impostor', 'Jevica'))).value.profile.name, 'resident');
-  assert.equal((await view(identity('alice', 'alice'), identity('impostor', 'Jevica'))).value.profile.name, 'resident');
+  assert.equal((await view(identity('impostor', 'Jevica'))).value.profile.name, 'Visitor #impostor');
+  assert.equal((await view(identity('alice', 'alice'), identity('impostor', 'Jevica'))).value.profile.name, 'Visitor #impostor');
   assert.equal((await view(identity('alice', 'alice'), identity(ADMIN, 'BunsDev'))).value.profile.name, 'Jevica');
 });
 
@@ -132,7 +132,7 @@ test('the waitlist keeps each request named as its owner signs in now, never as 
   const reopened = await createFileWaitlist(join(dir, 'waitlist.json'));
   assert.equal((await reopened.list())[0].name, 'val-dev', 'and keeps it after a restart');
   const { guardWaitlistRequest } = await import('../name-guard.js');
-  assert.equal(guardWaitlistRequest({ userId: 'impostor', name: 'Jevica' }).name, 'resident');
+  assert.equal(guardWaitlistRequest({ userId: 'impostor', name: 'Jevica' }).name, 'Visitor #impostor');
   assert.equal(guardWaitlistRequest({ userId: ADMIN, name: 'BunsDev' }).name, 'Jevica');
 });
 
@@ -162,4 +162,19 @@ test('the Redis waitlist also keeps each request named as its owner signs in now
   assert.deepEqual([renamed.name, renamed.status], ['val-dev', 'approved'], 'renaming keeps the decision');
   assert.equal((await waitlist.list())[0].name, 'val-dev');
   assert.equal((await waitlist.request({ userId: 'user_1', name: 'val-dev' })).decidedBy, 'admin');
+});
+
+test('long fallback names survive checkpoint roundtrips without losing account uniqueness', () => {
+  const ids = ['user_' + 'a'.repeat(100), 'user_' + 'a'.repeat(99) + 'b'];
+  const world = createSharedWorld(data, { now: () => 1_000_000 });
+  for (const userId of ids) {
+    assert.equal(world.join(identity(userId, 'Resident')).ok, true);
+    assert.equal(world.rename(identity(userId, 'Resident')).name, `Visitor #${userId}`);
+    assert.equal(world.command(userId, { type: 'chat', text: 'hello' }).ok, true);
+  }
+  const restored = createSharedWorld(data, { now: () => 1_000_000 });
+  assert.equal(restored.restore(world.checkpoint()).ok, true);
+  const snapshot = restored.snapshot();
+  assert.deepEqual(snapshot.players.map(player => player.name), ids.map(id => `Visitor #${id}`));
+  assert.deepEqual(snapshot.chat.map(entry => entry.authorName), ids.map(id => `Visitor #${id}`));
 });
