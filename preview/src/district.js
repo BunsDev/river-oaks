@@ -108,19 +108,27 @@ export function buildDistrictBuildings(world) {
     const retailHeight=building.kind==='parking'?0:4.25, roofHeight=visibleRoofHeight(world,building);
     // The ground-floor wall is assembled around real openings. Upper massing and
     // roof keep the mapped polygon; rooms below are original display alcoves.
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth: roofHeight-retailHeight, bevelEnabled: false, steps: 1, curveSegments: 1 });
-    geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
-    const mesh = new THREE.Mesh(geometry, building.kind === 'parking' ? roof : reference.massMaterial(building) ?? stone);
-    mesh.position.y = building.center[2]+retailHeight; mesh.castShadow = mesh.receiveShadow = true;
-    mesh.userData.districtBuilding = building.id; group.add(mesh);
-    const roofGeometry = new THREE.ShapeGeometry(shape); roofGeometry.rotateX(-Math.PI / 2); geometries.add(roofGeometry);
-    const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + roofHeight + 0.02; top.receiveShadow = true; group.add(top);
+    // A stepped block keeps its whole footprint up to the step and only the
+    // tower's ring above it (reference-blocks.js), so a low wing has sky over it.
+    const step = reference.plan.steps.get(building.id), towerShape = step ? new THREE.Shape(step.ring.map(([x, y]) => new THREE.Vector2(x, y))) : shape;
+    const massMaterial = building.kind === 'parking' ? roof : reference.massMaterial(building) ?? stone;
+    for (const [outline, from, to] of step ? [[shape, retailHeight, step.height], [towerShape, step.height, roofHeight]] : [[shape, retailHeight, roofHeight]]) {
+      const geometry = new THREE.ExtrudeGeometry(outline, { depth: to-from, bevelEnabled: false, steps: 1, curveSegments: 1 });
+      geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
+      const mesh = new THREE.Mesh(geometry, massMaterial);
+      mesh.position.y = building.center[2]+from; mesh.castShadow = mesh.receiveShadow = true;
+      mesh.userData.districtBuilding = building.id; group.add(mesh);
+    }
+    for (const [outline, height] of step ? [[shape, step.height], [towerShape, roofHeight]] : [[shape, roofHeight]]) {
+      const roofGeometry = new THREE.ShapeGeometry(outline); roofGeometry.rotateX(-Math.PI / 2); geometries.add(roofGeometry);
+      const top = new THREE.Mesh(roofGeometry, roof); top.position.y = building.center[2] + height + 0.02; top.receiveShadow = true; group.add(top);
+    }
     const ring = building.ring;
     const winding=Math.sign(ring.slice(1).reduce((sum,b,i)=>sum+ring[i][0]*b[1]-b[0]*ring[i][1],0));
     const levels = building.kind === 'parking' ? [] : upperWindowLevels(roofHeight);
     // Rooftop plant and a stair bulkhead, placed inside the footprint by pulling
     // each mapped corner toward the centroid; a membrane roof is never bare.
-    const corners = ring.slice(0, -1), centroid = corners.reduce((sum, [x, y]) => [sum[0] + x / corners.length, sum[1] + y / corners.length], [0, 0]);
+    const corners = (step?.ring ?? ring).slice(0, -1), centroid = corners.reduce((sum, [x, y]) => [sum[0] + x / corners.length, sum[1] + y / corners.length], [0, 0]);
     const roofTop = building.center[2] + roofHeight;
     corners.forEach(([x, y], corner) => {
       const f = corner % 2 ? 0.42 : 0.3, px = centroid[0] + (x - centroid[0]) * f, py = centroid[1] + (y - centroid[1]) * f;
