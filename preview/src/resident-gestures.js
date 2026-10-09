@@ -17,6 +17,8 @@ export function createResidentGestures({reducedMotion=false}={}) {
   // Watering: lean in, look down at the planter, right arm forward with the
   // can tipped, and a slow pour that sways the wrist.
   const water={spine_03:[.16,0,0],head:[.22,0,0],upperarm_r:[-.78,0,-.08],lowerarm_r:[0,0,.32],hand_r:[.42,0,0]};
+  const handshake={upperarm_r:[-.85,0,-.12],lowerarm_r:[0,0,.35],hand_r:[0,.15,0]};
+  const dance={spine_03:[0,0,0],head:[0,0,0],upperarm_l:[-.45,0,.2],upperarm_r:[-.45,0,-.2],lowerarm_l:[0,0,.8],lowerarm_r:[0,0,.8]};
   let suspended=false;
   return {
     suspend(){suspended=true;},
@@ -28,7 +30,11 @@ export function createResidentGestures({reducedMotion=false}={}) {
       greeting.lowerarm_r[2]=-0.32+Math.sin(time*2)*0.025;
       wave.lowerarm_r[2]=1.25+Math.sin(time*9)*.16;
       water.hand_r[0]=.42+Math.sin(time*2.6)*.08;
-      const target=action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:action==='water'?water:{};
+      handshake.upperarm_r[0]=-.85+Math.sin(time*7)*.06;
+      dance.spine_03[2]=Math.sin(time*2.5)*.13;dance.spine_03[1]=Math.sin(time*1.6)*.12;
+      dance.head[2]=-Math.sin(time*2.5)*.06;
+      dance.upperarm_l[0]=-.45+Math.sin(time*2.5)*.18;dance.upperarm_r[0]=-.45-Math.sin(time*2.5)*.18;
+      const target=action==='handshake'?handshake:action==='dance'?dance:action==='acknowledge'?acknowledgement:action==='startled'?startled:action==='amazed'||action==='enchanted'?surprised:action==='greet'?greeting:action==='wave'?wave:action==='bow'?bow:action==='water'?water:{};
       const dt=Number.isFinite(delta)?Math.max(0,Math.min(0.08,delta)):0;
       const frequency=10,decay=Math.exp(-frequency*dt);
       for(const name of joints)for(let axis=0;axis<3;axis++){

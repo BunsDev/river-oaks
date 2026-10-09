@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createInteractions } from './interactions.js';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
 import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
 import { personElevation } from '../preview/src/person-position.js';
@@ -34,7 +35,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 4, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 5, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -97,7 +98,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const movementOf = player => movementByUser.get(player.id)==='beast' && isBeastAppearance(player.appearance) ? 'beast' : 'upright';
   // Every name leaves the world checked against its account: only Jevica's
   // accounts are Jevica, whatever a stored or restored record says.
-  const publicPlayer = player => ({id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:player.gestureUntil>now()?player.gesture:null,canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
+  const interactions=createInteractions({players,environment,now,movementOf,changed:()=>revision++,residents:()=>state.locals});
+  const publicPlayer = player => ({interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
@@ -133,6 +135,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(!environment.isFree(seat.position[0],-seat.position[1])
       || [...players.values()].some(other=>other.id!==player.id && distance(other.position,seat.position)<.6))
       return reject('seat_blocked','Someone is standing at the seat.');
+    interactions.cancel(player.id);
     focus.delete(player.id);
     Object.assign(player,{position:seat.position,yaw:seatYaw(seat.yaw-Math.PI),altitude:0,vehicle:null,
       sitting:{buildId:seat.buildId,slot:seat.slot},poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
@@ -183,6 +186,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return reject('planter_out_of_reach','Walk closer to the planter.');
     if(time-ledger.gestureAt<GESTURE_COOLDOWN_MS)return reject('gesture_cooldown','Wait a moment before watering again.');
     // The body turns to the planter; a player's yaw is the camera's, behind them.
+    interactions.cancel(player.id);
     player.yaw=seatYaw(headingTo(player.position,[planter.x,planter.north])+Math.PI);
     player.gesture='water';player.gestureUntil=time+WATER_MS;ledger.gestureAt=time;revision++;
     return {ok:true,player:publicPlayer(player)};
@@ -261,6 +265,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   function leave(userId) {
     if (!players.delete(userId)) return false;
+    interactions.cancel(userId);
     focus.delete(userId);
     const ledger = ledgers.get(userId);
     if (ledger) ledger.seen = now();
@@ -285,14 +290,17 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
     const {position,yaw,altitude} = message;
-    if (!fields(message,['type','position','yaw','altitude','vehicle']) || (message.vehicle != null && !vehicleKind(message.vehicle))
+    if (!fields(message,['type','position','yaw','altitude','vehicle','interactionId']) || (message.vehicle != null && !vehicleKind(message.vehicle))
       || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
+      || message.interactionId!==undefined && (typeof message.interactionId!=='string'||message.interactionId.length>200)
       || !Number.isFinite(yaw) || !Number.isFinite(altitude) || altitude < 0 || altitude > environment.flightCeiling) return correction('invalid_pose');
     if(player.sitting) {
       if(distance(position,player.position)>1e-6 || Math.abs(position[2]-player.position[2])>1e-6
         || altitude!==0 || message.vehicle)return correction('stand_before_moving');
       return {ok:true,player:publicPlayer(player)};
     }
+    const activity=interactions.active(player.id);
+    if(activity?.kind==='handshake'&&activity.expiresAt>time&&message.interactionId!==activity.id)return correction('greeting_aligning');
     if (message.vehicle && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
     if (altitude>0 && !canFlyAs(player.id,player.appearance)) return correction('flight_not_allowed');
@@ -314,6 +322,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
       if (height>0.1 ? !environment.canFly(x,environment.groundAt(x,-north)+height,-north) : !environment.isFree(x,-north)) return correction('blocked');
     }
+    if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
     // Watering keeps the body turned to the planter; walking off ends it.
@@ -423,6 +432,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const target=local?.position ?? peer?.position ?? place?.position ?? (point ? null : mode==='enter' && room ? room.toWorld(room.center,room.depth-1) : store.facade);
     // A bare position keeps the traveller's own facing; a place faces its spot.
     const yaw=target && !(target[0]===destination[0] && target[1]===destination[1]) ? Math.atan2(destination[0]-target[0],target[1]-destination[1]) : player.yaw;
+    interactions.cancel(player.id);
     Object.assign(player,{position:destination,sitting:null,altitude:0,yaw,poseAt:time,moveBudget:0.1,liftBudget:0.1,vehicle:null,gesture:null,gestureUntil:0});
     revision++;
     return {ok:true,player:publicPlayer(player)};
@@ -438,6 +448,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     ledger.tokenAt=time;
     if (ledger.tokens<1) return reject('rate_limited');
     ledger.tokens--;
+    interactions.prune();
+    if(message.type==='interaction')return interactions.command(player,message,ledger,time);
     if(message.type==='sit')return sit(player,message,time);
     if(message.type==='stand')return stand(player,message,time);
     if (message.type==='travel') return travel(player,message,ledger,time);
@@ -446,6 +458,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(!fields(message,['type','kind']) || !GESTURES.includes(message.kind))return reject('invalid_gesture');
       if(player.altitude>0.1 || player.vehicle)return reject('gesture_on_foot','Step out or land before greeting someone.');
       if(time-ledger.gestureAt<GESTURE_COOLDOWN_MS)return reject('gesture_cooldown','Wait a moment before another gesture.');
+      interactions.cancel(player.id);
       player.gesture=message.kind;player.gestureUntil=time+GESTURE_DURATION_MS;ledger.gestureAt=time;revision++;
       return {ok:true,player:publicPlayer(player)};
     }
@@ -457,6 +470,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (player.appearance===chosen.id) return {ok:true,player:publicPlayer(player)};
       if (player.altitude>0) return reject('land_before_appearance','Land before changing character or form.');
       if (time-ledger.appearanceAt<APPEARANCE_COOLDOWN_MS) return reject('appearance_cooldown','Wait a moment before changing appearance again.');
+      interactions.cancel(player.id);
       player.appearance=chosen.id;ledger.appearanceAt=time;
       rememberAppearance(userId,player.appearance);revision++;
       return {ok:true,player:publicPlayer(player)};
@@ -465,6 +479,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (!fields(message,['type','movement']) || !MOVEMENTS.includes(message.movement)) return reject('invalid_movement');
       if (message.movement==='beast' && !isBeastAppearance(player.appearance)) return reject('beast_form_required','Choose a beast form before moving like one.');
       if ((movementByUser.get(userId)??'upright')===message.movement) return {ok:true,player:publicPlayer(player)};
+      interactions.cancel(player.id);
       if (message.movement==='beast') movementByUser.set(userId,'beast'); else movementByUser.delete(userId);
       revision++;
       return {ok:true,player:publicPlayer(player)};
@@ -636,9 +651,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     revision++;
   }
   function snapshot() {
+    const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -651,7 +667,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Store and restore only through the trusted persistence owner, never clients.
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
-    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],homeGuests:[...homeGuests],
+    interactions.prune();
+    const payload=JSON.parse(checkpointJSON({revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()],ledgers:[...ledgers],focus:[...focus],chat,appearances:[...appearanceByUser],movements:[...movementByUser],builds:[...builds.values()],inventory:[...inventory],homeGuests:[...homeGuests],
       life:life?Object.fromEntries(LIFE_FIELDS.map(key=>[key,life[key]])):null}));
     const envelope={version:CHECKPOINT_VERSION,worldId,worldFingerprint,payload};
     if (Buffer.byteLength(JSON.stringify(envelope))>MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint capacity exceeded');
@@ -668,7 +685,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -874,6 +891,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         const helper=nextState.locals.find(local=>local.id===job.helperId);
         if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
       }
+      if(saved.version<5&&recovered.interactions?.length || saved.version>=5&&!Array.isArray(recovered.interactions))throw new Error('Invalid interaction version');
+      const nextInteractions=interactions.validate(recovered.interactions,nextPlayers);
       // Navigation caches/functions derive from the same fingerprinted district.
       // Build them before committing; only serialized simulation state is restored.
       if (nextLife) {Object.assign(nextLife,clock);nextLife.state=state;}
@@ -890,6 +909,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       inventory.clear();for(const [id,items] of nextInventory)inventory.set(id,items);
       homeGuests.clear();for(const [storeId,ids] of nextHomeGuests)homeGuests.set(storeId,ids);
       localById.clear();for (const local of state.locals) localById.set(local.id,local);
+      interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;
       return {ok:true};
     } catch (error) {
@@ -899,6 +919,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
+    interactions.clear();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;
     Object.assign(state,fresh);localById.clear();
