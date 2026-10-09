@@ -62,6 +62,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Graphics quality', selector: '[data-quality=auto]', run: () => openTab(2, '[data-quality=auto]') },
     { label: 'Light & atmosphere', selector: '#sun-hour', run: () => openTab(2, '#sun-hour') },
     { label: getClearView()?.active ? 'Show controls' : 'Clear view', keys: 'H', enabled: () => getClearView() && (document.body.classList.contains('walking') || getClearView().active), run: () => getClearView()?.set(!getClearView()?.active) },
+    { label: 'Report a problem', terms: 'bug debug feedback issue broken crash error help support', run: () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem')) },
     { label: 'Return to world', run: () => {
       if (document.querySelector('#community-dialogue')?.hidden === false) document.querySelector('#community-close')?.click();
       sidebar.setOpen(false); getDock()?.setOpen(false); focusWorld();

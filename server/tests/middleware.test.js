@@ -13,6 +13,9 @@ test('game assets require an approved cookie while the sign-in bundle stays publ
   });
   assert.equal(protectedGameAsset('/assets/index-abc.js'), false);
   assert.equal(protectedGameAsset('/assets/preload-helper-abc.js'), false);
+  // The problem-report collector and dialog load on the sign-in page; lookalikes do not.
+  for (const path of ['/assets/debug-report-D4CCBOl3.js', '/assets/debug-report-ui-QfBMpgMe.js', '/assets/debug-report-ui-CtO71uXq.css']) assert.equal(protectedGameAsset(path), false, path);
+  for (const path of ['/assets/debug-reports-abc.js', '/assets/my-debug-report-abc.js', '/assets/debug-report-abc/../main-abc.js']) assert.equal(protectedGameAsset(path), true, path);
   assert.equal(protectedGameAsset('/assets/main-abc.js'), true);
   assert.equal(protectedGameAsset('/assets/walking-abc.js'), true);
   assert.equal(protectedGameAsset('/assets/three-abc.js'), true);

@@ -207,3 +207,7 @@
 @media (pointer: coarse), (max-width: 700px) {
   :root[data-theme] :is(.panel-trigger .rail-key-hint, .visit-tools-toggle .rail-key-hint, .commands-toggle kbd) { display: none; }
 }
+
+/* When loading fails, the panel offers a problem report. */
+:root[data-theme] .loading-state .loading-report:not([hidden]) { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; margin-top: 14px; padding: 0 16px; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font-weight: 600; pointer-events: auto; cursor: pointer; }
+:root[data-theme] .loading-state .loading-report:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 2px; }
