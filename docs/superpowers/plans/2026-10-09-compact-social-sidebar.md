@@ -41,3 +41,8 @@ Main integration: PR #194 (ab914a6) landed during CI. Merged its glass-panel
 changes without conflicts; reran `npm run verify` (all 11 tasks passed) and the
 focused browser journey (passed), and inspected the combined dark card screenshot.
 Hosted checks must pass on the updated branch before PR #196 can merge.
+
+Second main integration: PR #195 (9c31050) landed after all updated PR checks
+passed. Its changes are confined to landing-page files and its ledger; merged
+without conflicts. `npm run build` and `git diff --check` passed on the combined
+tree. Sidebar source and browser harness are unchanged from the verified revision.

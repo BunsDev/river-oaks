@@ -1,20 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap');
 
+/* One evening palette: the page is always dark, like its night-time artwork. */
 :root {
-  color-scheme: light dark;
-  --page: #fff7fa; --surface: #ffffff; --text: #28232d; --muted: #625764;
-  --accent: #9c315b; --pink: #ffa8ca; --line: #dfd1d9; --hover: #ffedf4;
-  --hero-mid: #fff7faf0; --hero-clear: #fff7fa00;
+  color-scheme: dark;
+  --page: #0b0b0f; --surface: #16161c; --text: #ffffff; --muted: #c4c5cb;
+  --accent: #f9a7ca; --pink: #fda1c7; --on-pink: #2a1726; --pink-outline: #b88b9b;
+  --line: #26262e; --ring: #2e2e36; --hover: #1d1c24;
+  --hero-mid: #0b0b0fed; --hero-clear: #0b0b0f00;
   --display: 'Fraunces', Georgia, serif; --body: 'Outfit', sans-serif; --utility: 'Space Mono', monospace;
-  --card-image-size: clamp(70px, 18dvh, 190px);
+  --card-image-size: clamp(70px, 17.8dvh, 190px);
   font-family: var(--body); color: var(--text); background: var(--page); font-synthesis: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page: #0b0c10; --surface: #14151b; --text: #faf5f7; --muted: #b9b3bf;
-    --accent: #ffa8ca; --line: #303038; --hover: #201a24;
-    --hero-mid: #0b0c10ed; --hero-clear: #0b0c1000;
-  }
 }
 * { box-sizing: border-box; }
 html { height: 100%; overflow: hidden; }
@@ -26,60 +21,58 @@ img { display: block; max-width: 100%; }
 .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 main, footer { width: 100%; min-width: 0; }
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 42px; padding: 11px 22px; background: var(--pink); color: #29212a; border: 1px solid transparent; border-radius: 8px; font-size: 13px; font-weight: 600; transition: box-shadow .18s; }
-.button:hover { background: #ffbed8; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 42px; padding: 11px 22px; background: var(--pink); color: var(--on-pink); border: 1px solid transparent; border-radius: 6px; font-size: 13px; font-weight: 600; transition: box-shadow .18s; }
+.button:hover { background: #ffb9d6; }
 .button.secondary { background: var(--surface); color: var(--text); border-color: var(--line); }
 .button.secondary:hover { background: var(--hover); }
-main { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 12px; padding-bottom: 16px; }
-.hero { position: relative; isolation: isolate; min-height: 0; overflow: hidden; display: flex; align-items: center; container: hero / size; }
-.hero-art { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
-.hero-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, var(--page), var(--hero-mid) 24%, var(--hero-clear) 70%), linear-gradient(0deg, var(--page), var(--hero-clear) 23%); }
-.hero-copy { width: min(62%, 800px); padding: clamp(12px, 3dvh, 36px) 0 clamp(12px, 3dvh, 36px) 48px; }
-.hero-signature { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(10px, 2cqh, 22px); }
+main { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 8px; padding-bottom: 14px; }
+/* The artwork carries its own left and bottom shading, so the desktop shade only guards wide screens. */
+.hero { position: relative; isolation: isolate; min-height: 0; margin-bottom: -4px; overflow: hidden; display: flex; align-items: center; container: hero / size; }
+.hero-art { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+.hero-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, var(--page), var(--hero-clear) 18%); }
+.hero-copy { width: min(62%, 800px); padding: clamp(12px, 3dvh, 36px) 0 clamp(12px, 3dvh, 36px) 44px; }
+.hero-signature { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(10px, 2.4cqh, 22px); }
 .hero-signature .eyebrow { margin: 0; }
-.hero-signature > img { width: 30px; height: 30px; }
-.hero-tagline { font-family: var(--display); font-size: 25px; line-height: 1.25; margin: 0 0 22px; letter-spacing: -.7px; }
-.hero-tagline em { color: var(--accent); }
-.eyebrow { margin: 0 0 clamp(8px, 1.5dvh, 18px); color: var(--accent); font-family: var(--utility); font-size: 9px; letter-spacing: 2.2px; text-transform: uppercase; line-height: 1.6; }
+.hero-signature > img { width: 22px; height: 22px; }
+.hero-tagline { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.25; margin: 0 0 clamp(12px, 3.6cqh, 24px); letter-spacing: -.4px; font-variation-settings: 'SOFT' 0, 'WONK' 0; }
+.eyebrow { margin: 0 0 clamp(8px, 1.5dvh, 18px); color: var(--accent); font-family: var(--utility); font-size: 9px; letter-spacing: 1.1px; text-transform: uppercase; line-height: 1.6; }
 h1, h2 { font-family: var(--display); font-weight: 500; font-variation-settings: 'SOFT' 30, 'WONK' 1; }
-h1 { font-size: clamp(38px, 7.8dvh, 86px); line-height: 1.05; letter-spacing: -3px; margin: 0 0 clamp(10px, 2dvh, 22px); }
+h1 { font-size: clamp(38px, 7.8dvh, 86px); line-height: 1.05; letter-spacing: -3px; margin: 0 0 clamp(10px, 1.8dvh, 20px); }
 h1 em { color: var(--accent); font-weight: 500; }
-.intro { font-size: 15px; line-height: 1.6; max-width: 440px; margin: 0 0 18px; text-wrap: pretty; }
-.hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 440px; }
-.hero-actions .button { min-height: 50px; font-size: 15px; gap: 12px; padding: 12px 16px; box-shadow: 0 5px 20px #00000012; }
-.hero-actions .secondary { border-color: var(--accent); }
-.hero-actions .mac-download { grid-column: 1 / -1; border-color: var(--line); gap: 12px; }
-.apple-icon { fill: currentColor; stroke: none; }
+.intro { font-size: 13.3px; line-height: 21px; max-width: 372px; margin: 0 0 15px; text-wrap: pretty; }
+.hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 11px; max-width: 375px; }
+.hero-actions .button { min-height: 42px; font-size: 13px; gap: 12px; padding: 8px 16px; }
+.hero-actions .secondary { border-color: var(--pink-outline); }
+.hero-actions .mac-download { grid-column: 1 / -1; min-height: 48px; justify-content: flex-start; padding-inline: 14px 16px; border-color: var(--line); gap: 10px; }
+.apple-icon { width: 17px; height: 17px; fill: currentColor; stroke: none; }
 .mac-download > span { text-align: left; line-height: 1.2; }
-.mac-download small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+.mac-download small { display: block; font-size: 8.5px; font-weight: 400; color: var(--muted); margin-top: 3px; }
 .mac-download > .icon:last-child { margin-left: auto; }
-.access-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; color: var(--muted); font-size: 11px; margin: 14px 0 0; line-height: 1.5; }
-.access-note strong { font-family: var(--utility); font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: .8px; color: var(--accent); padding: 4px 7px; border: 1px solid var(--line); border-radius: 4px; }
-.pathways, .discover { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-inline: 32px; min-height: 0; }
-.pathway { display: flex; align-items: center; gap: 20px; min-height: clamp(64px, 10dvh, 110px); padding: clamp(12px, 2dvh, 22px); border: 1px solid var(--line); border-radius: 11px; background: var(--surface); transition: box-shadow .18s; }
+.access-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 9px; color: var(--muted); font-size: 9.5px; margin: 14px 0 0; line-height: 1.5; }
+.access-note strong { font-family: var(--utility); font-size: 8px; font-weight: 400; text-transform: uppercase; letter-spacing: .7px; color: var(--accent); padding: 3px 5px; border: 1px solid var(--ring); border-radius: 3px; }
+.pathways, .discover { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; padding-inline: 26px; min-height: 0; }
+.pathway { display: flex; align-items: center; gap: 14px; min-height: clamp(64px, 9.3dvh, 110px); padding: 10px 19px 10px 21px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); transition: box-shadow .18s; }
 .pathway:hover { background: var(--hover); }
-.pathway-icon { width: 34px; height: 34px; color: var(--accent); stroke-width: 1.5; }
-.pathway h2 { font-size: 21px; letter-spacing: -.6px; margin: 0 0 5px; line-height: 1.15; }
-.pathway p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
-.round-arrow { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--line); border-radius: 50%; margin-left: auto; color: var(--muted); }
-.round-arrow .icon { width: 17px; height: 17px; }
-.discovery-card { min-width: 0; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); position: relative; }
-.card-image { height: var(--card-image-size); position: relative; overflow: hidden; border-radius: 10px 10px 0 0; background: #28232d; }
-.card-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, #0b0c1099, transparent 65%); pointer-events: none; }
+.pathway-icon { width: 30px; height: 30px; color: var(--accent); stroke-width: 1.5; }
+.pathway h2 { font-size: 17.5px; font-weight: 600; letter-spacing: -.4px; margin: 0 0 5px; line-height: 1.15; }
+.pathway p { margin: 0; font-size: 10.3px; line-height: 1.5; color: var(--muted); }
+.round-arrow { display: grid; place-items: center; width: 31px; height: 31px; flex-shrink: 0; border: 1px solid var(--ring); border-radius: 50%; margin-left: auto; color: var(--muted); }
+.round-arrow .icon { width: 15px; height: 15px; }
+.discovery-card { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); position: relative; }
+.card-image { height: var(--card-image-size); position: relative; overflow: hidden; border-radius: 9px 9px 0 0; background: #201c24; }
 .card-image > img { width: 100%; height: 100%; object-fit: cover; }
-.card-image .avatar-art { object-position: 75% 44%; width: 155%; max-width: none; margin-left: -45%; }
-.image-label { position: absolute; z-index: 1; bottom: 12px; left: 18px; color: #fff; font-size: 10px; letter-spacing: .4px; }
-.card-copy { display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
-.card-copy h2 { font-size: 21px; letter-spacing: -.6px; line-height: 1.2; margin: 0; }
+.image-label { position: absolute; z-index: 1; bottom: 10px; left: 14px; color: #fff; font-size: 9px; font-weight: 500; letter-spacing: .2px; text-shadow: 0 1px 6px #000a; }
+.card-copy { display: flex; align-items: center; gap: 12px; min-height: 47px; padding: 6px 18px 6px 15px; }
+.card-copy h2 { font-size: 19px; font-weight: 600; letter-spacing: -.5px; line-height: 1.2; margin: 0; }
 .card-open { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; margin-left: auto; }
 .card-open::after { content: ''; position: absolute; inset: 0; border-radius: 11px; }
 .card-open:hover { color: var(--accent); }
 .discovery-card:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 32px; border-top: 1px solid var(--line); }
-.footer-links { display: flex; align-items: center; gap: 24px; }
+footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 40px; padding: 6px 26px; border-top: 1px solid var(--line); }
+.footer-links { display: flex; align-items: center; gap: 22px; }
 .footer-links a { display: inline-flex; align-items: center; gap: 7px; padding-block: 3px; }
 .footer-links a:hover { color: var(--accent); }
-footer p, .footer-links { color: var(--muted); font-size: 11px; margin: 0; }
+footer p, .footer-links { color: var(--muted); font-size: 9.5px; margin: 0; }
 footer .icon { width: 14px; height: 14px; }
 .skip { position: absolute; top: -60px; left: 16px; padding: 12px; background: var(--surface); z-index: 10; }
 .skip:focus { top: 16px; }
@@ -89,7 +82,7 @@ footer .icon { width: 14px; height: 14px; }
 .detail-dialog::backdrop { background: #05060ac7; backdrop-filter: blur(8px); }
 .dialog-close { position: absolute; z-index: 1; top: 12px; right: 12px; width: 40px; height: 40px; display: grid; place-items: center; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 50%; font-size: 26px; line-height: 1; }
 .detail-content { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); height: 100%; }
-.detail-art { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
+.detail-art { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: var(--focus, 60%) center; }
 .detail-copy { padding: 48px 36px 32px; min-width: 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
 .detail-copy h2 { font-size: 37px; letter-spacing: -1.3px; line-height: 1.1; margin: 0 0 18px; }
 .detail-copy > p:not(.eyebrow):not(.access-note) { font-size: 15px; line-height: 1.7; color: var(--muted); margin: 0 0 24px; }
@@ -195,10 +188,13 @@ footer .icon { width: 14px; height: 14px; }
 
 /* Scale the hero to the space remaining after navigation and cards. */
 .hero-copy { padding-block: clamp(8px, 4cqh, 30px); }
-.hero-copy h1 { font-size: clamp(34px, min(18cqh, 16cqw), 110px); }
-@container hero (max-height: 640px) {
+.hero-copy h1 { font-size: clamp(34px, min(16cqh, 16cqw), 110px); }
+@container hero (max-height: 480px) {
   .intro { display: none; }
-  .hero-copy h1 { font-size: clamp(32px, min(18cqh, 16cqw), 92px); }
+}
+/* Phones keep the shorter hero: the intro would push the copy into the bright top of the art. */
+@container hero (max-height: 640px) and (max-width: 760px) {
+  .intro { display: none; }
 }
 @container hero (max-height: 400px) {
   .hero-copy { padding-block: 8px; }
