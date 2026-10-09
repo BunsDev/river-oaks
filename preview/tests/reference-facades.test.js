@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { BELLA_BLOCK, HERMES_BLOCK, IPIC_BLOCK, facadeEdges, letteringCanvasSize, referencePlan, visibleRoofHeight } from '../src/reference-facades.js';
+import { BELLA_BLOCK, HERMES_BLOCK, IPIC_BLOCK, SIGN_GUTTER, SIGN_PAGE, facadeEdges, letteringCanvasSize, referencePlan, shelfPack, visibleRoofHeight } from '../src/reference-facades.js';
 import { DIOR_BLOCK, EQUINOX_BLOCK, ETRO_BLOCK, RESIDENCES_NORTH, RESIDENCES_SOUTH, WING_HEIGHT, WING_WIDTH, clipRing } from '../src/reference-blocks.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -127,8 +127,8 @@ test('sign canvases follow the sign size instead of a fixed 2048-texel width', (
   assert.deepEqual(letteringCanvasSize(7, 0.85), [1792, 218]);
   // Small print keeps 64 texels on its short side; proportions never change.
   assert.deepEqual(letteringCanvasSize(1, 0.13), [492, 64]);
-  // Caps: 2048 wide and 1024 tall.
-  assert.deepEqual(letteringCanvasSize(12, 0.72), [2048, 123]);
+  // Caps: a page less its gutters wide (2032), and 1024 tall.
+  assert.deepEqual(letteringCanvasSize(12, 0.72), [2032, 122]);
   assert.deepEqual(letteringCanvasSize(0.5, 6), [85, 1024]);
   // The vertical EQUINOX pylon sign fits without hitting a cap.
   assert.deepEqual(letteringCanvasSize(0.55, 3.9), [141, 998]);
@@ -136,4 +136,21 @@ test('sign canvases follow the sign size instead of a fixed 2048-texel width', (
     const [cw, ch] = letteringCanvasSize(w, h);
     assert.ok(Math.abs(cw / ch - w / h) / (w / h) < 0.02, `${w}x${h} keeps its aspect`);
   }
+});
+
+test('signs pack onto pages with a clear gutter around each one', () => {
+  const sizes = [[2032, 218], [1792, 218], [900, 190], [640, 160], [400, 128], [300, 96], [2032, 122], [1200, 64], [500, 64], [140, 998], [85, 1024]].map(([w, h]) => ({ w, h }));
+  const order = sizes.map((rect, i) => [rect, i]).sort(([a], [b]) => b.h - a.h || b.w - a.w);
+  const spots = shelfPack(order.map(([rect]) => rect));
+  const placed = order.map(([rect], k) => ({ ...rect, ...spots[k] }));
+  for (const item of placed) {
+    assert.ok(item.x >= SIGN_GUTTER && item.y >= SIGN_GUTTER, 'inside the leading gutter');
+    assert.ok(item.x + item.w + SIGN_GUTTER <= SIGN_PAGE && item.y + item.h + SIGN_GUTTER <= SIGN_PAGE, 'inside the trailing gutter');
+  }
+  for (const a of placed) for (const b of placed) {
+    if (a === b || a.page !== b.page) continue;
+    const apart = a.x + a.w + SIGN_GUTTER * 2 <= b.x || b.x + b.w + SIGN_GUTTER * 2 <= a.x || a.y + a.h + SIGN_GUTTER * 2 <= b.y || b.y + b.h + SIGN_GUTTER * 2 <= a.y;
+    assert.ok(apart, `signs ${JSON.stringify(a)} and ${JSON.stringify(b)} keep a double gutter between them`);
+  }
+  assert.throws(() => shelfPack([{ w: SIGN_PAGE, h: 10 }]), /does not fit/);
 });
