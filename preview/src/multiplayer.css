@@ -64,3 +64,74 @@
 .multiplayer-profile-status { min-height: 1.4em; }
 .remote-player-labels { pointer-events: none; position: absolute; inset: 0; overflow: hidden; z-index: 3; }
 .remote-player-label { position: absolute; top: 0; left: 0; padding: 4px 9px; border-radius: 20px; background: #372534d9; color: white; font-size: 12px; }
+
+/* A quiet, compact social card in both exploration and walking rails. */
+:root[data-theme] .multiplayer-roster {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: inset 0 1px 0 #ffffff08, 0 8px 24px #0000000a;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.multiplayer-roster > strong { font-size: 13px; font-weight: 600; letter-spacing: -.015em; }
+.multiplayer-roster .multiplayer-person { gap: 8px; margin-top: 6px; font-size: 12px; }
+.multiplayer-roster .multiplayer-person-name { color: var(--muted); }
+.multiplayer-roster > :is(.multiplayer-chat, .multiplayer-social, .multiplayer-groups, .multiplayer-gestures) {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.multiplayer-roster :is(h3, h4) {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.multiplayer-roster .multiplayer-chat-history { min-height: 0; }
+.multiplayer-roster .multiplayer-chat-history:not(:empty) { margin-bottom: 10px; }
+/* Keep live regions mounted; remove only their empty visual footprint. */
+.multiplayer-roster [role=status]:empty { min-height: 0; height: 0; margin: 0; padding: 0; }
+.multiplayer-roster .multiplayer-social-conversation:empty { margin: 0; }
+.multiplayer-roster .multiplayer-social-contacts > p { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+:root[data-theme] .multiplayer-roster button {
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink);
+  font-weight: 500;
+  line-height: 1.4;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms;
+}
+:root[data-theme] .multiplayer-roster button:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
+:root[data-theme] .multiplayer-roster button:disabled { opacity: .5; cursor: not-allowed; }
+:root[data-theme] .multiplayer-roster :is(input, textarea, select) {
+  box-sizing: border-box;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+}
+.multiplayer-roster input::placeholder { color: var(--muted); opacity: 1; }
+:root[data-theme] .multiplayer-roster .multiplayer-chat-form button { background: var(--accent-soft); color: var(--ink); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+:root[data-theme] .multiplayer-roster :is(button, input, textarea, select, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.multiplayer-roster > button { margin-top: 12px; }
+@media (pointer: coarse) {
+  :root[data-theme] .multiplayer-roster :is(button, input, select) { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme] .multiplayer-roster button { transition: none; }
+}
