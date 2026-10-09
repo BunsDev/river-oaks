@@ -127,14 +127,17 @@ function cladding({ color, panel, bond = false, tone = 0.04, joint = 0.8, veins 
 
 // Applied lettering: one canvas per sign, alpha-tested so it never sorts
 // against the glazing behind it.
+// Signs are packed onto shared texture pages, each sign inside a gutter so
+// mipmaps never pull in its neighbour.
+export const SIGN_PAGE = 2048, SIGN_GUTTER = 8;
 // A sign's canvas in texels, sized to the sign rather than one fixed width:
 // 256 texels a metre, at least 64 on the short side for small print, and at most
-// 2048 wide or 1024 tall. The canvas keeps the sign's proportions, so the text
-// is never stretched.
+// a page width (less its gutters) wide or 1024 tall. The canvas keeps the sign's
+// proportions, so the text is never stretched.
 export function letteringCanvasSize(width, height) {
   let scale = 256;
   scale = Math.max(scale, 64 / Math.min(width, height));
-  scale = Math.min(scale, 2048 / width, 1024 / height);
+  scale = Math.min(scale, (SIGN_PAGE - SIGN_GUTTER * 2) / width, 1024 / height);
   return [Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale))];
 }
 
@@ -165,8 +168,26 @@ function lettering(text, { width, height, family = 'Georgia, serif', weight = 60
 }
 function letteringMaterial(canvas, { background, metalness, roughness, emissive }) {
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
-  return new THREE.MeshStandardMaterial({ map: texture, alphaTest: background ? 0 : 0.45, transparent: false, metalness, roughness,
+  const material = new THREE.MeshStandardMaterial({ map: texture, alphaTest: background ? 0 : 0.45, transparent: false, metalness, roughness,
     emissive: emissive ? '#ffffff' : '#000000', emissiveMap: emissive ? texture : null, emissiveIntensity: emissive });
+  material.userData.lettering = { canvas, background: Boolean(background) };
+  return material;
+}
+
+// Shelf-pack rectangles (taken in the order given) onto square pages, each with
+// a gutter on every side. Returns { page, x, y } per rectangle, x and y being
+// the top-left of its content.
+export function shelfPack(rects, { size = SIGN_PAGE, gutter = SIGN_GUTTER } = {}) {
+  const spots = [];
+  let page = 0, x = gutter, y = gutter, row = 0;
+  for (const { w, h } of rects) {
+    if (w + gutter * 2 > size || h + gutter * 2 > size) throw new Error(`A ${w}x${h} sign does not fit a ${size} page`);
+    if (x + w + gutter > size) { x = gutter; y += row + gutter * 2; row = 0; }
+    if (y + h + gutter > size) { page++; x = gutter; y = gutter; row = 0; }
+    spots.push({ page, x, y });
+    x += w + gutter * 2; row = Math.max(row, h);
+  }
+  return spots;
 }
 
 // The IPIC blade: an orange IPIC head on brass over stacked THEATERS on violet.
@@ -238,11 +259,82 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     taupe: surface('amorino-canopy', { color: '#8c806e', roughness: 0.5, metalness: 0.3 }),
     chequer: keep(cladding({ color: '#a9a8a4', panel: [0.6, 0.6], tone: 0.28, joint: 0.9, veins: 0.08, roughness: 0.5 }), 'chequer-stone'),
   };
+  const signs = [];
   const sign = (material, f, s, h, d, width, height, yaw = f.yaw) => {
     if (!materials.includes(material)) keep(material, 'lettering');
     const mesh = new THREE.Mesh(plane, material); mesh.position.fromArray(f.at(s, h, d)); mesh.rotation.y = yaw; mesh.scale.set(width, height, 1);
-    mesh.receiveShadow = true; group.add(mesh); return mesh;
+    mesh.receiveShadow = true; group.add(mesh); signs.push(mesh); return mesh;
   };
+  // Every sign is packed onto a few shared texture pages, grouped by finish so a
+  // finish mostly lands on one page; each finish draws as one mesh per page it
+  // uses, instead of a mesh, material and texture per sign.
+  function packSigns() {
+    const finishOf = material => [material.metalness, material.roughness, material.emissiveIntensity, material.alphaTest].join(':');
+    const lettered = signs.filter(mesh => mesh.material.userData.lettering);
+    const arts = [...new Map(lettered.map(mesh => [mesh.material.userData.lettering, finishOf(mesh.material)])).entries()]
+      .sort(([a, p], [b, q]) => p.localeCompare(q) || b.canvas.height - a.canvas.height || b.canvas.width - a.canvas.width).map(([art]) => art);
+    const spots = shelfPack(arts.map(({ canvas }) => ({ w: canvas.width, h: canvas.height })));
+    // Each page is only as tall as the rows on it.
+    const heights = [];
+    spots.forEach(({ page, y }, i) => { heights[page] = Math.max(heights[page] ?? 0, Math.ceil((y + arts[i].canvas.height + SIGN_GUTTER) / 8) * 8); });
+    const pages = heights.map(height => { const sheet = document.createElement('canvas'); sheet.width = SIGN_PAGE; sheet.height = height; return { sheet, context: sheet.getContext('2d'), texture: null }; });
+    const places = new Map();
+    arts.forEach((art, i) => {
+      const { page, x, y } = spots[i], { canvas } = art, { context, sheet } = pages[page];
+      // An opaque sign bleeds its own edge into the gutter; a cut-out one keeps it clear.
+      if (art.background) { context.drawImage(canvas, x - SIGN_GUTTER, y - SIGN_GUTTER, canvas.width + SIGN_GUTTER * 2, canvas.height + SIGN_GUTTER * 2); context.clearRect(x, y, canvas.width, canvas.height); }
+      context.drawImage(canvas, x, y);
+      places.set(art, { page, u0: x / SIGN_PAGE, u1: (x + canvas.width) / SIGN_PAGE, v0: 1 - (y + canvas.height) / sheet.height, v1: 1 - y / sheet.height });
+    });
+    for (const page of pages) {
+      page.texture = new THREE.CanvasTexture(page.sheet); page.texture.colorSpace = THREE.SRGBColorSpace; page.texture.anisotropy = 8;
+      textures.push(page.texture);
+    }
+    const draws = new Map();
+    for (const mesh of lettered) {
+      const { page } = places.get(mesh.material.userData.lettering), key = `${finishOf(mesh.material)}|${page}`;
+      if (!draws.has(key)) draws.set(key, { template: mesh.material, page: pages[page], meshes: [] });
+      draws.get(key).meshes.push(mesh);
+    }
+    const retired = new Set(lettered.map(mesh => mesh.material));
+    for (const { template, page, meshes } of draws.values()) {
+      const material = new THREE.MeshStandardMaterial({ map: page.texture, alphaTest: template.alphaTest, metalness: template.metalness, roughness: template.roughness,
+        emissive: template.emissive, emissiveMap: template.emissiveMap ? page.texture : null, emissiveIntensity: template.emissiveIntensity });
+      material.name = 'reference-lettering'; materials.push(material);
+      const geometry = mergeSigns(meshes, mesh => places.get(mesh.material.userData.lettering)); geometries.push(geometry);
+      const merged = new THREE.Mesh(geometry, material); merged.name = 'facade-signs'; merged.receiveShadow = true; group.add(merged);
+      for (const mesh of meshes) group.remove(mesh);
+    }
+    // The per-sign materials were never drawn; release their canvases now.
+    const retiredMaps = new Set([...retired].map(material => material.map));
+    for (const material of retired) { material.map.dispose(); material.dispose(); }
+    for (const list of [materials, textures]) for (let i = list.length - 1; i >= 0; i--) if (retired.has(list[i]) || retiredMaps.has(list[i])) list.splice(i, 1);
+    signs.length = 0;
+  }
+  // One geometry for many sign quads: each corner moved by its sign's transform
+  // and its UVs remapped to the sign's place on the page.
+  function mergeSigns(meshes, placeOf) {
+    const source = plane, corners = source.attributes.position.count, index = source.index?.array ?? [...Array(corners).keys()];
+    const positions = new Float32Array(meshes.length * corners * 3), normals = new Float32Array(meshes.length * corners * 3), uvs = new Float32Array(meshes.length * corners * 2), indices = [];
+    const point = new THREE.Vector3(), normal = new THREE.Vector3(), normalMatrix = new THREE.Matrix3();
+    meshes.forEach((mesh, k) => {
+      mesh.updateMatrix(); normalMatrix.getNormalMatrix(mesh.matrix);
+      const { u0, u1, v0, v1 } = placeOf(mesh);
+      for (let i = 0; i < corners; i++) {
+        point.fromBufferAttribute(source.attributes.position, i).applyMatrix4(mesh.matrix); point.toArray(positions, (k * corners + i) * 3);
+        normal.fromBufferAttribute(source.attributes.normal, i).applyMatrix3(normalMatrix).normalize(); normal.toArray(normals, (k * corners + i) * 3);
+        uvs[(k * corners + i) * 2] = u0 + source.attributes.uv.getX(i) * (u1 - u0);
+        uvs[(k * corners + i) * 2 + 1] = v0 + source.attributes.uv.getY(i) * (v1 - v0);
+      }
+      for (const i of index) indices.push(k * corners + i);
+    });
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    return geometry;
+  }
   const box = (f, material, s0, s1, h0, h1, d0, d1, pitch = 0) => {
     if (s1 - s0 < 0.005 || h1 - h0 < 0.005) return;
     part(material, f.at((s0 + s1) / 2, (h0 + h1) / 2, (d0 + d1) / 2), [s1 - s0, h1 - h0, Math.abs(d1 - d0)], f.yaw, f.buildingIndex, pitch);
@@ -612,6 +704,7 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     }
     const hermes = plan.frontages.find(frontage => frontage.kind === 'hermes');
     if (hermes) hermesPavilion(hermes);
+    packSigns();
   }
 
   return {

@@ -11,6 +11,7 @@ export { storefrontBenchSpots };
 import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
+import { finishKey } from './material-finish.js';
 
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
@@ -386,12 +387,28 @@ export function buildDistrictBuildings(world) {
   reference.build();
   reference.materials.forEach(material => materials.add(material)); reference.geometries.forEach(item => geometries.add(item)); textures.push(...reference.textures);
   const dummy = new THREE.Object3D();
-  for (const { material, geometry, parts } of batches.values()) {
+  // Plain-colour batches with the same finish and geometry draw together: one
+  // shared material, each box keeping its colour as an instance colour.
+  const special = new Set([glass, upperGlass, light, spot, ...reference.reflective]), finishes = new Map(), drawn = [];
+  for (const batch of batches.values()) {
+    const key = finishKey(batch.material, special);
+    if (!key) { drawn.push(batch); continue; }
+    const id = `${batch.geometry.uuid}|${key}`;
+    if (!finishes.has(id)) {
+      const material = batch.material.clone(); material.color.set('#ffffff'); material.name = `finish:${key}`; materials.add(material);
+      finishes.set(id, { material, geometry: batch.geometry, parts: [] }); drawn.push(finishes.get(id));
+    }
+    for (const part of batch.parts) finishes.get(id).parts.push({ ...part, color: batch.material.color });
+  }
+  for (const { material, geometry, parts } of drawn) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;
     mesh.userData.breakableGlass = material === glass || material === upperGlass || material.userData.breakableGlass === true;
     mesh.userData.buildingIndices = parts.map(part => part.buildingIndex);
-    parts.forEach((part, index) => { dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix); });
+    parts.forEach((part, index) => {
+      dummy.position.fromArray(part.position); dummy.scale.fromArray(part.scale); dummy.rotation.set(part.pitch, part.yaw, 0, 'YXZ'); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix);
+      if (part.color) mesh.setColorAt(index, part.color);
+    });
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
   group.add(reference.group);
