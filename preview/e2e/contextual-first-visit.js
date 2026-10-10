@@ -87,6 +87,7 @@ async initialPage => {
   finally { await page.keyboard.up('KeyA'); }
   check(true, 'First visit ends with walking restored after taking a photo');
   await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.locator('.town-chat-dock').evaluate(node => node.open)) await page.locator('.town-chat-toggle').click();
   if (await more.evaluate(node => node.open)) await more.locator('summary').click();
   if (await page.locator('#walking-movement').isHidden()) await page.locator('#walking-controls-toggle').click();
   check(await page.locator('[data-walk-key=KeyW]').isVisible(), 'Narrow viewport exposes the on-screen movement pad');

@@ -58,5 +58,16 @@ async page => {
   check(dialog.x >= 0 && dialog.x + dialog.width <= 390, 'Settings fits a narrow screen');
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'HUD does not create horizontal overflow');
   await page.screenshot({ path: 'output/playwright/game-hud-mobile.png' });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Close People', exact: true }).focus();
+  await page.keyboard.press('KeyH');
+  check(await page.locator('.commands-toggle').evaluate(node => node.checkVisibility({ visibilityProperty: true }) && node === document.activeElement), 'Mobile Clear view exposes and focuses its restore control');
+  await page.keyboard.press('KeyH');
+  check(await page.locator('#canvas-host').evaluate(node => node === document.activeElement), 'Restoring mobile panels keeps focus on a visible control');
+  await page.locator('#people-toggle').click();
+  if (await page.locator('.town-chat-dock').evaluate(node => node.open)) await page.locator('.town-chat-toggle').click();
+  const commands = await page.locator('.commands-toggle').boundingBox();
+  const walking = await page.locator('.walking-console').boundingBox();
+  check(commands.y + commands.height < walking.y, 'Mobile Commands stays clear of the movement controls');
   return { checks };
 }

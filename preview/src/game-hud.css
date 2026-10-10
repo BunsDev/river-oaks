@@ -108,8 +108,8 @@
   :root[data-theme] .game-hud .walking-console { bottom: 72px; right: 20px; left: auto; translate: none; }
   .game-hud:has(.town-chat-dock[open]) .walking-console { visibility: hidden; }
   .game-hud:has(.hud-space:not([hidden])) :is(.walking-console,.visit-tools) { visibility: hidden; }
-  :root[data-theme] .game-hud .commands-toggle { bottom: 70px; right: 12px; }
-  .game-hud:has(.town-chat-dock[open]) .commands-toggle { bottom: auto; top: 132px; }
+  .game-hud:not(.clear-view):has(.hud-space:not([hidden]), .visit-tools[open]) .commands-toggle { visibility: hidden; }
+  :root[data-theme] .game-hud .commands-toggle { bottom: auto; top: 132px; right: 12px; }
   :root[data-theme] .game-hud #settings-dialog { width: calc(100vw - 24px); height: min(680px,calc(100dvh - 24px)); border-radius: 16px; }
   .game-hud .settings-header { padding: 16px; }
   .game-hud .settings-layout { grid-template-columns: 114px minmax(0,1fr); }

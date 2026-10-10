@@ -7,9 +7,11 @@ export function createClearView({ onChange = () => {} } = {}) {
   const set = next => {
     active = Boolean(next);
     // H can be pressed from a focused card button, not just from the world.
-    // Return focus to the visible way back before hiding that card.
-    if(active&&document.activeElement?.closest('.visit-tools, .walking-console, .town-chat-dock, .hud-space, .hud-launcher, #panel-toggle'))document.querySelector('.commands-toggle')?.focus({preventScroll:true});
+    // Apply visibility before focusing the way back, which panels may cover.
+    const focusedCard = document.activeElement?.closest('.visit-tools, .walking-console, .town-chat-dock, .hud-space, .hud-launcher, #panel-toggle');
     document.body.classList.toggle('clear-view', active);
+    if (active && focusedCard) document.querySelector('.commands-toggle')?.focus({ preventScroll: true });
+    else if (!active && document.activeElement?.matches('.commands-toggle') && !document.activeElement.checkVisibility({ visibilityProperty: true })) document.querySelector('#canvas-host')?.focus({ preventScroll: true });
     onChange(active);
   };
   // Anywhere on the page except where H is typed: the walk can move focus off
