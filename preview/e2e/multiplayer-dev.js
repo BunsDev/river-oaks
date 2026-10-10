@@ -126,6 +126,8 @@ async page => {
   check(true,'Accepted contacts and private history survive a browser reconnect');
   // People and Play share the right edge; reveal Play before checking permissions.
   for (const tab of [page, second]) await tab.locator('#people-toggle').click();
+  await page.locator('.visit-tools').getByRole('button', { name: 'Build', exact: true }).click();
+  await page.locator('.shared-build-controls').waitFor({ state: 'visible' });
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
   check(await second.locator('#wish-grant').evaluate(button=>button.hidden),'A guest cannot access wish granting');

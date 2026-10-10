@@ -44,10 +44,12 @@ async page => {
       decision = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
       return route.fulfill({ json: { userId: decision.body.userId, status: 'rejected' } });
     });
-    await admin.route('**/src/main.js*', route => route.fulfill({ contentType: 'text/javascript', body: "import { setupSidebar, setupSidebarSections } from './sidebar.js'; import { createCommunityPanel } from './community-ui.js'; createCommunityPanel({ host: document.querySelector('.panel-scroll') }); setupSidebarSections({ sidebar: setupSidebar() });" }));
+    await admin.route('**/src/main.js*', route => route.fulfill({ contentType: 'text/javascript', body: "import { setupThemeControls } from './theme.js'; import { setupSidebar, setupSidebarSections } from './sidebar.js'; import { createCommunityPanel } from './community-ui.js'; setupThemeControls(); createCommunityPanel({ host: document.querySelector('.panel-scroll') }); setupSidebarSections({ sidebar: setupSidebar() }); document.querySelector('#loading').hidden = true;" }));
     await admin.goto(origin, { waitUntil: 'commit' });
-    await admin.addStyleTag({ url: `${origin}/src/style.css` });
-    await admin.addStyleTag({ url: `${origin}/src/game-hud.css` });
+    // Match the real HUD layout while omitting the world renderer.
+    for (const sheet of ['style', 'playground-theme', 'district-theme', 'immersive', 'sidebar', 'visual-finish', 'retro-finish', 'rail-navigation', 'hud-glass', 'game-hud']) {
+      await admin.addStyleTag({ url: `${origin}/src/${sheet}.css` });
+    }
     await openHudSpace(admin, 'settings-section', 'Account');
     await admin.getByRole('button', { name: 'Waitlist requests' }).click();
     check(!await admin.locator('#settings-dialog').evaluate(node => node.open), 'Waitlist review closes Settings before taking focus');
