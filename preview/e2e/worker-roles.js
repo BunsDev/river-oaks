@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const errors=[],workers=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1440,height:1000});
@@ -22,7 +23,7 @@ async page => {
   });
   if(catalog.staff.length!==62)throw new Error(`Expected 62 workers, got ${catalog.staff.length}`);
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(element=>element.open))await page.locator('#community-more > summary').click();
   const visit=async id=>{
     await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();

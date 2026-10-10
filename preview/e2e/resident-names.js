@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   // Residents are shown by GitHub username and only Jevica's account is ever
   // shown as Jevica. The fixture's "impostor" and "lookalike" sessions are
   // non-admin accounts whose session claims Jevica ("Jevica", and "Jеv1ca" with
@@ -18,7 +19,7 @@ async page => {
   const openPeople=async tab=>{
     const control=tab.locator('#panel-toggle');
     if(await control.getAttribute('aria-expanded')==='false')await control.click();
-    await tab.locator('[data-section=community-section]').click();
+    await openHudSpace(tab, 'community-section');
   };
   const named=async(tab,id)=>tab.evaluate(id=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===id)?.name,id);
   const waitForPlayer=(tab,id)=>tab.waitForFunction(id=>window.__riverMultiplayer?.().snapshot?.players.some(player=>player.id===id),id,{timeout:60000});
@@ -97,7 +98,7 @@ async page => {
 
   // The live player list on the map, where the world has one.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   const players=page.locator('.world-map-player-list');
   if(await players.count()){
     await players.locator('summary').click();

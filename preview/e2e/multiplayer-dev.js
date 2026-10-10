@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   // `npm run dev` with no WorkOS configuration: two browsers join one town as
   // local development identities and see each other.
   const checks=[];
@@ -50,7 +51,7 @@ async page => {
   const openPeople = async tab => {
     const control=tab.locator('#panel-toggle');
     if (await control.getAttribute('aria-expanded') === 'false') await control.click();
-    await tab.locator('[data-section=community-section]').click();
+    await openHudSpace(tab, 'community-section');
   };
   await openPeople(page);
   await page.getByRole('region',{name:'Avatar gestures'}).getByRole('button',{name:'Wave',exact:true}).click();
@@ -123,6 +124,10 @@ async page => {
   await page.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
   await page.locator('.multiplayer-social-history').getByText('A private hello').waitFor({state:'attached'});
   check(true,'Accepted contacts and private history survive a browser reconnect');
+  // People and Play share the right edge; reveal Play before checking permissions.
+  for (const tab of [page, second]) await tab.locator('#people-toggle').click();
+  await page.locator('.visit-tools').getByRole('button', { name: 'Build', exact: true }).click();
+  await page.locator('.shared-build-controls').waitFor({ state: 'visible' });
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
   check(await second.locator('#wish-grant').evaluate(button=>button.hidden),'A guest cannot access wish granting');
@@ -135,7 +140,7 @@ async page => {
   const district = await (await page.request.get('http://127.0.0.1:5173/data/district.json')).json();
   const spot = district.communityLocations[5];
   const toggle = page.locator('#panel-toggle'); if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator(`#places-list li[data-place-id="spot:${spot.id}"] button[aria-label^="Go to"]`).click();
   await page.waitForFunction(name => document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`), spot.name, { timeout: 15000 });
   const seen = async (tab, id) => tab.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 4.5; }, [id, spot.position], { timeout: 15000 }).then(() => true, () => false);
@@ -145,13 +150,13 @@ async page => {
   await page.locator('#landmark-name').fill('Town bench'); await page.locator('#landmark-add').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'), null, {timeout:15000})
     .catch(async () => { throw new Error(`Landmark save failed: ${await page.locator('#places-status').textContent()}`); });
-  await second.locator('[data-section=explore-section]').click();
+  await openHudSpace(second, 'explore-section');
   check(await second.locator('#landmarks-list li').count()===0,'A different account cannot see a private landmark');
   await page.evaluate(()=>localStorage.removeItem('river-oaks-landmarks'));
   await page.reload({waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected);
   const placesToggle=page.locator('#panel-toggle');if(await placesToggle.getAttribute('aria-expanded')==='false')await placesToggle.click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Town bench');
   check(true,'An account landmark survives reload without device storage');
   await page.keyboard.down('KeyW'); await page.waitForTimeout(900); await page.keyboard.up('KeyW');

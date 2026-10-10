@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const errors=[],visits=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1440,height:1000});
@@ -9,7 +10,7 @@ async page => {
     return (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';
   },null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(element=>element.open))await page.locator('#community-more > summary').click();
   const ids=await page.locator('#community-local option').evaluateAll(options=>options.map(option=>option.value));
   // The shared town presents building residents only; outdoor and vehicle encounters

@@ -1,4 +1,5 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
  const errors=[],runs=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
  await page.goto('http://127.0.0.1:5181/?motion-debug=1');
@@ -20,7 +21,7 @@ async page=>{
  if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
  await measure('street');
  await page.keyboard.down('w');try{await measure('walking');}finally{await page.keyboard.up('w');}
- await page.locator('#panel-toggle').click();await page.locator('[data-section=community-section]').click();
+ await page.locator('#panel-toggle').click();await openHudSpace(page, 'community-section');
  if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
  const id=await page.evaluate(()=>window.__riverPeople().find(p=>p.task?.kind==='tray')?.id);
  if(!id)throw new Error('No serving worker');await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();

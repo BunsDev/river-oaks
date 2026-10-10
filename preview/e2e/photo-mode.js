@@ -7,6 +7,7 @@ async page => {
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true', null, { timeout: 120000 });
   const open = async () => {
+    if (page.viewportSize().width <= 900 && await page.locator('.visit-tools').evaluate(node => node.open)) await page.locator('.visit-tools-toggle').click();
     await page.locator('.commands-toggle').click();
     await page.locator('.rail-commands').getByRole('button', { name: /Photo mode/ }).click();
     await page.locator('.photo-mode').waitFor({ state: 'visible' });

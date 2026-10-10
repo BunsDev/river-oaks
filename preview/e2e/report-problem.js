@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   // "Report a problem": the dialog opens from the account tools, the Commands
   // palette and the F3 debug panel; the report captures the game's state and
   // recent failures, redacts private details, and copies, downloads and sends.
@@ -18,7 +19,7 @@ async page => {
   });
   await page.waitForTimeout(300);
 
-  if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+  await openHudSpace(page, 'settings-section', 'Account');
   await page.locator('#access-report').click();
   const dialog = page.locator('#report-dialog');
   await dialog.waitFor();
@@ -69,6 +70,8 @@ async page => {
   await page.keyboard.press('Escape');
   await dialog.waitFor({ state: 'hidden' });
   check(await page.evaluate(() => document.activeElement?.id === 'access-report'), 'closing returns focus to the button that opened it');
+
+  await page.getByRole('button', { name: 'Close settings', exact: true }).click();
 
   // The same dialog from the Commands palette and the F3 debug panel.
   await page.locator('.commands-toggle').click();

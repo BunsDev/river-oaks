@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[];
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   const second=await(await page.context().browser().newContext()).newPage();
@@ -11,7 +12,7 @@ async page => {
     for(const tab of [page,second]) {
       const toggle=tab.locator('#panel-toggle');
       if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
-      await tab.locator('[data-section=community-section]').click();
+      await openHudSpace(tab, 'community-section');
     }
     // Earlier development journeys' residents can still be listed in this town,
     // so add the second player by id rather than the first Add button.
@@ -39,7 +40,7 @@ async page => {
     await second.waitForFunction(()=>window.__riverMultiplayer?.().connected);
     const toggle=second.locator('#panel-toggle');
     if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
-    await second.locator('[data-section=community-section]').click();
+    await openHudSpace(second, 'community-section');
     await second.locator('.multiplayer-group-row').filter({hasText:'Moon Garden Friends'}).getByRole('button',{name:'Open'}).click();
     await second.locator('.multiplayer-group-history').getByText('Hello from the group').waitFor({state:'attached'});
     check(true,'Group membership and conversation survive reconnect');

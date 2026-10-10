@@ -4,7 +4,7 @@ async page => {
   // A real navigation establishes loopback's address space; fulfilling a fake
   // document would trigger Chromium's local-network WebSocket protection.
   await page.goto('http://127.0.0.1:5173/src/world-contract.js');
-  await page.setContent('<!doctype html><div class="app-shell"><div id="canvas-host" tabindex="0"></div><div id="community-more"></div></div>');
+  await page.setContent('<!doctype html><div class="app-shell"><div id="canvas-host" tabindex="0"></div><div id="community-more"></div><main id="viewport"></main><dialog id="settings-dialog"><button>Audio settings</button></dialog></div>');
   await page.exposeFunction('__lifecycleProgress',message=>console.log(message));
   const result=await page.evaluate(async()=>{
     const timeout=(promise,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label)),10000))]);
@@ -36,11 +36,17 @@ async page => {
         await pause(50);
       }
       window.fetch=originalFetch;
-      let joined,callbacks=0;
+      let joined,rejoined,callbacks=0;
       const ready=new Promise(resolve=>{joined=resolve;});
-      const client=createMultiplayer({getPose:()=>null,onSnapshot(){callbacks++;joined();},onPlayers(){callbacks++;},onCorrection(){callbacks++;},onHomeAccess(){callbacks++;}});
+      const client=createMultiplayer({getPose:()=>null,onSnapshot(){callbacks++;joined();rejoined?.();},onPlayers(){callbacks++;},onCorrection(){callbacks++;},onHomeAccess(){callbacks++;}});
       await window.__lifecycleProgress('Connecting live controller');
       await timeout(ready,'Live controller did not join');
+      const settings=document.querySelector('#settings-dialog'); settings.showModal(); settings.querySelector('button').focus();
+      const reconnect=new Promise(resolve=>{rejoined=resolve;}),socket=sockets.at(-1);
+      const closed=new Promise(resolve=>socket.addEventListener('close',resolve,{once:true})); socket.close(); await closed;
+      check(!settings.open,'connection loss dismisses Settings before making the application inert');
+      check(document.activeElement.id==='multiplayer-title','connection gate receives focus after Settings is dismissed');
+      await timeout(reconnect,'Controller did not reconnect after settings gate test');
       const pending=client.command({type:'homeAccess',action:'list'}).then(()=>false,()=>true);
       client.dispose();
       const atDisposal=callbacks;

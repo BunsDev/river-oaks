@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [];
   const check = (condition, message) => { if (!condition) throw new Error(message); checks.push(message); };
   const errors = [];
@@ -42,8 +43,8 @@ async page => {
   await page.screenshot({ path: 'output/playwright/hardware-acceleration-mobile.png' });
   // A warning must not block the controls beneath its noninteractive message.
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click({ timeout: 5000 });
-  check(await page.locator('[data-section=explore-section]').getAttribute('aria-selected') === 'true', 'mobile navigation remains usable while the warning is visible');
+  await openHudSpace(page, 'explore-section');
+  check(await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true', 'mobile navigation remains usable while the warning is visible');
   await page.locator('#panel-toggle').click();
   const dismiss = notice.getByRole('button', { name: 'Dismiss graphics performance warning' });
   await dismiss.focus();

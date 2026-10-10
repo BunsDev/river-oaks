@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   // Residents are shown by portraits rendered from their own 3D models, in the
   // People list and the conversation header (resident-portraits.js).
   const checks=[],errors=[];const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
@@ -7,7 +8,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host')?.dataset;return d?.playerReady==='true'&&(document.querySelector('#canvas-host')?.dataset.multiplayer==='joined');},null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   await page.waitForFunction(()=>{const rows=[...document.querySelectorAll('.nearby-person')];return rows.length>0&&rows.every(row=>row.classList.contains('has-portrait'));},null,{timeout:15000});
   check(true,'Every nearby person card shows a rendered portrait');
   // Decode each portrait and measure it: a drawn face has contrast, and two people differ.

@@ -1,9 +1,10 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const check = (ok, message) => { if (!ok) throw new Error(message); };
   await page.goto('http://127.0.0.1:5181/');
   await page.waitForFunction(() => document.querySelector('.multiplayer-roster')?.dataset.connected === 'true');
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('#rail-tab-0').click();
+  await openHudSpace(page, 'community-section');
   const panel = page.locator('.multiplayer-roster');
   const history = page.locator('.multiplayer-chat-history');
   check(await history.evaluate(el => el.getBoundingClientRect().height) === 0, 'Empty chat must not reserve a blank transcript');

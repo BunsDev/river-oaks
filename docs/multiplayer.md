@@ -133,7 +133,9 @@ contact. Profiles are shared across worlds, versioned across devices, and
 persist in Redis outside room checkpoints. Editing a profile does not grant
 building or wish permissions.
 
-The People panel also includes town chat. Messages are visible to everyone in
+Town chat has a collapsible dock at the lower left of the game view. Closing
+the dock retains a draft; unread messages offer a jump back to the latest
+message. People is a separate expandable panel at the upper right. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.

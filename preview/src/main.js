@@ -68,6 +68,7 @@ import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
+import './game-hud.css';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
 // Every stylesheet above is applied by now, so the sign-in gate can lift.
@@ -191,7 +192,7 @@ function initializeRenderer() {
   }
   worldEvents=createWorldEvents({host:$('#explore-section'),creationToolsEnabled});
   void worldEvents.load();
-  sidebarSections = setupSidebarSections({ graphics: quality.element });
+  sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,

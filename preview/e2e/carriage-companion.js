@@ -1,4 +1,5 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];
   const check=(condition,message)=>{if(!condition)throw new Error(message);checks.push(message);};
   page.on('pageerror',error=>errors.push(error.message));
@@ -6,7 +7,7 @@ async page=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.carriageDriverReady==='true'&&window.__riverCarriage?.().placement);
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
-  await page.locator('[data-section=explore-section]').click();await page.locator('#destination').selectOption({label:'Dior'});
+  await openHudSpace(page, 'explore-section');await page.locator('#destination').selectOption({label:'Dior'});
   if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   check(await page.locator('#player-companion').getAttribute('aria-pressed')==='false','Companionship is opt-in');
   await page.waitForFunction(()=>{const c=window.__riverCarriage();return c.princeVisible&&Math.hypot(c.princePosition[0]-c.pose.position[0],c.princePosition[2]-c.pose.position[2])<=8;});
@@ -19,7 +20,7 @@ async page=>{
   const outside=await page.evaluate(()=>({companion:window.__riverCarriage().companion,person:(()=>{const c=window.__riverCarriage();return {id:'carriage-driver',visible:c.princeVisible,position:[c.princePosition[0],-c.princePosition[2]],reachable:Math.hypot(c.princePosition[0]-c.pose.position[0],c.princePosition[2]-c.pose.position[2])<3.5};})()}));
   check(outside.companion.carrying&&outside.person.visible,'The blonde adult prince carries the bag while accompanying Jevica');
   await page.screenshot({path:'output/playwright/jev-companion-outside.png'});
-  await page.locator('[data-section=explore-section]').click();await page.locator('#visit-destination').click();
+  await openHudSpace(page, 'explore-section');await page.locator('#visit-destination').click();
   await page.waitForFunction(()=>{const c=window.__riverCarriage();return Math.hypot(c.companion.position[0]-c.pose.position[0],c.companion.position[1]-c.pose.position[2])<2;},null,{timeout:60000});
   // The existing store UI places Jevica inside. Jev must navigate through
   // the real doorway and fixtures without sharing that visitor relocation.

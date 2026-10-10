@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[],views=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   page.on('pageerror',e=>errors.push(e.message));
@@ -20,7 +21,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.carriageDriverReady==='true'&&window.__riverCarriage?.().placement);
   const panel=page.locator('#panel-toggle');if(await panel.getAttribute('aria-expanded')==='false')await panel.click();
-  await page.locator('[data-section=explore-section]').click();await page.locator('#destination').selectOption({label:'Dior'});
+  await openHudSpace(page, 'explore-section');await page.locator('#destination').selectOption({label:'Dior'});
   await page.locator('#visit-destination').click();if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   await page.locator('#player-carriage').click();
   await page.locator('#player-companion').click();await page.waitForFunction(()=>window.__riverCarriage().companion.mode==='walking');

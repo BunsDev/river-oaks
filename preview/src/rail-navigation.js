@@ -9,7 +9,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
   dialog.innerHTML = `<header><h2 id="rail-commands-title">Commands & keyboard</h2><button type="button" class="commands-close" aria-label="Close commands">Close <kbd>Esc</kbd></button></header>
     <label for="rail-command-search">Find a control or activity</label><input id="rail-command-search" type="search" autocomplete="off" placeholder="Try places, chat, rides…">
     <p class="commands-count" role="status"></p><div class="commands-results" role="group" aria-label="Available commands"></div>
-    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; arrow keys, Home and End select People, Places and Settings tabs. Shortcuts leave typing and modal dialogs alone.</small></details>`;
+    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; Alt+1 opens People, Alt+2 opens Places, and Alt+3 opens Settings. Up and Down select settings categories. Shortcuts leave typing and modal dialogs alone.</small></details>`;
   document.body.append(dialog);
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'commands-toggle';
   trigger.innerHTML = '<span>Commands</span><kbd>?</kbd>'; trigger.title = `Commands & keyboard (${primary}K or ?)`;
@@ -22,12 +22,12 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     const target = document.querySelector(selector);
     if (!target || target.disabled) return null;
     for (let node = target; node && node !== document.body; node = node.parentElement) {
-      if (node.hidden && node.getAttribute('role') !== 'tabpanel') return null;
+      if (node.hidden && node.getAttribute('role') !== 'tabpanel' && !node.classList.contains('hud-space')) return null;
     }
     return target;
   };
   const openTab = (index, selector = null) => {
-    sidebar.setOpen(true); getSections()?.select(index, true);
+    getClearView()?.set(false); getSections()?.select(index, true, selector);
     const target = selector && document.querySelector(selector);
     if (!target) return;
     for (let node = target.parentElement; node && node !== sidebar.panel; node = node.parentElement) {
@@ -36,13 +36,14 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     target.scrollIntoView({ block: 'nearest', behavior: 'instant' }); target.focus({ preventScroll: true });
   };
   const showPlay = selector => {
+    if (document.querySelector('#people-toggle')?.getAttribute('aria-expanded') === 'true') document.querySelector('#people-toggle').click();
     if (matchMedia('(max-width:1200px)').matches && document.querySelector('#community-dialogue')?.hidden === false) document.querySelector('#community-close')?.click();
     getClearView()?.set(false);
     if (matchMedia('(max-width:1100px)').matches) sidebar.setOpen(false);
     const dock = getDock(); dock?.setOpen(true, { focus: true }); if (selector) dock?.jump(selector);
   };
   const actions = () => [
-    { label: 'Explore · show or hide places and people', keys: `${primary}B`, terms: 'sidebar left rail', toggle: true, run: () => sidebar.toggle() },
+    { label: 'Places · show or hide destinations', keys: `${primary}B`, terms: 'sidebar left rail', toggle: true, run: () => { getClearView()?.set(false); sidebar.toggle(); } },
     { id: 'activities', label: 'Activities · show or hide controls', keys: `${primary}Shift+B`, terms: 'play right rail dock', toggle: true, run: () => {
       const dock = getDock(); if (!dock) return;
       if (dock.element.open && dock.element.checkVisibility({ visibilityProperty: true })) { dock.setOpen(false); focusWorld(); } else showPlay();
@@ -53,7 +54,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     { label: 'Save a landmark', selector: '#landmark-name', run: () => openTab(1, '#landmark-name') },
     { label: 'Browse shared worlds', selector: '.world-portal-list a', run: () => openTab(1, '.world-portal-list a') },
     { label: 'Events & gatherings', selector: '.world-events-filters select', run: () => openTab(1, '.world-events-filters select') },
-    { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => openTab(0, '.multiplayer-chat-form input') },
+    { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => { getClearView()?.set(false); document.querySelector('#community-close')?.click(); document.querySelector('.town-chat-dock').open = true; document.querySelector('.multiplayer-chat-form input').focus(); } },
     { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
     { label: 'Camera · Photo mode', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
     { label: 'Rides · driving and camera', selector: '#player-camera', run: () => showPlay('.player-settings') },
@@ -124,7 +125,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
       const dock = getDock();
       if (sidebar.panel.contains(event.target) || dock?.element.contains(event.target)) {
         event.preventDefault(); event.stopImmediatePropagation();
-        if (sidebar.panel.contains(event.target)) sidebar.setOpen(false); else dock.setOpen(false);
+        if (sidebar.panel.contains(event.target)) sidebar.closeTarget(event.target); else dock.setOpen(false);
         focusWorld(); return;
       }
     }
@@ -132,7 +133,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     const action = railShortcut(event); if (!action) return;
     event.preventDefault(); event.stopImmediatePropagation(); if (event.repeat) return;
     if (action === 'commands') open({ help: event.key === '?' });
-    else if (action === 'rail') sidebar.toggle();
+    else if (action === 'rail') { getClearView()?.set(false); sidebar.toggle(); }
     else if (action === 'play') actions().find(item => item.id === 'activities')?.run();
     else if (action.startsWith('tab-')) openTab(Number(action.slice(-1)));
     else if (action === 'search' && visibleTarget('#store-search')) openTab(1, '#store-search');

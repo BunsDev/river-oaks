@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -6,7 +7,7 @@ async page => {
   await page.locator('#loading').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => { const d = document.querySelector('#canvas-host').dataset; return (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined') && d.storePeopleTotal === d.storePeopleReady; });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
+  await openHudSpace(page, 'explore-section');
   const destinations = await page.locator('#destination option').evaluateAll(options => options.map(option => ({ value: option.value, name: option.textContent })));
   const visits = [];
   for (const destination of destinations) {

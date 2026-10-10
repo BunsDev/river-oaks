@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];
   const check=(condition,message)=>{if(!condition)throw new Error(message);checks.push(message);};
   page.on('pageerror',error=>errors.push(error.message));
@@ -7,7 +8,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   // Shared indoor residents are reached through server-confirmed directory travel.
   let met=null;
