@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[],metrics={},visits=[],origin='http://127.0.0.1:5173';
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   for(const viewport of [{width:1024,height:900},{width:390,height:844}]) {
@@ -59,7 +60,7 @@ async page => {
 
       // Enter through the normal storefront controls before direct mesh taps.
       await touch.locator('#panel-toggle').click();
-      await touch.locator('[data-section=explore-section]').click();
+      await openHudSpace(touch, 'explore-section');
       await touch.locator('#destination').selectOption('osm-node-8172494967');
       await touch.locator('#enter-destination').click();
       await touch.waitForFunction(()=>document.querySelector('#walking-hud').dataset.inside==='osm-node-8172494967');
@@ -69,7 +70,7 @@ async page => {
         if(viewport.width<700 || suffix===9) {
           // On a narrow phone the entry camera cannot frame both sides of the room.
           // Use the existing approach action, then close it and test direct touch.
-          await touch.locator('#panel-toggle').click();await touch.locator('[data-section=community-section]').click();
+          await touch.locator('#panel-toggle').click();await openHudSpace(touch, 'community-section');
           if(!await touch.locator('#community-more').evaluate(e=>e.open))await touch.locator('#community-more > summary').click();
           await touch.locator('#community-local').selectOption(id);await touch.locator('#community-meet').click();
           await touch.locator('#community-dialogue').waitFor({state:'visible'});await touch.locator('#community-close').click();

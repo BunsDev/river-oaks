@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const errors=[],checks=[];
   page.on('pageerror',error=>errors.push(error.message));
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
@@ -7,7 +8,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/?motion-debug=1');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#destination').selectOption('osm-node-8172494967');
   await page.locator('#enter-destination').click();
   await page.waitForFunction(()=>document.querySelector('#walking-hud').dataset.inside==='osm-node-8172494967');

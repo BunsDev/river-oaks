@@ -1,11 +1,12 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin='http://127.0.0.1:5173',checks=[],errors=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('.world-portal-form').waitFor({state:'visible'});
   await page.locator('.world-portal-form input[name=title]').fill('Moon Garden');
   await page.locator('.world-portal-form input[name=id]').fill('moon-garden');
@@ -70,7 +71,7 @@ async page=>{
   await page.waitForFunction(()=>document.querySelector('#terrain-state')?.textContent==='Creator-authored terrain');
   await page.waitForFunction(()=>document.querySelector('.walking-title span')?.textContent==='Moon Garden');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('.world-portal-design').waitFor({state:'visible'});
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedWorldPlace=text;}}}));
   await page.locator('#places-list li').filter({hasText:'Moon Arch'}).locator('button[aria-label^="Copy a link"]').click();
@@ -200,7 +201,7 @@ async page=>{
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id===window.__riverMultiplayer().selfId)?.canBuild))===false,'A guest can visit but cannot build');
     check((await guest.evaluate(()=>window.__riverMultiplayer().snapshot.builds.some(item=>item.kind==='side-table'))),'The guest sees Jevica’s home furnishing in shared state');
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
-    await guest.locator('[data-section=explore-section]').click();
+    await openHudSpace(guest, 'explore-section');
     await guest.locator('#store-category').selectOption('Homes');
     check(await guest.locator('#enter-destination').isDisabled(),'The directory disables private home entry for uninvited guests');
     check((await guest.locator('#enter-destination').textContent())==='Invitation required','A guest sees that home entry requires an invitation');
@@ -208,9 +209,9 @@ async page=>{
     await guest.waitForFunction(()=>document.querySelector('#walking-enter')?.textContent.includes('Invitation required'));
     check(await guest.locator('#walking-enter').isDisabled(),'The doorway also blocks guest entry');
     check((await guest.locator('#walking-hud').getAttribute('data-inside'))!=='venue-building-2','The guest remains outside');
-    await guest.locator('[data-section=community-section]').click();
+    await openHudSpace(guest, 'community-section');
     await guest.locator('.multiplayer-person button[aria-label^="Add "]').first().click();
-    await page.locator('[data-section=community-section]').click();
+    await openHudSpace(page, 'community-section');
     await page.waitForFunction(()=>[...document.querySelectorAll('.multiplayer-social-row')].some(row=>row.textContent.includes('wants to connect')),null,{timeout:15000});
     await page.locator('.multiplayer-social-row button', {hasText:'Accept'}).click();
     await page.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
@@ -218,7 +219,7 @@ async page=>{
     await page.locator('.multiplayer-social-conversation button', {hasText:'Invite into home'}).click();
     await page.waitForFunction(()=>document.querySelector('.multiplayer-social-status')?.textContent.includes('can now enter this home'));
     check(true,'Jevica invites an accepted contact into a specific private home from the People panel');
-    await guest.locator('[data-section=explore-section]').click();
+    await openHudSpace(guest, 'explore-section');
     await guest.waitForFunction(()=>!document.querySelector('#enter-destination')?.disabled);
     await guest.locator('#enter-destination').click();
     await guest.waitForFunction(()=>document.querySelector('#walking-hud')?.dataset.inside==='venue-building-2');
@@ -236,7 +237,7 @@ async page=>{
       .some(row=>row.querySelector('a')?.textContent==='Moon Garden'&&row.querySelector('small')?.textContent.includes('2 visitors online')),null,{timeout:30000});
     check(true,'The world directory shows current visitors without exposing their identities');
   } finally {await otherContext.close();}
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await Promise.all([page.waitForNavigation({waitUntil:'commit',timeout:60000}),
     page.locator('.world-portal-revision button', {hasText:'Apply saved draft'}).click()]);
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected
@@ -247,7 +248,7 @@ async page=>{
   check((await page.locator('.world-map-place title').allTextContents()).includes('Revised Moon Arch'),'The map follows the applied region revision');
   check((await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256))===live.regionSha256,'The client reconnects to the applied region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('.world-portal-list button[aria-label="Edit revision draft for Moon Garden"]').click();
   await page.locator('.region-editor').waitFor({state:'visible'});
   await page.locator('.region-editor [data-action=done]').click();
@@ -270,7 +271,7 @@ async page=>{
   check(restored.world.communityLocations.some(place=>place.name==='Moon Arch'),'Saving and applying the retained version restores the live region');
   check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#landmark-name').fill('Moon arrival');
   await page.locator('#landmark-add').click();
   await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
@@ -282,7 +283,7 @@ async page=>{
   await page.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().snapshot.worldId==='river-oaks');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
   const returnLink=page.locator('#landmarks-list li a[aria-label^="Go to Moon arrival"]');
   const destination=new URL(await returnLink.getAttribute('href'));

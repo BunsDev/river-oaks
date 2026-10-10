@@ -1,4 +1,5 @@
 async(page)=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
   const check=(value,message)=>{if(!value)throw new Error(message);};
   const errors=[],consoleErrors=[];
   page.on('pageerror',error=>errors.push(error.message));
@@ -11,7 +12,7 @@ async(page)=>{
   const stats=()=>page.locator('#canvas-host').evaluate(element=>JSON.parse(element.dataset.renderStats));
   const openControls=async()=>{if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();};
   // The rail sidebar shows one section at a time; select the tab a control lives in first.
-  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const rail = section => openHudSpace(page, section);
   const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices' }).evaluate(details => { details.open = true; }); };
   // Visual coverage does not require optional decision/voice provider credentials.
   for(const provider of ['jev','elevenlabs'])await page.route(`**/v1/settings/${provider}`,route=>route.fulfill({json:{source:'none',configured:false}}));

@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   page.on('pageerror', e => errors.push(e.message));
@@ -15,7 +16,7 @@ async page => {
       && Array.isArray(JSON.parse(document.querySelector('#walking-hud')?.dataset.position ?? 'null')));
     const toggle = page.locator('#panel-toggle');
     if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-    await page.locator('[data-section=explore-section]').click();
+    await openHudSpace(page, 'explore-section');
   };
   await page.goto(`${origin}/`); await open();
   await page.waitForFunction(() => document.querySelector('#places-here')?.textContent.includes('Arrival'));

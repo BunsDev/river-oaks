@@ -7,7 +7,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
   const host = page.locator('#canvas-host'), trigger = page.locator('#panel-toggle'), dock = page.locator('.visit-tools'), menu = page.locator('.rail-commands'), search = page.locator('#rail-command-search');
   const expanded = () => trigger.getAttribute('aria-expanded');
-  const selected = () => page.locator('[role=tab][aria-selected=true]').getAttribute('id');
+  const selected = () => page.locator('#settings-dialog [role=tab][aria-selected=true]').getAttribute('id');
   const focus = () => page.evaluate(() => document.activeElement.id);
   const exposed = () => page.evaluate(() => {
     const node = document.activeElement, rect = node.getBoundingClientRect();
@@ -19,7 +19,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await page.locator('.world-map').count() === (worldMapEnabled ? 1 : 0), 'World map creation respects the environment flag');
   check(await page.locator('.world-portal').count() === (worldMapEnabled ? 1 : 0), 'Worlds directory and publishing controls respect the environment flag');
   await page.keyboard.press('Control+b');
-  check(await expanded() === 'true' && await focus() === 'rail-tab-0', 'Ctrl+B opens the left rail and focuses its selected tab');
+  check(await expanded() === 'true' && await focus() === 'explore-section', 'Ctrl+B opens Places and focuses its panel');
   await page.keyboard.press('Meta+b');
   check(await expanded() === 'false' && await focus() === 'canvas-host', 'Cmd+B closes the rail and returns to the world');
   check(await page.locator('#player-flight').getAttribute('aria-pressed') === flight, 'Rail modifier chords never trigger B flight');
@@ -32,7 +32,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await page.locator('#player-camera').getAttribute('aria-pressed') === camera, 'Paste chord does not switch gameplay camera');
 
   await page.keyboard.press('Alt+2');
-  check(await selected() === 'rail-tab-1', 'Alt+2 opens Places directly');
+  check(await page.locator('#explore-section').isVisible(), 'Alt+2 opens Places directly');
   await host.focus(); await page.keyboard.press('/');
   check(await focus() === 'store-search', '/ focuses destination search');
   await page.locator('#store-search').fill('h');
@@ -80,15 +80,10 @@ async (page, { worldMapEnabled = false } = {}) => {
   await page.evaluate(() => { document.querySelector('#test-modal').close(); document.querySelector('#test-modal').remove(); });
 
   await host.focus(); await page.keyboard.press('Alt+3');
-  await page.locator('.panel-scroll').evaluate(node => { node.scrollTop = 180; });
-  const scroll = await page.locator('.panel-scroll').evaluate(node => node.scrollTop);
-  check(scroll > 100, 'Settings has real scrollable content for navigation acceptance');
-  await page.keyboard.press('Alt+1'); await page.keyboard.press('Alt+3');
-  check(await page.locator('.panel-scroll').evaluate(node => node.scrollTop) === scroll, 'Each tab restores its reading position');
-  await page.keyboard.press('Home'); check(await selected() === 'rail-tab-0', 'Home selects the first tab');
-  await page.keyboard.press('End'); check(await selected() === 'rail-tab-2', 'End selects the last tab');
-  await page.keyboard.press('ArrowRight'); check(await selected() === 'rail-tab-0', 'Linear tab navigation wraps predictably');
-  await page.keyboard.press('Alt+3');
+  check(await page.locator('#settings-dialog').evaluate(node => node.open), 'Alt+3 opens the settings modal');
+  await page.keyboard.press('End'); check(await selected() === 'settings-tab-5', 'End selects the last settings category');
+  await page.keyboard.press('ArrowDown'); check(await selected() === 'settings-tab-0', 'Settings category navigation wraps');
+  await page.keyboard.press('Home'); check(await selected() === 'settings-tab-0', 'Home selects Appearance');
   await page.locator('[data-theme-preference=dark]').click();
   await page.screenshot({ path: 'output/playwright/rails-desktop-dark.png' });
   await page.keyboard.press('Escape');
@@ -111,7 +106,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   check(await page.evaluate(() => document.activeElement.closest('.bird-cams') !== null), 'Play activity jump reveals and focuses its destination');
   await page.keyboard.press('Escape');
   await page.reload(); await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true');
-  check(await selected() === 'rail-tab-2' && await expanded() === 'false' && !await dock.evaluate(node => node.open), 'Tab and both rail preferences survive reload');
+  check(await expanded() === 'false' && !await dock.evaluate(node => node.open), 'Collapsed Places and Play preferences survive reload');
 
   for (const [width, height] of [[390, 844], [844, 390], [1024, 600]]) {
     await page.setViewportSize({ width, height });

@@ -1,11 +1,12 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[];const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   const second=await(await page.context().browser().newContext()).newPage();
   const open=async tab=>{
     await tab.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});
     await tab.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('.world-events-form select')?.options.length>0);
     const toggle=tab.locator('#panel-toggle');if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
-    await tab.locator('[data-section=explore-section]').click();
+    await openHudSpace(tab, 'explore-section');
   };
   try {
     await open(page);await open(second);
@@ -39,7 +40,7 @@ async page=>{
     await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.multiplayer==='joined'&&document.querySelector('#places-status')?.textContent.includes("You're at Arrival"));
     check(new URL(page.url()).searchParams.get('place')==='arrival','Visiting the event arrives through the normal shared travel flow');
     const toggle=page.locator('#panel-toggle');if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
-    await page.locator('[data-section=explore-section]').click();
+    await openHudSpace(page, 'explore-section');
     await page.locator('.world-event').filter({hasText:'Moonlit Story Circle'}).getByRole('button',{name:'Withdraw RSVP'}).click();
     await page.locator('.world-event').filter({hasText:'Moonlit Story Circle'}).getByRole('button',{name:'I’m going',exact:true}).waitFor({state:'visible'});
     check(true,'RSVP survives reconnect and can be withdrawn');

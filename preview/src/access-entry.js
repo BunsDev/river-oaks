@@ -12,7 +12,7 @@ const gateSignout = $('#access-gate-signout');
 const review = $('#access-review'), reviewList = $('#access-review-list'), reviewStatus = $('#access-review-status');
 let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
 const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem');
-let reviewGeneration = 0;
+let reviewGeneration = 0, restoreReviewSettings = false;
 
 registerDiagnosticSource('access', () => ({ gate: gate.hidden ? 'entered' : gateState || 'checking', signedIn: Boolean(session?.authenticated), entered, admin: isAdmin }));
 // Every "Report a problem" control dispatches one event; the dialog loads on first use.
@@ -202,6 +202,11 @@ invitesDialog.addEventListener('close', () => { inviteGeneration++; });
 
 async function loadRequests() {
   const generation = ++reviewGeneration;
+  if (review.hidden) {
+    const settings = $('#settings-dialog[open]');
+    restoreReviewSettings = Boolean(settings);
+    settings?.close();
+  }
   review.hidden = false;
   $('.app-shell').inert = true;
   $('#access-review-title').focus({ preventScroll: true });
@@ -260,9 +265,16 @@ async function loadRequests() {
 
 retry.addEventListener('click', checkAccess);
 adminButton.addEventListener('click', loadRequests);
-function closeReview() { reviewGeneration++; review.hidden = true; $('.app-shell').inert = false; adminButton.focus(); }
+function closeReview() {
+  reviewGeneration++; review.hidden = true; $('.app-shell').inert = false;
+  if (restoreReviewSettings) $('#settings-toggle')?.click();
+  restoreReviewSettings = false;
+  adminButton.focus();
+}
 $('#access-review-close').addEventListener('click', closeReview);
-review.addEventListener('keydown', event => { if (event.key === 'Escape') closeReview(); });
+review.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeReview(); }
+});
 async function signout() {
   try {
     const { url } = await api('/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': session.csrfToken } });

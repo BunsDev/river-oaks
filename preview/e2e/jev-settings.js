@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [];
   const check = (value, label) => { if (!value) throw new Error(label); checks.push(label); };
   page.on('pageerror', error => errors.push(error.message));
@@ -14,7 +15,7 @@ async page => {
   const openSettings = async () => {
     await page.locator('#jev-key-status').waitFor({ state: 'attached' });
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-    await page.getByRole('tab', { name: 'Settings', exact: true }).click();
+    await openHudSpace(page, 'settings-section', 'Account');
     if (!await jevPanel.evaluate(node => node.open)) await jevPanel.locator('> summary').click();
     await jevPanel.locator('[type=submit]').waitFor({ state: 'visible' });
   };

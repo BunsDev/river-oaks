@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [], puts = [];
   const check = (condition, label) => { if (!condition) throw new Error(label); checks.push(label); };
   page.on('pageerror', error => errors.push(error.message));
@@ -13,7 +14,7 @@ async page => {
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=settings-section]').click();
+  await openHudSpace(page, 'settings-section', 'Audio');
   const disclosure = page.locator('.jev-settings').filter({ hasText: 'ElevenLabs API key' });
   await disclosure.locator('summary').click();
   const select = page.locator('#elevenlabs-voice');
@@ -49,7 +50,7 @@ async page => {
   await page.reload();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=settings-section]').click();
+  await openHudSpace(page, 'settings-section', 'Audio');
   await page.locator('.jev-settings').filter({ hasText: 'ElevenLabs API key' }).locator('summary').click();
   await page.waitForFunction(() => document.querySelector('#elevenlabs-voice-status')?.textContent.includes('myLibraryVoice42'));
   check(await page.locator('#elevenlabs-voice').inputValue() === 'custom' && await page.locator('#elevenlabs-voice-id').inputValue() === 'myLibraryVoice42', 'A reload shows the custom voice the bridge is using');

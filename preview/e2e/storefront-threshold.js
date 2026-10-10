@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin = 'http://127.0.0.1:5173', routes = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.context().route('**/v1/**', route => route.fulfill({ status: 503, json: {} }));
@@ -50,7 +51,7 @@ async page => {
     const selfId = await page.evaluate(() => window.__riverMultiplayer().selfId);
     for (const [index, name] of ['Hermès', 'Vince', 'Steak 48'].entries()) {
       if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-      await page.locator('[data-section=explore-section]').click();
+      await openHudSpace(page, 'explore-section');
       await page.locator('#destination').selectOption({ label: name });
       await page.locator('#visit-destination').click();
       await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.primaryAction === 'enter');

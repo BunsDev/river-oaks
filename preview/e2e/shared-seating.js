@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   const origin='http://127.0.0.1:5173';
@@ -10,7 +11,7 @@ async page => {
   const self=tab=>tab.evaluate(()=>{const t=window.__riverMultiplayer();return t.snapshot.players.find(p=>p.id===t.selfId);});
   const openPlaces=async tab=>{
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await tab.locator('#panel-toggle').click();
-    await tab.locator('[data-section=explore-section]').click();
+    await openHudSpace(tab, 'explore-section');
   };
   const closePanel=async tab=>{if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();};
   await join(page);
@@ -75,7 +76,7 @@ async page => {
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.ready&&p.riderSeated&&p.sitting?.slot===1),visitor.id);
     check(true,'The other browser renders the confirmed remote seated pose');
     if(await guest.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await guest.locator('#panel-toggle').click();
-    await guest.locator('[data-section=community-section]').click();
+    await openHudSpace(guest, 'community-section');
     await guest.getByRole('button',{name:'Wave',exact:true}).click();
     await page.waitForFunction(id=>window.__riverMultiplayer().remotes?.some(p=>p.id===id&&p.gesture==='wave'&&p.rightArmMotion>.7&&p.riderSeated),visitor.id);
     check(true,'Seated fox visitors visibly wave to the other browser without moving their seat');

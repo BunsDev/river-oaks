@@ -1,4 +1,5 @@
 async (page, { creationToolsEnabled = false } = {}) => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [], groupRequests = [];
   const check = (ok, label) => { if (!ok) throw new Error(label); checks.push(label); };
   page.on('pageerror', error => errors.push(error.message));
@@ -24,7 +25,7 @@ async (page, { creationToolsEnabled = false } = {}) => {
   await page.keyboard.press('Escape');
   if (creationToolsEnabled) {
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-    await page.locator('[data-section=community-section]').click();
+    await openHudSpace(page, 'community-section');
     await page.locator('.multiplayer-groups-create input[name=name]').fill('Creation flag friends');
     await page.locator('.multiplayer-groups-create button').click();
     await page.locator('.multiplayer-group-row').filter({ hasText: 'Creation flag friends' }).waitFor({ state: 'visible' });

@@ -1,4 +1,5 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
  const checks=[],runs=[],errors=[],assets=[];let voiceRequests=0;
  const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().includes('/assets/characters/speech/'))assets.push(r.url());if(r.url().endsWith('/v1/voice')&&r.method()==='POST')voiceRequests++;});
@@ -6,7 +7,7 @@ async page=>{
  const meet=async id=>{
   if(await page.locator('#community-dialogue').isVisible()){await page.locator('#community-close').click();await page.locator('#community-dialogue').waitFor({state:'hidden'});}
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
+  await openHudSpace(page, 'community-section');if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();await page.locator('#community-dialogue').waitFor({state:'visible'});
   if(!await page.locator('.community-audio').evaluate(e=>e.open))await page.locator('.community-audio > summary').click();
  };

@@ -1,4 +1,5 @@
 async initialPage => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const visit = async (page, { touch = false } = {}) => {
   const checks = [], errors = [], replies = [];
   page.on('websocket', socket => socket.on('framereceived', ({ payload }) => { try { const data = JSON.parse(String(payload)); if (data.type === 'result') replies.push({ ok: data.ok, error: data.error, message: data.message }); } catch {} }));
@@ -17,7 +18,7 @@ async initialPage => {
   };
   if (touch) {
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').tap();
-    await page.locator('[data-section=explore-section]').tap();
+    await openHudSpace(page, 'explore-section');
   } else { await host.focus(); await page.keyboard.press('/'); }
   await page.locator('#store-search').fill('Herm');
   const destination = await page.locator('#destination').inputValue();

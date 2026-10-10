@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'ui-improvements', 'nearby-encounters'];
+const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'ui-improvements', 'nearby-encounters'];
 const names = process.argv.slice(2);
 // Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
 // Chromium's headless SwiftShader path stalls on the district scene.

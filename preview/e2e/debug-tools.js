@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [];
   const check = (condition, label) => { if (!condition) throw new Error(label); checks.push(label); };
   page.on('pageerror', error => errors.push(error.message));
@@ -75,7 +76,7 @@ async page => {
   await page.locator('[data-debug-heavy] summary').click();
   await page.keyboard.press('F3');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#destination').selectOption({label:'Dior'});await page.locator('#visit-destination').click();
   await page.locator('#enter-destination').click();
   await page.locator('#panel-toggle').click();await page.keyboard.press('F3');
