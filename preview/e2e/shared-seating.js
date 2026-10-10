@@ -13,7 +13,9 @@ async page => {
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await tab.locator('#panel-toggle').click();
     await openHudSpace(tab, 'explore-section');
   };
-  const closePanel=async tab=>{if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();};
+  const closePanel=async tab=>{
+    for(const selector of ['#panel-toggle','#people-toggle'])if(await tab.locator(selector).getAttribute('aria-expanded')==='true')await tab.locator(selector).click();
+  };
   await join(page);
   const fixtureOwner=await self(page);
   check(fixtureOwner.canBuild&&fixtureOwner.canGrantWishes,'The fresh loopback owner has building and wish permissions');
@@ -91,6 +93,7 @@ async page => {
     check(connections>=2&&(await self(guest)).id===visitor.id&&(await self(guest)).sitting?.slot===1,'The same account recovers its seat on socket reconnect within the grace period');
     if(await guest.locator('.visit-tools').evaluate(node=>node.open))await guest.locator('.visit-tools-toggle').click();
     await guest.setViewportSize({width:390,height:844});
+    if(await guest.locator('.town-chat-dock').evaluate(node=>node.open))await guest.locator('.town-chat-toggle').click();
     // Standing up is the walking HUD's single primary action while seated.
     await guest.waitForFunction(()=>document.querySelector('#walking-hud').dataset.primaryAction==='interact'&&document.querySelector('#walking-interact').textContent.startsWith('Stand up'));
     await guest.locator('.walking-primary > #walking-interact').scrollIntoViewIfNeeded();

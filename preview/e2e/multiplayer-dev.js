@@ -124,6 +124,8 @@ async page => {
   await page.locator('.multiplayer-social-row button', {hasText:'Message'}).click();
   await page.locator('.multiplayer-social-history').getByText('A private hello').waitFor({state:'attached'});
   check(true,'Accepted contacts and private history survive a browser reconnect');
+  // People and Play share the right edge; reveal Play before checking permissions.
+  for (const tab of [page, second]) await tab.locator('#people-toggle').click();
   check(await page.locator('.shared-build-controls').isVisible(),'Shared play exposes player-owned building');
   check(!(await second.locator('.shared-build-controls').isVisible()),'A guest cannot access the shared builder');
   check(await second.locator('#wish-grant').evaluate(button=>button.hidden),'A guest cannot access wish granting');

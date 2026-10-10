@@ -8,11 +8,12 @@ async page => {
   const host = page.locator('#canvas-host'), menu = page.locator('.rail-commands'), search = page.locator('#rail-command-search');
   const command = async text => { await host.focus(); await page.keyboard.press('Control+k'); await search.fill(text); await page.keyboard.press('Enter'); };
   await command('town chat');
-  check(await page.evaluate(() => document.activeElement.matches('.multiplayer-chat-form input')), 'Chat command opens People and focuses the live town composer');
+  check(await page.evaluate(() => document.activeElement.matches('.multiplayer-chat-form input')), 'Chat command opens the town dock and focuses its composer');
   check(await page.evaluate(() => Boolean(document.querySelector('#community-meet').compareDocumentPosition(document.querySelector('.multiplayer-roster')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Nearby residents and meeting actions precede town tools');
-  check(await page.evaluate(() => Boolean(document.querySelector('.multiplayer-chat').compareDocumentPosition(document.querySelector('.multiplayer-social')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Public town chat precedes private contacts and groups');
+  check(await page.evaluate(() => document.querySelector('.town-chat-dock').contains(document.querySelector('.multiplayer-chat')) && !document.querySelector('#community-section').contains(document.querySelector('.multiplayer-chat'))), 'Town chat lives independently of the People panel');
+  const placesBeforeTyping = await page.locator('#panel-toggle').getAttribute('aria-expanded');
   await page.keyboard.press('Control+b');
-  check(await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'true', 'Typing town chat retains keyboard ownership');
+  check(await page.locator('#panel-toggle').getAttribute('aria-expanded') === placesBeforeTyping, 'Typing town chat retains keyboard ownership');
   await page.screenshot({ path: 'output/playwright/rails-town-people.png' });
   await page.keyboard.press('Escape');
   const canBuild = await page.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId).canBuild; });

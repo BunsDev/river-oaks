@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { openHudSpace } from './hud-navigation.js';
 import { workosSdkFixture } from '../../server/tests/workos-sdk-fixture.js';
 import { createAuth } from '../../server/auth.js';
 import { createFileWaitlist } from '../../server/waitlist.js';
@@ -121,10 +122,8 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal((await post('/api/waitlist/invite-redeem', { code: invite.code })).status(), 400);
     const invitations = await (await request.get(`${origin}/api/waitlist/invites`)).json();
     assert.equal(invitations.invites.length, 2);
-    // The access gate hides before main.js initializes the sidebar. Wait for
-    // its real state, then open it while the scene can still be initializing.
-    await page.locator('#panel-toggle[aria-keyshortcuts]').waitFor({ state: 'visible' });
-    if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+    // Account actions live in the settings modal once the HUD initializes.
+    await openHudSpace(page, 'settings-section', 'Account');
     await page.locator('#access-invites-open').click();
     await page.locator('#access-invites[open]').waitFor();
     await page.locator('#canvas-host canvas').waitFor({ state: 'visible' });
