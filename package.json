@@ -24,7 +24,7 @@
     "audit:multiplayer": "node server/performance-audit.js data/reports/multiplayer-performance-audit.json",
     "start": "node --env-file-if-exists=.env server/start.js",
     "server:redis": "node --env-file-if-exists=.env server/redis-start.js",
-    "desktop:dev": "node --env-file-if-exists=.env desktop/dev.js",
+    "desktop:dev": "node --env-file-if-exists=.env --env-file-if-exists=.env.local desktop/dev.js",
     "desktop:start": "electron .",
     "desktop:package": "node desktop/package.js",
     "test:desktop": "node --test desktop/tests/*.test.js",
