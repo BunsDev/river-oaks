@@ -112,3 +112,9 @@ verified combined branch for hosted checks while PR210 finishes; do not merge
 until PR210 and primary reconciliation release the hold. The follow-on minimap
 will use a new branch in this same checkout, preserving the cleanup PR's exact
 head. Storybook retirement proof can join that follow-on ledger once it lands.
+
+Published cleanup PR215 at 2d9e0d16385ea16c9cb04ce3b7cf12dee073ad87 while
+retaining the PR210 main hold. Hosted CI is running in parallel. The minimap work
+is on feat/destination-minimap-20261011 in the reused memory checkout; no UI
+implementation is included in PR215. Source owner can retire its three remaining
+checkouts once PR215 merges and exact-source comparison succeeds.

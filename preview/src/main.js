@@ -65,7 +65,6 @@ import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
-import { createWorldEvents } from './world-events.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
@@ -94,7 +93,7 @@ let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, sto
 let districtUI, environmentAssets = null, storefrontReflections = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
-let worldPortal = null, worldEvents = null;
+let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
@@ -192,8 +191,6 @@ function initializeRenderer() {
     worldPortal=createWorldPortal({host:$('#explore-section'),creationToolsEnabled,getCanPublish:()=>Boolean(multiplayer?.connected && multiplayer.snapshot?.players.find(player=>player.id===multiplayer.identity?.id)?.canBuild)});
     void worldPortal.load();
   }
-  worldEvents=createWorldEvents({host:$('#explore-section'),creationToolsEnabled});
-  void worldEvents.load();
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
   walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null });
   storeIntros = createStoreIntros({ camera, host,
@@ -229,7 +226,7 @@ function initializeRenderer() {
   });
   visitTools.prepend(photoMode.panel);
   landmarks = createAccountLandmarks({ request: (action, data) => multiplayer.landmarkRequest(action, data), worldId: worldIdFromSearch(location.search) });
-  placesUI = setupPlacesUI({ places: [], landmarks, worldMapEnabled, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
+  placesUI = setupPlacesUI({ places: [], landmarks, onGo: goToPlace, getPosition: () => walking?.getPosition() ?? null, getYaw: () => walking?.getYaw() ?? 0,
     isOutdoor: position => Boolean(world && walkingEnvironment().isFree(position[0],-position[1]) && !walkingEnvironment().roomAt(position[0],-position[1])) });
   startMultiplayer();
   districtUI = setupDistrictUI({ onArrive: arriveAtStore, onEnter: enterStore, onAtmosphere: updateAtmosphere, describeStore: describeInterior, canEnter: canEnterStore });
@@ -608,7 +605,6 @@ async function loadWorld() {
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
-    worldEvents?.setPlaces(places);
     placesUI?.setWorld(data);
     placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.

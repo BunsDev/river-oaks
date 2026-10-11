@@ -11,13 +11,12 @@ async (page, { creationToolsEnabled = false } = {}) => {
   const expected = creationToolsEnabled ? 1 : 0;
   for (const [selector, label] of [
     ['.multiplayer-groups', 'Groups'],
-    ['.world-events-studio', 'Event hosting'],
     ['.shared-build-controls', 'Building and saved designs'],
     ['.world-portal-form', 'World publishing'],
     ['.world-portal-revision', 'World revision editing'],
   ]) check(await page.locator(selector).count() === expected, `${label} respects the creation flag`);
   check(await page.locator('.world-portal').count() === 1, 'World browsing remains independently enabled');
-  check(await page.locator('.world-events-filters').count() === 1, 'Event browsing remains available');
+  check(await page.locator('.world-events').count() === 0, 'Unreleased Events stays absent regardless of the creation flag');
   check(await page.locator('.multiplayer-chat-form').count() === 1 && await page.locator('.multiplayer-social').count() === 1, 'Chat and contacts remain available');
   check((await page.locator('.visit-tools-toggle span').textContent()).includes('build') === creationToolsEnabled, 'The play rail advertises building only when enabled');
   await page.locator('#canvas-host').focus(); await page.keyboard.press('Control+k');

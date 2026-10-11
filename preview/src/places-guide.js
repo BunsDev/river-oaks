@@ -8,14 +8,15 @@ export function createPlacesGuide(host) {
   const trigger = document.createElement('button');
   trigger.id = 'places-open'; trigger.type = 'button'; trigger.className = 'places-launcher';
   trigger.setAttribute('aria-haspopup', 'dialog'); trigger.setAttribute('aria-controls', 'places-dialog');
-  trigger.innerHTML = '<span><strong>Places & landmarks</strong><small>Find your next stop or save a favourite.</small></span><span aria-hidden="true">↗</span>';
+  trigger.innerHTML = '<span><strong>Expand map</strong><small>Find a destination · save a favourite</small></span><span aria-hidden="true">↗</span>';
   host.append(trigger);
   const dialog = document.createElement('dialog');
   dialog.id = 'places-dialog'; dialog.className = 'places-guide';
   dialog.setAttribute('aria-labelledby', 'places-guide-title');
-  dialog.innerHTML = `<header><div><p class="places-eyebrow">Your district</p><h2 id="places-guide-title">Where to next?</h2></div><button type="button" class="places-close" aria-label="Close travel guide">Close <kbd>Esc</kbd></button></header>
-    <div class="places-tabs" role="tablist" aria-label="Travel guide"><button type="button" id="places-tab-destinations" role="tab">Destinations</button><button type="button" id="places-tab-saved" role="tab">Saved places</button></div>
-    <div class="places-guide-content"></div><footer><p class="places-live-note">The town stays live while you browse.</p></footer>`;
+  dialog.innerHTML = `<header><div><p class="places-eyebrow">River Oaks · District atlas</p><h2 id="places-guide-title">Find your next stop</h2></div><button type="button" class="places-close" aria-label="Close map">Close <kbd>Esc</kbd></button></header>
+    <div class="places-atlas-layout"><div class="places-map-stage"></div><div class="places-browser">
+    <div class="places-tabs" role="tablist" aria-label="Map destinations"><button type="button" id="places-tab-destinations" role="tab">Destinations</button><button type="button" id="places-tab-saved" role="tab">Saved places</button></div>
+    <div class="places-guide-content"></div></div></div><footer><p class="places-live-note">Select a destination on the map or search by name.</p></footer>`;
   const content = dialog.querySelector('.places-guide-content');
   groups.forEach((group, index) => {
     group.open = true; group.id = `places-pane-${index ? 'saved' : 'destinations'}`;
@@ -27,7 +28,7 @@ export function createPlacesGuide(host) {
   const results = document.createElement('p'); results.id = 'places-results'; results.setAttribute('role', 'status');
   const empty = document.createElement('p'); empty.id = 'places-no-results'; empty.textContent = 'No places found. Try a different name.'; empty.hidden = true;
   groups[0].querySelector('summary').after(searchLabel, results, empty);
-  if (map) groups[0].querySelector('summary').after(map);
+  const mapStage = dialog.querySelector('.places-map-stage');
   dialog.querySelector('footer').prepend(status);
   document.body.append(dialog);
   const search = dialog.querySelector('#places-search'), tabs = [...dialog.querySelectorAll('[role=tab]')];
@@ -38,14 +39,17 @@ export function createPlacesGuide(host) {
     content.scrollTop = 0;
   };
   const open = (selector = '#places-search') => {
+    if (!dialog.open) returnFocus = document.activeElement;
+    if (map) { map.open = true; mapStage.append(map); }
     const target = dialog.querySelector(selector) ?? search;
     select(groups[1].contains(target) ? 1 : 0);
-    if (!dialog.open) { returnFocus = document.activeElement; dialog.showModal(); }
+    if (!dialog.open) dialog.showModal();
     for (let parent = target.parentElement; parent && parent !== dialog; parent = parent.parentElement) if (parent.tagName === 'DETAILS') parent.open = true;
     target.focus({ preventScroll: true }); target.scrollIntoView({ block: 'nearest' });
   };
   const close = () => dialog.close();
   dialog.addEventListener('close', () => {
+    if (map) host.querySelector('#places-here').after(map);
     const target = returnFocus?.isConnected && returnFocus.checkVisibility() && !returnFocus.closest('[inert]') ? returnFocus : trigger;
     target.focus({ preventScroll: true });
   });
@@ -56,6 +60,14 @@ export function createPlacesGuide(host) {
   dialog.addEventListener('places-open', event => open(event.detail?.selector));
   dialog.querySelector('.places-close').addEventListener('click', close);
   trigger.addEventListener('click', () => open());
+  const expandMap = event => {
+    if (dialog.open || event.isComposing || !event.target.closest('.world-map-surface')) return;
+    if (event.type === 'keydown' && !['Enter', ' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+    if (event.type === 'keydown') event.preventDefault();
+    open('.world-map-surface');
+  };
+  map?.addEventListener('click', expandMap);
+  map?.addEventListener('keydown', expandMap);
   tabs.forEach((tab, index) => {
     tab.setAttribute('aria-controls', groups[index].id);
     tab.addEventListener('click', () => select(index));
@@ -75,5 +87,5 @@ export function createPlacesGuide(host) {
   };
   search.addEventListener('input', refresh);
   select(0);
-  return { refresh, dispose() { host.append(...groups, status); if (map) host.append(map); trigger.remove(); dialog.remove(); } };
+  return { refresh, dispose() { map?.removeEventListener('click', expandMap); map?.removeEventListener('keydown', expandMap); host.append(...groups, status); if (map) host.append(map); trigger.remove(); dialog.remove(); } };
 }

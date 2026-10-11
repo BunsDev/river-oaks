@@ -16,7 +16,7 @@ async (page, { worldMapEnabled = false } = {}) => {
   await host.focus();
   const flight = await page.locator('#player-flight').getAttribute('aria-pressed');
   check(await page.locator('.clear-view-toggle').count() === 0, 'Commands replaces the standalone Clear view button');
-  check(await page.locator('.world-map').count() === (worldMapEnabled ? 1 : 0), 'World map creation respects the environment flag');
+  check(await page.locator('.world-map').count() === 1, 'District minimap is available independently of shared-world publishing');
   check(await page.locator('.world-portal').count() === (worldMapEnabled ? 1 : 0), 'Worlds directory and publishing controls respect the environment flag');
   await page.keyboard.press('Control+b');
   check(await expanded() === 'true' && await focus() === 'explore-section', 'Ctrl+B opens Places and focuses its panel');
@@ -45,7 +45,7 @@ async (page, { worldMapEnabled = false } = {}) => {
 
   await page.keyboard.press('Control+k');
   check(await menu.isVisible() && await focus() === 'rail-command-search', 'Commands open as a focused modal dialog');
-  check(await menu.getByRole('button', { name: 'World map', exact: true }).count() === (worldMapEnabled ? 1 : 0), 'Commands offers World map only when enabled');
+  check(await menu.getByRole('button', { name: 'World map', exact: true }).count() === 1, 'Commands always offers the district map');
   if (!worldMapEnabled) check(await menu.getByRole('button', { name: 'Browse shared worlds', exact: true }).count() === 0, 'Commands omits shared worlds when disabled');
   check(await menu.getByRole('button', { name: 'Build & decorate', exact: true }).count() === 0, 'Command list omits disabled building tools');
   check(!(await menu.locator('.commands-results').textContent()).toLowerCase().includes('rail'), 'Commands describe player activities rather than interface rails');
@@ -128,15 +128,8 @@ async (page, { worldMapEnabled = false } = {}) => {
     await dock.locator('summary').first().focus(); await page.keyboard.press('Escape');
     await page.locator('.commands-toggle').click();
     check(await menu.isVisible(), width+'×'+height+': Commands remains pointer-reachable');
-    if (worldMapEnabled) {
-      await search.fill('world map'); await page.keyboard.press('Enter');
-      check(await focus() === '' && await page.evaluate(() => document.activeElement.classList.contains('world-map-surface')), `${width}×${height}: command opens the map with keyboard focus`);
-    } else {
-      await search.fill('world map');
-      check((await menu.locator('.commands-count').textContent()).startsWith('No matching'), `${width}×${height}: disabled World map is unavailable`);
-      await page.keyboard.press('Escape');
-      await host.focus(); await page.keyboard.press('Alt+2');
-    }
+    await search.fill('world map'); await page.keyboard.press('Enter');
+    check(await focus() === '' && await page.evaluate(() => document.activeElement.classList.contains('world-map-surface')), `${width}×${height}: command opens the map with keyboard focus`);
     check(!await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), `${width}×${height}: no page overflow`);
     await page.keyboard.press('Escape');
   }

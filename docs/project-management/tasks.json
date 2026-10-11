@@ -924,7 +924,7 @@
       "owner": "/root:retirement-round2-20261011",
       "leaseUntil": "2026-10-11T09:20:33.903475+00:00",
       "updatedAt": "2026-10-11T07:20:33.903475+00:00",
-      "nextAction": "Integrate the source owner verified reduced-motion fix and retirement records; merge Storybook after PR210; publish one combined cleanup delivery.",
+      "nextAction": "Pass published cleanup PR hosted checks; merge after PR210 primary reconciliation hold releases, then source owner retires both sign-in trees.",
       "ledger": "docs/superpowers/plans/2026-10-11-retirement-round2.md",
       "filesOwned": [
         "docs/project-management/",
@@ -935,7 +935,13 @@
         "Restore bundle refs and fsck",
         "Recheck clean status and ownership before retirement",
         "Task validation and relevant repository gates"
-      ]
+      ],
+      "pr": 215,
+      "verification": {
+        "core": "11 tasks passed at 957cefc",
+        "browser": "email-access 1/1 passed",
+        "review": "independent review clear"
+      }
     },
     {
       "id": "reconcile-delivered-sources",
@@ -966,11 +972,13 @@
     {
       "id": "destination-minimap",
       "title": "Replace Events and duplicate destination navigation with an expandable minimap",
-      "status": "queued",
-      "branches": [],
-      "owner": null,
-      "updatedAt": "2026-10-11T07:52:01.384553+00:00",
-      "nextAction": "This session will reuse its checkout after cleanup delivery; consolidate Places around the existing map, remove Events entry points and verify desktop/mobile navigation.",
+      "status": "active",
+      "branches": [
+        "feat/destination-minimap-20261011"
+      ],
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:10:27.251174+00:00",
+      "nextAction": "Commit verified minimap change, run final-head hosted checks and merge after the queued PR210/PR215 deliveries.",
       "ledger": "docs/superpowers/plans/2026-10-11-destination-minimap.md",
       "filesOwned": [
         "preview/src/places-ui.js",
@@ -987,7 +995,13 @@
         "Focused behavioral regressions and desktop/mobile browser journeys",
         "Core verification and build",
         "Independent review and final-head hosted checks"
-      ]
+      ],
+      "leaseUntil": "2026-10-11T09:58:13.006965+00:00",
+      "verification": {
+        "core": "pnpm run verify: 11 tasks passed",
+        "browser": "destination-minimap and Events final focused passed; Places/guide/rail navigation/game HUD passed",
+        "review": "independent follow-up clear; focus and sizing fixes verified"
+      }
     }
   ]
 }
