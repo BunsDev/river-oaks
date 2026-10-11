@@ -1,8 +1,12 @@
-import { app, BrowserWindow, Menu, dialog, net, screen, session, shell } from 'electron';
+import { app, BrowserWindow, Menu, dialog, net, screen, session, shell, ipcMain } from 'electron';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
+import { createStudioDesignerHost, designerSenderAllowed } from './studio-designer-host.js';
 import { navigationAllowed, windowBounds } from './runtime.js';
 import { photoDownloadAllowed } from './photo-download.js';
+import { studioDownloadAllowed } from './studio-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 
 app.setName('TypeSafe Place');
@@ -10,10 +14,12 @@ app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
-let window, quitting = false, saved = {}, lastRecovery = 0;
+let window, designerHost, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
 const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://typesafe.place/play';
 const gameOrigin = new URL(entry).origin;
+const studioEntry = new URL('/studio.html', gameOrigin).href;
+let activeEntry = entry;
 const clientId = dev ? process.env.WORKOS_CLIENT_ID : 'client_01M3ZHFZDKDSTJ2RNSMP5V9SKV';
 if (dev) {
   const url = new URL(entry);
@@ -28,7 +34,7 @@ async function saveWindow() {
   await writeFile(stateFile, JSON.stringify(state));
 }
 
-async function loadGame() {
+async function loadGame(target = activeEntry) {
   try {
     const current = await net.fetch(`${gameOrigin}/auth/session`, { credentials: 'include' }).then(response => response.json()).catch(() => null);
     if (!current?.authenticated) {
@@ -48,13 +54,15 @@ async function loadGame() {
       await session.defaultSession.cookies.set({ url: gameOrigin, name: 'river_oaks_session', ...cookie,
         httpOnly: true, secure: !dev, sameSite: 'lax' });
     }
-    await window.loadURL(entry);
+    await window.loadURL(target);
   }
   catch (error) {
+    // A renderer may veto navigation to protect an unsaved Studio draft.
+    if (error.code === 'ERR_ABORTED' || error.errno === -3) return;
     if (quitting || !window || window.isDestroyed()) return;
     const { response } = await dialog.showMessageBox({ type: 'error', message: 'TypeSafe Place could not open', detail: error.message, buttons: ['Try again', 'Quit'], defaultId: 0, cancelId: 1 });
     console.error('Game load failed:', error.message);
-    if (response === 0) void loadGame(); else app.quit();
+    if (response === 0) void loadGame(target); else app.quit();
   }
 }
 
@@ -64,7 +72,7 @@ function createWindow() {
     ...windowBounds(saved, displays), minWidth: 800, minHeight: 600,
     title: dev ? 'TypeSafe Place · Development' : 'TypeSafe Place', backgroundColor: '#18271f', show: false,
     autoHideMenuBar: process.platform !== 'darwin',
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, backgroundThrottling: true, spellcheck: false },
+    webPreferences: { preload: fileURLToPath(new URL('./studio-preload.cjs', import.meta.url)), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, backgroundThrottling: true, spellcheck: false },
   });
   window.on('page-title-updated', event => event.preventDefault());
   window.once('ready-to-show', () => {
@@ -89,13 +97,33 @@ function createWindow() {
     }
     if (!navigationAllowed(url, entry)) event.preventDefault();
   });
+  // Keep recovery on the selected app when users follow an in-page app link.
+  contents.on('did-start-navigation', (_event, _url, _inPlace, isMainFrame) => { if (isMainFrame) designerHost?.dispose(); });
+  contents.on('did-navigate', (_event, url) => {
+    if (!navigationAllowed(url, entry)) return;
+    const pathname = new URL(url).pathname;
+    if (pathname === '/studio.html' || pathname === '/studio') activeEntry = studioEntry;
+    else if (pathname === '/play' || pathname === '/' || pathname === new URL(entry).pathname) activeEntry = entry;
+  });
+  contents.on('will-prevent-unload', event => {
+    const response = dialog.showMessageBoxSync(window, {
+      type: 'warning', message: 'Discard unsaved changes?',
+      detail: 'Your changes have not been saved on this device. Keep editing to save them before leaving.',
+      buttons: ['Keep editing', 'Discard changes'], defaultId: 0, cancelId: 0,
+    });
+    // Electron requires a synchronous decision. Overriding this event allows
+    // unload; leaving it alone preserves the renderer's cancellation.
+    if (response === 1) event.preventDefault();
+    else quitting = false; // A canceled app quit must restore normal recovery.
+  });
   contents.on('will-attach-webview', event => event.preventDefault());
   contents.on('render-process-gone', async (_event, details) => {
+    designerHost?.dispose();
     if (quitting || details.reason === 'clean-exit') return;
     console.error(`Game renderer stopped: ${details.reason}`);
     // Recover once automatically; repeated crashes require a decision, never a reload loop.
     if (Date.now() - lastRecovery > 60_000) { lastRecovery = Date.now(); void loadGame(); return; }
-    const { response } = await dialog.showMessageBox(window, { type: 'error', message: 'The game stopped unexpectedly', detail: 'Reload to rebuild the district. Your appearance and graphics preferences are preserved.', buttons: ['Reload game', 'Quit'], cancelId: 1 });
+    const { response } = await dialog.showMessageBox(window, { type: 'error', message: 'The game stopped unexpectedly', detail: 'Reload the current app. Saved Studio drafts and game preferences are preserved; unsaved edits may be lost.', buttons: ['Reload game', 'Quit'], cancelId: 1 });
     if (response === 0) void loadGame(); else app.quit();
   });
   window.on('unresponsive', async () => {
@@ -118,18 +146,19 @@ else {
     event.preventDefault();
     void saveWindow().catch(console.error).finally(() => { quitting = true; app.quit(); });
   });
-  app.on('window-all-closed', () => app.quit());
+  app.on('window-all-closed', () => { designerHost?.dispose(); app.quit(); });
   app.whenReady().then(async () => {
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     session.defaultSession.setPermissionCheckHandler(() => false);
     session.defaultSession.on('will-download', (event, item, contents) => {
-      const allowed = contents === window?.webContents && photoDownloadAllowed({
+      const download = {
         url: item.getURL(), initiator: item.getInitiatorOrigin(), filename: item.getFilename(),
         mime: item.getMimeType(), bytes: item.getTotalBytes(), userGesture: item.hasUserGesture(),
-      }, gameOrigin);
-      if (!allowed) { event.preventDefault(); return; }
-      item.setSaveDialogOptions({ title: 'Save your River Oaks photo', defaultPath: item.getFilename(),
-        filters: [{ name: 'PNG image', extensions: ['png'] }] });
+      };
+      const studio = studioDownloadAllowed(download, gameOrigin);
+      if (contents !== window?.webContents || (!studio && !photoDownloadAllowed(download, gameOrigin))) { event.preventDefault(); return; }
+      item.setSaveDialogOptions({ title: studio ? 'Export World Studio region' : 'Save your River Oaks photo', defaultPath: item.getFilename(),
+        filters: studio ? [{ name: 'Region JSON', extensions: ['json'] }] : [{ name: 'PNG image', extensions: ['png'] }] });
     });
     try {
       const state = JSON.parse(await readFile(stateFile, 'utf8'));
@@ -137,13 +166,33 @@ else {
     } catch { /* First run or invalid state uses safe defaults. */ }
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
-      { label: 'Game', submenu: [{ label: 'Reload game', accelerator: 'CmdOrCtrl+R', click: () => window?.webContents.reload() }, { type: 'separator' }, { role: 'quit' }] },
+      { label: 'Game', submenu: [{ label: 'World Studio', click: () => void loadGame(studioEntry) }, { label: 'Return to world', click: () => void loadGame(entry) }, { type: 'separator' }, { label: 'Reload game', accelerator: 'CmdOrCtrl+R', click: () => window?.webContents.reload() }, { type: 'separator' }, { role: 'quit' }] },
       { role: 'editMenu' },
       // Debug tools (colliders, walkable grid, polygon inspector) live in the game; F3 toggles them there too.
       { label: 'View', submenu: [{ role: 'togglefullscreen' }, { label: 'Debug tools', accelerator: 'F3', click: () => window?.webContents.executeJavaScript("window.dispatchEvent(new CustomEvent('river-oaks:debug'))").catch(() => {}) }, ...(dev ? [{ role: 'toggleDevTools' }] : [])] },
       { role: 'windowMenu' },
       { label: 'Help', submenu: [{ label: 'Game controls', click: () => dialog.showMessageBox(window, { message: 'Explore TypeSafe Place', detail: 'WASD · Walk\nDrag · Look around\nShift · Walk faster\nE · Talk nearby\nF · Enter or leave a shop\nB · Fly or land\nSpace / C · Rise / descend\nV · Change camera\nH · Hide or show the HUD\n\nGraphics and appearance are in Settings. Auto adjusts scene resolution to the available frame budget.' }) }] },
     ]));
+    const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
+    const pack = app.isPackaged ? JSON.parse(await readFile(join(sourceRoot, 'desktop/world-design-pack.json'), 'utf8')) : await buildWorldDesignPack(sourceRoot);
+    designerHost = createStudioDesignerHost({ root: join(app.getPath('userData'), 'designer'), pack,
+      executable: process.env.RIVER_OAKS_DESIGNER_COVEN || 'coven', model: process.env.RIVER_OAKS_DESIGNER_MODEL || null,
+      confirm: async request => {
+        const { response } = await dialog.showMessageBox(window, { type: 'question', defaultId: 0, cancelId: 0, buttons: ['Cancel', request.kind === 'connect' ? 'Connect' : 'Send task'],
+          message: request.kind === 'connect' ? `Set up ${request.name}?` : `Send this task to ${request.name}?`,
+          detail: request.kind === 'connect'
+            ? 'Studio installs its world-building skills in a private project workspace. A dedicated familiar gets its own local Coven instance and identity. Existing familiars are unchanged. Codex uses the sign-in on this device; provider authentication remains unverified until you send a task.'
+            : `Share ${request.scope === 'region' ? 'the whole region' : 'the selected object'} and the project brief. Your configured provider may charge for this request. The agent runs read-only and returns proposed edits for review.\n\n${request.brief}` });
+        return response === 1;
+      },
+    });
+    for (const method of ['catalog','connect','request','cancel','disconnect']) ipcMain.handle(`studio-designer:${method}`, async (event, input) => {
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Designer access is limited to the main Studio window.');
+      const frame = event.senderFrame;
+      const result = await designerHost[method](input);
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      return result;
+    });
     createWindow();
   }).catch(error => { console.error('Desktop startup failed:', error); app.exit(1); });
 }

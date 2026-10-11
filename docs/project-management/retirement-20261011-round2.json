@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-11T07:24:10.906840+00:00",
+  "scope": "This thread only; coordinated owners independently retire Harry Winston/sign-in work. Remote branches and active integration trees are preserved.",
+  "initialCounts": {
+    "worktrees": 17,
+    "localBranches": 17
+  },
+  "archive": {
+    "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+    "sha256": "93ead12a31d98fd80244ba1fe457127dd2a0a243e48b517a0dd3c92ef80e1745",
+    "restoredRefs": 3,
+    "fsck": "passed",
+    "restoreCommand": "git fetch <bundle> <archiveRef>:refs/heads/recovered/<name>"
+  },
+  "results": [
+    {
+      "branch": "polish/compact-social-sidebar",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-compact-sidebar-20261009",
+      "artifact": "data/reports/sidebar-contextual-recheck.json",
+      "pr": 196,
+      "ownership": "Originating session moved on to Dior after delivered sidebar; no current process/session claim on this checkout.",
+      "sha": "7173f291b2e00979b605f54991e648c967e1c55b",
+      "main": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+      "reviewedHead": "7173f291b2e00979b605f54991e648c967e1c55b",
+      "merge": "0ff3742d632fb79abe029e7cdf09a19e843ea9b2",
+      "comparedPaths": [
+        "data/reports/compact-social-sidebar.json",
+        "docs/superpowers/plans/2026-10-09-compact-social-sidebar.md",
+        "preview/e2e/compact-social-sidebar.js",
+        "preview/src/multiplayer.css"
+      ],
+      "proof": "Every changed path in the reviewed aggregate matches its delivered merge.",
+      "artifactSha256": "885dfd44c29b9fdaf54c59dc43a27e9184fcb68956602d8dc417c3cf0542cf85",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round2/polish-compact-social-sidebar",
+      "outcome": "retired",
+      "retainedArtifact": {
+        "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/polish-compact-social-sidebar/data/reports/sidebar-contextual-recheck.json",
+        "sha256": "885dfd44c29b9fdaf54c59dc43a27e9184fcb68956602d8dc417c3cf0542cf85"
+      },
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011-round2/polish-compact-social-sidebar-evidence.tar",
+        "sha256": "1846323bcccc85bf11e82210e1c88e5cb5a0658a94fbb620c675893d9a28b831",
+        "verifiedFiles": 16
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "codex/repo-completion-20261007",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-completion-20261007",
+      "artifact": "docs/superpowers/plans/2026-10-07-repo-completion.md",
+      "pr": null,
+      "ownership": "Historical audit from October 7 has no implementation changes; current task register and both cleanup rounds supersede its audit. Preserve original ledger unchanged.",
+      "sha": "20208490353808213c962ccedd0923c38d17c1a8",
+      "main": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+      "proof": "Exact branch tip is already an ancestor of main. Only remaining file is the retained historical audit ledger; no implementation change.",
+      "artifactSha256": "74a982e3465875b6a385cfd33d3e873377d49f3235abdc910e9b84d2e742211e",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round2/codex-repo-completion-20261007",
+      "outcome": "retired",
+      "retainedArtifact": {
+        "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/codex-repo-completion-20261007/docs/superpowers/plans/2026-10-07-repo-completion.md",
+        "sha256": "74a982e3465875b6a385cfd33d3e873377d49f3235abdc910e9b84d2e742211e"
+      },
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011-round2/codex-repo-completion-20261007-evidence.tar",
+        "sha256": "218598fd9cb061f6a73c9528e0492e389ce714585a65b152e1f3e19f0c12e218",
+        "verifiedFiles": 1
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "chore/project-lifecycle-20261011",
+      "worktree": null,
+      "artifact": null,
+      "pr": 209,
+      "ownership": "This session released the delivered branch and reused its clean checkout for round2.",
+      "sha": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
+      "main": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+      "reviewedHead": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
+      "merge": "d3dbe639592b66e0b3ca27033d80f81f4b95179c",
+      "comparedPaths": [
+        ".agents/skills/project-management/SKILL.md",
+        ".agents/skills/project-management/agents/openai.yaml",
+        ".agents/skills/worktree-retirement/SKILL.md",
+        ".agents/skills/worktree-retirement/agents/openai.yaml",
+        "AGENTS.md",
+        "docs/agent-workflow.md",
+        "docs/project-management/retirement-20261011.json",
+        "docs/project-management/tasks.json",
+        "docs/project-management/workflow.md",
+        "docs/superpowers/plans/2026-10-11-project-lifecycle.md",
+        "package.json",
+        "scripts/project-status.mjs",
+        "scripts/tests/project-status.test.js"
+      ],
+      "proof": "Every changed path in the reviewed aggregate matches its delivered merge.",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round2/chore-project-lifecycle-20261011",
+      "outcome": "retired"
+    }
+  ]
+}

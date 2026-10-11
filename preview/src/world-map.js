@@ -63,9 +63,10 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
   const self=svg('circle',{class:'world-map-self',r:11,hidden:''});
   const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
+  const targetLabel=svg('text',{class:'world-map-selection-label','text-anchor':'middle',hidden:''});
   const north=node('span','N ↑','world-map-north');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
+  overlay.append(self,target,targetLabel);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
   const legend=node('p','● You   ◉ Player   ◇ Parcel   ◆ Saved place   • Destination','world-map-legend');
   const parcelDetails=node('details',null,'world-map-parcel-list'),parcelSummary=node('summary','Land parcels · 0'),parcelList=node('ul');
   parcelDetails.append(parcelSummary,parcelList);parcelDetails.hidden=true;
@@ -135,7 +136,9 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     }else self.setAttribute('hidden','');
     if(selected){
       const [cx,cy]=mapPoint(selected.position);target.setAttribute('cx',cx);target.setAttribute('cy',cy);target.removeAttribute('hidden');
-    }else target.setAttribute('hidden','');
+      targetLabel.setAttribute('x',clamp(cx,180,SIZE-180));targetLabel.setAttribute('y',cy>SIZE-70?cy-30:cy+48);
+      targetLabel.textContent=selected.name;targetLabel.removeAttribute('hidden');
+    }else {target.setAttribute('hidden','');targetLabel.setAttribute('hidden','');}
   }
   function select(next){
     selected=next;
@@ -239,6 +242,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
         else{select(null);status.textContent='That player is no longer outdoors in this world.';}
       }
     },
+    selectPlace: select,
     refresh,
     dispose(){section.remove();},
   };

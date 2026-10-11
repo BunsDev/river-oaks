@@ -5,13 +5,13 @@
     {
       "id": "project-lifecycle",
       "title": "Reduce worktrees and maintain task lifecycle",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "chore/project-lifecycle-20261011"
       ],
-      "owner": "/root:project-lifecycle-20261011",
-      "updatedAt": "2026-10-11T06:21:42.413771+00:00",
-      "nextAction": "Wait for exact-head hosted checks on PR209, land the verified lifecycle changes, then reconcile delivery and local archive state.",
+      "owner": null,
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [
         "scripts/project-status.mjs",
         "scripts/tests/project-status.test.js",
@@ -31,7 +31,6 @@
         "mergeInProgress": false,
         "activeProcess": true
       },
-      "leaseUntil": "2026-10-11T08:20:29.781585+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-project-lifecycle.md",
       "pr": 209,
       "verification": {
@@ -40,84 +39,249 @@
         "tooling": "25 passed after review fixes",
         "skills": "both quick_validate.py checks passed",
         "review": "independent follow-up: no findings"
+      },
+      "evidence": [
+        {
+          "originalHead": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
+          "reviewedHead": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
+          "merge": "d3dbe639592b66e0b3ca27033d80f81f4b95179c",
+          "proof": "Every changed path in the reviewed aggregate matches its delivered merge."
+        }
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/chore-project-lifecycle-20261011",
+        "sha": "023fa88a961bc6c59b9e71182bb8b01623b63f74"
       }
     },
     {
       "id": "harry-winston",
       "title": "Complete Harry Winston reference work",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "codex/harry-winston-reference-20261009"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify ownership, review dirty reference/fixture/source changes, and run matched reference and runtime acceptance from the scoped ledger.",
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Use the restore-tested archive if the historical source is needed. Current source is delivered on main; preserve documented acceptance limits.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
       ],
-      "observed": {
-        "head": "22d00439cebf818e983dab0ce855eb3883ed5bda",
-        "dirtyPaths": 36,
-        "mergeInProgress": false,
-        "activeProcess": false
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+        "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+        "bundleVerify": true,
+        "isolatedRestore": true,
+        "fsck": true,
+        "dirtyPatchReplay": true
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "evidence": [
+        {
+          "pr": 198,
+          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "hostedVerify": 38119680150
+        }
+      ]
     },
     {
       "id": "pending-integration",
       "title": "Finish owned pending-work integration",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "codex/integrate-pending-20261011"
       ],
-      "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Owner coordinates PR198 delivery with thread 01a12983, then reconciles staged main work; preserve integration checkout.",
-      "filesOwned": [],
+      "owner": null,
+      "updatedAt": "2026-10-11T08:17:17.849065+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
+      "filesOwned": [
+        "preview/e2e/contextual-first-visit.js",
+        "docs/superpowers/plans/2026-10-11-pending-integration.md"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "PR198 exact head and merge proof",
+        "Preservation audit of older owned diagnostics and source trees"
       ],
       "observed": {
         "head": "8f78e30d3fdef5a0c27b290975e501f510579abf",
-        "dirtyPaths": 2,
         "mergeInProgress": false,
-        "activeProcess": false
+        "dirtyPaths": 2
       },
-      "leaseUntil": "2026-10-11T08:20:29.781585+00:00"
+      "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ],
+      "pr": 210,
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/trial-integration",
+        "sha": "8f78e30d3fdef5a0c27b290975e501f510579abf",
+        "retainedFiles": 72,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "places-studio-integration",
       "title": "Finish places and studio integration",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "codex/places-studio-integration-20261011"
       ],
-      "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Owner verifies and delivers combined Places guide, local Studio and staged spatial source; preserve source checkouts until complete delivery proof.",
-      "filesOwned": [],
+      "owner": null,
+      "updatedAt": "2026-10-11T08:17:20.846141+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
+      "filesOwned": [
+        ".agents/skills/studio-world-design/SKILL.md",
+        ".github/workflows/verify.yml",
+        "config/agent-workflow.json",
+        "data/reports/map-spatial-circulation-20261008.json",
+        "data/reports/map-spatial-final-browser-20261008.json",
+        "data/reports/map-spatial-measurements-20261008.json",
+        "data/reports/map-spatial-narrow-20261008.json",
+        "data/reports/map-spatial-native-20261008.json",
+        "data/reports/map-spatial-review-20261008.json",
+        "data/reports/map-spatial-route-queries-20261008.json",
+        "data/reports/map-spatial-shared-20261008.json",
+        "data/reports/map-spatial-streets-20261008.json",
+        "data/reports/walkability-experience-20261008.json",
+        "data/reports/walkability-shared-20261008.json",
+        "desktop/designer-e2e.js",
+        "desktop/e2e.js",
+        "desktop/main.js",
+        "desktop/package.js",
+        "desktop/studio-command.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-download.js",
+        "desktop/studio-e2e.js",
+        "desktop/studio-preload.cjs",
+        "desktop/tests/fixtures/studio-coven.mjs",
+        "desktop/tests/studio-command.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/studio-download.test.js",
+        "desktop/tests/studio-skill-pack.test.js",
+        "docs/desktop.md",
+        "docs/level-design/district/blockout-review.md",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-08-map-spatial-review.md",
+        "docs/superpowers/plans/2026-10-09-places-guide.md",
+        "docs/superpowers/plans/2026-10-09-world-studio-designer.md",
+        "docs/superpowers/plans/2026-10-09-world-studio.md",
+        "docs/superpowers/plans/2026-10-11-pending-integration.md",
+        "docs/superpowers/specs/2026-10-09-world-studio-designer-design.md",
+        "docs/world-design-pack.md",
+        "docs/world-studio-designer.md",
+        "docs/world-studio.md",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/multiplayer-dev.js",
+        "preview/e2e/multiplayer.js",
+        "preview/e2e/places-guide.js",
+        "preview/e2e/places.js",
+        "preview/e2e/shared-seating.js",
+        "preview/e2e/spatial-circulation.js",
+        "preview/e2e/spatial-streets.js",
+        "preview/e2e/world-map.js",
+        "preview/e2e/world-publish.js",
+        "preview/e2e/world-studio.js",
+        "preview/index.html",
+        "preview/src/places-guide.css",
+        "preview/src/places-guide.js",
+        "preview/src/places-ui.js",
+        "preview/src/rail-navigation.js",
+        "preview/src/store-rooms.js",
+        "preview/src/studio/designer-panel.js",
+        "preview/src/studio/designer-protocol.js",
+        "preview/src/studio/document.js",
+        "preview/src/studio/entry.js",
+        "preview/src/studio/limits.js",
+        "preview/src/studio/main.js",
+        "preview/src/studio/scene.js",
+        "preview/src/studio/studio.css",
+        "preview/src/studio/viewport.js",
+        "preview/src/world-map.css",
+        "preview/studio.html",
+        "preview/tests/auto-navigation.test.js",
+        "preview/tests/studio-designer.test.js",
+        "preview/tests/studio-document.test.js",
+        "preview/tests/studio-scene.test.js",
+        "preview/vite.config.js",
+        "scripts/studio-skill-pack.js",
+        "server/game-assets.js",
+        "server/tests/app.test.js",
+        "server/tests/studio-assets.test.js"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "pnpm run verify full with isolated Redis",
+        "pnpm run verify tooling",
+        "pnpm run verify after task-tooling reconciliation",
+        "Native Studio, Designer and desktop fixture acceptance",
+        "Independent review",
+        "Exact-head hosted checks and merged PR"
       ],
       "observed": {
-        "head": "4fbdf3baf04b0eddcc6dbe467e80b806210efec3",
-        "dirtyPaths": 62,
+        "head": "926e45f43428dad42eaf2dd4ab8acb837799e122",
         "mergeInProgress": false,
-        "activeProcess": false
+        "dirtyPaths": 0
       },
-      "leaseUntil": "2026-10-11T08:20:29.781585+00:00"
+      "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
+      "verification": {
+        "candidate": "9ce3a4a",
+        "full": "Passed all 17 tasks; 2586 preview tests, 415 Redis, 31 desktop, 141 Python, 10 experience and 19 shared journeys. One existing Vince glazing negative-approach test skipped.",
+        "native": "Studio 9, Designer 7, desktop 12 checks passed with synthetic/local transports. Initial native failures retained as failures.",
+        "receipt": ".runtime/integration/final-reports/full.json",
+        "testedPatchSha256": "7872bccb4efa1dc083d778ce264ce0cf35b85129b3d5b2a538f34d65f1dd9572",
+        "upstreamReconciliation": "Only documentation, task tooling and package script guards changed; anticipated merge tree matched actual rebased tree.",
+        "core": "Passed all 11 tasks after task-tooling reconciliation; .runtime/integration/final-reports/core-reconciled.json",
+        "tooling": "27 passed, zero skips",
+        "review": "Independent final reconciliation review found no required issues; exact tree/patch/index hashes and verification receipts confirmed.",
+        "finalRebase": {
+          "base": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "head": "64db466817ac9b3ccdb5dfca41f6639a847b898a",
+          "tree": "7fcd4454409e787b847c878434039d0ea1359406",
+          "unchangedFromReconciledCandidate": true
+        },
+        "reviewFixes": "23 host/pack tests, seven native Designer checks and all 11 core tasks passed; cancellation regression failed before fix. Independent review has no required findings. Final-head hosted checks pending."
+      },
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/final-integration",
+        "sha": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+        "retainedFiles": 223,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "repo-completion-ledger",
       "title": "Reconcile repository completion ledger",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "codex/repo-completion-20261007"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Review the untracked completion ledger against live delivery, retain its distinct notes, then assess the otherwise merged checkout.",
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -128,18 +292,35 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "evidence": [
+        {
+          "originalHead": "20208490353808213c962ccedd0923c38d17c1a8",
+          "reviewedHead": "20208490353808213c962ccedd0923c38d17c1a8",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "proof": "Exact branch tip is already an ancestor of main. Only remaining file is the retained historical audit ledger; no implementation change."
+        }
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/codex-repo-completion-20261007",
+        "sha": "20208490353808213c962ccedd0923c38d17c1a8",
+        "retainedArtifact": {
+          "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/codex-repo-completion-20261007/docs/superpowers/plans/2026-10-07-repo-completion.md",
+          "sha256": "74a982e3465875b6a385cfd33d3e873377d49f3235abdc910e9b84d2e742211e"
+        }
+      }
     },
     {
       "id": "signin-review",
       "title": "Reconcile sign-in review changes",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "codex/signin-typesafe-coven-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Compare the full patch with login-aesthetic and integration work; record equivalence or remaining distinct work before retiring either checkout.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -150,18 +331,20 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
     },
     {
       "id": "store-intros-delivery",
       "title": "Complete store intros and tooling delivery",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "codex/store-intros-signin-delivery-20261009"
       ],
-      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
-      "updatedAt": "2026-10-11T06:55:54.717716+00:00",
-      "nextAction": "Push verified lifecycle-main reconciliation, pass required hosted checks on final head, then squash merge PR198. Integration owner will record exact merge proof after landing.",
+      "owner": null,
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Use the restore-tested archive if the historical source is needed. Current source is delivered on main; preserve documented acceptance limits.",
       "filesOwned": [
         "package.json",
         "AGENTS.md",
@@ -176,32 +359,36 @@
         "pnpm run verify tooling",
         "Required hosted checks on final PR head"
       ],
-      "observed": {
-        "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
-        "dirtyPaths": 14,
-        "mergeInProgress": true,
-        "activeProcess": true
-      },
       "pr": 198,
-      "leaseUntil": "2026-10-11T08:55:54.717716+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pr198-merge.md",
       "evidence": [
         {
-          "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
-          "verification": "Local full: 17 tasks passed; 414 Redis tests, six experience journeys, 19 shared journeys. All hosted checks passed, including unchanged security retry. Core and 27 tooling tests also pass after docs/tooling-only main d3dbe63 reconciliation."
+          "pr": 198,
+          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "hostedVerify": 38119680150
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+        "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+        "bundleVerify": true,
+        "isolatedRestore": true,
+        "fsck": true,
+        "dirtyPatchReplay": true
+      }
     },
     {
       "id": "login-aesthetic",
       "title": "Reconcile TypeSafe login aesthetic changes",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "codex/typesafe-login-aesthetic-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Compare complete dirty patches with signin-review and current main; choose one owner and preserve all distinct changes before consolidating.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -212,21 +399,37 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
     },
     {
       "id": "cartier-pilot",
       "title": "Complete Cartier visual pilot",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "cody/cartier-visual-pilot"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify the existing owner; review the dirty storefront/source and asset changes against the pilot ledger, then run its visual and runtime checks.",
-      "filesOwned": [],
+      "owner": "cody-cartier-01a12a17-a2e4-7331-bb7d-c1199ed41b22",
+      "updatedAt": "2026-10-11T08:34:20.428044+00:00",
+      "nextAction": "Repair reproduced browser harness failures, rerun local gates, and deliver a persistent visual review with measured performance limits.",
+      "filesOwned": [
+        "preview/src/cartier-pilot.js",
+        "preview/src/store-interiors.js",
+        "preview/src/district.js",
+        "preview/src/main.js",
+        "preview/e2e/cartier-pilot*.js",
+        "preview/e2e/store-interiors.js",
+        "preview/e2e/storefront-lighting.js",
+        "preview/tests/cartier-pilot.test.js",
+        "output/cartier-*",
+        "data/reports/cartier-pilot*"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "node --test preview/tests/cartier-pilot.test.js preview/tests/store-rooms.test.js",
+        "pnpm run verify",
+        "pnpm run test:experience cartier-pilot cartier-pilot-walkthrough store-interiors storefront-lighting",
+        "Matched visual review; paired performance; true night remains unsupported"
       ],
       "observed": {
         "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
@@ -234,7 +437,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "leaseUntil": "2026-10-11T10:34:20.428044+00:00",
+      "ledger": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/docs/superpowers/plans/2026-10-11-cartier-pilot-results.md"
     },
     {
       "id": "jevica-psyche",
@@ -243,9 +447,9 @@
       "branches": [
         "cody/jevica-psyche-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Coordinate with the existing character owner; review rig/driver edits and perform relevant animation and browser verification.",
+      "owner": "Cody:cody-jev-playables-20261011",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Coordinate with Cody under cody-jev-playables-20261011; preserve candidates and complete cloth/facial adapters, real rendered behavior and current verification before delivery.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -256,7 +460,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Actively owned authored-character integration; candidate animation/facial failures remain documented. Do not retire.",
+      "ledger": "docs/superpowers/plans/2026-10-11-jev-playables.md"
     },
     {
       "id": "sdk-phase1",
@@ -266,8 +471,8 @@
         "cody/sdk-phase1-input"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify owner and reconcile native source changes with SDK/plot documentation; run native builds and contracts before delivery.",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Reconcile and freshly verify the completed Phase1 contract/input patch against main; resolve the remaining editor-pan versus gameplay input acceptance without inferring human acceptance from automated tests.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -278,7 +483,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Distinct native source with historical passing builds/29 contracts; physical capture/trackpad behavior remains unverified. Phase2 is separate scope.",
+      "ledger": "docs/superpowers/plans/2026-10-08-sdk-phase1-input.md"
     },
     {
       "id": "world-studio",
@@ -305,16 +511,20 @@
     {
       "id": "storybook",
       "title": "Reconcile and deliver storybook canon",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "docs/storybook-companion-layer"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "PR200 is open and its remote head differs from the local branch. Compare both complete histories, coordinate with pending integration, then verify links/content and exact-head checks before merge.",
-      "filesOwned": [],
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
+      "filesOwned": [
+        "docs/storybook.md"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "Full documentation diff review against current runtime docs",
+        "All relative links resolve",
+        "Exact-head hosted checks and independent review"
       ],
       "observed": {
         "head": "fad49b0b03134508e0767abda64db863d6ce4d11",
@@ -323,40 +533,78 @@
         "activeProcess": false
       },
       "pr": 200,
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "deliveryPr": 223
     },
     {
       "id": "primary-reconciliation",
       "title": "Reconcile staged primary checkout work",
-      "status": "blocked",
+      "status": "delivered",
       "branches": [
         "main"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Preserve the staged spatial reports, authored ledgers and lockfile migration; coordinate with integration owners before splitting or moving changes.",
-      "filesOwned": [],
+      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
+      "nextAction": "Primary is at PR210 merge; preserve the ten unrelated staged files and existing unique stash. Their separate tasks remain unfinished.",
+      "filesOwned": [
+        "data/reports/map-spatial-circulation-20261008.json",
+        "data/reports/map-spatial-final-browser-20261008.json",
+        "data/reports/map-spatial-measurements-20261008.json",
+        "data/reports/map-spatial-narrow-20261008.json",
+        "data/reports/map-spatial-native-20261008.json",
+        "data/reports/map-spatial-review-20261008.json",
+        "data/reports/map-spatial-route-queries-20261008.json",
+        "data/reports/map-spatial-shared-20261008.json",
+        "data/reports/map-spatial-streets-20261008.json",
+        "data/reports/walkability-experience-20261008.json",
+        "data/reports/walkability-shared-20261008.json",
+        "docs/level-design/district/blockout-review.md",
+        "docs/superpowers/plans/2026-10-08-map-spatial-review.md",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "preview/e2e/spatial-circulation.js",
+        "preview/e2e/spatial-streets.js",
+        "preview/src/store-rooms.js",
+        "preview/tests/auto-navigation.test.js"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "Revalidate all 28 original index hashes before mutation",
+        "Verify exact remote delivery of each reconciled path",
+        "Preserve original staged patch and divergent lock bytes",
+        "Verify remaining staged index hashes and original source worktrees after primary fast-forward"
       ],
       "observed": {
-        "head": "20edac0bb75d7c4e7b51e987d717e9f39413d0eb",
-        "dirtyPaths": 28,
+        "head": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
         "mergeInProgress": false,
-        "activeProcess": true
+        "dirtyPaths": 10
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
+      "verification": {
+        "preservation": ".runtime/integration/primary-staged-original.patch",
+        "sha256": "c4631e15712b9592ce377b7ef9b2b13ad44eedae32c8ed4882d90a58b605277a",
+        "originalPaths": 28
+      },
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ]
     },
     {
       "id": "compact-sidebar",
       "title": "Retain sidebar recheck evidence and retire checkout",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "polish/compact-social-sidebar"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Review and archive the untracked sidebar recheck report; recheck inactivity and retire only after the tree is clean.",
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -370,11 +618,22 @@
       "pr": 196,
       "evidence": [
         {
-          "pr": 196,
+          "originalHead": "7173f291b2e00979b605f54991e648c967e1c55b",
           "reviewedHead": "7173f291b2e00979b605f54991e648c967e1c55b",
-          "merge": "0ff3742d632fb79abe029e7cdf09a19e843ea9b2"
+          "merge": "0ff3742d632fb79abe029e7cdf09a19e843ea9b2",
+          "proof": "Every changed path in the reviewed aggregate matches its delivered merge."
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/polish-compact-social-sidebar",
+        "sha": "7173f291b2e00979b605f54991e648c967e1c55b",
+        "retainedArtifact": {
+          "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/polish-compact-social-sidebar/data/reports/sidebar-contextual-recheck.json",
+          "sha256": "885dfd44c29b9fdaf54c59dc43a27e9184fcb68956602d8dc417c3cf0542cf85"
+        }
+      }
     },
     {
       "id": "dior-promenade",
@@ -384,8 +643,8 @@
         "polish/dior-promenade"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify the owner and compare dirty facade/furniture changes with current main; validate authored scale and rendering before delivery.",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Resume the original facade owner workflow: reconcile current source, finish day/night reference checks, compare the Cartier re-entry failure against baseline, then run focused/core/browser gates.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -396,29 +655,48 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Distinct promenade implementation; ledger has no completed verification handoff.",
+      "ledger": "docs/superpowers/plans/2026-10-09-dior-promenade.md"
     },
     {
       "id": "places-guide",
       "title": "Reconcile places guide with studio integration",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "polish/places-guide"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Do not start another integration: compare this dirty source tree with codex/places-studio-integration-20261011 under that owner.",
+      "updatedAt": "2026-10-11T08:17:15.537916+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
       ],
       "observed": {
         "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
-        "dirtyPaths": 23,
         "mergeInProgress": false,
-        "activeProcess": false
+        "dirtyPaths": 23
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity.",
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/places",
+        "sha": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
+        "retainedFiles": 62,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "retired-feat-debug-report",
@@ -705,6 +983,99 @@
         "ref": "refs/tags/archive/worktree-prune/20261011-round1/codex-streetview-realism-20261008",
         "sha": "22d00439cebf818e983dab0ce855eb3883ed5bda"
       }
+    },
+    {
+      "id": "retirement-round2",
+      "title": "Complete pending delivery and retire deeper",
+      "status": "active",
+      "branches": [
+        "chore/retirement-round2-20261011"
+      ],
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
+      "ledger": "docs/superpowers/plans/2026-10-11-retirement-round2.md",
+      "filesOwned": [
+        "docs/project-management/",
+        "docs/superpowers/plans/2026-10-11-retirement-round2.md"
+      ],
+      "requiredChecks": [
+        "Exact-head delivery comparison",
+        "Restore bundle refs and fsck",
+        "Recheck clean status and ownership before retirement",
+        "Task validation and relevant repository gates"
+      ],
+      "pr": 215,
+      "verification": {
+        "core": "11 tasks passed at 957cefc",
+        "browser": "email-access 1/1 passed",
+        "review": "independent review clear"
+      },
+      "deliveryPr": 223
+    },
+    {
+      "id": "reconcile-delivered-sources",
+      "title": "Reconcile delivered Harry Winston and duplicate sign-in source worktrees",
+      "status": "active",
+      "branches": [
+        "chore/reconcile-delivered-sources-20261011"
+      ],
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json",
+        "docs/project-management/retirement-delivered-sources-20261011.json",
+        "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+        "preview/src/access-gate.css",
+        "preview/e2e/email-access.test.js"
+      ],
+      "requiredChecks": [
+        "Complete changed-path comparison and ownership handoff",
+        "Exact SHA and file hashes; archive restoration check",
+        "Clean unlocked inactive worktree before non-forced removal",
+        "Post-removal ref/path verification; tooling and core before docs commit"
+      ],
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
+    },
+    {
+      "id": "destination-minimap",
+      "title": "Replace Events and duplicate destination navigation with an expandable minimap",
+      "status": "active",
+      "branches": [
+        "feat/destination-minimap-20261011"
+      ],
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
+      "ledger": "docs/superpowers/plans/2026-10-11-destination-minimap.md",
+      "filesOwned": [
+        "preview/src/places-ui.js",
+        "preview/src/places-guide.js",
+        "preview/src/places-guide.css",
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/src/main.js",
+        "preview/src/rail-navigation.js",
+        "preview/src/sidebar.js",
+        "preview/e2e/"
+      ],
+      "requiredChecks": [
+        "Focused behavioral regressions and desktop/mobile browser journeys",
+        "Core verification and build",
+        "Independent review and final-head hosted checks"
+      ],
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "verification": {
+        "core": "pnpm run verify: 11 tasks passed",
+        "browser": "destination-minimap and Events final focused passed; Places/guide/rail navigation/game HUD passed",
+        "review": "independent follow-up clear; focus and sizing fixes verified"
+      },
+      "deliveryPr": 223,
+      "pr": 223
     }
   ]
 }
