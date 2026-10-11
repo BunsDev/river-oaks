@@ -1978,14 +1978,13 @@
     {
       "id": "workplace-delivery-records",
       "title": "Record delivery and retirement of the workplace #221 stack (#230, #232, #235/#236, #237, #238) and the server hardening (#244)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/workplace-delivered"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T20:18:00+00:00",
-      "leaseUntil": "2026-10-11T22:18:00+00:00",
-      "nextAction": "Merge this docs-only register PR (#254) in its queue slot after #249, then release this task and retire docs/workplace-delivered with project:prune.",
+      "owner": null,
+      "updatedAt": "2026-10-11T21:05:28.708Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
       "filesOwned": [
         "docs/project-management/tasks.json (delivery records)"
@@ -1997,6 +1996,53 @@
       "issues": [
         221,
         214
+      ],
+      "pr": 254,
+      "deliveryPr": 254,
+      "evidence": [
+        {
+          "pr": 254,
+          "reviewedHead": "dfff311e37169dc8b2948cbcb20954e6491ae710",
+          "merge": "9f8e7d8852dc8832bb3d1a0a4e3a9126c5df8511",
+          "tree": "0d81aaa9ef7e3194c363aeefc7e97f6ec3984436",
+          "checks": "All hosted checks passed on dfff311 (guard CLEAN); docs-only register change; project:status validated the register before push."
+        }
+      ],
+      "retirement": {
+        "head": "dfff311e37169dc8b2948cbcb20954e6491ae710",
+        "releasedAt": "2026-10-11T21:04:59+00:00",
+        "sessionsReviewedAt": "2026-10-11T21:04:59+00:00"
+      },
+      "retiredBranches": [
+        "docs/workplace-delivered"
+      ],
+      "archive": {
+        "docs/workplace-delivered": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-35nHpd/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-35nHpd/history.bundle",
+          "sha256": "ac2ef39cc0ec56e5e857c71817ac8b3c8d81c756570ac101a95b31c93adf346b",
+          "tag": "refs/tags/archive/worktree-prune/4d49305b-229f-45fe-a966-ca48124e90bc",
+          "head": "dfff311e37169dc8b2948cbcb20954e6491ae710"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261011",
+      "title": "Commit two retirement records that exist only in the primary's live register (desktop-host-errors, workplace-delivery-records)",
+      "status": "active",
+      "branches": [
+        "docs/register-sweep-20261011"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T23:38:00+00:00",
+      "leaseUntil": "2026-10-12T01:38:00+00:00",
+      "nextAction": "Merge this docs-only register PR with gh-merge-when-green.sh (Val approved 2026-10-11), then release this task and retire docs/register-sweep-20261011 with project:prune.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (desktop-host-errors, workplace-delivery-records, register-sweep-20261011)"
+      ],
+      "requiredChecks": [
+        "project:status validates the register",
+        "Hosted CI"
       ]
     },
     {
@@ -2377,14 +2423,13 @@
     {
       "id": "desktop-host-errors",
       "title": "Replace the desktop IPC error prefix allowlist with a HostError class (bridge-hardening review N4)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/desktop-host-errors"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-11T22:43:27+00:00",
-      "updatedAt": "2026-10-11T20:43:27+00:00",
-      "nextAction": "PR #250 approved by river-oaks-c2; merge after #249 and #254 in queue order.",
+      "owner": null,
+      "updatedAt": "2026-10-11T21:15:08.915Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
       "filesOwned": [
         "desktop/host-error.js",
@@ -2400,7 +2445,34 @@
         "node desktop/designer-e2e.js",
         "pnpm run verify",
         "hosted Verify"
-      ]
+      ],
+      "pr": 250,
+      "evidence": [
+        {
+          "pr": 250,
+          "reviewedHead": "83c03cee2bef6bf343c43675775dfd0d5dd8a774",
+          "merge": "77278c7e733395dcafde018050ecd887c647fc46",
+          "tree": "12c3c8e66279cdaf158b07fc694e8af8e1aeb939",
+          "checks": "All 17 hosted checks passed on the final head; approved by river-oaks-c2 (PR comment); merged by gh-merge-when-green.sh in queue order. Local core verify, desktop units 49, agent-e2e 9 and designer-e2e 9 passed."
+        }
+      ],
+      "retirement": {
+        "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774",
+        "releasedAt": "2026-10-11T21:14:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T21:14:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/desktop-host-errors"
+      ],
+      "archive": {
+        "fix/desktop-host-errors": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-l9vuPO/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-l9vuPO/history.bundle",
+          "sha256": "7ed344582f9a6c38957cb516c012a78404619ee7468f9ac37da038f1a04ae688",
+          "tag": "refs/tags/archive/worktree-prune/7b995d71-4975-4725-a596-0fb1ca254c00",
+          "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774"
+        }
+      }
     }
   ]
 }
