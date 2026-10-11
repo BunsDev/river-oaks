@@ -3,6 +3,10 @@ import { terrainHeight } from '../geometry.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from '../world-surface.js';
 import { assertStudioBudget } from './limits.js';
 
+// Viewport backdrop per resolved appearance; matches the --sage panel token.
+const CLEAR_COLORS={light:'#e8eeea',dark:'#111815'};
+export function studioClearColor(theme) { return CLEAR_COLORS[theme]??CLEAR_COLORS.light; }
+
 export function frameStudioObject(camera, object) {
   const sphere=new THREE.Box3().setFromObject(object).getBoundingSphere(new THREE.Sphere());
   const vertical=THREE.MathUtils.degToRad(camera.fov)/2,horizontal=Math.atan(Math.tan(vertical)*camera.aspect);

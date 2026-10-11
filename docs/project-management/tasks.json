@@ -1331,6 +1331,37 @@
       }
     },
     {
+      "id": "map-ui-readability",
+      "title": "Improve district map hierarchy and selection readability",
+      "status": "active",
+      "branches": [
+        "feat/map-ui-readability"
+      ],
+      "owner": "codex:map-ui-readability-20261011",
+      "leaseUntil": "2026-10-11T13:35:55.746515+00:00",
+      "updatedAt": "2026-10-11T11:43:29.621808+00:00",
+      "nextAction": "Verified map polish; integrate into PR #229, refresh after #213, complete final CI and merge.",
+      "filesOwned": [
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/src/places-guide.css",
+        "preview/tests/world-map.test.js",
+        "preview/e2e/destination-minimap.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/world-map.test.js",
+        "pnpm run test:experience destination-minimap",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-map-ui-readability.md",
+      "verification": {
+        "core": "11 tasks passed; .runtime/agent/core.json",
+        "browser": "destination-minimap passed across themes/viewports; edge regression red/green",
+        "shared": "development-world passed both journeys",
+        "review": "No remaining findings; badge edge correction verified across 90 combinations"
+      }
+    },
+    {
       "id": "jev-ride-shortcuts",
       "title": "Keyboard shortcuts for calling Jev and entering or exiting a ride",
       "status": "active",
