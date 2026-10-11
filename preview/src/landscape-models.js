@@ -4,6 +4,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { spatialInstanceBatches } from './spatial-instances.js';
 import { seeThroughNearCamera } from './near-camera-fade.js';
+import { composePlanter, seedFromPosition, MODEL_SPECIES } from './planting-palette.js';
+import { buildProceduralPlants } from './procedural-plants.js';
+import { winstonBedPlants } from './reference-planting.js';
 
 const loader = new GLTFLoader(), templates = new Map();
 function template(name) {
@@ -125,9 +128,34 @@ function normalizedParts(source, variant=0) {
   return {geometry,material:materialFrom(mesh.material,true)};
 }
 
+// Each lane planter gets its own layered mix, seeded by its position so a
+// reload, another browser and the tests all see the same planting.
+export function planterCompositions(planters) {
+  return planters.map(([x,,z])=>composePlanter(seedFromPosition(x,z)));
+}
+export function planterPlacements(planters) {
+  const compositions=planterCompositions(planters),models={boxwood:[],'fountain-grass':[]},procedural=[];
+  planters.forEach(([x,y,z,angle],index)=>compositions[index].plants.forEach(plant=>{
+    const [a,d]=plant.at,origin=[x+Math.cos(angle)*a+Math.sin(angle)*d,y+0.62,z-Math.sin(angle)*a+Math.cos(angle)*d];
+    (MODEL_SPECIES.has(plant.species)?models[plant.species]:procedural).push({plant,origin,yaw:angle});
+  }));
+  return {compositions,models,procedural};
+}
+
 export function buildPlanterPlanting(planters) {
   const group=new THREE.Group();group.name='Clipped boxwood and fountain grasses';let disposed=false;
   group.userData.cancelLandscapeLoad=()=>{disposed=true;};
+  const {compositions,models,procedural}=planterPlacements(planters);
+  // Authored ferns, broadleaf colour, flowers and succulents draw immediately.
+  group.add(...buildProceduralPlants(procedural));
+  // A dense clipped volume inside each boxwood's leaf-and-twig model.
+  if(models.boxwood.length) {
+    const fills=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,2),new THREE.MeshStandardMaterial({color:'#34492a',roughness:1}),models.boxwood.length),volume=new THREE.Object3D();
+    models.boxwood.forEach(({origin:[x,y,z],yaw,plant},i)=>{volume.position.set(x,y+plant.size*.42,z);volume.rotation.set(0,yaw,0);volume.scale.set(.19*plant.spread,plant.size*.42,.24);volume.updateMatrix();fills.setMatrixAt(i,volume.matrix);});
+    fills.castShadow=fills.receiveShadow=true;fills.computeBoundingSphere();
+    group.add(...spatialInstanceBatches(fills));fills.dispose();
+  }
+  group.userData.species=[...new Set(compositions.flatMap(c=>c.plants.map(p=>p.species)))].sort();
   group.userData.ready=Promise.all([template('boxwood-source'),template('fountain-grass-source')]).then(([shrub,grass])=>{
     if(disposed)return;
     const boxwood=normalizedParts(shrub),tuft=normalizedParts(grass,2);
@@ -137,86 +165,74 @@ export function buildPlanterPlanting(planters) {
       position.setXYZ(i,Math.max(-0.43,Math.min(0.43,position.getX(i)*1.12)),Math.min(0.88,position.getY(i)),Math.max(-0.43,Math.min(0.43,position.getZ(i)*1.12)));
     }
     position.needsUpdate=true;boxwood.geometry.computeVertexNormals();boxwood.geometry.computeBoundingSphere();
-    const hedges=new THREE.InstancedMesh(boxwood.geometry,boxwood.material,planters.length*3);
-    const grasses=new THREE.InstancedMesh(tuft.geometry,tuft.material,planters.length*4);
-    const dummy=new THREE.Object3D();
-    const place=(mesh,index,planter,a,d,height,scale,yaw=0)=>{
-      const [x,y,z,angle]=planter;dummy.position.set(x+Math.cos(angle)*a+Math.sin(angle)*d,y+0.62+height,z-Math.sin(angle)*a+Math.cos(angle)*d);
-      dummy.rotation.set(0,angle+yaw,0);dummy.scale.fromArray(scale);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
+    const dummy=new THREE.Object3D(),color=new THREE.Color();
+    const place=(mesh,index,{origin,yaw},scale,turn,hsl)=>{
+      dummy.position.fromArray(origin);dummy.rotation.set(0,yaw+turn,0);dummy.scale.fromArray(scale);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
+      if(hsl)mesh.setColorAt(index,color.setHSL(...hsl));
     };
-    planters.forEach((planter,index)=>{
-      for(let i=0;i<3;i++)place(hedges,index*3+i,planter,(i-1)*0.29,0,0,[0.48,0.48+(index%3)*0.025,0.57],i*Math.PI);
-      for(let i=0;i<4;i++)place(grasses,index*4+i,planter,(i<2?-1:1)*0.57,(i%2?1:-1)*0.08,0,[0.56,0.73+(i%2)*0.16,0.56],i*2.4);
-    });
-    for(const mesh of [hedges,grasses]){
+    const hedgeRecords=models.boxwood,grassRecords=models['fountain-grass'];
+    const meshes=[];
+    if(hedgeRecords.length) {
+      const hedges=new THREE.InstancedMesh(boxwood.geometry,boxwood.material,hedgeRecords.length);
+      // Clipped hedges stay square to their planter: only half turns.
+      hedgeRecords.forEach((record,i)=>{const {plant}=record;place(hedges,i,record,[0.48*plant.spread,plant.size,0.57],plant.yaw>Math.PI?Math.PI:0,plant.color);});
+      meshes.push(hedges);
+    }
+    if(grassRecords.length) {
+      const grasses=new THREE.InstancedMesh(tuft.geometry,tuft.material,grassRecords.length*2);
+      grassRecords.forEach((record,i)=>{const {plant}=record;for(let side=0;side<2;side++){
+        const offset=(side?1:-1)*0.08,[x,y,z]=record.origin;
+        place(grasses,i*2+side,{origin:[x+Math.sin(record.yaw)*offset,y,z+Math.cos(record.yaw)*offset],yaw:record.yaw},[0.56*plant.spread,plant.size*(side?1:0.86),0.56*plant.spread],plant.yaw+side*2.4,plant.color);
+      }});
+      meshes.push(grasses);
+    }
+    for(const mesh of meshes){
       mesh.castShadow=mesh.receiveShadow=true;mesh.userData.aoExclude=true;
       group.add(...spatialInstanceBatches(mesh));mesh.dispose();
     }
-    // Fine arching flower heads soften the clipped hedge silhouette.
-    const curves=[];
-    for(let i=0;i<7;i++) {
-      const angle=i*2.39996,lean=0.16+(i%3)*0.035,top=0.75+(i%4)*0.045;
-      const points=[new THREE.Vector3(0,0,0),new THREE.Vector3(Math.cos(angle)*lean*0.3,top*0.7,Math.sin(angle)*lean*0.3),new THREE.Vector3(Math.cos(angle)*lean,top,Math.sin(angle)*lean)];
-      curves.push(new THREE.CatmullRomCurve3(points));
-    }
+    // Fine arching flower heads rise only from the fountain grass.
     const stemMaterial=new THREE.MeshStandardMaterial({color:'#79864c',roughness:0.92});
     const plumeMaterial=new THREE.MeshStandardMaterial({color:'#c5bb91',roughness:1,side:THREE.DoubleSide});
-    curves.forEach((curve,slot)=>{
-      const stem=new THREE.InstancedMesh(new THREE.TubeGeometry(curve,10,0.0035,3,false),stemMaterial,planters.length*2);
+    if(grassRecords.length)for(let slot=0;slot<7;slot++) {
+      const angle=slot*2.39996,lean=0.16+(slot%3)*0.035,top=0.75+(slot%4)*0.045;
+      const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(Math.cos(angle)*lean*0.3,top*0.7,Math.sin(angle)*lean*0.3),new THREE.Vector3(Math.cos(angle)*lean,top,Math.sin(angle)*lean)]);
+      const stem=new THREE.InstancedMesh(new THREE.TubeGeometry(curve,10,0.0035,3,false),stemMaterial,grassRecords.length);
       const tip=curve.getPoint(1),tangent=curve.getTangent(1);
       const plumeGeometry=new THREE.SphereGeometry(1,6,8);plumeGeometry.scale(0.018,0.10,0.018);
       plumeGeometry.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),tangent));plumeGeometry.translate(tip.x,tip.y,tip.z);
-      const plume=new THREE.InstancedMesh(plumeGeometry,plumeMaterial,planters.length*2);
-      for(let index=0;index<planters.length;index++)for(let side=0;side<2;side++)for(const mesh of [stem,plume])place(mesh,index*2+side,planters[index],side?0.57:-0.57,0,0,[1,1,1],slot*0.3);
+      const plume=new THREE.InstancedMesh(plumeGeometry,plumeMaterial,grassRecords.length);
+      grassRecords.forEach((record,i)=>{const s=record.plant.size/0.82;for(const mesh of [stem,plume])place(mesh,i,record,[s,s,s],slot*0.3+record.plant.yaw);});
       for(const mesh of [stem,plume]){mesh.castShadow=false;mesh.receiveShadow=true;mesh.computeBoundingSphere();group.add(mesh);}
-    });
+    }
     const host=document.querySelector('#canvas-host');if(host)host.dataset.plantedBeds=String(planters.length);
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   return group;
 }
 
-// Reuses the shipped CC0 ground-cover models; no new asset acquisition. Each
-// instance follows the same ground support as feet, rather than flattening the DEM.
+// Reuses the shipped CC0 boxwood model and authored procedural ground cover;
+// no new asset acquisition. Each instance follows the same ground support as
+// feet, rather than flattening the DEM.
 export function buildReferenceBedPlanting(bed, world) {
   const group=new THREE.Group();group.name='Harry Winston reference planting';let disposed=false;
   group.userData.cancelLandscapeLoad=()=>{disposed=true;};
-  // Lance-shaped foliage supplies the dense grass/purple ground-cover layer
-  // visible in REF-HW-01. Authored geometry, not a claim of identified species.
-  const leafPositions=[],leafIndices=[];
-  for(let row=0;row<=8;row++) {
-    const t=row/8,w=Math.sin(t*Math.PI)*.045;
-    leafPositions.push(-w,t*.4,t*t*.16,w,t*.4,t*t*.16);
-    if(row<8){const a=row*2;leafIndices.push(a,a+1,a+2,a+1,a+3,a+2);}
-  }
-  const leafGeometry=new THREE.BufferGeometry();leafGeometry.setAttribute('position',new THREE.Float32BufferAttribute(leafPositions,3));leafGeometry.setIndex(leafIndices);leafGeometry.computeVertexNormals();
-  const leafMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.85,side:THREE.DoubleSide});
-  const leaves=new THREE.InstancedMesh(leafGeometry,leafMaterial,bed.groundcover.length*36),leaf=new THREE.Object3D();
-  bed.groundcover.forEach(({position:[x,n],kind},i)=>{
-    for(let j=0;j<36;j++) {
-      const angle=j*2.399963+i,spread=.04+(j%6)*.036,px=x+Math.cos(angle)*spread,pn=n+Math.sin(angle)*spread;
-      leaf.position.set(px,groundSurfaceHeight(world,px,-pn)+.03,-pn);leaf.rotation.set((j%3)*.18,angle,0);leaf.scale.set(kind==='purple'?1.5:.75,kind==='purple'?.65:1+(j%4)*.08,1.4);leaf.updateMatrix();
-      leaves.setMatrixAt(i*36+j,leaf.matrix);leaves.setColorAt(i*36+j,new THREE.Color().setHSL(kind==='purple'?.76:.24,kind==='purple'?.22:.34,.18+(j%5)*.025));
-    }
-  });leaves.castShadow=leaves.receiveShadow=true;leaves.computeBoundingSphere();group.add(leaves);
+  // Foxtail fern, mounded fern and coleus from the photograph, seeded per bed.
+  group.add(...buildProceduralPlants(winstonBedPlants(bed).map(({position:[x,n],plant})=>({plant,origin:[x,groundSurfaceHeight(world,x,-n)+.03,-n],yaw:0}))));
   // Dense low foliage volume beneath the scanned leaf-and-twig detail.
   const fillGeometry=new THREE.IcosahedronGeometry(1,2),fillMaterial=new THREE.MeshStandardMaterial({color:'#344a28',roughness:1});
   const fills=new THREE.InstancedMesh(fillGeometry,fillMaterial,bed.shrubs.length),volume=new THREE.Object3D();
   bed.shrubs.forEach(({position:[x,n],scale},i)=>{
     volume.position.set(x,groundSurfaceHeight(world,x,-n)+.28,-n);volume.scale.set(scale[0]*.48,.27,scale[2]*.48);volume.updateMatrix();fills.setMatrixAt(i,volume.matrix);
   });fills.castShadow=fills.receiveShadow=true;group.add(fills);
-  group.userData.ready=Promise.all([template('boxwood-source'),template('fountain-grass-source')]).then(([shrub,grass])=>{
+  group.userData.ready=template('boxwood-source').then(shrub=>{
     if(disposed)return;
-    for(const kind of ['shrub','grass','purple']) {
-      const source=normalizedParts(kind==='shrub'?shrub:grass,kind==='shrub'?0:2);
-      if(kind==='purple'){source.material.color.set('#66516f');source.material.emissive.set('#211528');source.material.emissiveIntensity=.05;}
-      const records=[...bed.shrubs,...bed.groundcover].filter(item=>item.kind===kind).flatMap(record =>
-        Array.from({length:kind==='shrub'?5:3},(_,i)=>({...record,position:[record.position[0]+Math.cos(i*2.4)*.13,record.position[1]+Math.sin(i*2.4)*.13]})));
-      const mesh=new THREE.InstancedMesh(source.geometry,source.material,records.length),dummy=new THREE.Object3D();
-      records.forEach(({position:[x,n],scale},i)=>{
-        dummy.position.set(x,groundSurfaceHeight(world,x,-n)+.055,-n);dummy.rotation.set(0,i*2.399963,0);dummy.scale.fromArray(scale);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
-      });
-      mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();group.add(mesh);
-    }
+    const source=normalizedParts(shrub,0);
+    const records=bed.shrubs.flatMap(record =>
+      Array.from({length:5},(_,i)=>({...record,position:[record.position[0]+Math.cos(i*2.4)*.13,record.position[1]+Math.sin(i*2.4)*.13]})));
+    const mesh=new THREE.InstancedMesh(source.geometry,source.material,records.length),dummy=new THREE.Object3D();
+    records.forEach(({position:[x,n],scale},i)=>{
+      dummy.position.set(x,groundSurfaceHeight(world,x,-n)+.055,-n);dummy.rotation.set(0,i*2.399963,0);dummy.scale.fromArray(scale);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+    });
+    mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();group.add(mesh);
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   return group;
 }

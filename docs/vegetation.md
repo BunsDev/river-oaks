@@ -22,7 +22,7 @@ The mature-tree pass retains all 230 existing stem coordinates and terrain heigh
 
 The batches occupy 12 m tiles. This reduces offscreen tree submissions compared with 24 m tiles while keeping stem coordinates fixed. The EZ Tree pass removes the previous overlapping canopy shells. An 8 m trial submitted almost the same geometry with more draw calls; 12 m was retained. Rendering measurements and remaining performance limits are recorded in [the people and movement progress report](people-interaction-progress.md).
 
-The 38 rectangular lane planters retain their original shells, positions and orientation. Their planting combines trimmed boxwood-style leaf-and-twig clusters with arching ornamental grass tufts and soft seed heads. Existing roads, buildings, navigation and other street furniture are unchanged.
+The rectangular lane planters retain their original shells, positions and orientation. Each now holds a mulched, layered mix rather than one repeated planting; see [mixed street planting](#mixed-street-planting-october-2026). Existing roads, buildings, navigation and other street furniture are unchanged.
 
 The visual reference is Fab/Megascans-quality foliage, including [European Hornbeam](https://www.fab.com/listings/c6f917b6-ffcb-4b86-9d9f-5274ba7f6a8e) and [Boxwood PBR](https://www.fab.com/listings/bf535af4-31f3-4a8a-b3de-9a5e68eccb8e). Tree geometry and textures are baked from [EZ Tree](https://github.com/dgreenheck/ez-tree) 1.1.0, distributed under MIT; its copyright and license ship beside the assets. The Oak Large preset uses seed 23399 with leaf size 3.2 and count 16. These are interpreted oaks, not identified species at each stem. Planter models are derived from Poly Haven [shrub_02](https://polyhaven.com/a/shrub_02) and [grass_medium_02](https://polyhaven.com/a/grass_medium_02), available under [CC0](https://polyhaven.com/license). The older Poly Haven tree assets remain available to reproduce earlier evidence. They are not purchased Fab assets or verified botanical boxwood/fountain-grass scans. The shrub shaping and grass seed heads are authored styling.
 
@@ -68,3 +68,31 @@ unchanged. Rendering, tree pits, resident/companion navigation, NPC flight and
 vehicle parking share the selector. The smaller crowns retain an authored 2.1 m
 radius; their existing oak assets do not reproduce the pictured multi-stem species.
 This does not add player trunk collision to the existing movement contract.
+
+## Mixed street planting, October 2026
+
+River Oaks District Street View (Kettering Drive curb beds and the cream lane
+planters) shows foxtail fern plumes, a lower mounded fern, purple-and-green
+broadleaf colour with small pink flowers, clipped boxwood, ornamental grass and
+succulents over dark mulch. `preview/src/planting-palette.js` composes each lane
+planter from three layers: a tall accent (foxtail fern, fountain grass or soft-leaf
+agave), a mid mound (boxwood or mounded fern) and two alternating low colour
+plants (coleus, Persian shield or pink pentas). The seed comes from the planter's
+decimetre-rounded position, so every load shows the same planting. Each plant
+varies in height, spread, yaw and tint.
+
+Boxwood and fountain grass reuse the shipped CC0 models. The other forms are authored
+low-poly geometry in `preview/src/procedural-plants.js`: star-section plumes,
+feathery fronds, cupped leaves with vertex-coloured variegation, keeled succulent
+leaves and small blooms. No asset was downloaded or generated. These are
+interpreted forms, not identified plants at surveyed positions. The Harry Winston
+reference bed keeps its boxwood row and watering targets. Its ground cover is now
+foxtail fern, mounded fern and coleus, plus a seeded companion beside each clump.
+
+Stems stay inside the planter or bed. Foliage may spill at most 0.1 m past the
+rim, at planter height. Plants wider than that are compressed horizontally, never
+moved. Part instances use 24 m spatial batches. Low broadleaf and blooms skip the
+shadow pass. In the 20-planter fixture, the mixed planting is about 271k triangles
+versus about 593k for the uniform planting. Planter views drew 8-29 % fewer
+triangles and needed 6-29 more draw calls. `preview/tests/plant-diversity.test.js`
+covers layering, determinism, variation, clearance and triangle budgets.

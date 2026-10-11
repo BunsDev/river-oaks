@@ -104,6 +104,8 @@ export function buildStreetFurniture(world, isFree) {
   const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
   const stoneCast = new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: 0.85 });
   const grate = new THREE.MeshStandardMaterial({ color: '#4a4b48', roughness: 0.6, metalness: 0.55 });
+  // Dark bark mulch fills each planter top around its mixed planting.
+  const mulch = new THREE.MeshStandardMaterial({ color: '#2e241b', roughness: 1 });
   // Tree pits sit flush in the paving: a pale stone frame and an iron grate.
   const flush = { polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 };
   const pitStone = new THREE.MeshStandardMaterial({ color: '#bdb3a2', roughness: 0.86, ...flush });
@@ -132,6 +134,7 @@ export function buildStreetFurniture(world, isFree) {
     add(box, stoneCast, [x, y + 0.36, z], [1.5, 0.5, 0.62], yaw);
     add(box,bronze,[x,y+.18,z],[1.52,.055,.64],yaw);
     add(box,brass,[x,y+.59,z],[1.52,.025,.64],yaw);
+    add(box,mulch,[x,y+.612,z],[1.4,.012,.52],yaw);
   }
   group.add(buildPlanterPlanting(planters));
   for (const [x, y, z, yaw] of bins) {
@@ -150,7 +153,7 @@ export function buildStreetFurniture(world, isFree) {
     // A per-build texture is released with the world (see the reload teardown in main.js).
     if (material === treeGrate) mesh.userData.texture = treeGrate.map;
     parts.forEach((p, i) => { dummy.position.fromArray(p.position); dummy.scale.fromArray(p.scale); dummy.rotation.set(0, p.yaw, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix); if (p.color) mesh.setColorAt(i, p.color); });
-    mesh.castShadow = material !== pitStone && material !== treeGrate && material !== lampGlow; mesh.receiveShadow = true; group.add(mesh);
+    mesh.castShadow = material !== pitStone && material !== treeGrate && material !== lampGlow && material !== mulch; mesh.receiveShadow = true; group.add(mesh);
   }
   group.userData.counts = { kerbs: kerbStrips(world).length, lamps: lamps.length, planters: planters.length, bins: bins.length, pits: treePits(world).length };
   return group;
