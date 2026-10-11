@@ -10,15 +10,30 @@ if count == 1 or redis.call('PTTL', KEYS[1]) < 0 then redis.call('PEXPIRE', KEYS
 if count > tonumber(ARGV[1]) then return 0 end
 return 1`;
 
+// Tickets live 15 s. Each user holds at most TICKETS_PER_USER of them: a new
+// request retires that user's oldest, so retries still work but a few hundred
+// accounts cannot fill the shared table and lock everyone else out.
+const TICKETS_PER_USER = 3, TICKET_TABLE = 4096;
 const ISSUE = `
 local expired = redis.call('ZRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
 for _, key in ipairs(expired) do redis.call('HDEL', KEYS[1], key) end
 redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
-if redis.call('HEXISTS', KEYS[3], ARGV[4]) == 1 or redis.call('HLEN', KEYS[1]) >= 512 then return 0 end
+redis.call('ZREMRANGEBYSCORE', KEYS[4], '-inf', ARGV[1])
+local mine = redis.call('ZRANGE', KEYS[4], 0, -1)
+for i = 1, #mine - (tonumber(ARGV[5]) - 1) do
+  redis.call('HDEL', KEYS[1], mine[i]); redis.call('ZREM', KEYS[2], mine[i]); redis.call('ZREM', KEYS[4], mine[i])
+end
+if redis.call('HEXISTS', KEYS[3], ARGV[4]) == 1 or redis.call('HLEN', KEYS[1]) >= tonumber(ARGV[6]) then return 0 end
 redis.call('HSET', KEYS[1], ARGV[2], ARGV[3])
 redis.call('ZADD', KEYS[2], tonumber(ARGV[1]) + 15000, ARGV[2])
+-- Strictly after the user's newest ticket, so "oldest" is well defined even within one millisecond.
+local newest = redis.call('ZRANGE', KEYS[4], -1, -1, 'WITHSCORES')
+local order = tonumber(ARGV[1]) + 15000
+if newest[2] and tonumber(newest[2]) >= order then order = tonumber(newest[2]) + 0.001 end
+redis.call('ZADD', KEYS[4], order, ARGV[2])
 redis.call('PEXPIRE', KEYS[1], 15000)
 redis.call('PEXPIRE', KEYS[2], 15000)
+redis.call('PEXPIRE', KEYS[4], 15000)
 return 1`;
 
 const CONSUME = `
@@ -74,14 +89,15 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   };
   return {
     async allow(scope, id, limit, windowMs) {
-      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'profile', 'inventory'].includes(scope)) return false;
+      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {
       try { validateWorldId(worldId); } catch { return null; }
       if (!identity(user) || !await limited('tickets', user.userId, 10, 60000)) return null;
       const ticket = randomBytes(32).toString('base64url');
-      const issued = await execute(ISSUE, ['tickets:values', 'tickets:expiry', 'bans'], [now(), ticket, JSON.stringify({ userId: user.userId, sessionId: user.sessionId, worldId }), user.userId]);
+      const mine = `tickets:user:${createHash('sha256').update(user.userId).digest('base64url')}`;
+      const issued = await execute(ISSUE, ['tickets:values', 'tickets:expiry', 'bans', mine], [now(), ticket, JSON.stringify({ userId: user.userId, sessionId: user.sessionId, worldId }), user.userId, TICKETS_PER_USER, TICKET_TABLE]);
       return issued === 1 ? ticket : null;
     },
     async consumeTicket(ticket, user, worldId = DEFAULT_WORLD_ID) {

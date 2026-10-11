@@ -6,6 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
+import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -35,7 +36,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000 } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -44,6 +45,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   let stopped = false, ticking = false;
   const send = (ws, value, options) => sendFrame(ws, value, options);
   const access = req => {
+    if (req[ADMITTED]) return true;
     const ip = rateLimitKey(address(req));
     return localAccess(ip) && security.allow('access', ip, 1000, 60_000);
   };
@@ -77,23 +79,36 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, allowInviteList: id => security.allow('invites', id, 20, 60_000), isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
-  function publish(view) {
+  // Sends the committed view. The snapshot is serialized once per broadcast, not
+  // once per connection; `only` limits it to one connection (a command's sender).
+  function publish(view, only = null) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
-    for (const connection of connections.values()) {
+    let frame = null;
+    for (const connection of only ? [only] : connections.values()) {
       if (!connection.joined) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
       if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
         ws.close(4000, 'World region updated.'); continue;
       }
-      if (!active) { ws.close(4003, 'Session ended or account removed from the town.'); continue; }
+      if (!active) {
+        // Removed from this world. If the account's presence is now in another
+        // world it moved there (one world per account): close as "another tab",
+        // which the client treats as final, instead of reading like a ban.
+        if (connection.closing) continue;
+        connection.closing = true;
+        const close = moved => ws.close(moved ? 4009 : 4003, moved ? 'This account joined another world.' : 'Session ended or account removed from the town.');
+        if (!presence) { close(false); continue; }
+        void presence.getMany([identity.userId]).then(found => close(Boolean(found.get(identity.userId)) && found.get(identity.userId).worldId !== worldId), () => close(false));
+        continue;
+      }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, view.snapshot, { snapshot: true });
+      send(ws, frame ??= JSON.stringify(view.snapshot), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -101,7 +116,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
-      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/auth/desktop/exchange', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
@@ -315,7 +330,15 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           if (!view) throw new Error('No committed town');
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           admissionStage = 'presence';
-          if (presence) await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
+          if (presence) {
+            // One world per account: arriving here removes the account from the
+            // world it was last in, so a few dozen accounts cannot fill every
+            // world. The removal runs in the background and never blocks entry.
+            const previous = (await presence.getMany([identity.userId])).get(identity.userId);
+            await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
+            // The trusted owner accounts are exempt: they may edit one world while playing another.
+            if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
+          }
           if (ws.readyState !== WebSocket.OPEN) return false;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;
@@ -376,7 +399,9 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
-            if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read());
+            // The sender sees its result at once; everyone else gets it on the next
+            // 200 ms tick, instead of a full rebroadcast per command.
+            if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read(), connection);
             if (!earlyAck && (requestId !== undefined || !result.ok)) send(ws, { type: 'result', requestId, ...result });
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
@@ -390,11 +415,21 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       });
     } catch { reject(503); }
   });
+  // One slow or failed Redis call is not an outage: everyone is told to
+  // reconnect only after FAILURES_BEFORE_CLOSE ticks in a row fail, and a
+  // heartbeat failure counts against its own connection only.
+  const FAILURES_BEFORE_CLOSE = 3;
+  let failedTicks = 0;
   const loop = setInterval(async () => {
     if (stopped || ticking || !connections.size) return;
     ticking = true;
-    try { publish(await room.tick()); }
-    catch { for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.'); }
+    try { publish(await room.tick()); failedTicks = 0; }
+    catch {
+      if (++failedTicks >= FAILURES_BEFORE_CLOSE) {
+        failedTicks = 0;
+        for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.');
+      }
+    }
     finally { ticking = false; }
   }, 200);
   loop.unref();
@@ -403,16 +438,20 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     if (stopped || heartbeatBusy) return;
     heartbeatBusy = true;
     try {
-      await Promise.all([...connections.values()].map(async connection => {
+      await Promise.allSettled([...connections.values()].map(async connection => {
         if (!connection.joined) return;
         if (!connection.alive) { connection.ws.terminate(); return; }
         connection.alive = false; connection.ws.ping();
-        await room.request({ type: 'heartbeat', userId: connection.identity.userId, connectionId: connection.connectionId });
-        if (presence) await presence.touch(connection.identity.userId, connection.connectionId);
+        try {
+          await room.request({ type: 'heartbeat', userId: connection.identity.userId, connectionId: connection.connectionId });
+          if (presence) await presence.touch(connection.identity.userId, connection.connectionId);
+          connection.failedBeats = 0;
+        } catch {
+          if ((connection.failedBeats = (connection.failedBeats ?? 0) + 1) >= FAILURES_BEFORE_CLOSE) connection.ws.close(1013, 'Town temporarily unavailable.');
+        }
       }));
-    } catch { for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.'); }
-    finally { heartbeatBusy = false; }
-  }, 5000);
+    } finally { heartbeatBusy = false; }
+  }, heartbeatMs);
   heartbeat.unref();
   return { server, disconnectUser, async close() {
     stopped = true; clearInterval(loop); clearInterval(heartbeat);

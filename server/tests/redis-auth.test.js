@@ -217,9 +217,12 @@ integration('state and session admission caps are atomic across nodes', async t 
   const stateFields = [], scores = [];
   for (let i = 0; i < MAX_PENDING_SIGN_INS - 1; i++) { stateFields.push(`seed-${i}`, JSON.stringify({expiresAt:f.now()+60_000})); scores.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[0], ...stateFields); await f.redis.zadd(f.keys[1], ...scores);
+  // A full table gives up its oldest pending sign-in instead of refusing everyone,
+  // so a flood from many addresses cannot lock all sign-ins out; it never grows past the cap.
   const admissions = await Promise.all([f.a.request('/auth/login'),f.b.request('/auth/login')]);
-  assert.deepEqual(admissions.map(response=>response.status).sort(), [302,503]);
+  assert.deepEqual(admissions.map(response=>response.status).sort(), [302,302]);
   assert.equal(await f.redis.hlen(f.keys[0]), MAX_PENDING_SIGN_INS);
+  assert.equal(await f.redis.hexists(f.keys[0], 'seed-0'), 0, 'the oldest pending state made room');
   f.advance(61_000);
   const starts = await Promise.all([f.begin(),f.begin(f.b)]);
   const sessions = [], expiry = [];

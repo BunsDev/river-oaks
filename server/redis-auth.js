@@ -63,7 +63,15 @@ local function allowedCookie(record, hash)
   return hash == record.cookieHash or (hash == record.previousHash and record.previousUntil > time)
 end
 if p.op == 'state-put' then
-  if redis.call('HLEN', KEYS[1]) >= ${MAX_PENDING_SIGN_INS} or redis.call('HEXISTS', KEYS[1], p.id) == 1 then return false end
+  if redis.call('HEXISTS', KEYS[1], p.id) == 1 then return false end
+  -- A full table gives up the pending sign-in closest to expiring instead of
+  -- refusing everyone, so a flood from many addresses cannot lock out sign-in.
+  while redis.call('HLEN', KEYS[1]) >= ${MAX_PENDING_SIGN_INS} do
+    local oldest = redis.call('ZRANGE', KEYS[2], 0, 0)[1]
+    if not oldest then return false end
+    redis.call('HDEL', KEYS[1], oldest)
+    redis.call('ZREM', KEYS[2], oldest)
+  end
   redis.call('HSET', KEYS[1], p.id, cjson.encode(p.record))
   redis.call('ZADD', KEYS[2], p.record.expiresAt, p.id)
   redis.call('PEXPIRE', KEYS[1], p.ttl)

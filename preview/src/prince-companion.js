@@ -139,7 +139,9 @@ export function createCompanionBrain({
     return response.json();
   }, now = () => performance.now(), interval = 2500,
 } = {}) {
-  let tick = 0, generation = 0, next = 0, pending = null, greetedAt = -Infinity,disposed=false,latest={};
+  // `failures` backs off polling (to at most once a minute) while the bridge is
+  // missing or answering without a decision; one Jev decision resets it.
+  let tick = 0, generation = 0, next = 0, pending = null, greetedAt = -Infinity,disposed=false,latest={},failures=0;
   const status = { stance: 'beside', source: 'local', label: 'Walking beside you', reason: 'starting', decisions: 0 };
   const apply = (stance, source, reason = null) => {
     if (stance === 'greet') greetedAt = now();
@@ -164,7 +166,7 @@ export function createCompanionBrain({
       const activeContext=status.stance==='greet'?{...latest,greeted_recently:false}:latest;
       if(!companionStanceEligible(status.stance,activeContext))apply(localStance(latest),'local','context_changed');
       if (pending || now() < next) return status;
-      next = now() + interval;
+      next = now() + Math.min(60_000, interval * 2 ** failures);
       const controller = new AbortController(), version = generation, packet = {
         schema_version: 1, tick: ++tick, generation, ...context, greeted_recently: this.greetedRecently, candidates: companionOptions(),
       };
@@ -174,13 +176,14 @@ export function createCompanionBrain({
         .then(reply => {
           if (version !== generation) return;
           const stance = reply?.candidate_id;
+          if (reply?.source === 'jev') { failures = 0;next = Math.min(next, now() + interval); } else failures++;
           if (reply?.schema_version === 1 && reply.tick === packet.tick && reply.generation === packet.generation && reply.source === 'jev' && COMPANION_STANCES[stance]
             && companionStanceEligible(stance,latest)
             && Number.isFinite(reply.confidence) && reply.confidence >= THRESHOLDS[stance] && reply.confidence <= 1) {
             status.decisions++; apply(stance, 'jev');
           } else apply(localStance(latest), 'local', reply?.reason ?? 'invalid_answer');
         })
-        .catch(error => { if (version === generation) apply(localStance(latest), 'local', error.name === 'AbortError' ? 'timeout' : 'offline'); })
+        .catch(error => { failures++;if (version === generation) apply(localStance(latest), 'local', error.name === 'AbortError' ? 'timeout' : 'offline'); })
         .finally(() => { clearTimeout(timer); if (pending === controller) pending = null; });
       return status;
     },

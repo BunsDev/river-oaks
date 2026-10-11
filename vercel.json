@@ -16,7 +16,16 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/(.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$).*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -1758,6 +1758,59 @@
       "pr": 241
     },
     {
+      "id": "server-hardening",
+      "title": "Harden the server against abuse: production interruptions and lag, remote code execution, and owner-billed costs",
+      "status": "active",
+      "branches": [
+        "fix/server-hardening"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T16:37:00+00:00",
+      "leaseUntil": "2026-10-11T18:37:00+00:00",
+      "nextAction": "Open the PR, pass hosted CI (watch the Vercel preview for the new vercel.json header sources), take a merge-queue turn after the workplace stack.",
+      "ledger": "docs/superpowers/plans/2026-10-11-server-hardening.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-11-server-hardening.md",
+        "server/tests/hardening-*.test.js",
+        "preview/tests/hardening-*.test.js",
+        "scripts/tests/hardening-*.test.js",
+        "server/asset-gate.js",
+        "middleware.js",
+        "server/redis-room.js",
+        "server/redis-security.js",
+        "server/distributed-app.js",
+        "server/world-router.js",
+        "server/world-gateway.js",
+        "server/app.js",
+        "server/town.js",
+        "server/waitlist-routes.js",
+        "server/chauffeur.js",
+        "server/redis-auth.js",
+        "server/magic-auth.js",
+        "server/redis-backend.js",
+        "vercel.json (asset headers)",
+        "preview/src/prince-companion.js",
+        "preview/src/chauffeur.js",
+        ".githooks/pre-commit",
+        "scripts/install-project-hooks.mjs",
+        ".env.example (CHAUFFEUR_DAILY_LIMIT)"
+      ],
+      "requiredChecks": [
+        "Focused regressions per finding",
+        "Full server suite with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "notes": "Server files touched are listed per finding in the ledger and coordinated with other active sessions before editing.",
+      "verification": {
+        "preview": "2617 pass, 1 skipped (pre-existing)",
+        "server_and_scripts": "536 pass, 0 skipped with isolated Redis",
+        "core": "pnpm run verify: core passed (75aada6)",
+        "fixes": "14 findings fixed, each with a regression that failed before the change"
+      },
+      "pr": 244
+    },
+    {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
       "status": "delivered",

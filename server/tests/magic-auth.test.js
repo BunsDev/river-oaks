@@ -120,8 +120,11 @@ for (const mode of ['memory', 'redis']) test(`${mode} magic store caps admission
   t.after(async () => { store.close(); if (redis) { const keys = await redis.keys(`${namespace}:auth:*`); if (keys.length) await redis.del(...keys); await redis.quit(); } });
   const start = (id, emailHash = id) => store.transaction({ op: 'start', id, emailHash, record: { email: `${id}@example.com`, attempts: 0, expiresAt: time + 600000 } });
   assert.deepEqual((await Promise.all([start('a'), start('b', 'a')])).sort(), ['cooldown', 'ok']);
-  assert.equal(await start('c'), 'ok'); assert.equal(await start('d'), 'full');
-  time += 600001; assert.equal(await start('d'), 'ok');
+  assert.equal(await start('c'), 'ok');
+  // Full: the oldest pending code gives way instead of refusing every new sign-in.
+  assert.equal(await start('d'), 'ok');
+  assert.equal(await store.transaction({ op: 'attempt', id: 'a', owner: 'probe' }) ?? null, null, 'the oldest state was evicted');
+  assert.notEqual(await store.transaction({ op: 'attempt', id: 'c', owner: 'probe' }) ?? null, null, 'newer states survive');
 });
 
 for (const mode of ['memory', 'redis']) {
