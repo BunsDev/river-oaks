@@ -1708,9 +1708,9 @@
         "docs/typesafe-place-season-1"
       ],
       "owner": "charm-cave-river-oaks-20261011",
-      "updatedAt": "2026-10-11T17:30:00+00:00",
+      "updatedAt": "2026-10-11T17:33:00+00:00",
       "leaseUntil": "2026-10-11T19:30:00+00:00",
-      "nextAction": "Open the PR and let hosted checks run; Val reviews and merges.",
+      "nextAction": "PR #247 open: wait for hosted checks, then Val reviews and merges with the guard script.",
       "filesOwned": [
         "docs/marketing/typesafe-place-season-1/",
         "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md"
@@ -1720,7 +1720,8 @@
         "pnpm run verify security (secret guard)",
         "Hosted CI before merge"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md"
+      "ledger": "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md",
+      "pr": 247
     }
   ]
 }
