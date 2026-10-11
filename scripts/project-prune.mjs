@@ -12,6 +12,7 @@ function git(root,args,optional=false) {
   try { return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd(); }
   catch(error) { if(optional)return null;throw new Error(`git ${args[0]} failed (${error.status??'unavailable'})`); }
 }
+const shellQuote=value=>"'"+value.replaceAll("'","'\\''")+"'";
 const canonical=path=>existsSync(path)?realpathSync(path):join(canonical(dirname(resolve(path))),basename(path));
 const within=(path,parent)=>{const r=relative(canonical(parent),canonical(path));return !r||(!r.startsWith('..'+ '/')&&r!=='..'&&!isAbsolute(r));};
 function worktrees(root) {
@@ -107,7 +108,7 @@ export function retire(options) {
     writeFileSync(permit,JSON.stringify({branch,head:expectedHead,expiresAt:Date.now()+60_000}),{mode:0o600});
     try {git(root,['update-ref','-d',`refs/heads/${branch}`,expectedHead]);} finally {unlinkSync(permit);}
     if(git(root,['rev-parse','--verify',`refs/heads/${branch}`],true)!==null)throw new Error('Branch removal postcondition failed');
-    receipt.status='retired';receipt.restoreCommand=`git fetch ${JSON.stringify(bundle)} ${tag}:refs/heads/recovered`;record();
+    receipt.status='retired';receipt.restoreCommand=`git fetch ${shellQuote(bundle)} ${tag}:refs/heads/recovered`;record();
     // Re-read rather than overwriting the initial coordination snapshot.
     const before=readFileSync(tasksPath,'utf8'),register=JSON.parse(before);
     const task=register.tasks.find(t=>t.id===plan.taskId);

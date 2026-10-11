@@ -45,11 +45,12 @@ test('rejects wrong head, default branch, open PR and extra undelivered work',t=
  writeFileSync(join(f.checkout,'file'),'extra');f.git('-C',f.checkout,'commit','-am','extra');assert.ok(planRetirement(options(f)).blockers.includes('head-changed'));
 });
 test('apply restore-tests exact-tip bundle, removes only selected ref and records restoration',t=>{
- const f=fixture(t);const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ const f=fixture(t);f.archiveRoot=join(f.archiveRoot,"space ' and $(false)");const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
  assert.equal(existsSync(f.checkout),false);assert.throws(()=>f.git('rev-parse','--verify','refs/heads/feature'));
  const saved=JSON.parse(readFileSync(f.tasksPath));assert.equal(saved.tasks[0].status,'retired');
  assert.ok(existsSync(result.bundle));assert.equal(f.git('rev-parse',result.tag),f.head);
  const restored=join(f.archiveRoot,'recovery');f.git('init','--bare',restored);f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`);assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
+ execFileSync('sh',['-c',result.restoreCommand],{cwd:restored,stdio:'pipe'});assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
 });
 test('changed ownership after archive prevents removal',t=>{
  const f=fixture(t);let calls=0;

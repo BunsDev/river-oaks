@@ -8,6 +8,7 @@ Branch: `chore/enforced-local-pruning`. Reused owned ride-shortcuts checkout; no
 
 - `scripts/project-prune.mjs`: exact-head, released session ownership, GitHub merge/tree proof, activity, clean/ignored/index/operation checks; shared lock; external bundle restored into bare Git and fsck verified; fresh checks before nonforced removal and expected-SHA deletion; external receipt and primary task reconciliation.
 - `scripts/project-ref-guard.mjs`, shared hook installer and reference-transaction hook: protect local branch deletion and archive tags; short exact-SHA permit only after verification; installation shared across existing checkouts and preserves custom hook paths.
+- `project:check` now fails for delivered tasks retaining local branches, until verified retirement resolves the gap.
 - Package bootstrap, lifecycle workflow, root instructions and retirement skill use guarded entry point.
 - Real Git fixtures cover normal retirement and restoring the bundle; refusal for ownership, unknown activity, dirty/ignored data, locks, open/mismatched PRs, changed heads, branch switching during retirement, hidden index edits, custom hooks, and malformed/expired permits.
 
@@ -27,4 +28,4 @@ Branch: `chore/enforced-local-pruning`. Reused owned ride-shortcuts checkout; no
 
 Git cannot intercept raw worktree removal or registration pruning; agents must use the supported command. Hooks prevent accidental ref deletion, not intentional configuration overrides. Older bootstrap scripts can override hooksPath. Unknown ownership, ignored evidence, submodules and differing aggregate trees require reconciliation. Task register is advisory coordination; the common lock serializes this tool, not arbitrary noncooperating Git/filesystem writers.
 
-No browser, Redis, native or live-auth checks added for this local tooling change. Hosted CI and delivery remain pending. Preserve this checkout and all task archives until exact delivery and retirement proof are recorded.
+No browser, Redis, native or live-auth checks added for this local tooling change. Latest-main integration (`62ba3db`) passed 20 focused paver/prune tests. The pending-retirement gate passed a red/green behavior regression; final tooling suite: 39 passed. Final prune/status behavior suite: 20 passed, including a restore command using a path with spaces, quotes and shell metacharacters. Hosted CI and delivery remain pending. Preserve this checkout and all task archives until exact delivery and retirement proof are recorded.

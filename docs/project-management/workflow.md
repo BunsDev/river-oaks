@@ -51,7 +51,7 @@ and retirement. Do not overwrite historical reports with new timestamps.
 Run `pnpm run --silent project:check --github` at session start and handoff.
 Exit 0 means the register passed validation and no tracked reconciliation gaps
 were found; 1 means gaps such as unregistered branches, mismatched PR heads,
-expired ownership, or resurrected retired refs; 2 means input/tool failure.
+expired ownership, delivered tasks retaining local branches, or resurrected retired refs; 2 means input/tool failure.
 None of these exit codes proves that the project is complete or safe to delete.
 Without `--github`, remote delivery is explicitly unknown. Process CWDs are only
 positive activity evidence; absence is not proof that no agent owns a task.
@@ -103,6 +103,10 @@ artifacts live under `~/worktree-backups/river-oaks-20261011/`. The register cap
 known unfinished work rather than treating this round as global task completion.
 
 ## Enforced local retirement
+
+`project:check` exits nonzero while a delivered task retains any local branch.
+A blocked cleanup stays visible until its evidence is reconciled; do not relabel
+the task active or retired to hide the gap.
 
 Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` to
 refresh GitHub/Git evidence and report blockers. Add `--apply` to retire that exact
