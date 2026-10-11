@@ -1477,6 +1477,38 @@
       "pr": 235
     },
     {
+      "id": "workplace-room-envelope",
+      "title": "Workplace gap from #221: door height, measured seated bounds and depth-aware routes in the coworking room plan",
+      "status": "active",
+      "branches": [
+        "fix/workplace-room-envelope"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T11:54:00+00:00",
+      "leaseUntil": "2026-10-11T13:54:00+00:00",
+      "nextAction": "Measure seated bounds and heights for the 22 looks; write failing plan checks; then fix the plan and graybox.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-room-envelope.md",
+      "filesOwned": [
+        "preview/src/workplace-room.js (agreed with river-oaks-55)",
+        "docs/level-design/workplace-coworking-fixture/avatar-envelope.json",
+        "preview/tests/workplace-room.test.js",
+        "docs/superpowers/plans/2026-10-11-workplace-room-envelope.md"
+      ],
+      "requiredChecks": [
+        "Seated/height measurement on all 22 looks",
+        "workplace-room unit tests",
+        "workplace-room graybox harness",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        218,
+        214
+      ],
+      "dependsOn": "workplace-task-sweep (PR #235), stacked until it merges"
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "active",
