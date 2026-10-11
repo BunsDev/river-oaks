@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin='http://127.0.0.1:5180',checks=[],errors=[];
   page.setDefaultTimeout(45000);page.setDefaultNavigationTimeout(60000);
   const check=(condition,label)=>{if(!condition)throw new Error(label);checks.push(label);};
@@ -40,8 +41,7 @@ async page => {
     check(await page.locator('input[name=player-character][value=kai]').isChecked()&&await page.locator('input[name=player-form][value=beast]').isChecked(),'Appearance survives reconnect');
     check(await page.locator('#player-beast-movement').getAttribute('aria-pressed')==='true','Beast movement belongs to the account and survives reconnect');
     await page.bringToFront();
-    const openPanel=page.getByRole('button',{name:'Explore River Oaks',exact:true});
-    if(await openPanel.isVisible())await openPanel.click();
+    await openHudSpace(page, 'community-section');
     check(await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='alice')?.canGrantWishes===true),'Alice fixture retains server-issued wish permission after reconnect');
     const targets=await page.evaluate(()=>{
       const locals=window.__riverMultiplayer().snapshot.locals.filter(local=>local.indoor&&!local.wish);
@@ -95,7 +95,7 @@ async page => {
     // the outdoor arrival before checking movement in the shared town.
     const placesToggle=page.locator('#panel-toggle');
     if(await placesToggle.getAttribute('aria-expanded')==='false')await placesToggle.click();
-    await page.locator('[data-section=explore-section]').click();
+    await openHudSpace(page, 'explore-section');
     await page.locator('#places-list li[data-place-id="arrival"] button[aria-label^="Go to"]').click();
     await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Arrival"));
     const arrival=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
@@ -103,8 +103,7 @@ async page => {
       const player=window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice');
       return player && Math.hypot(player.position[0]-position[0],player.position[1]-position[1])<1.5;
     },arrival);
-    const closePanel=page.getByRole('button',{name:'Close exploration panel',exact:true});
-    if(await closePanel.isVisible())await closePanel.click();
+    if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
     // Try each walking direction and require the peer to observe real travel.
     let walked=false;
     await page.bringToFront();await page.locator('#canvas-host').focus();
@@ -121,8 +120,7 @@ async page => {
     await page.screenshot({path:'output/playwright/multiplayer-mobile.png'});
     // Sign out through the same authenticated HTTP + socket lifecycle used by the client.
     await other.bringToFront();
-    const showControls=other.getByRole('button',{name:'Explore River Oaks',exact:true});
-    if(await showControls.isVisible())await showControls.click();
+    await openHudSpace(other, 'settings-section', 'Account');
     await other.locator('#access-signout').click();
     await other.getByRole('link',{name:'Continue with GitHub'}).waitFor({state:'visible'});
     await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.length===1);

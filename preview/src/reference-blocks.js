@@ -13,15 +13,40 @@ export const RESIDENCES_SOUTH = 'osm-way-878472795', RESIDENCES_NORTH = 'osm-way
 // The Etro and Brunello Cucinelli end stands a storey-band above the rest of its
 // block; Dior's stone frame rises two storeys over Toulouse's building.
 const ETRO_PODIUM = 8.2, ETRO_HEIGHT = 9.2, DIOR_PODIUM = 9.4, DIOR_HEIGHT = 13.5;
+// Le Colonial's wing: the Equinox block's Kettering Drive end, two storeys with
+// sky above it; the office tower rises east of it. The tower's podium cornice,
+// curtain-wall top and floor lines.
+export const WING_WIDTH = 17.6, WING_HEIGHT = 10.6;
+const PODIUM_TOP = 12.78, TOWER_TOP = 27.85, TOWER_FLOORS = [16.6, 20.45, 24.3];
+// The podium's second storey: windows from 6.9 m (Davidoff) or 6.0 m (the gym) to
+// 11 m, then the stone band to the cornice.
+const UPPER_TOP = 11.0, GYM_WINDOW = [6.9, 10.9];
 // Residential storeys over the shops, and the overhanging roof plate.
 const FLOORS = [5.5, 9.0, 12.5, 16.0, 19.5], EAVES = 23.0;
 
+// The part of a convex ring at least `inset` metres inside the edge through
+// `point` with outward normal `o`: the footprint minus a strip along that edge.
+export function clipRing(ring, point, o, inset) {
+  const side = ([east, north]) => (east - point[0]) * o[0] + (north - point[1]) * o[1] + inset, out = [];
+  const corners = ring.slice(0, -1);
+  corners.forEach((p, i) => {
+    const q = corners[(i + 1) % corners.length], sp = side(p), sq = side(q);
+    if (sp <= 0) out.push(p);
+    if (sp * sq < 0) { const t = sp / (sp - sq); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
+  });
+  return [...out, out[0]];
+}
 // Which edges of these blocks are rebuilt; `add` registers a frontage exactly as
 // the Hermès, IPIC and Bella Rinova plans do.
 export function planBlocks(world, { building, store, add, plan, facadeEdges, storeEdge }) {
   const whole = (kind, item, edge, extra) => add(kind, item, edge, 0, edge.length, true, extra);
   const equinox = building(EQUINOX_BLOCK);
-  if (equinox && store('Equinox', EQUINOX_BLOCK)) for (const edge of facadeEdges(equinox)) whole('equinox', equinox, edge);
+  if (equinox && store('Equinox', EQUINOX_BLOCK)) {
+    const edges = facadeEdges(equinox);
+    for (const edge of edges) whole('equinox', equinox, edge);
+    const west = edges.find(edge => edge.facing === 'west');
+    if (west) plan.steps.set(EQUINOX_BLOCK, { height: WING_HEIGHT, ring: clipRing(equinox.ring, west.a, west.o, WING_WIDTH) });
+  }
   const etro = building(ETRO_BLOCK);
   if (etro && store('Brunello Cucinelli', ETRO_BLOCK)) {
     for (const edge of facadeEdges(etro)) whole(edge.facing === 'north' ? 'plaza' : 'etro', etro, edge);
@@ -146,6 +171,23 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
     hedge: surface('box-hedge', { color: '#3d5a2f', roughness: 0.9 }),
     timber: surface('timber-louvre', { color: '#6b5240', roughness: 0.65, metalness: 0.1 }),
     copper: surface('copper-panel', { color: '#a8743d', roughness: 0.42, metalness: 0.65 }),
+    darkBronze: surface('dark-bronze', { color: '#2e241d', roughness: 0.4, metalness: 0.6 }),
+    soffitBronze: surface('bronze-soffit', { color: '#3a2b21', roughness: 0.55, metalness: 0.35 }),
+    lobbyGlass: surface('lobby-canopy-glass', { color: '#9fc9bf', roughness: 0.2, metalness: 0.3, envMapIntensity: 1.2, transparent: true, opacity: 0.62, depthWrite: false }),
+    taupeMetal: surface('taupe-frame', { color: '#5f5a55', roughness: 0.4, metalness: 0.55 }),
+    davidoffGrey: surface('davidoff-band', { color: '#6f6c69', roughness: 0.55, metalness: 0.2 }),
+    davidoffOrange: surface('davidoff-orange', { color: '#e0742c', roughness: 0.5, emissive: '#7a3410', emissiveIntensity: 0.2 }),
+    louvreGrey: surface('louvre-grey', { color: '#8c8986', roughness: 0.5, metalness: 0.35 }),
+    paleGlass: surface('pale-spandrel', { color: '#c9cdd0', roughness: 0.25, metalness: 0.35 }),
+    verandaBase: surface('veranda-base', { color: '#6b625a', roughness: 0.5, metalness: 0.3 }),
+    verandaGlass: glazing('veranda-glass', { color: '#55616b', roughness: 0.05, metalness: 0.7, envMapIntensity: 2 }),
+    rattan: surface('rattan', { color: '#d4b04c', roughness: 0.8 }),
+    tableTop: surface('marble-top', { color: '#f1efe9', roughness: 0.35 }),
+    planter: surface('planter', { color: '#dcd5c8', roughness: 0.7 }),
+    reclaimed: surface('reclaimed-timber', { color: '#4b3b2f', roughness: 0.8 }),
+    bernardRed: surface('bernard-red', { color: '#d8343c', roughness: 0.45, emissive: '#5a0d10', emissiveIntensity: 0.4 }),
+    canopyGlass: surface('lane-canopy-glass', { color: '#cfe0df', roughness: 0.18, metalness: 0.3, envMapIntensity: 1.2, transparent: true, opacity: 0.45, depthWrite: false }),
+    beam: surface('canopy-beam', { color: '#5d6163', roughness: 0.45, metalness: 0.55 }),
   };
   const fills = new Map();
   const fill = color => { if (!fills.has(color)) fills.set(color, surface(`sign-${color.slice(1)}`, { color, roughness: 0.45, metalness: 0.15 })); return fills.get(color); };
@@ -248,89 +290,331 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
     });
   }
 
-  // Equinox (4444 Westheimer): a two-storey limestone podium, shops under a
-  // white canopy and the gym's tall windows over a timber band, carrying four
-  // storeys of royal-blue curtain wall. EQUINOX is cut into the corner bays.
+  // Equinox (4444 Westheimer), from Street View (2023–2025). Two parts: the
+  // office tower, a two-storey limestone podium under four storeys of royal-blue
+  // curtain wall, and Le Colonial's white-tiled wing on the Kettering Drive
+  // corner with only sky above it. Along the north lane, east to west: Equinox
+  // under its dark soffit, the office lobby's green-glass canopy, Davidoff of
+  // Geneva's two bays, then Le Colonial's veranda. Saint Bernard faces the east
+  // lane under a steel-and-glass canopy. Kettering Drive and Westheimer keep the
+  // earlier, unphotographed treatment, cut to the wing where it stands.
   function equinox(frontage, f, W, doors) {
-    const face = frontage.edge.facing, doorS = doors.map(item => item.s), pier = 1.2;
-    const count = Math.max(1, Math.round((W - pier) / 7.8)), centres = [];
+    const face = frontage.edge.facing, doorS = doors.map(item => item.s);
+    if (face === 'north') equinoxNorth(frontage, f, W, doors);
+    else if (face === 'east') equinoxEast(f, W, doors);
+    else if (face === 'west') {
+      // Kettering Drive: all wing. Le Colonial's veranda turns the corner.
+      colonialReturn(f, Math.min(9.6, W * 0.3));
+      podiumRun(f, Math.min(9.6, W * 0.3) + 0.6, W, doorS, { top: WING_HEIGHT - 0.3, ouzo: true, ends: [0, 0.45] });
+      wingCornice(f, -0.45, W + 0.45);
+    } else {
+      // Westheimer: the wing's two storeys, then the tower to the east corner.
+      const step = WING_WIDTH;
+      podiumRun(f, 0, step, doorS, { top: WING_HEIGHT - 0.3, ends: [0.45, 0] });
+      wingCornice(f, -0.45, step);
+      podiumRun(f, step, W, doorS, { top: 11.0, ends: [0, 0.45] });
+      tower(f, step, W, { from: 11.0, ends: [0, 0.45] });
+    }
+  }
+  const splitBays = (a, b, count, pier) => {
+    const w = (b - a - pier * (count - 1)) / count;
+    return Array.from({ length: count }, (_, k) => [a + k * (w + pier), a + k * (w + pier) + w]);
+  };
+  // The tower above the podium: its top stone band and cornice, then the
+  // curtain wall's mullions, floor lines and coping (the glass is the mass).
+  function tower(f, s0, s1, { from = UPPER_TOP, ends = [0.45, 0.45], gap = null } = {}) {
+    const bands = gap ? [[s0 - ends[0], gap[0]], [gap[1], s1 + ends[1]]] : [[s0 - ends[0], s1 + ends[1]]];
+    for (const [a, b] of bands) {
+      box(f, n.equinoxStone, a, b, from, 12.6, -0.05, 0.45);
+      box(f, n.equinoxStone, a - (a === s0 - ends[0] ? 0.1 : 0), b + (b === s1 + ends[1] ? 0.1 : 0), 12.6, PODIUM_TOP, -0.05, 0.58);
+    }
+    if (gap) {
+      // Over the office lobby the curtain wall runs down to the canopy, set back in the podium.
+      const [g0, g1] = gap, lights = Math.max(1, Math.round((g1 - g0) / 1.55));
+      sheet(f, n.royalGlass, g0, g1, 5.4, PODIUM_TOP, -0.3);
+      for (let i = 0; i <= lights; i++) { const g = g0 + (g1 - g0) * i / lights; box(f, n.royalFrame, g - 0.035, g + 0.035, 5.4, PODIUM_TOP, -0.3, -0.16); }
+      for (const h of [8.9, 11.0]) box(f, n.royalFrame, g0, g1, h - 0.06, h + 0.06, -0.3, -0.18);
+      for (const g of [g0, g1]) box(f, n.equinoxStone, g - (g === g0 ? 0 : 0.3), g + (g === g0 ? 0.3 : 0), 5.4, PODIUM_TOP, -0.3, 0.45);
+    }
+    const panes = Math.max(1, Math.round((s1 - s0) / 1.55));
+    for (let i = 0; i <= panes; i++) { const s = s0 + (s1 - s0) * i / panes; box(f, n.royalFrame, s - 0.035, s + 0.035, PODIUM_TOP, TOWER_TOP, 0, 0.16); }
+    for (const h of TOWER_FLOORS) box(f, n.royalFrame, s0 - 0.02, s1 + 0.02, h - 0.07, h + 0.07, 0, 0.12);
+    box(f, n.royalFrame, s0 - 0.18, s1 + 0.18, TOWER_TOP, TOWER_TOP + 0.3, -0.05, 0.2);
+  }
+  // U.S. Capital Advisors' crest and serif name at the top of the curtain wall.
+  function capitalSign(f, s, width) {
+    const crest = s - width / 2 - 0.7;
+    box(f, n.whiteMetal, crest - 0.38, crest + 0.38, 25.95, 26.9, 0.16, 0.24);
+    for (const c of [crest - 0.16, crest, crest + 0.16]) box(f, n.royalFrame, c - 0.03, c + 0.03, 26.15, 26.6, 0.24, 0.26);
+    letter('U.S.Capital Advisors', { family: '"Trajan Pro", "Times New Roman", Georgia, serif', weight: 600, color: '#f6f7fb', spacing: 0.01, emissive: 0.15 }, f, s, 26.42, 0.17, width, 0.95);
+  }
+  // A deep dark-bronze soffit over the gym's shop glass: fascia, fans, downlights.
+  // Its underside stays above the street lamps on the narrow pavements (5.14 m).
+  function soffit(f, s0, s1) {
+    box(f, n.soffitBronze, s0, s1, 5.2, 5.55, 0.45, 3.0);
+    box(f, n.darkBronze, s0, s1, 5.15, 5.6, 2.94, 3.06);
+    for (let s = s0 + 2.8; s < s1 - 1.5; s += 6) {
+      box(f, n.darkBronze, s - 0.05, s + 0.05, 4.95, 5.2, 1.7, 1.8);
+      box(f, n.darkBronze, s - 0.72, s + 0.72, 4.93, 4.96, 1.68, 1.82);
+      box(f, n.darkBronze, s - 0.07, s + 0.07, 4.93, 4.96, 1.03, 2.47);
+    }
+    for (let s = s0 + 1.2; s < s1 - 0.6; s += 3) box(f, m.lamp, s - 0.08, s + 0.08, 5.18, 5.2, 2.3, 2.46);
+  }
+  // A tall bronze wall sconce on a pier.
+  const sconce = (f, s) => { box(f, n.darkBronze, s - 0.14, s + 0.14, 2.15, 2.9, 0.45, 0.6); box(f, m.lamp, s - 0.1, s + 0.1, 2.22, 2.83, 0.6, 0.61); };
+  // EQUINOX in silver metal letters on the stone over a gym window.
+  const equinoxName = (f, s, width) => letter('EQUINOX', { family: '"Gill Sans", Futura, Avenir, sans-serif', weight: 400, color: '#a9abb0', spacing: 0.55, metalness: 0.5, roughness: 0.4 }, f, s, 11.75, 0.5, width, 1.25);
+  // Equinox's shop glass under the soffit, the stone storey above it and the gym's
+  // wide four-pane windows; the stone wall itself is drawn with these openings.
+  function gymBay(f, b0, b1, doorS, columns = 4) {
+    storefront(f, b0, b1, 4.9, { doors: doorS, mullion: m.charcoal, pitch: 2.0, transom: 3.6, d: 0.04, depth: 0.12 });
+    framedWindow(f, b0 + 0.3, b1 - 0.3, ...GYM_WINDOW, { d: 0.12, face: 0.45, columns, frame: n.darkBronze, transom: false });
+  }
+
+  function equinoxNorth(frontage, f, W, doors) {
+    const wing = W - WING_WIDTH, doorS = doors.map(item => item.s), reach = behind(frontage);
+    const gymDoor = doorAt(doors, 'Equinox') ?? 36, colonialDoor = doorAt(doors, 'Le Colonial') ?? wing + 4.2;
+    // Equinox: three wide bays from the corner to the bronze pylon beside its doors,
+    // each with a five-pane window over the soffit.
+    const pylon = Math.max(gymDoor + 1.6, 37.6), gym = splitBays(0.6, pylon, 3, 1.1);
+    const right = [wing - 4.3, wing - 0.8], left = [right[0] - 4.7, right[0] - 1.2], davidoff = [left, right];
+    const lobby = [Math.max(pylon + 3.2, left[0] - 9.2), left[0] - 2.6];
+    const holes = [...gym.map(([a, b]) => [a, b, 0, 4.9]), ...gym.map(([a, b]) => [a + 0.3, b - 0.3, ...GYM_WINDOW]),
+      [lobby[0], lobby[1], 0, UPPER_TOP], ...davidoff.map(([a, b]) => [a, b, 0, UPPER_TOP])];
+    wall(f, n.equinoxStone, -0.45, wing, 0.5, UPPER_TOP, -0.05, 0.45, holes);
+    wall(f, m.granite, -0.45, wing, 0, 0.5, -0.05, 0.49, holes.filter(([, , lo]) => lo === 0));
+    for (const [a, b] of gym) gymBay(f, a, b, doorS, 5);
+    soffit(f, -3.06, pylon + 0.2);
+    equinoxName(f, (gym[2][0] + gym[2][1]) / 2, Math.min(8.6, gym[2][1] - gym[2][0] - 1.6));
+    // The bronze pylon with EQUINOX set vertically, and the 4444 address plaque.
+    box(f, n.darkBronze, pylon, pylon + 1.1, 0, 5.15, -0.02, 0.52);
+    letter('EQUINOX', { family: '"Gill Sans", Futura, Avenir, sans-serif', weight: 500, color: '#c9a06a', metalness: 0.6, roughness: 0.35, vertical: true }, f, pylon + 0.55, 2.67, 0.525, 0.55, 3.9);
+    const plaque = pylon + 1.45;
+    box(f, n.whiteMetal, plaque - 0.3, plaque + 0.3, 1.45, 2.25, 0.45, 0.5);
+    letter('4444', { family: '"Gill Sans", Futura, sans-serif', weight: 600, color: '#26272a' }, f, plaque, 2.05, 0.505, 0.5, 0.15);
+    letter('G', { family: '"Gill Sans", Futura, sans-serif', weight: 600, color: '#26272a' }, f, plaque, 1.78, 0.505, 0.2, 0.18);
+    // The office lobby: a dark stone portal set back under a green-glass canopy.
+    const [l0, l1] = lobby, middle = (l0 + l1) / 2;
+    box(f, n.soffit, l0, l1, 4.35, 4.4, -1.25, 0.45);
+    for (const s of [l0, l1 - 0.1]) box(f, n.equinoxStone, s, s + 0.1, 0, 4.4, -1.25, 0.45);
+    wall(f, m.granite, l0, l1, 0, 4.35, -1.3, -1.1, [[middle - 1.8, middle + 1.8, 0, 3.3]]);
+    storefront(f, middle - 1.8, middle + 1.8, 3.3, { mullion: m.charcoal, pitch: 0.9, transom: 2.7, d: -1.28, depth: 0.1 });
+    letter('Davidoff of Geneva', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 400, color: '#dcd8cf', spacing: 0.05 }, f, middle, 3.82, -1.09, 2.2, 0.24);
+    box(f, n.lobbyGlass, l0 - 0.6, l1 + 0.6, 5.28, 5.36, 0.45, 3.7);
+    box(f, n.steel, l0 - 0.6, l1 + 0.6, 5.18, 5.3, 3.62, 3.76);
+    for (const s of [l0 - 0.6, l1 + 0.48]) box(f, n.steel, s, s + 0.12, 5.16, 5.3, 0.45, 3.76);
+    for (let s = l0 + 0.8; s < l1; s += 1.45) box(f, n.steel, s - 0.03, s + 0.03, 5.22, 5.28, 0.45, 3.7);
+    for (const s of [l0 + 0.4, l1 - 0.4]) {
+      const rise = 7.3 - 5.3, run = 3.2, pitch = Math.atan2(rise, run), length = Math.hypot(rise, run);
+      box(f, n.steel, s - 0.02, s + 0.02, 6.3 - 0.02, 6.3 + 0.02, 2.05 - length / 2, 2.05 + length / 2, pitch);
+    }
+    // Davidoff of Geneva: in each bay, taupe-framed shop glass, an orange rule,
+    // the grey name band, grey louvres, a pale spandrel and a three-pane window.
+    davidoff.forEach(([a, b], i) => {
+      const c = (a + b) / 2;
+      storefront(f, a, b, 3.6, { mullion: n.taupeMetal, pitch: (b - a) / 3, transom: 3.6, d: 0.06, depth: 0.12 });
+      if (i === 0) {
+        const door = (a + b) / 2;
+        for (const s of [door - 1.0, door, door + 1.0]) box(f, n.taupeMetal, s - 0.05, s + 0.05, 0.06, 2.85, 0.06, 0.2);
+        box(f, n.taupeMetal, door - 1.0, door + 1.0, 2.8, 2.9, 0.06, 0.2);
+        for (const s of [door - 0.13, door + 0.13]) box(f, n.gold, s - 0.02, s + 0.02, 0.9, 1.65, 0.2, 0.26);
+      }
+      box(f, n.davidoffOrange, a, b, 3.6, 3.68, 0.06, 0.17);
+      box(f, n.davidoffGrey, a, b, 3.68, 4.8, 0.02, 0.15);
+      letter('Davidoff of Geneva', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 400, color: '#f3f1ec', spacing: 0.06 }, f, c, 4.32, 0.155, b - a - 0.5, 0.4);
+      letter('since 1911', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 400, color: '#e9e6e0', spacing: 0.2 }, f, c, 3.92, 0.155, 0.9, 0.12);
+      for (let h = 4.88; h < 5.78; h += 0.13) box(f, n.louvreGrey, a, b, h, h + 0.07, 0.04, 0.17);
+      box(f, n.paleGlass, a, b, 5.8, 6.9, 0.02, 0.06);
+      framedWindow(f, a, b, 6.9, UPPER_TOP, { d: 0.1, face: 0.45, columns: 3, frame: n.taupeMetal, transom: false });
+    });
+    // The round lamp and engraved name on the pier between Davidoff's bays.
+    const blade = (davidoff[0][1] + davidoff[1][0]) / 2;
+    box(f, n.whiteMetal, blade - 0.3, blade + 0.3, 2.6, 3.2, 0.45, 0.55); box(f, m.lamp, blade - 0.24, blade + 0.24, 2.66, 3.14, 0.55, 0.56);
+    letter('Davidoff of Geneva', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 500, color: '#55524e', spacing: 0.04 }, f, blade, 2.15, 0.455, 1.25, 0.15);
+    letter('since 1911', { family: '"Avenir Next", Avenir, "Century Gothic", sans-serif', weight: 500, color: '#55524e', spacing: 0.15 }, f, blade, 1.97, 0.455, 0.5, 0.07);
+    tower(f, -0.45, wing, { from: UPPER_TOP, ends: [0, 0], gap: lobby });
+    capitalSign(f, wing - 6.0, 8.6);
+    // The tower's west wall above the wing: stone band, curtain wall, coping.
+    box(f, n.equinoxStone, wing, wing + 0.45, WING_HEIGHT, 12.6, -reach, 0.45);
+    box(f, n.equinoxStone, wing - 0.1, wing + 0.58, 12.6, PODIUM_TOP, -reach, 0.58);
+    const panes = Math.max(1, Math.round(reach / 1.55));
+    for (let i = 0; i <= panes; i++) { const d = -reach * i / panes; box(f, n.royalFrame, wing, wing + 0.16, PODIUM_TOP, TOWER_TOP, d - 0.035, d + 0.035); }
+    for (const h of TOWER_FLOORS) box(f, n.royalFrame, wing, wing + 0.12, h - 0.07, h + 0.07, -reach, 0);
+    box(f, n.royalFrame, wing - 0.18, wing + 0.2, TOWER_TOP, TOWER_TOP + 0.3, -reach, 0.2);
+    colonialFront(f, wing, W, colonialDoor, doorS);
+  }
+
+  // Le Colonial's wing on the lane: white tile, iron-framed windows and French
+  // doors, gas lanterns, the iron marquise with the blue neon script, the
+  // glazed veranda on gooseneck brackets, and the terrace's rattan chairs.
+  function colonialFront(f, wing, W, door, doorS) {
+    const terrace = [door + 1.7, W - 0.7], count = Math.max(1, Math.round((terrace[1] - terrace[0] + 0.8) / 2.8));
+    const french = splitBays(terrace[0], terrace[1], count, 0.8);
+    const windows = [[wing + 0.5, door - 1.5], ...french];
+    wall(f, n.tile, wing, W + 0.3, 0, WING_HEIGHT - 0.3, -0.05, 0.3, [[door - 0.95, door + 0.95, 0, 3.6], ...windows.map(([a, b]) => [a, b, 0.05, 3.6])]);
+    for (const [a, b] of windows) framedWindow(f, a, b, 0.05, 3.6, { d: 0.08, face: 0.3, columns: Math.max(2, Math.round((b - a) / 0.75)), frame: n.iron, transom: true });
+    storefront(f, door - 0.95, door + 0.95, 3.6, { doors: doorS, mullion: n.iron, pitch: 1.9, transom: 2.9, d: 0.08, depth: 0.1 });
+    for (const s of [door - 1.25, door + 1.25, ...french.slice(1).map(([a]) => a - 0.4)]) lantern(f, s);
+    // The marquise: a black iron canopy on scroll brackets, the neon script on top.
+    box(f, n.iron, door - 1.5, door + 1.5, 3.95, 4.05, 0.3, 1.7);
+    box(f, n.iron, door - 1.5, door + 1.5, 3.85, 4.1, 1.62, 1.72);
+    for (const s of [door - 1.35, door + 1.35]) {
+      const rise = 3.95 - 3.25, run = 1.35, length = Math.hypot(rise, run);
+      box(f, n.iron, s - 0.03, s + 0.03, 3.6 - 0.025, 3.6 + 0.025, 0.97 - length / 2, 0.97 + length / 2, -Math.atan2(rise, run));
+    }
+    letter('Le Colonial', { family: '"Snell Roundhand", "Brush Script MT", "Segoe Script", cursive', weight: 700, color: '#4a7dff', emissive: 1 }, f, door, 4.42, 1.66, 2.7, 0.66);
+    veranda(f, wing + 0.2, W + 2.1);
+    for (let s = wing + 1.4; s < W; s += 4.4) gooseneck(f, s);
+    box(f, n.whiteMetal, wing + 0.9, wing + 1.8, 0, 1.15, 1.35, 1.95);
+    for (const [a, b] of french) {
+      const c = (a + b) / 2;
+      box(f, n.tableTop, c - 0.38, c + 0.38, 0.72, 0.76, 1.15, 1.95); box(f, n.iron, c - 0.03, c + 0.03, 0, 0.72, 1.52, 1.58);
+      for (const side of [-1, 1]) {
+        const s = c + side * 0.66;
+        box(f, n.rattan, s - 0.23, s + 0.23, 0.44, 0.5, 1.3, 1.8);
+        box(f, n.rattan, s + side * 0.2 - 0.03, s + side * 0.2 + 0.03, 0.5, 0.95, 1.3, 1.8);
+      }
+    }
+    for (const s of [terrace[0] - 0.2, W - 0.4]) { box(f, n.planter, s - 0.35, s + 0.35, 0, 0.85, 0.35, 1.05); box(f, n.leaf, s - 0.6, s + 0.6, 0.85, 1.65, 0.1, 1.3); }
+    wingCornice(f, wing, W + 0.45);
+  }
+  // The veranda's return along Kettering Drive and the tiled wall beneath it.
+  function colonialReturn(f, s1) {
+    const windows = splitBays(0.6, s1 - 0.4, Math.max(1, Math.round(s1 / 3)), 0.8);
+    wall(f, n.tile, -0.3, s1, 0, WING_HEIGHT - 0.3, -0.05, 0.3, windows.map(([a, b]) => [a, b, 0.05, 3.6]));
+    for (const [a, b] of windows) framedWindow(f, a, b, 0.05, 3.6, { d: 0.08, face: 0.3, columns: Math.max(2, Math.round((b - a) / 0.75)), frame: n.iron, transom: true });
+    veranda(f, 0, s1);
+    for (let s = 1.6; s < s1; s += 4.4) gooseneck(f, s);
+  }
+  // A glazed veranda over the lane: a stone floor slab, the black balustrade with
+  // gilt diamonds, tall glass in iron frames, a timber louvre band and a roof.
+  function veranda(f, s0, s1) {
+    const floor = 5.4, rail = 6.4, glass = 9.15, louvre = 9.75, top = 10.0, d0 = 0.3, d1 = 2.1;
+    box(f, n.verandaBase, s0, s1, 5.15, floor, d0, d1 + 0.1);
+    box(f, n.iron, s0, s1, floor, rail, d1 - 0.12, d1 - 0.08);
+    const posts = Math.max(2, Math.round((s1 - s0) / 0.95));
+    for (let i = 0; i <= posts; i++) {
+      const s = s0 + (s1 - s0) * i / posts;
+      box(f, n.iron, s - 0.03, s + 0.03, floor, rail, d1 - 0.05, d1 + 0.03);
+      if (i < posts) { const c = s + (s1 - s0) / posts / 2; box(f, n.gold, c - 0.1, c + 0.1, (floor + rail) / 2 - 0.15, (floor + rail) / 2 + 0.15, d1 - 0.04, d1 + 0.02); }
+    }
+    for (const h of [floor + 0.08, rail]) box(f, n.iron, s0, s1, h - 0.06, h, d1 - 0.08, d1 + 0.05);
+    sheet(f, n.verandaGlass, s0, s1, rail, glass, d1 - 0.1);
+    const lights = Math.max(2, Math.round((s1 - s0) / 1.05));
+    for (let i = 0; i <= lights; i++) { const s = s0 + (s1 - s0) * i / lights; box(f, n.iron, s - 0.035, s + 0.035, rail, glass, d1 - 0.12, d1 - 0.02); }
+    for (let h = glass; h < louvre - 0.02; h += 0.11) box(f, n.timber, s0, s1, h, h + 0.06, d1 - 0.12, d1 + 0.02);
+    box(f, n.verandaBase, s0 - 0.08, s1 + 0.08, louvre, top, d0, d1 + 0.15);
+    for (const s of [s0, s1 - 0.05]) box(f, n.verandaGlass, s, s + 0.05, rail, glass, d0, d1);
+  }
+  // A black iron gooseneck: a stem off the wall curving out under the veranda.
+  function gooseneck(f, s) {
+    box(f, n.iron, s - 0.04, s + 0.04, 3.9, 4.6, 0.3, 0.38);
+    const rise = 5.12 - 4.6, run = 0.9, length = Math.hypot(rise, run);
+    box(f, n.iron, s - 0.04, s + 0.04, 4.86 - 0.04, 4.86 + 0.04, 0.79 - length / 2, 0.79 + length / 2, -Math.atan2(rise, run));
+    box(f, n.iron, s - 0.04, s + 0.04, 3.82, 3.92, 0.3, 0.46);
+  }
+  // A gas lantern on a short wall bracket.
+  function lantern(f, s) {
+    box(f, n.iron, s - 0.02, s + 0.02, 3.4, 3.48, 0.3, 0.55);
+    box(f, n.iron, s - 0.18, s + 0.18, 3.3, 3.42, 0.36, 0.72);
+    box(f, m.lamp, s - 0.12, s + 0.12, 2.85, 3.3, 0.42, 0.66);
+    for (const [a, b] of [[-0.16, -0.12], [0.12, 0.16]]) box(f, n.iron, s + a, s + b, 2.8, 3.3, 0.4, 0.68);
+    box(f, n.iron, s - 0.16, s + 0.16, 2.74, 2.82, 0.4, 0.68);
+  }
+  // The wing's tiled cornice and white metal coping.
+  function wingCornice(f, s0, s1) {
+    box(f, n.tile, s0, s1, WING_HEIGHT - 0.3, WING_HEIGHT - 0.05, -0.05, 0.4);
+    box(f, n.whiteMetal, s0 - 0.05, s1 + 0.05, WING_HEIGHT - 0.05, WING_HEIGHT + 0.08, -0.05, 0.45);
+  }
+
+  // The east lane: Equinox's other frontage at the north end, Saint Bernard's red
+  // letters on a timber band, its shield sign, and the lane's steel-and-glass
+  // canopy; plain gym-style bays to the south.
+  function equinoxEast(f, W, doors) {
+    const doorS = doors.map(item => item.s), bernard = doorAt(doors, 'Saint Bernard') ?? W * 0.47;
+    const shop = [bernard - 4.2, bernard + 4.4], south = splitBays(0.6, shop[0] - 4.8, 2, 1.1), north = splitBays(shop[1] + 1.3, W - 0.9, 3, 0.75);
+    const holes = [...[...south, ...north].flatMap(([a, b]) => [[a, b, 0, 4.9], [a + 0.3, b - 0.3, ...GYM_WINDOW]]), [shop[0], shop[1], 0, 6.2], [shop[0] + 0.3, shop[1] - 0.3, 6.6, GYM_WINDOW[1]]];
+    wall(f, n.equinoxStone, -0.45, W + 0.45, 0.5, UPPER_TOP, -0.05, 0.45, holes);
+    wall(f, m.granite, -0.45, W + 0.45, 0, 0.5, -0.05, 0.49, holes.filter(([, , lo]) => lo === 0));
+    for (const [a, b] of [...south, ...north]) gymBay(f, a, b, doorS, 3);
+    soffit(f, -0.45, south[1][1] + 0.4); soffit(f, shop[1] + 0.2, W + 0.45);
+    for (const s of [south[0][1] + 0.55, shop[0] - 3.0, shop[1] + 0.65, north[0][1] + 0.375, north[1][1] + 0.375, W - 0.45]) sconce(f, s);
+    equinoxName(f, (north[1][0] + north[1][1]) / 2, north[1][1] - north[1][0] - 0.6);
+    // Saint Bernard: black-framed glass, the reclaimed-timber band with red
+    // letters standing on it, and pale clerestory glass above.
+    const [a, b] = shop, c = (a + b) / 2;
+    storefront(f, a, b, 3.45, { doors: doorS, mullion: m.charcoal, pitch: 1.45, transom: 2.95, d: 0.04, depth: 0.12 });
+    box(f, n.reclaimed, a, b, 3.45, 4.35, 0.04, 0.32);
+    letter('SAINT BERNARD', { family: '"Avenir Next Condensed", Futura, "Arial Narrow", sans-serif', weight: 700, color: '#e23b42', spacing: 0.05, emissive: 0.55 }, f, c, 4.62, 0.36, Math.min(7.9, b - a - 0.5), 0.95);
+    sheet(f, n.paleGlass, a, b, 4.35, 6.2, 0.05);
+    for (let s = a; s <= b + 0.01; s += (b - a) / 4) box(f, m.charcoal, s - 0.04, s + 0.04, 4.35, 6.2, 0.05, 0.15);
+    framedWindow(f, a + 0.3, b - 0.3, 6.6, GYM_WINDOW[1], { d: 0.12, face: 0.45, columns: 4, frame: n.darkBronze, transom: false });
+    // The white panel with the red shield on the stone south of the shop.
+    const panel = a - 3.0;
+    box(f, n.whiteMetal, panel - 0.55, panel + 0.55, 3.3, 4.9, 0.45, 0.62);
+    box(f, n.bernardRed, panel - 0.32, panel + 0.32, 3.55, 4.6, 0.62, 0.65);
+    box(f, n.whiteMetal, panel - 0.05, panel + 0.05, 3.75, 4.4, 0.65, 0.66);
+    // The lane canopy: four steel beams across the lane, purlins and glass, on
+    // two columns at the far kerb.
+    const c0 = a - 0.2, c1 = b + 0.2, reach = 11.4;
+    for (const s of [c0, (c0 + c1) / 2, c1]) box(f, n.beam, s - 0.14, s + 0.14, 6.25, 6.75, 0.45, reach);
+    for (const d of [2.4, 4.6, 6.8, 9.0, reach - 0.1]) box(f, n.beam, c0, c1, 6.55, 6.7, d - 0.07, d + 0.07);
+    box(f, n.canopyGlass, c0, c1, 6.7, 6.74, 0.45, reach);
+    for (const s of [c0, c1]) box(f, n.beam, s - 0.15, s + 0.15, 0, 6.7, reach - 0.3, reach);
+    tower(f, -0.45, W + 0.45, { from: UPPER_TOP, ends: [0, 0] });
+    capitalSign(f, W - 5.2, 6.4);
+  }
+
+  // The earlier, unphotographed treatment of a face span: limestone piers, bronze
+  // shop glass, the gym storey (timber louvres under tall glass), a canopy, and
+  // Ouzo Bay's blue awnings on Kettering Drive. `top` is where the piers end.
+  function podiumRun(f, s0, s1, doorS, { top, ouzo = false, ends = [0.45, 0.45] }) {
+    const pier = 1.2, span = s1 - s0, count = Math.max(1, Math.round((span - pier) / 7.8)), centres = [];
     for (let k = 0; k <= count; k++) {
-      let c = pier / 2 + k * (W - pier) / count;
+      let c = s0 + pier / 2 + k * (span - pier) / count;
       for (const s of doorS) if (k > 0 && k < count && Math.abs(c - s) < pier / 2 + 1.0) c = s + Math.sign(c - s || 1) * (pier / 2 + 1.0);
       centres.push(c);
     }
     const bays = centres.slice(1).map((c, k) => [centres[k] + pier / 2, c - pier / 2]);
-    const lettered = face === 'north' || face === 'west' ? bays.length - 1 : -1;
-    const terrace = face === 'west' ? [-0.45, centres[Math.min(2, count)]] : null;
-    const ouzo = face === 'west' ? bays.filter(([b0]) => b0 > W * 0.45) : [];
+    const glassTop = top - 0.6, awnings = ouzo ? bays.filter(([b0]) => b0 > s0 + span * 0.45) : [];
     centres.forEach((c, k) => {
-      const s0 = k === 0 ? -0.45 : c - pier / 2, s1 = k === count ? W + 0.45 : c + pier / 2;
-      box(f, n.equinoxStone, s0, s1, 0.5, 11.0, -0.05, 0.45);
-      box(f, m.granite, s0, s1, 0, 0.5, -0.05, 0.49);
+      const p0 = k === 0 ? s0 - ends[0] : c - pier / 2, p1 = k === count ? s1 + ends[1] : c + pier / 2;
+      box(f, n.equinoxStone, p0, p1, 0.5, top, -0.05, 0.45);
+      box(f, m.granite, p0, p1, 0, 0.5, -0.05, 0.49);
     });
-    bays.forEach(([b0, b1], k) => {
+    bays.forEach(([b0, b1]) => {
       storefront(f, b0, b1, 5.0, { doors: doorS, mullion: m.bronze, pitch: 1.9, transom: 3.6, upper: m.shopGlass, d: 0.04, depth: 0.14 });
-      if (k === lettered) {
-        box(f, n.equinoxStone, b0, b1, 5.0, 11.0, -0.05, 0.3);
-        letter('EQUINOX', { family: '"Gill Sans", Futura, Avenir, sans-serif', weight: 400, color: '#4c4c50', spacing: 0.45, metalness: 0.5, roughness: 0.4 }, f, (b0 + b1) / 2, 8.6, 0.31, Math.min(6.2, b1 - b0 - 0.6), 0.85);
-        return;
-      }
-      // The gym storey: a timber louvre band under tall bronze-framed glass.
       sheet(f, m.charcoal, b0, b1, 5.0, 6.5, 0.02);
       for (let i = 0; i < 4; i++) box(f, m.teak, b0, b1, 5.55 + i * 0.23, 5.69 + i * 0.23, 0.14, 0.3);
-      sheet(f, m.shopGlass, b0, b1, 6.5, 11.0, 0.06);
+      sheet(f, m.shopGlass, b0, b1, 6.5, glassTop, 0.06);
       const columns = Math.max(2, Math.round((b1 - b0) / 2.4));
-      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, 11.0, 0.06, 0.2); }
-      for (const h of [6.5, 8.9, 11.0]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.06, 0.2);
+      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, glassTop, 0.06, 0.2); }
+      for (const h of [6.5, (6.5 + glassTop) / 2, glassTop]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.06, 0.2);
       box(f, n.equinoxStone, b0, b1, 6.4, 6.52, 0.0, 0.5);
+      box(f, n.equinoxStone, b0, b1, glassTop, top, -0.05, 0.45);
     });
-    // Shop canopy, broken where the terrace slab or the Ouzo Bay awnings take
-    // over. Its soffit clears the street lamps on the narrow pavements (5.14 m).
-    const runs = [[-2.0, W + 2.0]].flatMap(([p, q]) => (terrace ? [[p, terrace[0]], [terrace[1], q]] : [[p, q]]).filter(([x, y]) => y - x > 0.2))
-      .flatMap(([p, q]) => ouzo.length ? [[p, Math.min(q, ouzo[0][0] - pier / 2)], [Math.max(p, ouzo.at(-1)[1] + pier / 2), q]].filter(([x, y]) => y - x > 0.2) : [[p, q]]);
+    // The shop canopy, broken where Ouzo Bay's awnings take over. Its soffit
+    // clears the street lamps on the narrow pavements (5.14 m).
+    const runs = awnings.length ? [[s0 - ends[0], awnings[0][0] - pier / 2], [awnings.at(-1)[1] + pier / 2, s1 + ends[1]]].filter(([x, y]) => y - x > 0.2) : [[s0 - ends[0], s1 + ends[1]]];
     for (const [p, q] of runs) {
       box(f, n.canopy, p, q, 5.26, 5.46, 0.45, 1.9);
       box(f, n.canopy, p, q, 5.22, 5.5, 1.82, 1.92);
     }
     for (const [b0, b1] of bays) for (const s of [b0 + (b1 - b0) * 0.3, b0 + (b1 - b0) * 0.7]) if (runs.some(([p, q]) => s > p && s < q)) box(f, m.lamp, s - 0.1, s + 0.1, 5.24, 5.26, 1.0, 1.2);
-    // Gilt shop names in the transom over each door.
-    for (const { store, s } of doors) letter(store.name, { family: store.name === 'Le Colonial' ? '"Big Caslon", Baskerville, Georgia, serif' : '"Gill Sans", Futura, Avenir, sans-serif', weight: 500, color: '#caa968', spacing: 0.08, metalness: 0.55, roughness: 0.35 }, f, s, 4.3, 0.19, 2.8, 0.42);
-    if (ouzo.length) {
-      // Ouzo Bay's blue canvas awnings and fascia toward Westheimer.
-      const a = ouzo[0][0] - 0.2, b = ouzo.at(-1)[1] + 0.2;
+    if (awnings.length) {
+      // Ouzo Bay's blue canvas awnings and fascia.
+      const a = awnings[0][0] - 0.2, b = awnings.at(-1)[1] + 0.2;
       box(f, n.ouzo, a, b, 5.0, 5.36, 0.45, 0.62);
       letter('OUZO BAY', { family: 'Futura, Avenir, sans-serif', weight: 500, color: '#f4f2ec', spacing: 0.3 }, f, (a + b) / 2, 5.18, 0.625, Math.min(5, b - a - 1), 0.28);
-      for (const [b0, b1] of ouzo) {
+      for (const [b0, b1] of awnings) {
         const run = 1.6, pitch = 0.45, drop = Math.sin(pitch) * run / 2, middle = 0.45 + run / 2 * Math.cos(pitch), edge = 0.45 + run * Math.cos(pitch);
         box(f, n.ouzo, b0, b1, 5.0 - drop - 0.015, 5.0 - drop + 0.015, middle - run / 2, middle + run / 2, pitch);
         box(f, n.ouzo, b0, b1, 5.0 - drop * 2 - 0.25, 5.0 - drop * 2, edge - 0.015, edge + 0.015);
       }
     }
-    if (terrace) {
-      // The corner terrace: a stone slab at the gym floor with black ironwork,
-      // a pergola and lanterns, over the Kettering Drive pavement.
-      const [t0, t1] = terrace;
-      box(f, n.equinoxStone, t0, t1, 5.25, 5.5, 0.45, 2.35);
-      for (let s = t0 + 0.1; s <= t1 - 0.05; s += (t1 - t0 - 0.2) / Math.max(1, Math.round((t1 - t0) / 1.25))) box(f, n.iron, s - 0.03, s + 0.03, 5.5, 6.6, 2.22, 2.28);
-      for (const h of [5.75, 6.55]) box(f, n.iron, t0, t1, h - 0.03, h + 0.03, 2.21, 2.29);
-      const posts = Math.max(1, Math.round((t1 - t0) / 3));
-      for (let i = 0; i <= posts; i++) {
-        const s = t0 + 0.12 + (t1 - t0 - 0.24) * i / posts;
-        box(f, n.iron, s - 0.07, s + 0.07, 5.5, 9.2, 2.18, 2.32);
-        box(f, n.iron, s - 0.1, s + 0.1, 8.25, 8.65, 2.33, 2.5); box(f, m.lamp, s - 0.07, s + 0.07, 8.3, 8.6, 2.5, 2.52);
-      }
-      box(f, n.iron, t0, t1, 9.2, 9.36, 0.45, 2.35);
-      for (let s = t0 + 0.2; s < t1; s += 0.55) box(f, n.iron, s - 0.03, s + 0.03, 9.36, 9.46, 0.45, 2.35);
-    }
-    box(f, n.equinoxStone, -0.45, W + 0.45, 11.0, 12.6, -0.05, 0.45);
-    box(f, n.equinoxStone, -0.55, W + 0.55, 12.6, 12.78, -0.05, 0.58);
-    // Four storeys of curtain wall, mullions every ~1.5 m, floor lines and a coping.
-    const panes = Math.max(1, Math.round(W / 1.55));
-    for (let i = 0; i <= panes; i++) { const s = W * i / panes; box(f, n.royalFrame, s - 0.035, s + 0.035, 12.78, 27.85, 0, 0.16); }
-    for (const h of [16.6, 20.45, 24.3]) box(f, n.royalFrame, -0.02, W + 0.02, h - 0.07, h + 0.07, 0, 0.12);
-    box(f, n.royalFrame, -0.18, W + 0.18, 27.85, 28.15, -0.05, 0.2);
-    if (face === 'north' || face === 'west') letter('U.S. CAPITAL ADVISORS', { family: '"Gill Sans", Futura, Avenir, sans-serif', weight: 500, color: '#f3f5fa', spacing: 0.06, emissive: 0.08 }, f, face === 'north' ? W - 7.5 : 7.5, 26.6, 0.17, 10, 0.72);
   }
+  // How far the mass reaches behind a frontage (the block's depth from that face).
+  const behind = ({ edge, building }) => Math.max(...building.ring.map(([east, north]) => -((east - edge.a[0]) * edge.o[0] + (north - edge.a[1]) * edge.o[1])));
 
   // The Etro block: grey-beige limestone, black-framed shop glass under one long
   // cantilevered canopy with ribs and hanger rods, sign boxes above it, and the
@@ -859,7 +1143,7 @@ export function blockFacades({ m, keep, surface, glazing, sign, box, sheet, stor
       return true;
     },
     wall,
-    reflective: [n.royalGlass],
+    reflective: [n.royalGlass, n.lobbyGlass, n.verandaGlass, n.canopyGlass],
     massMaterial: building => ({ [EQUINOX_BLOCK]: n.royalGlass, [ETRO_BLOCK]: n.etroStone, [RESIDENCES_SOUTH]: n.white, [RESIDENCES_NORTH]: n.tile, [DIOR_BLOCK]: n.diorStone })[building.id] ?? null,
   };
 }

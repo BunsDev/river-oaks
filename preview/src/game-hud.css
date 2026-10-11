@@ -1,0 +1,133 @@
+/* Independent edge spaces preserve the street as the primary surface. */
+:root[data-theme] body.game-hud #control-panel {
+  position: absolute; inset: 0; width: auto; height: auto; display: block;
+  visibility: visible; opacity: 1; translate: none; transition: none; overflow: visible; pointer-events: none;
+  background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none;
+}
+.game-hud #control-panel > :is(.identity, .experience-nav, .panel-scroll) { display: none; }
+:root[data-theme] .game-hud #control-panel .hud-space {
+  position: absolute; top: 76px; bottom: auto; width: 318px; max-height: calc(100dvh - 100px);
+  padding: 0 18px 18px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  pointer-events: auto; border: 1px solid var(--hud-hairline); border-radius: 18px;
+  background: var(--hud-glass); backdrop-filter: var(--hud-filter); box-shadow: var(--hud-shadow);
+}
+.game-hud #control-panel .hud-space[hidden] { display: none; }
+.game-hud #explore-section { left: 20px; }
+.game-hud #community-section { right: 20px; }
+.game-hud .hud-space-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--hud-hairline); margin-bottom: 14px; }
+.game-hud .hud-space-header h2 { font-size: 16px; margin: 0; font-weight: 650; }
+.game-hud .hud-space-header button { min-width: 36px; min-height: 36px; font-size: 24px; border-radius: 10px; }
+.game-hud .hud-space > .section-label:first-of-type { display: none; }
+:root[data-theme] .game-hud :is(#panel-toggle, .hud-launcher) {
+  position: absolute; top: 20px; bottom: auto; z-index: 8; transform: none;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: auto; min-height: 40px; padding: 0 14px; flex-direction: row;
+  border: 1px solid var(--hud-hairline); border-radius: 12px;
+  background: var(--hud-glass); backdrop-filter: var(--hud-filter); color: var(--ink); box-shadow: 0 4px 16px #00000014;
+  font-size: 13px; font-weight: 600; opacity: 1;
+}
+.game-hud #panel-toggle { left: 20px; }
+.game-hud #people-toggle { right: 124px; }
+.game-hud #settings-toggle { right: 20px; }
+.game-hud #panel-toggle kbd { font: 10px var(--font-mono); color: var(--muted); }
+.game-hud :is(#panel-toggle,.hud-launcher)[aria-expanded=true] { outline: 2px solid var(--hud-action); outline-offset: -2px; }
+:root[data-theme] .game-hud :is(.walking-title, .viewport-heading) { left: 190px; top: 22px; }
+:root[data-theme] .game-hud .walking-title strong { font-size: 21px; }
+.game-hud .view-meta { display: none; }
+:root[data-theme] .game-hud .visit-tools { top: 76px; right: 20px; }
+.game-hud:has(#community-section:not([hidden])) .visit-tools { visibility: hidden; }
+:root[data-theme] .game-hud .commands-toggle { top: auto; bottom: 20px; right: 20px; left: auto; }
+:root[data-theme] .game-hud .walking-console { bottom: 20px; right: auto; left: 50%; transform: none; translate: -50% 0; max-width: 310px; }
+/* Settings stays under the app access gate; showModal supplies focus containment. */
+:root[data-theme] .game-hud #settings-dialog {
+  pointer-events: auto; width: min(820px, calc(100vw - 40px)); max-width: none;
+  height: min(620px, calc(100dvh - 48px)); max-height: none; padding: 0;
+  border: 1px solid var(--hud-hairline); border-radius: 22px;
+  color: var(--ink); background: var(--panel, var(--paper)); box-shadow: var(--hud-shadow);
+}
+.game-hud #settings-dialog[open] { display: flex; flex-direction: column; }
+.game-hud #settings-dialog::backdrop { background: #101b2280; backdrop-filter: blur(7px); }
+.game-hud .settings-header { display: flex; flex-shrink: 0; justify-content: space-between; align-items: center; padding: 22px 26px; border-bottom: 1px solid var(--line); }
+.game-hud .settings-header p { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
+.game-hud .settings-header h2 { margin: 0; font-size: 26px; letter-spacing: -.6px; }
+.game-hud .settings-header button { min-height: 40px; padding: 8px 12px; border-radius: 10px; background: var(--hud-tile); }
+.game-hud .settings-header kbd { margin-left: 8px; font: 10px var(--font-mono); color: var(--muted); }
+.game-hud .settings-layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); flex: 1; min-height: 0; }
+.game-hud .settings-layout nav { display: flex; flex-direction: column; gap: 5px; padding: 18px 12px; border-right: 1px solid var(--line); overflow-y: auto; }
+.game-hud .settings-layout [role=tab] { min-height: 42px; padding: 10px 14px; text-align: left; font-size: 13px; font-weight: 600; border-radius: 9px; color: var(--muted); }
+.game-hud .settings-layout [role=tab][aria-selected=true] { background: var(--accent-soft); color: var(--accent); box-shadow: inset 3px 0 var(--accent); }
+:root[data-theme] .game-hud #settings-section { padding: 24px 28px; overflow: auto; border: none; min-height: 0; }
+.game-hud #settings-section h3 { font-size: 18px; margin: 0 0 22px; }
+.game-hud #settings-section .appearance-control { max-width: none; margin-top: 0; }
+.game-hud #settings-section .theme-switch { margin-top: 12px; }
+.game-hud #settings-section .access-tools { padding: 0; margin-bottom: 24px; }
+.game-hud #settings-dialog > footer { padding: 13px 26px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.game-hud #settings-section .layer-row { min-height: 44px; }
+.game-hud #settings-section .layer-row input { width: 17px; height: 17px; }
+.game-hud #settings-section .panel-footer { margin-top: 24px; padding-inline: 0; }
+/* Chat is a compact, stable reading surface, independent of the People directory. */
+:root[data-theme] .game-hud .town-chat-dock {
+  position: absolute; z-index: 5; left: 20px; bottom: 20px; width: min(360px, calc(100vw - 40px)); margin: 0;
+  color: var(--ink); background: var(--hud-glass); backdrop-filter: var(--hud-filter);
+  border: 1px solid var(--hud-hairline); border-radius: 16px; box-shadow: var(--hud-shadow); overflow: hidden;
+}
+.game-hud .town-chat-toggle { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 14px; list-style: none; font-size: 13px; font-weight: 650; }
+.game-hud .town-chat-toggle::-webkit-details-marker { display: none; }
+.game-hud .town-chat-toggle > span:first-child { flex: 1; }
+.game-hud .town-chat-toggle small { display: block; font-size: 10px; font-weight: 400; color: var(--hud-muted); }
+.game-hud .town-chat-dock:not([open]) .town-chat-toggle > span:last-child { transform: rotate(180deg); }
+.game-hud .chat-unread { font-size: 11px; color: var(--accent); }
+.game-hud .multiplayer-chat { padding: 0 12px 8px; margin: 0; border: 0; font-size: 12px; }
+.game-hud .multiplayer-chat-history { max-height: min(180px, 24dvh); min-height: 0; overscroll-behavior: contain; scrollbar-width: thin; padding: 0 2px; }
+.game-hud .multiplayer-chat-message { padding: 8px 10px; margin: 0 0 5px; border-radius: 9px; background: var(--hud-tile); line-height: 1.55; }
+.game-hud .multiplayer-chat-message strong { color: var(--accent); }
+.game-hud .multiplayer-chat-form { margin-top: 10px; }
+.game-hud .multiplayer-chat-form input { min-height: 42px; background: var(--hud-raised); color: var(--ink); }
+.game-hud .multiplayer-chat-form button { min-height: 42px; padding: 0 12px; background: var(--hud-action); color: var(--hud-on-action); border-radius: 9px; }
+.game-hud .multiplayer-chat-status { margin: 4px 0 0; min-height: 0; font-size: 11px; color: var(--muted); }
+.game-hud .chat-empty { font-size: 12px; color: var(--muted); margin: 8px 2px 16px; }
+.game-hud .chat-jump { display: block; margin: 8px auto; min-height: 32px; padding: 4px 12px; border-radius: 16px; background: var(--accent-soft); color: var(--accent); }
+.game-hud .chat-jump[hidden] { display: none; }
+.game-hud:has(#community-dialogue:not([hidden])) .town-chat-dock { visibility: hidden; }
+:root[data-theme] .game-hud #community-dialogue { left: 20px; bottom: 20px; width: min(400px, calc(100vw - 40px)); max-height: calc(100dvh - 100px); }
+.game-hud #community-dialogue .community-dialogue-top { padding: 14px; }
+.game-hud #community-dialogue h2 { font-size: 21px; }
+.game-hud.clear-view :is(.town-chat-dock,.hud-launcher,#panel-toggle,#control-panel .hud-space),
+.game-hud.photographing :is(.town-chat-dock,.hud-launcher,#panel-toggle,#control-panel .hud-space) { visibility: hidden; }
+.game-hud :is(.hud-launcher,.town-chat-dock,#settings-dialog,.hud-space) :focus-visible,
+.game-hud .hud-launcher:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: -3px; }
+@media (max-width:900px) {
+  :root[data-theme] .game-hud #control-panel .hud-space { left: 12px; right: 12px; top: 72px; width: auto; max-height: calc(100dvh - 92px); }
+  :root[data-theme] .game-hud :is(.walking-title,.viewport-heading) { top: 74px; left: 20px; }
+  .game-hud .walking-title small { display: none; }
+  :root[data-theme] .game-hud #panel-toggle { left: 12px; }
+  .game-hud #panel-toggle kbd { display: none; }
+  .game-hud #settings-toggle { right: 12px; }
+  .game-hud #people-toggle { right: 112px; }
+  :root[data-theme] .game-hud .town-chat-dock { left: 12px; bottom: 12px; width: min(340px,calc(100vw - 24px)); }
+  :root[data-theme] .game-hud .walking-console { bottom: 72px; right: 20px; left: auto; translate: none; }
+  .game-hud:has(.town-chat-dock[open]) .walking-console { visibility: hidden; }
+  .game-hud:has(.hud-space:not([hidden])) :is(.walking-console,.visit-tools) { visibility: hidden; }
+  .game-hud:not(.clear-view):has(.hud-space:not([hidden]), .visit-tools[open]) .commands-toggle { visibility: hidden; }
+  :root[data-theme] .game-hud .commands-toggle { bottom: auto; top: 132px; right: 12px; }
+  :root[data-theme] .game-hud #settings-dialog { width: calc(100vw - 24px); height: min(680px,calc(100dvh - 24px)); border-radius: 16px; }
+  .game-hud .settings-header { padding: 16px; }
+  .game-hud .settings-layout { grid-template-columns: 114px minmax(0,1fr); }
+  .game-hud .settings-layout nav { padding: 10px 6px; }
+  .game-hud .settings-layout [role=tab] { padding: 10px; font-size: 12px; min-height: 44px; }
+  :root[data-theme] .game-hud #settings-section { padding: 18px 12px; }
+  .game-hud #settings-section .quality-modes { flex-direction: column; }
+  .game-hud #settings-section .theme-switch { flex-wrap: wrap; }
+  .game-hud #settings-dialog > footer { padding: 12px 16px; }
+}
+
+@media (min-width:901px) and (min-height:650px) {
+  :root[data-theme] .game-hud #control-panel #explore-section { max-height: calc(100dvh - 400px); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .game-hud :is(.hud-space, .town-chat-dock, .hud-launcher, #settings-dialog) { transition: none; animation: none; }
+}
+
+@media (min-width:901px) and (max-width:1200px) {
+  :root[data-theme] .game-hud .town-chat-dock { width: 300px; }
+}

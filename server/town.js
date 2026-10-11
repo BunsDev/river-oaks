@@ -16,6 +16,7 @@ import { createMemorySocial } from './social.js';
 import { createMemoryGroups } from './groups.js';
 import { createMemoryProfiles } from './profiles.js';
 import { createMemoryEvents } from './events.js';
+import { createMemoryDebugReports } from './debug-reports.js';
 import { createMemoryAvatarPreferences } from './avatar-preferences.js';
 import { createMemoryPresence } from './presence.js';
 import { isJevicaAdmin } from './admin.js';
@@ -54,7 +55,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
   });
 
-  const games=new Map(),pending=new Map(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
+  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
     if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
     return landmarkStores.get(id);
@@ -83,7 +84,9 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     entry.world=next;entry.meta=candidate.world;
     return {ok:true,world:candidate.world,disconnectedPlayers:migrated.disconnectedPlayers,clearedWishes:migrated.clearedWishes};
   }
+  let closed=false,closing=null;
   async function worldFor(id) {
+    if(closed)return null;
     if(games.has(id))return games.get(id);
     if(pending.has(id))return pending.get(id);
     const load=(async()=>{
@@ -92,7 +95,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,worldId:id}:{worldId:id});
-      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,avatarPreferences,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,avatarPreferences,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
@@ -106,8 +109,15 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,
     security:{isBanned:id=>moderation.isBanned(id),allow:(_scope,id)=>drivingLimit(id)},...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
-  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,async close(){
-    for(const {game} of games.values())await game.close();
-    await router.close();auth.close();
+  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
+    if(closing)return closing;
+    closed=true;
+    closing=(async()=>{
+      await Promise.allSettled([...pending.values()]);
+      for(const {game} of games.values())await game.close();
+      games.clear();landmarkStores.clear();
+      await router.close();auth.close();
+    })();
+    return closing;
   }};
 }

@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];page.on('pageerror',error=>errors.push(error.message));
   const check=(condition,label)=>{if(!condition)throw new Error(label);checks.push(label);};
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
@@ -7,7 +8,7 @@ async page => {
   await ready();
   const panel=async section=>{
     if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-    await page.locator(`[data-section=${section}]`).click();
+    await openHudSpace(page, section);
   };
   const directory=async id=>{
     await panel('community-section');

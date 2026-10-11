@@ -28,7 +28,7 @@ jobs:
     # skip without REDIS_URL; this service runs them, as production uses Redis.
     services:
       redis:
-        image: redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        image: mirror.gcr.io/library/redis:7.4.11-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
         ports:
           - 6379:6379
         options: >-
@@ -108,7 +108,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
           RIVER_OAKS_E2E_REPORT: ci-experience.json
-        run: xvfb-run -a pnpm run test:experience contextual-first-visit photo-mode rail-navigation
+        run: xvfb-run -a pnpm run test:experience contextual-first-visit store-intro photo-mode rail-navigation
       - name: Experience journey failure evidence
         if: ${{ failure() && steps.experience.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

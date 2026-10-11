@@ -254,7 +254,10 @@
         "pnpm",
         "run",
         "test:experience",
+        "player-lifecycle",
+        "multiplayer-lifecycle",
         "contextual-first-visit",
+        "store-intro",
         "photo-mode",
         "rail-navigation"
       ],

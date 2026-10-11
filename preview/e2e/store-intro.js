@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [], errors = [], claims = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
   page.on('pageerror', error => errors.push(error.message));
@@ -8,8 +9,7 @@ async page => {
   const ready = () => page.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
   await ready();
   const arrive = async name => {
-    if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-    await page.locator('[data-section=explore-section]').click();
+    await openHudSpace(page, 'explore-section');
     await page.locator('#destination').selectOption({ label: name });
     // The prior store entry may also be less than a second old (e.g. a skipped intro).
     await page.waitForTimeout(1100);

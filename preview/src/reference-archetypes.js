@@ -136,8 +136,10 @@ export function createReferenceStyle(avatar,appearance){
   function leaf(parent,surface,position,length=.026,tilt=0,turn=0){
     const item=ball(parent,surface,position,[length*.42,length,length*.12]);item.rotation.set(turn,0,tilt);return item;
   }
+  let blossomMaterials;
   function blossom(parent,position,size=.011){
-    const petal=material('#f5efe0',{roughness:.55}),heart=material('#d9b25a',{roughness:.4,metalness:.3});
+    // Reuse within this outfit so static flowers on a bone can batch together.
+    const [petal,heart]=blossomMaterials??= [material('#f5efe0',{roughness:.55}),material('#d9b25a',{roughness:.4,metalness:.3})];
     for(let i=0;i<5;i++){const a=i/5*Math.PI*2;ball(parent,petal,[position[0]+Math.cos(a)*size*.8,position[1]+Math.sin(a)*size*.8,position[2]],[size*.62,size*.62,size*.22]);}
     ball(parent,heart,position,[size*.42,size*.42,size*.3]);
   }

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { AVATAR_PROFILES } from '../src/avatars.js';
 import { relaxResidentArms } from '../src/avatar-stance.js';
 import { createArmContacts, placePalm } from '../src/arm-contact.js';
+import { applyHandshakeContact } from '../src/handshake-contact.js';
 
 function rig(profile) {
   const bytes=readFileSync(new URL(`../public/assets/characters/${profile}.glb`,import.meta.url));
@@ -21,6 +22,20 @@ function rig(profile) {
   const model=new THREE.Group();gltf.scenes[gltf.scene??0].nodes.forEach(i=>model.add(nodes[i]));
   relaxResidentArms(model);return model;
 }
+
+for(const profile of AVATAR_PROFILES)test(`${profile}: a shared handshake meets the same palm target from opposite sides`,()=>{
+  const target=[0,1.12,0];
+  for(const side of [-1,1]){
+    const model=rig(profile),holder=new THREE.Group();holder.add(model);holder.position.x=side*.46;holder.rotation.y=-side*Math.PI/2;
+    const arm=createArmContacts(model,holder).find(arm=>arm.side==='r');
+    const before=model.getObjectByName('foot_r').getWorldPosition(new THREE.Vector3());
+    applyHandshakeContact(arm,holder,{target,elapsed:1,duration:4.2});
+    const palm=arm.foot.getWorldPosition(new THREE.Vector3()).add(arm.palmOffset.clone().applyQuaternion(arm.foot.getWorldQuaternion(new THREE.Quaternion())));
+    assert.ok(palm.distanceTo(new THREE.Vector3(...target))<.04,'both palms meet at the shared contact');
+    assert.ok(arm.error<.005,`palm contact error ${arm.error}`);
+    assert.ok(before.distanceTo(model.getObjectByName('foot_r').getWorldPosition(new THREE.Vector3()))<1e-8,'feet stay planted');
+  }
+});
 
 for(const profile of AVATAR_PROFILES)test(`${profile}: palms remain on a held object through turns and torso motion`,()=>{
   const model=rig(profile),holder=new THREE.Group();holder.add(model);

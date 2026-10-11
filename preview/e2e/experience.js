@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];
   const check=(condition,label)=>{if(!condition)throw new Error(label);checks.push(label);};
   page.on('pageerror',error=>errors.push(error.message));
@@ -15,7 +16,7 @@ async page => {
   check(await page.locator('.commands-toggle').evaluate(el=>el===document.activeElement),'Clear view moves focus to Commands outside hidden controls');
   await page.keyboard.press('h');await page.locator('.player-settings summary').click();
   await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=settings-section]').focus();await page.keyboard.press('Escape');
+  await page.locator('#explore-section').focus();await page.keyboard.press('Escape');
   check(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false','Escape closes the exploration panel');
   check(await page.locator('#canvas-host').evaluate(el=>el===document.activeElement),'Closing the panel restores world focus');
   await page.screenshot({path:'output/playwright/aaa-hud-desktop.png'});
@@ -49,7 +50,7 @@ async page => {
   await page.setViewportSize({width:1440,height:1000});
   // Conversation stays clear of the play dock in a compact desktop window.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   await page.locator('#community-more').evaluate(node=>{node.open=true;});
   await page.locator('#community-local').selectOption('store-osm-node-8172494969-person-2');
   await page.locator('#community-meet').click();

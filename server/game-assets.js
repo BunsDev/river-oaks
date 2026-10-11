@@ -16,12 +16,14 @@ export function canonicalAssetPath(pathname) {
   return `/${segments.join('/')}`.toLowerCase();
 }
 
-// Vite's access entry and preload helper must load before sign-in. Every other
-// executable/style chunk and world data requires server-side approval. A path
-// that cannot be classified is treated as gated.
+// Vite's access entry and preload helper must load before sign-in, and so must
+// the problem-report collector and dialog (debug-report*), which hold no game
+// code and let a player report a broken sign-in. Every other executable/style
+// chunk and world data requires server-side approval. A path that cannot be
+// classified is treated as gated.
 export const protectedGameAsset = pathname => {
   const path = canonicalAssetPath(pathname);
   return path === null || path.startsWith('/data/')
     || path.startsWith('/assets/') && /\.(?:js|css)$/.test(path)
-      && !/^\/assets\/(?:index|preload-helper)-[^/]+\.(?:js|css)$/.test(path);
+      && !/^\/assets\/(?:index|preload-helper|debug-report(?:-ui)?)-[a-z0-9_-]+\.(?:js|css)$/.test(path);
 };

@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   // A refused take-off is announced above the walking console, where the player is looking.
   const checks = [], errors = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
@@ -8,7 +9,7 @@ async page => {
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 120000 });
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#destination').selectOption('osm-node-8172494967');
   await page.locator('#enter-destination').click();
   await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.inside === 'osm-node-8172494967', null, { timeout: 30000 });

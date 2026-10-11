@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -10,7 +11,7 @@ async page => {
   await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.reflections ?? 'null')?.captures >= 1);
   const toggle = page.locator('#panel-toggle');
   // The rail sidebar shows one section at a time; select the tab a control lives in first.
-  const rail = section => page.locator(`[data-section=${section}]`).click();
+  const rail = section => openHudSpace(page, section);
   const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices' }).evaluate(details => { details.open = true; }); };
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   await rail('explore-section');

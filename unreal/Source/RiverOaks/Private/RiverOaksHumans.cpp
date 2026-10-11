@@ -3,33 +3,34 @@
 
 int32 FRiverHumanPoseLedger::Create()
 {
-    FEntry Entry;
-    Entry.bLive = true;
-    return Entries.Add(Entry);
+    if (NextHandle == TNumericLimits<int32>::Max()) return INDEX_NONE;
+    const int32 Handle = NextHandle++;
+    Entries.Add(Handle, 0);
+    return Handle;
 }
 
 bool FRiverHumanPoseLedger::Destroy(int32 Handle)
 {
-    if (!IsLive(Handle)) return false;
-    Entries[Handle].bLive = false;
-    return true;
+    return Entries.Remove(Handle) != 0;
 }
 
 bool FRiverHumanPoseLedger::IsLive(int32 Handle) const
 {
-    return Entries.IsValidIndex(Handle) && Entries[Handle].bLive;
+    return Entries.Contains(Handle);
 }
 
 bool FRiverHumanPoseLedger::Accept(int32 Handle, uint64 Sequence)
 {
-    if (!IsLive(Handle) || Sequence <= Entries[Handle].LastSequence) return false;
-    Entries[Handle].LastSequence = Sequence;
+    uint64* Last = Entries.Find(Handle);
+    if (!Last || Sequence <= *Last) return false;
+    *Last = Sequence;
     return true;
 }
 
 uint64 FRiverHumanPoseLedger::LastSequence(int32 Handle) const
 {
-    return Entries.IsValidIndex(Handle) ? Entries[Handle].LastSequence : 0;
+    const uint64* Last = Entries.Find(Handle);
+    return Last ? *Last : 0;
 }
 
 IRiverHumanBackend* IRiverHumanBackend::SelectFrom(IRiverHumanBackend* Fallback,

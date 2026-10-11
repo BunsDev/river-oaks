@@ -1,4 +1,5 @@
 async initialPage => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const visit = async (page, { touch = false } = {}) => {
   const checks = [], errors = [], replies = [];
   page.on('websocket', socket => socket.on('framereceived', ({ payload }) => { try { const data = JSON.parse(String(payload)); if (data.type === 'result') replies.push({ ok: data.ok, error: data.error, message: data.message }); } catch {} }));
@@ -17,7 +18,7 @@ async initialPage => {
   };
   if (touch) {
     if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').tap();
-    await page.locator('[data-section=explore-section]').tap();
+    await openHudSpace(page, 'explore-section');
   } else { await host.focus(); await page.keyboard.press('/'); }
   await page.locator('#store-search').fill('Herm');
   const destination = await page.locator('#destination').inputValue();
@@ -28,14 +29,25 @@ async initialPage => {
   if (await page.locator('.visit-tools').evaluate(node => node.open)) await page.locator('.visit-tools-toggle').click();
   await readyActions();
   check(await page.locator('.walking-primary > #walking-enter').isVisible(), 'Arrival gives the doorway a single primary prompt');
+  const introClaim = page.waitForResponse(response => response.url().includes('/api/profile/claim-intro'));
   if (touch) await page.locator('#walking-enter').tap();
   else { await page.locator('#walking-enter').focus(); await page.keyboard.press('Enter'); }
-  await page.waitForFunction(id => document.querySelector('#walking-hud').dataset.inside === id || !document.querySelector('#walking-notice').hidden, destination, { timeout: 10000 });
-  if (!await page.locator('#walking-hud').getAttribute('data-inside')) {
+  const arrival = await Promise.race([
+    introClaim.then(() => 'arrived'),
+    page.locator('#walking-notice').waitFor({ state: 'visible', timeout: 10000 }).then(() => 'refused'),
+  ]);
+  if (arrival === 'refused') {
     check((await page.locator('#walking-notice').textContent()).includes('Wait a moment'), 'Rapid arrival/entry explains the authoritative cooldown at the action');
     // Retry after the visible refusal dismisses; do not weaken the server cooldown.
     await page.locator('#walking-notice').waitFor({ state: 'hidden' });
     await page.locator('#walking-enter').click();
+  }
+  // First arrivals own input until the welcome finishes. Returning visitors
+  // receive a repeat claim instead; neither case should race walking input.
+  if ((await (await introClaim).json()).firstVisit) {
+    await page.locator('.store-intro').waitFor({ state: 'visible' });
+    await page.locator('.store-intro button').click();
+    await page.locator('.store-intro').waitFor({ state: 'hidden' });
   }
   await page.waitForFunction(id => document.querySelector('#walking-hud').dataset.inside === id, destination, { timeout: 10000 });
   await readyActions();
@@ -86,6 +98,7 @@ async initialPage => {
   finally { await page.keyboard.up('KeyA'); }
   check(true, 'First visit ends with walking restored after taking a photo');
   await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.locator('.town-chat-dock').evaluate(node => node.open)) await page.locator('.town-chat-toggle').click();
   if (await more.evaluate(node => node.open)) await more.locator('summary').click();
   if (await page.locator('#walking-movement').isHidden()) await page.locator('#walking-controls-toggle').click();
   check(await page.locator('[data-walk-key=KeyW]').isVisible(), 'Narrow viewport exposes the on-screen movement pad');

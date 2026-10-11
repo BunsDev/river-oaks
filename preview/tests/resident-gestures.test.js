@@ -18,6 +18,18 @@ test('a visible slow frame still advances a shared wave',()=>{
 });
 
 const copy=pose=>structuredClone(pose);
+test('handshakes extend an arm and dancing moves both arms and torso at a shared phase',()=>{
+  const handshake=createResidentGestures(),dance=createResidentGestures();let hand,pose;
+  for(let i=0;i<90;i++){hand=handshake.update('handshake',1/60,1);pose=dance.update('dance',1/60,1);}
+  assert.ok(hand.upperarm_r[0]<-.5,'hand reaches forward');
+  assert.ok(Math.abs(pose.spine_03[2])>.03,'torso sways');
+  assert.ok(pose.upperarm_l[0]<-.2&&pose.upperarm_r[0]<-.2,'both arms participate');
+  const before=copy(pose);
+  for(let i=0;i<60;i++)pose=dance.update('dance',1/60,2);
+  assert.ok(Math.abs(before.spine_03[2]-pose.spine_03[2])>.04,'dance changes with phase');
+  for(let i=0;i<120;i++)pose=dance.update('continue',1/60,3);
+  assert.ok(Object.values(pose).flat().every(angle=>Math.abs(angle)<1e-6));
+});
 test('passive acknowledgement is a small head nod that leaves walking arms free',()=>{
   const motion=createResidentGestures();let pose;
   for(let frame=0;frame<40;frame++)pose=motion.update('acknowledge',1/60);

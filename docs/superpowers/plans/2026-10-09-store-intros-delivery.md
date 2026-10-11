@@ -1,5 +1,8 @@
 # Sign-in, Harry Winston and first-visit intro delivery
 
+Current reconciliation and merge evidence continues in
+[the October 11 PR #198 ledger](2026-10-11-pr198-merge.md).
+
 User authorized commit, push and merge to main on October 9. Integration branch:
 `codex/store-intros-signin-delivery-20261009`, external worktree
 `river-oaks-delivery-20261009`, based on origin/main 1018d0c.

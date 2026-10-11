@@ -1,4 +1,5 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
  const checks=[],runs=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&/Shader Error|VALIDATE_STATUS|WebGLProgram/.test(m.text()))errors.push(m.text());});
  const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
@@ -12,7 +13,7 @@ async page=>{
    await page.locator('#community-dialogue').waitFor({state:'hidden'});
   }
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
+  await openHudSpace(page, 'community-section');if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();await page.locator('#community-dialogue').waitFor({state:'visible'});
  };
  const sample=async(id,duration=8000)=>page.evaluate(async({id,duration})=>{
