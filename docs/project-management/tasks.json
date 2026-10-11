@@ -1401,9 +1401,9 @@
         "fix/workplace-retention-status"
       ],
       "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T11:29:00+00:00",
-      "leaseUntil": "2026-10-11T13:29:00+00:00",
-      "nextAction": "Write failing tests for per-draft key expiry, no brief in the owner document, forget of finished briefs, and stale panel status; then implement.",
+      "updatedAt": "2026-10-11T11:36:00+00:00",
+      "leaseUntil": "2026-10-11T13:36:00+00:00",
+      "nextAction": "Run full server/preview suites and pnpm run verify, then open the PR stacked on #230.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-retention-status.md",
       "filesOwned": [
         "server/workplace.js (storage and forget; agreed with river-oaks-55)",
@@ -1411,8 +1411,8 @@
         "preview/src/workplace-ui.js (health, forget control)",
         "server/vercel-routing.js",
         "vercel.json (workplace routes)",
-        "server/tests/workplace-retention.test.js",
-        "preview/tests/workplace-panel.test.js",
+        "server/tests/retention-workplace.test.js",
+        "preview/tests/panel-workplace.test.js",
         "docs/workplace-operations.md",
         "docs/superpowers/plans/2026-10-11-workplace-retention-status.md"
       ],
