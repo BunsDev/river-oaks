@@ -1419,6 +1419,41 @@
         "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
       },
       "pr": 229
+    },
+    {
+      "id": "studio-starter-districts",
+      "title": "Five importable district starters and World Studio template chooser",
+      "status": "active",
+      "branches": [
+        "cody/starter-districts-20261011"
+      ],
+      "owner": "cody-starter-districts-20261011",
+      "leaseUntil": "2026-10-11T16:35:18.422219+00:00",
+      "updatedAt": "2026-10-11T14:35:18.422219+00:00",
+      "nextAction": "Commit and open the authorized PR, then await review and hosted CI. Local chooser integration is verified; do not retire before merge.",
+      "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
+      "filesOwned": [
+        "preview/public/data/starter-districts/",
+        "preview/src/studio/templates.js",
+        "preview/src/studio/template-picker.js",
+        "preview/src/studio/main.js",
+        "preview/src/studio/studio.css",
+        "preview/tests/studio-templates.test.js",
+        "docs/starter-districts.md",
+        "preview/e2e/world-studio.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-templates.test.js",
+        "pnpm run verify",
+        "Studio browser acceptance"
+      ],
+      "evidence": {
+        "verification": [
+          ".runtime/agent/core.json",
+          "data/reports/starter-districts-browser.json"
+        ],
+        "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
+      }
     }
   ]
 }
