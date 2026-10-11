@@ -40,8 +40,21 @@ warning domes use a texture rather than individual meshes.
 
 At continuous road bends, asphalt, gutters, curbs, pavers and ramp warnings share
 joined polygon corners. Bounded miter joins prevent independently extruded strips
-from leaving gaps or protruding triangles. True junctions retain their existing
-crossing treatment and clipping.
+from leaving gaps or protruding triangles.
+
+Junctions of three or more street arms get curb returns, after the River Oaks
+District corners such as Kettering Drive (`preview/src/street-corners.js`). Each
+corner between neighbouring arms has a 3 m return: a concrete gutter band and
+asphalt fill in the mouth, a curved curb face and top, and one paving field across
+the corner whose courses continue the through street's. The paving is graded by
+distance to the curb, so it meets both sidewalks and the plaza without a step;
+its seam edges reuse the strips' own vertices. Crossings keep clear of these
+corners and of mapped footways that cross the carriageway: a crossing that would
+land inside a corner moves along its street until its ramp, flares and warning
+strip lie beyond the corner paving. Where that is impossible (a stub street, a
+short connector with junctions at both ends) or the corner would reach another
+carriageway, that corner stays square. `preview/e2e/fixtures/corners.html` frames
+every junction corner (`cornerFixture.view(index, 'street' | 'plan')`) for review.
 
 Lamps, bins and planters occupy the furnishing strip. Planters run along the
 street to avoid projecting into the eight-foot walking strip. New fixtures avoid
