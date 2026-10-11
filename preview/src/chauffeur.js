@@ -38,22 +38,25 @@ export function scenicRoute(world,pose) {
  return dense;
 }
 export function createChauffeur({fetcher=(...args)=>fetch(...args),clock=()=>performance.now()}={}) {
- let route=[],index=0,active=false,label='Jev is ready',generation=0,tick=0,pending=null,nextPoll=0,leaseUntil=0,action=null,stalled=0,source=null,paused=false;
+ let route=[],index=0,active=false,label='Jev is ready',generation=0,tick=0,pending=null,nextPoll=0,leaseUntil=0,action=null,stalled=0,source=null,paused=false,failures=0;
+ // `failures` backs off polling (up to a minute) while the server refuses or answers
+ // without a decision (not configured, budget spent, provider paused); one decision resets it.
  const cancel=()=>{generation++;pending?.abort();pending=null;leaseUntil=0;action=null;source=null;};
  const poll=(pose,error,remaining,roadClear,rearClear,recovery)=>{
   const now=clock();if(pending||now<nextPoll)return;
-  const controller=new AbortController();pending=controller;nextPoll=now+1500;
+  const controller=new AbortController();pending=controller;nextPoll=now+Math.min(60_000,1500*2**failures);
   const request={schema_version:1,tick:++tick,generation,vehicle:pose.vehicle??'rolls',speed:Math.min(20,Math.abs(pose.speed)),remaining_m:Math.min(100000,remaining),turn_radians:error,road_clear:roadClear,rear_clear:rearClear,recovery,
    candidates:Object.keys(policy.thresholds).map(action=>({id:action,action,label:action}))};
   const timer=setTimeout(()=>controller.abort(),2800);
   const timeout=new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(new Error('Aborted')),{once:true}));
   Promise.race([fetcher('/v1/chauffeur',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:controller.signal}).then(r=>{if(!r.ok)throw new Error('Unavailable');return r.json();}),timeout]).then(answer=>{
+   if(answer?.source==='jev'){failures=0;nextPoll=Math.min(nextPoll,clock()+1500);}else failures++;
    if(!active||generation!==request.generation||controller.signal.aborted)return;
    const thresholds=policy.thresholds;
    const valid=answer.schema_version===1&&answer.tick===request.tick&&answer.generation===request.generation&&answer.source==='jev'&&Object.hasOwn(thresholds,answer.candidate_id)&&Number.isFinite(answer.confidence)&&answer.confidence>=thresholds[answer.candidate_id]&&answer.confidence<=1;
    if(!valid){leaseUntil=0;action=null;source=null;label=answer.reason==='not_configured'?(import.meta.env?.DEV?'Add your Jev API key in Settings':'Jev smart driving is not configured on the server'):'Jev unavailable · holding';return;}
    action=answer.candidate_id;source='jev';leaseUntil=clock()+2800;label=({cruise:'Jev smart driving',accelerate:'Jev is accelerating',slow:'Jev is slowing down',turn_left:'Jev is steering left',turn_right:'Jev is steering right',brake:'Jev is braking',reverse:'Jev is reversing carefully',yield:'Jev is yielding',stop:'Jev has stopped',park:'Jev is parking'})[action];
-  }).catch(()=>{if(generation===request.generation){leaseUntil=0;action=null;source=null;label='Jev unavailable · holding';}}).finally(()=>{clearTimeout(timer);if(pending===controller)pending=null;});
+  }).catch(()=>{failures++;if(generation===request.generation){leaseUntil=0;action=null;source=null;label='Jev unavailable · holding';}}).finally(()=>{clearTimeout(timer);if(pending===controller)pending=null;});
  };
  return {
   get status(){return {active,paused,label,source,remaining:Math.max(0,route.length-index)};},
