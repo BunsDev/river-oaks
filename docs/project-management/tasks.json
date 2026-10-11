@@ -1813,13 +1813,13 @@
     {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/studio-agent-chat"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T15:44:03+00:00",
-      "nextAction": "Delivered by PR #240 (merge a9cfe01). Bridge hardening follow-up is tracked by studio-bridge-hardening. Retire worktree river-oaks-studio-chat-20261011 after this register change merges.",
+      "updatedAt": "2026-10-11T17:59:58.711Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-agent-chat.md",
       "filesOwned": [
         "preview/src/studio/agent-chat.js",
@@ -1844,19 +1844,35 @@
           "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh. Local core verify, Studio unit (58), agent Electron E2E, designer/studio Electron E2E and world-studio browser journey passed. Packaged build was not exercised (see studio-bridge-hardening)."
         }
       ],
-      "retirement": null
+      "retirement": {
+        "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "pr": 240,
+      "retiredBranches": [
+        "feat/studio-agent-chat"
+      ],
+      "archive": {
+        "feat/studio-agent-chat": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/history.bundle",
+          "sha256": "92bc447263911e5a5cca6678eab2dcdcbbb110cbdf1c8087bee148c8721d3586",
+          "tag": "refs/tags/archive/worktree-prune/e8790513-6677-40df-b484-38e4e177b229",
+          "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12"
+        }
+      }
     },
     {
       "id": "studio-bridge-hardening",
       "title": "Harden the Studio desktop bridges (World Designer and agent chat) against page-script steering and file reads",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/studio-bridge-hardening"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-11T17:44:03+00:00",
-      "updatedAt": "2026-10-11T15:44:03+00:00",
-      "nextAction": "Push, open PR, request review from river-oaks-c2; merge only with user authorization via the guard, in merge-queue order.",
+      "owner": null,
+      "updatedAt": "2026-10-11T18:00:19.461Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
       "filesOwned": [
         "desktop/studio-preload.cjs",
@@ -1871,6 +1887,54 @@
         "node desktop/designer-e2e.js",
         "node desktop/studio-e2e.js",
         "pnpm run verify"
+      ],
+      "pr": 243,
+      "evidence": [
+        {
+          "pr": 243,
+          "reviewedHead": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+          "merge": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "tree": "dbb7093a5b0ffc6b7341a9c47cd1dfd1ed27f74d",
+          "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh after river-oaks-c2 approval (PR comment) at 014e2a0 (identical patches rebased). Local core verify, desktop units 47, Studio units 25, agent-e2e 9, designer-e2e 9, studio-e2e and world-studio journey passed; live hardened-CLI file-read probes refused."
+        }
+      ],
+      "retirement": {
+        "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "retiredBranches": [
+        "fix/studio-bridge-hardening"
+      ],
+      "archive": {
+        "fix/studio-bridge-hardening": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/history.bundle",
+          "sha256": "d2268f8126319211d199821a5263f9d665e1998abe9cb9e49647908ffa02832b",
+          "tag": "refs/tags/archive/worktree-prune/70a97fd7-f4a6-45d2-8164-b6ec47f29272",
+          "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2"
+        }
+      }
+    },
+    {
+      "id": "studio-retirement-register",
+      "title": "Record retirement of the Studio agent-chat and bridge-hardening branches in the shared register",
+      "status": "active",
+      "branches": [
+        "docs/studio-tasks-retired"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-11T20:03:42+00:00",
+      "updatedAt": "2026-10-11T18:03:42+00:00",
+      "nextAction": "Merge the docs-only register PR in queue order, then release this task and retire docs/studio-tasks-retired with project:prune.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json"
+      ],
+      "requiredChecks": [
+        "pnpm run test:agent",
+        "pnpm run project:status",
+        "hosted Verify"
       ]
     },
     {
