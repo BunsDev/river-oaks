@@ -68,7 +68,10 @@ A **long-lived** gateway (`server/redis-start.js`, any deployment where `VERCEL`
 - An owner who lost access has their work stopped (`access_revoked`).
 - An index entry for a document that expired or was deleted is removed, but only if nobody re-scored it in the meantime.
 
-On **Vercel**, a function invocation can't keep a timer, so there is no sweep. A task advances on its owner's authorized reads, and an orphaned task waits for its owner. The in-memory town keeps everything in one process, so a restart loses its data, and it has no sweep either.
+On **Vercel**, a function invocation can't keep a timer. Instead, Vercel Cron calls `GET /api/workplace-sweep` once a minute (`crons` in `vercel.json`; the team is on Pro, which allows that rate), and the route **drains**: it steps every overdue task to completion, all owners in parallel, within a 20 s budget. The minute-long gap before the call counts as one lost-runner recovery, and the drain then keeps within the lease. A task the budget doesn't finish stays in the index for the next call (`server/tests/cron-workplace.test.js`).
+- The route exists only with the workplace on and `CRON_SECRET` set. Without the secret it returns 404, and with a wrong or missing `Authorization: Bearer <CRON_SECRET>` header it returns 401. The comparison is constant-time.
+- With `RIVER_OAKS_WORKPLACE` off, the Vercel entry answers the cron with 404 before it starts the backend, so the per-minute call costs almost nothing.
+- **Before enabling on Vercel:** set `CRON_SECRET` in the project's environment variables. Vercel sends it on cron calls. Without it, tasks advance only on owner reads. The in-memory town keeps everything in one process, so a restart loses its data, and it has no sweep either.
 
 The due index holds raw user ids, because the access check needs them. The waitlist and moderation stores already hold user ids server-side, and the index is never exposed through any route.
 
@@ -76,5 +79,5 @@ The due index holds raw user ids, because the access check needs them. The waitl
 
 - Live WorkOS sessions, hosted Redis under production load, and multi-region behavior.
 - The art pass, uncoached player sessions and device performance budgets (#221, owned by Val).
-- Unattended recovery on Vercel: no sweep runs there.
+- The Vercel cron route on a real deployment: tested locally against a live Redis gateway, not on Vercel itself.
 - Any external effect. The fixture adapter writes nothing outside the owner's document, and each receipt records `externalWrites: 0` and `paidCalls: 0`.

@@ -51,6 +51,8 @@ export async function createRedisBackend(env = process.env) {
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
       workplaceSweep: env.VERCEL !== '1',
+      // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
+      workplaceCronSecret: env.CRON_SECRET || null,
     });
     return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
       await gateway.close(); auth.close(); security.close(); redis.disconnect();
