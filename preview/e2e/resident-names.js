@@ -96,16 +96,16 @@ async page => {
     rows:[...document.querySelectorAll('.multiplayer-social-row span')].map(span=>span.textContent)}));
   check(listed,`The contact list shows the impostor’s safe name (${JSON.stringify(social)})`);
 
-  // The live player list on the map, where the world has one.
+  // The live player list is available in the expanded district map.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('#places-open').click();
   const players=page.locator('.world-map-player-list');
-  if(await players.count()){
-    await players.locator('summary').click();
-    await page.locator('.world-map-player-list button[data-peer-id="impostor"]').waitFor({state:'attached',timeout:30000});
-    check(await page.locator('.world-map-player-list button[data-peer-id="impostor"]').textContent().then(text=>!text.includes('Jevica')),
-      'The map’s live player list shows the impostor safely');
-  }
+  await players.locator('summary').click();
+  await page.locator('.world-map-player-list button[data-peer-id="impostor"]').waitFor({state:'visible',timeout:30000});
+  check(await page.locator('.world-map-player-list button[data-peer-id="impostor"]').textContent().then(text=>!text.includes('Jevica')),
+    'The map’s live player list shows the impostor safely');
+  await page.getByRole('button',{name:'Close map',exact:true}).click();
 
   const owned=await sweep(page,'Alice’s view');
   check(owned.length>=3,'The admin is still shown as Jevica on the roster, nameplate and chat');

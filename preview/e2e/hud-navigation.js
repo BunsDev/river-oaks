@@ -7,4 +7,6 @@ export async function openHudSpace(page, section, category = 'Appearance') {
     await trigger.click();
     await page.getByRole('tab', { name: category, exact: true }).click();
   } else if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click();
+  // Legacy storefront journeys still exercise entry permissions and direct arrival.
+  if (section === 'explore-section' && await page.locator('.storefront-access').count() && !await page.locator('.storefront-access').evaluate(el => el.open)) await page.locator('.storefront-access > summary').click();
 }

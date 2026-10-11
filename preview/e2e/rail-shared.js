@@ -48,8 +48,11 @@ async page => {
     await page.screenshot({ path: 'output/playwright/rails-region-inspector.png' });
     await page.getByRole('button', { name: 'Close region editor', exact: true }).click();
   }
-  await command('events & gatherings');
-  check(await page.evaluate(() => document.activeElement.matches('.world-events-filters select')), 'Events command focuses a live calendar filter');
+  await host.focus(); await page.keyboard.press('Control+k'); await search.fill('events');
+  check((await page.locator('.commands-count').textContent()).startsWith('No matching') && await page.locator('.world-events').count() === 0, 'Shared commands omit the unreleased Events surface');
+  await page.keyboard.press('Escape');
+  await command('world map');
+  check(await page.locator('#places-dialog').isVisible() && await page.evaluate(() => document.activeElement.matches('.world-map-surface')), 'Shared map command expands the atlas and focuses its live map');
   check(!errors.length, `No shared navigation page errors: ${errors.join('; ')}`);
   return { checks, canBuild, errors };
 }
