@@ -18,7 +18,7 @@ try {
  const entry=`http://127.0.0.1:${vite.httpServer.address().port}/`,env={...process.env,RIVER_OAKS_DEV_URL:entry,RIVER_OAKS_DESIGNER_COVEN:join(root,'desktop/tests/fixtures/studio-coven.mjs')};delete env.ELECTRON_RUN_AS_NODE;
  app=await electron.launch({args:[root,`--user-data-dir=${profile}`],env,timeout:30000});page=await app.firstWindow();page.setDefaultTimeout(15000);
  page.on('pageerror',error=>errors.push(error.message));
- await page.waitForURL(entry);assert.match(await page.evaluate(async()=>{try{await window.worldDesigner.catalog();return 'allowed';}catch(error){return error.message;}}),/limited/);
+ await page.waitForURL(entry);assert.equal(await page.evaluate(()=>typeof window.worldDesigner),'undefined');
  await app.evaluate(({dialog,Menu})=>{dialog.showMessageBox=async()=>({response:1});Menu.getApplicationMenu().items.find(i=>i.label==='Game').submenu.items.find(i=>i.label==='World Studio').click();});
  await page.waitForFunction(()=>document.body.dataset.studioReady==='true');
  await page.getByRole('button',{name:'Add building',exact:true}).click();await page.locator('#studio-save').click();await page.locator('#studio-designer-open').click();await page.locator('[data-runtime] option').waitFor({state:'attached'});

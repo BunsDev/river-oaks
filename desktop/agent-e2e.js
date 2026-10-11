@@ -20,10 +20,17 @@ try {
  const entry=`http://127.0.0.1:${vite.httpServer.address().port}/`,env={...process.env,RIVER_OAKS_DEV_URL:entry,RIVER_OAKS_AGENT_CLAUDE:cli,RIVER_OAKS_AGENT_CODEX:cli,AGENT_FIXTURE_LOG:log};delete env.ELECTRON_RUN_AS_NODE;
  app=await electron.launch({args:[root,`--user-data-dir=${profile}`],env,timeout:30000});page=await app.firstWindow();page.setDefaultTimeout(15000);
  page.on('pageerror',error=>errors.push(error.message));
- await page.waitForURL(entry);assert.match(await page.evaluate(async()=>{try{await window.studioAgent.catalog();return 'allowed';}catch(error){return error.message;}}),/limited/);
- check('agent IPC refuses the game page outside Studio');
+ await page.waitForURL(entry);
+ assert.deepEqual(await page.evaluate(()=>[typeof window.studioAgent,typeof window.worldDesigner]),['undefined','undefined']);
+ // pushState can rename the game page, but the bridges were decided at load and main tracks the committed URL.
+ assert.deepEqual(await page.evaluate(()=>{history.pushState(null,'','/studio.html');return [typeof window.studioAgent,typeof window.worldDesigner];}),['undefined','undefined']);
+ check('agent and designer bridges are absent on the game page, even after pushState to /studio.html');
  await app.evaluate(({dialog,Menu})=>{globalThis.__agentConsents=0;dialog.showMessageBox=async()=>{globalThis.__agentConsents++;return {response:1};};Menu.getApplicationMenu().items.find(i=>i.label==='Game').submenu.items.find(i=>i.label==='World Studio').click();});
  await page.waitForFunction(()=>document.body.dataset.studioReady==='true');
+ // Without a recent click or key press, page script cannot start agent work.
+ const unattended=await page.evaluate(()=>new Promise(resolve=>setTimeout(()=>window.studioAgent.send({chatId:'c',requestId:'r',providerId:'claude',modelId:'claude-haiku-5-5',mode:'ask',message:'hi',context:null}).then(()=>resolve('sent'),error=>resolve(error.message)),5500)));
+ assert.match(unattended,/click or key press/);
+ check('a send without a recent user gesture is refused before reaching the host');
  const before=await count();
  await page.getByLabel('Ask the World Studio agent').fill('Frame the arrival with trees');await page.getByLabel('Ask the World Studio agent').press('Enter');
  await page.getByRole('button',{name:'Apply as one edit'}).waitFor();

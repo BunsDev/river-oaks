@@ -53,7 +53,22 @@ skills. The task shares your editable project brief and either selected objects
 or the whole region, with units and revision. Screenshots and external reference
 attachments are not implemented yet. Studio sends context explicitly and adds no cross-project
 memory. The configured Codex harness retains its own user-level settings and
-authentication; read-only mode is not a guarantee of filesystem read isolation. Model responses must identify loaded skills and assumptions.
+authentication. Model responses must identify loaded skills and assumptions.
+
+**Read access.** Coven's `--permission read-only` maps to Codex's read-only
+sandbox, which still lets its shell *read* any file this account can read, and
+`coven run` cannot pass Codex feature flags to turn that shell off. The
+per-task dialog therefore says so, and shows the full task, project brief and
+scope before anything is sent. A tool-less Coven mode (or passing Codex
+`--disable` flags through) is needed to close this.
+
+**Page boundary.** As with the agent chat, the bridge exists only in documents
+loaded at a Studio path, the main process checks the committed URL, and setup
+and tasks need a recent click or key press. The host rebuilds the prompt from
+allowlisted request fields (task, project brief, scope, selected IDs and an
+allowlisted scene snapshot), and returns only allowlisted, length-capped
+proposal fields to the page. Nothing, including the Coven capability check,
+runs before setup consent.
 
 Project ID, familiar name, selected mode and brief are saved separately from the
 region file. A saved preference never implies a live connection after reload.

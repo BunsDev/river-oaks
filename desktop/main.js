@@ -15,7 +15,7 @@ app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
-let window, designerHost, agentHost, quitting = false, saved = {}, lastRecovery = 0;
+let window, designerHost, agentHost, loadedUrl = null, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
 const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://typesafe.place/play';
 const gameOrigin = new URL(entry).origin;
@@ -26,6 +26,13 @@ if (dev) {
   const url = new URL(entry);
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
   if (!clientId && process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE !== '1') throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
+}
+
+const excerpt = (text, max) => text.length > max ? `${text.slice(0, max)}…` : text;
+// Everything free-form the designer receives is shown before the user agrees.
+function designerRequestDetail({ scope, brief, projectBrief, selected, objects }) {
+  const shared = scope === 'region' ? `the whole region${objects === null ? '' : ` (${objects} objects)`}` : `${selected} selected object${selected === 1 ? '' : 's'}`;
+  return `Shares ${shared}, the task and the project brief. Your configured provider may charge for this request. Codex runs in Coven's read-only mode: it cannot change files, but it can read files this account can read. Proposed edits come back for your review.\n\nTask:\n${excerpt(brief, 600)}\n\nProject brief:\n${projectBrief ? excerpt(projectBrief, 600) : '(none)'}`;
 }
 
 async function saveWindow() {
@@ -99,8 +106,10 @@ function createWindow() {
     if (!navigationAllowed(url, entry)) event.preventDefault();
   });
   // Keep recovery on the selected app when users follow an in-page app link.
-  contents.on('did-start-navigation', (_event, _url, _inPlace, isMainFrame) => { if (isMainFrame) { designerHost?.dispose(); agentHost?.dispose(); } });
+  contents.on('did-start-navigation', (_event, _url, inPlace, isMainFrame) => { if (isMainFrame) { if (!inPlace) loadedUrl = null; designerHost?.dispose(); agentHost?.dispose(); } });
   contents.on('did-navigate', (_event, url) => {
+    // Committed main-frame loads only; in-page pushState never updates this.
+    loadedUrl = url;
     if (!navigationAllowed(url, entry)) return;
     const pathname = new URL(url).pathname;
     if (pathname === '/studio.html' || pathname === '/studio') activeEntry = studioEntry;
@@ -183,15 +192,15 @@ else {
           message: request.kind === 'connect' ? `Set up ${request.name}?` : `Send this task to ${request.name}?`,
           detail: request.kind === 'connect'
             ? 'Studio installs its world-building skills in a private project workspace. A dedicated familiar gets its own local Coven instance and identity. Existing familiars are unchanged. Codex uses the sign-in on this device; provider authentication remains unverified until you send a task.'
-            : `Share ${request.scope === 'region' ? 'the whole region' : 'the selected object'} and the project brief. Your configured provider may charge for this request. The agent runs read-only and returns proposed edits for review.\n\n${request.brief}` });
+            : designerRequestDetail(request) });
         return response === 1;
       },
     });
     for (const method of ['catalog','connect','request','cancel','disconnect']) ipcMain.handle(`studio-designer:${method}`, async (event, input) => {
-      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Designer access is limited to the main Studio window.');
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) throw Error('Designer access is limited to the main Studio window.');
       const frame = event.senderFrame;
       const result = await designerHost[method](input);
-      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
       return result;
     });
     agentHost = createStudioAgentHost({ root: join(app.getPath('userData'), 'studio-agent'),
@@ -203,11 +212,11 @@ else {
       },
     });
     for (const method of ['catalog','send','cancel','reset']) ipcMain.handle(`studio-agent:${method}`, async (event, input) => {
-      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Agent chat is limited to the main Studio window.');
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) throw Error('Agent chat is limited to the main Studio window.');
       const frame = event.senderFrame, sender = event.sender;
-      const onDelta = text => { if (!frame.isDestroyed() && designerSenderAllowed(event, window?.webContents, gameOrigin)) sender.send('studio-agent:delta', { requestId: input.requestId, text }); };
+      const onDelta = text => { if (!frame.isDestroyed() && designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) sender.send('studio-agent:delta', { requestId: input.requestId, text }); };
       const result = await agentHost[method](input, { onDelta });
-      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { agentHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) { agentHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
       return result;
     });
     createWindow();
