@@ -1,0 +1,89 @@
+{
+  "state": "retired",
+  "task": "dependency-prs-211-213",
+  "head": "cd42d50e70f545ccc9e9292bd324183b0a3ef972",
+  "branch": "chore/dependency-merge-20261011",
+  "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-deps-20261011",
+  "owner": "codex:01a12a36-ff30-7b13-944b-58f6c69719ce",
+  "ownership": "Created and exclusively used by this session; no pending verification processes; fresh project inventory active=false. Other sessions preserved.",
+  "ignoredEvidence": [
+    ".runtime",
+    "output/playwright"
+  ],
+  "regenerableCaches": [
+    "node_modules",
+    ".venv",
+    "dist",
+    "data/generated",
+    ".pytest_cache",
+    ".ruff_cache",
+    "scripts/__pycache__",
+    "src/river_oaks/__pycache__",
+    "tests/__pycache__"
+  ],
+  "sourceProof": "Exact PR213 merge commit; entire tree matches delivered merge and commit is ancestor of fetched main. No local source delta.",
+  "archiveTag": "archive/dependency-prs-211-213/20261011",
+  "bundle": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/source-history.bundle",
+  "bundleSha256": "0004d46e74d5edcb85edd33bfc1d1869f90ae70963509e5cec3a5d23d9744f5e",
+  "restoreRepository": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/restored.git",
+  "restoreVerified": true,
+  "fsck": true,
+  "localEvidence": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/local-evidence.tar",
+  "localEvidenceSha256": "908cfd73664841342e9854ef96ddba27d02d8940f5abff14baf86d1ae945c91d",
+  "evidenceFileCount": 189,
+  "evidenceHashesVerified": true,
+  "restoreCommands": [
+    "git fetch /Users/buns/worktree-backups/river-oaks-dependencies-20261011/source-history.bundle refs/tags/archive/dependency-prs-211-213/20261011:refs/heads/recover-dependencies",
+    "git worktree add /new/recovery/path recover-dependencies",
+    "Inspect local-evidence.tar before selectively restoring reports; do not apply runtime state to live services."
+  ],
+  "immediateGuards": {
+    "headMatches": true,
+    "cleanIncludingSubmodules": true,
+    "unlocked": true,
+    "exclusiveTaskOwner": true,
+    "processCwdsClear": true,
+    "evidenceUnchanged": true
+  },
+  "method": "non-forced git worktree remove; git branch -d",
+  "retiredAt": "2026-10-11T13:07:50.697452+00:00",
+  "primaryDirtyPathsPreserved": true,
+  "postMergeCI": {
+    "failedRun": 38136791982,
+    "failure": "creator-objects.js:77 waitForFunction Timeout 60000ms",
+    "laterMainPassedRun": 38138550538,
+    "laterMainHead": "9eaec796d9a0d5ed7e3730aa2ecd71efaa0e62e0",
+    "rootCause": "unproven"
+  },
+  "finalVerification": {
+    "worktreesBefore": 25,
+    "worktreesAfter": 24,
+    "branchesBefore": 25,
+    "branchesAfter": 25,
+    "removedWorktrees": 1,
+    "removedBranches": 1,
+    "concurrentNewBranches": [
+      "chore/enforced-local-pruning"
+    ],
+    "projectCheckExit": 1,
+    "remainingGaps": [
+      "Unregistered branch: chore/desktop-dev-env-local",
+      "Expired ownership lease: workplace-review; do not take over without reconciliation",
+      "Unregistered branch: docs/workplace-slice-delivered",
+      "Unregistered branch: feat/hud-rail-luxe",
+      "Unregistered branch: feat/paver-texture-realism",
+      "Unregistered branch: feat/plant-diversity",
+      "Unregistered branch: feat/sidewalk-corners",
+      "Unregistered branch: feat/studio-agent-chat",
+      "Unregistered branch: feat/studio-system-theme",
+      "Unregistered branch: fix/workplace-erase",
+      "Unregistered branch: fix/workplace-retention-status",
+      "Unregistered branch: fix/workplace-room-envelope",
+      "Unregistered branch: fix/workplace-task-sweep",
+      "Unregistered branch: fix/workplace-vercel-sweep",
+      "Unregistered branch: test/workplace-221-adversarial"
+    ],
+    "toolingTests": "node --test --test-concurrency=2 scripts/tests/project-status.test.js: 8 passed, 0 failures/skips",
+    "dependencyTaskGaps": []
+  }
+}
