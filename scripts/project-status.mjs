@@ -77,8 +77,8 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
     const task=tasks.find(t=>t.branches.includes(branch.branch));
     const worktree=snapshot.worktrees.find(w=>w.branch===branch.branch);
     if(!task)gaps.push(`Unregistered branch: ${branch.branch}`);
-    if(task?.status==='delivered')gaps.push(`Pending local retirement: ${task.id} (${branch.branch}); run project:prune and reconcile blockers`);
-    if(task?.status==='retired')gaps.push(`Previously retired branch reappeared: ${branch.branch}`);
+    if(task?.status==='delivered'&&!worktree?.primary&&!['main','master',snapshot.defaultBranch].includes(branch.branch))gaps.push(`Pending local retirement: ${task.id} (${branch.branch}); run project:prune and reconcile blockers`);
+    if(task?.status==='retired'||task?.retiredBranches?.includes(branch.branch))gaps.push(`Previously retired branch reappeared: ${branch.branch}`);
     if(task?.status==='active'&&Date.parse(task.leaseUntil)<=now)gaps.push(`Expired ownership lease: ${task.id}; do not take over without reconciliation`);
     const matchingPRs=(pulls??[]).filter(p=>p.head?.ref===branch.branch);
     if(task?.pr&&pulls!==null){

@@ -155,4 +155,6 @@ test('an exact-tip source alias can retire while the task retains its other bran
  const result=retire({...options(f),branch:'source-alias',loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
  assert.equal(result.status,'retired');assert.equal(f.git('rev-parse','feature'),f.head);assert.ok(existsSync(f.checkout));
  const task=JSON.parse(readFileSync(f.tasksPath)).tasks[0];assert.equal(task.status,'delivered');assert.deepEqual(task.retiredBranches,['source-alias']);
+ f.git('branch','source-alias',f.head);
+ assert.ok(planRetirement({...options(f),branch:'source-alias',register:{tasks:[task]}}).blockers.includes('previously-retired-ref-reappeared'));
 });

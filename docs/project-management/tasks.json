@@ -1490,7 +1490,7 @@
       ],
       "verification": {
         "core": "passed: .runtime/agent/core.json, .runtime/pruning-core-final.log",
-        "tooling": "42 passed, 0 failed, 0 skipped; .runtime/pruning-final42.log",
+        "tooling": "43 passed, 0 failed, 0 skipped; .runtime/pruning-final43.log",
         "review": "Independent final review: no findings on maintenance exception or exact-tip source alias support",
         "localInstall": "Shared common-Git hooksPath installed; real map branch dry run blocked, no actual removals",
         "liveRetirement": "/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/manifest.json"

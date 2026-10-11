@@ -104,7 +104,8 @@ known unfinished work rather than treating this round as global task completion.
 
 ## Enforced local retirement
 
-`project:check` exits nonzero while a delivered task retains any local branch.
+`project:check` exits nonzero while a delivered task retains a non-protected local branch.
+Primary/default branches are excluded from retirement debt.
 A blocked cleanup stays visible until its evidence is reconciled; do not relabel
 the task active or retired to hide the gap.
 

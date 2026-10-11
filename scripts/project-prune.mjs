@@ -38,6 +38,7 @@ export function planRetirement({root,branch,expectedHead,register,pulls,activity
   if(['main','master',defaultRef.replace('refs/remotes/origin/','')].includes(branch)||owned.some(w=>w.primary))block('protected-branch');
   const tasks=register?.tasks?.filter(t=>t.branches?.includes(branch))??[];const task=tasks[0];
   if(tasks.length!==1||task.status!=='delivered'||task.owner||task.leaseUntil)block('ownership-not-released');
+  if(task?.retiredBranches?.includes(branch))block('previously-retired-ref-reappeared');
   const release=task?.retirement;
   const fresh=date=>Number.isFinite(Date.parse(date))&&now-Date.parse(date)>=0&&now-Date.parse(date)<2*60*60*1000;
   if(release?.head!==head||!fresh(release?.sessionsReviewedAt)||!fresh(release?.releasedAt))block('session-release-missing-or-stale');

@@ -70,3 +70,12 @@ test('delivered local branches remain a reconciliation gap until actually retire
   const removed=reconcile({branches:[],worktrees:[]},{tasks:[{...task,status:'retired'}]},[]);
   assert.deepEqual(removed.gaps,[]);
 });
+
+test('protected default and primary branches never become retirement debt', () => {
+  for(const branch of ['main','master','trunk','primary-checkout']) {
+    const task={id:'delivered-on-protected',status:'delivered',branches:[branch],owner:null};
+    const snapshot={defaultBranch:'trunk',branches:[{...delivered,branch}],worktrees:branch==='primary-checkout'?[{branch,primary:true}]:[]};
+    const r=reconcile(snapshot,{tasks:[task]},[]);
+    assert.ok(!r.gaps.some(gap=>gap.includes('Pending local retirement')));
+  }
+});

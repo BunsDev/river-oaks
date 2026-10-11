@@ -68,3 +68,10 @@ Final local tooling gate: `pnpm run test:agent` — 42 passed, 0 failed/skipped,
 weakening SHA/tree/open-PR checks; regression proves other branches survive and
 multi-branch tasks stay delivered until all refs retire. Independent final review
 reported no findings on either this case or the maintenance exception.
+
+Protected default/primary branches are excluded from pending-retirement gaps;
+a red/green regression covers main, master, custom default and primary checkouts.
+
+Recreated retired refs remain protected even within delivered multi-branch tasks.
+Final tooling suite after these reconciliation fixes: 43 passed, 0 failed/skipped;
+`.runtime/pruning-final43.log`. Independent focused review: no findings.
