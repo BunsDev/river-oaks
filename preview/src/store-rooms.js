@@ -147,6 +147,10 @@ function guests(room, count, spots) {
   spots.slice(0, count).forEach(([a, d, facing, pose = 'browse'], i) => person(room, 'guest', pose, a, d, facing, { seed: room.index * 7 + i }));
 }
 
+// Wall displays project 0.54 m from each side. A centre island needs an
+// 0.8 m aisle on both sides for the 0.7 m player; smaller shops use wall displays.
+const fitsDisplayIsland = (width, islandWidth) => width >= 2 * 0.54 + islandWidth + 2 * 0.8;
+
 function layoutRoom(room) {
   const W = room.width, D = room.depth, half = W / 2, back = D - 0.9;
   const columns = W > 9.5 ? [-W / 3, 0, W / 3] : [-W / 4, W / 4];
@@ -187,7 +191,9 @@ const LAYOUTS = {
     const narrow = W < 5.5;
     for (const side of [-1, 1]) wall(room, 'rail', side, 1.6, D - 2.4, { shelf: true });
     for (const side of [-1, 1]) wall(room, 'shelves', side, D - 2.2, D - 1.0, { contents: 'shoes' });
-    if (narrow) block(room, 'table', 0, D * 0.5, 1.2, 0.7, { contents: 'folded' });
+    if (narrow) {
+      if (fitsDisplayIsland(W, 1.2)) block(room, 'table', 0, D * 0.5, 1.2, 0.7, { contents: 'folded' });
+    }
     else {
       block(room, 'table', -W * 0.18, D * 0.36, 1.7, 0.85, { contents: 'folded' });
       block(room, 'table', W * 0.18, D * 0.62, 1.7, 0.85, { contents: 'folded' });
@@ -214,14 +220,18 @@ const LAYOUTS = {
   jewelry(room, { W, D, half, back }) {
     for (const side of [-1, 1]) wall(room, 'niche', side, 1.4, D - 1.8);
     const rows = D > 7 ? [D * 0.32, D * 0.55] : [D * 0.4], sides = W < 5.5 ? [0] : [-1, 1];
-    for (const d of rows) for (const side of sides) block(room, 'vitrine', side * Math.min(1.6, W * 0.18), d, 1.3, 0.62);
+    const islands = sides.length > 1 || fitsDisplayIsland(W, 1.3);
+    if (islands) {
+      for (const d of rows) for (const side of sides) block(room, 'vitrine', side * Math.min(1.6, W * 0.18), d, 1.3, 0.62);
+    }
     block(room, 'desk', 0, back - 0.1, 1.6, 0.8, { style: 'consultation' });
     block(room, 'chair', -0.5, back - 1.0, 0.5, 0.5, { style: 'armchair', yaw: Math.PI });
     block(room, 'chair', 0.5, back - 1.0, 0.5, 0.5, { style: 'armchair', yaw: Math.PI });
     room.fixtures.push({ kind: 'feature', quadrant: 1, a: 0, d: D - 0.22, w: Math.min(4.6, W - 1.2), h: 2.6 });
     person(room, 'staff', 'attend', 0, back + 0.75, [0, -1]);
-    person(room, 'staff', 'attend', -Math.min(1.6, W * 0.18), rows[0] + 0.85, [0, -1]);
-    guests(room, 2, [[Math.min(1.6, W * 0.18), rows[0] - 0.85, [0, 1], 'browse'], [half - 0.95, D * 0.6, [1, 0], 'browse']]);
+    const displayStation = islands ? Math.min(1.6, W * 0.18) : half - 0.95;
+    person(room, 'staff', 'attend', -displayStation, rows[0] + 0.85, [0, -1]);
+    guests(room, 2, [[displayStation, rows[0] - 0.85, [0, 1], 'browse'], [half - 0.95, D * 0.6, [1, 0], 'browse']]);
   },
   perfumery(room, { W, D, half, back }) {
     for (const side of [-1, 1]) wall(room, 'shelves', side, 1.3, D - 1.6, { contents: 'bottles', lit: true });

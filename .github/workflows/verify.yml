@@ -108,7 +108,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
           RIVER_OAKS_E2E_REPORT: ci-experience.json
-        run: xvfb-run -a pnpm run test:experience contextual-first-visit store-intro photo-mode rail-navigation
+        run: xvfb-run -a pnpm run test:experience contextual-first-visit store-intro photo-mode rail-navigation places-guide world-studio spatial-circulation spatial-streets
       - name: Experience journey failure evidence
         if: ${{ failure() && steps.experience.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

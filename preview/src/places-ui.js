@@ -6,6 +6,7 @@ import { worldIdFromSearch } from './world-contract.js';
 import { worldVisitUrl } from './world-portal.js';
 import { createWorldMap } from './world-map.js';
 import './world-map.css';
+import { createPlacesGuide } from './places-guide.js';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
@@ -18,6 +19,8 @@ export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
   const worldMap=worldMapEnabled ? createWorldMap({host,onGo,getPosition,getYaw,isOutdoor,shareBase,say,copy}) : null;
+
+  const guide = createPlacesGuide(host);
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
@@ -37,7 +40,11 @@ export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo
     const share = document.createElement('button'); share.type = 'button'; share.textContent = 'Link'; share.setAttribute('aria-label', `Copy a link to ${place.name}`);
     share.addEventListener('click', () => copy(place.kind === 'landmark' || place.kind === 'link'
       ? positionLink(place.position, place.yaw ?? 0, place.worldId ? worldVisitUrl(place.worldId) : shareBase()) : placeLink(place, shareBase())));
-    item.append(name, kind, go, share);
+    const label = document.createElement('span'); label.className = 'place-label'; label.append(name, kind);
+    const more = document.createElement('details'); more.className = 'place-more';
+    const summary = document.createElement('summary'); summary.textContent = '•••'; summary.setAttribute('aria-label', `More options for ${place.name}`);
+    const actions = document.createElement('div'); actions.className = 'place-more-actions'; actions.append(share);
+    more.append(summary, actions); item.append(label, go, more);
     if (removable) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove landmark ${place.name}`);
       remove.addEventListener('click', async () => {
@@ -46,11 +53,11 @@ export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo
           const removed=await store.remove(place.id,place.worldId);
           if(store!==currentLandmarks)return;
           if(!removed)return say('That landmark is no longer available.','error');
-          renderLandmarks();say(`Removed ${place.name}`);
+          renderLandmarks();say(`Removed ${place.name}`);nameInput.focus();
         } catch(error) {if(store===currentLandmarks)say(error.message,'error');}
         finally {remove.disabled=false;}
       });
-      item.append(remove);
+      actions.append(remove);
     }
     return item;
   }
@@ -58,12 +65,14 @@ export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo
     list.replaceChildren(...current.map(place => row(place)));
     $('#places-count').textContent = String(current.length);
     worldMap?.setPlaces(current);
+    guide.refresh();
   }
   function renderLandmarks() {
     const items = currentLandmarks.list();
     marks.replaceChildren(...items.map(place => row(place, { removable: true })));
     $('#landmarks-empty').hidden = items.length > 0;
     worldMap?.setLandmarks(items);
+    guide.refresh();
   }
   addButton.addEventListener('click', async () => {
     const position = getPosition();
@@ -98,6 +107,6 @@ export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo
     setLandmarks(next) { currentLandmarks = next; renderLandmarks(); },
     refresh() { renderLandmarks(); refreshHere(); },
     say,
-    dispose() { clearInterval(timer); worldMap?.dispose(); },
+    dispose() { clearInterval(timer); guide.dispose(); worldMap?.dispose(); },
   };
 }

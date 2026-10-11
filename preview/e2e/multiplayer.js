@@ -96,6 +96,7 @@ async page => {
     const placesToggle=page.locator('#panel-toggle');
     if(await placesToggle.getAttribute('aria-expanded')==='false')await placesToggle.click();
     await openHudSpace(page, 'explore-section');
+    await page.locator('#places-open').click();
     await page.locator('#places-list li[data-place-id="arrival"] button[aria-label^="Go to"]').click();
     await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Arrival"));
     const arrival=await page.evaluate(()=>window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice').position);
@@ -103,6 +104,7 @@ async page => {
       const player=window.__riverMultiplayer().snapshot.players.find(p=>p.id==='alice');
       return player && Math.hypot(player.position[0]-position[0],player.position[1]-position[1])<1.5;
     },arrival);
+    await page.locator('.places-close').click();
     if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
     // Try each walking direction and require the peer to observe real travel.
     let walked=false;

@@ -1,0 +1,124 @@
+{
+  "createdAt": "2026-10-08T08:14:31.841Z",
+  "results": [
+    {
+      "name": "debug-tools",
+      "status": "passed",
+      "seconds": 12.242,
+      "result": {
+        "checks": [
+          "Debug tools are not loaded until asked for",
+          "F3 opens the debug panel",
+          "All mapped collision polygons are drawn (9)",
+          "The walkable grid samples free and blocked ground (6713 free, 2696 blocked)",
+          "Registered ground triangles around the visitor are drawn (2490)",
+          "Store rooms and mapped roads are drawn (30 rooms, 39 roads)",
+          "Nearby skeletons are drawn (24)",
+          "The stats line reports overlay counts",
+          "The cursor reads ground height and walkability (18.46 m, free)",
+          "The cursor readout is shown in the panel",
+          "Placement receipt uses world east/north coordinates",
+          "Clicking inspects the mesh under the cursor (Roads and walkways: 11632 tris)",
+          "Inspecting does not start a conversation",
+          "The selection panel lists polygon counts",
+          "Cursor, selection and bones stay on top through an X-ray toggle",
+          "X-ray switches only the depth-tested overlays",
+          "The heaviest meshes are listed",
+          "Wireframe shows the whole scene as polygons",
+          "Turning wireframe off restores every material",
+          "F3 closes the panel and hides the overlays",
+          "The desktop menu event opens the panel",
+          "The placement cursor finds the boutique floor",
+          "Indoor coordinate receipt includes the room ID and local fixture coordinates",
+          "No page errors: "
+        ],
+        "counts": {
+          "colliders": 9,
+          "free": 6713,
+          "blocked": 2696,
+          "groundTriangles": 2490,
+          "roads": 39,
+          "footprints": 9,
+          "stores": 30,
+          "rooms": 30,
+          "skeletons": 24
+        },
+        "cursor": {
+          "x": -2765.321977373157,
+          "z": 1295.7197609447499,
+          "ground": 18.462403362676056,
+          "terrain": 18.186781566151772,
+          "free": true,
+          "room": null
+        },
+        "selection": {
+          "name": "(unnamed)",
+          "path": "Roads and walkways",
+          "type": "Mesh",
+          "instanceId": null,
+          "triangles": 11632,
+          "vertices": 34896,
+          "instances": 1,
+          "drawnTriangles": 11632,
+          "materials": [
+            "MeshStandardMaterial"
+          ],
+          "skinned": false
+        }
+      }
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 32.144,
+      "result": {
+        "desktop": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "On-screen movement buttons also work from the keyboard",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.8297356779176,20.057112141494105,1314.6724600530358]",
+          "errors": []
+        },
+        "touch": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "Releasing real touch input clears the held movement state",
+            "Touch test uses a coarse-pointer device context",
+            "Touch press turns the player using the on-screen pad",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.767045097612,20.057927049960924,1314.7499022906345]",
+          "errors": []
+        }
+      }
+    }
+  ]
+}

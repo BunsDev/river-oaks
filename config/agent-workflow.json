@@ -259,7 +259,11 @@
         "contextual-first-visit",
         "store-intro",
         "photo-mode",
-        "rail-navigation"
+        "rail-navigation",
+        "places-guide",
+        "world-studio",
+        "spatial-circulation",
+        "spatial-streets"
       ],
       "browser": true,
       "timeoutMs": 1200000

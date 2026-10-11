@@ -1,0 +1,51 @@
+/* The rail offers one entry; collections and management live in the travel guide. */
+:root[data-theme] #control-panel .places-launcher{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:14px;text-align:left;border:1px solid var(--hud-hairline,var(--line));border-radius:12px;background:var(--hud-tile,var(--soft));color:var(--ink);font-family:inherit;cursor:pointer}
+.places-launcher strong{display:block;font-size:13px;font-weight:600}
+.places-launcher small{display:block;margin-top:4px;font-size:11px;line-height:1.5;color:var(--muted)}
+.places-launcher>span:last-child{font-size:22px;color:var(--muted)}
+.places-guide{--places:var(--accent);box-sizing:border-box;width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:20px;background:var(--hud-glass,var(--panel));backdrop-filter:var(--hud-filter);color:var(--ink);box-shadow:0 24px 100px #0007;font-family:inherit;overflow:hidden}
+.places-guide[open]{display:flex;flex-direction:column}
+.places-guide::backdrop{background:#07191799;backdrop-filter:blur(8px)}
+.places-guide header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 24px 18px;flex-shrink:0}
+.places-guide .places-eyebrow{margin:0 0 6px;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.places-guide h2{margin:0;font-size:25px;font-weight:500;letter-spacing:-.035em;line-height:1.2}
+.places-guide :is(button,input,summary,a){font-family:inherit}
+.places-guide button,.places-guide .places-list a{min-height:36px;border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);border-radius:8px;padding:7px 12px;background:transparent;color:var(--ink);font-size:12px;line-height:1.4;cursor:pointer;text-decoration:none;box-sizing:border-box}
+.places-guide button:hover,.places-guide .places-list a:hover,.places-guide summary:hover{background:var(--accent-soft)}
+.places-guide button:disabled{opacity:.5;cursor:wait}
+.places-guide :is(button,input,summary,a):focus-visible,.places-launcher:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.places-guide kbd{margin-left:6px;font-size:10px;color:var(--muted)}
+.places-guide .places-tabs{display:flex;gap:4px;margin:0 24px;padding:4px;background:color-mix(in srgb,var(--ink) 5%,transparent);border-radius:12px;flex-shrink:0}
+.places-guide .places-tabs button{flex:1;border-color:transparent;color:var(--muted)}
+.places-guide .places-tabs button[aria-selected=true]{background:var(--hud-raised,var(--panel));color:var(--ink);box-shadow:0 1px 5px #0001}
+.places-guide-content{padding:20px 24px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.places-guide .places-group>summary{display:none}
+.places-guide [hidden]{display:none!important}
+.places-guide .places-search-label{display:grid;gap:7px;font-size:12px;color:var(--muted)}
+.places-guide input{box-sizing:border-box;width:100%;min-width:0;min-height:40px;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);border-radius:9px;padding:9px 12px;background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font-size:13px}
+.places-guide input::placeholder{color:var(--muted);opacity:1}
+.places-guide :is(#places-results,#places-no-results,#landmarks-empty){font-size:12px;line-height:1.5;color:var(--muted);margin:12px 0}
+.places-guide .places-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.places-guide .places-list li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:62px;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
+.places-guide .place-label{display:grid;gap:3px;min-width:0}
+.places-guide .place-name{font-size:13px;font-weight:500;overflow-wrap:anywhere}
+.places-guide .place-kind{font-size:11px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.places-guide .places-list li>button,.places-guide .places-list li>a{background:var(--accent-soft)}
+.places-guide .place-more{position:relative}
+.places-guide .place-more>summary{display:grid;place-items:center;width:36px;min-height:36px;border-radius:8px;list-style:none;cursor:pointer;font-size:12px;color:var(--muted)}
+.places-guide .place-more>summary::-webkit-details-marker{display:none}
+.places-guide .place-more-actions{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}
+.places-guide .places-list li:has(.place-more[open]){grid-template-columns:minmax(0,1fr) auto auto}
+.places-guide .place-more[open]{grid-column:1/-1}
+.places-guide .place-more[open]>summary{position:absolute;right:0;bottom:100%}
+.places-guide .landmark-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.places-guide footer{padding:12px 24px 16px;border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent);flex-shrink:0}
+.places-guide #places-status{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:0 0 6px}
+.places-guide #places-status:empty{margin:0}
+.places-guide .places-live-note{margin:0;font-size:11px;color:var(--muted)}
+.places-guide .world-map{margin-top:20px}
+@media(max-width:480px){.places-guide header{padding:20px 16px 16px}.places-guide .places-tabs{margin-inline:16px}.places-guide-content{padding:16px}.places-guide footer{padding:12px 16px}.places-guide h2{font-size:22px}.places-guide kbd{display:none}}
+@media(pointer:coarse){.places-guide :is(button,input,.places-list a),.places-guide .place-more>summary{min-height:44px}.places-guide .place-more>summary{width:44px}}
+
+@media(prefers-reduced-transparency:reduce){.places-guide{background:var(--panel);backdrop-filter:none}.places-guide::backdrop{backdrop-filter:none}}
+@supports not (backdrop-filter:blur(1px)){.places-guide{background:var(--panel)}}

@@ -30,6 +30,8 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     getClearView()?.set(false); getSections()?.select(index, true, selector);
     const target = selector && document.querySelector(selector);
     if (!target) return;
+    const guide = target.closest('#places-dialog');
+    if (guide) { guide.dispatchEvent(new CustomEvent('places-open', { detail: { selector } })); return; }
     for (let node = target.parentElement; node && node !== sidebar.panel; node = node.parentElement) {
       if (node.tagName === 'DETAILS') node.open = true;
     }
@@ -51,6 +53,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     ...['People · nearby and chat', 'Explore · places and landmarks', 'Settings'].map((label, index) => ({ label, keys: `Alt+${index + 1}`, run: () => openTab(index) })),
     { label: 'Search destinations', keys: '/', selector: '#store-search', run: () => openTab(1, '#store-search') },
     { label: 'World map', selector: '.world-map-surface', run: () => openTab(1, '.world-map-surface') },
+    { label: 'Places & landmarks', terms: 'go somewhere saved travel guide', selector: '#places-search', run: () => openTab(1, '#places-search') },
     { label: 'Save a landmark', selector: '#landmark-name', run: () => openTab(1, '#landmark-name') },
     { label: 'Browse shared worlds', selector: '.world-portal-list a', run: () => openTab(1, '.world-portal-list a') },
     { label: 'Events & gatherings', selector: '.world-events-filters select', run: () => openTab(1, '.world-events-filters select') },
