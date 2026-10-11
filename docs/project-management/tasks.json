@@ -1870,6 +1870,136 @@
           "checks": "Only upstream login artwork and its source record changed; both own commits have identical range-diff. Fresh production build and Studio journey passed; all tracked hashes unchanged during verification. Prior head 2db64ea passed all ten hosted checks."
         }
       ]
+    },
+    {
+      "id": "paver-texture-realism",
+      "title": "Sidewalk pavers re-authored from the Kettering Drive Street View reference",
+      "status": "delivered",
+      "branches": [
+        "feat/paver-texture-realism"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #231. Retire the local worktree and branch feat/paver-texture-realism with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/paver-textures.js",
+        "preview/tests/paver-textures.test.js"
+      ],
+      "pr": 231,
+      "deliveryPr": 231,
+      "evidence": [
+        {
+          "pr": 231,
+          "reviewedHead": "1b60689ef024530d849b29b776e306fbdfe8488e",
+          "merge": "62ba3db8ec1687c297890d7578874055ef6278f8",
+          "tree": "c672c2712be513a10610cdfea0379d1f53f538c2",
+          "checks": "All 11 final-head hosted checks passed on 1b60689. Local at 1b60689: paver-textures 9/9, pnpm test 2602 pass 0 fail, build passed."
+        }
+      ]
+    },
+    {
+      "id": "sidewalk-corners",
+      "title": "Curb returns with one paving field per junction corner; crossings kept clear of corners and footways",
+      "status": "delivered",
+      "branches": [
+        "feat/sidewalk-corners"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #233. Retire the local worktree and branch feat/sidewalk-corners with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/street-corners.js",
+        "preview/src/sidewalks.js",
+        "preview/src/street-roads.js",
+        "preview/src/pedestrian-network.js",
+        "preview/tests/street-corners.test.js",
+        "preview/e2e/fixtures/corners.html",
+        "preview/e2e/fixtures/corners.js"
+      ],
+      "pr": 233,
+      "deliveryPr": 233,
+      "evidence": [
+        {
+          "pr": 233,
+          "reviewedHead": "88496d97efa72ed2f27fa53a2b6085b1d1c937a8",
+          "merge": "c4a871bca555f4ffbc246b7f84c3597b6b905264",
+          "tree": "729cb0cd7cb680e5d2c8cf23d2bd72119b1ede15",
+          "checks": "All 11 final-head hosted checks passed on 88496d9. Local at 88496d9: street-corners 6/6, pnpm test 2615 pass 1 pre-existing skip, build passed; pnpm run verify core passed at f0e1c9f; 39 corners rendered before/after via the corners fixture."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-sidewalk-corners.md"
+    },
+    {
+      "id": "plant-diversity",
+      "title": "Seeded, layered River Oaks planting in lane planters and the Harry Winston curb bed",
+      "status": "delivered",
+      "branches": [
+        "feat/plant-diversity"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #234. Retire the local worktree and branch feat/plant-diversity with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/planting-palette.js",
+        "preview/src/procedural-plants.js",
+        "preview/src/landscape-models.js",
+        "preview/src/reference-planting.js",
+        "preview/tests/plant-diversity.test.js"
+      ],
+      "pr": 234,
+      "deliveryPr": 234,
+      "evidence": [
+        {
+          "pr": 234,
+          "reviewedHead": "6849af1a9605e912ea0f28ffb3c3a510982250bd",
+          "merge": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "tree": "e5fc6e2394e4fb675cb95b3cf96eec8dc5c9f2aa",
+          "checks": "All 11 final-head hosted checks passed on 6849af1 (preview after one rerun of the flaky email-access browser test). Local at 6849af1: plant-diversity 6/6, pnpm test 2621 pass 1 pre-existing skip, build passed."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-plant-diversity.md"
+    },
+    {
+      "id": "login-art-awake",
+      "title": "Sign-in art edited so Jevica is upright and awake; provenance recorded",
+      "status": "delivered",
+      "branches": [
+        "feat/login-art-awake"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #245. Retire the local worktree and branch feat/login-art-awake with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/public/assets/login/jev-jevica-golden-hour.jpg",
+        "preview/public/assets/login/sources.json"
+      ],
+      "pr": 245,
+      "deliveryPr": 245,
+      "evidence": [
+        {
+          "pr": 245,
+          "reviewedHead": "1811f71d16574d791c629afde7d0d2401062c12b",
+          "merge": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "tree": "55b0a1768fd23a7fbfb71ddb6e91fea8855f7c54",
+          "checks": "All 11 final-head hosted checks passed on 1811f71. Local at 3bd3a44: pnpm test 2621 pass 1 pre-existing skip, build passed; signed-out gate rendered at 1440x900 and 390x844."
+        }
+      ]
+    },
+    {
+      "id": "street-visuals-register",
+      "title": "Record the paver, corner, planting and login-art deliveries and retire their worktrees",
+      "status": "active",
+      "branches": [
+        "docs/street-visuals-delivered"
+      ],
+      "owner": "claude:river-oaks-f8",
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "leaseUntil": "2026-10-11T20:40:00+00:00",
+      "nextAction": "Merge this register PR after the queued PRs (c2's #237, #238, #244; #242; #248; #249). Then, from a clean primary on main, add fresh retirement records and run project:prune for feat/paver-texture-realism, feat/sidewalk-corners, feat/plant-diversity and feat/login-art-awake. Remote branch deletion is not authorized.",
+      "requiredChecks": [
+        "project-status validateTasks passes",
+        "Hosted checks on the final head"
+      ]
     }
   ]
 }
