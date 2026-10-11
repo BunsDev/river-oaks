@@ -179,14 +179,16 @@ for (const [name, makeStore] of stores) {
     const h = harness(await makeStore(t));
     const third = {userId: 'third-user', name: 'Third'};
     for (const actor of [owner, guest, third]) await h.workplace.companion(actor, {name: 'Pip'});
-    const claims = await Promise.all([owner, guest, third].map(actor => h.workplace.presence(actor, {mode: 'stationed'})));
+    // Three simultaneous claims for two desks: any one of them may lose the race.
+    const actors = [owner, guest, third];
+    const claims = await Promise.all(actors.map(actor => h.workplace.presence(actor, {mode: 'stationed'})));
     assert.deepEqual(claims.map(claim => claim.ok).sort(), [false, true, true]);
     assert.equal(claims.find(claim => !claim.ok).reason, 'stations_full');
-    const occupancy = await h.workplace.occupancy(third);
+    const loser = actors[claims.findIndex(claim => !claim.ok)], leaving = actors[claims.findIndex(claim => claim.ok)];
+    const occupancy = await h.workplace.occupancy(loser);
     assert.deepEqual(occupancy.stations.map(station => [station.occupied, station.mine]), [[true, false], [true, false]]);
-    const leaving = [owner, guest].find((actor, index) => claims[index].ok);
     await h.workplace.presence(leaving, {mode: 'offstage'});
-    assert.equal((await h.workplace.presence(third, {mode: 'stationed'})).ok, true, 'leaving releases the station');
+    assert.equal((await h.workplace.presence(loser, {mode: 'stationed'})).ok, true, 'leaving releases the station');
     h.tick(WORKPLACE_LIMITS.stationLeaseMs + 1);
     assert.equal((await h.workplace.occupancy(owner)).stations.every(station => !station.occupied), true, 'leases expire');
     // Declining costs nothing; accepting later still works.
