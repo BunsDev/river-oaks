@@ -1,6 +1,6 @@
 # Integrated workplace: review-first planning package
 
-**Status:** Awaiting independent agent review; not approved for implementation.  
+**Status:** Reviewed October 11, 2026. See the [keep / amend / defer record](review-2026-10-11.md). The first milestone is draft-only on a labeled fixture site. This is a recommendation to Val, not approval of canon, spending or deployment.  
 **Tracker:** [#214](https://github.com/BunsDev/river-oaks/issues/214).  
 **Start here:** [Review and reconciliation #216](https://github.com/BunsDev/river-oaks/issues/216).  
 **Publication branch:** `docs/workplace-review-package-20261011`.  
@@ -8,6 +8,7 @@
 
 ## Documents and authority
 
+- [Review record (#216)](review-2026-10-11.md): current dispositions, pinned baseline, open decisions and owners. Where it differs from the documents below, it supersedes them.
 - [Design specification](typesafe-place-workplace-design.md): player experience, physical setting, story alignment and safety boundaries.
 - [Implementation plan](typesafe-place-workplace-implementation-plan.md): proposed Tasks 0–8, integration seams and validation.
 
