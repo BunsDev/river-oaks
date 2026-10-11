@@ -40,3 +40,13 @@ test('only Vercel entry uses the platform-owned IP header and invalid values sha
   assert.equal(vercelClientAddress({ headers: {} }), 'unknown');
   assert.equal(vercelClientAddress({ headers: { 'x-vercel-forwarded-for': '2001:0db8:0:0::1' } }), '2001:db8::1');
 });
+
+test('the deployed intro rewrite reaches the private account claim route', () => {
+  const { rewrites } = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  const route = '/api/profile/claim-intro';
+  const rewrite = rewrites.find(item => item.source === route);
+  assert.ok(rewrite, 'intro claims have a hosted rewrite');
+  assert.equal(normalizeVercelRoute(rewrite.destination), route);
+  assert.equal(normalizeVercelRoute(route), route);
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/profile/claim-intro&_river_path=/auth/logout'), '/not-found');
+});
