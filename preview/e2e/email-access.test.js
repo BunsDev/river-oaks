@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { openHudSpace } from './hud-navigation.js';
 import { workosSdkFixture } from '../../server/tests/workos-sdk-fixture.js';
 import { createAuth } from '../../server/auth.js';
 import { createFileWaitlist } from '../../server/waitlist.js';
@@ -92,6 +93,14 @@ test('email access: browser verification, invitation, member controls and revoca
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }
+    // A signed-out visitor can report a broken sign-in: the report chunks are
+    // served before approval, and without a session only Copy and Download show.
+    await page.locator('#access-gate-report').click();
+    await page.locator('#report-dialog').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#report-send').isVisible(), false, 'signed out, a report can be copied or downloaded but not sent');
+    assert.equal(await page.locator('#report-download').isVisible(), true);
+    await page.keyboard.press('Escape');
+    await page.locator('#report-dialog').waitFor({ state: 'hidden' });
     const request = context.request;
     assert.equal(await page.evaluate(() => {
       const script = document.createElement('script');
@@ -139,8 +148,8 @@ test('email access: browser verification, invitation, member controls and revoca
     await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached' });
     await page.locator('.multiplayer-gate').waitFor({ state: 'hidden' });
     await page.locator('.app-shell:not([inert])').waitFor({ state: 'visible' });
-    await page.locator('#panel-toggle[aria-keyshortcuts]').waitFor({ state: 'visible' });
-    if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
+    // Account actions live in the settings modal once the HUD initializes.
+    await openHudSpace(page, 'settings-section', 'Account');
     await page.locator('#access-invites-open').click();
     await page.locator('#access-invites[open]').waitFor();
     await page.locator('#canvas-host canvas').waitFor({ state: 'visible' });

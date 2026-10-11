@@ -7,7 +7,7 @@ const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/d
   '/api/social/list', '/api/social/request', '/api/social/accept', '/api/social/remove', '/api/social/messages', '/api/social/send', '/api/social/invite-world', '/api/social/invite-place',
   '/api/groups/list', '/api/groups/read', '/api/groups/create', '/api/groups/invite', '/api/groups/accept', '/api/groups/decline', '/api/groups/leave', '/api/groups/remove', '/api/groups/send',
   '/api/events/list', '/api/events/create', '/api/events/rsvp', '/api/events/cancel',
-  '/api/profile/view', '/api/profile/save', '/multiplayer']);
+  '/api/profile/view', '/api/profile/save', '/api/debug-reports', '/api/debug-reports/get', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {
     const url = new URL(raw, 'http://localhost');

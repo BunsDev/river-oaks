@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks = [];
   const check = (condition, message) => { if (!condition) throw new Error(message); checks.push(message); };
   const errors = [];
@@ -18,7 +19,7 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:120000});
   await page.locator('#community-more').evaluate(element => { element.open = true; });
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click(); // Places tab: the rail shows one section at a time.
+  await openHudSpace(page, 'explore-section');
   await page.locator('#store-search').fill('hermes');
   check(await page.locator('#destination option').count() === 1, 'Store search handles accents');
   check(await page.locator('#store-name').textContent() === 'Hermès', 'Selected store details follow search');
@@ -52,8 +53,8 @@ async page => {
   check(await page.locator('#walking-movement').isVisible(), 'Movement controls can be shown');
   await page.locator('#walking-controls-toggle').click();
   check(await page.locator('#walking-movement').isHidden(), 'Movement controls collapse again');
-  await page.locator('[data-section=community-section]').click();
-  check(await page.locator('[data-section=community-section]').getAttribute('aria-selected') === 'true' && await page.locator('#community-section').isVisible(), 'People shortcut selects the People rail section');
+  await openHudSpace(page, 'community-section');
+  check(await page.locator('#people-toggle').getAttribute('aria-expanded') === 'true' && await page.locator('#community-section').isVisible(), 'People shortcut selects the People rail section');
   check(Number(await page.locator('#community-objective').getAttribute('max')) > 0, 'Community objective has a real target');
   for (const option of await page.locator('#community-scenario option').evaluateAll(options => options.map(option => option.value))) {
     await page.locator('#community-scenario').selectOption(option);
@@ -67,7 +68,7 @@ async page => {
     check(await opened(), 'Open-request shortcut starts a conversation');
     await close();
   } else check(true, 'No unassigned open request: the open-request shortcut is unavailable');
-  await page.locator('[data-section=settings-section]').click();
+  await openHudSpace(page, 'settings-section', 'World');
   await page.locator('[data-atmosphere=mist]').click();
   check(await page.locator('#weather').inputValue() === 'haze', 'Mist preset changes actual weather');
   check(await page.locator('[data-atmosphere=mist]').getAttribute('aria-pressed') === 'true', 'Active lighting preset is announced');
@@ -75,7 +76,7 @@ async page => {
   check(await page.locator('[data-atmosphere=mist]').getAttribute('aria-pressed') === 'false', 'Manual weather clears stale preset state');
   await page.locator('[data-atmosphere=pink]').click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   check(!await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), 'Mobile panel has no horizontal overflow');
   await page.locator('#store-clear').click();
   await page.locator('#destination').selectOption({ label: 'Dior' });

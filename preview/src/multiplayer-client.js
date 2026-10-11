@@ -1,3 +1,5 @@
+import { createTownChatDock, bindTownChatComposer } from './town-chat.js';
+import { createGreetingsUI } from './greetings-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
@@ -7,7 +9,8 @@ import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
-export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
+export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
+  const lifetime=new AbortController();let connectionDeadline=null;
   const reloadRegion=()=>{
     if(window.__riverRegionReloadScheduled)return;
     window.__riverRegionReloadScheduled=true;setTimeout(()=>location.reload(),0);
@@ -54,6 +57,8 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   const setStatus=(message,locked=true)=>{
     const active=document.activeElement,inside=gate.contains(active);
     if(locked&&!inside)returnFocus=active;
+    // A modal inside the app must release focus before the access gate makes it inert.
+    if(locked)document.querySelector('#settings-dialog[open]')?.close();
     status.textContent=message;gate.hidden=!locked;gateLogout.hidden=!locked||!identity;
     document.querySelector('.app-shell')?.toggleAttribute('inert',locked);panel.dataset.connected=String(connected);
     if(locked&&(!inside||active.hidden))title.focus({preventScroll:true});
@@ -71,8 +76,11 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   });
   const api=async(path,options={})=>{
-    const response=await fetch(path,{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
+    lifetime.signal.throwIfAborted();
+    const signal=options.signal?AbortSignal.any([lifetime.signal,options.signal]):lifetime.signal;
+    const response=await fetch(path,{...options,signal,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
     const data=await response.json();
+    lifetime.signal.throwIfAborted();
     if(!response.ok){
       const message=data.error==='auth_unavailable'?'Sign-in is not configured yet. Please try again later.':data.error??'Online play is unavailable. Please try again.';
       const error=new Error(message);error.status=response.status;throw error;
@@ -93,6 +101,9 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   const groups=creationToolsEnabled?createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
     request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(logout);
+  const chatDock = createTownChatDock(chatSection);
+  const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
+  let activeGreeting=null;
   const latestPlayers=new Map();
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);
@@ -123,16 +134,17 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
   };
   const chatRows=new Map();let chatInitialized=false;
   const displayChat=messages=>{
-    const atEnd=chatHistory.scrollHeight-chatHistory.scrollTop-chatHistory.clientHeight<24;
+    const follow=chatDock.beforeUpdate();let added=0;
     const ids=new Set(messages.map(message=>message.id));
     for(const [id,row] of chatRows)if(!ids.has(id)){row.remove();chatRows.delete(id);}
     for(const message of messages){
       if(chatRows.has(message.id))continue;
+      added++;
       const row=element('p',null,'multiplayer-chat-message');row.dataset.authorId=message.authorId;
       const author=element('strong',message.authorName+(message.authorId===selfId?' (you)':''));
       row.append(author,document.createTextNode(`: ${message.text}`));chatRows.set(message.id,row);chatHistory.append(row);
     }
-    if(atEnd)chatHistory.scrollTop=chatHistory.scrollHeight;
+    chatDock.updated({added,initial:!chatInitialized,follow});
     // Avoid announcing restored history on join, then announce each new row.
     if(!chatInitialized){chatInitialized=true;chatHistory.setAttribute('aria-live','polite');}
   };
@@ -142,7 +154,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     const current=socket;
     try{
       const result=await command({type:'homeAccess',action:'list'});
-      if(current!==socket||!result.ok)return;
+      if(stopped||current!==socket||!result.ok)return;
       homeAccess=result.homes??[];onHomeAccess(homeAccess);social.refreshHomeAccess();
     }catch{ /* Reconnect and retry on the next refresh. */ }
   }
@@ -154,18 +166,19 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
     try{
       worldId=worldIdFromSearch(location.search);
       const session=await api('/auth/session');
+      if(stopped)return;
       if(!session.authenticated){identity=null;login.hidden=false;setStatus('Sign in to play.');connecting=false;return;}
       identity=session.user;csrfToken=session.csrfToken;
-      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});moderator=access.moderator;
+      const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return;moderator=access.moderator;
       if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
         const error=new Error('This world needs a newer client. Refresh the page to join.');error.status=426;throw error;
       }
       const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
       url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
       const ws=new WebSocket(url);socket=ws;
-      const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);
+      const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);connectionDeadline=deadline;
       ws.addEventListener('message',event=>{
-        if(socket!==ws)return;
+        if(stopped||socket!==ws)return;
         try{
           const data=JSON.parse(event.data);
           if(data.type==='snapshot'){
@@ -179,6 +192,9 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
             if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
             selfId=data.selfId??selfId;latestSnapshot=data;
             if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void refreshHomeAccess();}
+            const self=data.players.find(player=>player.id===selfId);
+            if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
+            activeGreeting=self?.interaction?.id??null;
             onSnapshot(data);onPlayers(data.players,selfId);displayPlayers(data.players);displayChat(data.chat??[]);
             chatInput.disabled=chatSend.disabled=false;gestureButtons.forEach(button=>button.disabled=false);
           }else if(data.type==='result'){
@@ -188,7 +204,7 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
         }catch{notice.textContent='A town update could not be read.';}
       });
       ws.addEventListener('close',event=>{
-        clearTimeout(deadline);if(socket!==ws)return;
+        clearTimeout(deadline);if(lifetime.signal.aborted||socket!==ws)return;
         socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
@@ -196,24 +212,20 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
         setStatus(event.code===4000?'This world changed. Refresh the page to join.':event.code===4003?'This account cannot join the town.':event.code===4009?'Your account joined from another tab.':'Connection lost. Rejoining the town…');retry.hidden=event.code===4000;
         if(!terminal)schedule();
       });
-      ws.addEventListener('error',()=>{status.textContent='The town connection is unavailable.';});
-    }catch(error){connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
+      ws.addEventListener('error',()=>{if(!stopped&&socket===ws)status.textContent='The town connection is unavailable.';});
+    }catch(error){if(stopped)return;connecting=false;setStatus(error.message);retry.hidden=error.status===404||error.status===426;if(![403,404,426].includes(error.status))schedule();}
   }
   function command(message){
-    if(!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
+    if(stopped||!connected||socket?.readyState!==WebSocket.OPEN)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
     return new Promise((resolve,reject)=>{
       const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('The town did not confirm this action. Please try again.'));},8000);
       pending.set(requestId,{resolve,reject,timer});socket.send(JSON.stringify({...message,requestId}));
     });
   }
-  chatForm.addEventListener('submit',async event=>{
-    event.preventDefault();const text=chatInput.value.trim();if(!text||!connected)return;
-    chatSend.disabled=true;chatStatus.textContent='';
-    try{const result=await command({type:'chat',text});if(result.ok)chatInput.value='';else chatStatus.textContent=result.message;}
-    catch(error){chatStatus.textContent=error.message;}
-    finally{chatSend.disabled=!connected;if(connected)chatInput.focus();}
-  });
+  bindTownChatComposer({ form: chatForm, input: chatInput, send: chatSend, status: chatStatus,
+    connected: () => connected, sendMessage: text => command({ type: 'chat', text }),
+    onSent: () => chatDock.reveal(), signal: lifetime.signal });
   retry.addEventListener('click',()=>{clearTimeout(retryTimer);retryTimer=null;connect();});
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
@@ -233,15 +245,23 @@ export function createMultiplayer({ getPose, getRegionSha256 = () => null, getMe
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
       // Refusals carry a code; the town notice never shows it bare (travel-message.js).
-      try{const result=await command({type:'travel',...target});if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=travelRefusal(result,{blocked:'That spot is blocked. Try a nearby path or open space.',cooldown:'Wait a moment before travelling again.',fallback:'That place is not reachable right now.'});return result;}
+      try{const result=await command({type:'travel',...target});if(stopped)return result;if(result.ok&&result.player)onCorrection(result.player);else if(!result.ok)notice.textContent=travelRefusal(result,{blocked:'That spot is blocked. Try a nearby path or open space.',cooldown:'Wait a moment before travelling again.',fallback:'That place is not reachable right now.'});return result;}
       catch(error){notice.textContent=error.message;return {ok:false,message:error.message};}
       finally{traveling=false;}
     },
     update(now){
+      greetings.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
+      if(!traveling&&now-lastPose>=200){lastPose=now;const pose=getPose();if(pose)socket.send(JSON.stringify({type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})}));}
       if(now-lastFocus>=10000){lastFocus=now;const dialog=document.querySelector('#community-dialogue');if(dialog&&!dialog.hidden)command({type:'focus',localId:document.querySelector('#community-local')?.value}).catch(()=>{});}
     },
-    dispose(){stopped=true;clearTimeout(retryTimer);clearInterval(homeAccessTimer);socket?.close();clearPending();social.dispose();groups?.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');},
+    dispose(){
+      if(lifetime.signal.aborted)return;
+      stopped=true;lifetime.abort();clearTimeout(retryTimer);clearTimeout(connectionDeadline);clearInterval(homeAccessTimer);
+      const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
+      current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
+      identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
+      social.dispose();groups?.dispose();greetings.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+    },
   };
 }

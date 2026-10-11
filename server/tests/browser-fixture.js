@@ -19,9 +19,9 @@ const identity=req=>{
   // Residents carry their GitHub username; the owner is a Jevica account. The
   // impostors are non-admin sessions that claim Jevica, as a stale or forged
   // record would, so journeys can prove no surface ever shows them as Jevica.
-  const fixtureId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob|guest|owner|impostor|lookalike)/)?.[1];
+  const fixtureId=req.headers.cookie?.match(/(?:^|; )fixture_session=(alice|bob|guest|owner|impostor|lookalike|unnamed)/)?.[1];
   const userId=fixtureId==='owner'?'user_01M40Y914S1H4EJCEHH91DKTAY':fixtureId;
-  const name={owner:'Jevica',alice:'alice',bob:'bob',guest:'guest',impostor:'Jevica',lookalike:'J\u0435v1ca'}[fixtureId];
+  const name={owner:'Jevica',alice:'alice',bob:'bob',guest:'guest',unnamed:'Resident',impostor:'Jevica',lookalike:'J\u0435v1ca'}[fixtureId];
   return userId?{userId,name,sessionId:userId,csrfToken:'fixture-'+fixtureId,expiresAt:Date.now()+3600000}:null;
 };
 const auth={authenticate:async req=>identity(req),async handle(req,res){
@@ -39,7 +39,7 @@ const auth={authenticate:async req=>identity(req),async handle(req,res){
 app=createGameServer({auth,world:createSharedWorld(data,process.env.RIVER_OAKS_TEST_CREATOR==='1'?{}:{isAdmin:id=>id==='alice'}),landmarks:createMemoryLandmarks(),social:createMemorySocial(),profiles:createMemoryProfiles(),events:createMemoryEvents(),waitlist:approvedWaitlist,origin});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
-const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/profile':townHttp,'/api/waitlist':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
+const vite=await createViteServer({configFile:'preview/vite.config.js',server:{host:'127.0.0.1',port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/profile':townHttp,'/api/waitlist':townHttp,'/api/debug-reports':townHttp,'/api/moderation':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
 await vite.listen();
 console.log('Multiplayer browser fixture: '+origin+' (test identities only; no live WorkOS acceptance)');
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();await vite.close();process.exit(0);});

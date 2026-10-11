@@ -1,0 +1,152 @@
+{
+  "createdAt": "2026-10-09T19:30:04.590Z",
+  "results": [
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "passed",
+      "seconds": 2.693,
+      "result": {
+        "checks": [
+          {
+            "passed": true,
+            "message": "/auth/session: disposed connect cannot create a WebSocket"
+          },
+          {
+            "passed": true,
+            "message": "/auth/session: late completion cannot publish a snapshot"
+          },
+          {
+            "passed": true,
+            "message": "/auth/session: disposal aborts the owned HTTP request"
+          },
+          {
+            "passed": true,
+            "message": "disposal during session read prevents requesting a ticket"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: disposed connect cannot create a WebSocket"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: late completion cannot publish a snapshot"
+          },
+          {
+            "passed": true,
+            "message": "/api/multiplayer/ticket: disposal aborts the owned HTTP request"
+          },
+          {
+            "passed": true,
+            "message": "connected state and snapshot are cleared synchronously"
+          },
+          {
+            "passed": true,
+            "message": "disposal rejects pending command promises"
+          },
+          {
+            "passed": true,
+            "message": "disposed client refuses new commands"
+          },
+          {
+            "passed": true,
+            "message": "socket close and queued frames cannot publish after disposal"
+          },
+          {
+            "passed": true,
+            "message": "late callbacks cannot relock the application"
+          }
+        ]
+      }
+    },
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 9.343,
+      "result": {
+        "checks": [
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases document visibility listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "disposal cancels queued appearance request"
+          },
+          {
+            "passed": true,
+            "message": "late appearance reply cannot mutate the disposed controller"
+          },
+          {
+            "passed": true,
+            "message": "late reply cannot schedule the next queued appearance"
+          },
+          {
+            "passed": true,
+            "message": "late identity snapshots stay inert"
+          }
+        ],
+        "queuedRequests": 0,
+        "requests": [
+          "rowan-human"
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

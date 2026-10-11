@@ -10,6 +10,7 @@ import { traversalForAppearance } from './beast-traversal.js';
 export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   let disposed=false,previous=null;
+  const next=new THREE.Vector3(),before=new THREE.Vector3(),point=new THREE.Vector3();
   const remove=entry=>{entry.removed=true;entry.version++;entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
@@ -49,8 +50,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
       return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
     });},
     sync(players,selfId){
-      const peers=players.filter(player=>player.id!==selfId);
-      for(const [id,entry]of entries)if(!peers.some(player=>player.id===id)){remove(entry);entries.delete(id);}
+      if(disposed)return;
+      const peers=players.filter(player=>player.id!==selfId),ids=new Set(peers.map(player=>player.id));
+      for(const [id,entry]of entries)if(!ids.has(id)){remove(entry);entries.delete(id);}
       for(const player of peers){
         let entry=entries.get(player.id);
         if(!entry){
@@ -58,14 +60,16 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
         }
-        entry.target=player;entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
+        entry.target=player;entry.syncedAt=performance.now();entry.label.textContent=player.name;syncRoad(entry,player.vehicle);loadAppearance(entry,player);
       }
     },
     update(now,camera){
+      if(disposed)return;
+      const width=host.clientWidth,height=host.clientHeight;
       const delta=previous===null?0:Math.min(0.1,(now-previous)/1000);previous=now;
       for(const entry of entries.values()){
-        const {holder,target,avatar,label}=entry;const next=new THREE.Vector3(target.position[0],target.position[2]+target.altitude,-target.position[1]);
-        const before=holder.position.clone();if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
+        const {holder,target,avatar,label}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
+        before.copy(holder.position);if(target.sitting || entry.wasSitting || holder.position.distanceTo(next)>8)holder.position.copy(next);else holder.position.lerp(next,1-Math.exp(-12*delta));
         const moved=holder.position.distanceTo(before);entry.distance+=moved;
         // Face the way they walk, as the local avatar does; a player standing
         // still keeps their last heading. Facing the camera yaw while moving
@@ -76,6 +80,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
         else if(target.vehicle)entry.heading=target.yaw;
         // Watering: face the planter, which the server turned them toward
         // (a player's yaw is the camera's, behind them).
+        else if(target.interaction)entry.heading=target.interaction.heading;
         else if(target.gesture==='water')entry.heading=target.yaw+Math.PI;
         else if(Math.hypot(dx,dz)>0.004)entry.heading=Math.atan2(dx,dz);
         if(target.sitting)holder.rotation.y=entry.heading;
@@ -89,7 +94,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast)},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(target.gesture??'continue'):'continue',false,{speed:seated?0:Math.min(beast?.sprint??3.4,delta?moved/delta:0),flightSpeed:speed,distance:entry.distance,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',beast:Boolean(beast),handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){
@@ -99,8 +104,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now()}={}){
           }
         }
         entry.wasSitting=Boolean(target.sitting);
-        const point=holder.position.clone().add(new THREE.Vector3(0,target.sitting?1.75:2.2,0)).project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
-        if(!label.hidden)label.style.transform=`translate(${(point.x+1)*host.clientWidth/2}px,${(1-point.y)*host.clientHeight/2}px) translate(-50%,-100%)`;
+        point.copy(holder.position);point.y+=target.sitting?1.75:2.2;point.project(camera);label.hidden=!holder.visible||point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1;
+        if(!label.hidden)label.style.transform=`translate(${(point.x+1)*width/2}px,${(1-point.y)*height/2}px) translate(-50%,-100%)`;
       }
     },
     dispose(){disposed=true;for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},

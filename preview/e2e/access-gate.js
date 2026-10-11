@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin = 'http://127.0.0.1:5180';
   const checks = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
@@ -43,9 +44,15 @@ async page => {
       decision = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
       return route.fulfill({ json: { userId: decision.body.userId, status: 'rejected' } });
     });
-    await admin.route('**/src/main.js*', route => route.fulfill({ contentType: 'text/javascript', body: '' }));
+    await admin.route('**/src/main.js*', route => route.fulfill({ contentType: 'text/javascript', body: "import { setupThemeControls } from './theme.js'; import { setupSidebar, setupSidebarSections } from './sidebar.js'; import { createCommunityPanel } from './community-ui.js'; setupThemeControls(); createCommunityPanel({ host: document.querySelector('.panel-scroll') }); setupSidebarSections({ sidebar: setupSidebar() }); document.querySelector('#loading').hidden = true;" }));
     await admin.goto(origin, { waitUntil: 'commit' });
+    // Match the real HUD layout while omitting the world renderer.
+    for (const sheet of ['style', 'playground-theme', 'district-theme', 'immersive', 'sidebar', 'visual-finish', 'retro-finish', 'rail-navigation', 'hud-glass', 'game-hud']) {
+      await admin.addStyleTag({ url: `${origin}/src/${sheet}.css` });
+    }
+    await openHudSpace(admin, 'settings-section', 'Account');
     await admin.getByRole('button', { name: 'Waitlist requests' }).click();
+    check(!await admin.locator('#settings-dialog').evaluate(node => node.open), 'Waitlist review closes Settings before taking focus');
     check(await admin.locator('#access-review-title').evaluate(node => node === document.activeElement), 'Waitlist review opens with keyboard focus in its dialog');
     await admin.locator('.access-request').first().waitFor({ state: 'visible' });
     check(await admin.locator('.access-request').count() === 3, 'Approvers can review pending and decided accounts');
@@ -77,6 +84,7 @@ async page => {
     releaseRefresh();
     await finalRefresh;
     await admin.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    check(await admin.locator('#settings-dialog').evaluate(node => node.open), 'Closing waitlist review restores Account settings');
     check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert && document.querySelector('#access-review').hidden), 'Escape keeps review closed and returns focus to the game controls');
   } finally { await adminContext.close(); }
   return { passed: true, checks };

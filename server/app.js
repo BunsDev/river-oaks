@@ -9,6 +9,8 @@ import { sendFrame } from './backpressure.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
+import { createDebugReportRoutes } from './debug-report-routes.js';
+import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
@@ -22,7 +24,7 @@ import { securityHeaders } from './security-headers.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -58,6 +60,8 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       disconnectUser(userId, 4003, 'Waitlist approval ended');
       await onBan?.(userId);
     } });
+  const debugReportSends = createRateLimiter(3,600000);
+  const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned, allow: id => debugReportSends(id) });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -72,6 +76,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
       if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(pathname) && !signIns(rateLimitKey(clientAddress(req)))) return json(res,429,{error:'Too many attempts. Try again later.'});
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
+      if (await handleDebugReports(req, res, pathname)) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
@@ -270,7 +275,7 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
         }
         clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);
         const old=connections.get(identity.userId);
-        const connection={ws,identity,token,alive:true};connections.set(identity.userId,connection);
+        const connection={ws,identity,token,alive:true,pending:0};connections.set(identity.userId,connection);
         old?.ws.close(4009,'This account joined in another tab.');
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
         let messageQueue = Promise.resolve(),waitingPose=null;
@@ -288,8 +293,9 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
           // place between the latest pose before it and the latest pose after.
           const coalescible=message?.type==='pose' && message.requestId===undefined;
           if(coalescible && waitingPose){waitingPose.message=message;return;}
+          if(!coalescible && connection.pending>=8)return ws.close(4008,'Too many pending commands.');
           const slot={message};
-          if(coalescible)waitingPose=slot;else waitingPose=null;
+          if(coalescible)waitingPose=slot;else{waitingPose=null;connection.pending++;}
           messageQueue = messageQueue.then(async()=>{
           if(waitingPose===slot)waitingPose=null;
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
@@ -313,12 +319,13 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
             if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
           } catch {send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
-          }).catch(()=>ws.close(1013,'Town temporarily unavailable.'));
+          }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
         });
         ws.on('close',()=>{
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
+          if(stopped){world.leave(identity.userId);return;}
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
@@ -364,8 +371,11 @@ export function createGameServer({ auth, world, worldTitle = world.title, landma
     connections.clear();world=next;regionSha256=hash;
   },async close(){
     stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
-    for(const timer of departures.values())clearTimeout(timer);
+    for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
+    departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
+    for(const id of connections.keys())world.leave(id);
+    connections.clear();
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));

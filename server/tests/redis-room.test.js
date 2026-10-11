@@ -234,12 +234,12 @@ testRedis('lost lease cannot publish replies or trim queue; next leader replays 
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1);
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   assert.equal((await f.redis.keys(`${f.prefix}:reply:*`)).length,1,'only earlier committed join has a reply');
-  await f.redis.set(`${f.prefix}:lease`,'v4:different-leader','PX',5000);
+  await f.redis.set(`${f.prefix}:lease`,'v5:different-leader','PX',5000);
   release();await delay(250);
   assert.equal(await f.redis.llen(`${f.prefix}:queue`),1,'stale commit cannot trim pending operation');
   assert.deepEqual(await f.redis.getBuffer(`${f.prefix}:state`),stateBefore);
   await stalled.close();
-  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v4:different-leader','close only releases its own lease');
+  assert.equal(await f.redis.get(`${f.prefix}:lease`),'v5:different-leader','close only releases its own lease');
   await f.redis.del(`${f.prefix}:lease`);
   const survivor=f.create();await survivor.tick();
   await request;
@@ -353,17 +353,36 @@ testRedis('competing edges reserve one furniture slot and recover it through coo
 });
 
 testRedis('an upgraded coordinator takes over an older lease without waiting for its TTL',async t=>{
-  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=`v3:${randomUUID()}`;
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,legacy=`v4:${randomUUID()}`;
   await f.redis.set(key,legacy,'PX',5000);
   await room.tick();
   const owner=await f.redis.get(key);
-  assert.notEqual(owner,legacy,'a pre-creator writer cannot keep renewing the obsolete lease');
-  assert.match(owner,/^v4:/);
+  assert.notEqual(owner,legacy,'a pre-interaction writer cannot keep renewing the obsolete lease');
+  assert.match(owner,/^v5:/);
   assert.equal((await room.read()).snapshot.worldId,'river-oaks');
 });
 
+testRedis('paired invitations and consent survive coordinator replacement with shared timing',async t=>{
+  const f=await setup(t),first=f.create(),second=f.create();
+  for(const id of ['alice','bob'])assert.equal((await f.join(first,id)).ok,true);
+  const invitation=await f.command(first,'alice',{type:'interaction',action:'invite',peerId:'bob',kind:'dance'});
+  assert.equal(invitation.ok,true);
+  await first.close();await second.close();
+  const replacement=f.create();
+  const accepted=await f.command(replacement,'bob',{type:'interaction',action:'accept',id:invitation.interaction.id});
+  assert.equal(accepted.ok,true);
+  const players=(await replacement.read()).snapshot.players;
+  assert.ok(players.every(p=>p.gesture==='dance'));
+  assert.equal(players[0].interaction.elapsed,players[1].interaction.elapsed);
+  const state=JSON.parse(inflateSync(await f.redis.getBuffer(`${f.prefix}:state`)).toString());
+  assert.equal(state.checkpoint.version,5);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
+  await replacement.close();const last=f.create();
+  assert.equal((await f.command(last,'alice',{type:'interaction',action:'cancel',id:invitation.interaction.id})).ok,true);
+  assert.ok((await last.read()).snapshot.players.every(p=>p.gesture===null));
+});
+
 testRedis('an older generation does not steal an active newer coordinator lease',async t=>{
-  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v5:${randomUUID()}`;
+  const f=await setup(t),room=f.create(),key=`${f.prefix}:lease`,future=`v6:${randomUUID()}`;
   await f.redis.set(key,future,'PX',5000);
   await room.tick();
   assert.equal(await f.redis.get(key),future);

@@ -1,0 +1,39 @@
+{
+  "createdAt": "2026-10-09T19:49:08.948Z",
+  "status": "passed",
+  "modes": [
+    "development-world"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "world-map",
+      "status": "passed",
+      "seconds": 26.343,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The map draws the active world roads and buildings",
+          "Named destinations and the live player position appear on the map",
+          "Selecting a map marker previews it before travel",
+          "Go here uses the shared server travel path",
+          "A saved landmark appears in its world map",
+          "Keyboard arrows choose an arbitrary destination",
+          "A selected map point shares its world and position",
+          "The active world contains a broad blocked building footprint",
+          "A building click remains an arbitrary point, not a storefront shortcut",
+          "The server refuses an indoor map destination",
+          "A player in the same world appears as a live map marker",
+          "The keyboard-accessible player list offers server-checked meeting without sharing another player position",
+          "Meet nearby arrives beside Bob rather than on top of him",
+          "A departed selected player leaves the map and clears the meeting action",
+          "Another world omits map landmarks saved in the configured alternate world",
+          "No browser errors: "
+        ],
+        "errors": []
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

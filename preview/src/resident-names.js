@@ -2,8 +2,8 @@ import { isJevicaAccount } from './jevica-accounts.js';
 
 // Resident display names. A signed-in resident is shown by their GitHub
 // username. Only an admin account may use a custom name, and that name is
-// Jevica. Nobody else may be shown as Jevica under any spelling: different
-// case, accents, lookalike letters or digits, other scripts, spacing,
+// Jevica. Missing or disallowed names use a unique account fallback. Nobody
+// else may be shown as Jevica under any spelling: different case, accents, lookalike letters or digits, other scripts, spacing,
 // punctuation, invisible characters, or Jevica inside a longer name.
 
 export const ADMIN_NAME = 'Jevica';
@@ -45,22 +45,32 @@ export function nameSkeleton(name) {
 }
 
 export const reservedName = name => nameSkeleton(name).includes(RESERVED);
+const unavailableName = name => reservedName(name) || nameSkeleton(name) === 'resident';
+const isFallback = name => typeof name === 'string' && /^visitor\s*#/i.test(name.trim());
 
-// The name every other resident sees. `login` and `githubId` come from the
-// server's GitHub lookup, never from the client.
-export function residentName({ admin = false, login = null, githubId = null } = {}) {
-  if (admin) return ADMIN_NAME;
-  if (validGitHubLogin(login) && !reservedName(login)) return login;
-  if (validGitHubId(githubId)) return `github-${githubId}`;
-  return 'resident';
+// Account IDs are already public in world, profile and contact payloads. Keep
+// the entire ID: shortening or hashing it would weaken uniqueness. Encoding
+// preserves distinct IDs and avoids invisible characters in legacy records.
+// The # namespace cannot collide with a valid GitHub username.
+export function fallbackName(userId) {
+  if (typeof userId !== 'string' || !userId) throw new TypeError('A player name requires an account ID');
+  return `Visitor #${encodeURIComponent(userId)}`;
 }
 
-// For a name already stored with a record: the admin is always Jevica, and a
-// stored name that reads as Jevica for anyone else is replaced.
-export function shownName(name, admin = false) {
+// The name every other resident sees. `login` and `userId` come from the
+// verified server identity, never from the client.
+export function residentName({ admin = false, login = null, userId } = {}) {
   if (admin) return ADMIN_NAME;
-  return typeof name === 'string' && name.trim() && !reservedName(name) ? name : 'resident';
+  if (validGitHubLogin(login) && !unavailableName(login)) return login;
+  return fallbackName(userId);
 }
 
-// shownName for a record that carries its account ID.
-export const accountName = (userId, name) => shownName(name, isJevicaAccount(userId));
+// Rebuild fallback names from the owner, including stored copies truncated by
+// older writers, so one account can never borrow another account's fallback.
+export function shownName(name, admin = false, userId) {
+  if (admin) return ADMIN_NAME;
+  return typeof name === 'string' && name.trim() && !unavailableName(name) && !isFallback(name)
+    ? name : fallbackName(userId);
+}
+
+export const accountName = (userId, name) => shownName(name, isJevicaAccount(userId), userId);

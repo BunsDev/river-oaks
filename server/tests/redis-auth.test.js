@@ -335,9 +335,9 @@ integration('residents are named by GitHub username and only the admin is Jevica
   f.workos.setDisplayName('Jevica');
   assert.equal(await nameFor((await f.login()).sessionCookie), 'val-dev', 'a GitHub profile name of Jevica is ignored');
   f.workos.setUserId('user_2'); f.githubApi.accounts['1002'] = 'Jevica';
-  assert.equal(await nameFor((await f.login()).sessionCookie), 'github-1002', 'a GitHub username of Jevica is not shown');
+  assert.equal(await nameFor((await f.login()).sessionCookie), 'Visitor #user_2', 'a GitHub username of Jevica is not shown');
   f.githubApi.accounts['1002'] = 'jev1ca-official';
-  assert.equal(await nameFor((await f.login()).sessionCookie), 'github-1002', 'nor a lookalike');
+  assert.equal(await nameFor((await f.login()).sessionCookie), 'Visitor #user_2', 'nor a lookalike');
   f.workos.setUserId(JEVICA_ADMIN_USER_IDS[0]); f.workos.githubIds[JEVICA_ADMIN_USER_IDS[0]] = '1003'; f.githubApi.accounts['1003'] = 'BunsDev';
   f.workos.setDisplayName('Val', 'Dev');
   const admin = (await f.login()).sessionCookie;
@@ -345,13 +345,13 @@ integration('residents are named by GitHub username and only the admin is Jevica
   assert.equal((await f.b.auth.authenticate({ headers: { cookie: admin } })).name, 'Jevica', 'on every instance');
 });
 
-integration('a GitHub outage at sign-in shows the GitHub account number until GitHub answers again', async t => {
+integration('a GitHub outage at sign-in uses a unique account fallback until GitHub answers again', async t => {
   const f = await fixture(t);
   f.githubApi.down = true;
   const { sessionCookie } = await f.login();
-  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'github-1001');
+  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'Visitor #user_1');
   f.githubApi.down = false;
-  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'github-1001', 'not retried on every request');
+  assert.equal((await f.a.auth.authenticate({ headers: { cookie: sessionCookie } })).name, 'Visitor #user_1', 'not retried on every request');
   f.advance(10 * 60_000);
   // The WorkOS access token has expired by now; the HTTP session route refreshes it.
   assert.equal((await (await f.b.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user.name, 'val-dev');
@@ -377,4 +377,18 @@ integration('canonical callbacks return to /play across Redis instances', async 
   assert.equal(callback.headers.get('location'), '/play');
   const invalid = await f.app(f.redis, { returnPath: '//evil.example' });
   assert.equal((await invalid.request('/auth/login')).status, 503);
+});
+
+integration('Resident GitHub logins receive distinct stable names on every instance', async t => {
+  const f = await fixture(t), names = [];
+  for (const [userId, githubId] of [['user_1', '1001'], ['user_2', '1002']]) {
+    f.workos.setUserId(userId); f.githubApi.accounts[githubId] = 'Resident';
+    const { sessionCookie } = await f.login();
+    for (const app of [f.a, f.b]) {
+      const user = await app.auth.authenticate({ headers: { cookie: sessionCookie } });
+      assert.equal(user.name, `Visitor #${userId}`);
+      names.push(user.name);
+    }
+  }
+  assert.equal(new Set(names).size, 2);
 });

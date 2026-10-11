@@ -1,5 +1,6 @@
 // Run against the real shared-town fixture; voice failures are controlled by this journey.
 async (page) => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   await page.unrouteAll({behavior:'ignoreErrors'});
   const check = (value, message) => { if (!value) throw new Error(message); };
   const errors = [], screenshots = [];
@@ -16,9 +17,10 @@ async (page) => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.multiplayer==='joined' && document.querySelector('#community-local').options.length>0);
   const toggle = page.locator('#panel-toggle');
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   await page.locator('#community-more > summary').click();
   const meet = async id => {
+    await openHudSpace(page, 'community-section');
     await page.locator('#community-local').selectOption(id);
     if(await page.locator('#community-dialogue').isVisible())await page.locator('#community-close').click();
     await page.waitForTimeout(1100);await page.locator('#community-meet').click();
@@ -76,9 +78,9 @@ async (page) => {
 
   const layouts = [];
   for (const theme of ['dark', 'light']) {
-    await page.locator('[data-section=settings-section]').click(); // Appearance lives in the Settings rail section.
+    await openHudSpace(page, 'settings-section');
     await page.locator(`button[data-theme-preference=${theme}]`).click();
-    await page.locator('[data-section=community-section]').click();
+    await openHudSpace(page, 'community-section');
     for (const [width, height] of [[1440, 1000], [1280, 720], [390, 844], [320, 568], [844, 390]]) {
       await page.setViewportSize({ width, height });
       // Measure an open conversation with whichever resident is reachable now:

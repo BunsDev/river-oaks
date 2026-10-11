@@ -1,0 +1,94 @@
+{
+  "startedAt": "2026-10-09T19:49:51.766Z",
+  "scope": "96 loopback server lifetimes, eight synthetic authenticated players each; forced-GC process diagnostics, no Redis or live providers.",
+  "samples": [
+    {
+      "cycle": 12,
+      "rss": 187990016,
+      "heapTotal": 85966848,
+      "heapUsed": 15816968,
+      "external": 7242746,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 24,
+      "rss": 208977920,
+      "heapTotal": 85966848,
+      "heapUsed": 16004960,
+      "external": 7242786,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 36,
+      "rss": 213942272,
+      "heapTotal": 85704704,
+      "heapUsed": 14846272,
+      "external": 7238580,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 48,
+      "rss": 238764032,
+      "heapTotal": 152813568,
+      "heapUsed": 14841632,
+      "external": 7237204,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 60,
+      "rss": 241647616,
+      "heapTotal": 152813568,
+      "heapUsed": 14960136,
+      "external": 7237204,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 72,
+      "rss": 252280832,
+      "heapTotal": 152813568,
+      "heapUsed": 15109728,
+      "external": 7237204,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 84,
+      "rss": 256851968,
+      "heapTotal": 152813568,
+      "heapUsed": 15120800,
+      "external": 7237204,
+      "arrayBuffers": 353857,
+      "resources": {}
+    },
+    {
+      "cycle": 96,
+      "rss": 257146880,
+      "heapTotal": 153075712,
+      "heapUsed": 15124888,
+      "external": 7237204,
+      "arrayBuffers": 353857,
+      "resources": {}
+    }
+  ],
+  "sha256": {
+    "server/app.js": "63ce6726e0574401ee5de621ea69e2fbdf09b8ff605e5805b41014dcc62780dc",
+    "server/world.js": "ff6ec8782755ae2e1317e0d5a1eb9ca6ad17906b3d8cbc7bbfae716b25d7c440",
+    ".runtime/memory/server-retention.mjs": "6c78b272f0262b8f0a2c3a138dda0c38c86606235912ecd8bc911e31a6210b91"
+  },
+  "afterIdle": {
+    "rss": 257146880,
+    "heapTotal": 20955136,
+    "heapUsed": 15020616,
+    "external": 7237204,
+    "arrayBuffers": 353857,
+    "retainedWorlds": 0,
+    "retainedServers": 0
+  },
+  "status": "passed",
+  "finishedAt": "2026-10-09T19:50:02.000Z"
+}

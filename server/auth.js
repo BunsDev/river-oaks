@@ -53,7 +53,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   const secure = base?.startsWith('https:');
   const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, store: createMemoryGitHubNameStore(), token: githubToken, fetcher: githubFetch, now });
   // Residents are shown by GitHub username; only an admin account is Jevica.
-  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
+  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // A session whose lookup failed is renamed once GitHub answers again.
   const named = async (user, record) => {
     if (!user || record.authMethod === 'MagicAuth' || isJevicaAdmin(record.userId) || validGitHubLogin(record.login)) return user;

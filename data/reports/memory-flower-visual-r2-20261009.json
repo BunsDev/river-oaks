@@ -1,0 +1,81 @@
+{
+  "scope": "Matched textured rig/reference outfits, before vs after blossom material sharing; hardware Chromium, rest and articulated poses.",
+  "status": "measured",
+  "results": [
+    {
+      "id": "forest-aristocrat",
+      "pose": "rest",
+      "changedPixels": 1,
+      "maxChannelDelta": 44,
+      "meanChannelDelta": 0.00004991319444444445,
+      "before": {
+        "draws": 59,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-rest-before.png"
+      },
+      "after": {
+        "draws": 43,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-rest-after.png"
+      }
+    },
+    {
+      "id": "forest-aristocrat",
+      "pose": "posed",
+      "changedPixels": 2,
+      "maxChannelDelta": 51,
+      "meanChannelDelta": 0.00006673177083333333,
+      "before": {
+        "draws": 59,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-posed-before.png"
+      },
+      "after": {
+        "draws": 43,
+        "triangles": 180082,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-posed-after.png"
+      }
+    },
+    {
+      "id": "forest-aristocrat-feminine",
+      "pose": "rest",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "meanChannelDelta": 0,
+      "before": {
+        "draws": 74,
+        "triangles": 280396,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-feminine-rest-before.png"
+      },
+      "after": {
+        "draws": 58,
+        "triangles": 280396,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-feminine-rest-after.png"
+      }
+    },
+    {
+      "id": "forest-aristocrat-feminine",
+      "pose": "posed",
+      "changedPixels": 2,
+      "maxChannelDelta": 43,
+      "meanChannelDelta": 0.00006293402777777778,
+      "before": {
+        "draws": 74,
+        "triangles": 280396,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-feminine-posed-before.png"
+      },
+      "after": {
+        "draws": 58,
+        "triangles": 280396,
+        "png": "output/playwright/memory-flowers/forest-aristocrat-feminine-posed-after.png"
+      }
+    }
+  ],
+  "visualAcceptance": "Pixel deltas are measurements, not a hidden tolerance or human review. Inspect saved matched renders.",
+  "sha256": {
+    "preview/src/reference-archetypes.js": "daf9ac7e2f68102aca6b1dd13eead9f4f841c854633cf020f11fd1d5f6eec48b",
+    ".runtime/memory/reference-baseline.mjs": "d70b9a6aded9a244fab4db5b02332af74f8952e16b0770082fab1e1c10aa5754",
+    ".runtime/memory/flower-scene.mjs": "7f211372d447f922899cf69293fdd7cd56e10cc0a0cbe8a01162a8bac58c7e22",
+    ".runtime/memory/flower-visual.mjs": "d9447da809b7e1462a7aa9ec95047d63567d1a19489ce2efa695b3bbc7831489"
+  }
+}
