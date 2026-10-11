@@ -24,18 +24,20 @@ const brief = {purpose: 'Welcome Mina to the block', guestOfHonor: 'Mina', prefe
 
 // One memory-backed server. Timers never fire, so each authorized read drives
 // exactly one step, as on a serverless host; the cases stay deterministic.
-async function serve(t, {places = safePlaces} = {}) {
+async function serve(t, {places = safePlaces, waitlist = approvedWaitlist, moderation} = {}) {
   const workplace = createWorkplace({stepMs: 0, schedule: () => null, cancel: () => {}});
   const world = {worldId: 'river-oaks', players: new Map(), join: () => ({ok: true}), leave() {}, command: () => ({ok: true}), step() {},
     snapshot: () => ({type: 'snapshot', players: [], locals: [], wishes: {}}), resolvePlace: id => places.find(place => place.id === id) ?? null, listPlaces: () => places};
-  const app = createGameServer({auth, world, waitlist: approvedWaitlist, workplace, origin: ORIGIN, staticRoot: '/nonexistent'});
+  const app = createGameServer({auth, world, waitlist, workplace, origin: ORIGIN, staticRoot: '/nonexistent', moderation,
+    moderators: ['moderator'], waitlistAdmins: ['approver']});
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
   t.after(() => { app.close();workplace.close(); });
   const base = `http://127.0.0.1:${app.server.address().port}`;
-  const post = (user, action, data = {}) => fetch(`${base}/api/workplace/${action}`, {method: 'POST',
-    headers: {Origin: ORIGIN, Cookie: `session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+  const send = (user, path, data = {}, raw) => fetch(`${base}${path}`, {method: 'POST',
+    headers: {Origin: ORIGIN, Cookie: `session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json'}, body: raw ?? JSON.stringify(data)});
+  const post = (user, action, data = {}, raw) => send(user, `/api/workplace/${action}`, data, raw);
   const read = async user => (await (await post(user, 'state')).json()).state;
-  return {post, read};
+  return {post, read, send, workplace};
 }
 async function prepare(api, user = 'owner') {
   assert.equal((await api.post(user, 'companion', {name: 'Pip'})).status, 200);
@@ -186,6 +188,69 @@ test('an effect that completed before its acknowledgment is never repeated by a 
   assert.equal(JSON.stringify(await api.read('owner')).includes('Welcome Mina'), false, 'deleting the draft forgot the brief');
 });
 
+test('a ban or an ended waitlist approval stops paused work and idle grants, and restored access revives neither', async t => {
+  const banned = new Set(), removed = new Set();
+  const moderation = {isBanned: id => banned.has(id), async setBanned(id, value) { if (value) banned.add(id);else banned.delete(id);return true; }};
+  const waitlist = {...approvedWaitlist, isApproved: async id => !removed.has(id),
+    async decide({userId, approved}) { if (approved) removed.delete(userId);else removed.add(userId);return {userId, status: approved ? 'approved' : 'revoked'}; }};
+  const api = await serve(t, {moderation, waitlist});
+  const paused = {}, inspect = async user => (await api.workplace.state({userId: user, name: user})).state;
+  for (const user of ['paused-owner', 'unlisted-owner']) {
+    await prepare(api, user);
+    const {taskId} = await (await api.post(user, 'submit', {brief, requestId: 'request-0001'})).json();
+    assert.equal((await api.post(user, 'pause', {taskId})).status, 200);
+    paused[user] = taskId;
+  }
+  await prepare(api, 'idle-owner');
+  // No timer runs for a paused task or an idle grant: only the moderation paths can stop them.
+  for (const user of ['paused-owner', 'idle-owner'])
+    assert.equal((await api.send('moderator', '/api/moderation/ban', {userId: user, banned: true})).status, 200);
+  assert.equal((await api.send('approver', '/api/waitlist/decision', {userId: 'unlisted-owner', approved: false})).status, 200);
+  for (const user of ['paused-owner', 'unlisted-owner']) {
+    const state = await inspect(user);
+    assert.equal(state.tasks[0].status, 'cancelled', user);assert.equal(state.tasks[0].reason, 'access_revoked', user);
+    assert.equal(state.grant.active, false, user);
+  }
+  assert.equal((await inspect('idle-owner')).grant.active, false, 'an idle grant is revoked too');
+  // Access comes back: nothing resumes and nothing new runs without a new grant.
+  assert.equal((await api.send('moderator', '/api/moderation/ban', {userId: 'paused-owner', banned: false})).status, 200);
+  assert.equal((await api.send('approver', '/api/waitlist/decision', {userId: 'unlisted-owner', approved: true})).status, 200);
+  for (const user of ['paused-owner', 'unlisted-owner']) {
+    assert.equal((await api.post(user, 'resume', {taskId: paused[user]})).status, 409, user);
+    assert.equal((await api.post(user, 'submit', {brief, requestId: 'request-0002'})).status, 403, user);
+    assert.equal((await api.read(user)).artifacts.length, 0, user);
+  }
+});
+
+test('the public occupancy view carries exactly a station id, occupied and mine', async t => {
+  const api = await serve(t);
+  await prepare(api);
+  assert.equal((await api.post('owner', 'presence', {mode: 'stationed'})).status, 200);
+  for (const user of ['owner', 'stranger']) {
+    const {stations} = await (await api.post(user, 'occupancy')).json();
+    for (const station of stations) assert.deepEqual(Object.keys(station).sort(), ['id', 'mine', 'occupied'], `${user}: ${JSON.stringify(station)}`);
+    assert.equal(stations.filter(station => station.occupied).length, 1);
+    assert.equal(stations.some(station => station.mine), user === 'owner');
+  }
+});
+
+test('write and read budgets are enforced per account, and the body cap holds for otherwise valid JSON', async t => {
+  const api = await serve(t);
+  await prepare(api);
+  const writes = [];
+  // Set-up made 2 writes (companion, grant); 28 more fill the 30-write minute.
+  for (let i = 0; i < 28; i++) writes.push((await api.post('owner', 'offer', {decision: 'defer'})).status);
+  assert.ok(writes.every(status => status === 200), writes.join());
+  assert.equal((await api.post('owner', 'offer', {decision: 'defer'})).status, 429);
+  assert.equal((await api.post('neighbour', 'companion', {name: 'Pip'})).status, 200, 'another account has its own budget');
+  const reads = await Promise.all(Array.from({length: 121}, () => api.post('reader', 'state')));
+  assert.equal(reads.filter(response => response.status === 429).length, 1, 'the 121st read in a minute waits');
+  const padded = `{"name":"Pip"${' '.repeat(5000)}}`;
+  assert.equal(JSON.parse(padded).name, 'Pip');
+  assert.equal((await api.post('cap-owner', 'companion', {}, padded)).status, 400, 'a body over 4 KiB is refused before validation');
+  assert.equal((await api.post('cap-owner', 'companion', {name: 'Pip'})).status, 200);
+});
+
 // Live Redis: real gateways, real timers, the shared security store.
 async function gateways(t, {waitlist = approvedWaitlist} = {}) {
   const redis = new Redis(process.env.REDIS_URL);redis.on('error', () => {});
@@ -198,13 +263,14 @@ async function gateways(t, {waitlist = approvedWaitlist} = {}) {
   const security = createRedisSecurity({redis, prefix: `{${namespace}}`});
   const open = new Set();
   async function start(enabled = true) {
-    const gateway = createWorldGateway({redis, namespace, worldData, auth: gatewayAuth, security, waitlist, origin, workplaceEnabled: enabled});
+    const gateway = createWorldGateway({redis, namespace, worldData, auth: gatewayAuth, security, waitlist, origin, workplaceEnabled: enabled, moderators: ['moderator']});
     await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
     open.add(gateway);
     const base = `http://127.0.0.1:${gateway.server.address().port}`;
-    const post = (user, action, data = {}) => fetch(`${base}/api/workplace/${action}`, {method: 'POST',
+    const send = (user, path, data = {}) => fetch(`${base}${path}`, {method: 'POST',
       headers: {Origin: origin, Cookie: `test_session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
-    return {post, read: async user => (await (await post(user, 'state')).json()).state, close: async () => { open.delete(gateway);await gateway.close(); }};
+    const post = (user, action, data = {}) => send(user, `/api/workplace/${action}`, data);
+    return {post, send, read: async user => (await (await post(user, 'state')).json()).state, close: async () => { open.delete(gateway);await gateway.close(); }};
   }
   // Reads the stored owner document directly, without passing through any gate.
   const stored = async user => {
@@ -268,6 +334,13 @@ test('a ban or an ended waitlist approval mid-task stops unattended work on the 
   }
   const bystander = await until(async () => { const state = await gateway.read('bystander');return state.tasks[0].status === 'completed' ? state : null; });
   assert.ok(bystander, 'an owner in good standing is unaffected');
+  // A paused task has no timer; the moderation route itself must stop it.
+  await gateway.post('paused', 'companion', {name: 'Pip'});await gateway.post('paused', 'grant', {scope: 'event_plan'});
+  const {taskId} = await (await gateway.post('paused', 'submit', {brief, requestId: 'request-0001'})).json();
+  assert.equal((await gateway.post('paused', 'pause', {taskId})).status, 200);
+  assert.equal((await gateway.send('moderator', '/api/moderation/ban', {userId: 'paused', banned: true})).status, 200);
+  const stopped = await env.stored('paused');
+  assert.equal(stopped.tasks[0].status, 'cancelled');assert.equal(stopped.tasks[0].reason, 'access_revoked');assert.ok(stopped.grant.revokedAt);
   // Restored access does not revive the old grant; new work needs a new grant.
   await env.security.unban({userId: 'banned', actorId: 'moderator'});
   const back = await gateway.read('banned');

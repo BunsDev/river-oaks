@@ -72,7 +72,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
-    onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
+    onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
   function publish(view) {
@@ -254,6 +254,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!ok) return json(res, 503, { error: 'Moderation is temporarily unavailable.' });
         if (data.banned) {
           await disconnectUser(data.userId);
+          await workplace?.suspend(data.userId);
           await onBan?.(data.userId);
         }
         return json(res, 200, { ok: true });

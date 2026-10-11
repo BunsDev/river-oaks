@@ -59,6 +59,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned,
     onRevoke: async userId => {
       disconnectUser(userId, 4003, 'Waitlist approval ended');
+      await workplace?.suspend(userId);
       await onBan?.(userId);
     } });
   const debugReportSends = createRateLimiter(3,600000);
@@ -209,7 +210,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
         if(data.banned) await waitlist.revokeInvites?.({userId:data.userId,actorId:identity.userId});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
-        if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await onBan?.(data.userId);}
+        if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await workplace?.suspend(data.userId);await onBan?.(data.userId);}
         return json(res,200,{ok:true});
       }
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
