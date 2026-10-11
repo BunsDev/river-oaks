@@ -1,4 +1,5 @@
 import './studio.css';
+import { mountAgentChat } from './agent-chat.js';
 import { mountDesignerPanel } from './designer-panel.js';
 import { blankRegion } from '../region-draft.js';
 import { createStudioDocument, parseRegion, MAX_REGION_BYTES, STORAGE_KEY } from './document.js';
@@ -11,7 +12,7 @@ export function startStudio(host) {
     <aside class="studio-inspector" aria-label="Object properties"><div class="studio-panel-title"><h2>Inspector</h2><span id="studio-kind">Selection</span></div><h3 id="studio-selected">Choose an object</h3><form id="studio-properties" autocomplete="off"></form><button id="studio-delete" class="studio-delete" hidden>Delete object</button><p class="studio-inspector-note">Moves snap to 0.5 m. Rotation snaps to 22.5°. Use the fields for precise values.</p><div class="studio-document-note"><strong>Yours to shape</strong><p>Save keeps a draft on this device. Export makes a portable region file. Your edits never change a live shared world.</p><button id="studio-reopen">Reopen saved draft</button></div></aside></div>
     <footer class="studio-footer"><span id="studio-dirty">New draft</span><p id="studio-status" role="status" aria-live="polite">Select an object, or add something to your region.</p><span id="studio-position">East / North · m</span></footer>`;
   const $=selector=>host.querySelector(selector),doc=createStudioDocument();
-  let selected=null,walking=false,disposed=false,importGeneration=0,viewport,designer;
+  let selected=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
   let renderedRevision = doc.revision;
   const say=text=>{$('#studio-status').textContent=text;};
   try { if(doc.restore(localStorage))say('Saved draft reopened.'); } catch(error){say(`${error.message} Export or open a valid region file; the saved draft has not been changed.`);}
@@ -20,7 +21,7 @@ export function startStudio(host) {
   const select=id=>{selected=id;viewport.select(id);renderPanels();};
   viewport=createStudioViewport($('#studio-viewport'),{onSelect:select,onTransform:(id,patch)=>run(()=>{doc.update(id,patch);render();say('Transform applied.');}),onExitWalk:()=>setWalk(false),onPosition:position=>{$('#studio-position').textContent=`${position[0].toFixed(1)} E / ${(-position[2]).toFixed(1)} N · m`;}});
   function renderPanels(){
-    designer?.refresh();
+    designer?.refresh();agent?.refresh();
     const items=doc.items,item=items.find(value=>value.id===selected);
     $('#studio-count').textContent=`${items.length} objects`;
     $('#studio-dirty').textContent=doc.dirty?'● Unsaved changes':'○ Draft unchanged';
@@ -86,8 +87,9 @@ export function startStudio(host) {
   },{signal:events.signal});
   window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY)say('The saved draft changed in another tab. Export your edits before reopening.');},{signal:events.signal});
   window.addEventListener('beforeunload',event=>{if(doc.dirty){event.preventDefault();event.returnValue='';}},{signal:events.signal});
-  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();designer?.dispose();viewport.dispose();}},{signal:events.signal});
+  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();designer?.dispose();agent?.dispose();viewport.dispose();}},{signal:events.signal});
   designer = mountDesignerPanel(host, { doc, selected: () => selected, apply: render, canEdit: () => !walking });
+  agent = mountAgentChat($('.studio-stage'), { doc, selected: () => selected, apply: render, canEdit: () => !walking });
   $('#studio-designer-open').addEventListener('click', event => designer.open(event.currentTarget));
   render();viewport.frameRegion();document.body.dataset.mode='edit';document.body.dataset.studioReady='true';
 }

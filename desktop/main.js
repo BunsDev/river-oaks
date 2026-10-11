@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
 import { createStudioDesignerHost, designerSenderAllowed } from './studio-designer-host.js';
+import { createStudioAgentHost } from './studio-agent-host.js';
 import { navigationAllowed, windowBounds } from './runtime.js';
 import { photoDownloadAllowed } from './photo-download.js';
 import { studioDownloadAllowed } from './studio-download.js';
@@ -14,7 +15,7 @@ app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
-let window, designerHost, quitting = false, saved = {}, lastRecovery = 0;
+let window, designerHost, agentHost, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
 const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://typesafe.place/play';
 const gameOrigin = new URL(entry).origin;
@@ -98,7 +99,7 @@ function createWindow() {
     if (!navigationAllowed(url, entry)) event.preventDefault();
   });
   // Keep recovery on the selected app when users follow an in-page app link.
-  contents.on('did-start-navigation', (_event, _url, _inPlace, isMainFrame) => { if (isMainFrame) designerHost?.dispose(); });
+  contents.on('did-start-navigation', (_event, _url, _inPlace, isMainFrame) => { if (isMainFrame) { designerHost?.dispose(); agentHost?.dispose(); } });
   contents.on('did-navigate', (_event, url) => {
     if (!navigationAllowed(url, entry)) return;
     const pathname = new URL(url).pathname;
@@ -118,7 +119,7 @@ function createWindow() {
   });
   contents.on('will-attach-webview', event => event.preventDefault());
   contents.on('render-process-gone', async (_event, details) => {
-    designerHost?.dispose();
+    designerHost?.dispose(); agentHost?.dispose();
     if (quitting || details.reason === 'clean-exit') return;
     console.error(`Game renderer stopped: ${details.reason}`);
     // Recover once automatically; repeated crashes require a decision, never a reload loop.
@@ -146,7 +147,7 @@ else {
     event.preventDefault();
     void saveWindow().catch(console.error).finally(() => { quitting = true; app.quit(); });
   });
-  app.on('window-all-closed', () => { designerHost?.dispose(); app.quit(); });
+  app.on('window-all-closed', () => { designerHost?.dispose(); agentHost?.dispose(); app.quit(); });
   app.whenReady().then(async () => {
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     session.defaultSession.setPermissionCheckHandler(() => false);
@@ -191,6 +192,22 @@ else {
       const frame = event.senderFrame;
       const result = await designerHost[method](input);
       if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      return result;
+    });
+    agentHost = createStudioAgentHost({ root: join(app.getPath('userData'), 'studio-agent'),
+      confirm: async ({ name }) => {
+        const { response } = await dialog.showMessageBox(window, { type: 'question', defaultId: 0, cancelId: 0, buttons: ['Cancel', `Use ${name}`],
+          message: `Chat with the World Studio agent through ${name}?`,
+          detail: `Studio runs the ${name} CLI installed on this device with your existing sign-in. Your messages and this region's scene snapshot are sent to ${name}; usage may be billed. The agent has no tools and only proposes edits, which Studio validates before they change your draft. You will not be asked again until the app restarts.` });
+        return response === 1;
+      },
+    });
+    for (const method of ['catalog','send','cancel','reset']) ipcMain.handle(`studio-agent:${method}`, async (event, input) => {
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Agent chat is limited to the main Studio window.');
+      const frame = event.senderFrame, sender = event.sender;
+      const onDelta = text => { if (!frame.isDestroyed() && designerSenderAllowed(event, window?.webContents, gameOrigin)) sender.send('studio-agent:delta', { requestId: input.requestId, text }); };
+      const result = await agentHost[method](input, { onDelta });
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { agentHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
       return result;
     });
     createWindow();
