@@ -8,6 +8,7 @@
 
 - `server/tests/adversarial-workplace.test.js`: new.
 - `docs/workplace-operations.md`: new.
+- `.env.example`: both flags, off.
 - `docs/project-management/tasks.json`: register entry.
 
 ## Cases and their boundary
@@ -41,7 +42,6 @@
 
 - No live WorkOS, hosted Redis, or multi-region run.
 - The WebSocket path is not exercised: the workplace exposes no socket actions, and occupancy is read over HTTP.
-- `RIVER_OAKS_WORKPLACE` and `VITE_WORKPLACE` are missing from `.env.example`, which is outside this task's files.
 - No single erase-everything action per owner (recorded in the operations doc).
 
 ## Next step
