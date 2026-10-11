@@ -48,7 +48,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     <section class="vehicle-garage" aria-label="Jev chauffeur">
       <div class="vehicle-garage-title"><span>Your chauffeur</span><span aria-hidden="true">✧</span></div>
       <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option></select>
-      <div class="player-actions"><button id="player-carriage" type="button">Call vehicle</button><button id="player-ride" type="button">Ride with Jev</button></div>
+      <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions"><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
@@ -86,6 +86,12 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
+  host.addEventListener('keydown',event=>{
+    if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
+    const button=event.code==='KeyQ'?carriageButton:event.code==='KeyG'?rideButton:null;
+    if(!button||button.disabled)return;
+    event.preventDefault();button.click();
+  },{signal:lifetime.signal});
   // Keep the detailed decision source in diagnostics; the player sees what Jev
   // is doing and whether he is following locally while the connection recovers.
   const companionButton=panel.querySelector('#player-companion'),companionStatus=panel.querySelector('#player-companion-status');
@@ -326,7 +332,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       carriageButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
       companionButton.disabled=!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
       rideButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
-      rideButton.textContent=carriage.riding?'Step out':'Ride with Jev';
+      rideButton.querySelector('[data-ride-label]').textContent=carriage.riding?'Step out':'Ride with Jev';
       vehicleSelect.disabled=!owner||carriage.riding||away;driveButton.disabled=!owner||!carriage.riding||away;
       pauseDrive.textContent=carriage.chauffeur.paused?'Resume ride':'Pause ride';pauseDrive.disabled=!carriage.chauffeur.active&&!carriage.chauffeur.paused;
       for(const button of panel.querySelectorAll('[data-drive],#player-drive-park'))button.disabled=!carriage.riding;
