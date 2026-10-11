@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-10-11T09:46:40.650Z",
+  "results": [
+    {
+      "name": "workplace",
+      "status": "passed",
+      "seconds": 46.122,
+      "result": {
+        "checks": [
+          "Deferring the offer takes nothing away",
+          "No brief without permission",
+          "A running draft can be paused",
+          "A paused draft stays paused",
+          "Opening a draft moves focus to it",
+          "The plan names what still needs a human decision",
+          "The draft renders as inert text",
+          "Another account never sees the owner's brief",
+          "Another account cannot fetch the draft by id",
+          "Revoking permission removes the brief",
+          "A deleted draft is not presented as waiting for review",
+          "Nothing calls the events service"
+        ]
+      }
+    }
+  ]
+}

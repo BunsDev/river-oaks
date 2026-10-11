@@ -8,6 +8,22 @@ async (page) => {
   await openHudSpace(page, 'settings-section', 'World');
   await page.getByRole('link', { name: 'Open World Studio' }).click({ timeout: 10000 });
   await page.waitForSelector('body[data-studio-ready="true"]',{timeout:20000});
+  // Appearance follows the OS by default and honors the game's explicit Light/Dark choice.
+  const appearance=async()=>{
+    const {theme,header,box}=await page.evaluate(()=>({theme:document.documentElement.dataset.theme,header:getComputedStyle(document.querySelector('.studio-header')).backgroundColor,box:document.querySelector('#studio-viewport canvas').getBoundingClientRect().toJSON()}));
+    await page.waitForTimeout(100);const shot=(await page.screenshot({clip:{x:box.x+4,y:box.y+4,width:1,height:1}})).toString('base64');
+    const backdrop=await page.evaluate(async shot=>{const image=new Image();image.src='data:image/png;base64,'+shot;await image.decode();const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return [...ctx.getImageData(0,0,1,1).data.slice(0,3)];},shot);
+    return {theme,header,dark:backdrop.every(channel=>channel<60)};
+  };
+  await page.emulateMedia({colorScheme:'dark'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+  let look=await appearance();
+  if(look.header!=='rgb(24, 32, 28)'||!look.dark)throw Error(`Dark system appearance left the Studio light: ${JSON.stringify(look)}`);
+  await page.screenshot({path:'output/playwright/world-studio-dark.png'});
+  await page.evaluate(()=>localStorage.setItem('river-oaks-appearance','light'));await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
+  look=await appearance();
+  if(look.theme!=='light'||look.header!=='rgb(245, 248, 246)'||look.dark)throw Error(`Explicit Light preference was ignored: ${JSON.stringify(look)}`);
+  await page.evaluate(()=>localStorage.removeItem('river-oaks-appearance'));await page.emulateMedia({colorScheme:'light'});
+  await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
   await page.locator('#studio-designer-open').click();
   await page.locator('[data-state]').filter({hasText:'Electron desktop editor'}).waitFor();
   if(!await page.locator('[data-connect]').isDisabled())throw Error('Browser without host offered a fake connection');

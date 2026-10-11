@@ -15,6 +15,7 @@ import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { profileAction } from './profile-api.js';
 import { eventAction } from './events-api.js';
+import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
 
@@ -26,7 +27,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -71,7 +72,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
-    onRevoke: async userId => { await disconnectUser(userId); await onBan?.(userId); } });
+    onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
   function publish(view) {
@@ -220,6 +221,13 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           },allowWrite:id=>security.allow('events',id,12,60_000)});
         return json(res,result.status,result.value);
       }
+      if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
+        const identity=await authorized(req,res);if(!identity)return;
+        if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
+        const result=await workplaceAction({action:path.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
+          listPlaces:()=>room.listPlaces(),allowWrite:id=>security.allow('workplace',id,30,60_000),allowRead:id=>security.allow('workplace_read',id,120,60_000),now});
+        return json(res,result.status,result.value);
+      }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
@@ -246,6 +254,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         if (!ok) return json(res, 503, { error: 'Moderation is temporarily unavailable.' });
         if (data.banned) {
           await disconnectUser(data.userId);
+          await workplace?.suspend(data.userId);
           await onBan?.(data.userId);
         }
         return json(res, 200, { ok: true });

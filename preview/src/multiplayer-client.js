@@ -5,6 +5,7 @@ import './multiplayer.css';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
 import { createSocialUI } from './social-ui.js';
 import { createGroupsUI } from './groups-ui.js';
+import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
 
@@ -100,6 +101,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     profileRequest:(action,data={})=>api(`/api/profile/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
   const groups=creationToolsEnabled?createGroupsUI({panel,connected:()=>connected,selfId:()=>selfId,socialRequest,
     request:(action,data={})=>api(`/api/groups/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
+  // Default off: VITE_WORKPLACE=true shows the draft-only workplace test (#214).
+  const workplace=import.meta.env.VITE_WORKPLACE==='true'?createWorkplaceUI({panel,connected:()=>connected,
+    request:(action,data={})=>api(`/api/workplace/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}):null;
   panel.append(logout);
   const chatDock = createTownChatDock(chatSection);
   const greetings=createGreetingsUI({host:document.querySelector('#viewport'),getTown:()=>({connected,selfId,snapshot:latestSnapshot}),getEnvironment,request:command});
@@ -191,7 +195,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
             if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
             if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void refreshHomeAccess();}
+            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
             const self=data.players.find(player=>player.id===selfId);
             if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
             activeGreeting=self?.interaction?.id??null;
@@ -261,7 +265,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();
-      social.dispose();groups?.dispose();greetings.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
+      social.dispose();groups?.dispose();workplace?.dispose();greetings.dispose();chatDock.dispose();gate.remove();panel.remove();document.querySelector('.app-shell')?.removeAttribute('inert');
     },
   };
 }

@@ -1,23 +1,23 @@
 :is(#control-panel,.places-guide) .world-map{margin:2px 0 8px;padding:0 0 10px;border-bottom:1px solid var(--line)}
 :is(#control-panel,.places-guide) .world-map>summary{min-height:36px;font-size:13px;font-weight:650;color:var(--places);cursor:pointer}
-:is(#control-panel,.places-guide) .world-map-surface{position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:1px solid #668784;border-radius:12px;background:#182831;cursor:crosshair;touch-action:manipulation}
+:is(#control-panel,.places-guide) .world-map-surface{position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:1px solid #668784;border-radius:12px;background:#162d32;cursor:crosshair;touch-action:manipulation}
 :is(#control-panel,.places-guide) .world-map-surface:focus-visible{outline:3px solid var(--places);outline-offset:3px}
 :is(#control-panel,.places-guide) .world-map-surface svg{display:block;width:100%;height:100%}
-:is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:#fff8ee;font:700 10px/1.2 system-ui,sans-serif;text-shadow:0 1px 4px #13252a;pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-north{top:9px;right:10px;letter-spacing:.12em}
-:is(#control-panel,.places-guide) .world-map-scale{left:10px;bottom:9px;display:block;min-width:var(--world-map-scale-width);padding-top:3px;border-top:2px solid #fff8ee;text-align:center}
-:is(#control-panel,.places-guide) .world-map-ground{fill:#21343a}
+:is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:#fff8ee;font:700 10px/1.2 system-ui,sans-serif;pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-north{top:12px;right:12px;letter-spacing:.08em;padding:9px 10px;border:1px solid #68878666;border-radius:8px;background:#162d32e8}
+:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;width:var(--world-map-scale-width);padding-top:5px;border-top:2px solid #b6c9c6;text-align:center;color:#c2d2cf;text-shadow:0 1px 2px #162d32}
+:is(#control-panel,.places-guide) .world-map-ground{fill:#162d32}
 :is(#control-panel,.places-guide) .world-map-parcel{fill:#dd9ac8;fill-opacity:.3;stroke:#f0bfdb;stroke-width:4;stroke-dasharray:10 6;cursor:pointer}
 :is(#control-panel,.places-guide) .world-map-parcel.selected{fill-opacity:.5;stroke:#fff0c8;stroke-width:7;stroke-dasharray:none}
-:is(#control-panel,.places-guide) .world-map-road{fill:none;stroke:#8fbab1;stroke-linecap:round;stroke-linejoin:round;opacity:.92}
-:is(#control-panel,.places-guide) .world-map-building{fill:#b5aaa5;stroke:#ebd8c8;stroke-width:2;opacity:.9}
-:is(#control-panel,.places-guide) .world-map-place{fill:#f1bc68;stroke:#3d303b;stroke-width:3}
-:is(#control-panel,.places-guide) .world-map-landmark{fill:#f6d8ef;stroke:#80405b;stroke-width:3}
-:is(#control-panel,.places-guide) .world-map-peer{fill:#77dfd0;stroke:#0d4048;stroke-width:4}
-:is(#control-panel,.places-guide) .world-map-self{fill:#f69ac6;stroke:#fff8ee;stroke-width:5;filter:drop-shadow(0 0 9px #f69ac6)}
-:is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:#fff4b8;stroke-width:5;filter:drop-shadow(0 0 6px #fff4b8)}
+:is(#control-panel,.places-guide) .world-map-road{fill:none;stroke:#688786;stroke-linecap:round;stroke-linejoin:round}
+:is(#control-panel,.places-guide) .world-map-building{fill:#29454a;stroke:#466064;stroke-width:1.5}
+:is(#control-panel,.places-guide) .world-map-place{fill:#edc88a;stroke:#162d32;stroke-width:3}
+:is(#control-panel,.places-guide) .world-map-landmark{fill:#dfb4d0;stroke:#162d32;stroke-width:3}
+:is(#control-panel,.places-guide) .world-map-peer{fill:#162d32;stroke:#b5eee6;stroke-width:4}
+:is(#control-panel,.places-guide) .world-map-self{fill:#b5eee6;stroke:#fff;stroke-width:5}
+:is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:#ffe2a4;stroke-width:5}
 :is(#control-panel,.places-guide) .world-map-overlay [hidden]{display:none}
-:is(#control-panel,.places-guide) .world-map-legend{margin:7px 0 3px;font-size:10px;line-height:1.35;color:var(--muted)}
+:is(#control-panel,.places-guide) .world-map-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0;padding:0;list-style:none;font-size:11px;line-height:1.4;color:var(--muted)}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list){margin:5px 0;color:var(--ink);font-size:12px}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list)>summary{cursor:pointer;font-weight:650}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list) ul{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0;padding:0;list-style:none}
@@ -30,3 +30,16 @@
 :is(#control-panel,.places-guide) .world-map-actions button:focus-visible{outline:2px solid var(--places);outline-offset:2px}
 :is(#control-panel,.places-guide) .world-map-actions button:disabled{opacity:.45;cursor:default}
 :is(#control-panel,.places-guide) .world-map-status{min-height:1em;margin:5px 0 0;font-size:11px;line-height:1.4;color:var(--muted)}
+
+:is(#control-panel,.places-guide) .world-map-path{stroke:#426268;stroke-linecap:butt}
+:is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--font-sans,system-ui);letter-spacing:.015em;color:#c7d8d3;text-shadow:0 1px 2px #162d32,0 -1px 2px #162d32;pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 11px;border:1px solid #edc88a88;border-radius:8px;background:#14292ef5;box-shadow:0 3px 12px #0003;color:#fff1d7;font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-selection-label.above{margin-top:-20px;transform:translate(-50%,-100%)}
+:is(#control-panel,.places-guide) .world-map-legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
+:is(#control-panel,.places-guide) .world-map-key{display:inline-block;width:8px;height:8px;box-sizing:border-box;flex:none;border-radius:50%}
+:is(#control-panel,.places-guide) .world-map-key-self{background:#b5eee6;box-shadow:0 0 0 1px #426268,0 0 0 3px #b5eee633}
+:is(#control-panel,.places-guide) .world-map-key-place{background:#edc88a;box-shadow:0 0 0 1px #75684d}
+:is(#control-panel,.places-guide) .world-map-key-peer{border:2px solid #73b7ad}
+:is(#control-panel,.places-guide) .world-map-key-landmark{background:#dfb4d0;border:1px solid #986d8a;border-radius:1px;transform:rotate(45deg)}
+:is(#control-panel,.places-guide) .world-map-key-parcel{border:1px dashed #bd84a8;border-radius:1px}
