@@ -1312,7 +1312,8 @@
       "title": "Workplace first slice (#214): contract/grants, fixture-site graybox, fixture event_plan task, draft-only panel, evidence",
       "status": "delivered",
       "branches": [
-        "feat/workplace-slice-20261011"
+        "feat/workplace-slice-20261011",
+        "docs/workplace-slice-delivered"
       ],
       "owner": "claude:river-oaks-55",
       "updatedAt": "2026-10-11T12:50:00+00:00",
