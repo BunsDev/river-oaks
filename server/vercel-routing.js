@@ -7,6 +7,7 @@ const paths = new Set(['/auth/login', '/auth/callback', '/auth/verify', '/auth/d
   '/api/social/list', '/api/social/request', '/api/social/accept', '/api/social/remove', '/api/social/messages', '/api/social/send', '/api/social/invite-world', '/api/social/invite-place',
   '/api/groups/list', '/api/groups/read', '/api/groups/create', '/api/groups/invite', '/api/groups/accept', '/api/groups/decline', '/api/groups/leave', '/api/groups/remove', '/api/groups/send',
   '/api/events/list', '/api/events/create', '/api/events/rsvp', '/api/events/cancel',
+  '/api/workplace/state', '/api/workplace/companion', '/api/workplace/grant', '/api/workplace/revoke', '/api/workplace/offer', '/api/workplace/submit', '/api/workplace/pause', '/api/workplace/resume', '/api/workplace/cancel', '/api/workplace/artifact', '/api/workplace/delete', '/api/workplace/ack', '/api/workplace/presence', '/api/workplace/occupancy',
   '/api/profile/view', '/api/profile/save', '/api/profile/claim-intro', '/api/debug-reports', '/api/debug-reports/get', '/multiplayer']);
 export function normalizeVercelRoute(raw) {
   try {

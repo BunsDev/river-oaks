@@ -10,6 +10,7 @@ import { createRedisSocial } from './social.js';
 import { createRedisGroups } from './groups.js';
 import { createRedisProfiles } from './profiles.js';
 import { createRedisEvents } from './events.js';
+import { createWorkplace, createRedisWorkplaceStore } from './workplace.js';
 import { createRedisDebugReports } from './debug-reports.js';
 import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
 import { createRedisDesignLibrary } from './design-library.js';
@@ -17,10 +18,12 @@ import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest}={}) {
+  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
+  const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix})}):null;
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
@@ -61,7 +64,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
@@ -81,7 +84,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
     await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
   },async close() {
-    closed=true;
+    closed=true;workplace?.close();
     await Promise.allSettled([...pending.values()]);
     for(const {game,room} of worlds.values()){await game.close();await room.close();}
     await router.close();

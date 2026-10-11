@@ -1076,6 +1076,45 @@
       },
       "deliveryPr": 223,
       "pr": 223
+    },
+    {
+      "id": "workplace-slice",
+      "title": "Workplace first slice (#214): contract/grants, fixture-site graybox, fixture event_plan task, draft-only panel, evidence",
+      "status": "active",
+      "branches": [
+        "feat/workplace-slice-20261011"
+      ],
+      "owner": "claude:river-oaks-55",
+      "updatedAt": "2026-10-11T09:45:00+00:00",
+      "leaseUntil": "2026-10-11T11:45:00+00:00",
+      "nextAction": "Write failing #217 contract/policy tests, then implement the server workplace domain and routes behind RIVER_OAKS_WORKPLACE=1.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-slice.md",
+      "filesOwned": [
+        "preview/src/workplace-contract.js",
+        "preview/src/workplace-room.js",
+        "preview/src/workplace-ui.js",
+        "preview/src/workplace.css",
+        "server/workplace.js",
+        "server/workplace-api.js",
+        "server/tests/workplace*.test.js",
+        "preview/tests/workplace*.test.js",
+        "preview/e2e/workplace.js",
+        "preview/e2e/fixtures/workplace.html"
+      ],
+      "requiredChecks": [
+        "Focused workplace server/client tests incl. Redis variants",
+        "pnpm run verify",
+        "Rendered fixture-site graybox journey",
+        "Independent review and final-head hosted checks"
+      ],
+      "issues": [
+        214,
+        217,
+        218,
+        219,
+        220,
+        221
+      ]
     }
   ]
 }
