@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 
 // Only the host supplies executable/argv/env. Renderer input never selects commands.
-export function runStudioCommand(executable, args, { cwd, env = process.env, signal, timeout = 120000, maxBytes = 512 * 1024 } = {}) {
+export function runStudioCommand(executable, args, { cwd, env = process.env, signal, timeout = 120000, maxBytes = 512 * 1024, onStdout = null } = {}) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new Error('Design request canceled.'));
     const child = spawn(executable, args, { cwd, env, shell: false, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore','pipe','pipe'] });
@@ -15,7 +15,7 @@ export function runStudioCommand(executable, args, { cwd, env = process.env, sig
     signal?.addEventListener('abort', abort, { once: true });
     const timer = setTimeout(() => stop('Designer runtime timed out.'), timeout);
     child.stdout.setEncoding('utf8');
-    child.stdout.on('data', data => { size += Buffer.byteLength(data); if (size > maxBytes) stop('Designer output exceeded its limit.'); else output += data; });
+    child.stdout.on('data', data => { size += Buffer.byteLength(data); if (size > maxBytes) stop('Designer output exceeded its limit.'); else { output += data; onStdout?.(data); } });
     // Count but do not return stderr: runtime diagnostics can contain private host data.
     child.stderr.on('data', data => { size += data.length; if (size > maxBytes) stop('Designer output exceeded its limit.'); });
     const cleanup = () => { clearTimeout(timer); clearTimeout(killTimer); signal?.removeEventListener('abort', abort); };
