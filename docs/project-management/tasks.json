@@ -1628,9 +1628,9 @@
         "cody/starter-districts-20261011"
       ],
       "owner": "claude:river-oaks-27",
-      "leaseUntil": "2026-10-11T19:01:31.137419+00:00",
-      "updatedAt": "2026-10-11T17:01:31.137419+00:00",
-      "nextAction": "Handed off from Cody (lease expired 16:35Z) at Val's direction. Merged main (agent chat #240) into PR #242 keeping both features; re-verify Studio tests, core and World Studio browser acceptance, push, pass hosted CI, then merge with the guard only on Val's authorization.",
+      "leaseUntil": "2026-10-11T19:11:16.115875+00:00",
+      "updatedAt": "2026-10-11T17:11:16.115875+00:00",
+      "nextAction": "PR #242 refreshed on main at 9fcf11e and re-verified (27 Studio tests, core, World Studio browser). Val authorized the merge: after the queued #235, #237, #238, #244 and #243, merge with ~/.claude/scripts/gh-merge-when-green.sh 242, then record merge evidence and mark delivered. Retire the worktree only after that.",
       "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
       "filesOwned": [
         "preview/public/data/starter-districts/",
@@ -1653,7 +1653,8 @@
           "data/reports/starter-districts-browser.json"
         ],
         "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
-      }
+      },
+      "pr": 242
     }
   ]
 }
