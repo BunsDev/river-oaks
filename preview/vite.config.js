@@ -42,6 +42,6 @@ export default defineConfig({
   build: {
     outDir: '../dist/preview',
     emptyOutDir: true,
-    rolldownOptions: { output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules\/three/ }] } } },
+    rolldownOptions: { input: { index: fileURLToPath(new URL('./index.html', import.meta.url)), studio: fileURLToPath(new URL('./studio.html', import.meta.url)) }, output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules\/three/ }] } } },
   },
 });

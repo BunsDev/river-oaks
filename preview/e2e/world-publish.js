@@ -74,7 +74,10 @@ async page=>{
   await openHudSpace(page, 'explore-section');
   await page.locator('.world-portal-design').waitFor({state:'visible'});
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedWorldPlace=text;}}}));
+  await page.locator('#places-open').click();
+  await page.locator('#places-list li').filter({hasText:'Moon Arch'}).locator('.place-more > summary').click();
   await page.locator('#places-list li').filter({hasText:'Moon Arch'}).locator('button[aria-label^="Copy a link"]').click();
+  await page.locator('.places-close').click();
   const sharedPlace=new URL(await page.evaluate(()=>window.__copiedWorldPlace));
   check(sharedPlace.searchParams.get('world')==='moon-garden'&&!sharedPlace.searchParams.has('play')
     &&sharedPlace.searchParams.get('place')?.startsWith('spot:'),'A published world place link keeps its world and shared play mode');
@@ -90,6 +93,7 @@ async page=>{
   check(await page.locator('.world-map-parcel').count()===1
     &&(await page.locator('.world-map-parcel-list').textContent()).includes('Gallery Lot · Your parcel'),
   'The live world map shows the parcel boundary and its account ownership');
+  await page.locator('#places-open').click();
   await page.locator('.world-map-parcel-list>summary').click();
   await page.locator('.world-map-parcel-list button').click();
   check((await page.locator('.world-map-hint').textContent()).includes('Gallery Lot · Your parcel')
@@ -102,6 +106,7 @@ async page=>{
     `The parcel boundary is visible and selected: ${JSON.stringify(plotVisual)}`);
   await page.locator('.world-map-surface').screenshot({path:'output/playwright/world-parcel-surface.png'});
   await page.locator('.world-map').screenshot({path:'output/playwright/world-parcels.png'});
+  await page.locator('.places-close').click();
   check(authored.world.stores.length===2&&authored.world.stores.some(store=>store.name==='Moon Gallery')&&authored.world.stores.some(store=>store.name==='Moon House'&&store.category==='home'&&store.access==='owner'),'The region package publishes a walk-in venue and Jevica-only home');
   check((await page.locator('#stores-count').textContent())==='2','Both creator interiors appear in the world directory');
   await page.locator('#enter-destination').click();
@@ -272,6 +277,8 @@ async page=>{
   check(restored.regionSha256===(await page.evaluate(()=>window.__riverMultiplayer().snapshot.regionSha256)),'The client reconnects to the restored region');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('#places-open').click();
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmark-name').fill('Moon arrival');
   await page.locator('#landmark-add').click();
   await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
@@ -285,6 +292,8 @@ async page=>{
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
   await page.waitForFunction(()=>document.querySelector('#landmarks-list li .place-name')?.textContent==='Moon arrival');
+  await page.locator('#places-open').click();
+  await page.locator('#places-tab-saved').click();
   const returnLink=page.locator('#landmarks-list li a[aria-label^="Go to Moon arrival"]');
   const destination=new URL(await returnLink.getAttribute('href'));
   check(destination.searchParams.get('world')==='moon-garden'&&destination.searchParams.get('at')===savedWorldLink.searchParams.get('at'),'The account directory routes a saved landmark to its original world');

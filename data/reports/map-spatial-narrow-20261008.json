@@ -1,0 +1,147 @@
+{
+  "revision": "2020849",
+  "results": [
+    {
+      "name": "Zadig & Voltaire",
+      "start": {
+        "position": [
+          -2830.3481041822542,
+          20.020098205010267,
+          1349.805888951847
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.340098205010268,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.6212999767083551,
+        "speed": 0,
+        "velocity": [
+          0,
+          0
+        ],
+        "distance": 0,
+        "roomId": "osm-node-8172494990",
+        "showBody": true
+      },
+      "end": {
+        "position": [
+          -2831.746226163025,
+          20.020098205010267,
+          1349.962628536029
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.340098205010268,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.6212999767083551,
+        "speed": 0.08329560260190277,
+        "velocity": [
+          -1.64789618671094,
+          0.08329560259162566
+        ],
+        "distance": 1.4859761422109745,
+        "roomId": "osm-node-8172494990",
+        "showBody": true
+      },
+      "back": {
+        "position": [
+          -2828.659172571433,
+          20.020098205010267,
+          1349.8155876327112
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.340098205010268,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.6212999767083551,
+        "speed": 1.649999999878549,
+        "velocity": [
+          1.6478961867092983,
+          -0.0832956025915426
+        ],
+        "distance": 4.5945607159848585,
+        "roomId": "osm-node-8172494990",
+        "showBody": true
+      },
+      "elapsed": 2.019,
+      "displacement": 1.4068803681775666
+    },
+    {
+      "name": "de Boulle",
+      "start": {
+        "position": [
+          -2829.703903945118,
+          20.048327158112034,
+          1334.1059398138661
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.368327158112034,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.4695697579148441,
+        "speed": 7.256606658480517e-11,
+        "velocity": [
+          -6.261862481246157e-11,
+          3.165160602515455e-12
+        ],
+        "distance": 4.710624939147815,
+        "roomId": "osm-node-8172494993",
+        "showBody": true
+      },
+      "end": {
+        "position": [
+          -2829.916878208593,
+          20.048327158112034,
+          1333.7911912167824
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.368327158112034,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.4695697579148441,
+        "speed": 0.16673874091382873,
+        "velocity": [
+          -1.6415535909318009,
+          -0.1667387409274955
+        ],
+        "distance": 5.21781103928626,
+        "roomId": "osm-node-8172494993",
+        "showBody": true
+      },
+      "back": {
+        "position": [
+          -2826.818422632797,
+          20.048327158112034,
+          1334.08713569852
+        ],
+        "riding": null,
+        "sitting": null,
+        "ground": 18.368327158112034,
+        "altitude": 0,
+        "flying": false,
+        "landing": false,
+        "yaw": 1.4695697579148441,
+        "speed": 1.6499999998834,
+        "velocity": [
+          1.6415535909331558,
+          0.1667387409276331
+        ],
+        "distance": 8.354449348107416,
+        "roomId": "osm-node-8172494993",
+        "showBody": false
+      },
+      "elapsed": 2.013,
+      "displacement": 0.38003252001503607
+    }
+  ]
+}

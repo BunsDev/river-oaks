@@ -1,0 +1,75 @@
+{
+  "createdAt": "2026-10-08T07:58:28.140Z",
+  "results": [
+    {
+      "name": "connection-required",
+      "status": "passed",
+      "seconds": 4.782,
+      "result": {
+        "checks": [
+          "Legacy solo preferences cannot unlock an offline game",
+          "An unavailable town never creates a private session",
+          "Offline keyboard input cannot move the player",
+          "There is no alternate play-mode control",
+          "Connection recovery unlocks the authenticated town",
+          "The recovered player belongs to the server snapshot",
+          "Device landmarks do not become account landmarks",
+          "Movement resumes after a successful authenticated connection"
+        ]
+      }
+    },
+    {
+      "name": "contextual-first-visit",
+      "status": "passed",
+      "seconds": 32.808,
+      "result": {
+        "desktop": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "On-screen movement buttons also work from the keyboard",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.8069580238166,20.057408225899295,1314.7005974939764]",
+          "errors": []
+        },
+        "touch": {
+          "checks": [
+            "First visit: search selects a destination",
+            "Arrival gives the doorway a single primary prompt",
+            "Rapid arrival/entry explains the authoritative cooldown at the action",
+            "Inside, the reachable conversation becomes primary",
+            "The primary action opens the actual conversation",
+            "Conversation dismissal restores world focus",
+            "Leaving remains reachable as a secondary action",
+            "Leaving immediately after a conversation explains the travel cooldown",
+            "Secondary doorway action returns to the street",
+            "First visit ends with walking restored after taking a photo",
+            "Narrow viewport exposes the on-screen movement pad",
+            "Releasing real touch input clears the held movement state",
+            "Touch test uses a coarse-pointer device context",
+            "Touch press turns the player using the on-screen pad",
+            "Narrow layout has no horizontal overflow",
+            "Photo survives returning to walking and reopening on a narrow screen",
+            "No page errors: "
+          ],
+          "destination": "osm-node-8172494969",
+          "start": "[-2758.7673547186682,20.057923025228355,1314.74951981296]",
+          "errors": []
+        }
+      }
+    }
+  ]
+}

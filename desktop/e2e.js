@@ -1,3 +1,4 @@
+import { openHudSpace } from '../preview/e2e/hud-navigation.js';
 import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -19,7 +20,15 @@ if (process.argv.includes('--dev')) {
     RIVER_OAKS_DEV_TOWN_PORT:String(townPort),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')};
   Object.assign(process.env,fixture);Object.assign(env,fixture);
   const { createServer } = await import('vite');
-  vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), server: { port: 0 } });
+  // Keep provider fixtures in the server: Playwright page interception cannot
+  // reliably service a replacement renderer after the deliberate crash below.
+  const offlineBridge = { name: 'desktop-offline-bridge', enforce: 'pre', configureServer(server) {
+    server.middlewares.use('/v1', (_request, response) => {
+      response.statusCode = 503; response.setHeader('Content-Type', 'application/json');
+      response.end(JSON.stringify({ error: 'Offline desktop fixture' }));
+    });
+  } };
+  vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), plugins: [offlineBridge], server: { port: 0 } });
   await vite.listen();
   env.RIVER_OAKS_DEV_URL = `http://127.0.0.1:${vite.httpServer.address().port}/`;
 }
@@ -95,8 +104,7 @@ try {
   check('keyboard movement');
   const sharedTown = await page.locator('#canvas-host').getAttribute('data-multiplayer') === 'joined';
   report.sharedTown = sharedTown;
-  await panel.click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#destination').selectOption({ label: 'Hermès' });
   const beforeTravel = await position();
   await page.locator('#visit-destination').click();console.log('Checking shop arrival');
@@ -106,31 +114,35 @@ try {
   }, beforeTravel);
   // The shared server intentionally rate-limits travel to once per second.
   if (sharedTown) await page.waitForTimeout(1100);
+  const introClaim = sharedTown ? page.waitForResponse(response => response.url().includes('/api/profile/claim-intro')) : null;
   await page.locator('#enter-destination').click();console.log('Checking shop entry');
+  if (introClaim && (await (await introClaim).json()).firstVisit) {
+    await page.locator('.store-intro button').click();
+    await page.locator('.store-intro').waitFor({ state: 'hidden' });
+  }
   await page.waitForFunction(() => document.body.classList.contains('inside-store'));
   await page.locator('#canvas-host').focus();
   if (sharedTown) await page.waitForTimeout(1100);
   await page.keyboard.press('KeyF');console.log('Checking shop exit');
   await page.waitForFunction(() => !document.body.classList.contains('inside-store'));
   check('shop arrival, enter and exit');
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if (sharedTown) await page.waitForTimeout(1100);
   await page.locator('#community-meet').click();
   await page.locator('#community-about').click();
   await page.waitForFunction(() => document.querySelector('#community-speech').textContent.length > 40);
   await page.locator('#community-close').click();
   check('resident conversation');
-  await page.locator('[data-section=settings-section]').click();
+  await openHudSpace(page, 'settings-section', 'Graphics');
   await page.locator('[data-quality=smooth]').click();
   await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === 'smooth');
   await page.reload();
   await page.locator('#loading').waitFor({ state: 'hidden' });
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
-  if (await panel.getAttribute('aria-expanded') === 'false') await panel.click();
-  await page.locator('[data-section=settings-section]').click();
+  await openHudSpace(page, 'settings-section', 'Graphics');
   await page.locator('[data-quality=auto]').click();
-  await panel.click();
+  await page.locator('#settings-dialog .settings-header button').click();
   await page.waitForTimeout(5000);
   report.performance = await page.evaluate(async () => {
     const intervals = [];
@@ -204,8 +216,13 @@ try {
   // automatic recovery through the surviving native webContents instead.
   const recovered = await app.evaluate(async ({ BrowserWindow }) => {
     const contents = BrowserWindow.getAllWindows()[0].webContents;
-    await new Promise(resolve => {
-      contents.once('did-finish-load', resolve);
+    await new Promise((resolve, reject) => {
+      const loaded = () => { clearTimeout(timer); resolve(); };
+      const timer = setTimeout(() => {
+        contents.removeListener('did-finish-load', loaded);
+        reject(new Error(`Recovery navigation did not finish: loading=${contents.isLoading()}, crashed=${contents.isCrashed()}`));
+      }, 60000);
+      contents.once('did-finish-load', loaded);
       contents.forcefullyCrashRenderer();
     });
     const deadline = Date.now() + 60000;

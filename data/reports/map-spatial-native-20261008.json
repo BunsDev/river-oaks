@@ -1,0 +1,217 @@
+{
+  "revision": "014ea13",
+  "runtime": "UE 5.8.2 Mac Development game Metal",
+  "command": "getall InstancedStaticMeshComponent PerInstanceSMData",
+  "scope": "Live render instance transforms using 100 cm engine Cube; geometry bounds, not surveyed facade footprints",
+  "instances": [
+    {
+      "component": "Style_2",
+      "id": "osm-way-878472795",
+      "sizeMeters": [
+        101.084175,
+        118.670461,
+        23.5
+      ],
+      "centerCm": [
+        -285796.902281,
+        136728.752166,
+        1175
+      ],
+      "sourceSizeMeters": [
+        101.08417520241346,
+        118.67046135524288,
+        23.5
+      ],
+      "errorMeters": 3.552428751163461e-07
+    },
+    {
+      "component": "Style_2",
+      "id": "osm-way-878472797",
+      "sizeMeters": [
+        72.88612,
+        82.257758,
+        23.5
+      ],
+      "centerCm": [
+        -286326.716697,
+        124529.227093,
+        1175
+      ],
+      "sourceSizeMeters": [
+        72.88611990929348,
+        82.2577579957433,
+        23.5
+      ],
+      "errorMeters": 9.070652140508173e-08
+    },
+    {
+      "component": "Style_1",
+      "id": "osm-way-625330790",
+      "sizeMeters": [
+        39.738959,
+        181.635575,
+        20
+      ],
+      "centerCm": [
+        -270120.203727,
+        127726.258242,
+        1000
+      ],
+      "sourceSizeMeters": [
+        39.73895900003845,
+        181.6355751855299,
+        20
+      ],
+      "errorMeters": 1.8552989899944805e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625330785",
+      "sizeMeters": [
+        80.409631,
+        40.687615,
+        28
+      ],
+      "centerCm": [
+        -273439.372431,
+        140318.136353,
+        1400
+      ],
+      "sourceSizeMeters": [
+        80.40963094856124,
+        40.687615499831736,
+        28
+      ],
+      "errorMeters": 4.99831735112366e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625330792",
+      "sizeMeters": [
+        31.669481,
+        67.896454,
+        14.5
+      ],
+      "centerCm": [
+        -274247.206345,
+        133640.112287,
+        725
+      ],
+      "sourceSizeMeters": [
+        31.66948126681382,
+        67.89645351096988,
+        14.5
+      ],
+      "errorMeters": 4.890301283921872e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625330798",
+      "sizeMeters": [
+        36.881138,
+        99.471281,
+        18.5
+      ],
+      "centerCm": [
+        -273741.985358,
+        123554.60955,
+        925
+      ],
+      "sourceSizeMeters": [
+        36.88113841670565,
+        99.47128078527749,
+        18.5
+      ],
+      "errorMeters": 4.167056530945956e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625333006",
+      "sizeMeters": [
+        32.982558,
+        62.58131,
+        9.2
+      ],
+      "centerCm": [
+        -279288.024939,
+        133543.281993,
+        460
+      ],
+      "sourceSizeMeters": [
+        32.98255762091139,
+        62.58130984241143,
+        9.2
+      ],
+      "errorMeters": 3.790886040633268e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625333008",
+      "sizeMeters": [
+        31.890323,
+        47.490343,
+        13.5
+      ],
+      "centerCm": [
+        -279220.764243,
+        126425.197759,
+        675
+      ],
+      "sourceSizeMeters": [
+        31.890323165920563,
+        47.490342787932605,
+        13.5
+      ],
+      "errorMeters": 2.1206739830859078e-07
+    },
+    {
+      "component": "Style_0",
+      "id": "osm-way-625333009",
+      "sizeMeters": [
+        32.441705,
+        16.992533,
+        10.6
+      ],
+      "centerCm": [
+        -279139.057131,
+        121378.020197,
+        530
+      ],
+      "sourceSizeMeters": [
+        32.441704852855764,
+        16.992533265147358,
+        10.6
+      ],
+      "errorMeters": 2.6514735651517185e-07
+    }
+  ],
+  "movementProbe": {
+    "test": "RiverOaks.SpatialReview.GeneratedDistrictTraversal",
+    "state": "Success",
+    "durationSeconds": 0.10904346406459808,
+    "evidence": "Coordinates cm east/south/up: start X=-276530.440 Y=129507.270 Z=88.000; forward X=-276530.440 Y=128682.270 Z=88.000; return X=-276530.440 Y=129507.270 Z=88.000. Fixed 60 Hz input integration, not GPU or human acceptance.",
+    "scope": "Temporary compiled probe of the real pawn with generated district geometry under NullRHI; fixed-step integration, not measured render-frame traversal. Building collision negative case passed."
+  },
+  "meshBinding": "All three live Style components reported /Engine/BasicShapes/Cube.Cube",
+  "camera": {
+    "eyeHeightCm": 168,
+    "horizontalFov": 59.7,
+    "aspect": 1.6,
+    "viewport": [
+      1280,
+      800
+    ]
+  },
+  "captures": [
+    "unreal/Saved/Screenshots/MacEditor/ScreenShot00002.png",
+    "unreal/Saved/Screenshots/MacEditor/ScreenShot00003.png",
+    "unreal/Saved/Screenshots/MacEditor/ScreenShot00004.png"
+  ],
+  "temporaryOverrides": "Hour 14 and DayLengthSeconds 1000000 in the temporary game process; process closed without saving map.",
+  "cleanupBuild": {
+    "status": "succeeded",
+    "log": "/tmp/river-oaks-spatial-probe-restore-build.log",
+    "temporaryProbeSourceRemoved": true,
+    "scope": "Editor Development rebuild after removing the temporary traversal probe; no new native product source retained."
+  }
+}

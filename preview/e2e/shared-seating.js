@@ -12,8 +12,10 @@ async page => {
   const openPlaces=async tab=>{
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await tab.locator('#panel-toggle').click();
     await openHudSpace(tab, 'explore-section');
+    if (!await tab.locator('#places-dialog').evaluate(el=>el.open)) await tab.locator('#places-open').click();
   };
   const closePanel=async tab=>{
+    if(await tab.locator('#places-dialog').evaluate(el=>el.open))await tab.locator('.places-close').click();
     for(const selector of ['#panel-toggle','#people-toggle'])if(await tab.locator(selector).getAttribute('aria-expanded')==='true')await tab.locator(selector).click();
   };
   await join(page);
@@ -25,6 +27,7 @@ async page => {
   await openPlaces(page);
   await page.locator(`#places-list li[data-place-id="spot:${spot.id}"] button[aria-label^="Go to"]`).click();
   await page.waitForFunction(name=>document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`),spot.name);
+  await page.locator('.places-close').click();
   await closePanel(page);
   if(!await page.locator('.visit-tools').evaluate(node=>node.open))await page.locator('.visit-tools-toggle').click();
   await page.locator('#build-mode').click();

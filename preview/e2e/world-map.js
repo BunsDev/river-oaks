@@ -7,6 +7,7 @@ async page => {
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('#places-open').click();
   const surface=page.locator('.world-map-surface');
   await surface.waitFor({state:'visible'});
   check(await page.locator('.world-map-road').count()>0&&await page.locator('.world-map-building').count()>0,
@@ -23,10 +24,12 @@ async page => {
   await page.waitForFunction(name=>document.querySelector('.world-map-status')?.textContent.includes(`You're at ${name}`),name,{timeout:15000});
   const after=await page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(player=>player.id===m.selfId).position;});
   check(Math.hypot(after[0]-before[0],after[1]-before[1])>10,'Go here uses the shared server travel path');
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmark-name').fill('Map vantage');
   await page.locator('#landmark-add').click();
   await page.waitForFunction(()=>document.querySelector('.world-map-landmark'));
   check(await page.locator('.world-map-landmark').count()===1,'A saved landmark appears in its world map');
+  await page.locator('#places-tab-destinations').click();
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__mapLink=text;}}}));
   await surface.focus();
   await surface.press('ArrowRight');
@@ -81,6 +84,7 @@ async page => {
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('#places-open').click();
   await page.locator('.world-map-surface').waitFor({state:'visible'});
   check(await page.locator('.world-map-landmark').count()===0,'Another world omits map landmarks saved in the configured alternate world');
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);
