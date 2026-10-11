@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 try {
@@ -18,9 +18,13 @@ try {
     'pre-commit':readFileSync(new URL('../.githooks/pre-commit',import.meta.url)),
     'reference-transaction':readFileSync(new URL('../.githooks/reference-transaction',import.meta.url),'utf8').replace("installed_node=''",()=>`installed_node=${nodePath}`),
     'project-ref-guard.mjs':readFileSync(new URL('./project-ref-guard.mjs',import.meta.url)),
+    // The pre-commit hook runs this installed copy, so committing on a checked-out
+    // branch (for example a fork PR under review) never runs that branch's code.
+    'scripts/check_secrets.py':readFileSync(new URL('./check_secrets.py',import.meta.url)),
+    '.gitleaks.toml':readFileSync(new URL('../.gitleaks.toml',import.meta.url)),
   };
   for(const [name,contents] of Object.entries(files)){
-    const target=join(destination,name),temp=`${target}.${randomUUID()}`;
+    const target=join(destination,name),temp=`${target}.${randomUUID()}`;mkdirSync(dirname(target),{recursive:true});
     writeFileSync(temp,contents,{mode:0o755});renameSync(temp,target);
   }
   git(['config','--local','core.hooksPath',destination]);
