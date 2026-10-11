@@ -7,7 +7,7 @@ import './workplace.css';
 
 const node = (tag, text, className) => { const item = document.createElement(tag);if (text) item.textContent = text;if (className) item.className = className;return item; };
 const STEP_LABELS = {reading_brief: 'Reading your brief', checking_places: 'Checking public meeting places', drafting_plan: 'Drafting options', validating: 'Checking the plan'};
-const REASONS = {grant_revoked: 'Stopped because you revoked permission.', grant_expired: 'Stopped because the permission expired.', owner_cancelled: 'You cancelled it.', deadline: 'It ran out of time.',
+const REASONS = {grant_revoked: 'Stopped because you revoked permission.', grant_expired: 'Stopped because the permission expired.', access_revoked: 'Stopped because this account can no longer use the town.', owner_cancelled: 'You cancelled it.', deadline: 'It ran out of time.',
   worker_lost: 'The service lost track of it, so it stopped safely.', budget_exceeded: 'It hit its limit.', artifact_limit: 'You have three saved plans; delete one first.',
   no_venues: 'No public meeting places were available.', invalid_artifact: 'The result failed its checks, so nothing was saved.'};
 const date = value => new Date(value).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});

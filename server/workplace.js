@@ -83,7 +83,11 @@ export function fixtureEventPlan(brief, places) {
   };
 }
 
+// `allowed(userId)` reports whether the owner may still use the town (approved,
+// not banned). Requests already pass that gate; the service timer has no
+// request, so it asks before every unattended step.
 export function createWorkplace({now = Date.now, store = createMemoryWorkplaceStore({now}), createId = randomUUID, limits = {}, stepMs = 1500,
+  allowed = async () => true,
   schedule = (fn, ms) => { const timer = setTimeout(fn, ms); timer.unref?.(); return timer; }, cancel = clearTimeout} = {}) {
   const limit = {...WORKPLACE_LIMITS, ...limits};
   const ownerKey = userId => `owner:${sha256(userId)}`;
@@ -127,9 +131,11 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
   // One atomic step of the active task. Returns how long until the next step.
   function step(doc, t) {
     const task = activeTask(doc);
-    if (!task || task.status === 'paused') return {write: false, value: {waitMs: null}};
+    if (!task) return {write: false, value: {waitMs: null}};
+    // Checked before the paused case, so a paused task cannot outlive its grant.
     const sameGrant = doc.grant && !doc.grant.revokedAt && doc.grant.id === task.grantId && doc.grant.revision === task.grantRevision;
     if (!sameGrant || !grantActive(doc, t)) {finish(task, 'cancelled', t, sameGrant ? 'grant_expired' : 'grant_revoked');return {write: true, value: {waitMs: null}};}
+    if (task.status === 'paused') return {write: false, value: {waitMs: null}};
     if (task.status === 'queued') {
       Object.assign(task, {status: 'running', startedAt: t, deadline: t + limit.deadlineMs, nextAt: t + stepMs, updatedAt: t, fence: task.fence + 1});
       return {write: true, value: {waitMs: stepMs}};
@@ -167,14 +173,27 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
   async function advance(userId) {
     return mutate(ownerKey(userId), doc => step(doc, now()));
   }
+  // The owner lost access: revoke the grant, which stops queued, paused and running work.
+  async function suspend(userId) {
+    return mutate(ownerKey(userId), doc => {
+      const t = now(), active = doc.tasks.filter(task => ACTIVE.has(task.status));
+      if (!grantActive(doc, t) && !active.length) return {write: false};
+      if (doc.grant && !doc.grant.revokedAt) Object.assign(doc.grant, {revokedAt: t, revision: doc.grant.revision + 1});
+      for (const task of active) finish(task, 'cancelled', t, 'access_revoked');
+      return {write: true};
+    });
+  }
   // A long-lived service drives steps with a timer; a serverless request
   // drives them on the owner's next read. Either way each step is atomic.
   function drive(userId, delay = 0) {
     if (closed || timers.has(userId)) return;
     timers.set(userId, schedule(async () => {
       timers.delete(userId);
-      try { const result = await advance(userId);if (result?.waitMs != null) drive(userId, result.waitMs); }
-      catch { /* The next read retries. */ }
+      try {
+        // A failed check throws and runs nothing; the owner's next authorized read retries.
+        if (!await allowed(userId)) {await suspend(userId);return;}
+        const result = await advance(userId);if (result?.waitMs != null) drive(userId, result.waitMs);
+      } catch { /* The next read retries. */ }
     }, delay));
   }
   const STATIONS = () => ({stations: {}}), stationTtl = () => 2 * limit.stationLeaseMs;
@@ -248,6 +267,8 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       const result = await owner(actor, (doc, t) => {
         if (!doc.companion) return {write: false, value: {ok: false, reason: 'companion_required'}};
         if (grantActive(doc, t)) return {write: false, value: {ok: false, reason: 'grant_active'}};
+        // Work admitted under the lapsed grant ends with it; a new grant never revives it.
+        for (const task of doc.tasks) if (ACTIVE.has(task.status)) finish(task, 'cancelled', t, doc.grant?.revokedAt ? 'grant_revoked' : 'grant_expired');
         doc.grant = {id: id(createId), revision: (doc.grant?.revision ?? 0) + 1, scope, issuedAt: t, expiresAt: t + limit.grantMs, revokedAt: null};
         return {write: true, value: {ok: true}};
       });
@@ -256,6 +277,8 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     async revoke(actor, {grantId, expectedRevision}) {
       const result = await owner(actor, (doc, t) => {
         if (!doc.grant || doc.grant.id !== grantId) return {write: false, value: {ok: false, reason: 'grant_missing'}};
+        // A retry of the revoke that already landed (it bumped the revision once) succeeds again.
+        if (doc.grant.revokedAt && expectedRevision === doc.grant.revision - 1) return {write: false, value: {ok: true}};
         if (doc.grant.revision !== expectedRevision) return {write: false, value: {ok: false, reason: 'grant_stale'}};
         if (doc.grant.revokedAt) return {write: false, value: {ok: true}};
         // A new revision invalidates every queued, paused or running step at once.

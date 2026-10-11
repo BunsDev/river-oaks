@@ -56,7 +56,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
   });
 
-  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace():null,avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
+  const games=new Map(),pending=new Map(),debugReports=createMemoryDebugReports(),catalog=createMemoryWorldCatalog(),social=createMemorySocial(),groups=createMemoryGroups(),profiles=createMemoryProfiles(),events=createMemoryEvents(),workplace=env.RIVER_OAKS_WORKPLACE==='1'?createWorkplace({allowed:async id=>!moderation.isBanned(id)&&await waitlist.isApproved(id)}):null,avatarPreferences=createMemoryAvatarPreferences(),presence=createMemoryPresence(),landmarkStores=new Map();
   const landmarkStoreFor=id=>{
     if(!landmarkStores.has(id))landmarkStores.set(id,createMemoryLandmarks());
     return landmarkStores.get(id);

@@ -23,7 +23,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
-  const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix})}):null;
+  const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
+    allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id)}):null;
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {

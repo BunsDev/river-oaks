@@ -16,11 +16,14 @@ const brief = {purpose: 'A small welcome for a new neighbour', guestOfHonor: 'Mi
 const owner = {userId: 'owner-user', name: 'Owner'}, guest = {userId: 'guest-user', name: 'Guest'};
 const STEP = 1000;
 
-function harness(makeStore, limits = {}) {
+function harness(makeStore, limits = {}, options = {}) {
   let time = 1_000_000, ids = 0;
-  const now = () => time, store = makeStore(now);
-  const workplace = createWorkplace({store, now, stepMs: STEP, limits, createId: () => `id-${String(++ids).padStart(6, '0')}`, schedule: () => null, cancel: () => {}});
-  return {workplace, store, tick: ms => { time += ms; }, get now() { return time; }};
+  const now = () => time, store = makeStore(now), timers = [];
+  // Scheduled steps are collected, not run, so a test can fire the service timer itself.
+  const workplace = createWorkplace({store, now, stepMs: STEP, limits, createId: () => `id-${String(++ids).padStart(6, '0')}`,
+    schedule: fn => { timers.push(fn);return fn; }, cancel: () => {}, ...options});
+  const fire = async () => { for (let i = 0; i < 8 && timers.length; i++) { time += STEP;await timers.shift()(); } };
+  return {workplace, store, fire, tick: ms => { time += ms; }, get now() { return time; }};
 }
 async function ready(h, actor = owner) {
   assert.equal((await h.workplace.companion(actor, {name: 'Pip'})).ok, true);
@@ -132,7 +135,8 @@ for (const [name, makeStore] of stores) {
     assert.equal(state.tasks[0].status, 'cancelled');assert.equal(state.tasks[0].reason, 'grant_revoked');
     assert.equal(state.artifacts.length, 0);assert.equal(state.grant.active, false);
     assert.equal((await h.workplace.submit(owner, {brief, requestId: 'request-0002'}, {worldId: 'river-oaks', places})).reason, 'grant_required');
-    assert.equal((await h.workplace.revoke(owner, {grantId: grant.id, expectedRevision: grant.revision})).reason, 'grant_stale');
+    assert.equal((await h.workplace.revoke(owner, {grantId: grant.id, expectedRevision: grant.revision})).ok, true, 'a retried revoke is idempotent');
+    assert.equal((await h.workplace.revoke(owner, {grantId: grant.id, expectedRevision: grant.revision + 5})).reason, 'grant_stale');
   });
 
   test(`${name}: a lost runner recovers from its checkpoint, then fails closed after three attempts`, async t => {
@@ -257,6 +261,57 @@ for (const [name, makeStore] of stores) {
     assert.equal((await h.workplace.occupancy(guest)).stations[0].occupied, true);
     await h.workplace.state(owner);
     assert.equal((await h.workplace.occupancy(guest)).stations.every(station => !station.occupied), true, 'the next read gives the desk back');
+  });
+}
+
+for (const [name, makeStore] of stores) {
+  test(`${name}: the service timer stops work for an owner who lost access`, async t => {
+    let allowed = true;
+    const h = harness(await makeStore(t), {}, {allowed: async userId => userId !== owner.userId || allowed});
+    await ready(h);
+    await ready(h, guest);
+    await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    await h.workplace.submit(guest, {brief, requestId: 'request-0002'}, {worldId: 'river-oaks', places});
+    // Banned, or waitlist approval ended, after admission. Nobody reads again; only timers run.
+    allowed = false;
+    await h.fire();
+    const {state} = await h.workplace.state(owner);
+    assert.equal(state.tasks[0].status, 'cancelled');assert.equal(state.tasks[0].reason, 'access_revoked');
+    assert.equal(state.grant.active, false);assert.equal(state.artifacts.length, 0);
+    assert.equal((await h.workplace.state(guest)).state.tasks[0].status, 'completed', 'another owner is unaffected');
+  });
+
+  test(`${name}: a failing access check stops the step instead of running it`, async t => {
+    const h = harness(await makeStore(t), {}, {allowed: async () => { throw new Error('moderation store down'); }});
+    await ready(h);
+    await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    const key = `owner:${createHash('sha256').update(owner.userId).digest('hex')}`;
+    const before = await h.store.load(key);
+    await h.fire();
+    const after = await h.store.load(key);
+    assert.equal(after.revision, before.revision, 'no unattended step wrote');
+    assert.equal(after.value.tasks[0].checkpoints.length, 0);
+  });
+
+  test(`${name}: a paused task whose grant expired never blocks a new grant`, async t => {
+    const h = harness(await makeStore(t), {grantMs: 3 * STEP});
+    await ready(h);
+    const {taskId} = await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    assert.equal((await h.workplace.pause(owner, {taskId})).ok, true);
+    h.tick(4 * STEP);
+    // Re-granting without an intervening read still settles the old task.
+    const regranted = await h.workplace.grant(owner, {scope: 'event_plan'});
+    const old = regranted.state.tasks.find(task => task.id === taskId);
+    assert.equal(old.status, 'cancelled');assert.equal(old.reason, 'grant_expired');
+    assert.equal((await h.workplace.submit(owner, {brief, requestId: 'request-0002'}, {worldId: 'river-oaks', places})).ok, true);
+    // And a read alone reports a paused task under an expired grant as expired.
+    const read = harness(await makeStore(t), {grantMs: 3 * STEP});
+    await ready(read);
+    const paused = await read.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    await read.workplace.pause(owner, {taskId: paused.taskId});
+    read.tick(4 * STEP);
+    const [task] = (await read.workplace.state(owner)).state.tasks;
+    assert.equal(task.status, 'cancelled');assert.equal(task.reason, 'grant_expired');
   });
 }
 
