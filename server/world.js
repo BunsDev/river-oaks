@@ -931,7 +931,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     focus.clear();chat.length=0;builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
-  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,players,state};
+  const listPlaces = () => placesOf(worldData);
+  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,accountAppearance,applyAccountAppearance,resolvePlace,listPlaces,players,state};
 }
 
 /** Validate an old room, then transfer durable account and creation state to a new geography. */

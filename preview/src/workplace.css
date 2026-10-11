@@ -1,0 +1,17 @@
+/* Your companion (#220): follows the roster's social/groups styling. */
+.workplace { margin: 16px 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; }
+.workplace h3, .workplace h4, .workplace h5 { margin: 0 0 8px; font-size: 14px; }
+.workplace h5 { font-size: 12px; margin-top: 10px; }
+.workplace p { margin: 0 0 8px; line-height: 1.45; }
+.workplace-note { color: var(--muted, inherit); opacity: .82; }
+.workplace-card, .workplace-plan { margin: 10px 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.workplace-plan:focus-visible { outline: 2px solid var(--accent, #f486a1); outline-offset: 2px; }
+.workplace-plan ul, .workplace-terms { margin: 0 0 6px; padding-left: 18px; line-height: 1.45; }
+.workplace-actions, .workplace-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+.workplace-row span { flex: 1 1 140px; overflow-wrap: anywhere; }
+.workplace-who { margin: 0 0 6px; }
+.workplace-brief, .workplace-create { display: grid; gap: 8px; margin: 10px 0; }
+.workplace-field { display: grid; gap: 4px; }
+.workplace input { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+.workplace button { min-height: 32px; }
+.workplace [hidden] { display: none; }
