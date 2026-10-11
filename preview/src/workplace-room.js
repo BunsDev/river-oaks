@@ -7,8 +7,12 @@ import { DOOR_HALF_WIDTH, ROOM_HEIGHT } from './store-rooms.js';
 import { STATION_IDS } from './workplace-contract.js';
 
 export const FIXTURE_SITE = Object.freeze({id: 'coworking-studio-fixture', label: 'Coworking studio (fixture)'});
-// Measured from all 22 shared appearances (docs/level-design/workplace-coworking-fixture/avatar-envelope.json).
-export const AVATAR_ENVELOPE = Object.freeze({bodyHalfWidth: 0.505, turningRadius: 0.888, seatedRadius: 0.45});
+// Measured from all 22 shared appearances (docs/level-design/workplace-coworking-fixture/avatar-envelope.json):
+// widest body, longest turning body, tallest standing look, and the widest seated
+// footprint from the seat origin (tails and legs included; the beast looks set it).
+export const AVATAR_ENVELOPE = Object.freeze({bodyHalfWidth: 0.505, turningRadius: 0.888, height: 2.45, seatedRadius: 1.27});
+// Clearance above the tallest look under the door header.
+const HEADROOM = 0.1;
 export const CIRCULATION_WIDTH = 1.8;
 
 const box = (id, kind, x, d, w, l, h) => ({id, kind, x0: x - w / 2, x1: x + w / 2, d0: d - l / 2, d1: d + l / 2, height: h});
@@ -29,7 +33,7 @@ export function planWorkplaceRoom({width = 9, depth = 7} = {}) {
     box('planter-east', 'planter', half - 0.35, 0.6, 0.5, 0.5, 0.9),
   ];
   return {
-    site: FIXTURE_SITE, width, depth, height: ROOM_HEIGHT, door: {x: 0, halfWidth: DOOR_HALF_WIDTH},
+    site: FIXTURE_SITE, width, depth, height: ROOM_HEIGHT, door: {x: 0, halfWidth: DOOR_HALF_WIDTH, height: 2.6},
     stations, obstacles,
     review: {id: 'review', socket: [half - 2.85, 3.4], facing: Math.PI / 2},
     entrance: [0, 0.9], outside: [0, -1.2],
@@ -55,12 +59,21 @@ function free(room, point, r, blockers) {
   return blockers.every(([bx, bd, br]) => Math.hypot(x - bx, d - bd) >= r + br);
 }
 
-// Breadth-first search on a 0.1 m grid for a body of radius r, around seated
-// occupants and other blockers. Returns waypoints or null when no route exists.
+// The clearance a body needs at a point. Through the doorway a long body moves
+// straight, so its width is enough; anywhere else it may turn, so it needs its
+// full turning circle.
+export function bodyClearance(room, envelope = AVATAR_ENVELOPE) {
+  const band = envelope.turningRadius + 0.1;
+  return ([, d]) => Math.abs(d) <= band ? envelope.bodyHalfWidth : envelope.turningRadius;
+}
+
+// Breadth-first search on a 0.1 m grid for a body of radius r (a number, or a
+// function of the point), around seated occupants and other blockers. Returns
+// waypoints or null when no route exists.
 export function findRoute(room, from, to, {radius = AVATAR_ENVELOPE.bodyHalfWidth, blockers = [], step = 0.1} = {}) {
   const key = (i, j) => `${i},${j}`, toCell = ([x, d]) => [Math.round(x / step), Math.round(d / step)];
-  const [si, sj] = toCell(from), [ti, tj] = toCell(to);
-  const ok = (i, j) => free(room, [i * step, j * step], radius, blockers);
+  const [si, sj] = toCell(from), [ti, tj] = toCell(to), clearance = typeof radius === 'function' ? radius : () => radius;
+  const ok = (i, j) => { const point = [i * step, j * step];return free(room, point, clearance(point), blockers); };
   if (!ok(si, sj) || !ok(ti, tj)) return null;
   const previous = new Map([[key(si, sj), null]]), queue = [[si, sj]];
   for (let head = 0; head < queue.length; head++) {
@@ -79,20 +92,23 @@ export function findRoute(room, from, to, {radius = AVATAR_ENVELOPE.bodyHalfWidt
   return null;
 }
 
-// Plan checks: everything inside the walls, unique stations, a full turning
-// circle at every socket, and the entrance-desk-review-exit routes open while
-// the other station is occupied.
+// Plan checks: everything inside the walls, unique stations, a door that clears
+// the tallest look, a full turning circle at every socket, and the
+// entrance-desk-review-exit routes open for a turning body while the other
+// station's measured seated footprint is occupied.
 export function validateRoomPlan(room, envelope = AVATAR_ENVELOPE) {
   const problems = [];
   for (const o of room.obstacles) if (o.x0 < -room.width / 2 || o.x1 > room.width / 2 || o.d0 < 0 || o.d1 > room.depth) problems.push(`${o.id} leaves the room`);
   if (new Set(room.stations.map(station => station.id)).size !== room.stations.length) problems.push('duplicate station');
   if (room.door.halfWidth * 2 < envelope.bodyHalfWidth * 2 + 0.2) problems.push('door narrower than the widest body');
+  if (!(room.door.height >= envelope.height + HEADROOM)) problems.push('door lower than the tallest look');
+  if (!(room.door.height < room.height)) problems.push('door taller than the room');
   for (const point of [room.entrance, room.review.socket, ...room.stations.map(station => station.approach)])
     if (!free(room, point, envelope.turningRadius, [])) problems.push(`no turning circle at ${point.join(',')}`);
   for (const station of room.stations) {
     const others = room.stations.filter(other => other !== station).map(other => [...other.seat, envelope.seatedRadius]);
     for (const [a, b] of [[room.outside, station.approach], [station.exit, room.review.socket], [room.review.socket, room.outside]])
-      if (!findRoute(room, a, b, {radius: envelope.bodyHalfWidth, blockers: others})) problems.push(`no route ${a.join(',')} -> ${b.join(',')} with ${station.id} in use`);
+      if (!findRoute(room, a, b, {radius: bodyClearance(room, envelope), blockers: others})) problems.push(`no route ${a.join(',')} -> ${b.join(',')} with ${station.id} in use`);
   }
   return problems;
 }
@@ -111,7 +127,7 @@ export function buildWorkplaceGraybox(THREE, room) {
   add(new THREE.BoxGeometry(t, room.height, room.depth), wall, room.width / 2 + t / 2, room.height / 2, -room.depth / 2);
   add(new THREE.BoxGeometry(room.width + 2 * t, room.height, t), wall, 0, room.height / 2, -room.depth - t / 2);
   for (const sign of [-1, 1]) add(new THREE.BoxGeometry(sideWall, room.height, t), wall, sign * (room.door.halfWidth + sideWall / 2), room.height / 2, t / 2);
-  add(new THREE.BoxGeometry(room.door.halfWidth * 2, room.height - 2.4, t), wall, 0, 2.4 + (room.height - 2.4) / 2, t / 2);
+  add(new THREE.BoxGeometry(room.door.halfWidth * 2, room.height - room.door.height, t), wall, 0, room.door.height + (room.height - room.door.height) / 2, t / 2);
   for (const o of room.obstacles) add(new THREE.BoxGeometry(o.x1 - o.x0, o.height, o.d1 - o.d0), o.kind === 'review' ? accent : block, (o.x0 + o.x1) / 2, o.height / 2, -(o.d0 + o.d1) / 2);
   for (const station of room.stations) add(new THREE.BoxGeometry(0.46, 0.45, 0.46), block, station.seat[0], 0.225, -station.seat[1]);
   return {object, dispose() { object.removeFromParent();for (const g of geometries) g.dispose();for (const m of materials) m.dispose(); }};
