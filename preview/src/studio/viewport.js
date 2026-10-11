@@ -66,7 +66,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
     if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(event.key.toLowerCase())){event.preventDefault();keys.add(event.key.toLowerCase());}
   },{signal});
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()),{signal});
-  document.addEventListener('appearancechange',event=>renderer.setClearColor(studioClearColor(event.detail.resolved)),{signal});
+  document.addEventListener('appearancechange',event=>{renderer.setClearColor(studioClearColor(event.detail.resolved));content?.setAppearance(event.detail.resolved);},{signal});
   function resizeViewport(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();}
   const resize=new ResizeObserver(resizeViewport);resize.observe(host);resizeViewport();
   function frameObject(object){orbit.target.copy(frameStudioObject(camera,object));orbit.maxDistance=Math.max(700,camera.position.distanceTo(orbit.target)*2);orbit.update();}
@@ -82,7 +82,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   frame=requestAnimationFrame(animate);
   const api={
     render(region,id=selected){
-      transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region);
+      transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region,document.documentElement.dataset.theme);
       for(const [key,object] of content.items)object.userData.kind=key==='@arrival'?'arrival':region.buildings.some(v=>v.id===key)?'building':region.trees.some(v=>v.id===key)?'tree':'place';
       scene.add(content.group);selected=id;configureTransform();
       const bounds=new THREE.Box3().setFromObject(content.group),center=bounds.getCenter(new THREE.Vector3());
