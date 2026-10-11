@@ -25,12 +25,23 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
-  await page.locator('#player-carriage').click();
+  await page.locator('#canvas-host').focus();await page.keyboard.press('KeyQ');
+  await page.waitForFunction(()=>document.querySelector('#player-status').textContent.includes('waiting nearby'));
+  check(await page.locator('#player-carriage kbd').textContent()==='Q','Call button shows Q');
   const before=await page.evaluate(()=>window.__riverCarriage());
   check(before.placement.scale===1&&before.placement.vehicle==='rolls','The pink Rolls-Royce parks at its true size');
   check(before.visible&&!before.riding,'Calling places a visible carriage near Jevica');
   check(before.tyreClearances.every(gap=>Math.abs(gap)<.001),'All four parked tyres meet rendered paving');
-  await page.locator('#player-ride').click();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
+  await page.locator('#canvas-host').focus();
+  for(const chord of ['Control+KeyG','Meta+KeyG','Alt+KeyG'])await page.keyboard.press(chord);
+  check(await page.locator('#canvas-host').getAttribute('data-riding')==='false','System chords do not board');
+  await page.locator('#player-vehicle').focus();await page.keyboard.press('KeyG');
+  check(await page.locator('#canvas-host').getAttribute('data-riding')==='false','Typing in a select does not board');
+  await page.locator('#canvas-host').focus();await page.keyboard.down('KeyG');
+  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
+  await page.keyboard.down('KeyG');await page.keyboard.up('KeyG');
+  check(await page.locator('#canvas-host').getAttribute('data-riding')==='true','Holding G does not immediately exit');
+  check(await page.locator('#player-ride').textContent()==='Step outG','Exit button retains the G hint');
   check(await page.locator('#player-flight').isDisabled(),'Flight cannot start while seated');
   check(await page.locator('#player-carriage').isDisabled(),'A ridden carriage cannot be summoned elsewhere');
   await page.waitForTimeout(600);await page.screenshot({path:'output/playwright/carriage-riding.png'});
@@ -53,7 +64,7 @@ async page => {
     await page.locator('#community-close').click();
   }
   await page.screenshot({path:'output/playwright/carriage-driven.png'});
-  await page.locator('#player-ride').click();await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='false');
+  await page.locator('#canvas-host').focus();await page.keyboard.press('KeyG');await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='false');
   const after=await page.evaluate(()=>window.__riverCarriage());
   check(after.pose.showBody,'Dismount preserves a clear third-person camera');
   check(Math.abs(after.rider[1]-after.pose.ground)<.001,'Dismounted Jevica stands on the rendered pavement');

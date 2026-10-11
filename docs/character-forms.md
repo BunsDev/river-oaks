@@ -133,7 +133,10 @@ detail targets, asset size, and hash so you can reproduce the appearance.
 Third person is the default. **V** switches cameras. For Jevica, **B** takes off or lands,
 **Space** rises and **C** lowers altitude. **P** turns beast movement on or off
 in a beast form. Jevica flies in a bubble. Character controls also expose these
-actions, with a collapsed mobile panel and portraits of the actual models.
+actions. With the world focused, **Q** calls Jev and the selected vehicle; **G**
+gets in nearby or steps out of the vehicle. Button hints and the Commands reference
+show these keys. Typing, dialogs, and system shortcuts do not trigger them.
+The controls have a collapsed mobile panel and portraits of the actual models.
 
 Accessories following the same bone are batched by material. In the same studio
 fixture, the original static batching pass reduced Jevica from 175 to 41 render
