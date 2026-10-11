@@ -36,9 +36,17 @@ June 2024).
 ## Gaps
 
 - No in-game walk-through of a corner; ground continuity is tested numerically.
-- Hosted CI `preview` journeys not yet run for this branch.
 - The remaining 11 crossing/carriageway overlaps are short connectors where no
   clear station exists; they render as before.
 - Paver texture realism is a separate PR (#231); plant variety is separate too.
 
-**Next step:** open the PR, pass hosted checks, merge after #227 and #231.
+## Delivery
+
+Merged by #233 as `c4a871b` (reviewed head `88496d9`; all 11 hosted checks passed).
+The first run on `ce24f7d` failed only the known `creator-objects` flake at
+`creator-objects.js:77`; the branch had passed twice before and passed again.
+Main's own run on `c4a871b` failed the email-access browser timeout, which also
+hit unrelated #234 and passed on rerun.
+
+**Next step:** retire `feat/sidewalk-corners` and its worktree with
+`project:prune` once the `street-visuals-register` task is on the primary.

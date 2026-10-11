@@ -7,7 +7,7 @@ test('game assets require an approved cookie while the sign-in bundle stays publ
   const gate = createGameAssetMiddleware({
     fetcher: async (url, options) => {
       checked.push({ path: url.pathname, cookie: options.headers.cookie });
-      return Response.json({ status: options.headers.cookie === 'session=approved' ? 'approved' : 'pending' });
+      return Response.json({ status: options.headers.cookie === 'river_oaks_session=approved' ? 'approved' : 'pending' });
     },
     forward: options => { forwarded.push(options); return new Response('asset'); },
   });
@@ -25,11 +25,11 @@ test('game assets require an approved cookie while the sign-in bundle stays publ
   assert.equal((await gate(request('/assets/index-abc.js'))).status, 200);
   assert.equal((await gate(request('/assets/main-abc.js'))).status, 403);
   assert.equal((await gate(request('/assets/walking-abc.js'))).status, 403);
-  assert.equal((await gate(request('/assets/main-abc.js', 'session=pending'))).status, 403);
-  assert.equal((await gate(request('/data/district.json', 'session=approved'))).status, 200);
+  assert.equal((await gate(request('/assets/main-abc.js', 'river_oaks_session=pending'))).status, 403);
+  assert.equal((await gate(request('/data/district.json', 'river_oaks_session=approved'))).status, 200);
   assert.deepEqual(checked, [
-    { path: '/api/waitlist/status', cookie: 'session=pending' },
-    { path: '/api/waitlist/status', cookie: 'session=approved' },
+    { path: '/api/waitlist/status', cookie: 'river_oaks_session=pending' },
+    { path: '/api/waitlist/status', cookie: 'river_oaks_session=approved' },
   ]);
   assert.equal(forwarded[1].headers['Cache-Control'], 'private, no-store');
 });

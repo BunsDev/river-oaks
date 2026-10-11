@@ -21,9 +21,13 @@ jobs:
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: moderate
-  preview:
+  # The required "preview" check used to be one serial job of about 24 minutes,
+  # almost all of it two browser suites. These jobs run the same commands in
+  # parallel; the final "preview" job reports the required check.
+  preview-checks:
+    name: preview checks
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     # Redis-backed server tests (auth, sessions, rooms, presence, designs, groups)
     # skip without REDIS_URL; this service runs them, as production uses Redis.
     services:
@@ -80,6 +84,34 @@ jobs:
           retention-days: 7
           path: output/playwright/security-*-failure.png
       - run: pnpm run test:reflections:webgl
+  preview-shared:
+    name: preview shared (${{ matrix.shard.id }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      # Every shard reports, so one failing journey doesn't hide another.
+      fail-fast: false
+      matrix:
+        # Shards are shared-runner modes, balanced by their CI durations.
+        shard:
+          - id: required
+            modes: required
+          - id: development
+            modes: development
+          - id: worlds-and-creator
+            modes: development-world development-publish creator
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
       - name: Shared town journeys (local identities and authenticated fixtures)
         id: shared
         # Mesa under Xvfb avoids Chromium headless-shell's SwiftShader stalls.
@@ -88,36 +120,81 @@ jobs:
           RIVER_OAKS_SHARED_SOFTWARE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
-        run: xvfb-run -a pnpm run test:shared
+          SHARED_MODES: ${{ matrix.shard.modes }}
+        run: |
+          read -ra modes <<< "$SHARED_MODES"
+          xvfb-run -a pnpm run test:shared "${modes[@]}"
       - name: Shared town failure evidence
         if: ${{ failure() && steps.shared.outcome == 'failure' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: shared-town-failure
+          name: shared-town-failure-${{ matrix.shard.id }}
           retention-days: 7
           path: |
             data/reports/shared-experience.json
             output/playwright/shared-*-failure.png
+  preview-experience:
+    name: preview experience (${{ matrix.shard.id }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # spatial-streets alone takes about as long as the other journeys combined.
+        shard:
+          - id: streets
+            journeys: spatial-streets world-studio
+          - id: places
+            journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
       - name: Contextual action, photo and command journeys
         id: experience
-        # Also runs when only the shared journeys failed, so both regressions
-        # report. Same Mesa/Xvfb CPU path as the shared and security journeys.
-        if: ${{ !cancelled() && (success() || steps.shared.outcome == 'failure') }}
+        # Same Mesa/Xvfb CPU path as the shared and security journeys.
         env:
           RIVER_OAKS_EXPERIENCE_SOFTWARE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
           RIVER_OAKS_E2E_REPORT: ci-experience.json
-        run: xvfb-run -a pnpm run test:experience contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap world-studio spatial-circulation spatial-streets
+          EXPERIENCE_JOURNEYS: ${{ matrix.shard.journeys }}
+        run: |
+          read -ra journeys <<< "$EXPERIENCE_JOURNEYS"
+          xvfb-run -a pnpm run test:experience "${journeys[@]}"
       - name: Experience journey failure evidence
         if: ${{ failure() && steps.experience.outcome == 'failure' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: experience-failure
+          name: experience-failure-${{ matrix.shard.id }}
           retention-days: 7
           path: |
             data/reports/ci-experience.json
             output/playwright/experience-*-failure.png
+  preview:
+    # The main ruleset requires a check named "preview". It passes only when
+    # every preview job passed; a failed, cancelled or skipped job fails it.
+    if: ${{ always() }}
+    needs: [preview-checks, preview-shared, preview-experience]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every preview job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Preview job results: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = success ] || exit 1
+          done
   verify:
     runs-on: ubuntu-latest
     strategy:

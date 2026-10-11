@@ -6,7 +6,15 @@ const json=(res,status,error)=>{
   res.end(JSON.stringify({error}));
 };
 
-export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,handleRequest=async()=>false}={}) {
+// Set on a request the router already admitted, so the world's own server does
+// not count it against the per-address budget a second time. A Symbol, so no
+// client input can set it.
+export const ADMITTED=Symbol('river-oaks.admitted');
+
+// `admit(req)` is the per-address budget. It runs before anything else, so the
+// routes handled here (the chauffeur) and lookups of unknown worlds cannot be
+// flooded past it.
+export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,handleRequest=async()=>false,admit=async()=>true}={}) {
   validateWorldId(configuredWorldId);
   function select(req) {
     const url=new URL(req.url,'http://localhost');
@@ -17,6 +25,8 @@ export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,h
   }
   const server=createServer(async(req,res)=>{
     try {
+      if(!await admit(req))return json(res,429,'Too many requests. Try again shortly.');
+      req[ADMITTED]=true;
       if(await handleRequest(req,res))return;
       const world=await worldFor(select(req));
       if(!world)return json(res,404,'World not found.');
@@ -26,6 +36,8 @@ export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,h
   server.on('upgrade',async(req,socket,head)=>{
     socket.on('error',()=>{});
     try {
+      if(!await admit(req))return socket.end('HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n');
+      req[ADMITTED]=true;
       const world=await worldFor(select(req));
       if(!world)return socket.end('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n');
       world.game.server.emit('upgrade',req,socket,head);

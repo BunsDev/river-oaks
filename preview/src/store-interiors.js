@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RETRO } from './retro-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
+import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Everything is original procedural geometry and generated surface
@@ -38,46 +39,6 @@ function pixelTexture(size, seed, shade) {
     }
     ctx.putImageData(image, 0, 0);
   });
-}
-const mix = (a, b, t) => a + (b - a) * t;
-const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-function marbleTexture(seed, base, vein) {
-  return pixelTexture(512, seed, (u, v, f) => {
-    const warp = f.fbm(u * 3 + 7, v * 3 + 3, 5), veins = Math.abs(Math.sin((u * 1.4 + v * 0.6 + warp * 2.2) * Math.PI * 2));
-    const mask = 1 - smooth(0.02, 0.16, veins) * 0.85, mottle = f.fbm(u * 9, v * 9, 3) * 0.08 - 0.04;
-    return base.map((c, i) => Math.round(mix(vein[i], c, mask) * (1 + mottle)));
-  });
-}
-function plankTexture(seed, tones, { width = 0.16, length = 2.4, tile = 2.4 } = {}) {
-  // Long boards with hairline seams and soft grain; heavy seams read as brick.
-  return canvasTexture([1024, 1024], (ctx, w, h) => {
-    const field = noiseField(seed), px = w / tile;
-    ctx.fillStyle = tones[0]; ctx.fillRect(0, 0, w, h);
-    for (let row = 0; row * width < tile; row++) {
-      const offset = ((row * 7) % 5) * length / 5;
-      for (let col = -1; col * length - offset < tile; col++) {
-        const x = (col * length - offset) * px, y = row * width * px, plank = tones[Math.floor(field.random() * tones.length)];
-        ctx.fillStyle = plank; ctx.fillRect(x, y, length * px, width * px);
-        ctx.strokeStyle = '#0000000e'; ctx.lineWidth = 1;
-        for (let grain = 0; grain < 5; grain++) { const gy = y + 3 + field.random() * (width * px - 6); ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + length * px, gy + (field.random() - 0.5) * 4); ctx.stroke(); }
-        ctx.fillStyle = '#00000022'; ctx.fillRect(x, y, length * px, 1); ctx.fillRect(x, y, 1, width * px);
-      }
-    }
-  });
-}
-function terrazzoTexture(seed, base, chips) {
-  return canvasTexture([512, 512], (ctx, w, h) => {
-    const field = noiseField(seed);
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 1400; i++) {
-      ctx.fillStyle = chips[Math.floor(field.random() * chips.length)];
-      const x = field.random() * w, y = field.random() * h, r = 1.5 + field.random() * 6;
-      ctx.beginPath(); ctx.ellipse(x, y, r, r * (0.6 + field.random() * 0.6), field.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
-    }
-  });
-}
-function carpetTexture(seed) {
-  return pixelTexture(256, seed, (u, v, f) => { const n = f.fbm(u * 24, v * 24, 3); return [Math.round(56 + n * 22), Math.round(30 + n * 14), Math.round(48 + n * 18)]; });
 }
 function plasterTexture(seed) {
   return pixelTexture(256, seed, (u, v, f) => { const n = 236 + (f.fbm(u * 6, v * 6, 4) - 0.5) * 14; return [Math.round(n), Math.round(n - 3), Math.round(n - 8)]; });
@@ -123,23 +84,17 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const track = { g: g => { geometries.add(g); return g; }, m: m => { materials.add(m); return m; }, t: t => { textures.add(t); return t; } };
   const standard = options => track.m(new THREE.MeshStandardMaterial({ envMapIntensity: 0.35, ...options }));
   const physical = options => track.m(new THREE.MeshPhysicalMaterial({ envMapIntensity: 0.4, ...options }));
-  // finishes
-  const floors = {
-    marble: standard({ map: track.t(marbleTexture(11, [236, 233, 228], [150, 146, 148])), roughness: 0.18, metalness: 0 }),
-    darkMarble: standard({ map: track.t(marbleTexture(23, [72, 70, 72], [150, 140, 128])), roughness: 0.16 }),
-    oak: standard({ map: track.t(plankTexture(5, ['#c9ad88', '#c4a682', '#cfb391', '#bea07c'])), roughness: 0.42 }),
-    walnut: standard({ map: track.t(plankTexture(9, ['#5e4534', '#634937', '#584030', '#67503f'])), roughness: 0.38 }),
-    terrazzo: standard({ map: track.t(terrazzoTexture(3, RETRO.ivory, [RETRO.teal, RETRO.rose, RETRO.brass, RETRO.mint, '#f7f1e3'])), roughness: 0.3 }),
-    carpet: standard({ map: track.t(carpetTexture(4)), roughness: 1 }),
-  };
-  const themeFloor = { fashion: floors.terrazzo, leather: floors.marble, jewelry: floors.marble, perfumery: floors.marble, optician: floors.marble, gallery: floors.terrazzo, dining: floors.terrazzo, gelato: floors.terrazzo, salon: floors.terrazzo, wellness: floors.terrazzo, cinema: floors.carpet, home: floors.oak };
-  for (const material of Object.values(floors)) { material.map.repeat.set(1, 1); material.emissiveMap = material.map; material.emissive.set('#ffffff'); material.emissiveIntensity = 0.18; }
+  // finishes: the luxe pass supplies floors per palette suite (interior-luxe.js)
+  const luxe = createLuxeFinishes({ standard, physical, track }), floors = luxe.floors;
+  const suites = new Map(rooms.map(item => [item, luxeSuiteFor(item)])), suiteOf = item => suites.get(item);
+  const floorOf = item => floors[suiteOf(item).floor] ?? floors.marble;
   const plaster = track.t(plasterTexture(7));
-  const wallTint = { fashion:RETRO.ivory, leather:RETRO.mint, jewelry:RETRO.porcelain, perfumery:'#dbc2c1', optician:RETRO.mint, gallery:RETRO.porcelain, dining:RETRO.deepTeal, gelato:'#e4c7b4', salon:'#c4d5ce', wellness:RETRO.mint, cinema:RETRO.night, home:'#d5c6b5' };
-  const walls = Object.fromEntries(Object.entries(wallTint).map(([theme, color]) => [theme, standard({ map: plaster, color, roughness: 0.92, emissive: color, emissiveIntensity: 0.3, envMapIntensity: 0.5 })]));
-  const ceiling = standard({ color: '#f3efe8', roughness: 0.95, emissive: '#f3efe8', emissiveIntensity: 0.22 });
-  const slat = standard({ color: '#f1ebe1', roughness: 0.8, emissive: '#f1ebe1', emissiveIntensity: 0.12 });
-  const darkSlat = standard({ color: '#4a3a30', roughness: 0.7, emissive: '#4a3a30', emissiveIntensity: 0.12 });
+  // One plaster wall material; each room's suite tints its instances, emissive fill included.
+  const wall = tintEmissiveByColor(standard({ map: plaster, color: '#ffffff', roughness: 0.9, emissive: '#ffffff', emissiveMap: luxe.wash, emissiveIntensity: 0.3, envMapIntensity: 0.5 }));
+  // Fixture builders index walls by theme; every theme now shares the tinted material.
+  const walls = new Proxy({}, { get: () => wall });
+  const ceiling = tintEmissiveByColor(standard({ color: '#ffffff', roughness: 0.95, emissive: '#ffffff', emissiveIntensity: 0.09 }));
+  const tinted = new Map([[wall, 'wall'], [ceiling, 'ceiling']]);
   // fixture materials (white so instance colours drive the tint)
   const textile = standard({ color: '#ffffff', roughness: 0.94 });
   const leather = physical({ color: '#ffffff', roughness: 0.4, clearcoat: 0.25 });
@@ -164,9 +119,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const bronze = standard({ color: '#5a4a3a', roughness: 0.4, metalness: 0.7 });
   const steel = standard({ color: '#bfc3c7', roughness: 0.3, metalness: 0.9 });
   const cream = standard({ color: '#ffffff', roughness: 0.6 });
-  for (const [name, material] of Object.entries({ textile, leather, velvet, brass, chrome, black, oak, walnut, white, ceramic, marbleTop, stone, glassCase, bottleGlass, glow, lamp, warmPanel, mirror, foliage, bronze, steel, cream, ceiling, slat, darkSlat })) material.name = `interior-${name}`;
-  for (const [theme, material] of Object.entries(walls)) material.name = `wall-${theme}`;
-  for (const [kind, material] of Object.entries(floors)) material.name = `floor-${kind}`;
+  for (const [name, material] of Object.entries({ textile, leather, velvet, brass, chrome, black, oak, walnut, white, ceramic, marbleTop, stone, glassCase, bottleGlass, glow, lamp, warmPanel, mirror, foliage, bronze, steel, cream, ceiling, wall })) material.name = `interior-${name}`;
   // geometries
   const box = track.g(new THREE.BoxGeometry(1, 1, 1));
   const cylinder = track.g(new THREE.CylinderGeometry(1, 1, 1, 12));
@@ -198,6 +151,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   let room = null, roomMatrix = new THREE.Matrix4();
   const add = (geometry, material, a, d, y, scale, yaw = 0, color = '#ffffff', tilt = [0, 0]) => {
     const key = `${room?.buildingId ?? 'x'}:${geometry.uuid}:${material.uuid}`;
+    if (tinted.has(material) && color === '#ffffff') color = suiteOf(room)[tinted.get(material)];
     if (!batches.has(key)) batches.set(key, { geometry, material, matrices: [], colors: [] });
     E.set(tilt[0], yaw, tilt[1]); Q.setFromEuler(E); P.set(a, y, -d); S.set(scale[0], scale[1], scale[2]);
     M.compose(P, Q, S).premultiply(roomMatrix);
@@ -287,8 +241,11 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
       }
     },
     table({ a, d, w, l, contents }) {
-      add(box, room.theme === 'perfumery' ? white : oak, a, d, 0.82, [w, 0.05, l]);
-      add(box, room.theme === 'perfumery' ? marbleTop : oak, a, d, 0.4, [w * 0.55, 0.78, l * 0.5]);
+      // Luxe display table: polished stone top on a brass band, lacquer pedestal.
+      add(box, marbleTop, a, d, 0.82, [w, 0.05, l]);
+      add(box, brass, a, d, 0.791, [w - 0.04, 0.012, l - 0.04]);
+      add(box, room.theme === 'perfumery' ? marbleTop : black, a, d, 0.4, [w * 0.55, 0.78, l * 0.5]);
+      add(box, brass, a, d, 0.03, [w * 0.55 + 0.02, 0.06, l * 0.5 + 0.02]);
       const i0 = room.index * 3;
       if (contents === 'folded') for (let s = 0; s < 3; s++) for (let k = 0; k < 4; k++) add(box, textile, a - w / 2 + 0.35 + s * (w - 0.7) / 2, d + (k % 2 ? 0.04 : -0.04), 0.87 + k * 0.045, [0.34, 0.04, 0.26], 0, pick(palettes.garments, i0 + s * 4 + k));
       if (contents === 'smallgoods') for (let s = 0; s < 6; s++) add(box, leather, a - w / 2 + 0.3 + s * (w - 0.6) / 5, d + (s % 2 ? 0.18 : -0.18), 0.87, [0.18, 0.03, 0.11], 0.3 * (s % 3 - 1), pick(palettes.bags, i0 + s));
@@ -415,6 +372,20 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     plant({ a, d }) { add(pot, ceramic, a, d, 0, [1, 1, 1], 0, '#d9cfc0'); for (let k = 0; k < 6; k++) add(ico, foliage, a + Math.sin(k * 2.1) * 0.16, d + Math.cos(k * 2.1) * 0.16, 0.62 + (k % 3) * 0.12, [0.2, 0.22, 0.2], k, ['#3f6a45', '#4e7d4d', '#33583a'][k % 3]); },
   };
 
+  // ---- luxe shell: flush skirting, crown light, floor inlay, ceiling slots, halos
+  const surfaces = createSurfaceCollector();
+  const haloRing = track.g(new THREE.TorusGeometry(1, 0.02, 8, 72)), haloRim = track.g(new THREE.TorusGeometry(1, 0.011, 6, 72));
+  const shellMaterials = { reveal: luxe.reveal, brass, glow, lamp };
+  const luxeShell = target => {
+    for (const part of luxeShellPlan(target)) {
+      if (part.role !== 'halo') { add(box, shellMaterials[part.material], part.a, part.d, part.y, part.size); continue; }
+      const { a, d, y, radius, drop } = part;
+      add(haloRing, luxe.halo, a, d, y, [radius, radius, radius], 0, '#ffffff', [Math.PI / 2, 0]);
+      add(haloRim, brass, a, d, y + 0.028, [radius + 0.03, radius + 0.03, radius + 0.03], 0, '#ffffff', [Math.PI / 2, 0]);
+      for (let k = 0; k < 3; k++) { const t = k / 3 * Math.PI * 2 + 0.5; add(cylinder, chrome, a + Math.cos(t) * radius, d + Math.sin(t) * radius, y + drop / 2, [0.004, drop, 0.004]); }
+    }
+  };
+
   // ---- rooms ----------------------------------------------------------------
   const Y = new THREE.Vector3(0, 1, 0);
   const lightPositions = [];
@@ -425,7 +396,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     const floorGeometry = track.g(new THREE.PlaneGeometry(W, D)); floorGeometry.rotateX(-Math.PI / 2);
     const uv = floorGeometry.attributes.uv; const tile = room.theme === 'cinema' ? 1.2 : 2.4;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W / tile, uv.getY(i) * D / tile);
-    const floor = new THREE.Mesh(floorGeometry, themeFloor[room.theme] ?? floors.oak); floor.receiveShadow = true;
+    const floor = new THREE.Mesh(floorGeometry, floorOf(room)); floor.receiveShadow = true;
     placeMesh(floor, c, D / 2, 0.012);
     add(box, black, c, D / 2, -0.3, [W, 0.6, D], 0, '#5a5148');
     // Walls sit inside the room's own footprint so neighbours never show through.
@@ -440,23 +411,19 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
       add(disc, lamp, light.a, light.d, H - 0.012, [0.065, 0.02, 0.065]); add(ring, black, light.a, light.d, H - 0.01, [0.075, 0.075, 0.02], 0, '#ffffff', [Math.PI / 2, 0]);
       lightPositions.push({ room, position: new THREE.Vector3(light.a, light.y - 1.5, -light.d).applyMatrix4(roomMatrix) });
     }
-    // millwork on the back wall
-    const feature = room.fixtures.find(f => f.kind === 'feature');
-    if (['fashion', 'leather', 'jewelry', 'perfumery', 'optician', 'dining'].includes(room.theme)) {
-      for (let a = room.aMin + 0.12; a < room.aMax - 0.06; a += 0.11) {
-        if (feature && Math.abs(a - feature.a) < feature.w / 2 + 0.15) continue;
-        add(box, room.theme === 'dining' ? darkSlat : slat, a, D - 0.18, H / 2, [0.05, H - 0.02, 0.05]);
-      }
-    }
+    // millwork on the back wall: fluted panels around the feature frame
+    for (const panel of flutedPanels(room)) surfaces.panel(luxe.fluted, room, roomMatrix, panel, suiteOf(room).flute, luxe.flutedTile);
     // door surround inside: a threshold mat and two brass reveals
     add(box, textile, 0, 0.9, 0.01, [1.7, 0.012, 1.2], 0, room.theme === 'dining' ? '#3d3238' : '#5f5a56');
     for (const fixture of room.fixtures) builders[fixture.kind]?.(fixture);
+    luxeShell(room);
   }
+  surfaces.build(group, track);
   for (const { geometry, material, matrices, colors } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
-    mesh.castShadow = material !== glow && material !== lamp && material !== glassCase && material !== bottleGlass && material !== warmPanel;
+    mesh.castShadow = material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
     mesh.receiveShadow = true;
     // One batch per building and material: the renderer culls by instance bounds without a draw-call explosion.
     mesh.computeBoundingSphere();

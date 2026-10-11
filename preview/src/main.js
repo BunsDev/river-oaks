@@ -65,6 +65,7 @@ import { FACE_SHAPES } from './resident-face.js';
 import { seeThroughNearCameraIn } from './near-camera-fade.js';
 import { createBirdCamsUI } from './bird-cams-ui.js';
 import { createWorldPortal } from './world-portal.js';
+import { createRoomGroundClip } from './room-ground-clip.js';
 import { DEFAULT_WORLD_ID, worldIdFromSearch } from './world-contract.js';
 // Panel material last, so it applies over the earlier interface layers.
 import './hud-glass.css';
@@ -90,7 +91,7 @@ const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SO
 const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer;
-let districtUI, environmentAssets = null, storefrontReflections = null;
+let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
@@ -425,6 +426,8 @@ function populateWorld(data) {
   const streetEnvironment=createWalkingEnvironment(data);
   const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
+  // Rising terrain must not show through walk-in floors (render only).
+  roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground,roads,sidewalks);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
@@ -623,6 +626,7 @@ async function loadWorld() {
 
 
 function updateStoreLights() {
+  roomGroundClip?.setEnabled(Boolean(interiorsLayer?.visible));
   const positions = interiorsLayer?.visible ? buildingMesh?.userData.interiors?.userData.lightPositions ?? [] : [];
   const picked = [];
   for (const item of positions) { const d2 = item.position.distanceToSquared(camera.position); if (d2 < 32 * 32) picked.push([d2, item]); }

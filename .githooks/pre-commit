@@ -1,3 +1,8 @@
 #!/bin/sh
 set -eu
+# Installed by scripts/install-project-hooks.mjs, this runs the checker copied
+# next to the hook, never the checked-out branch's copy. The working-tree
+# fallback only applies when the hook runs straight from .githooks.
+hooks=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "$hooks/scripts/check_secrets.py" ]; then exec python3 "$hooks/scripts/check_secrets.py" --staged; fi
 exec python3 scripts/check_secrets.py --staged
