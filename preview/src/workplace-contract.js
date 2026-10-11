@@ -43,7 +43,7 @@ export function validateBrief(input, now = Date.now()) {
 // Each action's body. Unknown actions and fields fail closed.
 const BODIES = {
   state: [], companion: ['name'], grant: ['scope'], revoke: ['grantId', 'expectedRevision'],
-  offer: ['decision'], submit: ['brief', 'requestId'], pause: ['taskId'], resume: ['taskId'], cancel: ['taskId'], forget: ['taskId'],
+  offer: ['decision'], submit: ['brief', 'requestId'], pause: ['taskId'], resume: ['taskId'], cancel: ['taskId'], forget: ['taskId'], erase: ['confirm'],
   artifact: ['artifactId'], delete: ['artifactId'], ack: ['noticeId'], presence: ['mode'], occupancy: [],
 };
 export const WORKPLACE_ACTIONS = Object.freeze(Object.keys(BODIES));
@@ -66,6 +66,8 @@ export function validateWorkplaceRequest(action, input, now = Date.now()) {
     case 'artifact': case 'delete': return validId(data.artifactId) ? {ok: true, value: {artifactId: data.artifactId}} : fail('invalid_request');
     case 'ack': return typeof data.noticeId === 'string' && /^(result|failed):[A-Za-z0-9_-]{8,64}$/.test(data.noticeId)
       ? {ok: true, value: {noticeId: data.noticeId}} : fail('invalid_request');
+    // Erasing everything needs the exact word, so no stray request can do it.
+    case 'erase': return data.confirm === 'erase' ? {ok: true, value: {}} : fail('invalid_request');
     case 'presence': return PRESENCE_MODES.includes(data.mode) ? {ok: true, value: {mode: data.mode}} : fail('invalid_request');
     default: return {ok: true, value: {}};
   }
