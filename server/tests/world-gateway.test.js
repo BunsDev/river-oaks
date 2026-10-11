@@ -119,24 +119,28 @@ test('Jevica publishes a second world that survives gateway replacement', {skip:
   assert.equal((await (await post('admin','/api/world-draft/load',{id:'moon-garden'})).json()).draft.region.places[0].name,'Hidden revision');
   assert.notEqual((await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).world.communityLocations[0].name,'Hidden revision');
   assert.equal((await (await fetch(base+'/api/world-data?world=moon-garden',{headers:{Cookie:'test_session=admin'}})).json()).world.provenance.kind,'creator');
-  const visitor=await open('moon-garden','guest');
+  const firstVisit=await open('moon-garden','guest');
   const visitorsAfterRestart=(await (await fetch(base+'/api/worlds')).json()).worlds;
   assert.equal(visitorsAfterRestart.find(world=>world.id==='moon-garden').visitors,2);
   assert.equal(visitorsAfterRestart.some(world=>Object.hasOwn(world,'connections')||Object.hasOwn(world,'players')),false);
-  const visitorInRiver=await open('river-oaks','guest');
+  // One world per account: joining River Oaks ends the guest's Moon Garden
+  // connection as "joined another world".
+  const leftMoon=new Promise(resolve=>firstVisit.socket.once('close',resolve));
+  const visitor=await open('river-oaks','guest');
+  assert.equal(await leftMoon,4009);
   assert.equal(visitor.snapshot.players.some(player=>player.id==='guest-user'),true);
-  assert.equal((await post('guest','/api/social/request?world=moon-garden',{peerId:admin})).status,200);
-  const pendingContacts=(await (await post('guest','/api/social/list?world=moon-garden',{})).json()).contacts;
+  assert.equal((await post('guest','/api/social/request?world=river-oaks',{peerId:admin})).status,200);
+  const pendingContacts=(await (await post('guest','/api/social/list?world=river-oaks',{})).json()).contacts;
   assert.equal(Object.hasOwn(pendingContacts[0],'presence'),false);
   assert.equal((await post('admin','/api/social/accept?world=river-oaks',{peerId:'guest-user'})).status,200);
   const adminContacts=(await (await post('admin','/api/social/list?world=river-oaks',{})).json()).contacts;
-  const guestContacts=(await (await post('guest','/api/social/list?world=moon-garden',{})).json()).contacts;
+  const guestContacts=(await (await post('guest','/api/social/list?world=river-oaks',{})).json()).contacts;
   assert.deepEqual(adminContacts[0].presence,{worldId:'river-oaks',title:'River Oaks District'});
   assert.deepEqual(guestContacts[0].presence,{worldId:'moon-garden',title:'Moon Garden'});
-  assert.equal((await post('guest','/api/social/send?world=moon-garden',{peerId:admin,text:'See you in River Oaks'})).status,200);
+  assert.equal((await post('guest','/api/social/send?world=river-oaks',{peerId:admin,text:'See you in River Oaks'})).status,200);
   const crossWorldMessages=await (await post('admin','/api/social/messages?world=river-oaks',{peerId:'guest-user'})).json();
   assert.equal(crossWorldMessages.messages[0].text,'See you in River Oaks');
-  const closed=Promise.all([visitor,visitorInRiver].map(({socket})=>new Promise(resolve=>socket.once('close',resolve))));
+  const closed=new Promise(resolve=>visitor.socket.once('close',resolve));
   assert.equal((await post('admin','/api/moderation/ban',{userId:'guest-user',banned:true})).status,200);
   await closed;
   assert.equal((await post('guest','/api/multiplayer/ticket?world=moon-garden',{})).status,403);

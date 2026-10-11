@@ -1527,6 +1527,95 @@
       "pr": 236
     },
     {
+      "id": "workplace-vercel-sweep",
+      "title": "Workplace gap from #221: scheduled sweep on Vercel via Vercel Cron and a CRON_SECRET-guarded drain route",
+      "status": "active",
+      "branches": [
+        "fix/workplace-vercel-sweep"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T12:09:00+00:00",
+      "leaseUntil": "2026-10-11T14:09:00+00:00",
+      "nextAction": "Open the PR stacked on #236; after the stack merges, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard. Owner sets CRON_SECRET in Vercel before enabling.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md",
+      "filesOwned": [
+        "server/workplace.js (sweep drain; agreed with river-oaks-55)",
+        "server/distributed-app.js (sweep route)",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/vercel-routing.js",
+        "vercel.json (rewrite, crons)",
+        "api/server.js (flag-off short circuit)",
+        "server/tests/cron-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md",
+        ".env.example (CRON_SECRET name only)"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Guarded route on a live Redis gateway",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-room-envelope (PR #236), stacked until it merges",
+      "deliveryNote": "Production needs CRON_SECRET set in Vercel by the owner before the route accepts the cron; the agent does not change Vercel settings.",
+      "verification": {
+        "cron": "5 pass; 3 mutations caught",
+        "server": "485 pass, 0 skipped with isolated Redis",
+        "preview": "2596 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed"
+      },
+      "pr": 237
+    },
+    {
+      "id": "workplace-erase",
+      "title": "Workplace gap from #221: an owner 'erase my workplace' action that deletes every stored trace atomically",
+      "status": "active",
+      "branches": [
+        "fix/workplace-erase"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T12:18:00+00:00",
+      "leaseUntil": "2026-10-11T14:18:00+00:00",
+      "nextAction": "Open the PR stacked on #237; after the stack merges, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-erase.md",
+      "filesOwned": [
+        "server/workplace.js (erase; agreed with river-oaks-55)",
+        "preview/src/workplace-contract.js (erase action)",
+        "preview/src/workplace-ui.js (erase control)",
+        "server/vercel-routing.js",
+        "vercel.json (workplace routes)",
+        "server/tests/erase-workplace.test.js",
+        "preview/tests/panel-workplace.test.js",
+        "server/tests/adversarial-workplace.test.js (probe list)",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-erase.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Panel tests",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-vercel-sweep (PR #237), stacked until it merges",
+      "verification": {
+        "erase": "5 server + 1 panel pass; delete mutation caught (4 cases); desk release redundant with read reconciliation",
+        "server": "490 pass, 0 skipped with isolated Redis",
+        "preview": "2597 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "browser": "workplace journey passed"
+      },
+      "pr": 238
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "delivered",
@@ -1669,15 +1758,68 @@
       "pr": 241
     },
     {
+      "id": "server-hardening",
+      "title": "Harden the server against abuse: production interruptions and lag, remote code execution, and owner-billed costs",
+      "status": "active",
+      "branches": [
+        "fix/server-hardening"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T16:37:00+00:00",
+      "leaseUntil": "2026-10-11T18:37:00+00:00",
+      "nextAction": "Open the PR, pass hosted CI (watch the Vercel preview for the new vercel.json header sources), take a merge-queue turn after the workplace stack.",
+      "ledger": "docs/superpowers/plans/2026-10-11-server-hardening.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-11-server-hardening.md",
+        "server/tests/hardening-*.test.js",
+        "preview/tests/hardening-*.test.js",
+        "scripts/tests/hardening-*.test.js",
+        "server/asset-gate.js",
+        "middleware.js",
+        "server/redis-room.js",
+        "server/redis-security.js",
+        "server/distributed-app.js",
+        "server/world-router.js",
+        "server/world-gateway.js",
+        "server/app.js",
+        "server/town.js",
+        "server/waitlist-routes.js",
+        "server/chauffeur.js",
+        "server/redis-auth.js",
+        "server/magic-auth.js",
+        "server/redis-backend.js",
+        "vercel.json (asset headers)",
+        "preview/src/prince-companion.js",
+        "preview/src/chauffeur.js",
+        ".githooks/pre-commit",
+        "scripts/install-project-hooks.mjs",
+        ".env.example (CHAUFFEUR_DAILY_LIMIT)"
+      ],
+      "requiredChecks": [
+        "Focused regressions per finding",
+        "Full server suite with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "notes": "Server files touched are listed per finding in the ledger and coordinated with other active sessions before editing.",
+      "verification": {
+        "preview": "2617 pass, 1 skipped (pre-existing)",
+        "server_and_scripts": "536 pass, 0 skipped with isolated Redis",
+        "core": "pnpm run verify: core passed (75aada6)",
+        "fixes": "14 findings fixed, each with a regression that failed before the change"
+      },
+      "pr": 244
+    },
+    {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/studio-agent-chat"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T15:44:03+00:00",
-      "nextAction": "Delivered by PR #240 (merge a9cfe01). Bridge hardening follow-up is tracked by studio-bridge-hardening. Retire worktree river-oaks-studio-chat-20261011 after this register change merges.",
+      "updatedAt": "2026-10-11T17:59:58.711Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-agent-chat.md",
       "filesOwned": [
         "preview/src/studio/agent-chat.js",
@@ -1702,19 +1844,35 @@
           "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh. Local core verify, Studio unit (58), agent Electron E2E, designer/studio Electron E2E and world-studio browser journey passed. Packaged build was not exercised (see studio-bridge-hardening)."
         }
       ],
-      "retirement": null
+      "retirement": {
+        "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "pr": 240,
+      "retiredBranches": [
+        "feat/studio-agent-chat"
+      ],
+      "archive": {
+        "feat/studio-agent-chat": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/history.bundle",
+          "sha256": "92bc447263911e5a5cca6678eab2dcdcbbb110cbdf1c8087bee148c8721d3586",
+          "tag": "refs/tags/archive/worktree-prune/e8790513-6677-40df-b484-38e4e177b229",
+          "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12"
+        }
+      }
     },
     {
       "id": "studio-bridge-hardening",
       "title": "Harden the Studio desktop bridges (World Designer and agent chat) against page-script steering and file reads",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/studio-bridge-hardening"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-11T17:44:03+00:00",
-      "updatedAt": "2026-10-11T15:44:03+00:00",
-      "nextAction": "Push, open PR, request review from river-oaks-c2; merge only with user authorization via the guard, in merge-queue order.",
+      "owner": null,
+      "updatedAt": "2026-10-11T18:00:19.461Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
       "filesOwned": [
         "desktop/studio-preload.cjs",
@@ -1729,7 +1887,277 @@
         "node desktop/designer-e2e.js",
         "node desktop/studio-e2e.js",
         "pnpm run verify"
+      ],
+      "pr": 243,
+      "evidence": [
+        {
+          "pr": 243,
+          "reviewedHead": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+          "merge": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "tree": "dbb7093a5b0ffc6b7341a9c47cd1dfd1ed27f74d",
+          "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh after river-oaks-c2 approval (PR comment) at 014e2a0 (identical patches rebased). Local core verify, desktop units 47, Studio units 25, agent-e2e 9, designer-e2e 9, studio-e2e and world-studio journey passed; live hardened-CLI file-read probes refused."
+        }
+      ],
+      "retirement": {
+        "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "retiredBranches": [
+        "fix/studio-bridge-hardening"
+      ],
+      "archive": {
+        "fix/studio-bridge-hardening": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/history.bundle",
+          "sha256": "d2268f8126319211d199821a5263f9d665e1998abe9cb9e49647908ffa02832b",
+          "tag": "refs/tags/archive/worktree-prune/70a97fd7-f4a6-45d2-8164-b6ec47f29272",
+          "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2"
+        }
+      }
+    },
+    {
+      "id": "studio-retirement-register",
+      "title": "Record retirement of the Studio agent-chat and bridge-hardening branches in the shared register",
+      "status": "active",
+      "branches": [
+        "docs/studio-tasks-retired"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-11T20:03:42+00:00",
+      "updatedAt": "2026-10-11T18:03:42+00:00",
+      "nextAction": "Merge the docs-only register PR in queue order, then release this task and retire docs/studio-tasks-retired with project:prune.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json"
+      ],
+      "requiredChecks": [
+        "pnpm run test:agent",
+        "pnpm run project:status",
+        "hosted Verify"
       ]
+    },
+    {
+      "id": "studio-prompt-polish",
+      "title": "Match the World Studio scene prompt and surfaces to TypeSafe Place",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-polish"
+      ],
+      "owner": "codex session 01a12992-ca4f-7953-bf53-2e8875f2cf15",
+      "leaseUntil": "2026-10-11T20:29:48.733630+00:00",
+      "updatedAt": "2026-10-11T18:29:48.733630+00:00",
+      "nextAction": "User authorized protected landing of PR #246. Await exact-head hosted checks after the asset-only main update to 4849d62; coordinate concurrent River Oaks merges and retain local evidence.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-prompt-polish.md",
+      "filesOwned": [
+        "preview/src/studio/studio.css",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/scene.js",
+        "preview/src/studio/viewport.js",
+        "preview/src/access-gate.css",
+        "preview/src/access-theme.css"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "Visual inspection of prompt and panel in light/dark, focus, hover and narrow screens"
+      ],
+      "verification": {
+        "core": "3191 passing tests and 111 existing core-profile skips on 8c81; runtime source unchanged by the subsequent login-art-only main update. .runtime/prompt-polish-rebase-8c81/core.json",
+        "browser": "After main 4849 update, build passed and world-studio passed 10.967s; .runtime/prompt-polish-rebase-4849/verification.json",
+        "visual": "light/dark, focus/hover/typed/open/collapse, 320/390/1000px checks passed; local output/playwright/prompt-polish captures",
+        "source": "Shared login CSS extraction byte-identical; runtime hashes unchanged through gates"
+      },
+      "pr": 246,
+      "evidence": [
+        {
+          "pr": "https://github.com/BunsDev/river-oaks/pull/246",
+          "verifiedSourceHead": "99bb582c9d2777eeb20f00dc8c5fc8a8c5c95ae3",
+          "base": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "checks": "Core and World Studio journey passed; local visual captures inspected."
+        },
+        {
+          "base": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "verifiedRebasedHead": "1443b2cd631eb5e9b85df3ee993f474f3c32c7e7",
+          "checks": "Fresh core and World Studio journey passed after reconciling current main; all tracked source hashes unchanged during checks. Subsequent changes update only this task and its ledger."
+        },
+        {
+          "base": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "verifiedRebasedHead": "1a88bf0bd95d6c8f3be86374934221870e2af07f",
+          "checks": "Only upstream login artwork and its source record changed; both own commits have identical range-diff. Fresh production build and Studio journey passed; all tracked hashes unchanged during verification. Prior head 2db64ea passed all ten hosted checks."
+        }
+      ]
+    },
+    {
+      "id": "paver-texture-realism",
+      "title": "Sidewalk pavers re-authored from the Kettering Drive Street View reference",
+      "status": "delivered",
+      "branches": [
+        "feat/paver-texture-realism"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #231. Retire the local worktree and branch feat/paver-texture-realism with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/paver-textures.js",
+        "preview/tests/paver-textures.test.js"
+      ],
+      "pr": 231,
+      "deliveryPr": 231,
+      "evidence": [
+        {
+          "pr": 231,
+          "reviewedHead": "1b60689ef024530d849b29b776e306fbdfe8488e",
+          "merge": "62ba3db8ec1687c297890d7578874055ef6278f8",
+          "tree": "c672c2712be513a10610cdfea0379d1f53f538c2",
+          "checks": "All 11 final-head hosted checks passed on 1b60689. Local at 1b60689: paver-textures 9/9, pnpm test 2602 pass 0 fail, build passed."
+        }
+      ]
+    },
+    {
+      "id": "sidewalk-corners",
+      "title": "Curb returns with one paving field per junction corner; crossings kept clear of corners and footways",
+      "status": "delivered",
+      "branches": [
+        "feat/sidewalk-corners"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #233. Retire the local worktree and branch feat/sidewalk-corners with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/street-corners.js",
+        "preview/src/sidewalks.js",
+        "preview/src/street-roads.js",
+        "preview/src/pedestrian-network.js",
+        "preview/tests/street-corners.test.js",
+        "preview/e2e/fixtures/corners.html",
+        "preview/e2e/fixtures/corners.js"
+      ],
+      "pr": 233,
+      "deliveryPr": 233,
+      "evidence": [
+        {
+          "pr": 233,
+          "reviewedHead": "88496d97efa72ed2f27fa53a2b6085b1d1c937a8",
+          "merge": "c4a871bca555f4ffbc246b7f84c3597b6b905264",
+          "tree": "729cb0cd7cb680e5d2c8cf23d2bd72119b1ede15",
+          "checks": "All 11 final-head hosted checks passed on 88496d9. Local at 88496d9: street-corners 6/6, pnpm test 2615 pass 1 pre-existing skip, build passed; pnpm run verify core passed at f0e1c9f; 39 corners rendered before/after via the corners fixture."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-sidewalk-corners.md"
+    },
+    {
+      "id": "plant-diversity",
+      "title": "Seeded, layered River Oaks planting in lane planters and the Harry Winston curb bed",
+      "status": "delivered",
+      "branches": [
+        "feat/plant-diversity"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #234. Retire the local worktree and branch feat/plant-diversity with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/planting-palette.js",
+        "preview/src/procedural-plants.js",
+        "preview/src/landscape-models.js",
+        "preview/src/reference-planting.js",
+        "preview/tests/plant-diversity.test.js"
+      ],
+      "pr": 234,
+      "deliveryPr": 234,
+      "evidence": [
+        {
+          "pr": 234,
+          "reviewedHead": "6849af1a9605e912ea0f28ffb3c3a510982250bd",
+          "merge": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "tree": "e5fc6e2394e4fb675cb95b3cf96eec8dc5c9f2aa",
+          "checks": "All 11 final-head hosted checks passed on 6849af1 (preview after one rerun of the flaky email-access browser test). Local at 6849af1: plant-diversity 6/6, pnpm test 2621 pass 1 pre-existing skip, build passed."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-plant-diversity.md"
+    },
+    {
+      "id": "login-art-awake",
+      "title": "Sign-in art edited so Jevica is upright and awake; provenance recorded",
+      "status": "delivered",
+      "branches": [
+        "feat/login-art-awake"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #245. Retire the local worktree and branch feat/login-art-awake with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/public/assets/login/jev-jevica-golden-hour.jpg",
+        "preview/public/assets/login/sources.json"
+      ],
+      "pr": 245,
+      "deliveryPr": 245,
+      "evidence": [
+        {
+          "pr": 245,
+          "reviewedHead": "1811f71d16574d791c629afde7d0d2401062c12b",
+          "merge": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "tree": "55b0a1768fd23a7fbfb71ddb6e91fea8855f7c54",
+          "checks": "All 11 final-head hosted checks passed on 1811f71. Local at 3bd3a44: pnpm test 2621 pass 1 pre-existing skip, build passed; signed-out gate rendered at 1440x900 and 390x844."
+        }
+      ]
+    },
+    {
+      "id": "street-visuals-register",
+      "title": "Record the paver, corner, planting and login-art deliveries and retire their worktrees",
+      "status": "active",
+      "branches": [
+        "docs/street-visuals-delivered"
+      ],
+      "owner": "claude:river-oaks-f8",
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "leaseUntil": "2026-10-11T20:40:00+00:00",
+      "nextAction": "Merge this register PR after the queued PRs (c2's #237, #238, #244; #242; #248; #249). Then, from a clean primary on main, add fresh retirement records and run project:prune for feat/paver-texture-realism, feat/sidewalk-corners, feat/plant-diversity and feat/login-art-awake. Remote branch deletion is not authorized.",
+      "requiredChecks": [
+        "project-status validateTasks passes",
+        "Hosted checks on the final head"
+      ]
+    },
+    {
+      "id": "studio-starter-districts",
+      "title": "Five importable district starters and World Studio template chooser",
+      "status": "active",
+      "branches": [
+        "cody/starter-districts-20261011"
+      ],
+      "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
+      "leaseUntil": "2026-10-11T22:17:16+00:00",
+      "updatedAt": "2026-10-11T20:17:16+00:00",
+      "nextAction": "Queue turn reached. Merged main at 5f3c1bb (#244); only the register conflicted, resolved task by task. After re-verification: push, then gh-merge-when-green.sh 242; record merge evidence and mark delivered.",
+      "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
+      "filesOwned": [
+        "preview/public/data/starter-districts/",
+        "preview/src/studio/templates.js",
+        "preview/src/studio/template-picker.js",
+        "preview/src/studio/main.js",
+        "preview/src/studio/studio.css",
+        "preview/tests/studio-templates.test.js",
+        "docs/starter-districts.md",
+        "preview/e2e/world-studio.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-templates.test.js",
+        "pnpm run verify",
+        "Studio browser acceptance"
+      ],
+      "evidence": {
+        "verification": [
+          ".runtime/agent/core.json",
+          "data/reports/starter-districts-browser.json"
+        ],
+        "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
+      },
+      "pr": 242,
+      "handoff": {
+        "at": "2026-10-11T18:42:28+00:00",
+        "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
+        "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
+      }
     }
   ]
 }

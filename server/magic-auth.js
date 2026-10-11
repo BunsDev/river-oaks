@@ -19,7 +19,15 @@ end
 redis.call('ZREMRANGEBYSCORE', KEYS[3], '-inf', p.now)
 if p.op == 'start' then
   if redis.call('ZSCORE', KEYS[3], p.emailHash) then return 'cooldown' end
-  if redis.call('HLEN', KEYS[1]) >= p.maxStates or redis.call('ZCARD', KEYS[3]) >= p.maxStates then return 'full' end
+  -- Full tables give up their oldest entries instead of refusing every new
+  -- sign-in, so a flood of distinct addresses cannot lock everyone out.
+  while redis.call('HLEN', KEYS[1]) >= p.maxStates do
+    local oldest = redis.call('ZRANGE', KEYS[2], 0, 0)[1]
+    if not oldest then return 'full' end
+    redis.call('HDEL', KEYS[1], oldest)
+    redis.call('ZREM', KEYS[2], oldest)
+  end
+  while redis.call('ZCARD', KEYS[3]) >= p.maxStates do redis.call('ZPOPMIN', KEYS[3]) end
   redis.call('HSET', KEYS[1], p.id, cjson.encode(p.record))
   redis.call('ZADD', KEYS[2], p.record.expiresAt, p.id)
   redis.call('ZADD', KEYS[3], p.now + p.cooldown, p.emailHash)
@@ -59,7 +67,10 @@ export function createMagicStore({ redis, namespace, now = Date.now, maxStates =
     for (const [id, expiresAt] of cooldowns) if (expiresAt <= time) cooldowns.delete(id);
     if (p.op === 'start') {
       if (cooldowns.has(p.emailHash)) return 'cooldown';
-      if (states.size >= maxStates || cooldowns.size >= maxStates) return 'full';
+      // As in Redis: the oldest entries give way instead of refusing every sign-in.
+      const oldest = map => [...map].reduce((a, b) => (b[1].expiresAt ?? b[1]) < (a[1].expiresAt ?? a[1]) ? b : a)[0];
+      while (states.size >= maxStates) states.delete(oldest(states));
+      while (cooldowns.size >= maxStates) cooldowns.delete(oldest(cooldowns));
       states.set(p.id, p.record); cooldowns.set(p.emailHash, time + COOLDOWN); return 'ok';
     }
     const record = states.get(p.id);

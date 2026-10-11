@@ -1,0 +1,15 @@
+{
+  "createdAt": "2026-10-11T17:20:03.275Z",
+  "results": [
+    {
+      "name": "world-studio",
+      "status": "passed",
+      "seconds": 9.039,
+      "result": {
+        "passed": true,
+        "journey": "create-transform-undo-save-reopen-pick-export-import-walk",
+        "errors": []
+      }
+    }
+  ]
+}

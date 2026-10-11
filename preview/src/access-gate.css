@@ -1,18 +1,5 @@
 /* Sign-in gate: the district art on the left, the sign-in column on the right. */
-@font-face { font-family: 'TypeSafe Outfit'; src: url('/fonts/typesafe/outfit-latin.woff2') format('woff2'); font-weight: 400 700; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'TypeSafe Fraunces'; src: url('/fonts/typesafe/fraunces-500-latin.woff2') format('woff2'); font-weight: 500; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-:root {
-  --entry-ceramic: #f7f7ee; --entry-ink: #153f42; --entry-glass: #507f80;
-  --entry-text: #466f70;
-  --entry-brass: #b59a65; --entry-rose: #ecd4dc; --entry-mint: #d9e8df;
-  --entry-font: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-  --gate-bg: #151517; --gate-ink: #f7f6ed; --gate-muted: #b1b2b4; --gate-quiet: #8e9094;
-  --gate-line: #3a3b3e; --gate-field: #1b1b1d; --gate-field-line: #6a6d70; --gate-raised: #2a2a2c;
-  --gate-pink: #f68ca4; --gate-pink-hover: #f9a3b7; --gate-on-pink: #361b26; --gate-pink-line: #d98d9d;
-  --gate-sans: 'TypeSafe Outfit', 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
-  --gate-serif: 'TypeSafe Fraunces', 'Iowan Old Style', Georgia, serif;
-  --gate-control: clamp(44px, 5.8vh, 52px);
-}
+@import './access-theme.css';
 .access-gate *, .access-review *, .access-invites * { box-sizing: border-box; }
 .access-gate {
   position: fixed; inset: 0; z-index: 10000; overflow-y: auto; overscroll-behavior: contain;

@@ -8,6 +8,23 @@ async (page) => {
   await openHudSpace(page, 'settings-section', 'World');
   await page.getByRole('link', { name: 'Open World Studio' }).click({ timeout: 10000 });
   await page.waitForSelector('body[data-studio-ready="true"]',{timeout:20000});
+  const checkPrompt=async()=>{
+    const prompt=page.getByLabel('Ask the World Studio agent');
+    await prompt.focus();
+    const look=await prompt.evaluate(input=>{
+      const field=getComputedStyle(input),pill=getComputedStyle(input.closest('.studio-agent-pill'));
+      const panel=getComputedStyle(document.querySelector('.studio-agent-panel'));
+      return {fieldOutline:field.outlineStyle,pillOutline:pill.outlineStyle,pillWidth:pill.outlineWidth,background:pill.backgroundColor,surface:panel.backgroundColor};
+    });
+    if(look.fieldOutline!=='none'||look.pillOutline!=='solid'||look.pillWidth!=='2px'||look.background!==look.surface)throw Error(`Scene prompt lost its unified themed focus: ${JSON.stringify(look)}`);
+    await page.keyboard.press('Tab');
+    const open=page.getByRole('button',{name:'Open agent chat'});
+    if(!await open.evaluate(button=>button===document.activeElement&&getComputedStyle(button).outlineStyle==='solid'))throw Error('Prompt action lost keyboard focus');
+    await page.keyboard.press('Enter');
+    await page.getByRole('region',{name:'World Studio agent'}).waitFor();
+    await page.locator('.studio-agent').press('Escape');
+    if(!await prompt.evaluate(input=>input===document.activeElement))throw Error('Chat collapse did not restore prompt focus');
+  };
   // Appearance follows the OS by default and honors the game's explicit Light/Dark choice.
   const appearance=async()=>{
     const {theme,header,box}=await page.evaluate(()=>({theme:document.documentElement.dataset.theme,header:getComputedStyle(document.querySelector('.studio-header')).backgroundColor,box:document.querySelector('#studio-viewport canvas').getBoundingClientRect().toJSON()}));
@@ -18,10 +35,12 @@ async (page) => {
   await page.emulateMedia({colorScheme:'dark'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   let look=await appearance();
   if(look.header!=='rgb(24, 32, 28)'||!look.dark)throw Error(`Dark system appearance left the Studio light: ${JSON.stringify(look)}`);
+  await checkPrompt();
   await page.screenshot({path:'output/playwright/world-studio-dark.png'});
   await page.evaluate(()=>localStorage.setItem('river-oaks-appearance','light'));await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
   look=await appearance();
   if(look.theme!=='light'||look.header!=='rgb(245, 248, 246)'||look.dark)throw Error(`Explicit Light preference was ignored: ${JSON.stringify(look)}`);
+  await checkPrompt();
   await page.evaluate(()=>localStorage.removeItem('river-oaks-appearance'));await page.emulateMedia({colorScheme:'light'});
   await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
   await page.locator('#studio-designer-open').click();
@@ -90,6 +109,32 @@ async (page) => {
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/playwright/world-studio-narrow.png'});
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
   if(overflow)throw Error('Editor overflows compact viewport');
+  // Starter chooser: no mutation on cancel, explicit replacement, all five render.
+  await page.setViewportSize({width:1280,height:900});
+  const savedBeforeTemplates=await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'));
+  await page.locator('#studio-templates').click();
+  await page.getByRole('dialog',{name:'Choose a district'}).waitFor();
+  if(await page.locator('.studio-template-grid article').count()!==5)throw Error('Missing district templates');
+  await page.screenshot({path:'output/playwright/world-studio-templates.png'});
+  await page.keyboard.press('Escape');
+  if(!await page.locator('#studio-templates').evaluate(el=>el===document.activeElement))throw Error('Chooser did not restore focus');
+  const names=['Market Street','Garden Neighborhood','Arts Courtyard','Civic Square','Innovation Campus'];
+  for(let i=0;i<names.length;i++){
+    await page.locator('#studio-templates').click();
+    if(i>0)page.once('dialog',dialog=>dialog.accept());
+    await page.getByRole('button',{name:`Use ${names[i]}`,exact:true}).click();
+    await page.getByRole('status').filter({hasText:`${names[i]} opened`}).waitFor();
+    await page.screenshot({path:`output/playwright/world-studio-template-${i+1}.png`});
+  }
+  await page.locator('#studio-templates').click();
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.getByRole('button',{name:'Use Market Street',exact:true}).click();
+  if(!await page.getByRole('dialog',{name:'Choose a district'}).isVisible())throw Error('Discard cancellation closed chooser');
+  await page.setViewportSize({width:390,height:844});
+  if(await page.locator('.studio-templates').evaluate(el=>el.scrollWidth>el.clientWidth))throw Error('Template chooser overflows narrow view');
+  await page.screenshot({path:'output/playwright/world-studio-templates-narrow.png'});
+  await page.keyboard.press('Escape');
+  if(await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'))!==savedBeforeTemplates)throw Error('Template silently overwrote saved draft');
   if(errors.length)throw Error(errors.join('\n'));
   return {passed:true,journey:'create-transform-undo-save-reopen-pick-export-import-walk',errors};
 }

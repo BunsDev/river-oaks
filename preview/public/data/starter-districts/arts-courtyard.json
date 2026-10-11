@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "bounds_m": [
+    -80,
+    -80,
+    80,
+    80
+  ],
+  "terrain": {
+    "width": 5,
+    "height": 5,
+    "heights_m": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "spawn": [
+    0,
+    -64
+  ],
+  "roads": [
+    {
+      "id": "exhibition-loop",
+      "name": "Exhibition Loop",
+      "kind": "footway",
+      "width_m": 5,
+      "points": [
+        [
+          0,
+          -22
+        ],
+        [
+          22,
+          -22
+        ],
+        [
+          22,
+          22
+        ],
+        [
+          0,
+          22
+        ],
+        [
+          -22,
+          22
+        ],
+        [
+          -22,
+          -22
+        ],
+        [
+          0,
+          -22
+        ]
+      ]
+    },
+    {
+      "id": "gallery-approach",
+      "name": "Gallery Approach",
+      "kind": "footway",
+      "width_m": 5,
+      "points": [
+        [
+          0,
+          -68
+        ],
+        [
+          0,
+          -22
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          22
+        ],
+        [
+          0,
+          32
+        ]
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "west-studios",
+      "center": [
+        -45,
+        0
+      ],
+      "size": [
+        20,
+        48,
+        9
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "east-studios",
+      "center": [
+        45,
+        0
+      ],
+      "size": [
+        20,
+        48,
+        9
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "main-gallery",
+      "center": [
+        0,
+        48
+      ],
+      "size": [
+        52,
+        20,
+        16
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "cafe",
+      "center": [
+        -44,
+        -49
+      ],
+      "size": [
+        20,
+        16,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "workshop",
+      "center": [
+        44,
+        -49
+      ],
+      "size": [
+        20,
+        16,
+        8
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    }
+  ],
+  "trees": [
+    {
+      "id": "tree-1",
+      "position": [
+        -67,
+        -45
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-2",
+      "position": [
+        67,
+        -45
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-3",
+      "position": [
+        -67,
+        0
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-4",
+      "position": [
+        67,
+        0
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-5",
+      "position": [
+        -67,
+        45
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-6",
+      "position": [
+        67,
+        45
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-7",
+      "position": [
+        -16,
+        -48
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-8",
+      "position": [
+        16,
+        -48
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    }
+  ],
+  "places": [
+    {
+      "id": "place-arts-welcome",
+      "name": "Arts Welcome",
+      "position": [
+        0,
+        -64
+      ]
+    },
+    {
+      "id": "place-sculpture-court",
+      "name": "Sculpture Court",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "place-west-exhibition",
+      "name": "West Exhibition",
+      "position": [
+        -22,
+        0
+      ]
+    },
+    {
+      "id": "place-east-exhibition",
+      "name": "East Exhibition",
+      "position": [
+        22,
+        0
+      ]
+    },
+    {
+      "id": "place-gallery-steps",
+      "name": "Gallery Steps",
+      "position": [
+        0,
+        32
+      ]
+    }
+  ]
+}

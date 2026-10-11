@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "bounds_m": [
+    -80,
+    -80,
+    80,
+    80
+  ],
+  "terrain": {
+    "width": 5,
+    "height": 5,
+    "heights_m": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "spawn": [
+    0,
+    -64
+  ],
+  "roads": [
+    {
+      "id": "market-promenade",
+      "name": "Market Promenade",
+      "kind": "footway",
+      "width_m": 6,
+      "points": [
+        [
+          0,
+          -68
+        ],
+        [
+          0,
+          -40
+        ],
+        [
+          0,
+          -12
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          0,
+          40
+        ]
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "west-shop-1",
+      "center": [
+        -22,
+        -40
+      ],
+      "size": [
+        18,
+        16,
+        8
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "west-shop-2",
+      "center": [
+        -22,
+        -12
+      ],
+      "size": [
+        18,
+        16,
+        10
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "west-shop-3",
+      "center": [
+        -22,
+        16
+      ],
+      "size": [
+        18,
+        16,
+        12
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "east-shop-1",
+      "center": [
+        22,
+        -40
+      ],
+      "size": [
+        18,
+        16,
+        8
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "east-shop-2",
+      "center": [
+        22,
+        -12
+      ],
+      "size": [
+        18,
+        16,
+        10
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "east-shop-3",
+      "center": [
+        22,
+        16
+      ],
+      "size": [
+        18,
+        16,
+        12
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "market-hall",
+      "center": [
+        0,
+        59
+      ],
+      "size": [
+        42,
+        20,
+        15
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    }
+  ],
+  "trees": [
+    {
+      "id": "tree-1",
+      "position": [
+        -43,
+        -54
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-2",
+      "position": [
+        -43,
+        -26
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-3",
+      "position": [
+        -43,
+        2
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-4",
+      "position": [
+        -43,
+        30
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-5",
+      "position": [
+        -43,
+        58
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-6",
+      "position": [
+        43,
+        -54
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-7",
+      "position": [
+        43,
+        -26
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-8",
+      "position": [
+        43,
+        2
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-9",
+      "position": [
+        43,
+        30
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-10",
+      "position": [
+        43,
+        58
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    }
+  ],
+  "places": [
+    {
+      "id": "place-arrival-court",
+      "name": "Arrival Court",
+      "position": [
+        0,
+        -64
+      ]
+    },
+    {
+      "id": "place-cafe-row",
+      "name": "Cafe Row",
+      "position": [
+        0,
+        -40
+      ]
+    },
+    {
+      "id": "place-shop-crossing",
+      "name": "Shop Crossing",
+      "position": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "place-makers-row",
+      "name": "Makers Row",
+      "position": [
+        0,
+        16
+      ]
+    },
+    {
+      "id": "place-hall-forecourt",
+      "name": "Hall Forecourt",
+      "position": [
+        0,
+        40
+      ]
+    }
+  ]
+}

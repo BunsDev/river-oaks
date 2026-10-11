@@ -16,7 +16,16 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/(.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/((?!.*\\.(?:glb|hdr|jpg|jpeg|png|webp|ktx2)$).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -42,6 +51,9 @@
   },
   "regions": [
     "iad1"
+  ],
+  "crons": [
+    { "path": "/api/workplace-sweep", "schedule": "* * * * *" }
   ],
   "redirects": [
     {
@@ -197,6 +209,8 @@
     { "source": "/api/workplace/delete", "destination": "/api/server?_river_path=/api/workplace/delete" },
     { "source": "/api/workplace/ack", "destination": "/api/server?_river_path=/api/workplace/ack" },
     { "source": "/api/workplace/forget", "destination": "/api/server?_river_path=/api/workplace/forget" },
+    { "source": "/api/workplace/erase", "destination": "/api/server?_river_path=/api/workplace/erase" },
+    { "source": "/api/workplace-sweep", "destination": "/api/server?_river_path=/api/workplace-sweep" },
     { "source": "/api/workplace/presence", "destination": "/api/server?_river_path=/api/workplace/presence" },
     { "source": "/api/workplace/occupancy", "destination": "/api/server?_river_path=/api/workplace/occupancy" },
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
