@@ -19,6 +19,12 @@ import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
 
+// Constant-time comparison of an `Authorization: Bearer <secret>` header.
+function bearerMatches(header, secret) {
+  const given = Buffer.from(String(header ?? '')), expected = Buffer.from(`Bearer ${secret}`);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const json = (res, status, value) => {
@@ -27,7 +33,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
@@ -220,6 +226,12 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
           },allowWrite:id=>security.allow('events',id,12,60_000)});
         return json(res,result.status,result.value);
+      }
+      // Vercel Cron: serverless instances keep no timers, so a scheduled call drains overdue tasks.
+      // It exists only with the workplace on and a configured secret, and needs that secret.
+      if (path === '/api/workplace-sweep' && req.method === 'GET' && workplace && workplaceCronSecret) {
+        if (!bearerMatches(req.headers.authorization, workplaceCronSecret)) return json(res, 401, { error: 'Unauthorized.' });
+        return json(res, 200, { ok: true, ...await workplace.sweep({ drain: true, budgetMs: 20_000 }) });
       }
       if (path.startsWith('/api/workplace/') && req.method==='POST' && workplace) {
         const identity=await authorized(req,res);if(!identity)return;

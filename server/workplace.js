@@ -134,8 +134,10 @@ export function fixtureEventPlan(brief, places) {
 // request, so it asks before every unattended step.
 // `sweepMs` (long-lived services only; 0 is off) periodically drives every
 // overdue task in the due index, so a task whose instance died still finishes.
+// Serverless hosts call `sweep({drain: true, budgetMs})` from a scheduled route
+// instead: each overdue task is stepped to completion within the budget.
 export function createWorkplace({now = Date.now, store = createMemoryWorkplaceStore({now}), createId = randomUUID, limits = {}, stepMs = 1500,
-  allowed = async () => true, sweepMs = 0,
+  allowed = async () => true, sweepMs = 0, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
   schedule = (fn, ms) => { const timer = setTimeout(fn, ms); timer.unref?.(); return timer; }, cancel = clearTimeout} = {}) {
   const limit = {...WORKPLACE_LIMITS, ...limits};
   const ownerKey = userId => `owner:${sha256(userId)}`;
@@ -269,17 +271,26 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       catch { /* The next read or sweep retries. */ }
     }, delay));
   }
-  // Every instance may sweep; compare-and-set lets each step land once.
-  async function sweep() {
-    for (const {member, score} of await store.due(DUE, now(), 50)) {
-      if (closed || timers.has(member)) continue;
+  // Every instance may sweep; compare-and-set lets each step land once. A timer
+  // host hands each task back to its timers; a drain (serverless) keeps stepping
+  // it, owners in parallel, until it settles or the budget would be exceeded.
+  async function sweep({drain = false, budgetMs = 0} = {}) {
+    const started = now(), due = (await store.due(DUE, started, 50)).filter(({member}) => !closed && !timers.has(member));
+    let steps = 0;
+    await Promise.all(due.map(async ({member, score}) => {
       try {
-        const result = await unattended(member);
-        if (result?.waitMs != null) drive(member, result.waitMs);
+        let result = await unattended(member);steps++;
+        while (drain && result?.waitMs != null && now() - started + result.waitMs <= budgetMs) {
+          await sleep(result.waitMs);
+          result = await unattended(member);steps++;
+        }
+        if (result === BUSY) return;
+        if (result?.waitMs != null) { if (!drain) drive(member, result.waitMs); }
         // Nothing to run (the document expired or the task settled elsewhere): drop a stale entry.
-        else if (result !== BUSY) await store.undue(DUE, member, score);
+        else await store.undue(DUE, member, score);
       } catch { /* The next sweep retries. */ }
-    }
+    }));
+    return {owners: due.length, steps};
   }
   let sweeper = null;
   const loop = () => { if (closed || !sweepMs) return;sweeper = schedule(async () => { try { await sweep(); } finally { loop(); } }, sweepMs); };
@@ -349,6 +360,7 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     // Called when the owner is banned or loses waitlist approval. The timer check
     // alone misses a paused task or an idle grant, which have no timer.
     suspend: userId => suspend(userId),
+    sweep: options => sweep(options),
     async companion(actor, {name}) {
       const result = await owner(actor, (doc, t) => {
         if (doc.companion) return {write: false, value: {ok: false, reason: 'companion_limit'}};
