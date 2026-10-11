@@ -1,0 +1,21 @@
+{
+  "off": {
+    "raw": 1759139,
+    "gz": 522276
+  },
+  "on": {
+    "raw": 1770090,
+    "gz": 525991
+  },
+  "delta": {
+    "raw": 10951,
+    "gz": 3715
+  },
+  "changedFiles": [
+    {
+      "file": "assets/main.js",
+      "rawDelta": 10951,
+      "gzDelta": 3713
+    }
+  ]
+}
