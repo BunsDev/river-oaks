@@ -38,7 +38,7 @@ export function createWorkplaceUI({panel, request, connected}) {
   const anchor = panel.querySelector('.multiplayer-groups') ?? panel.querySelector('.multiplayer-social');
   if (anchor) anchor.after(section);else panel.append(section);
   // 'stale' after a failed or skipped refresh: the panel can no longer vouch for progress.
-  let state = null, timer = null, disposed = false, busy = false, rendered = '', opened = null, health = 'ok';
+  let state = null, timer = null, disposed = false, busy = false, rendered = '', opened = null, health = 'ok', confirmingErase = false;
   const say = message => { status.textContent = message; };
   async function act(action, data, success) {
     if (busy) { say('Still saving your last change. Try again in a moment.');return null; }
@@ -124,6 +124,15 @@ export function createWorkplaceUI({panel, request, connected}) {
         }
         parts.push(saved);
       }
+      // Erasing everything takes two deliberate steps and cannot be undone.
+      const yours = node('div', null, 'workplace-card');yours.setAttribute('role', 'group');yours.setAttribute('aria-label', 'Your workplace data');
+      if (!confirmingErase) yours.append(button('Erase my workplace…', () => { confirmingErase = true;render(); }, 'erase'));
+      else {
+        yours.append(node('p', 'This deletes your companion, its permission, every task, brief and draft. It cannot be undone.'),
+          button('Erase everything', () => void act('erase', {confirm: 'erase'}, 'Your workplace was erased.').then(result => { confirmingErase = false;if (result) closePlan();else render(); }), 'erase-confirm'),
+          button('Keep my workplace', () => { confirmingErase = false;render(); }, 'erase-cancel'));
+      }
+      parts.push(yours);
     }
     live.replaceChildren(...parts);
     if (focusKey) live.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`)?.focus({preventScroll: true});
