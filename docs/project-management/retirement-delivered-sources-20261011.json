@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-11T07:34:27.146435+00:00",
+  "scope": "Local delivered-source reconciliation. Archive paths are local; no remote branch deletion.",
+  "delivery": {
+    "pr": 198,
+    "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+    "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+    "hostedVerify": 38119680150
+  },
+  "supersedingSignin": {
+    "pr": 197,
+    "reviewedHead": "a3e428eb5686c71944165caf99147e20f47669a5",
+    "merge": "8b23f247f87a1c4aa7567ed5c615ce91a6c46f0f",
+    "designCommit": "f3255d16ec4af37e0da0743fc3d27c2253ae4110"
+  },
+  "archive": {
+    "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+    "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+    "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+    "bundleVerify": true,
+    "isolatedRestore": true,
+    "fsck": true,
+    "dirtyPatchReplay": true
+  },
+  "sourceOwner": {
+    "thread": "01a1208c-5625-7572-8a31-b61fb5260fdd",
+    "state": "notLoaded",
+    "lastAction": "Delivered PR198 source; stopped waiting for hosted checks. This session completed that merge."
+  },
+  "candidates": [
+    {
+      "task": "harry-winston",
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-harry-winston-20261009",
+      "branch": "codex/harry-winston-reference-20261009",
+      "head": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "state": "retired",
+      "retiredAt": "2026-10-11T07:32:00.123614+00:00",
+      "method": "restore-verified duplicate cleanup; non-forced worktree remove; branch -d",
+      "archiveTag": "archive/worktree-prune/20261011-delivered-sources/harry-winston",
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/harry-winston/local-files.tar.gz",
+      "localFilesSha256": "0aef6a6bbf1606919b90c3376e4a1107409fab5e5d3dd6856c24929cee09b7ca",
+      "restoredFileCount": 81,
+      "comparison": [
+        {
+          "path": "preview/e2e/experience-runner.js",
+          "sha256": "022676caffcf031cea9c330ba1a5d58e36b2ecf6b03edcc6b7d3234ecdc27376",
+          "disposition": "All source suite entries retained; main adds lifecycle/HUD/hardware suites."
+        },
+        {
+          "path": "preview/e2e/fixtures/facades.js",
+          "sha256": "ff066617433b4eb81cf3f5b42fe52fdcc622ac595ab814e155f38f855e24f1e9",
+          "disposition": "All source additions retained; main preserves additional camera roll handling."
+        },
+        {
+          "path": "preview/e2e/shared-runner.js",
+          "sha256": "a01284eca8d51707ff4417d7f95dc1935ad8368c6ea585edb3ef8cbf8f1e559a",
+          "disposition": "Storefront threshold selection retained; main also includes greetings."
+        },
+        {
+          "path": "preview/e2e/storefront-threshold.js",
+          "sha256": "799f008f90069ffe4c1bf988f15580ae61976bfcf3644e439dc69849ad25541a",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "preview/src/district.js",
+          "sha256": "71b33a893da06e0e201a75a4f4ef69794f257c08a3996e5a353cc401b7f9fa58",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "preview/src/landscape-models.js",
+          "sha256": "880a55c2f177cc1b612c90b5dbad545546172a0ad30ae920c26dd11aef894726",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/main.js",
+          "sha256": "ce2c5fad742741975695d8bcc69760594ea14d290f4639e39502d99a5eb33d52",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "preview/src/multiplayer-client.js",
+          "sha256": "fca800c0435d1a17d00d1f0a00eb22138ceb35ffa05a5f1f100f94b870b17bd1",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "preview/src/reference-facades.js",
+          "sha256": "399e59be4239a657c57858b1a33592741c7222917cd9f0bd66ffba2e249989db",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "preview/src/street-furniture.js",
+          "sha256": "73f420c3930a014c458d86ec8f9809ac43a52f7f9d221aede72b314ff8d3fcef",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/tree-placements.js",
+          "sha256": "d25ee545d4832f8db566d53cc4e4bf6a430c9bfa55b6df1c72b73889ba7c0f30",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/world-interactions.js",
+          "sha256": "37d8bb10655c7fa7b8716550b1c9a9a7a5c102a5c75a46804c4b59d36908e83b",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/tests/reference-facades.test.js",
+          "sha256": "677e6c275681a3ff95c16f6959f6e1218676040a70c7897088cbfbbd034024b6",
+          "disposition": "All source Harry Winston assertions retained; main adds Equinox wing and sign texture tests."
+        },
+        {
+          "path": "preview/tests/reference-trees.test.js",
+          "sha256": "4885d0da510ebf981ad9f798546bacd6291e0fe5f2cf7579422ab81d75ba14de",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/tests/street-furniture.test.js",
+          "sha256": "dddf79290eaa103a88fe63f74651460217a9ab81ad690cb1c716824ed599a812",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "server/app.js",
+          "sha256": "a124a2f3aed060f83ba0f2a966dd0ea366b76cc15489b0f6440cd3e7c472df44",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "server/distributed-app.js",
+          "sha256": "078fc581d02d37309ad49e4068fd2d7604207ceb7446f88ccab9aff0b0a16b6c",
+          "disposition": "Complete source delta three-way merged against original base yields delivered main unchanged."
+        },
+        {
+          "path": "server/profile-api.js",
+          "sha256": "36ac65f414036920f39b519de2f829a7ffae6860c3a8eead7af828e15cf5a932",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "server/profiles.js",
+          "sha256": "2b98903512daa8476eb4ec68081b14923b55c35de8cb019f0f2e4427e59c096e",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "server/tests/profile-gateway.test.js",
+          "sha256": "5ebb4b13e6bc0eeeaecdd402d1680560f1a82d41bf000c9fc9a65c8b8ede74d4",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "data/reports/harry-winston-threshold-20261009.json",
+          "sha256": "899b0430aef50026d3fbd90a8f6a17a61e1e47f5c41df034a807bd0468f131ca",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "data/reports/harry-winston-watering-20261009.json",
+          "sha256": "13a6846d157314d34115676c7ccdb0805f6173056d5c1083eca4281482b2d12c",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "data/reports/store-intro-20261009.json",
+          "sha256": "ccf749ad184937a7263517e8baad167b67d92542039d013245021d9ec2892734",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "docs/level-design/harry-winston/reference-scene-comparison.md",
+          "sha256": "47133fee0ab405fa0e7073240d11751895f82c57578f1b5af1195125bc484135",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-09-harry-winston-reference.md",
+          "sha256": "cd1ea6f8a56560e1d20dc1331f2a860bf94be66c08f4afb0bb0f2f4296ab4359",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-09-store-intros.md",
+          "sha256": "404cdc400ddf2c04a89de57c11c79d0e4e7b4e57ddc6a7eeb62bd3616c5e7bb4",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/e2e/store-intro.js",
+          "sha256": "415f9612007e973b5f62b37fe6a4543993f7f8bb73b475bcb5a8d4ac3ab74285",
+          "disposition": "Superseded old rail toggle with reviewed openHudSpace navigation in PR198; all intro assertions retained."
+        },
+        {
+          "path": "preview/src/harry-winston-facade.js",
+          "sha256": "9012595d8d89249ba333ea19ace682405af5b9eedde56f7c9f93b0ec91bddf76",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/reference-landscape.js",
+          "sha256": "91b63c9d1bd30de5d852e592c10602e9b34177c377a9eec37d0553fba89333d7",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/reference-planting.js",
+          "sha256": "242dd5fe022ce7b7ea804cf5c33462a851c64394d4945c4b7a047fcba179d555",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/store-intro-ui.js",
+          "sha256": "2b62180322dd3bd9137a2429c16b767dbab0ff0e65ec046e09f3e59e3bee79c9",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/store-intro.css",
+          "sha256": "04ff3c5d86bfccc8314de3c3ced087d6f10fa3e90c394b222e915e6e7104c963",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/src/store-intro.js",
+          "sha256": "56e28d7c8007de6a28a3e72cde02b630af0b1630cb1581503a254f4625eb7c96",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/tests/reference-planting.test.js",
+          "sha256": "e5b4b21fda495fb126b6d586163234c01c614a4bddc10a33f162dfe52f75bdfe",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/tests/store-intro.test.js",
+          "sha256": "778f3f0b6e1f7ee1c5b89ae7311a42736997f337e1ef8922ca31beca720c47a7",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "server/tests/store-intro.test.js",
+          "sha256": "c7c35681f0fba036d6968694eb09d473548f3786c185f74a39d6365842168fca",
+          "disposition": "identical bytes in delivered main"
+        }
+      ],
+      "ignoredPolicy": "All local evidence retained and hash-restored; only node_modules, venv, dist, Python bytecode and tool caches are regenerable."
+    },
+    {
+      "task": "signin-review",
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-signin-review-20261009",
+      "branch": "codex/signin-typesafe-coven-20261009",
+      "head": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "state": "preserved-pending-signin-fix-delivery",
+      "retiredAt": null,
+      "method": null,
+      "archiveTag": "archive/worktree-prune/20261011-delivered-sources/signin-review",
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/signin-review/local-files.tar.gz",
+      "localFilesSha256": "552e3d175271f42832f0c0b93733882b0818eaa15b5e181d1b1a772e914c45f2",
+      "restoredFileCount": 18,
+      "comparison": [
+        {
+          "path": "preview/e2e/email-access.test.js",
+          "sha256": "6a0644896592d3d79348effb837e802caca46af9a5f5e5a382557ae72b9511d8",
+          "disposition": "Contrast/focus retained by PR198; responsive layout assertions updated by PR197. Narrow-screen invitation reachability carried forward in this patch, pending delivery."
+        },
+        {
+          "path": "preview/index.html",
+          "sha256": "5da0aa856525dab456955113caa9fddab13c89fa9e38f8c69caec7cdd359d51c",
+          "disposition": "PR197 replaces glass district SVG/old layout with Jev/Jevica artwork and new responsive layout; form IDs/admission behavior retained."
+        },
+        {
+          "path": "preview/src/access-gate.css",
+          "sha256": "c92eb0370fa2e930788b29413f06405181627831c1fc6816ae1c1179d5545e78",
+          "disposition": "PR197 intentionally supersedes IBM Plex graphite/mint draft styling, including light admin dialogs. Missing admin reduced-motion behavior carried forward in this patch, pending delivery."
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-09-signin-typesafe-coven.md",
+          "sha256": "57ba161229feeb95b44cd1045c9142f46820fb19f8d02a040087ab717a1db4c2",
+          "disposition": "identical bytes in delivered main"
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/IBMPlexSans-latin.woff2",
+          "sha256": "056e4e2459f57a0033c8c9c844ff19d6e42ac8602027803d4345823bcc939818",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/LICENSE.txt",
+          "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/README.md",
+          "sha256": "cade9440b494f58f72f729d2530a5507713c40784e7e4c2c74ded97d26696c35",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        }
+      ],
+      "ignoredPolicy": "All local evidence retained and hash-restored; only node_modules, venv, dist, Python bytecode and tool caches are regenerable."
+    },
+    {
+      "task": "login-aesthetic",
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-realism-20261008",
+      "branch": "codex/typesafe-login-aesthetic-20261009",
+      "head": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "state": "preserved-pending-signin-fix-delivery",
+      "retiredAt": null,
+      "method": null,
+      "archiveTag": "archive/worktree-prune/20261011-delivered-sources/login-aesthetic",
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/login-aesthetic/local-files.tar.gz",
+      "localFilesSha256": "596f8a3d212ead2822024ebd29131aad80749d933eb62739ad98d0d71a24fa6e",
+      "restoredFileCount": 108,
+      "comparison": [
+        {
+          "path": "preview/e2e/email-access.test.js",
+          "sha256": "8862951f489e762ceffbdcaf7ac7ef00c61c102552ea2de4d29227f91753b1fe",
+          "disposition": "Contrast/focus retained by PR198; responsive layout assertions updated by PR197. Narrow-screen invitation reachability carried forward in this patch, pending delivery."
+        },
+        {
+          "path": "preview/index.html",
+          "sha256": "59e32ae9910d3650ec526398f26b8f91121b7ab9621b704816cbf244d0f3d48d",
+          "disposition": "PR197 replaces glass district SVG/old layout with Jev/Jevica artwork and new responsive layout; form IDs/admission behavior retained."
+        },
+        {
+          "path": "preview/src/access-gate.css",
+          "sha256": "fe8456806ad1c2a2e49bf2ffdd5c389fe4528bee4957ffabf8bb0bf6d483de04",
+          "disposition": "PR197 intentionally supersedes IBM Plex graphite/mint draft styling, including light admin dialogs. Missing admin reduced-motion behavior carried forward in this patch, pending delivery."
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-09-typesafe-login-aesthetic.md",
+          "sha256": "2980f769ee5d7d90c65da1564a3c607181b679fe64ff34f6ff32b1f27886f7de",
+          "disposition": "Historical draft ledger retained in archive; its design is superseded by PR197."
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/IBMPlexSans-latin.woff2",
+          "sha256": "056e4e2459f57a0033c8c9c844ff19d6e42ac8602027803d4345823bcc939818",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/LICENSE.txt",
+          "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        },
+        {
+          "path": "preview/public/fonts/ibm-plex/README.md",
+          "sha256": "cade9440b494f58f72f729d2530a5507713c40784e7e4c2c74ded97d26696c35",
+          "disposition": "Unused IBM Plex draft font/license replaced by licensed Outfit/Fraunces in PR197. Original bytes retained in archive."
+        }
+      ],
+      "ignoredPolicy": "All local evidence retained and hash-restored; only node_modules, venv, dist, Python bytecode and tool caches are regenerable."
+    }
+  ],
+  "deliveryRef": {
+    "branch": "codex/store-intros-signin-delivery-20261009",
+    "head": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+    "archiveTag": "archive/worktree-prune/20261011-delivered-sources/store-intros-delivery",
+    "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+    "retiredAt": "2026-10-11T07:32:25.925192+00:00",
+    "method": "exact SHA-guarded ref deletion after restore-tested archive; worktree reused for current task",
+    "refAbsent": true
+  }
+}

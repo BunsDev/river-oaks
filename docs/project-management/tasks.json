@@ -58,24 +58,34 @@
     {
       "id": "harry-winston",
       "title": "Complete Harry Winston reference work",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "codex/harry-winston-reference-20261009"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify ownership, review dirty reference/fixture/source changes, and run matched reference and runtime acceptance from the scoped ledger.",
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Use the restore-tested archive if the historical source is needed. Current source is delivered on main; preserve documented acceptance limits.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
       ],
-      "observed": {
-        "head": "22d00439cebf818e983dab0ce855eb3883ed5bda",
-        "dirtyPaths": 36,
-        "mergeInProgress": false,
-        "activeProcess": false
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+        "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+        "bundleVerify": true,
+        "isolatedRestore": true,
+        "fsck": true,
+        "dirtyPatchReplay": true
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "evidence": [
+        {
+          "pr": 198,
+          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "hostedVerify": 38119680150
+        }
+      ]
     },
     {
       "id": "pending-integration",
@@ -277,13 +287,13 @@
     {
       "id": "signin-review",
       "title": "Reconcile sign-in review changes",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "codex/signin-typesafe-coven-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Compare the full patch with login-aesthetic and integration work; record equivalence or remaining distinct work before retiring either checkout.",
+      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Deliver recovered admin reduced-motion and narrow-screen invitation checks, then retire this superseded source using exact restored archive.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -294,18 +304,19 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "leaseUntil": "2026-10-11T09:34:28.276875+00:00"
     },
     {
       "id": "store-intros-delivery",
       "title": "Complete store intros and tooling delivery",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "codex/store-intros-signin-delivery-20261009"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
-      "nextAction": "Retain clean delivery checkout and verification receipts for a separate archive-backed retirement. Exact reviewed head and squash tree equality are verified.",
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Use the restore-tested archive if the historical source is needed. Current source is delivered on main; preserve documented acceptance limits.",
       "filesOwned": [
         "package.json",
         "AGENTS.md",
@@ -320,39 +331,36 @@
         "pnpm run verify tooling",
         "Required hosted checks on final PR head"
       ],
-      "observed": {
-        "head": "5f409a33c078f282481a79093b2dc2353a60fcb1",
-        "dirtyPaths": 0,
-        "mergeInProgress": false
-      },
       "pr": 198,
       "ledger": "docs/superpowers/plans/2026-10-11-pr198-merge.md",
       "evidence": [
         {
-          "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
-          "verification": "Local full: 17 tasks passed; 414 Redis tests, six experience journeys, 19 shared journeys. All hosted checks passed, including unchanged security retry. Core and 27 tooling tests also pass after docs/tooling-only main d3dbe63 reconciliation."
-        },
-        {
           "pr": 198,
-          "url": "https://github.com/BunsDev/river-oaks/pull/198",
           "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
           "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
-          "tree": "50408e555a1f82044c47f271df12acabe403c6b2",
-          "mergedAt": "2026-10-11T07:17:35Z",
-          "verification": "All hosted checks passed on final head without retry; Verify38119680150. Local full17, reconciliation core11 and tooling27 passed. Merge tree equals reviewed head."
+          "hostedVerify": 38119680150
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+        "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+        "bundleVerify": true,
+        "isolatedRestore": true,
+        "fsck": true,
+        "dirtyPatchReplay": true
+      }
     },
     {
       "id": "login-aesthetic",
       "title": "Reconcile TypeSafe login aesthetic changes",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "codex/typesafe-login-aesthetic-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Compare complete dirty patches with signin-review and current main; choose one owner and preserve all distinct changes before consolidating.",
+      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
+      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
+      "nextAction": "Deliver recovered admin reduced-motion and narrow-screen invitation checks, then retire this superseded source using exact restored archive.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -363,7 +371,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "leaseUntil": "2026-10-11T09:34:28.276921+00:00"
     },
     {
       "id": "cartier-pilot",
@@ -938,12 +947,14 @@
       "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
       "updatedAt": "2026-10-11T07:21:22.020747+00:00",
       "leaseUntil": "2026-10-11T09:21:22.020747+00:00",
-      "nextAction": "Compare every dirty source change against delivered main, identify ownership and preserve exact archives before eligible retirement.",
+      "nextAction": "Carry forward reduced-motion admin-review fix and narrow-screen invitation regression, verify and deliver; retire only fully accounted source copies with restored archives.",
       "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
       "filesOwned": [
         "docs/project-management/tasks.json",
         "docs/project-management/retirement-delivered-sources-20261011.json",
-        "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md"
+        "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+        "preview/src/access-gate.css",
+        "preview/e2e/email-access.test.js"
       ],
       "requiredChecks": [
         "Complete changed-path comparison and ownership handoff",
