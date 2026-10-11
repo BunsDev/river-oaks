@@ -19,10 +19,12 @@ const sha256 = value => createHash('sha256').update(value).digest('hex');
 const clip = (value, max) => [...String(value)].slice(0, max).join('').trim();
 const empty = () => ({companion: null, grant: null, offer: {state: 'offered', updatedAt: 0}, tasks: [], artifacts: [], notices: [], requests: []});
 
-// `side` lists writes to private keys that land atomically with the document:
-// {key, op: 'set', value, ttlMs}, {key, op: 'expire', ttlMs} or {key, op: 'del'}.
+// `side` lists writes that land atomically with the document: private keys
+// ({key, op: 'set', value, ttlMs}, {key, op: 'expire', ttlMs}, {key, op: 'del'})
+// and the due index ({key, op: 'zadd', value: member, score}, {key, op: 'zrem', value: member}).
 export function createMemoryWorkplaceStore({now = Date.now} = {}) {
-  const records = new Map(), values = new Map();
+  const records = new Map(), values = new Map(), indexes = new Map();
+  const index = key => { if (!indexes.has(key)) indexes.set(key, new Map());return indexes.get(key); };
   const live = key => { const record = values.get(key);return record && record.until > now() ? record : null; };
   return {
     async load(key) {
@@ -35,12 +37,18 @@ export function createMemoryWorkplaceStore({now = Date.now} = {}) {
       if ((records.get(key)?.revision ?? 0) !== expectedRevision) return false;
       records.set(key, {revision: expectedRevision + 1, doc: JSON.stringify(value), until: now() + ttlMs});
       for (const write of side) {
-        if (write.op === 'del' || write.ttlMs <= 0) values.delete(write.key);
+        if (write.op === 'zadd') index(write.key).set(write.value, write.score);
+        else if (write.op === 'zrem') index(write.key).delete(write.value);
+        else if (write.op === 'del' || write.ttlMs <= 0) values.delete(write.key);
         else if (write.op === 'set') values.set(write.key, {value: JSON.stringify(write.value), until: now() + write.ttlMs});
         else if (write.op === 'expire' && live(write.key)) values.get(write.key).until = now() + write.ttlMs;
       }
       return true;
     },
+    // Members due by `at`, earliest first, as {member, score}.
+    async due(key, at, count) { return [...index(key)].filter(([, score]) => score <= at).sort((a, b) => a[1] - b[1]).slice(0, count).map(([member, score]) => ({member, score})); },
+    // Removes a member only if nobody re-scored it since it was read.
+    async undue(key, member, score) { if (index(key).get(member) === score) index(key).delete(member); },
   };
 }
 
@@ -52,12 +60,18 @@ redis.call('HSET', KEYS[1], 'revision', revision + 1, 'doc', ARGV[2])
 redis.call('PEXPIRE', KEYS[1], ARGV[3])
 for i = 2, #KEYS do
   local base = 3 + (i - 2) * 3
-  local op, value, ttl = ARGV[base + 1], ARGV[base + 2], tonumber(ARGV[base + 3])
-  if op == 'del' or ttl <= 0 then redis.call('DEL', KEYS[i])
-  elseif op == 'set' then redis.call('SET', KEYS[i], value, 'PX', ttl)
-  elseif op == 'expire' then redis.call('PEXPIRE', KEYS[i], ttl) end
+  local op, value, number = ARGV[base + 1], ARGV[base + 2], tonumber(ARGV[base + 3])
+  if op == 'zadd' then redis.call('ZADD', KEYS[i], number, value)
+  elseif op == 'zrem' then redis.call('ZREM', KEYS[i], value)
+  elseif op == 'del' or number <= 0 then redis.call('DEL', KEYS[i])
+  elseif op == 'set' then redis.call('SET', KEYS[i], value, 'PX', number)
+  elseif op == 'expire' then redis.call('PEXPIRE', KEYS[i], number) end
 end
 return 1
+`;
+const UNDUE = `
+if redis.call('ZSCORE', KEYS[1], ARGV[1]) == ARGV[2] then return redis.call('ZREM', KEYS[1], ARGV[1]) end
+return 0
 `;
 export function createRedisWorkplaceStore({redis, prefix}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^\{[^{}]+\}$/.test(prefix)) throw new Error('Invalid workplace storage');
@@ -70,9 +84,15 @@ export function createRedisWorkplaceStore({redis, prefix}) {
     async read(key) { const value = await redis.get(full(key));return value ? JSON.parse(value) : null; },
     // Each write extends the document's life; an abandoned owner's data expires with the retention period.
     async save(key, expectedRevision, value, ttlMs, side = []) {
-      const args = side.flatMap(write => [write.op, write.op === 'set' ? JSON.stringify(write.value) : '', write.op === 'del' ? 0 : Math.ceil(write.ttlMs)]);
+      const args = side.flatMap(write => [write.op, write.op === 'set' ? JSON.stringify(write.value) : write.op.startsWith('z') ? write.value : '',
+        write.op === 'zadd' ? write.score : write.op === 'del' || write.op === 'zrem' ? 0 : Math.ceil(write.ttlMs)]);
       return await redis.eval(SAVE, 1 + side.length, full(key), ...side.map(write => full(write.key)), expectedRevision, JSON.stringify(value), Math.ceil(ttlMs), ...args) === 1;
     },
+    async due(key, at, count) {
+      const flat = await redis.zrangebyscore(full(key), '-inf', at === Infinity ? '+inf' : at, 'WITHSCORES', 'LIMIT', 0, count);
+      const out = [];for (let i = 0; i < flat.length; i += 2) out.push({member: flat[i], score: Number(flat[i + 1])});return out;
+    },
+    async undue(key, member, score) { await redis.eval(UNDUE, 1, full(key), member, String(score)); },
   };
 }
 
@@ -112,12 +132,15 @@ export function fixtureEventPlan(brief, places) {
 // `allowed(userId)` reports whether the owner may still use the town (approved,
 // not banned). Requests already pass that gate; the service timer has no
 // request, so it asks before every unattended step.
+// `sweepMs` (long-lived services only; 0 is off) periodically drives every
+// overdue task in the due index, so a task whose instance died still finishes.
 export function createWorkplace({now = Date.now, store = createMemoryWorkplaceStore({now}), createId = randomUUID, limits = {}, stepMs = 1500,
-  allowed = async () => true,
+  allowed = async () => true, sweepMs = 0,
   schedule = (fn, ms) => { const timer = setTimeout(fn, ms); timer.unref?.(); return timer; }, cancel = clearTimeout} = {}) {
   const limit = {...WORKPLACE_LIMITS, ...limits};
   const ownerKey = userId => `owner:${sha256(userId)}`;
   const workKey = (userId, taskId) => `work:${sha256(userId)}:${taskId}`;
+  const DUE = 'due';
   const holder = userId => sha256(userId);
   const timers = new Map();let closed = false;
   async function mutate(key, change, initial = empty, ttlMs = limit.retentionMs, sideFor = () => []) {
@@ -142,6 +165,9 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
         task.storedUntil = task.finishedAt + limit.retentionMs;
         if (!touched.has(workKey(userId, task.id))) side.push({key: workKey(userId, task.id), op: 'expire', ttlMs: task.storedUntil - t});
       }
+      // The due index lists owners whose task is waiting for its next step; a paused task needs no runner.
+      const due = doc.tasks.find(task => task.status === 'queued' || task.status === 'running');
+      side.push(due ? {key: DUE, op: 'zadd', value: userId, score: due.status === 'queued' ? t : due.nextAt ?? t} : {key: DUE, op: 'zrem', value: userId});
       return side;
     });
   }
@@ -230,17 +256,34 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
   }
   // A long-lived service drives steps with a timer; a serverless request
   // drives them on the owner's next read. Either way each step is atomic.
+  // One unattended step. A failed access check throws and runs nothing.
+  async function unattended(userId) {
+    if (!await allowed(userId)) {await suspend(userId);return {waitMs: null};}
+    return advance(userId);
+  }
   function drive(userId, delay = 0) {
     if (closed || timers.has(userId)) return;
     timers.set(userId, schedule(async () => {
       timers.delete(userId);
-      try {
-        // A failed check throws and runs nothing; the owner's next authorized read retries.
-        if (!await allowed(userId)) {await suspend(userId);return;}
-        const result = await advance(userId);if (result?.waitMs != null) drive(userId, result.waitMs);
-      } catch { /* The next read retries. */ }
+      try { const result = await unattended(userId);if (result?.waitMs != null) drive(userId, result.waitMs); }
+      catch { /* The next read or sweep retries. */ }
     }, delay));
   }
+  // Every instance may sweep; compare-and-set lets each step land once.
+  async function sweep() {
+    for (const {member, score} of await store.due(DUE, now(), 50)) {
+      if (closed || timers.has(member)) continue;
+      try {
+        const result = await unattended(member);
+        if (result?.waitMs != null) drive(member, result.waitMs);
+        // Nothing to run (the document expired or the task settled elsewhere): drop a stale entry.
+        else if (result !== BUSY) await store.undue(DUE, member, score);
+      } catch { /* The next sweep retries. */ }
+    }
+  }
+  let sweeper = null;
+  const loop = () => { if (closed || !sweepMs) return;sweeper = schedule(async () => { try { await sweep(); } finally { loop(); } }, sweepMs); };
+  loop();
   const STATIONS = () => ({stations: {}}), stationTtl = () => 2 * limit.stationLeaseMs;
   async function stations() { return mutate('stations', doc => ({write: false, value: doc}), STATIONS); }
   const heldBy = (map, userId, t) => STATION_IDS.find(station => map[station]?.holder === holder(userId) && map[station].until > t) ?? null;
@@ -458,7 +501,7 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
         return {id: station, occupied: Boolean(held), mine: held?.holder === holder(actor.userId)};
       })};
     },
-    close() { closed = true;for (const timer of timers.values()) cancel(timer);timers.clear(); },
+    close() { closed = true;if (sweeper) cancel(sweeper);for (const timer of timers.values()) cancel(timer);timers.clear(); },
   };
   async function control(actor, taskId, allowed, change) {
     const result = await owner(actor, (doc, t) => {
