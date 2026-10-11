@@ -16,9 +16,10 @@ const brief = {purpose: 'A small welcome for a new neighbour', guestOfHonor: 'Mi
 const owner = {userId: 'owner-user', name: 'Owner'}, guest = {userId: 'guest-user', name: 'Guest'};
 const STEP = 1000;
 
-function harness(store) {
+function harness(makeStore, limits = {}) {
   let time = 1_000_000, ids = 0;
-  const workplace = createWorkplace({store, now: () => time, stepMs: STEP, createId: () => `id-${String(++ids).padStart(6, '0')}`, schedule: () => null, cancel: () => {}});
+  const now = () => time, store = makeStore(now);
+  const workplace = createWorkplace({store, now, stepMs: STEP, limits, createId: () => `id-${String(++ids).padStart(6, '0')}`, schedule: () => null, cancel: () => {}});
   return {workplace, store, tick: ms => { time += ms; }, get now() { return time; }};
 }
 async function ready(h, actor = owner) {
@@ -30,12 +31,14 @@ async function runToEnd(h, actor = owner) {
   for (let i = 0; i < 8; i++) { h.tick(STEP);await h.workplace.advance(actor.userId); }
   return (await h.workplace.state(actor)).state;
 }
-const stores = [['memory', async () => createMemoryWorkplaceStore()]];
+const stores = [['memory', async () => now => createMemoryWorkplaceStore({now})]];
 if (process.env.REDIS_URL) stores.push(['redis', async t => {
   const redis = new Redis(process.env.REDIS_URL);redis.on('error', () => {});
   const prefix = `{river-oaks:workplace-test:${randomUUID()}}`;
   t.after(async () => { const keys = await redis.keys(`${prefix}*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
-  return createRedisWorkplaceStore({redis, prefix});
+  const store = createRedisWorkplaceStore({redis, prefix});
+  store.redis = redis;store.prefix = prefix;
+  return () => store;
 }]);
 
 test('the contract rejects unknown actions, forged authority fields, bad ids and oversized text', () => {
@@ -165,10 +168,6 @@ for (const [name, makeStore] of stores) {
     ({taskId} = await h.workplace.submit(owner, {brief, requestId: 'request-0002'}, {worldId: 'river-oaks', places}));
     assert.equal((await h.workplace.cancel(owner, {taskId})).ok, true);
     assert.equal((await runToEnd(h)).artifacts.length, 1, 'a cancelled task saves nothing');
-    ({taskId} = await h.workplace.submit(owner, {brief, requestId: 'request-0003'}, {worldId: 'river-oaks', places}));
-    h.tick(STEP);await h.workplace.advance(owner.userId);
-    h.tick(WORKPLACE_LIMITS.deadlineMs + 1);await h.workplace.advance(owner.userId);
-    assert.equal((await h.workplace.state(owner)).state.tasks.find(task => task.id === taskId).reason, 'deadline');
     for (const requestId of ['request-0004', 'request-0005']) { await h.workplace.submit(owner, {brief, requestId}, {worldId: 'river-oaks', places });await runToEnd(h); }
     assert.equal((await h.workplace.state(owner)).state.artifacts.length, 3);
     assert.equal((await h.workplace.submit(owner, {brief, requestId: 'request-0006'}, {worldId: 'river-oaks', places})).reason, 'artifact_limit');
@@ -201,3 +200,72 @@ for (const [name, makeStore] of stores) {
     assert.equal((await h.workplace.ack(owner, {noticeId: `result:${taskId}`})).state.offer.state, 'reviewed');
   });
 }
+
+for (const [name, makeStore] of stores) {
+  test(`${name}: the deadline counts working time, and an expired grant is reported as expired`, async t => {
+    const h = harness(await makeStore(t), {deadlineMs: 1500, grantMs: 10 * STEP});
+    await ready(h);
+    const {taskId} = await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    const state = await runToEnd(h);
+    assert.equal(state.tasks.find(task => task.id === taskId).reason, 'deadline');
+    const late = harness(await makeStore(t), {grantMs: 3 * STEP});
+    await ready(late);
+    await late.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    const after = await runToEnd(late);
+    assert.equal(after.tasks[0].status, 'cancelled');assert.equal(after.tasks[0].reason, 'grant_expired');
+  });
+
+  test(`${name}: a reader returning after a long absence resumes the task instead of failing it`, async t => {
+    const h = harness(await makeStore(t));
+    await ready(h);
+    await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    h.tick(STEP);await h.workplace.advance(owner.userId);
+    h.tick(10 * 60_000);
+    const state = await runToEnd(h);
+    assert.equal(state.tasks[0].status, 'completed', 'ten minutes with nobody reading is one recovery, not a deadline');
+    assert.equal(state.tasks[0].attempts, 1);
+  });
+
+  test(`${name}: deleting a draft forgets its brief and finished briefs follow retention`, async t => {
+    const h = harness(await makeStore(t));
+    await ready(h);
+    await h.workplace.submit(owner, {brief, requestId: 'request-0001'}, {worldId: 'river-oaks', places});
+    let state = await runToEnd(h);
+    state = (await h.workplace.delete(owner, {artifactId: state.tasks[0].artifactId})).state;
+    assert.equal(JSON.stringify(state).includes(brief.purpose), false, 'the brief goes with the draft');
+    const {taskId} = await h.workplace.submit(owner, {brief, requestId: 'request-0002'}, {worldId: 'river-oaks', places});
+    await h.workplace.cancel(owner, {taskId});
+    h.tick(WORKPLACE_LIMITS.retentionMs + 1);
+    state = (await h.workplace.state(owner)).state;
+    assert.equal(state.tasks.length, 0, 'a cancelled brief expires too');
+    if (h.store.redis) {
+      const ttl = await h.store.redis.pttl(`${h.store.prefix}:workplace:v1:owner:${createHash('sha256').update(owner.userId).digest('hex')}`);
+      assert.ok(ttl > 0 && ttl <= WORKPLACE_LIMITS.retentionMs, 'abandoned owner data expires in Redis');
+    }
+  });
+
+  test(`${name}: desks follow the owner's choice even when writes race or fail`, async t => {
+    const h = harness(await makeStore(t));
+    await h.workplace.companion(owner, {name: 'Pip'});
+    assert.equal((await h.workplace.presence(owner, {mode: 'stationed'})).state.companion.presence.stationId, 'station-1');
+    // A racing write leaves the companion offstage while the desk is still held.
+    const key = `owner:${createHash('sha256').update(owner.userId).digest('hex')}`;
+    const loaded = await h.store.load(key);loaded.value.companion.presence = {mode: 'offstage'};
+    assert.equal(await h.store.save(key, loaded.revision, loaded.value, 60_000), true);
+    assert.equal((await h.workplace.occupancy(guest)).stations[0].occupied, true);
+    await h.workplace.state(owner);
+    assert.equal((await h.workplace.occupancy(guest)).stations.every(station => !station.occupied), true, 'the next read gives the desk back');
+  });
+}
+
+test('a desk write that keeps losing is reported as busy, never as a reserved desk', async () => {
+  const inner = createMemoryWorkplaceStore();
+  const store = {load: key => inner.load(key), save: (key, ...rest) => key === 'stations' ? false : inner.save(key, ...rest)};
+  const workplace = createWorkplace({store, stepMs: 0, schedule: () => null, cancel: () => {}});
+  await workplace.companion(owner, {name: 'Pip'});
+  const result = await workplace.presence(owner, {mode: 'stationed'});
+  assert.equal(result.ok, false);assert.equal(result.reason, 'workplace_busy');
+  const state = (await workplace.state(owner)).state;
+  assert.equal(state.companion.presence.stationId, null);
+  assert.notEqual(state.companion.presence.mode, 'stationed');
+});

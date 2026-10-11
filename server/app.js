@@ -31,7 +31,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000);
   const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
@@ -190,7 +190,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await workplaceAction({action:pathname.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
-          listPlaces:async()=>world.listPlaces?.()??[],allowWrite:id=>workplaceWrites(id),now});
+          listPlaces:async()=>world.listPlaces?.()??[],allowWrite:id=>workplaceWrites(id),allowRead:id=>workplaceReads(id),now});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {

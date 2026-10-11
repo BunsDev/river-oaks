@@ -225,7 +225,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await workplaceAction({action:path.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
-          listPlaces:()=>room.listPlaces(),allowWrite:id=>security.allow('workplace',id,30,60_000),now});
+          listPlaces:()=>room.listPlaces(),allowWrite:id=>security.allow('workplace',id,30,60_000),allowRead:id=>security.allow('workplace_read',id,120,60_000),now});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
