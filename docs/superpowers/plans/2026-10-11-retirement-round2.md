@@ -150,3 +150,29 @@ delivery checkout. Durable handoff records sourceOwnerReleased and unchanged109
 receipt hashes; this thread owns guarded post-PR223 retirement in the supplied
 order. Renewed all six owned claims and imported the current primary Cartier
 claim without touching its source tree. Source owner may archive its chat.
+
+## Final delivery and retirement — 2026-10-11
+
+PR223 merged at 2026-10-11T09:07:37Z: reviewed head `064e1dc4e7012a7c6948ac7661c76e912f56812a`,
+main merge `eb62862615f8a2ef5798e4eff213f811431a9e79`. Actual merge tree equals the reviewed
+head tree. All ten hosted checks passed, including preview and both Python
+matrices; Vercel status also passed. Source PR200 and PR215 are merged.
+
+Eleven worktrees were retired in this deeper round. The live snapshot now has
+9 worktrees and 9 local branches (started at17/17); three concurrent new
+worktrees belong to dependency delivery and Workplace work. Six final task
+records now say retired with exact archive refs, bundle hashes and path/ref
+absence. See [the final manifest](../../project-management/retirement-20261011-final.json).
+
+Both sign-in drafts, their source-reconciliation checkout, Storybook checkout,
+cleanup branch and this thread's minimap checkout are retired. All276 local
+files from the minimap checkout remain hash-verified in its restore-tested
+archive, including native and browser receipts. Source archives and original
+failed checks remain intact; no forced removal was used.
+
+Primary staged patch and unique stash are unchanged. Cartier, Dior, Jevica,
+SDK and World Studio source work remains protected, as do new concurrent tasks.
+Core11, focused browser checks and exact-head hosted verification support this
+delivery; native, live-auth, production and human accessibility acceptance are
+not claimed for the minimap. This source task is complete and retired. Final
+receipt publication uses a separate temporary index and no new local worktree.
