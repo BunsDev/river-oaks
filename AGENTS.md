@@ -61,3 +61,8 @@ archive/remove a worktree containing undelivered edits.
 
 Reconcile task status and next action at handoff. Mark delivered only with exact
 PR/merge evidence, and retired only with cleanup and restoration proof.
+
+Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` for local
+retirement; dry-run first, then `--apply` after resolving blockers. Do not bypass
+the installed ref guard or remove worktrees directly. See the lifecycle workflow
+for exact-head ownership release and restoration requirements.

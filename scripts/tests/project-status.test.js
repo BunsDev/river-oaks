@@ -62,3 +62,20 @@ test('discovered open PR head divergence is a gap without a recorded PR number',
   assert.ok(r.gaps.some(gap=>gap.includes('local and PR heads differ')));
   assert.equal(r.branches[0].disposition,'preserve');
 });
+
+test('delivered local branches remain a reconciliation gap until actually retired', () => {
+  const task={id:'done',status:'delivered',branches:[delivered.branch],owner:null};
+  const r=reconcile({branches:[delivered],worktrees:[]},{tasks:[task]},[]);
+  assert.ok(r.gaps.some(gap=>gap.includes('Pending local retirement: done (fix/done)')));
+  const removed=reconcile({branches:[],worktrees:[]},{tasks:[{...task,status:'retired'}]},[]);
+  assert.deepEqual(removed.gaps,[]);
+});
+
+test('protected default and primary branches never become retirement debt', () => {
+  for(const branch of ['main','master','trunk','primary-checkout']) {
+    const task={id:'delivered-on-protected',status:'delivered',branches:[branch],owner:null};
+    const snapshot={defaultBranch:'trunk',branches:[{...delivered,branch}],worktrees:branch==='primary-checkout'?[{branch,primary:true}]:[]};
+    const r=reconcile(snapshot,{tasks:[task]},[]);
+    assert.ok(!r.gaps.some(gap=>gap.includes('Pending local retirement')));
+  }
+});
