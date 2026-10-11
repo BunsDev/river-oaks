@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+hook_dir=$(dirname "$0")
+guard="$hook_dir/project-ref-guard.mjs"
+if [ ! -f "$guard" ]; then
+  guard="$hook_dir/../scripts/project-ref-guard.mjs"
+fi
+installed_node=''
+# GUI Git clients may not inherit the shell's Node PATH.
+for candidate in "$(command -v node 2>/dev/null || true)" "$installed_node" /opt/homebrew/bin/node /usr/local/bin/node "$HOME"/.nvm/versions/node/*/bin/node; do
+  if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+    exec "$candidate" "$guard" "$@"
+  fi
+done
+echo "project-ref-guard: node not found; install Node or configure the Git client's PATH" >&2
+exit 1

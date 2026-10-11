@@ -8,7 +8,7 @@
     "pnpm": "10.34.5"
   },
   "scripts": {
-    "prepare": "node scripts/enforce-pnpm.mjs && (git config core.hooksPath .githooks 2>/dev/null || true)",
+    "prepare": "node scripts/enforce-pnpm.mjs && node scripts/install-project-hooks.mjs",
     "dev": "vite --config preview/vite.config.js",
     "dev:landing": "vite --config landing-page/vite.config.js",
     "build": "vite build --config preview/vite.config.js && node scripts/build_landing_page.js",
@@ -67,7 +67,9 @@
     "project:status": "node scripts/project-status.mjs",
     "project:check": "node scripts/project-status.mjs --check",
     "preproject:status": "node scripts/enforce-pnpm.mjs",
-    "preproject:check": "node scripts/enforce-pnpm.mjs"
+    "preproject:check": "node scripts/enforce-pnpm.mjs",
+    "project:prune": "node scripts/project-prune.mjs",
+    "preproject:prune": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",

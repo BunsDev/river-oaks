@@ -51,7 +51,7 @@ and retirement. Do not overwrite historical reports with new timestamps.
 Run `pnpm run --silent project:check --github` at session start and handoff.
 Exit 0 means the register passed validation and no tracked reconciliation gaps
 were found; 1 means gaps such as unregistered branches, mismatched PR heads,
-expired ownership, or resurrected retired refs; 2 means input/tool failure.
+expired ownership, delivered tasks retaining local branches, or resurrected retired refs; 2 means input/tool failure.
 None of these exit codes proves that the project is complete or safe to delete.
 Without `--github`, remote delivery is explicitly unknown. Process CWDs are only
 positive activity evidence; absence is not proof that no agent owns a task.
@@ -82,11 +82,10 @@ Keep ignored reports/private local evidence in a restricted archive and verify i
 contents. Do not print credential values or copy private state into another runtime.
 Only explicitly identified regenerable dependencies/caches are disposable.
 
-Remove a worktree with `git worktree remove` without force. Delete its local branch
-only after it is no longer checked out. Use `git branch -d` when ancestry permits;
-for a restore-tested archive-backed tip, use `git update-ref -d refs/heads/<branch>
-<expected-full-sha>`. Never use `branch -D`, recursive worktree deletion, fabricated
-merge commits, or unconditional ref deletion. A failed safety check is a skip.
+Use `project:prune` below for local removal. It performs non-forced worktree removal
+and exact-SHA ref deletion only after its executable checks pass. Never bypass the
+reference hook, use `branch -D`, recursively delete a worktree, or fabricate merge
+ancestry. A failed safety check is a skip requiring reconciliation.
 
 Remote branch deletion and discarding distinct unfinished work need explicit scope
 approval. Local cleanup does not imply either. Preserve archive tags, bundles,
@@ -102,3 +101,56 @@ inspection; never apply private state to a live service automatically.
 The 2026-10-11 round is recorded in `retirement-20261011.json`; bundles and local
 artifacts live under `~/worktree-backups/river-oaks-20261011/`. The register captures
 known unfinished work rather than treating this round as global task completion.
+
+## Enforced local retirement
+
+`project:check` exits nonzero while a delivered task retains a non-protected local branch.
+Primary/default branches are excluded from retirement debt.
+A blocked cleanup stays visible until its evidence is reconciled; do not relabel
+the task active or retired to hide the gap.
+
+Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` to
+refresh GitHub/Git evidence and report blockers. Add `--apply` to retire that exact
+local branch and its worktree. There is no bulk, force, remote-delete or age-based
+mode. The command reads the **primary checkout's** task register so stale copies in
+feature worktrees cannot release another owner's work.
+
+Before applying, the task owner must release the delivered task (`owner: null`,
+remove `leaseUntil`) and record `retirement: { head, releasedAt, sessionsReviewedAt }`.
+Both timestamps must be within two hours. `sessionsReviewedAt` attests that the
+owner actually checked running agent sessions; an expired lease or no process CWD
+is not sufficient. These are coordination attestations, not authenticated locks.
+
+The command requires the exact merged PR head, its merge on the fetched default
+branch, and identical candidate/merge trees. A source branch alias is accepted only
+when its full tip SHA exactly matches that merged PR head. Other squash/rebase/supersession cases
+remain blocked for aggregate review. It refuses dirty/untracked/ignored material,
+submodules, locks, operations in progress, active process CWDs, unknown activity,
+open PRs, and missing proof. Retain ignored evidence separately first; this tool
+never deletes cache directories or private files to make a checkout removable.
+
+Apply takes a common-Git-directory lock, preserves the exact tip in a unique
+archive tag, creates a self-contained bundle outside all worktrees, fetches it into
+a fresh bare repository, compares the SHA and runs `git fsck --full`. It then
+rechecks ownership, GitHub, activity, worktree registrations and clean state before
+non-forced removal and expected-SHA ref deletion. The external manifest records
+partial progress as well as success. The primary task register is updated only
+after deletion postconditions pass. A multi-branch task remains delivered until
+all its recorded branches have been retired.
+
+Backups default to `~/worktree-backups/river-oaks/`; `--archive-root` must point
+outside every checkout. Preserve its manifest, bundle, checksum and restore-tested
+bare repository. A crash may leave `river-oaks-retirement.lock` in the common Git
+directory: inspect its owner activity and external receipts before manually
+reconciling it; the tool never steals a lock.
+
+`pnpm install` (prepare) and `sh scripts/install-hooks.sh` install a shared
+reference-transaction hook alongside the secret guard in the common Git directory.
+All existing worktrees use that absolute hook path, independent of their revision.
+Custom hook paths are preserved and require manual integration. It rejects direct local branch deletion (including `branch -D` and
+`update-ref -d`) and deletion of archive tags. The guarded command grants a short
+exact-ref/SHA permit only after verification. Normal commits, fetches and pushes
+are unaffected. Git offers no hook for `git worktree remove` or registration pruning: use this command as
+the supported removal path. Hooks are an accidental-deletion guard, not a security
+boundary; an explicit hooks override (including an older bootstrap resetting hooksPath) can
+bypass them. This command does not install a background cleanup scheduler.
