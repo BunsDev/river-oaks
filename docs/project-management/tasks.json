@@ -1365,6 +1365,35 @@
       ]
     },
     {
+      "id": "workplace-221-adversarial",
+      "title": "Workplace #221 (part): adversarial real-boundary suite and kill-switch/retention write-up",
+      "status": "active",
+      "branches": [
+        "test/workplace-221-adversarial"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T10:26:00+00:00",
+      "leaseUntil": "2026-10-11T12:26:00+00:00",
+      "nextAction": "Write the adversarial HTTP/Redis-gateway cases (cross-owner, malicious place text, edited approvals, revoke during work, duplicate callbacks, worker/gateway loss, effect before ack) and document flags, rollback and retention.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
+      "filesOwned": [
+        "server/tests/adversarial-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md"
+      ],
+      "requiredChecks": [
+        "Adversarial suite on memory and isolated Redis",
+        "Full server suite with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-slice (PR #227); stacked on feat/workplace-slice-20261011 until it merges, then rebased onto main"
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "active",
