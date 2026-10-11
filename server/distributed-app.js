@@ -83,10 +83,13 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
-  function publish(view) {
+  // Sends the committed view. The snapshot is serialized once per broadcast, not
+  // once per connection; `only` limits it to one connection (a command's sender).
+  function publish(view, only = null) {
     if (!view) return;
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
-    for (const connection of connections.values()) {
+    let frame = null;
+    for (const connection of only ? [only] : connections.values()) {
       if (!connection.joined) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
@@ -105,7 +108,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, view.snapshot, { snapshot: true });
+      send(ws, frame ??= JSON.stringify(view.snapshot), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -396,7 +399,9 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
-            if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read());
+            // The sender sees its result at once; everyone else gets it on the next
+            // 200 ms tick, instead of a full rebroadcast per command.
+            if (result.ok && command.type !== 'pose' && command.type !== 'inventory') publish(await room.read(), connection);
             if (!earlyAck && (requestId !== undefined || !result.ok)) send(ws, { type: 'result', requestId, ...result });
           }).catch(() => { ws.close(1013, 'Town temporarily unavailable.'); }).finally(() => { if (!coalescible) connection.pending--; });
         });
