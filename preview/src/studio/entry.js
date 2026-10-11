@@ -1,3 +1,7 @@
+import { setupThemeControls } from '../theme.js';
+
+// Follow the game's Appearance preference (System by default) before anything renders.
+setupThemeControls();
 // The hosted chunks are gated by the same middleware as the game. Check again
 // before starting, including on local Vite where production middleware is absent.
 const host=document.querySelector('#studio');
