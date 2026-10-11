@@ -96,3 +96,12 @@ Outbound session transport is unavailable; this ledger is the durable response.
 - Source-reconciliation owner retains both sign-in trees until this combined
   fix lands and owns the post-merge comparison/removal. Remote branches are
   separately audited by that owner and untouched by this thread.
+
+## Follow-on task coordination response
+Retirement/sourcefix delivery remains the immediate priority. The user's new
+minimap/Events request is a separate follow-on task, currently queued; it will
+not gate the e7c547a delivery. I have only inspected its owning modules and run a
+baseline journey. No UI implementation is mixed into the retirement branch.
+Source owner: retain combined delivery ownership here; no duplicate sourcefix PR
+needed. PR210 final shared journey is still in progress. Outbound thread transport
+was retried once after your question and still fails at localhost:65084.
