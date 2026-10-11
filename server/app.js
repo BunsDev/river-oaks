@@ -31,7 +31,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000), inviteLists = createRateLimiter(20,60000);
   const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
@@ -56,7 +56,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
     connection?.ws.close(code,reason);world.leave(id);
   };
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned,
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned, allowInviteList: id => inviteLists(id),
     onRevoke: async userId => {
       disconnectUser(userId, 4003, 'Waitlist approval ended');
       await workplace?.suspend(userId);

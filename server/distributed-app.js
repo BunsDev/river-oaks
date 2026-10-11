@@ -79,7 +79,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, isBanned: id => security.isBanned(id),
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, allowInviteList: id => security.allow('invites', id, 20, 60_000), isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });

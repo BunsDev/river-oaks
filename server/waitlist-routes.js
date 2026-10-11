@@ -13,7 +13,7 @@ const json = (res, status, value) => {
 
 // `assetGateSecret` (hosted deployments) lets an approved status reply carry the
 // signed pass the static-asset middleware checks without calling the server.
-export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {}, isBanned = async () => false, assetGateSecret = null, now = Date.now }) {
+export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {}, isBanned = async () => false, assetGateSecret = null, now = Date.now, allowInviteList = async () => true }) {
   const adminIds = new Set(admins);
   return async (req, res, path) => {
     if (!['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/waitlist/invites',
@@ -32,6 +32,8 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       return true;
     }
     if (path === '/api/waitlist/invites') {
+      // Listing reads the whole invite table, so each account may list only so often.
+      if (!await allowInviteList(identity.userId)) { json(res, 429, { error: 'too_many_requests' }); return true; }
       json(res, 200, { invites: await waitlist.listInvites({ userId: identity.userId }) }); return true;
     }
     if (path !== '/api/waitlist/invite-redeem' && !adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
