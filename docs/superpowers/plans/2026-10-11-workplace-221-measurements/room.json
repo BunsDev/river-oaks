@@ -1,0 +1,70 @@
+{
+  "renderer": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+  },
+  "viewport": [
+    1280,
+    800
+  ],
+  "frames": [
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.3999999761581421,
+      "calls": 38,
+      "triangles": 3142
+    },
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.20000004768371582,
+      "calls": 38,
+      "triangles": 3142
+    },
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.6000000238418579,
+      "calls": 38,
+      "triangles": 3142
+    }
+  ],
+  "entries": [
+    {
+      "entered": 0,
+      "jsHeapUsedMB": 8.44,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 20,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.55,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 120,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.7,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 320,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.93,
+      "nodes": 18,
+      "listeners": 21
+    }
+  ]
+}

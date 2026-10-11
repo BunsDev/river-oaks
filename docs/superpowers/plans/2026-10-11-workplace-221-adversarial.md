@@ -38,6 +38,26 @@
   - Both are defense in depth, covered at the store level by `revoking while running … a stale writer cannot commit` in `server/tests/workplace.test.js`.
 - Results at the final head are in the PR.
 
+## Measurements (#221 subtask 3)
+
+I took these on 2026-10-11 from `test/workplace-221-adversarial`, on an Apple M3 Max running headless Chromium through ANGLE Metal, against a local isolated Redis. Other sessions had seven headless Chromium processes running at the same time. The scripts and raw JSON are in [`2026-10-11-workplace-221-measurements/`](2026-10-11-workplace-221-measurements/). Run them from the repo root:
+
+- `node <dir>/room.mjs`
+- `REDIS_URL=… node <dir>/service.mjs`
+- `node <dir>/payload.mjs <build-off> <build-on>`, after two `vite build --outDir` runs with `VITE_WORKPLACE=false` and then `true`
+
+| Measure | Result | Limits |
+| --- | --- | --- |
+| Client payload | `VITE_WORKPLACE=true` adds 10,951 B raw and 3,715 B gzip, all in `main.js`, which is +0.7% of 522 KB gzip. Turned off, the build carries the same code minus the panel mount. | The panel is in the main bundle, not a lazy chunk. |
+| Frame time, graybox at CAM-01 with the companion seated and working, 1280×800, vsync off | Three runs of 180 frames: p50 0.1 ms, p95 0.2–0.6 ms, 38 draw calls, 3,142 triangles | Each frame is one `render` plus `gl.finish()` on the fixture site alone. This is not a district frame or a device budget. There is no A/B against `main`, because the room doesn't exist there. |
+| Memory after repeated entry | Geometry stays at 21 through 2,320 rebuilds. JS heap after forced GC: 8.44 MB at 0 entries, 8.93 MB at 320, then 9.02 MB at 2,320, so it levels off (warm-up, not a leak). DOM nodes stay at 18 and listeners at 21. | Fixture page only. GPU memory is not measured. |
+| Task completion, real service timer (`stepMs` 1500) | 5 trials: 6,032–6,069 ms (p50 6,039) from submit to completed, with no reads | Fixture adapter. |
+| Recovery after gateway loss | Outage of 3 s, inside the lease: 5 of 5 completed about 3.1 s after the replacement, `attempts` 0. Outage of 12 s, past the 10 s lease: 3 of 3 completed about 3.1 s after the replacement, `attempts` 1. Every trial ended with exactly 1 draft and 1 notice. | Single local Redis. |
+| Response size | `state` 1,510 B; `artifact` 2,088 B; `occupancy` 120 B | One completed task and one draft. |
+| Storage per owner | Owner key 6,474 B (`MEMORY USAGE`), of which the document is 5,631 B. TTL 30 days. Stations key 428 B. | One task and one draft. The cap is 3 drafts × 256 KiB. |
+
+**Not measured:** daytime and evening routes. The fixture has one fixed light rig, and the room isn't placed in the district until Val picks a site. Mobile and lower-tier devices, GPU memory, and hosted latency weren't measured either.
+
 ## Gaps
 
 - No live WorkOS, hosted Redis, or multi-region run.

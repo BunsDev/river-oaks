@@ -1366,21 +1366,22 @@
     },
     {
       "id": "workplace-221-adversarial",
-      "title": "Workplace #221 (part): adversarial real-boundary suite and kill-switch/retention write-up",
+      "title": "Workplace #221: adversarial suite, operations write-up, measurements, profiles, evidence and decision (handed off by river-oaks-55)",
       "status": "active",
       "branches": [
         "test/workplace-221-adversarial"
       ],
       "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T10:34:00+00:00",
-      "leaseUntil": "2026-10-11T12:34:00+00:00",
-      "nextAction": "After #227 merges: rebase onto main, retarget PR #230 to main, pass hosted CI, then deliver with the merge guard.",
+      "updatedAt": "2026-10-11T10:50:00+00:00",
+      "leaseUntil": "2026-10-11T12:50:00+00:00",
+      "nextAction": "After #227 merges: rebase #230 onto main and merge it; run doctor/core/full on main; independent evidence review; post the #221 evidence comment and update #214.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
       "filesOwned": [
         "server/tests/adversarial-workplace.test.js",
         "docs/workplace-operations.md",
         "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
-        ".env.example (workplace flags only)"
+        ".env.example (workplace flags only)",
+        "docs/superpowers/plans/2026-10-11-workplace-221-measurements/"
       ],
       "requiredChecks": [
         "Adversarial suite on memory and isolated Redis",
@@ -1397,7 +1398,8 @@
       "verification": {
         "adversarial": "8 pass, 0 skipped (memory + isolated Redis); 4/6 targeted mutations caught, 2 unreachable via API",
         "server": "455 pass, 0 skipped with isolated Redis",
-        "core": "pnpm run verify: core passed"
+        "core": "pnpm run verify: core passed",
+        "measurements": "payload +3.7 KB gzip; graybox p95 <=0.6 ms; heap plateaus ~9.0 MB over 2,320 entries; completion p50 6.0 s; recovery 3.1 s after replacement (attempts 0/1)"
       }
     },
     {
