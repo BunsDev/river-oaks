@@ -317,7 +317,7 @@ for (const [name, makeStore] of stores) {
 
 test('a desk write that keeps losing is reported as busy, never as a reserved desk', async () => {
   const inner = createMemoryWorkplaceStore();
-  const store = {load: key => inner.load(key), save: (key, ...rest) => key === 'stations' ? false : inner.save(key, ...rest)};
+  const store = {load: key => inner.load(key), read: key => inner.read(key), save: (key, ...rest) => key === 'stations' ? false : inner.save(key, ...rest)};
   const workplace = createWorkplace({store, stepMs: 0, schedule: () => null, cancel: () => {}});
   await workplace.companion(owner, {name: 'Pip'});
   const result = await workplace.presence(owner, {mode: 'stationed'});
