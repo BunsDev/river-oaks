@@ -1,0 +1,4 @@
+interface:
+  display_name: "River Oaks Project Management"
+  short_description: "Keep task ownership and delivery evidence current"
+  default_prompt: "Use $project-management to reconcile River Oaks tasks, ownership, branches, PRs and next actions."

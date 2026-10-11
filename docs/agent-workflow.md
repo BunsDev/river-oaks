@@ -101,3 +101,10 @@ results, and remaining work. Review `git diff --check`, `git diff --stat`, and t
 actual diff. Verify before any commit. Deliver a handoff with branch/worktree,
 changes, tests, proof gaps and next action. Commit/push/merge/deploy require the
 user's task authorization; successful local verification alone grants none.
+
+## Project lifecycle
+
+Use [task ownership and retirement](project-management/workflow.md) at session
+start, delivery and handoff. `npm run --silent project:status -- --github` compares
+local branches/worktrees with the task register and live PRs without changing them.
+`project:check` exits nonzero for reconciliation gaps, not application test failures.
