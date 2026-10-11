@@ -35,7 +35,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000 } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -390,11 +390,21 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       });
     } catch { reject(503); }
   });
+  // One slow or failed Redis call is not an outage: everyone is told to
+  // reconnect only after FAILURES_BEFORE_CLOSE ticks in a row fail, and a
+  // heartbeat failure counts against its own connection only.
+  const FAILURES_BEFORE_CLOSE = 3;
+  let failedTicks = 0;
   const loop = setInterval(async () => {
     if (stopped || ticking || !connections.size) return;
     ticking = true;
-    try { publish(await room.tick()); }
-    catch { for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.'); }
+    try { publish(await room.tick()); failedTicks = 0; }
+    catch {
+      if (++failedTicks >= FAILURES_BEFORE_CLOSE) {
+        failedTicks = 0;
+        for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.');
+      }
+    }
     finally { ticking = false; }
   }, 200);
   loop.unref();
@@ -403,16 +413,20 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     if (stopped || heartbeatBusy) return;
     heartbeatBusy = true;
     try {
-      await Promise.all([...connections.values()].map(async connection => {
+      await Promise.allSettled([...connections.values()].map(async connection => {
         if (!connection.joined) return;
         if (!connection.alive) { connection.ws.terminate(); return; }
         connection.alive = false; connection.ws.ping();
-        await room.request({ type: 'heartbeat', userId: connection.identity.userId, connectionId: connection.connectionId });
-        if (presence) await presence.touch(connection.identity.userId, connection.connectionId);
+        try {
+          await room.request({ type: 'heartbeat', userId: connection.identity.userId, connectionId: connection.connectionId });
+          if (presence) await presence.touch(connection.identity.userId, connection.connectionId);
+          connection.failedBeats = 0;
+        } catch {
+          if ((connection.failedBeats = (connection.failedBeats ?? 0) + 1) >= FAILURES_BEFORE_CLOSE) connection.ws.close(1013, 'Town temporarily unavailable.');
+        }
       }));
-    } catch { for (const { ws } of connections.values()) ws.close(1013, 'Town temporarily unavailable.'); }
-    finally { heartbeatBusy = false; }
-  }, 5000);
+    } finally { heartbeatBusy = false; }
+  }, heartbeatMs);
   heartbeat.unref();
   return { server, disconnectUser, async close() {
     stopped = true; clearInterval(loop); clearInterval(heartbeat);
