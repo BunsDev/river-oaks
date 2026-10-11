@@ -52,6 +52,32 @@ export function nearestMapPlace(places,point,projection,within=20){
   return selected;
 }
 
+// Label only long, visible streets. Keep names upright and the atlas uncluttered.
+export function mapRoadLabels(roads,projection){
+  if(!projection)return [];
+  const candidates=[];
+  for(const road of roads??[]){
+    if(!road.name||['footway','pedestrian','path','service'].includes(road.kind)||!Array.isArray(road.points))continue;
+    let best=null;
+    for(let i=1;i<road.points.length;i++){
+      if(!finitePair(road.points[i-1])||!finitePair(road.points[i]))continue;
+      const a=projection.toMap(road.points[i-1]),b=projection.toMap(road.points[i]);
+      const length=Math.hypot(b[0]-a[0],b[1]-a[1]),position=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      if(length<road.name.length*12+36||position.some(value=>value<80||value>SIZE-80))continue;
+      let angle=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;
+      if(angle>90)angle-=180;if(angle< -90)angle+=180;
+      if(!best||length>best.length)best={name:road.name,position,angle,length};
+    }
+    if(best)candidates.push(best);
+  }
+  const labels=[];
+  for(const {length,...candidate} of candidates.sort((a,b)=>b.length-a.length)){
+    if(labels.some(label=>label.name===candidate.name||Math.hypot(label.position[0]-candidate.position[0],label.position[1]-candidate.position[1])<150))continue;
+    labels.push(candidate);if(labels.length===6)break;
+  }
+  return labels;
+}
+
 export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,shareBase,say,copy}){
   const section=node('details',null,'world-map');section.open=true;
   const summary=node('summary','World map');
@@ -60,14 +86,19 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   const art=svg('svg',{viewBox:`0 0 ${SIZE} ${SIZE}`,'aria-hidden':'true',preserveAspectRatio:'none'});
   const ground=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-ground'});
   const parcels=svg('g',{class:'world-map-parcels'}),roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
+  const roadLabels=node('div',null,'world-map-road-labels');roadLabels.setAttribute('aria-hidden','true');
   const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
   const self=svg('circle',{class:'world-map-self',r:11,hidden:''});
   const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
-  const targetLabel=svg('text',{class:'world-map-selection-label','text-anchor':'middle',hidden:''});
+  const targetLabel=node('div',null,'world-map-selection-label');targetLabel.hidden=true;
   const north=node('span','N ↑','world-map-north');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target,targetLabel);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,north,scale);
-  const legend=node('p','● You   ◉ Player   ◇ Parcel   ◆ Saved place   • Destination','world-map-legend');
+  overlay.append(self,target);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,roadLabels,north,scale,targetLabel);
+  const legend=node('ul',null,'world-map-legend');legend.setAttribute('aria-label','Map key');
+  for(const [kind,label] of [['self','You'],['place','Destination'],['landmark','Saved place'],['peer','Player'],['parcel','Parcel']]){
+    const item=node('li'),symbol=node('span',null,`world-map-key world-map-key-${kind}`);symbol.setAttribute('aria-hidden','true');
+    item.append(symbol,document.createTextNode(label));legend.append(item);
+  }
   const parcelDetails=node('details',null,'world-map-parcel-list'),parcelSummary=node('summary','Land parcels · 0'),parcelList=node('ul');
   parcelDetails.append(parcelSummary,parcelList);parcelDetails.hidden=true;
   const peopleDetails=node('details',null,'world-map-player-list'),peopleSummary=node('summary','People here · 0'),peopleList=node('ul');
@@ -94,7 +125,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     position:[(parcel.bounds_m[0]+parcel.bounds_m[2])/2,(parcel.bounds_m[1]+parcel.bounds_m[3])/2],
     area:Math.round((parcel.bounds_m[2]-parcel.bounds_m[0])*(parcel.bounds_m[3]-parcel.bounds_m[1])),ownerId:parcel.ownerId});
   function renderStatic(){
-    parcels.replaceChildren();roads.replaceChildren();buildings.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
+    parcels.replaceChildren();roads.replaceChildren();buildings.replaceChildren();roadLabels.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
     if(!projection||!world)return;
     const plots=authoredParcels();parcelDetails.hidden=!plots.length;parcelSummary.textContent=`Land parcels · ${plots.length}`;
     for(const parcel of plots){
@@ -106,8 +137,9 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     }
     for(const road of world.roads??[]){
       if(!Array.isArray(road.points)||road.points.length<2||!road.points.every(finitePair))continue;
-      const line=svg('polyline',{points:points(road.points),class:'world-map-road',
-        'stroke-width':clamp((road.width_m??4)*projection.scale,3,34)});
+      const walking=['footway','pedestrian','path'].includes(road.kind);
+      const line=svg('polyline',{points:points(road.points),class:`world-map-road${walking?' world-map-path':''}`,
+        'stroke-width':walking?clamp((road.width_m??2)*projection.scale,2,5):clamp((road.width_m??4)*projection.scale,3,24)});
       if(road.name){const title=svg('title');title.textContent=road.name;line.append(title);}
       roads.append(line);
     }
@@ -116,9 +148,13 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
       if(ring.length<3)continue;
       buildings.append(svg('polygon',{points:points(ring),class:'world-map-building'}));
     }
+    for(const label of mapRoadLabels(world.roads,projection)){
+      const [x,y]=label.position,text=node('span',label.name,'world-map-road-label');
+      text.style.left=`${x/10}%`;text.style.top=`${y/10}%`;text.style.transform=`translate(-50%,-50%) rotate(${label.angle}deg)`;roadLabels.append(text);
+    }
     for(const place of places){
       if(!finitePair(place.position)||!projection.contains(place.position))continue;
-      const [cx,cy]=mapPoint(place.position),marker=svg('circle',{cx,cy,r:place.kind==='arrival'?9:6,class:'world-map-place'});
+      const [cx,cy]=mapPoint(place.position),marker=svg('circle',{cx,cy,r:place.kind==='arrival'?10:8,class:'world-map-place'});
       const title=svg('title');title.textContent=place.name;marker.append(title);markers.append(marker);
     }
     for(const mark of currentMarks()){
@@ -136,7 +172,8 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     }else self.setAttribute('hidden','');
     if(selected){
       const [cx,cy]=mapPoint(selected.position);target.setAttribute('cx',cx);target.setAttribute('cy',cy);target.removeAttribute('hidden');
-      targetLabel.setAttribute('x',clamp(cx,180,SIZE-180));targetLabel.setAttribute('y',cy>SIZE-70?cy-30:cy+48);
+      targetLabel.style.left=`clamp(96px, ${cx/10}%, calc(100% - 96px))`;targetLabel.style.top=`${cy/10}%`;
+      targetLabel.classList.toggle('above',cy>SIZE/2);targetLabel.title=selected.name;
       targetLabel.textContent=selected.name;targetLabel.removeAttribute('hidden');
     }else {target.setAttribute('hidden','');targetLabel.setAttribute('hidden','');}
   }

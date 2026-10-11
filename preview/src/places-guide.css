@@ -65,7 +65,6 @@
 #places-dialog .world-map-surface{border:0;border-radius:14px;box-shadow:inset 0 0 0 1px #ffffff14,0 8px 24px #0002}
 #places-dialog .world-map-actions{margin-top:12px}
 #places-dialog .world-map-hint{margin-top:12px;font-size:13px;min-height:1.4em}
-#places-dialog .world-map-legend{font-size:10px;line-height:1.8;letter-spacing:.015em}
 #control-panel #places .world-map{padding:0;border:0;margin:12px 0 0}
 #control-panel #places .world-map>summary,#control-panel #places .world-map>:not(.world-map-surface){display:none}
 #control-panel #places .world-map-surface{border:0;border-radius:14px;box-shadow:0 0 0 1px #ffffff14;cursor:zoom-in}
@@ -73,12 +72,6 @@
 #control-panel .storefront-access{margin-top:16px;border-top:1px solid var(--hud-hairline,var(--line));padding-top:12px}
 #control-panel .storefront-access>summary{cursor:pointer;font-size:12px;color:var(--muted);min-height:32px}
 #control-panel .district-summary{display:none}
-:is(#control-panel,.places-guide) .world-map-ground{fill:#152e32}
-:is(#control-panel,.places-guide) .world-map-road{stroke:#688f8e;opacity:.72}
-:is(#control-panel,.places-guide) .world-map-building{fill:#b4b9ac;stroke:#dde0d3;stroke-width:1.5;opacity:.84}
-:is(#control-panel,.places-guide) .world-map-place{fill:#d9b97f;stroke:#193235;stroke-width:3}
-:is(#control-panel,.places-guide) .world-map-self{fill:#b5eee6;stroke:#fff;filter:drop-shadow(0 0 9px #b5eee677)}
-:is(#control-panel,.places-guide) .world-map-target{stroke:#ffe2a4;filter:drop-shadow(0 0 6px #ffe2a477)}
 @media(max-width:700px){
   .places-guide{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:18px}
   .places-guide h2{font-size:24px}
@@ -90,9 +83,7 @@
   .places-guide-content{max-height:none;overflow:visible;padding-inline:16px}
   .places-guide .places-tabs{margin-inline:16px}
   .places-guide .places-list li{min-height:60px;gap:8px}
-  #places-dialog .world-map-legend{font-size:9px}
   .places-guide footer{padding:10px 16px}
 }
 @media(prefers-reduced-motion:reduce){.places-guide *,.places-launcher{animation:none!important;transition:none!important}}
-:is(#control-panel,.places-guide) .world-map-selection-label{font:600 26px/1.2 var(--font-sans,system-ui);fill:#fff5dd;stroke:#152e32;stroke-width:8px;paint-order:stroke;stroke-linejoin:round;pointer-events:none}
 @media(min-width:701px){#places-dialog .places-map-stage .world-map-surface{width:min(100%,max(220px,calc(100dvh - 390px)));margin-inline:auto}}
