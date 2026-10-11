@@ -6,6 +6,7 @@ import { runStudioCommand } from './studio-command.js';
 import { STUDIO_AGENT_GUIDE, studioAgentPrompt } from './studio-agent-guide.js';
 import { sanitizeSceneContext, normalizeText } from './studio-scene-context.js';
 import { codexArgs } from './studio-codex.js';
+import { HostError } from './host-error.js';
 
 const idPattern = /^[a-zA-Z0-9_-]{1,100}$/;
 const validId = value => typeof value === 'string' && idPattern.test(value);
@@ -63,8 +64,8 @@ export function createStreamReader(providerId, onDelta) {
     push(chunk) { buffer += chunk; const lines = buffer.split('\n'); buffer = lines.pop(); lines.forEach(line); },
     finish() {
       line(buffer); buffer = '';
-      if (failed) throw Error(failed);
-      if (!final?.trim()) throw Error('The agent returned an incomplete response.');
+      if (failed) throw new HostError(failed);
+      if (!final?.trim()) throw new HostError('The agent returned an incomplete response.');
       return final;
     },
   };
@@ -93,30 +94,30 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
     async send(input, { onDelta = () => {} } = {}) {
       const provider = STUDIO_AGENT_PROVIDERS[input?.providerId];
       if (!provider || !validId(input.chatId) || !validId(input.requestId) || !provider.models.some(model => model.id === input.modelId) || !['ask', 'allow'].includes(input.mode)
-        || typeof input.message !== 'string' || !input.message.trim() || input.message.length > MAX_MESSAGE || Buffer.byteLength(JSON.stringify(input.context ?? null)) > MAX_CONTEXT) throw Error('Invalid agent message.');
+        || typeof input.message !== 'string' || !input.message.trim() || input.message.length > MAX_MESSAGE || Buffer.byteLength(JSON.stringify(input.context ?? null)) > MAX_CONTEXT) throw new HostError('Invalid agent message.');
       // One reply at a time across every chat, so one user gesture cannot fan out into many runs.
       // A reply already stopped (New chat, Stop) is only cleaning up and does not count.
-      if ([...active.values()].some(run => !run.control.signal.aborted)) throw Error('The agent is still answering. Wait or stop it first.');
+      if ([...active.values()].some(run => !run.control.signal.aborted)) throw new HostError('The agent is still answering. Wait or stop it first.');
       const now = Date.now();
       while (sent.length && now - sent[0] > RATE.windowMs) sent.shift();
-      if (sent.length >= RATE.sends) throw Error('Too many agent messages in the last few minutes. Wait a moment and try again.');
+      if (sent.length >= RATE.sends) throw new HostError('Too many agent messages in the last few minutes. Wait a moment and try again.');
       // Counted before the first await, so a burst of direct calls cannot all pass the check.
       sent.push(now);
       const message = normalizeText(input.message);
-      if (!message) throw Error('Invalid agent message.');
+      if (!message) throw new HostError('Invalid agent message.');
       // Claim the chat before the first await so overlapping sends cannot both start.
       const control = new AbortController(); active.set(input.chatId, { requestId: input.requestId, control });
       try {
         const executable = (await locate())[input.providerId];
-        if (!executable) throw Error(`${provider.name} CLI was not found. Install it, sign in, or set ${provider.env} to its path.`);
+        if (!executable) throw new HostError(`${provider.name} CLI was not found. Install it, sign in, or set ${provider.env} to its path.`);
         if (!consented.has(input.providerId)) {
-          if (!await confirm({ providerId: input.providerId, name: provider.name })) throw Error('Agent chat canceled.');
+          if (!await confirm({ providerId: input.providerId, name: provider.name })) throw new HostError('Agent chat canceled.');
           consented.add(input.providerId);
         }
-        if (control.signal.aborted) throw Error('Agent reply stopped.');
+        if (control.signal.aborted) throw new HostError('Agent reply stopped.');
         const workspace = join(root, input.providerId);
         await mkdir(workspace, { recursive: true, mode: 0o700 });
-        const stat = await lstat(workspace); if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Agent workspace must be a private directory.');
+        const stat = await lstat(workspace); if (!stat.isDirectory() || stat.isSymbolicLink()) throw new HostError('Agent workspace must be a private directory.');
         const history = transcript(input.chatId);
         const prompt = studioAgentPrompt({ history, message, context: sanitizeSceneContext(input.context), mode: input.mode });
         let forwarded = 0;
@@ -129,9 +130,9 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
           await execute(executable, provider.args({ model: input.modelId, prompt, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${delimiter}${extraPath}` },
             signal: control.signal, timeout, maxBytes: 8 * 1024 * 1024, onStdout: chunk => reader.push(chunk) });
         } catch (error) {
-          if (control.signal.aborted) throw Error('Agent reply stopped.');
-          if (/timed out/.test(error.message)) throw Error(`${provider.name} did not answer in time.`);
-          throw Error(`${provider.name} CLI failed. Check that it is signed in on this device.`);
+          if (control.signal.aborted) throw new HostError('Agent reply stopped.');
+          if (/timed out/.test(error.message)) throw new HostError(`${provider.name} did not answer in time.`);
+          throw new HostError(`${provider.name} CLI failed. Check that it is signed in on this device.`);
         }
         const text = capBytes(reader.finish(), MAX_REPLY).text;
         history.push({ role: 'user', text: message }, { role: 'agent', text });

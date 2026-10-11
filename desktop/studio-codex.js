@@ -5,6 +5,8 @@
 // on codex-cli 0.162.1: it can neither read nor write outside the prompt, and it
 // has no web search. Codex still injects the user's global ~/.codex/AGENTS.md;
 // only a separate CODEX_HOME would stop that, which would mean copying credentials.
+import { HostError } from './host-error.js';
+
 // Every listed name must be one Codex knows (it refuses unknown flags), so a release
 // that drops one fails closed. Features that are off by default today are listed
 // too, so an upgrade cannot switch one on. Plumbing such as auth and storage stays on.
@@ -34,10 +36,10 @@ export function lastCodexMessage(stdout) {
   let message = null, completed = false;
   for (const line of String(stdout).split('\n')) {
     let event; try { event = JSON.parse(line); } catch { continue; }
-    if (event.type === 'turn.failed' || event.type === 'error') throw Error('Codex reported an error. Check its sign-in and usage limits.');
+    if (event.type === 'turn.failed' || event.type === 'error') throw new HostError('Codex reported an error. Check its sign-in and usage limits.');
     if (event.type === 'item.completed' && event.item?.type === 'agent_message' && typeof event.item.text === 'string') message = event.item.text;
     if (event.type === 'turn.completed') completed = true;
   }
-  if (!completed || !message) throw Error('Codex returned an incomplete response.');
+  if (!completed || !message) throw new HostError('Codex returned an incomplete response.');
   return message.trim();
 }

@@ -2347,6 +2347,34 @@
         "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
         "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
       }
+    },
+    {
+      "id": "desktop-host-errors",
+      "title": "Replace the desktop IPC error prefix allowlist with a HostError class (bridge-hardening review N4)",
+      "status": "active",
+      "branches": [
+        "fix/desktop-host-errors"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-11T20:11:09+00:00",
+      "updatedAt": "2026-10-11T18:11:09+00:00",
+      "nextAction": "Open the PR, request river-oaks-c2's review, and merge in queue order after #248 and c2's register PR.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "desktop/host-error.js",
+        "desktop/main.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js"
+      ],
+      "requiredChecks": [
+        "node --test desktop/tests/*.test.js",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "pnpm run verify",
+        "hosted Verify"
+      ]
     }
   ]
 }
