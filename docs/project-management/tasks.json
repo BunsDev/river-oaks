@@ -1807,7 +1807,8 @@
         "server_and_scripts": "536 pass, 0 skipped with isolated Redis",
         "core": "pnpm run verify: core passed (75aada6)",
         "fixes": "14 findings fixed, each with a regression that failed before the change"
-      }
+      },
+      "pr": 244
     },
     {
       "id": "studio-agent-chat",
