@@ -43,7 +43,7 @@ export function validateBrief(input, now = Date.now()) {
 // Each action's body. Unknown actions and fields fail closed.
 const BODIES = {
   state: [], companion: ['name'], grant: ['scope'], revoke: ['grantId', 'expectedRevision'],
-  offer: ['decision'], submit: ['brief', 'requestId'], pause: ['taskId'], resume: ['taskId'], cancel: ['taskId'],
+  offer: ['decision'], submit: ['brief', 'requestId'], pause: ['taskId'], resume: ['taskId'], cancel: ['taskId'], forget: ['taskId'],
   artifact: ['artifactId'], delete: ['artifactId'], ack: ['noticeId'], presence: ['mode'], occupancy: [],
 };
 export const WORKPLACE_ACTIONS = Object.freeze(Object.keys(BODIES));
@@ -62,7 +62,7 @@ export function validateWorkplaceRequest(action, input, now = Date.now()) {
       const brief = validateBrief(data.brief, now);
       return brief.ok ? {ok: true, value: {brief: brief.value, requestId: data.requestId}} : brief;
     }
-    case 'pause': case 'resume': case 'cancel': return validId(data.taskId) ? {ok: true, value: {taskId: data.taskId}} : fail('invalid_request');
+    case 'pause': case 'resume': case 'cancel': case 'forget': return validId(data.taskId) ? {ok: true, value: {taskId: data.taskId}} : fail('invalid_request');
     case 'artifact': case 'delete': return validId(data.artifactId) ? {ok: true, value: {artifactId: data.artifactId}} : fail('invalid_request');
     case 'ack': return typeof data.noticeId === 'string' && /^(result|failed):[A-Za-z0-9_-]{8,64}$/.test(data.noticeId)
       ? {ok: true, value: {noticeId: data.noticeId}} : fail('invalid_request');
@@ -94,11 +94,11 @@ export function validateEventPlan(plan) {
 
 // Presence, task state and connection health stay separate. The animation
 // can show "working" only while the service records a running task; an idle
-// companion never implies progress, and a stale heartbeat reads as stopped.
+// companion never implies progress, and a stale connection reads as not working.
 export function companionPresentation(presence, task, health = 'ok') {
   if (!presence || presence.mode === 'offstage') return {pose: 'offstage', label: 'Away from the studio', working: false};
   const seated = presence.mode === 'stationed' && Boolean(presence.stationId);
-  if (health !== 'ok') return {pose: seated ? 'seated-idle' : 'standing', label: 'Connection lost — work is not progressing', working: false};
+  if (health !== 'ok') return {pose: seated ? 'seated-idle' : 'standing', label: 'Connection lost — progress unknown', working: false};
   if (task?.status === 'running') return {pose: seated ? 'seated-working' : 'standing-working', label: 'Working on your plan', working: true};
   if (task?.status === 'completed') return {pose: seated ? 'seated-waiting' : 'standing', label: 'Plan ready for your review', working: false};
   if (task?.status === 'paused') return {pose: seated ? 'seated-idle' : 'standing', label: 'Paused', working: false};

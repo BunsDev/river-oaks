@@ -30,20 +30,24 @@ Everything lives under the deployment's Redis namespace, `{REDIS_NAMESPACE}`. In
 
 | Key | Holds | Lifetime |
 | --- | --- | --- |
-| `{ns}:workplace:v1:owner:<sha256(userId)>` | One owner's companion, grant, tasks (including each private brief), drafts with receipts, notices and recent request ids | Each write resets the key's expiry to the full retention period (30 days). An owner who stops writing loses the whole key 30 days after their last write. |
+| `{ns}:workplace:v1:owner:<sha256(userId)>` | One owner's companion, grant, task and draft metadata (status, steps, ids, the public places captured for the task), notices and recent request ids. No brief, draft or receipt text. | Each write resets the key's expiry to the full retention period (30 days). An owner who stops writing loses the whole key 30 days after their last write. |
+| `{ns}:workplace:v1:work:<sha256(userId)>:<taskId>` | One task's private text: the brief, plus the draft and receipt once it completes | Exact. Unfinished: 30 days from submission. Finished: 30 days from when it finished. Deleted with the task. An unrelated write never extends it (`server/tests/retention-workplace.test.js`). |
 | `{ns}:workplace:v1:stations` | Which station is held, by a hashed owner, until when | Station leases last 30 minutes and renew on reads; the key expires after 60 minutes without a write *(code)*. The public view is exactly `{id, occupied, mine}` (`the public occupancy view carries exactly …`). The key spans the whole namespace, so every world shares the two stations. |
 
 Inside an owner's document:
 
-- A **draft** stops being served 30 days after it was created. Deleting it also removes the task, brief, notice and request id that produced it (`deleting a draft forgets its brief …`).
-- A **finished task** (completed, failed or cancelled) keeps its brief for 30 days after it finished, and at most 8 finished tasks are kept, oldest removed first *(code)*. The owner can't delete a cancelled or failed task's brief directly; it goes when retention or the count cap removes it.
-- **Served versus stored.** Expired drafts and briefs are removed from the document only when the owner next reads or writes. Every write also resets the whole key's expiry to 30 days. So an expired item can stay in storage, unserved, for up to about twice the retention period. Example: a draft created on day 0, then one unrelated write on day 29, keeps the key until day 59.
+- A **draft** is deleted from storage 30 days after it was created. Deleting it also removes the task, brief, notice and request id that produced it (`deleting a draft forgets its brief …`).
+- A **finished task** (completed, failed or cancelled) keeps its brief for 30 days after it finished, and at most 8 finished tasks are kept, oldest removed first *(code)*.
+- **Forget:** the owner can delete any finished task with the `forget` action ("Forget" in the panel). It removes the brief, any draft and receipt, the notice and the request id in one save.
+- **Exact at rest.** Private text is stored in the per-task key, and that key's expiry is set from the task's own times, never from the owner's latest write. A draft created on day 0 is gone from storage on day 30, even if the owner wrote on day 29 and never visits again. Its metadata stays in the owner document until the next read or write tidies it; the metadata holds no private text.
+- **An unfinished brief** expires 30 days after submission too. A task paused past that point fails with `brief_expired` when resumed, and drafts nothing.
+- **Earlier documents:** a document written before per-task keys keeps its briefs inline until it expires. The workplace has never been enabled on a hosted deployment, so this affects only local development data.
 - An **active task** (queued, running or paused) stays until it finishes. The owner can cancel it, revoking cancels it, and a lapsed grant cancels it on the next read or re-grant.
 - At most 3 drafts of at most 256 KiB each. At most 8 notices *(code)*.
 
-The 30-day retention, 7-day grant and the other limits are `WORKPLACE_LIMITS` in `preview/src/workplace-contract.js`. They can only be changed in code: `town.js` and `world-gateway.js` pass no overrides. **The 30-day default, and whether storage may outlast it as described above, need Val's decision before hosted enablement.**
+The 30-day retention, 7-day grant and the other limits are `WORKPLACE_LIMITS` in `preview/src/workplace-contract.js`. They can only be changed in code: `town.js` and `world-gateway.js` pass no overrides. **The 30-day default needs Val's decision before hosted enablement.**
 
-There is no single "erase my workplace" action. An owner can delete each draft, and revoking stops work. Full erasure of one owner today means an operator deletes that owner's key.
+There is no single "erase my workplace" action. An owner can forget each finished task and delete each draft, and revoking stops work. Full erasure of one owner today means an operator deletes that owner's `owner:` key and their `work:` keys.
 
 ## Access changes during work
 

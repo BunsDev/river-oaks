@@ -9,7 +9,7 @@ const node = (tag, text, className) => { const item = document.createElement(tag
 const STEP_LABELS = {reading_brief: 'Reading your brief', checking_places: 'Checking public meeting places', drafting_plan: 'Drafting options', validating: 'Checking the plan'};
 const REASONS = {grant_revoked: 'Stopped because you revoked permission.', grant_expired: 'Stopped because the permission expired.', access_revoked: 'Stopped because this account can no longer use the town.', owner_cancelled: 'You cancelled it.', deadline: 'It ran out of time.',
   worker_lost: 'The service lost track of it, so it stopped safely.', budget_exceeded: 'It hit its limit.', artifact_limit: 'You have three saved plans; delete one first.',
-  no_venues: 'No public meeting places were available.', invalid_artifact: 'The result failed its checks, so nothing was saved.'};
+  no_venues: 'No public meeting places were available.', brief_expired: 'Its brief passed the retention period, so it stopped.', invalid_artifact: 'The result failed its checks, so nothing was saved.'};
 const date = value => new Date(value).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
 const list = (value = '') => value.split(',').map(item => item.trim()).filter(Boolean);
 
@@ -37,13 +37,14 @@ export function createWorkplaceUI({panel, request, connected}) {
   section.append(title, note, live, brief, plan, status);
   const anchor = panel.querySelector('.multiplayer-groups') ?? panel.querySelector('.multiplayer-social');
   if (anchor) anchor.after(section);else panel.append(section);
-  let state = null, timer = null, disposed = false, busy = false, rendered = '', opened = null;
+  // 'stale' after a failed or skipped refresh: the panel can no longer vouch for progress.
+  let state = null, timer = null, disposed = false, busy = false, rendered = '', opened = null, health = 'ok';
   const say = message => { status.textContent = message; };
   async function act(action, data, success) {
     if (busy) { say('Still saving your last change. Try again in a moment.');return null; }
     busy = true;say('');
     // Release before re-rendering, so the next control a player reaches works at once.
-    try { const result = await request(action, data);busy = false;if (result.state) apply(result.state);if (success) say(success);return result; }
+    try { const result = await request(action, data);busy = false;if (result.state) {health = 'ok';apply(result.state);}if (success) say(success);return result; }
     catch (error) { busy = false;say(error.message);return null; }
     finally { busy = false;schedule(); }
   }
@@ -62,7 +63,7 @@ export function createWorkplaceUI({panel, request, connected}) {
       const task = state.tasks.at(-1) ?? null, active = task && ['queued', 'running', 'paused'].includes(task.status);
       // A deleted draft is no longer waiting for review.
       const kept = task?.status !== 'completed' || state.artifacts.some(artifact => artifact.id === task.artifactId);
-      const presentation = companionPresentation(state.companion.presence, kept ? task : null);
+      const presentation = companionPresentation(state.companion.presence, kept ? task : null, health);
       const who = node('div', null, 'workplace-who');
       who.append(node('strong', state.companion.name), node('span', ` · ${presentation.label}`));
       const where = node('div', null, 'workplace-actions');where.setAttribute('role', 'group');where.setAttribute('aria-label', 'Where your companion is');
@@ -99,11 +100,14 @@ export function createWorkplaceUI({panel, request, connected}) {
         const line = task.status === 'running' ? `Step ${Math.min(stepIndex + 1, TASK_STEPS.length)} of ${TASK_STEPS.length}: ${STEP_LABELS[TASK_STEPS[Math.min(stepIndex, TASK_STEPS.length - 1)]]}.`
           : task.status === 'queued' ? 'Waiting to start.' : task.status === 'paused' ? 'Paused. Nothing is happening until you resume.'
           : task.status === 'completed' ? (kept ? 'Finished. The draft is saved below.' : 'Finished. You deleted this draft.') : `${task.status === 'failed' ? 'Failed' : 'Stopped'}. ${REASONS[task.reason] ?? ''}`;
-        card.append(node('h4', `Draft: ${task.brief.purpose}`), node('p', line));
+        // A brief past its retention period is gone from storage; say so plainly.
+        card.append(node('h4', task.brief ? `Draft: ${task.brief.purpose}` : 'Draft: brief no longer kept'), node('p', line));
         const controls = node('div', null, 'workplace-actions');
         if (['queued', 'running'].includes(task.status)) controls.append(button('Pause', () => void act('pause', {taskId: task.id}, 'Paused.'), 'pause'));
         if (task.status === 'paused') controls.append(button('Resume', () => void act('resume', {taskId: task.id}, 'Resumed.'), 'resume'));
         if (active) controls.append(button('Cancel', () => void act('cancel', {taskId: task.id}, 'Cancelled. Nothing was saved.'), 'cancel'));
+        else controls.append(button('Forget', () => void act('forget', {taskId: task.id}, 'Forgotten. Its brief and any draft are deleted.').then(result => { if (result && opened === task.artifactId) closePlan(); }),
+          'forget', task.brief ? `Forget ${task.brief.purpose}` : 'Forget this task'));
         if (controls.children.length) card.append(controls);
         parts.push(card);
       }
@@ -129,7 +133,7 @@ export function createWorkplaceUI({panel, request, connected}) {
     // One announcement per outcome; the server deduplicates notices too.
     for (const notice of next.notices) if (!before?.notices.some(item => item.id === notice.id))
       say(notice.kind === 'result_ready' ? 'Your draft plan is ready to review.' : 'Your companion stopped a task. Details are below.');
-    const serialized = JSON.stringify(next);if (serialized === rendered) return;rendered = serialized;render();
+    const serialized = JSON.stringify(next) + health;if (serialized === rendered) return;rendered = serialized;render();
   }
   function closePlan() { plan.hidden = true;plan.replaceChildren();opened = null; }
   async function open(artifactId) {
@@ -158,11 +162,13 @@ export function createWorkplaceUI({panel, request, connected}) {
     const running = state?.tasks.some(task => ['queued', 'running'].includes(task.status));
     timer = setTimeout(() => void refresh(), running ? 2000 : 15000);
   }
+  function stale() { health = 'stale';if (state) apply(state); }
   async function refresh() {
     if (disposed || busy) return schedule();
-    if (!connected() || document.visibilityState === 'hidden') return schedule();
-    try { const result = await request('state');if (!disposed && result.state) apply(result.state); }
-    catch { /* The next refresh retries; the panel keeps its last known state. */ }
+    if (!connected() || document.visibilityState === 'hidden') { stale();return schedule(); }
+    try { const result = await request('state');if (!disposed && result.state) {health = 'ok';apply(result.state);} }
+    // The next refresh retries; until then the last state shows no progress.
+    catch { stale(); }
     schedule();
   }
   return {refresh, dispose() { disposed = true;clearTimeout(timer);section.remove(); }};
