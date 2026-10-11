@@ -47,7 +47,7 @@ Inside an owner's document:
 
 The 30-day retention, 7-day grant and the other limits are `WORKPLACE_LIMITS` in `preview/src/workplace-contract.js`. They can only be changed in code: `town.js` and `world-gateway.js` pass no overrides. **The 30-day default needs Val's decision before hosted enablement.**
 
-There is no single "erase my workplace" action. An owner can forget each finished task and delete each draft, and revoking stops work. Full erasure of one owner today means an operator deletes that owner's `owner:` key and their `work:` keys.
+**Erase my workplace.** The `erase` action (body `{"confirm": "erase"}`, and a two-step control in the panel) removes every stored trace of the owner in one atomic save: the owner document (companion, grant, task metadata, notices, request ids), every `work:` key (briefs, drafts, receipts) and the due-index entry. Then it releases any desk and cancels any local timer. A runner racing the erase loses its compare-and-set and finds nothing to write. Another account's data is untouched, and the owner can start over (`server/tests/erase-workplace.test.js`). An owner can also forget a single finished task or delete a single draft.
 
 ## Access changes during work
 

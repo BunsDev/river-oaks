@@ -200,6 +200,7 @@
     { "source": "/api/workplace/delete", "destination": "/api/server?_river_path=/api/workplace/delete" },
     { "source": "/api/workplace/ack", "destination": "/api/server?_river_path=/api/workplace/ack" },
     { "source": "/api/workplace/forget", "destination": "/api/server?_river_path=/api/workplace/forget" },
+    { "source": "/api/workplace/erase", "destination": "/api/server?_river_path=/api/workplace/erase" },
     { "source": "/api/workplace-sweep", "destination": "/api/server?_river_path=/api/workplace-sweep" },
     { "source": "/api/workplace/presence", "destination": "/api/server?_river_path=/api/workplace/presence" },
     { "source": "/api/workplace/occupancy", "destination": "/api/server?_river_path=/api/workplace/occupancy" },

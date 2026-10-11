@@ -78,3 +78,22 @@ test('a finished task can be forgotten from the panel', async t => {
   await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(env.calls.find(([action]) => action === 'forget'), ['forget', {taskId: 'task-000001'}]);
 });
+
+test('erasing the workplace takes two deliberate steps', async t => {
+  const env = setup();t.after(() => env.ui.dispose());
+  await env.ui.refresh();
+  const find = key => env.section.find(node => node.tagName === 'button' && node.dataset.focusKey === key);
+  assert.ok(find('erase'), 'an erase control is offered');
+  assert.equal(find('erase-confirm'), null, 'nothing is erased by the first control alone');
+  await find('erase').click();
+  assert.equal(env.calls.some(([action]) => action === 'erase'), false);
+  assert.ok(find('erase-confirm'), 'a confirmation appears');
+  assert.ok(find('erase-cancel'), 'and a way back');
+  await find('erase-cancel').click();
+  assert.equal(find('erase-confirm'), null);
+  await find('erase').click();
+  env.next = {...running, companion: null, grant: null, tasks: [], offer: {state: 'offered'}};
+  await find('erase-confirm').click();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(env.calls.find(([action]) => action === 'erase'), ['erase', {confirm: 'erase'}]);
+});
