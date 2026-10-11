@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-11T09:16:39.484293+00:00",
+  "scope": "Completed deeper local retirement round; counts include concurrent new tasks. This is not global project completion or authorization to discard remaining work.",
+  "delivery": {
+    "pr": 223,
+    "head": "064e1dc4e7012a7c6948ac7661c76e912f56812a",
+    "base": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+    "merge": "eb62862615f8a2ef5798e4eff213f811431a9e79",
+    "tree": "e684d5f054e1915ae6dfaab3fdb01b45a87ca3d5",
+    "mergedAt": "2026-10-11T09:07:37Z",
+    "checks": {
+      "CodeQL": [
+        "completed",
+        "success"
+      ],
+      "verify (3.13)": [
+        "completed",
+        "success"
+      ],
+      "dependency-review": [
+        "completed",
+        "success"
+      ],
+      "verify (3.11)": [
+        "completed",
+        "success"
+      ],
+      "preview": [
+        "completed",
+        "success"
+      ],
+      "Analyze (c-cpp)": [
+        "completed",
+        "success"
+      ],
+      "Analyze (javascript-typescript)": [
+        "completed",
+        "success"
+      ],
+      "Analyze (csharp)": [
+        "completed",
+        "success"
+      ],
+      "Analyze (python)": [
+        "completed",
+        "success"
+      ],
+      "Analyze (actions)": [
+        "completed",
+        "success"
+      ]
+    },
+    "status": "success",
+    "completePatchReviewed": true,
+    "sourcePRs": {
+      "200": {
+        "state": "closed",
+        "merged_at": "2026-10-11T09:07:39Z",
+        "merge_commit_sha": "cecc6038d05c7e6b9470bf6d20ad9a1ac1c38d2e"
+      },
+      "215": {
+        "state": "closed",
+        "merged_at": "2026-10-11T09:07:39Z",
+        "merge_commit_sha": "74bc7b9939872dcf1021c3814f3df28dd7f145b3"
+      }
+    }
+  },
+  "counts": {
+    "initialWorktrees": 17,
+    "initialLocalBranches": 17,
+    "retiredWorktrees": 11,
+    "observedWorktrees": 9,
+    "observedLocalBranches": 9,
+    "concurrentNewWorktrees": [
+      "chore/dependency-merge-20261011",
+      "feat/workplace-slice-20261011",
+      "docs/workplace-review-package-20261011"
+    ]
+  },
+  "finalRetirements": {
+    "storybook": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-round2/storybook/archive-verification.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/storybook/storybook-history.bundle",
+      "sha256": "dd1b9c5914554a9259fa743466d8b448ba0dbf0fa393374841af44747a0f343d",
+      "ref": "refs/tags/archive/worktree-prune/20261011-round2/storybook-companion-layer",
+      "sha": "1667f0249fd1ead0676fd7bda52465cb569681f0",
+      "retiredAt": "2026-10-11T09:09:05.511728+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true
+    },
+    "retirement-round2": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-round2/cleanup-delivery/archive-verification.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/cleanup-delivery/history.bundle",
+      "sha256": "f7565ec96cd4ff0959758d2d5b7a3fd4b442e947e11e0a2af7b60d31fb386ccd",
+      "ref": "refs/tags/archive/worktree-prune/20261011-round2/cleanup-delivery",
+      "sha": "74bc7b9939872dcf1021c3814f3df28dd7f145b3",
+      "retiredAt": "2026-10-11T09:09:08.052720+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true
+    },
+    "destination-minimap": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-round2/final-delivery-064e1dc/manifest.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/final-delivery-064e1dc/history.bundle",
+      "sha256": "39a0211dca7ad625a844b520410026dcbd32e21585e8fd9e249b21aa1ae7ec08",
+      "ref": "refs/tags/archive/worktree-prune/20261011-round2/destination-minimap-064e1dc",
+      "sha": "064e1dc4e7012a7c6948ac7661c76e912f56812a",
+      "retiredAt": "2026-10-11T09:09:44.580165+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true,
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-round2/final-delivery-064e1dc/local-files.tar.gz",
+      "localFilesSha256": "e9ca41dff90b3f4267addad83ce31dfc3602583718d29ebf3e12595bca91e8e0"
+    },
+    "reconcile-delivered-sources": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/reconciliation-delivery/manifest.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/reconciliation-delivery/history.bundle",
+      "sha256": "22e3d9de298159c7948d4fecf858fc34ea8974c173e1e4277370cac0592e79f8",
+      "ref": "refs/tags/archive/worktree-prune/20261011-delivered-sources/reconciliation-delivery",
+      "sha": "e7c547ad4fc2d1c755521a000db3303dd8cc4b8d",
+      "retiredAt": "2026-10-11T09:08:56.527511+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true,
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/reconciliation-delivery/local-files.tar.gz",
+      "localFilesSha256": "b2ca5138039a99d39958ca76093a9a8feea4c097ab1dd4f008b202d4b525784e"
+    },
+    "signin-review": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+      "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+      "ref": "archive/worktree-prune/20261011-delivered-sources/signin-review",
+      "sha": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "retiredAt": "2026-10-11T09:08:22.154357+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true,
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/signin-review/local-files.tar.gz",
+      "localFilesSha256": "552e3d175271f42832f0c0b93733882b0818eaa15b5e181d1b1a772e914c45f2",
+      "retainedFiles": 18
+    },
+    "login-aesthetic": {
+      "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+      "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/source-history.bundle",
+      "sha256": "1e881d1829e91a2c8a5bfb07ea477b6eb6845726ef2bf6ca2768850dfff1fe59",
+      "ref": "archive/worktree-prune/20261011-delivered-sources/login-aesthetic",
+      "sha": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "retiredAt": "2026-10-11T09:08:23.400291+00:00",
+      "pathAbsent": true,
+      "refAbsent": true,
+      "restoreVerified": true,
+      "localFilesArchive": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/login-aesthetic/local-files.tar.gz",
+      "localFilesSha256": "596f8a3d212ead2822024ebd29131aad80749d933eb62739ad98d0d71a24fa6e",
+      "retainedFiles": 108
+    }
+  },
+  "earlierRetirementManifests": [
+    "docs/project-management/retirement-20261011-round2.json",
+    "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/manifest.json",
+    "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json"
+  ],
+  "remainingWorktrees": [
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks",
+      "branch": "main",
+      "head": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009",
+      "branch": "cody/cartier-visual-pilot",
+      "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-deps-20261011",
+      "branch": "chore/dependency-merge-20261011",
+      "head": "eb62862615f8a2ef5798e4eff213f811431a9e79"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-dior-promenade-20261009",
+      "branch": "polish/dior-promenade",
+      "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-jevica-20261009",
+      "branch": "cody/jevica-psyche-20261009",
+      "head": "397733ad7d3e776ea8376aeace3458db6a47b6d2"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-sdk-phase1-20261008",
+      "branch": "cody/sdk-phase1-input",
+      "head": "014ea13bb644806ba8073cf93f15cdfb9602434a"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-workplace-20261011",
+      "branch": "feat/workplace-slice-20261011",
+      "head": "eb62862615f8a2ef5798e4eff213f811431a9e79"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-workplace-review-20261011",
+      "branch": "docs/workplace-review-package-20261011",
+      "head": "e14eaa5a2e990a9d85cd43dc29df1330f89841af"
+    },
+    {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-world-studio-20261009",
+      "branch": "cody/world-studio-20261009",
+      "head": "c98351ac1ba478eeb6e3c218caf5306c2471723f"
+    }
+  ],
+  "primaryPreservation": {
+    "checkedAt": "2026-10-11T09:16:39.484293+00:00",
+    "head": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+    "indexPatchSha256": "775cbda56bbde309263e5712c74345f9431be5c38881cc1a83182fa8da412a1f",
+    "stagedPaths": [
+      "docs/superpowers/plans/2026-10-07-desktop-refresh.md",
+      "docs/superpowers/plans/2026-10-08-story-chapter-2-home.md",
+      "docs/superpowers/plans/2026-10-08-typesafe-place-pillars.md",
+      "docs/superpowers/plans/2026-10-08-typesafe-walkability.md",
+      "docs/superpowers/plans/2026-10-08-world-building-sdk-proposal.md",
+      "docs/superpowers/plans/2026-10-09-interior-visual-pilot-scope.md",
+      "docs/superpowers/plans/2026-10-09-story-chapter-3-work.md",
+      "docs/superpowers/plans/2026-10-09-story-names.md",
+      "pnpm-lock.yaml",
+      "unreal/Config/DefaultInput.ini"
+    ],
+    "stashRefs": [
+      "a75f73308eb6c8ee0db68fc4a58d10284d98d74f"
+    ],
+    "unchangedFrom": "/Users/buns/worktree-backups/river-oaks-20261011-round2/pre-final-primary-snapshot.json",
+    "note": "Concurrent unstaged task and untracked ledger edits are preserved; primary main is intentionally not fast-forwarded."
+  },
+  "verificationLogs": "/Users/buns/worktree-backups/river-oaks-20261011-round2/verification-logs/manifest.json",
+  "archivePolicy": "Exact refs restored into fresh bare repositories and fsck passed; local evidence restored and hash-compared before non-forced removal. Archive bundles, tags, receipts and retained files remain available. Only identified regenerable dependencies/caches were discarded.",
+  "remoteDeletion": "Source owner completed only the ten separately approved remote deletions; see /Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/remote-manifest.json. No additional remote deletion in this closeout.",
+  "acceptanceLimits": [
+    "No new native, live WorkOS, production or human accessibility acceptance is claimed for the minimap.",
+    "Remaining authored dirty or active work is preserved."
+  ]
+}
