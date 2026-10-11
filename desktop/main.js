@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
-import { createStudioDesignerHost, designerSenderAllowed } from './studio-designer-host.js';
+import { createStudioDesignerHost, designerSenderAllowed, designerConsentDetail } from './studio-designer-host.js';
 import { createStudioAgentHost } from './studio-agent-host.js';
 import { navigationAllowed, windowBounds } from './runtime.js';
 import { photoDownloadAllowed } from './photo-download.js';
@@ -15,7 +15,7 @@ app.enableSandbox();
 const dev = !app.isPackaged && Boolean(process.env.RIVER_OAKS_DEV_URL);
 const profile = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', profile || join(app.getPath('appData'), dev ? 'River Oaks Development' : 'River Oaks'));
-let window, designerHost, agentHost, quitting = false, saved = {}, lastRecovery = 0;
+let window, designerHost, agentHost, loadedUrl = null, quitting = false, saved = {}, lastRecovery = 0;
 const stateFile = join(app.getPath('userData'), 'window.json');
 const entry = dev ? process.env.RIVER_OAKS_DEV_URL : 'https://typesafe.place/play';
 const gameOrigin = new URL(entry).origin;
@@ -27,6 +27,14 @@ if (dev) {
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
   if (!clientId && process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE !== '1') throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
 }
+
+// Host errors are written for people; anything else (a parse error quoting model
+// output, a file path with the account name) is replaced before it reaches the page.
+const HOST_ERROR = /^(Designer|Design|Invalid|Existing designer|Familiar|Coven|Codex|Claude|The designer|The agent|Agent|Too many|Keep the task|Select an object|This region|This Coven|Installed design|Studio navigation|The proposal|Use 1–64)/;
+const publicError = (error, fallback) => {
+  const message = error instanceof Error && !(error instanceof SyntaxError) && !error.code ? error.message : '';
+  return Error(HOST_ERROR.test(message) && !/(^|[\s'"(])\/(Users|home|private|var)\//.test(message) ? message : fallback);
+};
 
 async function saveWindow() {
   if (!window || window.isDestroyed()) return;
@@ -101,6 +109,8 @@ function createWindow() {
   // Keep recovery on the selected app when users follow an in-page app link.
   contents.on('did-start-navigation', (_event, _url, _inPlace, isMainFrame) => { if (isMainFrame) { designerHost?.dispose(); agentHost?.dispose(); } });
   contents.on('did-navigate', (_event, url) => {
+    // Committed main-frame loads only; in-page pushState never updates this.
+    loadedUrl = url;
     if (!navigationAllowed(url, entry)) return;
     const pathname = new URL(url).pathname;
     if (pathname === '/studio.html' || pathname === '/studio') activeEntry = studioEntry;
@@ -177,37 +187,39 @@ else {
     const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
     const pack = app.isPackaged ? JSON.parse(await readFile(join(sourceRoot, 'desktop/world-design-pack.json'), 'utf8')) : await buildWorldDesignPack(sourceRoot);
     designerHost = createStudioDesignerHost({ root: join(app.getPath('userData'), 'designer'), pack,
-      executable: process.env.RIVER_OAKS_DESIGNER_COVEN || 'coven', model: process.env.RIVER_OAKS_DESIGNER_MODEL || null,
+      executable: process.env.RIVER_OAKS_DESIGNER_COVEN || 'coven', codex: process.env.RIVER_OAKS_DESIGNER_CODEX || null, model: process.env.RIVER_OAKS_DESIGNER_MODEL || null,
       confirm: async request => {
         const { response } = await dialog.showMessageBox(window, { type: 'question', defaultId: 0, cancelId: 0, buttons: ['Cancel', request.kind === 'connect' ? 'Connect' : 'Send task'],
           message: request.kind === 'connect' ? `Set up ${request.name}?` : `Send this task to ${request.name}?`,
           detail: request.kind === 'connect'
             ? 'Studio installs its world-building skills in a private project workspace. A dedicated familiar gets its own local Coven instance and identity. Existing familiars are unchanged. Codex uses the sign-in on this device; provider authentication remains unverified until you send a task.'
-            : `Share ${request.scope === 'region' ? 'the whole region' : 'the selected object'} and the project brief. Your configured provider may charge for this request. The agent runs read-only and returns proposed edits for review.\n\n${request.brief}` });
+            : designerConsentDetail(request) });
         return response === 1;
       },
     });
     for (const method of ['catalog','connect','request','cancel','disconnect']) ipcMain.handle(`studio-designer:${method}`, async (event, input) => {
-      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Designer access is limited to the main Studio window.');
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) throw Error('Designer access is limited to the main Studio window.');
       const frame = event.senderFrame;
-      const result = await designerHost[method](input);
-      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      let result;
+      try { result = await designerHost[method](input); } catch (error) { throw publicError(error, 'The designer host hit a local error. Check the desktop runtime and try again.'); }
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) { designerHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
       return result;
     });
     agentHost = createStudioAgentHost({ root: join(app.getPath('userData'), 'studio-agent'),
       confirm: async ({ name }) => {
         const { response } = await dialog.showMessageBox(window, { type: 'question', defaultId: 0, cancelId: 0, buttons: ['Cancel', `Use ${name}`],
           message: `Chat with the World Studio agent through ${name}?`,
-          detail: `Studio runs the ${name} CLI installed on this device with your existing sign-in. Your messages and this region's scene snapshot are sent to ${name}; usage may be billed. The agent has no tools and only proposes edits, which Studio validates before they change your draft. You will not be asked again until the app restarts.` });
+          detail: `Studio runs the ${name} CLI installed on this device with your existing sign-in. Your messages and this region's scene snapshot are sent to ${name}; usage may be billed. The agent runs with its tools off, so it cannot read or change files, and only proposes edits, which Studio validates before they change your draft. ${name === 'Codex' ? 'Codex still receives your global ~/.codex/AGENTS.md' : 'Claude still receives your Claude account email'}, which the agent could repeat to the page. You will not be asked again until the app restarts.` });
         return response === 1;
       },
     });
     for (const method of ['catalog','send','cancel','reset']) ipcMain.handle(`studio-agent:${method}`, async (event, input) => {
-      if (!designerSenderAllowed(event, window?.webContents, gameOrigin)) throw Error('Agent chat is limited to the main Studio window.');
+      if (!designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) throw Error('Agent chat is limited to the main Studio window.');
       const frame = event.senderFrame, sender = event.sender;
-      const onDelta = text => { if (!frame.isDestroyed() && designerSenderAllowed(event, window?.webContents, gameOrigin)) sender.send('studio-agent:delta', { requestId: input.requestId, text }); };
-      const result = await agentHost[method](input, { onDelta });
-      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin)) { agentHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
+      const onDelta = text => { if (!frame.isDestroyed() && designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) sender.send('studio-agent:delta', { requestId: input.requestId, text }); };
+      let result;
+      try { result = await agentHost[method](input, { onDelta }); } catch (error) { throw publicError(error, 'The agent host hit a local error. Try again.'); }
+      if (frame.isDestroyed() || !designerSenderAllowed(event, window?.webContents, gameOrigin, loadedUrl)) { agentHost.dispose(); throw Error('Studio navigation canceled this operation.'); }
       return result;
     });
     createWindow();

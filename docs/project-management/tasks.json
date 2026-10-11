@@ -1447,6 +1447,86 @@
       }
     },
     {
+      "id": "workplace-task-sweep",
+      "title": "Workplace gap from #221: unattended recovery of orphaned tasks via a due index and periodic sweep",
+      "status": "active",
+      "branches": [
+        "fix/workplace-task-sweep"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T11:52:00+00:00",
+      "leaseUntil": "2026-10-11T13:52:00+00:00",
+      "nextAction": "Open the PR stacked on #232; after #227, #230 and #232 merge, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-task-sweep.md",
+      "filesOwned": [
+        "server/workplace.js (due index and sweep; agreed with river-oaks-55)",
+        "server/world-gateway.js (sweep option)",
+        "server/redis-backend.js (sweep on long-lived only)",
+        "server/tests/sweep-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-task-sweep.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Live two-gateway orphan recovery on Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-retention-status (PR #232), stacked until it merges",
+      "verification": {
+        "server": "480 pass, 0 skipped with isolated Redis",
+        "preview": "2594 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "mutations": "no index writes: 7 cases fail; no stale cleanup: 1 case fails"
+      },
+      "pr": 235
+    },
+    {
+      "id": "workplace-room-envelope",
+      "title": "Workplace gap from #221: door height, measured seated bounds and depth-aware routes in the coworking room plan",
+      "status": "active",
+      "branches": [
+        "fix/workplace-room-envelope"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T12:01:00+00:00",
+      "leaseUntil": "2026-10-11T14:01:00+00:00",
+      "nextAction": "Open the PR stacked on #235; after the stack merges, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-room-envelope.md",
+      "filesOwned": [
+        "preview/src/workplace-room.js (agreed with river-oaks-55)",
+        "docs/level-design/workplace-coworking-fixture/avatar-envelope.json",
+        "preview/tests/workplace-room.test.js",
+        "docs/superpowers/plans/2026-10-11-workplace-room-envelope.md",
+        "docs/superpowers/plans/2026-10-11-workplace-room-envelope/"
+      ],
+      "requiredChecks": [
+        "Seated/height measurement on all 22 looks",
+        "workplace-room unit tests",
+        "workplace-room graybox harness",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        218,
+        214
+      ],
+      "dependsOn": "workplace-task-sweep (PR #235), stacked until it merges",
+      "verification": {
+        "room": "7 pass (3 new); 2 mutations caught",
+        "graybox": "workplace-room harness passed",
+        "preview": "2596 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "measurement": "22 looks standing + seated; tallest 2.45 m; widest seated 1.264 m"
+      },
+      "pr": 236
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "delivered",
@@ -1591,14 +1671,13 @@
     {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "feat/studio-agent-chat"
       ],
-      "owner": "claude-code session 84d929e5-0c68-4073-958d-1ca8c11181d2",
-      "leaseUntil": "2026-10-11T14:57:06+00:00",
-      "updatedAt": "2026-10-11T12:59:49+00:00",
-      "nextAction": "PR #240 open; await hosted CI and review. Merge only with user authorization via ~/.claude/scripts/gh-merge-when-green.sh, taking turns with the river-oaks-f8 session.",
+      "owner": null,
+      "updatedAt": "2026-10-11T15:44:03+00:00",
+      "nextAction": "Delivered by PR #240 (merge a9cfe01). Bridge hardening follow-up is tracked by studio-bridge-hardening. Retire worktree river-oaks-studio-chat-20261011 after this register change merges.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-agent-chat.md",
       "filesOwned": [
         "preview/src/studio/agent-chat.js",
@@ -1614,11 +1693,43 @@
         "node desktop/studio-e2e.js",
         "pnpm run verify"
       ],
-      "evidence": {
-        "pr": "https://github.com/BunsDev/river-oaks/pull/240",
-        "verifiedHead": "f6a95ec",
-        "base": "a13c4e4"
-      }
+      "evidence": [
+        {
+          "pr": 240,
+          "reviewedHead": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12",
+          "merge": "a9cfe017740d25ea3ad09a42fea768cf12cf2fb7",
+          "tree": "c4e9fefb13d9c7e910fb8f2915feddb6b9048d77",
+          "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh. Local core verify, Studio unit (58), agent Electron E2E, designer/studio Electron E2E and world-studio browser journey passed. Packaged build was not exercised (see studio-bridge-hardening)."
+        }
+      ],
+      "retirement": null
+    },
+    {
+      "id": "studio-bridge-hardening",
+      "title": "Harden the Studio desktop bridges (World Designer and agent chat) against page-script steering and file reads",
+      "status": "active",
+      "branches": [
+        "fix/studio-bridge-hardening"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-11T17:44:03+00:00",
+      "updatedAt": "2026-10-11T15:44:03+00:00",
+      "nextAction": "Push, open PR, request review from river-oaks-c2; merge only with user authorization via the guard, in merge-queue order.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "desktop/studio-preload.cjs",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-scene-context.js",
+        "desktop/main.js"
+      ],
+      "requiredChecks": [
+        "node --test desktop/tests/studio-*.test.js",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ]
     }
   ]
 }

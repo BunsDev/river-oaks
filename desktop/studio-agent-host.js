@@ -4,22 +4,32 @@ import { join, delimiter } from 'node:path';
 import { homedir } from 'node:os';
 import { runStudioCommand } from './studio-command.js';
 import { STUDIO_AGENT_GUIDE, studioAgentPrompt } from './studio-agent-guide.js';
+import { sanitizeSceneContext, normalizeText } from './studio-scene-context.js';
+import { codexArgs } from './studio-codex.js';
 
 const idPattern = /^[a-zA-Z0-9_-]{1,100}$/;
 const validId = value => typeof value === 'string' && idPattern.test(value);
-const MAX_MESSAGE = 4000, MAX_CONTEXT = 160 * 1024, MAX_TRANSCRIPT = 48 * 1024, MAX_CHATS = 8;
+const MAX_MESSAGE = 4000, MAX_CONTEXT = 160 * 1024, MAX_TRANSCRIPT = 48 * 1024, MAX_CHATS = 8, MAX_REPLY = 64 * 1024;
+// UTF-8 byte budget, cut on a code point boundary.
+function capBytes(text, budget) {
+  let used = 0, out = '';
+  for (const char of text) { const size = Buffer.byteLength(char); if (used + size > budget) break; used += size; out += char; }
+  return { text: out, used };
+}
+// A page script cannot spend the user's provider quota faster than a person chats.
+const RATE = { sends: 20, windowMs: 10 * 60 * 1000 };
 
 // Executables, argv and models are fixed here. The renderer picks only IDs from this table.
 export const STUDIO_AGENT_PROVIDERS = {
   claude: { name: 'Claude', command: 'claude', env: 'RIVER_OAKS_AGENT_CLAUDE',
     models: [{ id: 'claude-opus-5-5', label: 'Opus 5.5' }, { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' }, { id: 'claude-haiku-5-5', label: 'Haiku 5.5' }],
-    // No tools, MCP servers, project settings or saved sessions: the chat sees only the prompt.
+    // No tools, slash commands, MCP servers, settings sources (so no CLAUDE.md) or saved sessions.
     args: ({ model, prompt }) => ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--model', model,
-      '--no-session-persistence', '--strict-mcp-config', '--setting-sources', '', '--system-prompt', STUDIO_AGENT_GUIDE, '--tools', '', '--', prompt] },
+      '--no-session-persistence', '--strict-mcp-config', '--setting-sources', '', '--disable-slash-commands', '--system-prompt', STUDIO_AGENT_GUIDE, '--tools', '', '--', prompt] },
   codex: { name: 'Codex', command: 'codex', env: 'RIVER_OAKS_AGENT_CODEX',
     models: [{ id: 'default', label: 'Codex' }],
-    args: ({ model, prompt, workspace }) => ['exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check', '--ephemeral', '-C', workspace,
-      ...(model === 'default' ? [] : ['-m', model]), '--', `${STUDIO_AGENT_GUIDE}\n\n${prompt}`] },
+    // Tool-less: see studio-codex.js for why the read-only sandbox alone is not enough.
+    args: ({ model, prompt, workspace }) => codexArgs({ model, workspace, prompt: `${STUDIO_AGENT_GUIDE}\n\n${prompt}` }) },
 };
 
 // GUI launches often miss the shell PATH, so common user install locations are searched too.
@@ -61,7 +71,7 @@ export function createStreamReader(providerId, onDelta) {
 }
 
 export function createStudioAgentHost({ root, env = process.env, execute = runStudioCommand, resolve = resolveExecutable, confirm = async () => false, timeout = 180000 }) {
-  const chats = new Map(), active = new Map(), consented = new Set();
+  const chats = new Map(), active = new Map(), consented = new Set(), sent = [];
   let executables = null;
   async function locate() {
     if (!executables) {
@@ -84,7 +94,16 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
       const provider = STUDIO_AGENT_PROVIDERS[input?.providerId];
       if (!provider || !validId(input.chatId) || !validId(input.requestId) || !provider.models.some(model => model.id === input.modelId) || !['ask', 'allow'].includes(input.mode)
         || typeof input.message !== 'string' || !input.message.trim() || input.message.length > MAX_MESSAGE || Buffer.byteLength(JSON.stringify(input.context ?? null)) > MAX_CONTEXT) throw Error('Invalid agent message.');
-      if (active.has(input.chatId)) throw Error('The agent is still answering. Wait or stop it first.');
+      // One reply at a time across every chat, so one user gesture cannot fan out into many runs.
+      // A reply already stopped (New chat, Stop) is only cleaning up and does not count.
+      if ([...active.values()].some(run => !run.control.signal.aborted)) throw Error('The agent is still answering. Wait or stop it first.');
+      const now = Date.now();
+      while (sent.length && now - sent[0] > RATE.windowMs) sent.shift();
+      if (sent.length >= RATE.sends) throw Error('Too many agent messages in the last few minutes. Wait a moment and try again.');
+      // Counted before the first await, so a burst of direct calls cannot all pass the check.
+      sent.push(now);
+      const message = normalizeText(input.message);
+      if (!message) throw Error('Invalid agent message.');
       // Claim the chat before the first await so overlapping sends cannot both start.
       const control = new AbortController(); active.set(input.chatId, { requestId: input.requestId, control });
       try {
@@ -99,8 +118,12 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
         await mkdir(workspace, { recursive: true, mode: 0o700 });
         const stat = await lstat(workspace); if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Agent workspace must be a private directory.');
         const history = transcript(input.chatId);
-        const prompt = studioAgentPrompt({ history, message: input.message, context: input.context ?? null, mode: input.mode });
-        const reader = createStreamReader(input.providerId, onDelta);
+        const prompt = studioAgentPrompt({ history, message, context: sanitizeSceneContext(input.context), mode: input.mode });
+        let forwarded = 0;
+        const reader = createStreamReader(input.providerId, delta => {
+          const part = capBytes(delta, MAX_REPLY - forwarded); forwarded += part.used;
+          if (part.text) onDelta(part.text);
+        });
         const extraPath = [join(homedir(), '.local/bin'), '/opt/homebrew/bin', '/usr/local/bin'].join(delimiter);
         try {
           await execute(executable, provider.args({ model: input.modelId, prompt, workspace }), { cwd: workspace, env: { ...env, PATH: `${env.PATH || ''}${delimiter}${extraPath}` },
@@ -110,8 +133,8 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
           if (/timed out/.test(error.message)) throw Error(`${provider.name} did not answer in time.`);
           throw Error(`${provider.name} CLI failed. Check that it is signed in on this device.`);
         }
-        const text = reader.finish();
-        history.push({ role: 'user', text: input.message }, { role: 'agent', text });
+        const text = capBytes(reader.finish(), MAX_REPLY).text;
+        history.push({ role: 'user', text: message }, { role: 'agent', text });
         while (history.length > 2 && Buffer.byteLength(JSON.stringify(history)) > MAX_TRANSCRIPT) history.splice(0, 2);
         return { requestId: input.requestId, text };
       } finally { if (active.get(input.chatId)?.requestId === input.requestId) active.delete(input.chatId); }

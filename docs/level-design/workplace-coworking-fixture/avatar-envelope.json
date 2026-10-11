@@ -16,133 +16,252 @@
       "widthM": 1.01,
       "heightM": 2.13,
       "depthM": 0.42,
-      "turningRadiusM": 0.547
+      "turningRadiusM": 0.547,
+      "seated": {
+        "footprintRadiusM": 0.782,
+        "widthM": 0.78,
+        "depthM": 0.72
+      }
     },
     "jevica-beast": {
       "widthM": 1.01,
       "heightM": 2.24,
       "depthM": 1.46,
-      "turningRadiusM": 0.888
+      "turningRadiusM": 0.888,
+      "seated": {
+        "footprintRadiusM": 1.251,
+        "widthM": 0.78,
+        "depthM": 1.74
+      }
     },
     "sable-human": {
       "widthM": 1.01,
       "heightM": 2.13,
       "depthM": 0.44,
-      "turningRadiusM": 0.551
+      "turningRadiusM": 0.551,
+      "seated": {
+        "footprintRadiusM": 0.803,
+        "widthM": 0.78,
+        "depthM": 0.75
+      }
     },
     "woman-casual": {
       "widthM": 1.01,
       "heightM": 2.25,
       "depthM": 0.9,
-      "turningRadiusM": 0.676
+      "turningRadiusM": 0.676,
+      "seated": {
+        "footprintRadiusM": 0.803,
+        "widthM": 0.78,
+        "depthM": 1.21
+      }
     },
     "rowan-human": {
       "widthM": 0.73,
       "heightM": 2.23,
       "depthM": 0.51,
-      "turningRadiusM": 0.445
+      "turningRadiusM": 0.445,
+      "seated": {
+        "footprintRadiusM": 0.805,
+        "widthM": 0.93,
+        "depthM": 0.77
+      }
     },
     "man-casual": {
       "widthM": 0.73,
       "heightM": 2.31,
       "depthM": 1.49,
-      "turningRadiusM": 0.83
+      "turningRadiusM": 0.83,
+      "seated": {
+        "footprintRadiusM": 1.215,
+        "widthM": 0.93,
+        "depthM": 1.72
+      }
     },
     "woman-tailored": {
       "widthM": 1.01,
       "heightM": 2.13,
       "depthM": 0.46,
-      "turningRadiusM": 0.555
+      "turningRadiusM": 0.555,
+      "seated": {
+        "footprintRadiusM": 0.811,
+        "widthM": 0.83,
+        "depthM": 0.79
+      }
     },
     "vesper-beast": {
       "widthM": 1.01,
       "heightM": 2.18,
       "depthM": 1.37,
-      "turningRadiusM": 0.851
+      "turningRadiusM": 0.851,
+      "seated": {
+        "footprintRadiusM": 1.168,
+        "widthM": 0.83,
+        "depthM": 1.68
+      }
     },
     "man-tailored": {
       "widthM": 0.71,
       "heightM": 2.23,
       "depthM": 0.52,
-      "turningRadiusM": 0.44
+      "turningRadiusM": 0.44,
+      "seated": {
+        "footprintRadiusM": 0.824,
+        "widthM": 0.87,
+        "depthM": 0.79
+      }
     },
     "midnight-host-wolf": {
       "widthM": 0.71,
       "heightM": 2.33,
       "depthM": 1.53,
-      "turningRadiusM": 0.843
+      "turningRadiusM": 0.843,
+      "seated": {
+        "footprintRadiusM": 1.252,
+        "widthM": 0.87,
+        "depthM": 1.79
+      }
     },
     "lyra-human": {
       "widthM": 1.01,
       "heightM": 2.13,
       "depthM": 0.52,
-      "turningRadiusM": 0.568
+      "turningRadiusM": 0.568,
+      "seated": {
+        "footprintRadiusM": 0.811,
+        "widthM": 0.82,
+        "depthM": 0.84
+      }
     },
     "woman-daywear": {
       "widthM": 1.01,
       "heightM": 2.24,
       "depthM": 0.67,
-      "turningRadiusM": 0.606
+      "turningRadiusM": 0.606,
+      "seated": {
+        "footprintRadiusM": 0.811,
+        "widthM": 0.82,
+        "depthM": 0.98
+      }
     },
     "man-workwear": {
       "widthM": 0.68,
       "heightM": 2.23,
       "depthM": 0.52,
-      "turningRadiusM": 0.428
+      "turningRadiusM": 0.428,
+      "seated": {
+        "footprintRadiusM": 0.817,
+        "widthM": 0.85,
+        "depthM": 0.79
+      }
     },
     "kai-formal-beast": {
       "widthM": 0.68,
       "heightM": 2.27,
       "depthM": 1.56,
-      "turningRadiusM": 0.851
+      "turningRadiusM": 0.851,
+      "seated": {
+        "footprintRadiusM": 1.264,
+        "widthM": 0.85,
+        "depthM": 1.79
+      }
     },
     "kai-explorer": {
       "widthM": 0.75,
       "heightM": 2.23,
       "depthM": 0.52,
-      "turningRadiusM": 0.456
+      "turningRadiusM": 0.456,
+      "seated": {
+        "footprintRadiusM": 0.824,
+        "widthM": 0.96,
+        "depthM": 0.79
+      }
     },
     "kai-explorer-beast": {
       "widthM": 0.75,
       "heightM": 2.27,
       "depthM": 1.56,
-      "turningRadiusM": 0.865
+      "turningRadiusM": 0.865,
+      "seated": {
+        "footprintRadiusM": 1.264,
+        "widthM": 0.96,
+        "depthM": 1.8
+      }
     },
     "kai-noir": {
       "widthM": 0.68,
       "heightM": 2.23,
       "depthM": 0.52,
-      "turningRadiusM": 0.428
+      "turningRadiusM": 0.428,
+      "seated": {
+        "footprintRadiusM": 0.824,
+        "widthM": 0.85,
+        "depthM": 0.79
+      }
     },
     "kai-noir-beast": {
       "widthM": 0.68,
       "heightM": 2.27,
       "depthM": 1.56,
-      "turningRadiusM": 0.851
+      "turningRadiusM": 0.851,
+      "seated": {
+        "footprintRadiusM": 1.264,
+        "widthM": 0.85,
+        "depthM": 1.8
+      }
     },
     "forest-aristocrat": {
       "widthM": 0.69,
       "heightM": 2.45,
       "depthM": 0.62,
-      "turningRadiusM": 0.464
+      "turningRadiusM": 0.464,
+      "seated": {
+        "footprintRadiusM": 0.801,
+        "widthM": 0.81,
+        "depthM": 0.85
+      }
     },
     "forest-aristocrat-beast": {
       "widthM": 0.69,
       "heightM": 2.45,
       "depthM": 0.66,
-      "turningRadiusM": 0.477
+      "turningRadiusM": 0.477,
+      "seated": {
+        "footprintRadiusM": 0.801,
+        "widthM": 0.81,
+        "depthM": 0.88
+      }
     },
     "forest-aristocrat-feminine": {
       "widthM": 1.01,
       "heightM": 2.36,
       "depthM": 0.52,
-      "turningRadiusM": 0.568
+      "turningRadiusM": 0.568,
+      "seated": {
+        "footprintRadiusM": 0.782,
+        "widthM": 0.8,
+        "depthM": 0.8
+      }
     },
     "forest-aristocrat-feminine-beast": {
       "widthM": 1.01,
       "heightM": 2.36,
       "depthM": 0.59,
-      "turningRadiusM": 0.585
+      "turningRadiusM": 0.585,
+      "seated": {
+        "footprintRadiusM": 0.782,
+        "widthM": 0.8,
+        "depthM": 0.86
+      }
     }
-  }
+  },
+  "tallest": {
+    "look": "forest-aristocrat",
+    "heightM": 2.45
+  },
+  "widestSeated": {
+    "look": "kai-formal-beast",
+    "footprintRadiusM": 1.264
+  },
+  "seatedMethod": "Same fixture; the rig driven through the game's seat path (avatar.update with riding, ridingKind 'seat', seatToFloor 0.45) for 3 s of animation, then skinned vertex bounds of visible meshes. footprintRadiusM is the plan-view reach from the seat origin, hypot(max |x|, max |z|), and includes tails and legs. The game lowers the whole avatar onto the seat separately, so seated height is not measured here. Script: docs/superpowers/plans/2026-10-11-workplace-room-envelope/measure-envelope.mjs."
 }

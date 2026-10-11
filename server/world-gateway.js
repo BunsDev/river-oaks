@@ -18,13 +18,15 @@ import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false}={}) {
+  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
   const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
-    allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id)}):null;
+    allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id),
+    // A long-lived gateway sweeps for tasks orphaned by another instance; serverless relies on owner reads.
+    sweepMs:workplaceSweep?5000:0}):null;
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
