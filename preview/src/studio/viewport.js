@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { createStudioScene, disposeStudioScene, frameStudioObject } from './scene.js';
+import { createStudioScene, disposeStudioScene, frameStudioObject, studioClearColor } from './scene.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../walking.js';
 
 export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExitWalk}) {
   const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.setClearColor('#e8eeea');renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.setClearColor(studioClearColor(document.documentElement.dataset.theme));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','World Studio 3D viewport');
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,1,.1,2000);
   scene.add(new THREE.HemisphereLight('#f9fff9','#8c9b8b',2.5));
@@ -66,6 +66,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
     if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(event.key.toLowerCase())){event.preventDefault();keys.add(event.key.toLowerCase());}
   },{signal});
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()),{signal});
+  document.addEventListener('appearancechange',event=>renderer.setClearColor(studioClearColor(event.detail.resolved)),{signal});
   function resizeViewport(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();}
   const resize=new ResizeObserver(resizeViewport);resize.observe(host);resizeViewport();
   function frameObject(object){orbit.target.copy(frameStudioObject(camera,object));orbit.maxDistance=Math.max(700,camera.position.distanceTo(orbit.target)*2);orbit.update();}
