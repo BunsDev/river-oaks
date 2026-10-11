@@ -79,8 +79,8 @@
         "codex/integrate-pending-20261011"
       ],
       "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:06:36.667382+00:00",
-      "nextAction": "Wait for coordinated PR198 exact-head hosted gates and merge; retain the older checkout and its superseded diagnostic patch until final preservation audit.",
+      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
+      "nextAction": "PR198 is delivered. Complete PR210 feature delivery and primary staged reconciliation; preserve superseded trial receipts and original feature trees.",
       "filesOwned": [
         "preview/e2e/contextual-first-visit.js",
         "docs/superpowers/plans/2026-10-11-pending-integration.md"
@@ -96,7 +96,14 @@
         "activeProcess": false
       },
       "leaseUntil": "2026-10-11T09:06:36.667382+00:00",
-      "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md"
+      "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
+      "evidence": [
+        {
+          "pr": 198,
+          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511"
+        }
+      ]
     },
     {
       "id": "places-studio-integration",
@@ -106,8 +113,8 @@
         "codex/places-studio-integration-20261011"
       ],
       "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:10:24.797725+00:00",
-      "nextAction": "Await coordinated PR198 exact-head hosted checks and squash merge, rebase only this feature commit with an identical-tree check, then publish and verify the integration PR.",
+      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
+      "nextAction": "Pass exact-head hosted checks and review on PR210, squash merge, then reconcile delivered staged primary paths while preserving unrelated source work.",
       "filesOwned": [
         ".agents/skills/studio-world-design/SKILL.md",
         ".github/workflows/verify.yml",
@@ -196,10 +203,9 @@
         "Exact-head hosted checks and merged PR"
       ],
       "observed": {
-        "head": "ad0c985283f1a25686cc33d4ecb947903842c5bb",
+        "head": "64db466817ac9b3ccdb5dfca41f6639a847b898a",
         "dirtyPaths": 0,
-        "mergeInProgress": false,
-        "activeProcess": true
+        "mergeInProgress": false
       },
       "leaseUntil": "2026-10-11T09:06:36.667382+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
@@ -212,8 +218,15 @@
         "upstreamReconciliation": "Only documentation, task tooling and package script guards changed; anticipated merge tree matched actual rebased tree.",
         "core": "Passed all 11 tasks after task-tooling reconciliation; .runtime/integration/final-reports/core-reconciled.json",
         "tooling": "27 passed, zero skips",
-        "review": "Independent final reconciliation review found no required issues; exact tree/patch/index hashes and verification receipts confirmed."
-      }
+        "review": "Independent final reconciliation review found no required issues; exact tree/patch/index hashes and verification receipts confirmed.",
+        "finalRebase": {
+          "base": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "head": "64db466817ac9b3ccdb5dfca41f6639a847b898a",
+          "tree": "7fcd4454409e787b847c878434039d0ea1359406",
+          "unchangedFromReconciledCandidate": true
+        }
+      },
+      "pr": 210
     },
     {
       "id": "repo-completion-ledger",
@@ -262,13 +275,13 @@
     {
       "id": "store-intros-delivery",
       "title": "Complete store intros and tooling delivery",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "codex/store-intros-signin-delivery-20261009"
       ],
-      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
-      "updatedAt": "2026-10-11T06:55:54.717716+00:00",
-      "nextAction": "Push verified lifecycle-main reconciliation, pass required hosted checks on final head, then squash merge PR198. Integration owner will record exact merge proof after landing.",
+      "owner": null,
+      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
+      "nextAction": "Retain clean delivery checkout and verification receipts for a separate archive-backed retirement. Exact reviewed head and squash tree equality are verified.",
       "filesOwned": [
         "package.json",
         "AGENTS.md",
@@ -284,18 +297,25 @@
         "Required hosted checks on final PR head"
       ],
       "observed": {
-        "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
-        "dirtyPaths": 14,
-        "mergeInProgress": true,
-        "activeProcess": true
+        "head": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+        "dirtyPaths": 0,
+        "mergeInProgress": false
       },
       "pr": 198,
-      "leaseUntil": "2026-10-11T08:55:54.717716+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pr198-merge.md",
       "evidence": [
         {
           "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
           "verification": "Local full: 17 tasks passed; 414 Redis tests, six experience journeys, 19 shared journeys. All hosted checks passed, including unchanged security retry. Core and 27 tooling tests also pass after docs/tooling-only main d3dbe63 reconciliation."
+        },
+        {
+          "pr": 198,
+          "url": "https://github.com/BunsDev/river-oaks/pull/198",
+          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "tree": "50408e555a1f82044c47f271df12acabe403c6b2",
+          "mergedAt": "2026-10-11T07:17:35Z",
+          "verification": "All hosted checks passed on final head without retry; Verify38119680150. Local full17, reconciliation core11 and tooling27 passed. Merge tree equals reviewed head."
         }
       ]
     },

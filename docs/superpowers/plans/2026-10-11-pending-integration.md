@@ -152,3 +152,22 @@ required findings and verified the preservation hashes. `project:check --github`
 exited 1 only for the existing Storybook PR200 local/remote head divergence.
 Receipts are retained beside the full result. The next prerequisite is PR198
 landing; no additional runtime changes were introduced.
+
+## PR198 landed; feature PR opened
+
+PR198 merged at 2026-10-11T07:17:35Z: reviewed head `5f409a33c078f282481a79093b2dc2353a60fcb1`,
+squash `e561f9b7fdf071aa4bc95e38628264bb5b51c511`. Remote main contains the merge and its tree
+`50408e555a1f82044c47f271df12acabe403c6b2` exactly matches the reviewed head. All final-head hosted
+checks passed without retry (Verify run 38119680150); the delivery owner confirmed
+a clean retained checkout and released the main hold.
+
+The feature commit was rebased from `a60cd67` onto that squash as `64db466`.
+Before/after trees are identical: `7fcd4454409e787b847c878434039d0ea1359406`. Existing full,
+core and native evidence therefore still covers the runtime.
+
+Feature PR: https://github.com/BunsDev/river-oaks/pull/210. This follow-up changes only task delivery/PR
+records and this ledger; JSON validation and diff checks cover those metadata edits.
+Hosted checks for the final PR head and the feature merge remain pending.
+The temporary owned Redis16411 service was stopped after full verification; no
+other Redis service was touched. Original source trees and staged primary remain
+unchanged.
