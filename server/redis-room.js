@@ -287,9 +287,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     closed=true;cached=null;
     await redis.eval(RELEASE,1,keys.lease,token);
   }
-  async function resolvePlace(placeId) {
+  async function listPlaces() {
     const data=regionCatalog && worldId!==DEFAULT_WORLD_ID ? await regionCatalog.getRegion(worldId) : worldData;
-    return placesOf(data).find(place=>place.id===placeId)??null;
+    return placesOf(data);
   }
-  return {worldId,request,tick,read,resolvePlace,close};
+  async function resolvePlace(placeId) {
+    return (await listPlaces()).find(place=>place.id===placeId)??null;
+  }
+  return {worldId,request,tick,read,resolvePlace,listPlaces,close};
 }

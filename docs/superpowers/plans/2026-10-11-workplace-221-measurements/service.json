@@ -1,0 +1,80 @@
+{
+  "stepMs": 1500,
+  "completionMs": {
+    "n": 5,
+    "min": 6032,
+    "p50": 6039,
+    "max": 6069
+  },
+  "recovery": {
+    "afterReplacementMs": {
+      "n": 5,
+      "min": 3068,
+      "p50": 3154,
+      "max": 3215
+    },
+    "outcomes": [
+      {
+        "ms": 3197,
+        "status": "completed",
+        "attempts": 0,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3152,
+        "status": "completed",
+        "attempts": 0,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3068,
+        "status": "completed",
+        "attempts": 0,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3215,
+        "status": "completed",
+        "attempts": 0,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3154,
+        "status": "completed",
+        "attempts": 0,
+        "artifacts": 1,
+        "notices": 1
+      }
+    ]
+  },
+  "responseBytes": {
+    "state": {
+      "n": 5,
+      "min": 1510,
+      "p50": 1510,
+      "max": 1514
+    },
+    "artifact": {
+      "n": 5,
+      "min": 2088,
+      "p50": 2088,
+      "max": 2088
+    },
+    "occupancy": {
+      "n": 5,
+      "min": 120,
+      "p50": 120,
+      "max": 120
+    }
+  },
+  "storage": {
+    "ownerKeyBytes": 6474,
+    "ownerDocBytes": 5631,
+    "stationsKeyBytes": 428,
+    "ownerTtlDays": 30
+  }
+}
