@@ -1454,9 +1454,9 @@
         "fix/workplace-task-sweep"
       ],
       "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T11:45:00+00:00",
-      "leaseUntil": "2026-10-11T13:45:00+00:00",
-      "nextAction": "Write failing tests for sweep recovery without owner reads, paused tasks left alone, stale index cleanup and access loss; then implement.",
+      "updatedAt": "2026-10-11T11:52:00+00:00",
+      "leaseUntil": "2026-10-11T13:52:00+00:00",
+      "nextAction": "Open the PR stacked on #232; after #227, #230 and #232 merge, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-task-sweep.md",
       "filesOwned": [
         "server/workplace.js (due index and sweep; agreed with river-oaks-55)",
@@ -1476,7 +1476,13 @@
         221,
         214
       ],
-      "dependsOn": "workplace-retention-status (PR #232), stacked until it merges"
+      "dependsOn": "workplace-retention-status (PR #232), stacked until it merges",
+      "verification": {
+        "server": "480 pass, 0 skipped with isolated Redis",
+        "preview": "2594 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "mutations": "no index writes: 7 cases fail; no stale cleanup: 1 case fails"
+      }
     },
     {
       "id": "map-ui-readability",

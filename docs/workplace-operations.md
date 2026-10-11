@@ -18,7 +18,7 @@ This covers operating the first workplace slice (#214): one fixture companion, o
    - Switching off while a task is mid-flight is not tested.
 2. Optionally rebuild the client with `VITE_WORKPLACE` unset to remove the panel.
 
-Stored data is left in place, but each key's expiry keeps counting down while the flag is off. Turning the flag back on restores each owner's saved draft and finished tasks (same test). A task that was running when the flag went off resumes from its last checkpoint only when its owner next reads the workplace. A newly started instance doesn't look for unfinished tasks, so nothing recovers without the owner coming back *(code)*. The time it was off doesn't count against its deadline. A gap longer than the 10 s step lease counts as one recovery, however long it lasts. A task fails with `worker_lost` only after a fourth such gap (`a reader returning after a long absence …` and `a lost runner recovers …` in `server/tests/workplace.test.js`).
+Stored data is left in place, but each key's expiry keeps counting down while the flag is off. Turning the flag back on restores each owner's saved draft and finished tasks (same test). A task that was running when the flag went off resumes from its last checkpoint once the flag is back on: on a long-lived service, the sweep picks it up within 5 s (see **Unattended recovery** below); on Vercel, it resumes on the owner's next read. The time it was off doesn't count against its deadline. A gap longer than the 10 s step lease counts as one recovery, however long it lasts. A task fails with `worker_lost` only after a fourth such gap (`a reader returning after a long absence …` and `a lost runner recovers …` in `server/tests/workplace.test.js`).
 
 ## Rolling back the code
 
@@ -59,9 +59,22 @@ Every request passes the town's session, waitlist, ban, origin and CSRF gates. W
 
 On a serverless host with no timer, steps advance only on the owner's authorized reads, and the request gate already refuses banned or unapproved owners.
 
+## Unattended recovery
+
+Every save of an owner document also updates a due index, `{ns}:workplace:v1:due`. It's a sorted set of owners whose task is queued or running, scored by when the next step is due. The update happens in the same atomic script as the save. Pausing, finishing or cancelling removes the owner, so a paused task is never swept.
+
+A **long-lived** gateway (`server/redis-start.js`, any deployment where `VERCEL` isn't `1`) sweeps every 5 s. It takes up to 50 overdue owners and, for each one, checks access (approved and not banned), then runs the next step. That step goes through the same compare-and-set as every other runner, so several instances sweeping the same task still land each step once.
+- A task orphaned by an instance that died finishes on another instance, with nobody reading (`a live Redis gateway finishes a task orphaned by another gateway …` in `server/tests/sweep-workplace.test.js`).
+- An owner who lost access has their work stopped (`access_revoked`).
+- An index entry for a document that expired or was deleted is removed, but only if nobody re-scored it in the meantime.
+
+On **Vercel**, a function invocation can't keep a timer, so there is no sweep. A task advances on its owner's authorized reads, and an orphaned task waits for its owner. The in-memory town keeps everything in one process, so a restart loses its data, and it has no sweep either.
+
+The due index holds raw user ids, because the access check needs them. The waitlist and moderation stores already hold user ids server-side, and the index is never exposed through any route.
+
 ## Not covered
 
 - Live WorkOS sessions, hosted Redis under production load, and multi-region behavior.
 - The art pass, uncoached player sessions and device performance budgets (#221, owned by Val).
-- Unattended recovery: no instance looks for unfinished tasks on startup.
+- Unattended recovery on Vercel: no sweep runs there.
 - Any external effect. The fixture adapter writes nothing outside the owner's document, and each receipt records `externalWrites: 0` and `paidCalls: 0`.
