@@ -80,6 +80,11 @@ test('email access: browser verification, invitation, member controls and revoca
         return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
       }), true, 'keyboard focus is visible on the email field');
 
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      assert.equal(await page.locator('#access-review-close').evaluate(node => getComputedStyle(node).transitionDuration), '0s',
+        'admin review controls honor reduced motion');
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.evaluate(() => {
         const box=selector=>document.querySelector(selector).getBoundingClientRect();
@@ -90,6 +95,15 @@ test('email access: browser verification, invitation, member controls and revoca
         const panel=document.querySelector('.access-panel');
         return panel.scrollHeight<=panel.clientHeight && document.querySelector('#access-gate').scrollHeight<=innerHeight;
       }), true, 'beside the artwork, the whole sign-in column fits a laptop screen without scrolling');
+      if (width <= 700) {
+        await page.evaluate(() => document.fonts.ready);
+        await page.locator('#access-invite-redeem').scrollIntoViewIfNeeded();
+        assert.equal(await page.locator('#access-invite-redeem').evaluate(node => {
+          const rect = node.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= innerHeight;
+        }), true, 'the invitation action remains reachable on narrow screens');
+        await page.locator('.access-brand').scrollIntoViewIfNeeded();
+      }
       await mkdir('output/playwright', { recursive: true });
       await page.screenshot({ path: `output/playwright/login-${width}.png`, fullPage: true });
     }

@@ -27,7 +27,7 @@ Primary checkout remains at `c98351a` with 28 staged paths. Its exact staged bin
 - Read-only repository and GitHub inventory completed. #198 preview log: Birds button locator timed out in rail-navigation; other listed checks passed. No review comments or reviews were returned.
 - Frozen pnpm install, locked uv sync and core doctor passed in isolated worktree.
 - Seven merge-conflict files resolved in worktree; behavioral verification in progress.
-- No integration commit, push or merge yet. Do not archive this worktree.
+- PR198 reconciliation commits `4fbdf3b` and `8f78e30` were pushed. Neither feature integration nor PR198 is merged yet. Do not archive these worktrees.
 
 ## PR198 local reconciliation results
 
@@ -38,3 +38,189 @@ Primary checkout remains at `c98351a` with 28 staged paths. Its exact staged bin
 - `pnpm run verify tooling` after catalog/CI changes: 19 passed, zero skips.
 - Added store-intro to hosted and full browser acceptance. Independent read-only code review found no blocking issues.
 - Full local gate uses owned Redis at loopback port 16411; hosted checks and merge remain pending.
+
+## Combined integration checkpoint
+
+Worktree: `river-oaks-places-studio-integration-20261011`, branch
+`codex/places-studio-integration-20261011`, initial base `4fbdf3b`.
+Frozen snapshots of both source trees are under
+`/tmp/river-oaks-integration-sources-20261011/`; source hashes were rechecked and
+have not changed. Source trees and canonical main's staged files remain preserved.
+
+- Imported spatial source/tests and its authored review, then Places and the full
+  locally verified Studio/editor/dual-path Designer implementation.
+- Reconciled current HUD navigation in travel, saved places, shared journeys and
+  spatial acceptance. Retained existing settings dialog and all current suites.
+- Review exposed a lost Studio link: sidebar initialization discards the first
+  settings child. Moved the link after the Layers label and added browser entry
+  through Settings. Red fixture failed; combined green run now passes Studio.
+- Review exposed knowledge-pack upgrades rejecting an existing project. Install
+  packs by content hash, select the active pack in each prompt, and migrate only
+  the exact prior generated AGENTS bytes. Custom instructions and identity bytes
+  remain protected. Red test reproduced failure; 18 host/pack checks passed.
+- Focused document/scene/spatial/download/asset checks: 36 passed, zero skips.
+- Combined browser, desktop smoke and final core/full gates remain in progress.
+- PR198 is now owned by the concurrent delivery thread
+  `01a12983-1ffc-7ba0-93a0-f3026b435750`; this thread will make no further PR198
+  pushes. Its newer commit adds response-aware intro waits. Rebase the combined
+  integration on the final merged main before delivery. This coordination avoids
+  competing PR histories while preserving both sets of evidence.
+- Our earlier full run at `8f78e30` failed contextual-first-visit and photo-mode;
+  shared was not run. The delivery thread's final full run passed interaction
+  journeys and is completing shared checks. No full success is claimed yet.
+
+The eleven staged spatial/walkability reports are copied byte-for-byte from the
+primary index to preserve the review's evidence links. They are historical
+October 8 receipts, not current verification. Import hashes are recorded in
+`.runtime/integration/imported-historical-reports.json`; no dates/results changed.
+
+## Fresh combined acceptance
+
+- `RIVER_OAKS_E2E_REPORT=places-studio-green.json pnpm run test:experience
+  world-studio places-guide places spatial-circulation spatial-streets`: exit 0,
+  all five journeys passed. Browser images inspected at desktop and 390 px.
+- `node desktop/studio-e2e.js`: exit 0, nine native checks passed.
+- `node desktop/designer-e2e.js`: initial run timed out waiting for initial editor
+  readiness (15 s, zero checks). Preserved failure in
+  `.runtime/integration/designer-native-first.json`. Added failure-state/image
+  diagnostics without changing behavior or deadlines; rerun passed all seven
+  checks. This does not establish a cause or fix for the initial timeout.
+- Independent read-only review found no further blockers in hosted access,
+  subprocess/IPC boundaries, packaging or Places routing.
+- Imported the final PR198 runtime/test differences through `bc94c21` so the
+  combined gate uses its response-aware intro handling and hosted routing fix.
+- Added new journeys to full/browser profiles and hosted preview. Tooling 19/19
+  passed. Broader desktop regression and full combined gate remain pending.
+
+The broader `pnpm run test:desktop:e2e --dev` run exposed stale legacy sidebar
+buttons, then an incorrectly selected Appearance tab for Graphics controls.
+Updated the fixture to use current launchers/Graphics, complete account intro
+claims before exit, and stub optional provider routes in development mode.
+Both failure receipts/logs are retained under `.runtime/integration/`; final
+native rerun is pending. An initial invocation without `--dev` was stopped in
+its owned process tree before sign-in; it is not acceptance evidence.
+
+Final broad native run: `RIVER_OAKS_DESKTOP_REPORT=desktop-integration-final.json
+pnpm run test:desktop:e2e --dev` exited 0 with all native checks and zero page
+errors. Moving optional provider stubs from Playwright interception to the local
+Vite fixture server allowed the forced-crash replacement renderer to finish
+loading. The prior hanging run was explicitly terminated and is not a pass.
+The bounded recovery wait now fails instead of hanging indefinitely. Independent
+review found no required issues in the fixture updates. Final full verification
+runs with owned isolated Redis at `127.0.0.1:16411`.
+
+## Full gate and latest-main reconciliation
+
+- `REDIS_URL=redis://127.0.0.1:16411 pnpm run verify full` exited 0 on October 11
+  at 07:04 UTC: all 17 tasks passed. Counts: 19 tooling, 2,586 preview, 415 Redis,
+  31 desktop and 141 Python tests; ten experience and nineteen shared journeys.
+  The existing Vince glazing negative-approach test skipped because its approach
+  is already obstructed; that skip is not evidence about the glass.
+- The gate started from the staged candidate, committed unchanged as `9ce3a4a`.
+  Its complete binary patch SHA-256 is
+  `7872bccb4efa1dc083d778ce264ce0cf35b85129b3d5b2a538f34d65f1dd9572`;
+  the committed diff exactly matches the frozen tested patch. Final receipts and
+  generated browser/native reports are preserved under
+  `.runtime/integration/final-reports/`. Historical tracked receipts were restored
+  after preserving the fresh results; no historical result was relabeled.
+- Rebased the single feature commit onto the PR198 owner's reconciled head
+  `5f409a3` as `ad0c985`. Its tree exactly matches the conflict-free merge
+  simulation (`62b782b89325870b8236800acbaf714c54b8be3e`). Differences from the
+  full-tested candidate are task tooling, documentation and package-script guards;
+  gameplay, native runtime, browser fixtures and CI workflow are unchanged.
+- Claimed primary reconciliation and renewed both integration claims. Applied the
+  lifecycle owner's post-merge handoff for PR209, whose exact merge is `d3dbe639`.
+  No source worktree was retired or modified.
+- Primary is currently `20edac0` with all 28 staged paths unchanged. Its complete
+  staged patch still hashes to
+  `c4631e15712b9592ce377b7ef9b2b13ad44eedae32c8ed4882d90a58b605277a`.
+  Eleven reports, two review documents and two source/test files match the candidate
+  exactly; two spatial journeys preserve the original assertions with current-HUD
+  and store-intro adaptations. The divergent pnpm lock and nine unrelated
+  draft/native files remain preserved for the final primary reconciliation.
+
+Next: verify the added task tooling/core gate, await PR198's hosted checks and
+squash merge, rebase only the feature commit onto that final main with a tree
+comparison, then publish and verify the integration PR. PR198 and this feature
+integration remain unmerged at this checkpoint. Live provider/auth, signed
+packaging, human accessibility, Unreal and production acceptance remain outside
+this local verification scope.
+
+Reconciliation checks finished: `pnpm run verify tooling` passed all 27 tests;
+`pnpm run verify` passed all 11 core tasks. Independent final review found no
+required findings and verified the preservation hashes. `project:check --github`
+exited 1 only for the existing Storybook PR200 local/remote head divergence.
+Receipts are retained beside the full result. The next prerequisite is PR198
+landing; no additional runtime changes were introduced.
+
+## PR198 landed; feature PR opened
+
+PR198 merged at 2026-10-11T07:17:35Z: reviewed head `5f409a33c078f282481a79093b2dc2353a60fcb1`,
+squash `e561f9b7fdf071aa4bc95e38628264bb5b51c511`. Remote main contains the merge and its tree
+`50408e555a1f82044c47f271df12acabe403c6b2` exactly matches the reviewed head. All final-head hosted
+checks passed without retry (Verify run 38119680150); the delivery owner confirmed
+a clean retained checkout and released the main hold.
+
+The feature commit was rebased from `a60cd67` onto that squash as `64db466`.
+Before/after trees are identical: `7fcd4454409e787b847c878434039d0ea1359406`. Existing full,
+core and native evidence therefore still covers the runtime.
+
+Feature PR: https://github.com/BunsDev/river-oaks/pull/210. This follow-up changes only task delivery/PR
+records and this ledger; JSON validation and diff checks cover those metadata edits.
+Hosted checks for the final PR head and the feature merge remain pending.
+The temporary owned Redis16411 service was stopped after full verification; no
+other Redis service was touched. Original source trees and staged primary remain
+unchanged.
+
+## PR210 review fixes and cancellation regression
+
+The final-head CodeQL check on `c09e445` flagged multi-character tag deletion in
+heading-anchor extraction. The extractor validates Markdown link IDs, not HTML
+rendering, but a focused regression also proved a real bug: a quoted `>` inside
+an inline tag attribute leaked attribute text into the heading ID. Positive
+ID tokenization now handles quoted attributes, duplicate headings and Unicode,
+retains original Markdown bytes, and rejects the incorrect old anchor. The red
+and green receipts are `.runtime/integration/pack-anchors-{red,green}.log`.
+
+A native rerun failed when starting a new design request immediately after
+canceling one. Preserved failure receipt, screenshot and log are under
+`.runtime/integration/cancel-restart-failure/`. A deterministic real-subprocess
+regression reproduced the host rejecting the replacement while the canceled
+request was still cleaning up. The host now serializes replacements behind that
+cleanup. A queued replacement is itself cancelable; disconnect and replay fences
+remain enforced, with at most one design subprocess executing. Canceled tasks
+also stop before opening a fresh consent prompt after verification.
+
+- `node --test --test-name-pattern='immediate restart' desktop/tests/studio-designer-host.test.js`:
+  expected red failure, `.runtime/integration/cancel-restart-red.log`.
+- `node --test desktop/tests/studio-designer-host.test.js desktop/tests/studio-skill-pack.test.js`:
+  23 passed, zero skips, `.runtime/integration/cancel-restart-green.log`.
+- `node desktop/designer-e2e.js`: all seven native checks passed, including the
+  previously failing immediate restart. `.runtime/integration/cancel-restart-native.log`;
+  `.runtime/agent/studio-designer-native.json`.
+- Independent read-only review found no required findings in serialization,
+  cancellation/disconnect, replay protection or interaction with the parser fix.
+- `pnpm run verify`: all 11 core tasks passed at 07:39 UTC; 27 tooling,
+  2,586 preview (one existing skip), 298 server (106 Redis-dependent skips),
+  36 desktop and 141 Python tests. Build/lint/format/secrets and the expected
+  demo-verifier exit passed. Receipt: `.runtime/integration/final-reports/core-cancel-restart.json`;
+  log: `.runtime/integration/cancel-restart-core.log`. Hosted verification remains
+  pending on the next pushed head. The earlier full Redis/browser gate remains
+  baseline evidence; it was not rerun after these focused fixes.
+
+## Primary checkout preservation after concurrent pull
+
+Primary advanced separately to PR198's squash `e561f9b`; the delivered npm lockfile
+removal reduced the original 28 staged paths to 27. A pnpm add/add conflict had
+stage 2 equal to delivered PR198 and stage 3 equal to the original staged lock.
+All conflict stages and worktree bytes were retained, then the exact original
+stage-3 bytes were restored and staged. All other 26 index/worktree file hashes
+still match the original manifest; zero unmerged paths remain. Receipt:
+`.runtime/integration/primary-after-concurrent-pull.json`.
+
+After feature delivery, revalidate those hashes, align only the 17 delivered
+spatial/report paths to the exact merged feature tree, and fast-forward primary.
+A real temporary Git fixture verified that this preserves the divergent lock and
+nine unrelated staged draft/native files byte-for-byte. The feature source trees
+and the existing unique stash remain preserved. Final primary reconciliation is
+still pending PR210's merge.

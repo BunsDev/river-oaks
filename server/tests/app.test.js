@@ -31,12 +31,12 @@ test('standalone server protects every game chunk and world data after approval'
   const root=await mkdtemp(join(tmpdir(),'river-oaks-assets-'));
   t.after(()=>rm(root,{recursive:true,force:true}));
   await mkdir(join(root,'assets'));await mkdir(join(root,'data'));
-  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
+  for(const file of ['index.html','assets/index-entry.js','assets/preload-helper-entry.js','assets/modulepreload-polyfill-entry.js','assets/main-game.js','assets/walking-game.js','assets/three-game.js','data/district.json'])
     await writeFile(join(root,file),'fixture');
   const waitlist={...approvedWaitlist,isApproved:async id=>id==='owner'};
   const {origin}=await fixture(t,waitlist,root);
   const get=(path,id)=>fetch(origin+path,{headers:id?{Cookie:`session=${id}`}:{}});
-  for(const path of ['/','/assets/index-entry.js','/assets/preload-helper-entry.js'])assert.equal((await get(path)).status,200,path);
+  for(const path of ['/','/assets/index-entry.js','/assets/preload-helper-entry.js','/assets/modulepreload-polyfill-entry.js'])assert.equal((await get(path)).status,200,path);
   for(const path of ['/assets/main-game.js','/assets/walking-game.js','/assets/three-game.js','/data/district.json']){
     assert.equal((await get(path)).status,403,path);
     assert.equal((await get(path,'guest')).status,403,path);

@@ -5,13 +5,13 @@ export function setupSidebar() {
   const panel = document.querySelector('#control-panel');
   const trigger = document.querySelector('#panel-toggle');
   let controls = null;
-  trigger.innerHTML = '<span aria-hidden="true">⌖</span><span>Places</span><kbd>⌘B</kbd>';
+  trigger.innerHTML = '<span aria-hidden="true">⌖</span><span>Map</span><kbd>⌘B</kbd>';
   trigger.querySelector('kbd').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘B' : 'Ctrl B';
-  trigger.setAttribute('aria-label', 'Places');
+  trigger.setAttribute('aria-label', 'Map');
   trigger.setAttribute('aria-controls', 'explore-section');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('aria-keyshortcuts', 'Meta+B Control+B Alt+2');
-  trigger.title = 'Find a place';
+  trigger.title = 'Open district minimap';
   document.body.classList.add('panel-collapsed', 'game-hud');
   trigger.addEventListener('click', () => controls?.toggle(1));
   return {
@@ -76,13 +76,15 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   sections.forEach((section, index) => {
     section.classList.add('hud-space'); section.removeAttribute('role');
     const header = document.createElement('header'); header.className = 'hud-space-header';
-    const heading = document.createElement('h2'); heading.textContent = index === 0 ? 'People nearby' : 'Explore the district';
-    const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', `Close ${index === 0 ? 'People' : 'Places'}`);
+    const heading = document.createElement('h2'); heading.textContent = index === 0 ? 'People nearby' : 'District map';
+    const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', `Close ${index === 0 ? 'People' : 'Map'}`);
     close.addEventListener('click', () => setOpen(index, false)); header.append(heading, close); section.prepend(header);
     if (index === 1) {
       const directory = section.querySelector('#district-directory');
       directory.previousElementSibling.remove();
-      header.after(directory);
+      const access = document.createElement('details'); access.className = 'storefront-access';
+      const summary = document.createElement('summary'); summary.textContent = 'Storefront access';
+      access.append(summary, directory); section.append(access);
     }
     panel.append(section); setOpen(index, initialOpen[index]);
   });

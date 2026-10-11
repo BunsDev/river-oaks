@@ -1,0 +1,43 @@
+{
+  "createdAt": "2026-10-08T14:04:35.878Z",
+  "results": [
+    {
+      "name": "spatial-circulation",
+      "status": "failed",
+      "seconds": 155.315,
+      "error": "Error: Zadig & Voltaire: normal keyboard walking reaches return; {\"end\":[-2831.5344563599765,20.020098205010267,1349.3884614807796],\"target\":[-2830.3481041822542,-1349.805888951847],\"tail\":[{\"ms\":58053,\"position\":[-2831.5344563599765,20.020098205010267,1349.3884614807796],\"occupants\":[{\"id\":\"store-osm-node-8172494990-person-3\",\"position\":[-2834.2423614037507,18.340098205010268,1349.406349426479],\"role\":\"guest\"},{\"id\":\"store-osm-node-8172494990-person-1\",\"position\":[-2835.4282518389555,18.340098205010268,1350.0973720501624],\"role\":\"staff\"}],\"keys\":[\"KeyS\"]},{\"ms\":58386,\"position\":[-2831.5344563599765,20.020098205010267,1349.3884614807796],\"occupants\":[{\"id\":\"store-osm-node-8172494990-person-3\",\"position\":[-2834.2423614037507,18.340098205010268,1349.406349426479],\"role\":\"guest\"},{\"id\":\"store-osm-node-8172494990-person-1\",\"position\":[-2835.4282518389555,18.340098205010268,1350.0973720501624],\"role\":\"staff\"}],\"keys\":[\"KeyS\"]},{\"ms\":58845,\"position\":[-2831.5344563599765,20.020098205010267,1349.3884614807796],\"occupants\":[{\"id\":\"store-osm-node-8172494990-person-3\",\"position\":[-2834.2423614037507,18.340098205010268,1349.406349426479],\"role\":\"guest\"},{\"id\":\"store-osm-node-8172494990-person-1\",\"position\":[-2835.4282518389555,18.340098205010268,1350.0973720501624],\"role\":\"staff\"}],\"keys\":[\"KeyS\"]},{\"ms\":59674,\"position\":[-2831.5344563599765,20.020098205010267,1349.3884614807796],\"occupants\":[{\"id\":\"store-osm-node-8172494990-person-3\",\"position\":[-2834.2423614037507,18.340098205010268,1349.406349426479],\"role\":\"guest\"},{\"id\":\"store-osm-node-8172494990-person-1\",\"position\":[-2835.4282518389555,18.340098205010268,1350.0973720501624],\"role\":\"staff\"}],\"keys\":[\"KeyS\"]}]}\n    at check (preview/e2e/spatial-circulation.js:3:49)\n    at eval (preview/e2e/spatial-circulation.js:64:9)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:472:9)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks/preview/e2e/experience-runner.js:44:22",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:64606/?motion-debug=1",
+          "ready": "true",
+          "assets": "{\"loaded\":103,\"total\":103,\"failed\":0,\"done\":true}",
+          "renderStats": "{\"calls\":477,\"triangles\":2635037,\"geometries\":267,\"textures\":220}",
+          "quality": "{\"mode\":\"auto\",\"scale\":0.6,\"occlusion\":false,\"fps\":29}",
+          "pipeline": "{\"samples\":4,\"ao\":false,\"bloom\":true,\"renderScale\":0.6,\"aoScale\":1,\"transmissionScale\":1}",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": [
+            1440,
+            1000,
+            1440,
+            1000
+          ]
+        }
+      ]
+    }
+  ]
+}

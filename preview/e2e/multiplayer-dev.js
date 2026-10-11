@@ -141,12 +141,14 @@ async page => {
   const spot = district.communityLocations[5];
   const toggle = page.locator('#panel-toggle'); if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('#places-open').click();
   await page.locator(`#places-list li[data-place-id="spot:${spot.id}"] button[aria-label^="Go to"]`).click();
   await page.waitForFunction(name => document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`), spot.name, { timeout: 15000 });
   const seen = async (tab, id) => tab.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 4.5; }, [id, spot.position], { timeout: 15000 }).then(() => true, () => false);
   check(await seen(page, a.self) && await seen(second, a.self), `a shared teleport lands beside ${spot.name} in both browsers' snapshots`);
   await page.waitForTimeout(1100);
   const benchPosition = await page.evaluate(() => { const h = JSON.parse(document.querySelector('#walking-hud').dataset.position); return [h[0], -h[2]]; });
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmark-name').fill('Town bench'); await page.locator('#landmark-add').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'), null, {timeout:15000})
     .catch(async () => { throw new Error(`Landmark save failed: ${await page.locator('#places-status').textContent()}`); });
@@ -161,10 +163,13 @@ async page => {
   check(true,'An account landmark survives reload without device storage');
   await page.keyboard.down('KeyW'); await page.waitForTimeout(900); await page.keyboard.up('KeyW');
   await page.waitForTimeout(1100);
+  await page.locator('#places-open').click();
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmarks-list li button[aria-label^="Go to"]').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Town bench"), null, { timeout: 15000 });
   const atBench = await second.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 1.5; }, [a.self, benchPosition], { timeout: 15000 }).then(() => true, () => false);
   check(atBench, 'a landmark teleport is a server-checked position travel the other browser sees');
+  await page.locator('.places-close').click();
   if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
   // Builder mode: a live preview shows where a creation will land and
   // whether the town accepts it there; clicking the ground places it.

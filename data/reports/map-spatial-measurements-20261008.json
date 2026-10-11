@@ -1,0 +1,1051 @@
+{
+  "revision": "2020849",
+  "runtime": "browser detached facade fixture",
+  "measurements": {
+    "bounds": [
+      -2920.280118916899,
+      -1457.6085898216527,
+      -2666.336078522973,
+      -1167.1779702985634
+    ],
+    "doors": [
+      {
+        "id": "osm-node-8172494989",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172495006",
+        "width": 1.7000000000000737,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172495000",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494957",
+        "width": 1.7000000000001332,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494981",
+        "width": 1.7000000000001865,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494965",
+        "width": 1.7000000000002191,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494958",
+        "width": 1.7000000000000952,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494985",
+        "width": 1.7000000000000857,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172495003",
+        "width": 1.7000000000002629,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494974",
+        "width": 1.6999999999996585,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494972",
+        "width": 1.7000000000001037,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494969",
+        "width": 1.7000000000001037,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494955",
+        "width": 1.6999999999998843,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494964",
+        "width": 1.7000000000000737,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494963",
+        "width": 1.699999999999853,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494991",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494977",
+        "width": 1.7000000000001865,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494976",
+        "width": 1.6999999999996585,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494967",
+        "width": 1.7000000000000737,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494980",
+        "width": 1.7000000000001865,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494979",
+        "width": 1.7000000000001865,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494973",
+        "width": 1.7000000000001185,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494999",
+        "width": 1.6999999999998874,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-6374756992",
+        "width": 1.699999999999877,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494966",
+        "width": 1.7000000000000737,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172495005",
+        "width": 1.6999999999998325,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494960",
+        "width": 1.6999999999995794,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494987",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494990",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "osm-node-8172494993",
+        "width": 1.7000000000001863,
+        "height": 3,
+        "scale": [
+          1.7,
+          3,
+          1
+        ],
+        "parentScale": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "rooms": [
+      {
+        "id": "osm-node-8172494989",
+        "name": "Alice + Olivia",
+        "width": 13.275059207460142,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.39944868128693,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 5,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172495006",
+        "name": "Amorino",
+        "width": 13.031068258473319,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.514444615417435,
+        "bay": {
+          "buildingId": "osm-way-625330798",
+          "edgeIndex": 3,
+          "k0": 19,
+          "count": 4
+        },
+        "people": 5,
+        "obstacles": 4
+      },
+      {
+        "id": "osm-node-8172495000",
+        "name": "Baccarat",
+        "width": 13.275059207460146,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.362162043462618,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 15,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-8172494957",
+        "name": "Bella Rinova",
+        "width": 12.869456757845427,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.46665480090626,
+        "bay": {
+          "buildingId": "osm-way-625333009",
+          "edgeIndex": 1,
+          "k0": 2,
+          "count": 4
+        },
+        "people": 6,
+        "obstacles": 7
+      },
+      {
+        "id": "osm-node-8172494981",
+        "name": "Brunello Cucinelli",
+        "width": 13.053626021136097,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.460298903815538,
+        "bay": {
+          "buildingId": "osm-way-625333006",
+          "edgeIndex": 2,
+          "k0": 14,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172494965",
+        "name": "Cartier",
+        "width": 13.01237380095429,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.47556148345754,
+        "bay": {
+          "buildingId": "osm-way-625330798",
+          "edgeIndex": 2,
+          "k0": 5,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-8172494958",
+        "name": "Dior",
+        "width": 13.822122642753348,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.491121621938177,
+        "bay": {
+          "buildingId": "osm-way-625333008",
+          "edgeIndex": 1,
+          "k0": 4,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 10
+      },
+      {
+        "id": "osm-node-8172494985",
+        "name": "Diptyque",
+        "width": 13.048954871006586,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.447433907490698,
+        "bay": {
+          "buildingId": "osm-way-625333006",
+          "edgeIndex": 4,
+          "k0": 14,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 10
+      },
+      {
+        "id": "osm-node-8172495003",
+        "name": "Dolce & Gabbana",
+        "width": 13.02269041386738,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.339724712119995,
+        "bay": {
+          "buildingId": "osm-way-878472797",
+          "edgeIndex": 4,
+          "k0": 18,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 10
+      },
+      {
+        "id": "osm-node-8172494974",
+        "name": "Equinox",
+        "width": 12.807711579449503,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.40965303462014,
+        "bay": {
+          "buildingId": "osm-way-625330785",
+          "edgeIndex": 1,
+          "k0": 12,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 8
+      },
+      {
+        "id": "osm-node-8172494972",
+        "name": "Harry Winston",
+        "width": 12.849813936626866,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.425345891350194,
+        "bay": {
+          "buildingId": "osm-way-625330792",
+          "edgeIndex": 2,
+          "k0": 3,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-8172494969",
+        "name": "Hermès",
+        "width": 12.849813936626866,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.438471310601194,
+        "bay": {
+          "buildingId": "osm-way-625330792",
+          "edgeIndex": 2,
+          "k0": 16,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172494955",
+        "name": "Hopdoddy Burger Bar",
+        "width": 9.655025103610456,
+        "depth": 7,
+        "height": 3.9,
+        "floor": 18.47388110203801,
+        "bay": {
+          "buildingId": "osm-way-625333009",
+          "edgeIndex": 3,
+          "k0": 6,
+          "count": 3
+        },
+        "people": 10,
+        "obstacles": 6
+      },
+      {
+        "id": "osm-node-8172494964",
+        "name": "IPIC Theaters",
+        "width": 13.031068258473312,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.490281879609554,
+        "bay": {
+          "buildingId": "osm-way-625330798",
+          "edgeIndex": 3,
+          "k0": 15,
+          "count": 4
+        },
+        "people": 5,
+        "obstacles": 1
+      },
+      {
+        "id": "osm-node-8172494963",
+        "name": "Jo Malone London",
+        "width": 13.41986886210433,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.47989303330119,
+        "bay": {
+          "buildingId": "osm-way-625333008",
+          "edgeIndex": 2,
+          "k0": 8,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 5
+      },
+      {
+        "id": "osm-node-8172494991",
+        "name": "Kiton",
+        "width": 13.275059207460139,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.364211433792608,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 10,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172494977",
+        "name": "Laura Rathe Fine Art",
+        "width": 13.0536260211361,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.46029646156758,
+        "bay": {
+          "buildingId": "osm-way-625333006",
+          "edgeIndex": 2,
+          "k0": 1,
+          "count": 4
+        },
+        "people": 3,
+        "obstacles": 4
+      },
+      {
+        "id": "osm-node-8172494976",
+        "name": "Le Colonial",
+        "width": 12.8077115794495,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.420484794960096,
+        "bay": {
+          "buildingId": "osm-way-625330785",
+          "edgeIndex": 1,
+          "k0": 3,
+          "count": 4
+        },
+        "people": 12,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-8172494967",
+        "name": "MAD Houston",
+        "width": 13.031068258473312,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.48403050659379,
+        "bay": {
+          "buildingId": "osm-way-625330798",
+          "edgeIndex": 3,
+          "k0": 26,
+          "count": 4
+        },
+        "people": 12,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-8172494980",
+        "name": "Moreau",
+        "width": 13.0536260211361,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.43874001561078,
+        "bay": {
+          "buildingId": "osm-way-625333006",
+          "edgeIndex": 2,
+          "k0": 9,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 6
+      },
+      {
+        "id": "osm-node-8172494979",
+        "name": "Oliver Peoples",
+        "width": 9.790219515852073,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.41953239792885,
+        "bay": {
+          "buildingId": "osm-way-625333006",
+          "edgeIndex": 2,
+          "k0": 6,
+          "count": 3
+        },
+        "people": 4,
+        "obstacles": 3
+      },
+      {
+        "id": "osm-node-8172494973",
+        "name": "Saint Bernard",
+        "width": 13.310319952919084,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.299916891211684,
+        "bay": {
+          "buildingId": "osm-way-625330785",
+          "edgeIndex": 2,
+          "k0": 6,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 10
+      },
+      {
+        "id": "osm-node-8172494999",
+        "name": "Steak 48",
+        "width": 13.086963264688817,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.189917283824386,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 7,
+          "k0": 3,
+          "count": 4
+        },
+        "people": 12,
+        "obstacles": 9
+      },
+      {
+        "id": "osm-node-6374756992",
+        "name": "Toulouse",
+        "width": 13.419848520333463,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.443248597882796,
+        "bay": {
+          "buildingId": "osm-way-625333008",
+          "edgeIndex": 4,
+          "k0": 9,
+          "count": 4
+        },
+        "people": 12,
+        "obstacles": 8
+      },
+      {
+        "id": "osm-node-8172494966",
+        "name": "Van Cleef & Arpels",
+        "width": 13.031068258473312,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.436436493763036,
+        "bay": {
+          "buildingId": "osm-way-625330798",
+          "edgeIndex": 3,
+          "k0": 11,
+          "count": 4
+        },
+        "people": 4,
+        "obstacles": 5
+      },
+      {
+        "id": "osm-node-8172495005",
+        "name": "Veronica Beard",
+        "width": 6.342501271898236,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.38027356999186,
+        "bay": {
+          "buildingId": "osm-way-878472797",
+          "edgeIndex": 6,
+          "k0": 0,
+          "count": 1
+        },
+        "people": 7,
+        "obstacles": 10
+      },
+      {
+        "id": "osm-node-8172494960",
+        "name": "Vilebrequin",
+        "width": 13.813463480126657,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.44727581927857,
+        "bay": {
+          "buildingId": "osm-way-625333008",
+          "edgeIndex": 3,
+          "k0": 5,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172494987",
+        "name": "Vince",
+        "width": 13.275059207460142,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.418216797160575,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 0,
+          "count": 4
+        },
+        "people": 7,
+        "obstacles": 11
+      },
+      {
+        "id": "osm-node-8172494990",
+        "name": "Zadig & Voltaire",
+        "width": 3.3187648018650364,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.340098205010268,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 9,
+          "count": 1
+        },
+        "people": 4,
+        "obstacles": 7
+      },
+      {
+        "id": "osm-node-8172494993",
+        "name": "de Boulle",
+        "width": 3.3187648018650364,
+        "depth": 9,
+        "height": 3.9,
+        "floor": 18.368327158112034,
+        "bay": {
+          "buildingId": "osm-way-878472795",
+          "edgeIndex": 11,
+          "k0": 14,
+          "count": 1
+        },
+        "people": 4,
+        "obstacles": 7
+      }
+    ],
+    "camera": {
+      "fovVertical": 62,
+      "aspect": 1.6,
+      "near": 0.1
+    }
+  },
+  "captures": [
+    {
+      "station": "overview",
+      "position": [
+        -2840,
+        73.21063680632243,
+        1150
+      ],
+      "quaternion": [
+        0.05080535265537767,
+        0.9447845094543165,
+        0.17714791192026721,
+        -0.27096063208336874
+      ]
+    },
+    {
+      "station": "hermes",
+      "position": [
+        -2772,
+        20.210636806322427,
+        1305.5
+      ],
+      "quaternion": [
+        -0.06301627860751084,
+        0.8986417195161692,
+        -0.13752407418250098,
+        -0.4117755913063925
+      ]
+    },
+    {
+      "station": "dior",
+      "position": [
+        -2769,
+        20.010636806322427,
+        1296
+      ],
+      "quaternion": [
+        0.04958503497300986,
+        0.6706797078579977,
+        -0.045018130096836334,
+        0.7387174167006086
+      ]
+    },
+    {
+      "station": "street",
+      "position": [
+        -2769,
+        20.410636806322426,
+        1186
+      ],
+      "quaternion": [
+        -0.0016330559295016987,
+        0.9982216784503103,
+        -0.032742568268843024,
+        -0.04978692622904683
+      ]
+    },
+    {
+      "station": "equinox",
+      "position": [
+        -2790,
+        20.010636806322427,
+        1371
+      ],
+      "quaternion": [
+        -0.05022789954713037,
+        0.9004167274574856,
+        -0.1080980412386997,
+        -0.4183798375904268
+      ]
+    },
+    {
+      "station": "bari",
+      "position": [
+        -2814,
+        20.010636806322427,
+        1295
+      ],
+      "quaternion": [
+        0.048148552578779584,
+        0.754356174282904,
+        -0.05567951918906333,
+        0.6523252795566827
+      ]
+    },
+    {
+      "station": "west",
+      "position": [
+        -2735,
+        78.21063680632243,
+        1460
+      ],
+      "quaternion": [
+        -0.16821580843245457,
+        0.26531280970666493,
+        0.047067562021954314,
+        0.948207360973474
+      ]
+    }
+  ]
+}

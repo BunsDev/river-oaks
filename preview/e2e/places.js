@@ -17,6 +17,7 @@ async page => {
     const toggle = page.locator('#panel-toggle');
     if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
     await openHudSpace(page, 'explore-section');
+    await page.locator('#places-open').click();
   };
   await page.goto(`${origin}/`); await open();
   await page.waitForFunction(() => document.querySelector('#places-here')?.textContent.includes('Arrival'));
@@ -32,8 +33,12 @@ async page => {
   check(arrived < 5, `Go teleports beside the spot (${arrived.toFixed(1)} m from ${spot.name})`);
   await page.waitForFunction(name => document.querySelector('#places-here')?.textContent.includes(name), spot.name);
   check(true, 'The location label follows the teleport');
+  await page.locator('.places-close').click();
+  await page.locator('#canvas-host').focus();
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700); await page.keyboard.up('KeyW');
   const here = await hudPosition();
+  await page.locator('#places-open').click();
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmark-name').fill('Quiet bench');
   await page.locator('#landmark-add').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Quiet bench'));
@@ -43,11 +48,13 @@ async page => {
   check(await page.locator('#landmarks-list li').count() === 1, 'An unnamed landmark is refused');
   await page.goto(`${origin}/`); await open();
   check(await page.locator('#landmarks-list li').count() === 1 && (await page.locator('#landmarks-list li .place-name').textContent()) === 'Quiet bench', 'Landmarks survive a reload');
+  await page.locator('#places-tab-saved').click();
   await page.locator('#landmarks-list li button[aria-label^="Go to"]').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Quiet bench"));
   await near([here[0], -here[2]], 1.3);
   const back = await hudPosition();
   check(Math.hypot(back[0] - here[0], back[2] - here[2]) < 1.3, `A landmark returns to the saved spot (${Math.hypot(back[0] - here[0], back[2] - here[2]).toFixed(2)} m)`);
+  await page.locator('#landmarks-list .place-more > summary').click();
   await page.locator('#landmarks-list li button[aria-label^="Remove"]').click();
   await page.waitForFunction(()=>document.querySelectorAll('#landmarks-list li').length===0);
   check(await page.locator('#landmarks-list li').count() === 0 && await page.locator('#landmarks-empty').isVisible(), 'Removing a landmark empties the list');
