@@ -1394,6 +1394,42 @@
       }
     },
     {
+      "id": "workplace-retention-status",
+      "title": "Workplace gaps from #221: exact retention via per-draft keys, owner forget of finished briefs, stale panel status",
+      "status": "active",
+      "branches": [
+        "fix/workplace-retention-status"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T11:29:00+00:00",
+      "leaseUntil": "2026-10-11T13:29:00+00:00",
+      "nextAction": "Write failing tests for per-draft key expiry, no brief in the owner document, forget of finished briefs, and stale panel status; then implement.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-retention-status.md",
+      "filesOwned": [
+        "server/workplace.js (storage and forget; agreed with river-oaks-55)",
+        "preview/src/workplace-contract.js (forget action)",
+        "preview/src/workplace-ui.js (health, forget control)",
+        "server/vercel-routing.js",
+        "vercel.json (workplace routes)",
+        "server/tests/workplace-retention.test.js",
+        "preview/tests/workplace-panel.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-retention-status.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Panel status test",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-221-adversarial (PR #230), stacked until it merges",
+      "decision": "Per-draft keys chosen by the user on 2026-10-11 over expiring the whole owner key early or waiting for Val."
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "active",
