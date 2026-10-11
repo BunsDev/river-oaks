@@ -1758,6 +1758,30 @@
       "pr": 241
     },
     {
+      "id": "server-hardening",
+      "title": "Harden the server against abuse: production interruptions and lag, remote code execution, and owner-billed costs",
+      "status": "active",
+      "branches": [
+        "fix/server-hardening"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T15:15:00+00:00",
+      "leaseUntil": "2026-10-11T17:15:00+00:00",
+      "nextAction": "Triage the three read-only audits (availability, billing, code execution), verify each high finding, then fix in priority order with regressions.",
+      "ledger": "docs/superpowers/plans/2026-10-11-server-hardening.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-11-server-hardening.md",
+        "server/tests/hardening-*.test.js"
+      ],
+      "requiredChecks": [
+        "Focused regressions per finding",
+        "Full server suite with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "notes": "Server files touched are listed per finding in the ledger and coordinated with other active sessions before editing."
+    },
+    {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
       "status": "delivered",
