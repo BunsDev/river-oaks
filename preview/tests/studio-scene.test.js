@@ -2,7 +2,7 @@ import test from 'node:test';
 import * as THREE from 'three';
 import assert from 'node:assert/strict';
 import { blankRegion } from '../src/region-draft.js';
-import { buildStudioWorld, createStudioScene, disposeStudioScene, frameStudioObject } from '../src/studio/scene.js';
+import { buildStudioWorld, createStudioScene, disposeStudioScene, frameStudioObject, studioClearColor } from '../src/studio/scene.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
 
 test('scene maps east/north/metres with terrain and exact editable dimensions',()=>{
@@ -68,4 +68,10 @@ test('region framing includes elevated terrain and fits wide and narrow viewport
     }
   }
   disposeStudioScene(group);
+});
+
+test('viewport backdrop follows the resolved appearance and falls back to light', () => {
+  assert.equal(studioClearColor('light'), '#e8eeea');
+  assert.equal(studioClearColor('dark'), '#111815');
+  assert.equal(studioClearColor(undefined), '#e8eeea');
 });
