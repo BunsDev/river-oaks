@@ -5,13 +5,13 @@
     {
       "id": "project-lifecycle",
       "title": "Reduce worktrees and maintain task lifecycle",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "chore/project-lifecycle-20261011"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T07:06:36.667382+00:00",
-      "nextAction": "Retain lifecycle checkout and ignored audit evidence; delivery proven by PR209 and the owner post-merge handoff. Retirement remains separate.",
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [
         "scripts/project-status.mjs",
         "scripts/tests/project-status.test.js",
@@ -42,12 +42,18 @@
       },
       "evidence": [
         {
-          "pr": 209,
+          "originalHead": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
           "reviewedHead": "023fa88a961bc6c59b9e71182bb8b01623b63f74",
           "merge": "d3dbe639592b66e0b3ca27033d80f81f4b95179c",
-          "checks": "10 hosted checks passed; core passed; 25 tooling tests passed; both skills validated; independent review resolved"
+          "proof": "Every changed path in the reviewed aggregate matches its delivered merge."
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/chore-project-lifecycle-20261011",
+        "sha": "023fa88a961bc6c59b9e71182bb8b01623b63f74"
+      }
     },
     {
       "id": "harry-winston",
@@ -232,13 +238,13 @@
     {
       "id": "repo-completion-ledger",
       "title": "Reconcile repository completion ledger",
-      "status": "blocked",
+      "status": "retired",
       "branches": [
         "codex/repo-completion-20261007"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Review the untracked completion ledger against live delivery, retain its distinct notes, then assess the otherwise merged checkout.",
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -249,7 +255,24 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "evidence": [
+        {
+          "originalHead": "20208490353808213c962ccedd0923c38d17c1a8",
+          "reviewedHead": "20208490353808213c962ccedd0923c38d17c1a8",
+          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511",
+          "proof": "Exact branch tip is already an ancestor of main. Only remaining file is the retained historical audit ledger; no implementation change."
+        }
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/codex-repo-completion-20261007",
+        "sha": "20208490353808213c962ccedd0923c38d17c1a8",
+        "retainedArtifact": {
+          "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/codex-repo-completion-20261007/docs/superpowers/plans/2026-10-07-repo-completion.md",
+          "sha256": "74a982e3465875b6a385cfd33d3e873377d49f3235abdc910e9b84d2e742211e"
+        }
+      }
     },
     {
       "id": "signin-review",
@@ -350,8 +373,8 @@
         "cody/cartier-visual-pilot"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify the existing owner; review the dirty storefront/source and asset changes against the pilot ledger, then run its visual and runtime checks.",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Reconcile the October10 pilot against latest main; rerun recorded store-interiors cooldown and optional-bridge regressions, finish route benchmark, and obtain visual/moving-glass acceptance before delivery.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -362,7 +385,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Distinct uncommitted pilot; historical core/pilot journeys passed but broader regressions failed and benchmark/human acceptance remain open.",
+      "ledger": "docs/superpowers/plans/2026-10-10-cartier-pilot-results.md"
     },
     {
       "id": "jevica-psyche",
@@ -371,9 +395,9 @@
       "branches": [
         "cody/jevica-psyche-20261009"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Coordinate with the existing character owner; review rig/driver edits and perform relevant animation and browser verification.",
+      "owner": "Cody:cody-jev-playables-20261011",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Coordinate with Cody under cody-jev-playables-20261011; preserve candidates and complete cloth/facial adapters, real rendered behavior and current verification before delivery.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -384,7 +408,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Actively owned authored-character integration; candidate animation/facial failures remain documented. Do not retire.",
+      "ledger": "docs/superpowers/plans/2026-10-11-jev-playables.md"
     },
     {
       "id": "sdk-phase1",
@@ -394,8 +419,8 @@
         "cody/sdk-phase1-input"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify owner and reconcile native source changes with SDK/plot documentation; run native builds and contracts before delivery.",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Reconcile and freshly verify the completed Phase1 contract/input patch against main; resolve the remaining editor-pan versus gameplay input acceptance without inferring human acceptance from automated tests.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -406,7 +431,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Distinct native source with historical passing builds/29 contracts; physical capture/trackpad behavior remains unverified. Phase2 is separate scope.",
+      "ledger": "docs/superpowers/plans/2026-10-08-sdk-phase1-input.md"
     },
     {
       "id": "world-studio",
@@ -433,16 +459,20 @@
     {
       "id": "storybook",
       "title": "Reconcile and deliver storybook canon",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "docs/storybook-companion-layer"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "PR200 is open and its remote head differs from the local branch. Compare both complete histories, coordinate with pending integration, then verify links/content and exact-head checks before merge.",
-      "filesOwned": [],
+      "owner": "/root:retirement-round2-20261011",
+      "updatedAt": "2026-10-11T07:28:13.035687+00:00",
+      "nextAction": "Wait for PR210 landing and exact-head Storybook CI, then merge PR200 and archive/retire the clean source checkout.",
+      "filesOwned": [
+        "docs/storybook.md"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "Full documentation diff review against current runtime docs",
+        "All relative links resolve",
+        "Exact-head hosted checks and independent review"
       ],
       "observed": {
         "head": "fad49b0b03134508e0767abda64db863d6ce4d11",
@@ -451,7 +481,7 @@
         "activeProcess": false
       },
       "pr": 200,
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "leaseUntil": "2026-10-11T09:28:13.035687+00:00"
     },
     {
       "id": "primary-reconciliation",
@@ -507,13 +537,13 @@
     {
       "id": "compact-sidebar",
       "title": "Retain sidebar recheck evidence and retire checkout",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "polish/compact-social-sidebar"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Review and archive the untracked sidebar recheck report; recheck inactivity and retire only after the tree is clean.",
+      "updatedAt": "2026-10-11T07:24:10.906840+00:00",
+      "nextAction": "No work remains on this retired ref. Restore from the verified round2 bundle if needed; retained historical artifacts remain in the archive directory.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -527,11 +557,22 @@
       "pr": 196,
       "evidence": [
         {
-          "pr": 196,
+          "originalHead": "7173f291b2e00979b605f54991e648c967e1c55b",
           "reviewedHead": "7173f291b2e00979b605f54991e648c967e1c55b",
-          "merge": "0ff3742d632fb79abe029e7cdf09a19e843ea9b2"
+          "merge": "0ff3742d632fb79abe029e7cdf09a19e843ea9b2",
+          "proof": "Every changed path in the reviewed aggregate matches its delivered merge."
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "docs/project-management/retirement-20261011-round2.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retired-history.bundle",
+        "ref": "refs/tags/archive/worktree-prune/20261011-round2/polish-compact-social-sidebar",
+        "sha": "7173f291b2e00979b605f54991e648c967e1c55b",
+        "retainedArtifact": {
+          "path": "/Users/buns/worktree-backups/river-oaks-20261011-round2/retained-artifacts/polish-compact-social-sidebar/data/reports/sidebar-contextual-recheck.json",
+          "sha256": "885dfd44c29b9fdaf54c59dc43a27e9184fcb68956602d8dc417c3cf0542cf85"
+        }
+      }
     },
     {
       "id": "dior-promenade",
@@ -541,8 +582,8 @@
         "polish/dior-promenade"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Identify the owner and compare dirty facade/furniture changes with current main; validate authored scale and rendering before delivery.",
+      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
+      "nextAction": "Resume the original facade owner workflow: reconcile current source, finish day/night reference checks, compare the Cartier re-entry failure against baseline, then run focused/core/browser gates.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -553,7 +594,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Distinct promenade implementation; ledger has no completed verification handoff.",
+      "ledger": "docs/superpowers/plans/2026-10-09-dior-promenade.md"
     },
     {
       "id": "places-guide",
@@ -862,6 +904,53 @@
         "ref": "refs/tags/archive/worktree-prune/20261011-round1/codex-streetview-realism-20261008",
         "sha": "22d00439cebf818e983dab0ce855eb3883ed5bda"
       }
+    },
+    {
+      "id": "retirement-round2",
+      "title": "Complete pending delivery and retire deeper",
+      "status": "active",
+      "branches": [
+        "chore/retirement-round2-20261011"
+      ],
+      "owner": "/root:retirement-round2-20261011",
+      "leaseUntil": "2026-10-11T09:20:33.903475+00:00",
+      "updatedAt": "2026-10-11T07:20:33.903475+00:00",
+      "nextAction": "Integrate the source owner verified reduced-motion fix and retirement records; merge Storybook after PR210; publish one combined cleanup delivery.",
+      "ledger": "docs/superpowers/plans/2026-10-11-retirement-round2.md",
+      "filesOwned": [
+        "docs/project-management/",
+        "docs/superpowers/plans/2026-10-11-retirement-round2.md"
+      ],
+      "requiredChecks": [
+        "Exact-head delivery comparison",
+        "Restore bundle refs and fsck",
+        "Recheck clean status and ownership before retirement",
+        "Task validation and relevant repository gates"
+      ]
+    },
+    {
+      "id": "reconcile-delivered-sources",
+      "title": "Reconcile delivered Harry Winston and duplicate sign-in source worktrees",
+      "status": "active",
+      "branches": [
+        "chore/reconcile-delivered-sources-20261011"
+      ],
+      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
+      "updatedAt": "2026-10-11T07:21:22.020747+00:00",
+      "leaseUntil": "2026-10-11T09:21:22.020747+00:00",
+      "nextAction": "Compare every dirty source change against delivered main, identify ownership and preserve exact archives before eligible retirement.",
+      "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json",
+        "docs/project-management/retirement-delivered-sources-20261011.json",
+        "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md"
+      ],
+      "requiredChecks": [
+        "Complete changed-path comparison and ownership handoff",
+        "Exact SHA and file hashes; archive restoration check",
+        "Clean unlocked inactive worktree before non-forced removal",
+        "Post-removal ref/path verification; tooling and core before docs commit"
+      ]
     }
   ]
 }
