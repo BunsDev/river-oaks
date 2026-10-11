@@ -23,22 +23,3 @@ export function runStudioCommand(executable, args, { cwd, env = process.env, sig
     child.once('close', code => { cleanup(); if (failure) reject(failure); else if (code !== 0) reject(new Error('Designer runtime failed. Check its sign-in and configuration on this device.')); else resolve(output); });
   });
 }
-
-export function parseDesignerStream(text) {
-  let answer = '', initialized = false, completed = false;
-  for (const line of text.split('\n').filter(line => line.trim())) {
-    const event = JSON.parse(line);
-    if (event.type === 'system' && event.subtype === 'init') {
-      if (event.permission !== 'read-only') throw Error('Runtime did not confirm read-only mode.');
-      initialized = true;
-    }
-    if (event.type === 'assistant') {
-      const content = event.message?.content;
-      if (Array.isArray(content)) answer = content.filter(block => block.type === 'text').map(block => block.text).join('\n');
-    }
-    if (event.type === 'result') { if (event.is_error) throw Error('Designer runtime reported failure.'); completed = true; }
-  }
-  if (!initialized || !completed || !answer) throw Error('Designer returned an incomplete response.');
-  // Strict JSON only. No code blocks, executable snippets or permissive extraction.
-  return JSON.parse(answer);
-}

@@ -40,3 +40,17 @@ Verification on the merged tree, with dependencies freshly installed from `main`
 - `RIVER_OAKS_E2E_REPORT=merge-world-studio-browser.json pnpm run test:experience world-studio`: passed (`create-transform-undo-save-reopen-pick-export-import-walk`, no page errors). Screenshots of the chooser and an opened template with the agent chat visible were inspected.
 
 Not run: Redis/full profile, human accessibility review, native Electron interaction with the chooser, and a live agent-chat request against a template. Merge requires hosted CI and Val's authorization.
+
+## Takeover and second main refresh (2026-10-11, session 46fc41e0)
+
+`river-oaks-27` continued at 17:49Z into session `7019fbdf`, which never started, so nothing was left watching #242's place in `river-oaks-c2`'s merge queue. At Val's direction, Claude Code session `46fc41e0` took the task over and recorded the handoff in the register. Merge authorization stands: Val confirmed it with the takeover.
+
+Merging `main` at `4849d62` (#243, the Studio bridge hardening, and #245, the login art) conflicted only in the task register. The other files merged cleanly. The register was resolved task by task against the merge base: main's version for the four tasks main changed, and this branch's version for this task. No entry was dropped.
+
+Verification on the merged tree (no lockfile change, so the existing dependencies were reused):
+
+- `node --test preview/tests/studio-*.test.js`: 27 passed, 0 failed.
+- `pnpm run verify`: core passed, all 11 tasks. Tooling 43 passed; preview 2625 passed and 1 skipped; server 337 passed and 110 Redis-only skipped; desktop 47 passed; Python 141 passed. Receipt `.runtime/agent/core.json`, log `.runtime/takeover-core.log`.
+- `RIVER_OAKS_E2E_REPORT=takeover-world-studio-browser.json pnpm run test:experience world-studio`: passed, with no page errors. The chooser screenshot and an opened Market Street with the agent chat were inspected.
+
+Next: when the queue reaches #242 (after #244), merge the latest `main` again and push. Then merge with `~/.claude/scripts/gh-merge-when-green.sh 242` once hosted CI is green.
