@@ -1527,6 +1527,43 @@
       "pr": 236
     },
     {
+      "id": "workplace-vercel-sweep",
+      "title": "Workplace gap from #221: scheduled sweep on Vercel via Vercel Cron and a CRON_SECRET-guarded drain route",
+      "status": "active",
+      "branches": [
+        "fix/workplace-vercel-sweep"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T12:04:00+00:00",
+      "leaseUntil": "2026-10-11T14:04:00+00:00",
+      "nextAction": "Write failing tests for the drain sweep, the guarded route and the Vercel config; then implement.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md",
+      "filesOwned": [
+        "server/workplace.js (sweep drain; agreed with river-oaks-55)",
+        "server/distributed-app.js (sweep route)",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/vercel-routing.js",
+        "vercel.json (rewrite, crons)",
+        "api/server.js (flag-off short circuit)",
+        "server/tests/cron-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Guarded route on a live Redis gateway",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-room-envelope (PR #236), stacked until it merges",
+      "deliveryNote": "Production needs CRON_SECRET set in Vercel by the owner before the route accepts the cron; the agent does not change Vercel settings."
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "delivered",
