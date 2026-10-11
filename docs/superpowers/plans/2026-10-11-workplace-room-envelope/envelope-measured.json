@@ -1,0 +1,322 @@
+{
+  "measured": "2026-10-11",
+  "seatHeightM": 0.45,
+  "looks": {
+    "jevica": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.13,
+        "depthM": 0.42
+      },
+      "seated": {
+        "widthM": 0.78,
+        "heightM": 2.13,
+        "depthM": 0.72,
+        "frontM": 0.59,
+        "footprintRadiusM": 0.782
+      }
+    },
+    "jevica-beast": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.24,
+        "depthM": 1.46
+      },
+      "seated": {
+        "widthM": 0.78,
+        "heightM": 2.23,
+        "depthM": 1.74,
+        "frontM": 1.14,
+        "footprintRadiusM": 1.251
+      }
+    },
+    "sable-human": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.13,
+        "depthM": 0.44
+      },
+      "seated": {
+        "widthM": 0.78,
+        "heightM": 2.13,
+        "depthM": 0.75,
+        "frontM": 0.62,
+        "footprintRadiusM": 0.803
+      }
+    },
+    "woman-casual": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.25,
+        "depthM": 0.9
+      },
+      "seated": {
+        "widthM": 0.78,
+        "heightM": 2.24,
+        "depthM": 1.21,
+        "frontM": 0.62,
+        "footprintRadiusM": 0.803
+      }
+    },
+    "rowan-human": {
+      "standing": {
+        "widthM": 0.73,
+        "heightM": 2.23,
+        "depthM": 0.51
+      },
+      "seated": {
+        "widthM": 0.93,
+        "heightM": 2.23,
+        "depthM": 0.77,
+        "frontM": 0.62,
+        "footprintRadiusM": 0.805
+      }
+    },
+    "man-casual": {
+      "standing": {
+        "widthM": 0.73,
+        "heightM": 2.31,
+        "depthM": 1.49
+      },
+      "seated": {
+        "widthM": 0.93,
+        "heightM": 2.3,
+        "depthM": 1.72,
+        "frontM": 1.1,
+        "footprintRadiusM": 1.215
+      }
+    },
+    "woman-tailored": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.13,
+        "depthM": 0.46
+      },
+      "seated": {
+        "widthM": 0.83,
+        "heightM": 2.13,
+        "depthM": 0.79,
+        "frontM": 0.63,
+        "footprintRadiusM": 0.811
+      }
+    },
+    "vesper-beast": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.18,
+        "depthM": 1.37
+      },
+      "seated": {
+        "widthM": 0.83,
+        "heightM": 2.17,
+        "depthM": 1.68,
+        "frontM": 1.05,
+        "footprintRadiusM": 1.168
+      }
+    },
+    "man-tailored": {
+      "standing": {
+        "widthM": 0.71,
+        "heightM": 2.23,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.87,
+        "heightM": 2.23,
+        "depthM": 0.79,
+        "frontM": 0.64,
+        "footprintRadiusM": 0.824
+      }
+    },
+    "midnight-host-wolf": {
+      "standing": {
+        "widthM": 0.71,
+        "heightM": 2.33,
+        "depthM": 1.53
+      },
+      "seated": {
+        "widthM": 0.87,
+        "heightM": 2.31,
+        "depthM": 1.79,
+        "frontM": 1.14,
+        "footprintRadiusM": 1.252
+      }
+    },
+    "lyra-human": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.13,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.82,
+        "heightM": 2.13,
+        "depthM": 0.84,
+        "frontM": 0.63,
+        "footprintRadiusM": 0.811
+      }
+    },
+    "woman-daywear": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.24,
+        "depthM": 0.67
+      },
+      "seated": {
+        "widthM": 0.82,
+        "heightM": 2.24,
+        "depthM": 0.98,
+        "frontM": 0.63,
+        "footprintRadiusM": 0.811
+      }
+    },
+    "man-workwear": {
+      "standing": {
+        "widthM": 0.68,
+        "heightM": 2.23,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.85,
+        "heightM": 2.23,
+        "depthM": 0.79,
+        "frontM": 0.64,
+        "footprintRadiusM": 0.817
+      }
+    },
+    "kai-formal-beast": {
+      "standing": {
+        "widthM": 0.68,
+        "heightM": 2.27,
+        "depthM": 1.56
+      },
+      "seated": {
+        "widthM": 0.85,
+        "heightM": 2.26,
+        "depthM": 1.79,
+        "frontM": 1.15,
+        "footprintRadiusM": 1.264
+      }
+    },
+    "kai-explorer": {
+      "standing": {
+        "widthM": 0.75,
+        "heightM": 2.23,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.96,
+        "heightM": 2.23,
+        "depthM": 0.79,
+        "frontM": 0.64,
+        "footprintRadiusM": 0.824
+      }
+    },
+    "kai-explorer-beast": {
+      "standing": {
+        "widthM": 0.75,
+        "heightM": 2.27,
+        "depthM": 1.56
+      },
+      "seated": {
+        "widthM": 0.96,
+        "heightM": 2.26,
+        "depthM": 1.8,
+        "frontM": 1.15,
+        "footprintRadiusM": 1.264
+      }
+    },
+    "kai-noir": {
+      "standing": {
+        "widthM": 0.68,
+        "heightM": 2.23,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.85,
+        "heightM": 2.23,
+        "depthM": 0.79,
+        "frontM": 0.64,
+        "footprintRadiusM": 0.824
+      }
+    },
+    "kai-noir-beast": {
+      "standing": {
+        "widthM": 0.68,
+        "heightM": 2.27,
+        "depthM": 1.56
+      },
+      "seated": {
+        "widthM": 0.85,
+        "heightM": 2.26,
+        "depthM": 1.8,
+        "frontM": 1.15,
+        "footprintRadiusM": 1.264
+      }
+    },
+    "forest-aristocrat": {
+      "standing": {
+        "widthM": 0.69,
+        "heightM": 2.45,
+        "depthM": 0.62
+      },
+      "seated": {
+        "widthM": 0.81,
+        "heightM": 2.45,
+        "depthM": 0.85,
+        "frontM": 0.61,
+        "footprintRadiusM": 0.801
+      }
+    },
+    "forest-aristocrat-beast": {
+      "standing": {
+        "widthM": 0.69,
+        "heightM": 2.45,
+        "depthM": 0.66
+      },
+      "seated": {
+        "widthM": 0.81,
+        "heightM": 2.45,
+        "depthM": 0.88,
+        "frontM": 0.61,
+        "footprintRadiusM": 0.801
+      }
+    },
+    "forest-aristocrat-feminine": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.36,
+        "depthM": 0.52
+      },
+      "seated": {
+        "widthM": 0.8,
+        "heightM": 2.37,
+        "depthM": 0.8,
+        "frontM": 0.59,
+        "footprintRadiusM": 0.782
+      }
+    },
+    "forest-aristocrat-feminine-beast": {
+      "standing": {
+        "widthM": 1.01,
+        "heightM": 2.36,
+        "depthM": 0.59
+      },
+      "seated": {
+        "widthM": 0.8,
+        "heightM": 2.37,
+        "depthM": 0.86,
+        "frontM": 0.59,
+        "footprintRadiusM": 0.782
+      }
+    }
+  },
+  "widestSeated": {
+    "look": "kai-formal-beast",
+    "footprintRadiusM": 1.264
+  },
+  "tallest": {
+    "look": "forest-aristocrat",
+    "heightM": 2.45
+  }
+}
