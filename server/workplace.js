@@ -255,6 +255,9 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
   const owner = (actor, change) => mutate(ownerKey(actor.userId), doc => change(doc, now()));
   return {
     advance, state: async actor => ok(actor.userId),
+    // Called when the owner is banned or loses waitlist approval. The timer check
+    // alone misses a paused task or an idle grant, which have no timer.
+    suspend: userId => suspend(userId),
     async companion(actor, {name}) {
       const result = await owner(actor, (doc, t) => {
         if (doc.companion) return {write: false, value: {ok: false, reason: 'companion_limit'}};

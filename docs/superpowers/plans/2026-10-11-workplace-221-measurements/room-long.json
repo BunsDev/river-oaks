@@ -1,0 +1,110 @@
+{
+  "renderer": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+  },
+  "viewport": [
+    1280,
+    800
+  ],
+  "frames": [
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.30000007152557373,
+      "calls": 38,
+      "triangles": 3142
+    },
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.19999992847442627,
+      "calls": 38,
+      "triangles": 3142
+    },
+    {
+      "count": 180,
+      "p50": 0.10000002384185791,
+      "p95": 0.5999999046325684,
+      "calls": 38,
+      "triangles": 3142
+    }
+  ],
+  "entries": [
+    {
+      "entered": 0,
+      "jsHeapUsedMB": 8.44,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 20,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.59,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 120,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.7,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 320,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.94,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 820,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 8.98,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 1320,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 9.01,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 1820,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 9.02,
+      "nodes": 18,
+      "listeners": 21
+    },
+    {
+      "entered": 2320,
+      "geometries": {
+        "before": 21,
+        "after": 21
+      },
+      "jsHeapUsedMB": 9.03,
+      "nodes": 18,
+      "listeners": 21
+    }
+  ]
+}

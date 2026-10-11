@@ -1,0 +1,66 @@
+{
+  "stepMs": 1500,
+  "completionMs": {
+    "n": 3,
+    "min": 6026,
+    "p50": 6041,
+    "max": 6054
+  },
+  "recovery": {
+    "afterReplacementMs": {
+      "n": 3,
+      "min": 3067,
+      "p50": 3130,
+      "max": 3150
+    },
+    "outcomes": [
+      {
+        "ms": 3130,
+        "status": "completed",
+        "attempts": 1,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3067,
+        "status": "completed",
+        "attempts": 1,
+        "artifacts": 1,
+        "notices": 1
+      },
+      {
+        "ms": 3150,
+        "status": "completed",
+        "attempts": 1,
+        "artifacts": 1,
+        "notices": 1
+      }
+    ]
+  },
+  "responseBytes": {
+    "state": {
+      "n": 3,
+      "min": 1510,
+      "p50": 1510,
+      "max": 1514
+    },
+    "artifact": {
+      "n": 3,
+      "min": 2088,
+      "p50": 2088,
+      "max": 2088
+    },
+    "occupancy": {
+      "n": 3,
+      "min": 120,
+      "p50": 120,
+      "max": 120
+    }
+  },
+  "storage": {
+    "ownerKeyBytes": 6474,
+    "ownerDocBytes": 5631,
+    "stationsKeyBytes": 428,
+    "ownerTtlDays": 30
+  }
+}
