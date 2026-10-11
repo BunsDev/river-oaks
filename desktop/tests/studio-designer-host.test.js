@@ -8,9 +8,10 @@ import { createStudioDesignerHost, designerSenderAllowed } from '../studio-desig
 import { buildWorldDesignPack } from '../../scripts/studio-skill-pack.js';
 import { createStudioDocument } from '../../preview/src/studio/document.js';
 import { createDesignerSession } from '../../preview/src/studio/designer-protocol.js';
+import { runStudioCommand } from '../studio-command.js';
 const root = fileURLToPath(new URL('../../',import.meta.url));
 const pack = await buildWorldDesignPack(root);
-async function fixture(t){await mkdir(join(root,'.runtime/tmp'),{recursive:true});const path=await mkdtemp(join(root,'.runtime/tmp/designer-'));const host=createStudioDesignerHost({root:path,pack,executable:join(root,'desktop/tests/fixtures/studio-coven.mjs'),confirm:async()=>true});t.after(async()=>{host.dispose();await rm(path,{recursive:true,force:true});});return {host,path};}
+async function fixture(t, options = {}){await mkdir(join(root,'.runtime/tmp'),{recursive:true});const path=await mkdtemp(join(root,'.runtime/tmp/designer-'));const host=createStudioDesignerHost({root:path,pack,executable:join(root,'desktop/tests/fixtures/studio-coven.mjs'),confirm:async()=>true,...options});t.after(async()=>{host.dispose();await rm(path,{recursive:true,force:true});});return {host,path};}
 const input=mode=>({mode,name:'Aster',runtimeId:'coven-codex',projectId:'fixture-project'});
 test('both real subprocess paths install pack, fence identity and support preview/apply/undo',async t=>{
  const {host,path}=await fixture(t);
@@ -30,6 +31,48 @@ test('cancellation, project mismatch and altered installed bytes fail closed',as
  const request=session.begin({brief:'wait forever',scope:'region'}),pending=host.request(request);await new Promise(resolve=>setTimeout(resolve,100));await host.cancel({connectionId:connection.id,requestId:request.requestId});await assert.rejects(pending,/canceled/);
  await assert.rejects(host.request({...request,projectId:'other'}),/Invalid/);
  await writeFile(join(path,'fixture-project/general/knowledge',pack.manifest.sha256,'.agents/skills/world-workflow/SKILL.md'),'tampered');await assert.rejects(host.request(session.begin({brief:'Review',scope:'region'})),/skills changed/);
+});
+test('immediate restart waits for canceled subprocess cleanup and respects cancellation and disconnect', async t => {
+ for (const action of ['restart', 'disconnect', 'cancel']) await t.test(action, async t => {
+  let started, release, running = 0, maximum = 0, calls = 0;
+  const ready = new Promise(resolve => { started = resolve; });
+  const cleanup = new Promise(resolve => { release = resolve; });
+  const {host} = await fixture(t, { execute: async (executable, args, options) => {
+   if (args[0] !== 'run') return runStudioCommand(executable, args, options);
+   const first = ++calls === 1; maximum = Math.max(maximum, ++running);
+   if (first) started();
+   try { return await runStudioCommand(executable, args, options); }
+   finally { if (first) await cleanup; running--; }
+  } });
+  const connection = await host.connect(input('general'));
+  const doc = createStudioDocument(), session = createDesignerSession(doc); session.connect(connection);
+  const request = session.begin({brief:'wait forever',scope:'region'});
+  const canceled = assert.rejects(host.request(request), /canceled/);
+  await ready;
+  await assert.rejects(host.request({...request, requestId:'overlapping-request'}), /already running/);
+  await host.cancel({connectionId:connection.id,requestId:request.requestId});
+  await assert.rejects(host.request(request), /consumed/);
+  let settled = false;
+  const replacement = session.begin({brief:'Improve arrival',scope:'region'});
+  const next = host.request(replacement).then(
+   response => { settled = true; return {response}; }, error => { settled = true; return {error}; });
+  let third;
+  try {
+   await new Promise(resolve => setImmediate(resolve));
+   assert.equal(settled, false, 'replacement must wait for canceled request cleanup');
+   assert.equal(calls, 1, 'replacement must not start an overlapping subprocess');
+   if (action === 'disconnect') await host.disconnect({connectionId:connection.id});
+   if (action === 'cancel') {
+    await host.cancel({connectionId:connection.id,requestId:replacement.requestId});
+    third = host.request(session.begin({brief:'Improve arrival again',scope:'region'}));
+   }
+  } finally { release(); await canceled; }
+  const result = await next;
+  if (action === 'disconnect') { assert.match(result.error?.message ?? '', /disconnected/); assert.equal(calls, 1); }
+  else if (action === 'cancel') { assert.match(result.error?.message ?? '', /canceled/); session.preview(await third); session.apply(); assert.equal(doc.value.spawn[0], 2); assert.equal(calls, 2); }
+  else { assert.equal(result.error, undefined); session.preview(result.response); session.apply(); assert.equal(doc.value.spawn[0], 2); }
+  assert.equal(maximum, 1);
+ });
 });
 test('only the exact main Studio frame may invoke the bridge',()=>{
  const mainFrame={url:'https://example.test/studio.html'},contents={mainFrame};const event={sender:contents,senderFrame:mainFrame};assert.equal(designerSenderAllowed(event,contents,'https://example.test'),true);

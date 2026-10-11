@@ -171,3 +171,56 @@ Hosted checks for the final PR head and the feature merge remain pending.
 The temporary owned Redis16411 service was stopped after full verification; no
 other Redis service was touched. Original source trees and staged primary remain
 unchanged.
+
+## PR210 review fixes and cancellation regression
+
+The final-head CodeQL check on `c09e445` flagged multi-character tag deletion in
+heading-anchor extraction. The extractor validates Markdown link IDs, not HTML
+rendering, but a focused regression also proved a real bug: a quoted `>` inside
+an inline tag attribute leaked attribute text into the heading ID. Positive
+ID tokenization now handles quoted attributes, duplicate headings and Unicode,
+retains original Markdown bytes, and rejects the incorrect old anchor. The red
+and green receipts are `.runtime/integration/pack-anchors-{red,green}.log`.
+
+A native rerun failed when starting a new design request immediately after
+canceling one. Preserved failure receipt, screenshot and log are under
+`.runtime/integration/cancel-restart-failure/`. A deterministic real-subprocess
+regression reproduced the host rejecting the replacement while the canceled
+request was still cleaning up. The host now serializes replacements behind that
+cleanup. A queued replacement is itself cancelable; disconnect and replay fences
+remain enforced, with at most one design subprocess executing. Canceled tasks
+also stop before opening a fresh consent prompt after verification.
+
+- `node --test --test-name-pattern='immediate restart' desktop/tests/studio-designer-host.test.js`:
+  expected red failure, `.runtime/integration/cancel-restart-red.log`.
+- `node --test desktop/tests/studio-designer-host.test.js desktop/tests/studio-skill-pack.test.js`:
+  23 passed, zero skips, `.runtime/integration/cancel-restart-green.log`.
+- `node desktop/designer-e2e.js`: all seven native checks passed, including the
+  previously failing immediate restart. `.runtime/integration/cancel-restart-native.log`;
+  `.runtime/agent/studio-designer-native.json`.
+- Independent read-only review found no required findings in serialization,
+  cancellation/disconnect, replay protection or interaction with the parser fix.
+- `pnpm run verify`: all 11 core tasks passed at 07:39 UTC; 27 tooling,
+  2,586 preview (one existing skip), 298 server (106 Redis-dependent skips),
+  36 desktop and 141 Python tests. Build/lint/format/secrets and the expected
+  demo-verifier exit passed. Receipt: `.runtime/integration/final-reports/core-cancel-restart.json`;
+  log: `.runtime/integration/cancel-restart-core.log`. Hosted verification remains
+  pending on the next pushed head. The earlier full Redis/browser gate remains
+  baseline evidence; it was not rerun after these focused fixes.
+
+## Primary checkout preservation after concurrent pull
+
+Primary advanced separately to PR198's squash `e561f9b`; the delivered npm lockfile
+removal reduced the original 28 staged paths to 27. A pnpm add/add conflict had
+stage 2 equal to delivered PR198 and stage 3 equal to the original staged lock.
+All conflict stages and worktree bytes were retained, then the exact original
+stage-3 bytes were restored and staged. All other 26 index/worktree file hashes
+still match the original manifest; zero unmerged paths remain. Receipt:
+`.runtime/integration/primary-after-concurrent-pull.json`.
+
+After feature delivery, revalidate those hashes, align only the 17 delivered
+spatial/report paths to the exact merged feature tree, and fast-forward primary.
+A real temporary Git fixture verified that this preserves the divergent lock and
+nine unrelated staged draft/native files byte-for-byte. The feature source trees
+and the existing unique stash remain preserved. Final primary reconciliation is
+still pending PR210's merge.

@@ -79,7 +79,7 @@
         "codex/integrate-pending-20261011"
       ],
       "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
+      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
       "nextAction": "PR198 is delivered. Complete PR210 feature delivery and primary staged reconciliation; preserve superseded trial receipts and original feature trees.",
       "filesOwned": [
         "preview/e2e/contextual-first-visit.js",
@@ -95,7 +95,7 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "leaseUntil": "2026-10-11T09:06:36.667382+00:00",
+      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "evidence": [
         {
@@ -113,8 +113,8 @@
         "codex/places-studio-integration-20261011"
       ],
       "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:19:03.972070+00:00",
-      "nextAction": "Pass exact-head hosted checks and review on PR210, squash merge, then reconcile delivered staged primary paths while preserving unrelated source work.",
+      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
+      "nextAction": "Push verified parser/cancel-restart fixes, pass final-head hosted checks and merge PR210, then reconcile primary.",
       "filesOwned": [
         ".agents/skills/studio-world-design/SKILL.md",
         ".github/workflows/verify.yml",
@@ -207,7 +207,7 @@
         "dirtyPaths": 0,
         "mergeInProgress": false
       },
-      "leaseUntil": "2026-10-11T09:06:36.667382+00:00",
+      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "verification": {
         "candidate": "9ce3a4a",
@@ -224,7 +224,8 @@
           "head": "64db466817ac9b3ccdb5dfca41f6639a847b898a",
           "tree": "7fcd4454409e787b847c878434039d0ea1359406",
           "unchangedFromReconciledCandidate": true
-        }
+        },
+        "reviewFixes": "23 host/pack tests, seven native Designer checks and all 11 core tasks passed; cancellation regression failed before fix. Independent review has no required findings. Final-head hosted checks pending."
       },
       "pr": 210
     },
@@ -460,8 +461,8 @@
         "main"
       ],
       "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:06:36.667382+00:00",
-      "nextAction": "After exact integration merge proof, reconcile 17 delivered spatial/report paths and package-manager overlap, fast-forward primary, then restore divergent lock and preserve nine unrelated staged drafts/native files byte-for-byte.",
+      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
+      "nextAction": "After exact PR210 merge proof, revalidate 27 staged paths, align only 17 delivered spatial/report paths and fast-forward primary; preserve divergent lock and nine unrelated staged draft/native files byte-for-byte.",
       "filesOwned": [
         "data/reports/map-spatial-circulation-20261008.json",
         "data/reports/map-spatial-final-browser-20261008.json",
@@ -495,7 +496,7 @@
         "mergeInProgress": false,
         "activeProcess": true
       },
-      "leaseUntil": "2026-10-11T09:06:36.667382+00:00",
+      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "verification": {
         "preservation": ".runtime/integration/primary-staged-original.patch",

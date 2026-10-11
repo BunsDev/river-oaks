@@ -72,6 +72,22 @@ test('requires every named workflow, follows Markdown references and rejects mis
   await assert.rejects(buildWorldDesignPack(source), /missing|ENOENT/i);
 });
 
+test('validates heading anchors with quoted tag attributes, duplicate headings and Unicode text', async t => {
+  const { buildWorldDesignPack } = await api(), source = await sourceFixture(t);
+  await writeFile(path.join(source, 'docs/level-design-skills.md'), '# Contract\n'
+    + '[Door](details.md#door-height)\n[Second door](details.md#door-height-1)\n'
+    + '[Unicode](details.md#caf%C3%A9--%E5%85%A5%E5%8F%A3)\n[Explicit](details.md#named-anchor)\n');
+  const details = '# <span title="Door > frame">Door</span> height\n'
+    + "# <span title='Door > frame'>Door</span> height\n"
+    + '# Café & 入口\n<a id="named-anchor"></a>\n';
+  await writeFile(path.join(source, 'docs/details.md'), details);
+  const pack = await buildWorldDesignPack(source);
+  assert.deepEqual(pack.manifest.linkWarnings, []);
+  assert.equal(pack.files.find(file => file.path === 'docs/details.md').content, details);
+  await writeFile(path.join(source, 'docs/level-design-skills.md'), '# Contract\n[Wrong](details.md#frame-door-height)\n');
+  await assert.rejects(buildWorldDesignPack(source), /Missing required anchor/);
+});
+
 test('rejects source links and symlinks escaping the source root', async t => {
   const { buildWorldDesignPack } = await api(), source = await sourceFixture(t), outside = await fixture(t);
   await writeFile(path.join(outside, 'secret.md'), '# Secret\n');

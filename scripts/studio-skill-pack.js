@@ -72,7 +72,10 @@ function markdownLinks(content) {
 function anchors(content) {
   const ids = new Set(), counts = new Map();
   for (const match of content.matchAll(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm)) {
-    const slug = match[1].toLowerCase().replace(/<[^>]*>/g, '').replace(/[^\p{L}\p{N}_\-\s]/gu, '').replace(/\s/g, '-');
+    // Parse inline tags (including quoted attributes) and emit only ID characters.
+    // These IDs validate links; the original Markdown is preserved, not sanitized.
+    const tokens = match[1].toLowerCase().matchAll(/<(?:[^<>"']|"[^"]*"|'[^']*')*>|([\p{L}\p{N}_\-\s]+)/gu);
+    const slug = [...tokens].map(([, text = '']) => text.replace(/\s/g, '-')).join('');
     const count = counts.get(slug) || 0;
     ids.add(count ? `${slug}-${count}` : slug); counts.set(slug, count + 1);
   }

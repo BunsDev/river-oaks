@@ -119,13 +119,21 @@ export function createStudioDesignerHost({ root, pack, executable = 'coven', mod
     async request(request) {
       const state = connections.get(request?.connectionId);
       if (!state || request.projectId !== state.projectId || request.protocol !== 1 || request.packVersion !== pack.manifest.version || !validId(request.requestId) || Buffer.byteLength(JSON.stringify(request)) > 160*1024) throw Error('Invalid or disconnected design request.');
-      if (state.active || state.used.has(request.requestId)) throw Error('Design request is already running or was consumed.');
+      const previous = state.active;
+      if ((previous && !previous.control.signal.aborted) || state.used.has(request.requestId)) throw Error('Design request is already running or was consumed.');
       if (typeof request.brief !== 'string' || request.brief.length > 4000 || typeof request.projectBrief !== 'string' || request.projectBrief.length > 8000 || !['selection','region'].includes(request.scope)) throw Error('Invalid design context.');
-      const control = new AbortController(); state.active = { id:request.requestId, control }; state.used.add(request.requestId);
+      let finish;
+      const finished = new Promise(resolve => { finish = resolve; });
+      const control = new AbortController(); state.active = { id:request.requestId, control, finished }; state.used.add(request.requestId);
       if (state.used.size > 200) state.used.delete(state.used.values().next().value);
       try {
+        // A replacement is cancelable immediately, but cannot execute until the
+        // canceled request has finished verification and subprocess cleanup.
+        if (previous) await previous.finished;
+        if (!connections.has(state.id)) throw Error('Invalid or disconnected design request.');
+        if (control.signal.aborted) throw Error('Design request canceled.');
         await verify(state);
-        if (!await confirm({ kind:'request', name:state.name, scope:request.scope, brief:request.brief, projectId:state.projectId }) || control.signal.aborted) throw Error('Design request canceled.');
+        if (control.signal.aborted || !await confirm({ kind:'request', name:state.name, scope:request.scope, brief:request.brief, projectId:state.projectId }) || control.signal.aborted) throw Error('Design request canceled.');
         const skills = ['studio-world-design','world-workflow'];
         const routes = [[/scale|size|metre|meter/i,'map-scale-blockout'],[/route|walk|collision|arrival/i,'player-path-collision'],[/tree|plant|ecology/i,'vegetation-placement-collision'],[/facade|shape|silhouette/i,'shape-language-depth'],[/light|material/i,'lighting-pbr-diagnostics'],[/room|door|building/i,'room-logic'],[/reference/i,'reference-board']];
         for (const [pattern,skill] of routes) if (pattern.test(request.brief)) skills.push(skill);
@@ -142,7 +150,7 @@ export function createStudioDesignerHost({ root, pack, executable = 'coven', mod
         if (response.error) throw Error('The designer could not propose a supported edit. Refine the task to buildings, trees, places or arrival.');
         if (response.skillsUsed?.some(skill => !skills.includes(skill))) throw Error('Designer reported skills that were not loaded.');
         return response;
-      } finally { if (state.active?.id === request.requestId) state.active = null; }
+      } finally { if (state.active?.id === request.requestId) state.active = null; finish(); }
     },
     async cancel({ connectionId, requestId }) { const state = connections.get(connectionId); if (state?.active?.id === requestId) state.active.control.abort(); return { canceled:true }; },
     async disconnect({ connectionId }) { const state = connections.get(connectionId); state?.active?.control.abort(); connections.delete(connectionId); return { disconnected:true }; },
