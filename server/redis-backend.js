@@ -49,6 +49,7 @@ export async function createRedisBackend(env = process.env) {
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
+      workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
     });
     return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
       await gateway.close(); auth.close(); security.close(); redis.disconnect();

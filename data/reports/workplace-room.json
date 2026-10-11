@@ -1,0 +1,56 @@
+{
+  "createdAt": "2026-10-11T09:46:42.855Z",
+  "results": [
+    {
+      "name": "workplace-room",
+      "status": "passed",
+      "seconds": 0.617,
+      "result": {
+        "captures": [
+          {
+            "camera": "CAM-01",
+            "state": "arriving",
+            "label": "With you"
+          },
+          {
+            "camera": "CAM-01",
+            "state": "walking",
+            "label": "Waiting to start"
+          },
+          {
+            "camera": "CAM-02",
+            "state": "seated-working",
+            "label": "Working on your plan"
+          },
+          {
+            "camera": "CAM-03",
+            "state": "seated-waiting",
+            "label": "Plan ready for your review"
+          },
+          {
+            "camera": "CAM-02",
+            "state": "seated-stopped",
+            "label": "Connection lost — work is not progressing"
+          },
+          {
+            "camera": "CAM-04",
+            "state": "offstage",
+            "label": "Away from the studio"
+          }
+        ],
+        "frames": {
+          "count": 180,
+          "p50": 0.10000002384185791,
+          "p95": 0.2999999523162842,
+          "calls": 38,
+          "triangles": 3142
+        },
+        "reentry": {
+          "before": 21,
+          "after": 21
+        },
+        "route": 35
+      }
+    }
+  ]
+}

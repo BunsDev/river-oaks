@@ -1,4 +1,5 @@
 import test from 'node:test';
+import * as worldMap from '../src/world-map.js';
 import assert from 'node:assert/strict';
 import { buildingFootprint, mapProjection, nearestMapPlace } from '../src/world-map.js';
 
@@ -31,4 +32,27 @@ test('map selects only a nearby visible destination',()=>{
   assert.equal(nearestMapPlace([arrival,garden],projection.toMap([10,10]),projection),garden);
   assert.equal(nearestMapPlace([arrival,garden],projection.toMap([35,35]),projection),null);
   assert.equal(nearestMapPlace([arrival],null,projection),null);
+});
+
+
+test('street labels use a long visible segment once per name and omit walking paths',()=>{
+  const projection=mapProjection([-100,-100,100,100]);
+  const roads=[
+    {name:'Oak Lane',kind:'residential',points:[[-70,0],[70,0]]},
+    {name:'Oak Lane',kind:'residential',points:[[-70,10],[70,10]]},
+    {name:'Garden walk',kind:'footway',points:[[-70,40],[70,40]]},
+    {name:'Too short for its name',kind:'residential',points:[[0,80],[1,80]]},
+    {name:'Outside',kind:'residential',points:[[200,200],[300,300]]},
+  ];
+  const labels=worldMap.mapRoadLabels?.(roads,projection);
+  assert.deepEqual(labels,[{name:'Oak Lane',position:[500,500],angle:0}]);
+});
+
+
+test('street names stay upright for reversed geometry and tolerate invalid input',()=>{
+  const projection=mapProjection([-100,-100,100,100]);
+  const [label]=worldMap.mapRoadLabels([{name:'Oak',kind:'residential',points:[[70,0],[-70,0]]}],projection);
+  assert.equal(label.angle,0);
+  assert.deepEqual(worldMap.mapRoadLabels([{name:'Broken',points:[[NaN,0],[0,0]]}],projection),[]);
+  assert.deepEqual(worldMap.mapRoadLabels([],null),[]);
 });

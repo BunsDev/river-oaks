@@ -15,6 +15,9 @@ async page => {
   await page.locator('#places-search').fill('Dior');
   await page.getByRole('button', { name: 'Show Dior on map', exact: true }).click();
   check((await page.locator('.world-map-hint').textContent()).includes('Selected: Dior'), 'Search results select their real map destination');
+  check(await page.locator('.world-map-selection-label').textContent() === 'Dior', 'Selection has a readable destination badge');
+  check(await page.locator('.world-map-road-label').count() > 0, 'Real street names orient the map');
+  check(await page.locator('.world-map-legend li').count() >= 3, 'Map symbols have distinct legend entries');
   check(await page.locator('.world-map-actions button').first().isEnabled(), 'Selected destinations retain the authoritative travel action');
   await page.locator('#places-search').fill('no matching destination');
   check(await page.locator('#places-no-results').isVisible(), 'Search provides an empty state');
@@ -25,9 +28,17 @@ async page => {
       await page.setViewportSize({ width, height });
       check(await page.locator('#places-dialog').evaluate(el => el.scrollWidth <= el.clientWidth), 'Expanded map fits without horizontal overflow');
       check(await page.locator('.world-map-surface').evaluate(el => el.clientWidth >= 200 && el.clientHeight >= 200), 'The map remains usable in portrait and landscape');
+      check(await page.locator('.world-map-selection-label').evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 12 && el.getBoundingClientRect().left >= el.parentElement.getBoundingClientRect().left && el.getBoundingClientRect().right <= el.parentElement.getBoundingClientRect().right), 'Selection stays readable and contained at every map size');
       await page.locator('#places-dialog').screenshot({ path: `output/playwright/destination-minimap-${theme}-${width}x${height}.png` });
     }
   }
+  await page.setViewportSize({ width: 320, height: 844 });
+  const mapSurface=page.locator('.world-map-surface'),mapBox=await mapSurface.boundingBox();
+  await mapSurface.click({position:{x:mapBox.width*.5,y:mapBox.height*.83}});
+  check(await page.locator('.world-map-selection-label').evaluate(el=>{
+    const badge=el.getBoundingClientRect(),map=el.parentElement.getBoundingClientRect();
+    return badge.top>=map.top&&badge.bottom<=map.bottom&&badge.left>=map.left&&badge.right<=map.right;
+  }), 'An edge selection keeps the whole badge inside a narrow map');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.keyboard.press('Escape');
   await page.locator('#places .world-map-surface').waitFor({ state: 'visible' });

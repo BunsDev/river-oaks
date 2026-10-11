@@ -1,0 +1,148 @@
+{
+  "measured": "2026-10-11",
+  "revision": "eb62862 + workplace branch",
+  "method": "preview/e2e/fixtures/appearance.html?look=<id>, lookFixture.render('front').bounds (THREE.Box3 of the rest-pose rig, metres), Chromium with Metal ANGLE on macOS, 22 shared appearances",
+  "limits": "Rest-pose static bounds; arms and tails included, cloth and walking-cycle swing not. Prince Jev's angel wings are hidden on the ground and appear only in flight (angel-wings.js object.visible=false); open, they span about 7.4 m, so flight is not an indoor envelope.",
+  "widestBody": {
+    "look": "jevica",
+    "widthM": 1.01
+  },
+  "widestTurning": {
+    "look": "jevica-beast",
+    "radiusM": 0.888
+  },
+  "looks": {
+    "jevica": {
+      "widthM": 1.01,
+      "heightM": 2.13,
+      "depthM": 0.42,
+      "turningRadiusM": 0.547
+    },
+    "jevica-beast": {
+      "widthM": 1.01,
+      "heightM": 2.24,
+      "depthM": 1.46,
+      "turningRadiusM": 0.888
+    },
+    "sable-human": {
+      "widthM": 1.01,
+      "heightM": 2.13,
+      "depthM": 0.44,
+      "turningRadiusM": 0.551
+    },
+    "woman-casual": {
+      "widthM": 1.01,
+      "heightM": 2.25,
+      "depthM": 0.9,
+      "turningRadiusM": 0.676
+    },
+    "rowan-human": {
+      "widthM": 0.73,
+      "heightM": 2.23,
+      "depthM": 0.51,
+      "turningRadiusM": 0.445
+    },
+    "man-casual": {
+      "widthM": 0.73,
+      "heightM": 2.31,
+      "depthM": 1.49,
+      "turningRadiusM": 0.83
+    },
+    "woman-tailored": {
+      "widthM": 1.01,
+      "heightM": 2.13,
+      "depthM": 0.46,
+      "turningRadiusM": 0.555
+    },
+    "vesper-beast": {
+      "widthM": 1.01,
+      "heightM": 2.18,
+      "depthM": 1.37,
+      "turningRadiusM": 0.851
+    },
+    "man-tailored": {
+      "widthM": 0.71,
+      "heightM": 2.23,
+      "depthM": 0.52,
+      "turningRadiusM": 0.44
+    },
+    "midnight-host-wolf": {
+      "widthM": 0.71,
+      "heightM": 2.33,
+      "depthM": 1.53,
+      "turningRadiusM": 0.843
+    },
+    "lyra-human": {
+      "widthM": 1.01,
+      "heightM": 2.13,
+      "depthM": 0.52,
+      "turningRadiusM": 0.568
+    },
+    "woman-daywear": {
+      "widthM": 1.01,
+      "heightM": 2.24,
+      "depthM": 0.67,
+      "turningRadiusM": 0.606
+    },
+    "man-workwear": {
+      "widthM": 0.68,
+      "heightM": 2.23,
+      "depthM": 0.52,
+      "turningRadiusM": 0.428
+    },
+    "kai-formal-beast": {
+      "widthM": 0.68,
+      "heightM": 2.27,
+      "depthM": 1.56,
+      "turningRadiusM": 0.851
+    },
+    "kai-explorer": {
+      "widthM": 0.75,
+      "heightM": 2.23,
+      "depthM": 0.52,
+      "turningRadiusM": 0.456
+    },
+    "kai-explorer-beast": {
+      "widthM": 0.75,
+      "heightM": 2.27,
+      "depthM": 1.56,
+      "turningRadiusM": 0.865
+    },
+    "kai-noir": {
+      "widthM": 0.68,
+      "heightM": 2.23,
+      "depthM": 0.52,
+      "turningRadiusM": 0.428
+    },
+    "kai-noir-beast": {
+      "widthM": 0.68,
+      "heightM": 2.27,
+      "depthM": 1.56,
+      "turningRadiusM": 0.851
+    },
+    "forest-aristocrat": {
+      "widthM": 0.69,
+      "heightM": 2.45,
+      "depthM": 0.62,
+      "turningRadiusM": 0.464
+    },
+    "forest-aristocrat-beast": {
+      "widthM": 0.69,
+      "heightM": 2.45,
+      "depthM": 0.66,
+      "turningRadiusM": 0.477
+    },
+    "forest-aristocrat-feminine": {
+      "widthM": 1.01,
+      "heightM": 2.36,
+      "depthM": 0.52,
+      "turningRadiusM": 0.568
+    },
+    "forest-aristocrat-feminine-beast": {
+      "widthM": 1.01,
+      "heightM": 2.36,
+      "depthM": 0.59,
+      "turningRadiusM": 0.585
+    }
+  }
+}
