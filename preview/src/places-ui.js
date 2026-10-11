@@ -11,21 +11,26 @@ import { createPlacesGuide } from './places-guide.js';
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
 
-export function setupPlacesUI({ places, landmarks, worldMapEnabled = false, onGo, getPosition, getYaw, isOutdoor = () => true, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
+export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, isOutdoor = () => true, shareBase = () => worldVisitUrl(worldIdFromSearch(location.search)) }) {
   const host = $('#places'), here = $('#places-here'), list = $('#places-list'), marks = $('#landmarks-list'), status = $('#places-status');
   const nameInput = $('#landmark-name'), addButton = $('#landmark-add');
   if (!host) return null;
   let current = places, currentLandmarks = landmarks;
   const say = (message, tone = '') => { status.textContent = message; status.dataset.tone = tone; };
   const copy = async text => { try { await navigator.clipboard.writeText(text); say('Link copied'); } catch { say(text); } };
-  const worldMap=worldMapEnabled ? createWorldMap({host,onGo,getPosition,getYaw,isOutdoor,shareBase,say,copy}) : null;
+  const worldMap=createWorldMap({host,onGo,getPosition,getYaw,isOutdoor,shareBase,say,copy});
 
   const guide = createPlacesGuide(host);
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
     item.dataset.placeId = place.id;
-    const name = document.createElement('span'); name.className = 'place-name'; name.textContent = place.name;
+    const name = document.createElement('button'); name.type = 'button'; name.className = 'place-name'; name.textContent = place.name;
+    name.setAttribute('aria-label', `Show ${place.name} on map`);
+    name.addEventListener('click', () => {
+      if (place.worldId && place.worldId !== worldIdFromSearch(location.search)) return say('Visit this landmark’s world to see it on the map.');
+      worldMap.selectPlace(place);
+    });
     const kind = document.createElement('span'); kind.className = 'place-kind';
     kind.textContent = place.kind === 'landmark' && place.worldId
       ? `${KIND_LABEL.landmark} · ${place.worldTitle ?? place.worldId}` : KIND_LABEL[place.kind] ?? place.kind;

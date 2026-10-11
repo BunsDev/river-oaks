@@ -132,7 +132,6 @@
   .access-scene-copy { display: none; }
   .access-panel { padding-top: 22px; }
 }
-@media (prefers-reduced-motion: reduce) { .access-actions a, .access-card button { transition: none; } }
 
 .access-review {
   position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center;
@@ -169,3 +168,4 @@
 .access-invites code { display: block; overflow-wrap: anywhere; }
 .access-invites article { padding-block: 1rem; border-top: 1px solid #c4d3ca; }
 .access-invites article p { margin-block: .35rem; }
+@media (prefers-reduced-motion: reduce) { .access-actions a, .access-card button, .access-tools button, .access-review button { transition: none; } }

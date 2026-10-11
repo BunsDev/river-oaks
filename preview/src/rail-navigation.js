@@ -9,7 +9,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
   dialog.innerHTML = `<header><h2 id="rail-commands-title">Commands & keyboard</h2><button type="button" class="commands-close" aria-label="Close commands">Close <kbd>Esc</kbd></button></header>
     <label for="rail-command-search">Find a control or activity</label><input id="rail-command-search" type="search" autocomplete="off" placeholder="Try places, chat, rides…">
     <p class="commands-count" role="status"></p><div class="commands-results" role="group" aria-label="Available commands"></div>
-    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; Alt+1 opens People, Alt+2 opens Places, and Alt+3 opens Settings. Up and Down select settings categories. Shortcuts leave typing and modal dialogs alone.</small></details>`;
+    <details class="commands-reference"><summary>Gameplay keys & navigation</summary><p></p><small>Gameplay keys work with the world focused. Tab and Shift+Tab navigate controls; Alt+1 opens People, Alt+2 opens Map, and Alt+3 opens Settings. Up and Down select settings categories. Shortcuts leave typing and modal dialogs alone.</small></details>`;
   document.body.append(dialog);
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'commands-toggle';
   trigger.innerHTML = '<span>Commands</span><kbd>?</kbd>'; trigger.title = `Commands & keyboard (${primary}K or ?)`;
@@ -30,7 +30,7 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     getClearView()?.set(false); getSections()?.select(index, true, selector);
     const target = selector && document.querySelector(selector);
     if (!target) return;
-    const guide = target.closest('#places-dialog');
+    const guide = target.closest('#places-dialog') ?? (target.closest('.world-map') ? document.querySelector('#places-dialog') : null);
     if (guide) { guide.dispatchEvent(new CustomEvent('places-open', { detail: { selector } })); return; }
     for (let node = target.parentElement; node && node !== sidebar.panel; node = node.parentElement) {
       if (node.tagName === 'DETAILS') node.open = true;
@@ -45,18 +45,17 @@ export function setupRailNavigation({ sidebar, getSections, getDock, getClearVie
     const dock = getDock(); dock?.setOpen(true, { focus: true }); if (selector) dock?.jump(selector);
   };
   const actions = () => [
-    { label: 'Places · show or hide destinations', keys: `${primary}B`, terms: 'sidebar left rail', toggle: true, run: () => { getClearView()?.set(false); sidebar.toggle(); } },
+    { label: 'Map · show or hide minimap', keys: `${primary}B`, terms: 'sidebar left rail', toggle: true, run: () => { getClearView()?.set(false); sidebar.toggle(); } },
     { id: 'activities', label: 'Activities · show or hide controls', keys: `${primary}Shift+B`, terms: 'play right rail dock', toggle: true, run: () => {
       const dock = getDock(); if (!dock) return;
       if (dock.element.open && dock.element.checkVisibility({ visibilityProperty: true })) { dock.setOpen(false); focusWorld(); } else showPlay();
     } },
-    ...['People · nearby and chat', 'Explore · places and landmarks', 'Settings'].map((label, index) => ({ label, keys: `Alt+${index + 1}`, run: () => openTab(index) })),
+    ...['People · nearby and chat', 'Map · destinations and landmarks', 'Settings'].map((label, index) => ({ label, keys: `Alt+${index + 1}`, run: () => openTab(index) })),
     { label: 'Search destinations', keys: '/', selector: '#store-search', run: () => openTab(1, '#store-search') },
     { label: 'World map', selector: '.world-map-surface', run: () => openTab(1, '.world-map-surface') },
-    { label: 'Places & landmarks', terms: 'go somewhere saved travel guide', selector: '#places-search', run: () => openTab(1, '#places-search') },
+    { label: 'Find a place', terms: 'go somewhere saved travel guide', selector: '#places-search', run: () => openTab(1, '#places-search') },
     { label: 'Save a landmark', selector: '#landmark-name', run: () => openTab(1, '#landmark-name') },
     { label: 'Browse shared worlds', selector: '.world-portal-list a', run: () => openTab(1, '.world-portal-list a') },
-    { label: 'Events & gatherings', selector: '.world-events-filters select', run: () => openTab(1, '.world-events-filters select') },
     { label: 'Town chat', selector: '.multiplayer-chat-form input', run: () => { getClearView()?.set(false); document.querySelector('#community-close')?.click(); document.querySelector('.town-chat-dock').open = true; document.querySelector('.multiplayer-chat-form input').focus(); } },
     { label: 'Character · appearance and abilities', selector: 'input[name=player-character]:checked', run: () => showPlay('.player-controls') },
     { label: 'Camera · Photo mode', enabled: () => Boolean(getPhotoMode?.()), run: () => getPhotoMode().open() },
