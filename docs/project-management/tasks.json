@@ -1482,7 +1482,8 @@
         "preview": "2594 pass, 1 skipped (pre-existing)",
         "core": "pnpm run verify: core passed",
         "mutations": "no index writes: 7 cases fail; no stale cleanup: 1 case fails"
-      }
+      },
+      "pr": 235
     },
     {
       "id": "map-ui-readability",
