@@ -1523,7 +1523,8 @@
         "preview": "2596 pass, 1 skipped (pre-existing)",
         "core": "pnpm run verify: core passed",
         "measurement": "22 looks standing + seated; tallest 2.45 m; widest seated 1.264 m"
-      }
+      },
+      "pr": 236
     },
     {
       "id": "map-ui-readability",
