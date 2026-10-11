@@ -10,8 +10,8 @@
         "chore/project-lifecycle-20261011"
       ],
       "owner": "/root:project-lifecycle-20261011",
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Deliver verified lifecycle tooling and skills via PR; reconcile exact PR state at handoff.",
+      "updatedAt": "2026-10-11T06:21:42.413771+00:00",
+      "nextAction": "Wait for exact-head hosted checks on PR209, land the verified lifecycle changes, then reconcile delivery and local archive state.",
       "filesOwned": [
         "scripts/project-status.mjs",
         "scripts/tests/project-status.test.js",
@@ -32,7 +32,15 @@
         "activeProcess": true
       },
       "leaseUntil": "2026-10-11T08:20:29.781585+00:00",
-      "ledger": "docs/superpowers/plans/2026-10-11-project-lifecycle.md"
+      "ledger": "docs/superpowers/plans/2026-10-11-project-lifecycle.md",
+      "pr": 209,
+      "verification": {
+        "base": "20edac0bb75d7c4e7b51e987d717e9f39413d0eb",
+        "core": "passed; .runtime/agent/core.json",
+        "tooling": "25 passed after review fixes",
+        "skills": "both quick_validate.py checks passed",
+        "review": "independent follow-up: no findings"
+      }
     },
     {
       "id": "harry-winston",

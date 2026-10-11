@@ -55,3 +55,8 @@ inventory recorded there; no credential contents read. Current work is in progre
   bounded lease and concrete delivery next actions. Their trees remain preserved.
 - Remaining delivery: commit/push lifecycle changes, hosted CI, PR landing and final
   reconciliation. Do not treat local verification as hosted or deployment proof.
+
+## Delivery
+- Implementation committed as `15a8348cc028fee07704bb0f276b53f2bb17f811`.
+- PR: https://github.com/BunsDev/river-oaks/pull/209. Hosted checks and merge
+  remain pending; GitHub is authoritative for subsequent delivery status.
