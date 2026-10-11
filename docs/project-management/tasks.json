@@ -1403,6 +1403,50 @@
       }
     },
     {
+      "id": "workplace-retention-status",
+      "title": "Workplace gaps from #221: exact retention via per-draft keys, owner forget of finished briefs, stale panel status",
+      "status": "active",
+      "branches": [
+        "fix/workplace-retention-status"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T11:41:00+00:00",
+      "leaseUntil": "2026-10-11T13:41:00+00:00",
+      "nextAction": "After #227 and #230 merge: rebase onto main, retarget PR #232, run verify full on the final head, pass hosted CI, merge with the guard.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-retention-status.md",
+      "filesOwned": [
+        "server/workplace.js (storage and forget; agreed with river-oaks-55)",
+        "preview/src/workplace-contract.js (forget action)",
+        "preview/src/workplace-ui.js (health, forget control)",
+        "server/vercel-routing.js",
+        "vercel.json (workplace routes)",
+        "server/tests/retention-workplace.test.js",
+        "preview/tests/panel-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-retention-status.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Panel status test",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-221-adversarial (PR #230), stacked until it merges",
+      "decision": "Per-draft keys chosen by the user on 2026-10-11 over expiring the whole owner key early or waiting for Val.",
+      "pr": 232,
+      "verification": {
+        "server": "471 pass, 0 skipped with isolated Redis",
+        "preview": "2594 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "browser": "workplace journey passed",
+        "mutations": "derived side writes: 5 cases fail; stale mark: 1 case fails"
+      }
+    },
+    {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
       "status": "delivered",
