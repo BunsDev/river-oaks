@@ -61,7 +61,11 @@
     "preagent:list": "node scripts/enforce-pnpm.mjs",
     "preverify": "node scripts/enforce-pnpm.mjs",
     "pretest:agent": "node scripts/enforce-pnpm.mjs",
-    "pretest:desktop:photo": "node scripts/enforce-pnpm.mjs"
+    "pretest:desktop:photo": "node scripts/enforce-pnpm.mjs",
+    "project:status": "node scripts/project-status.mjs",
+    "project:check": "node scripts/project-status.mjs --check",
+    "preproject:status": "node scripts/enforce-pnpm.mjs",
+    "preproject:check": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",

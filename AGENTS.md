@@ -10,11 +10,16 @@ Read the scoped AGENTS.md in the subsystem you change.
 1. Run `git status --short` and `git worktree list`. Preserve existing edits and
    other agents' work. Use an external sibling worktree when ownership overlaps;
    never copy `.env`, private `.runtime` state, or credentials into it.
-2. Read the owning module, its callers, tests, and linked subsystem docs before
+2. Reconcile [the task register](docs/project-management/tasks.json) using
+   [the lifecycle workflow](docs/project-management/workflow.md). Claim the exact
+   task/branch, record your session owner and next action, and reuse an owned
+   checkout before creating another. Expired or missing ownership is not discard
+   permission.
+3. Read the owning module, its callers, tests, and linked subsystem docs before
    editing. Keep patches small; do not reformat large unrelated files.
-3. Run `pnpm run agent:doctor` after installing dependencies. Use
+4. Run `pnpm run agent:doctor` after installing dependencies. Use
    `pnpm run agent:list` for machine-readable verification profiles.
-4. For multi-step work, create/update a task-specific ledger in
+5. For multi-step work, create/update a task-specific ledger in
    `docs/superpowers/plans/`: objective, files owned, checks, results, gaps, next step.
    Historical reports are evidence of their recorded revision, not today's status.
 
@@ -53,3 +58,6 @@ unverified scope, worktree/branch, and remaining delivery steps. Keep secrets ou
 A green local gate is not merge, deployment, visual, or human accessibility proof.
 Do not mark a ledger complete until evidence supports each promised item. Do not
 archive/remove a worktree containing undelivered edits.
+
+Reconcile task status and next action at handoff. Mark delivered only with exact
+PR/merge evidence, and retired only with cleanup and restoration proof.

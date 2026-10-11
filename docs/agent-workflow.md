@@ -105,3 +105,10 @@ changes, tests, proof gaps and next action. Commit/push/merge/deploy require the
 user's task authorization; successful local verification alone grants none.
 
 `pnpm-lock.yaml` is the sole JavaScript lockfile. Install and public-script guards reject other package managers and versions; CI uses frozen installs. Electron and esbuild are the only approved dependency build scripts. Historical reports retain the commands actually run at their recorded revision.
+
+## Project lifecycle
+
+Use [task ownership and retirement](project-management/workflow.md) at session
+start, delivery and handoff. `pnpm run --silent project:status --github` compares
+local branches/worktrees with the task register and live PRs without changing them.
+`project:check` exits nonzero for reconciliation gaps, not application test failures.
