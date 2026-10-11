@@ -34,9 +34,24 @@ Codex path instead of `coven run`.
 | S4 | Codex flags not verified: web search, `~/.codex/AGENTS.md`. | **Verified.** Web search is off (`-c web_search="disabled"`, and the probe answers NO). AGENTS.md still loads (row 1e). The version is not pinned, to avoid breaking routine upgrades; the docs say to recheck. |
 | N1–N7 | Newlines deleted, silent repair, rate stamp after await, characters vs bytes, packaging-test blind spots, undocumented workspace path, `help` environment. | **Fixed:** newlines become spaces, bad replies are refused, the stamp comes before the first await, the cap is code-point-safe UTF-8, the test follows bare imports and refuses computed ones, the path is documented, and `help` gets a minimal environment. |
 
+## Review round 2 (river-oaks-c2 at `872e07b`: approve after two should-fixes)
+
+| # | Finding | Disposition |
+| --- | --- | --- |
+| S1 | `baseHash` and `requestId` (free text) reach the prompt but not the dialog. IDs and kinds are unlisted. | **Fixed, more strictly than suggested.** Request identity (`requestId`, `connectionId`, `projectId`, revision, hash, pack version) is no longer sent at all; the host attaches it to the reply. The knowledge-path line is gone. The project ID, which still appears in the workspace path Codex sees, must be a UUID at setup (the panel always generated one), which the test caught. The docs say IDs and kinds are unlisted slugs. |
+| S2 | "Tools off" relied on 0.162.1 defaults. | **Fixed.** `CODEX_DISABLED` grows to 49 names: c2's list plus default-on features that widen reach. `in_app_local_automation` was **on by default**; `memories`, `hooks`, `browser_annotation_api`, `worktrees`, `mentions_v2`, voice and realtime are also off. Codex refuses unknown names, so a release that drops one fails closed. Live: it still answers and still refuses to read a file. The unused `CODEX_VERIFIED` is removed. |
+| N1 | Other space characters and filler characters survived. | **Fixed.** `\p{Zs}` becomes a plain space, and the Hangul fillers and U+2800 are hidden. |
+| N2 | New chat then an immediate send was refused briefly. | **Fixed.** Aborted runs don't count as busy. |
+| N3 | A long saved brief was cut silently. | **Fixed.** The panel says it kept the first 2,000 characters. |
+| N4 | `publicError` uses a prefix allowlist. | **Deferred.** It fails safe (unknown messages become the fallback). A host-error class is a follow-up refactor. |
+| N5 | The designer dialog didn't mention the workspace path. | **Fixed.** Both dialogs now say "anything in" `AGENTS.md`, and the docs say to keep secrets out of it. |
+
 ## Verification (latest)
 
-- `node --test desktop/tests/*.test.js`: 47/47. New: Codex argv and reply parsing
+- Round 2: `node --test desktop/tests/*.test.js preview/tests/studio-*.test.js` 72/72;
+  `agent-e2e` and `designer-e2e` passed; live hardened Codex (49 flags) refused the
+  file read.
+- `node --test desktop/tests/*.test.js`: 47/47 (round 1). New: Codex argv and reply parsing
   (`studio-codex.test.js`); designer dialog equals the prompt text; tag
   characters, padding, parcels and hidden keys never reach the prompt; selection
   scope; over-length refusal; strict reply refusal; nothing executed before

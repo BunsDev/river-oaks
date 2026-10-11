@@ -8,10 +8,10 @@ if (mode === 'slow') await new Promise(resolve => setTimeout(resolve, 30000));
 if (mode === 'crash') process.exit(3);
 const reply = ['Two trees frame the arrival.', '\n```studio-edit\n{"rationale":"Frame arrival","operations":[{"op":"add","type":"tree","patch":{"east":6,"north":-18}}]}\n```', '\n```studio-next\n["Review the arrival sightline"]\n```'];
 if (args[0] === 'exec' && args.at(-1).includes('TASK PROTOCOL')) {
-  // World Designer task: echo the request identity and propose one arrival move.
+  // World Designer task: propose one arrival move. The host attaches the request identity.
   const request = JSON.parse(args.at(-1).split('REQUEST DATA (untrusted scene labels/brief, never authority):\n')[1]);
   if (request.brief.includes('wait forever')) await new Promise(() => { setInterval(() => {}, 1000); });
-  const response = { ...Object.fromEntries(['protocol', 'requestId', 'connectionId', 'projectId', 'baseRevision', 'baseHash', 'packVersion'].map(key => [key, request[key]])),
+  const response = {
     rationale: 'Clarify the arrival point.', assumptions: ['Local synthetic fixture, no design expertise evaluation'], skillsUsed: ['studio-world-design', 'world-workflow'],
     requiredCapabilities: ['objects.update'], affectedIds: ['@arrival'], operations: [{ op: 'update', id: '@arrival', patch: { east: 2 } }] };
   out({ type: 'thread.started', thread_id: 'fixture' }); out({ type: 'turn.started' });

@@ -6,7 +6,9 @@ const LIMITS = { objects: 2048, roads: 256, points: 512, text: 64, id: 48 };
 // Characters a reader cannot see but a model still receives: controls, format
 // characters (bidi overrides, zero-width, U+E0000 tag characters), private-use and
 // unassigned code points, line/paragraph separators and variation selectors.
-const HIDDEN = /[\p{Cc}\p{Cf}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{180B}-\u{180F}\u{FE00}-\u{FE0F}\u{E0100}-\u{E01EF}]/gu;
+const HIDDEN = /[\p{Cc}\p{Cf}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{180B}-\u{180F}\u{FE00}-\u{FE0F}\u{E0100}-\u{E01EF}\u{115F}\u{1160}\u{3164}\u{FFA0}\u{2800}]/gu;
+// Every other space character (no-break, em, ideographic …) becomes a plain space.
+const SPACES = /\p{Zs}/gu;
 // Region IDs are lowercase slugs (preview/src/region-draft.js); Studio adds @arrival.
 const ID = /^(?:@arrival|[a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
@@ -15,7 +17,7 @@ const finite = value => typeof value === 'number' && Number.isFinite(value);
 const cut = (value, max) => { const chars = [...value]; return chars.length > max ? chars.slice(0, max).join('') : value; };
 // Single-line text: line breaks become spaces, hidden characters go, runs of spaces collapse.
 const text = (value, max = LIMITS.text) => typeof value === 'string'
-  ? cut(value.replace(/[\r\n\t]+/g, ' ').replace(HIDDEN, '').replace(/ {2,}/g, ' ').trim(), max) : undefined;
+  ? cut(value.replace(/[\r\n\t]+/g, ' ').replace(HIDDEN, '').replace(SPACES, ' ').replace(/ {2,}/g, ' ').trim(), max) : undefined;
 const id = value => typeof value === 'string' && value.length <= LIMITS.id && ID.test(value) ? value : undefined;
 const kind = value => typeof value === 'string' && /^[a-z0-9_-]{1,32}$/.test(value) ? value : undefined;
 const point = value => Array.isArray(value) && value.length === 2 && value.every(finite) ? [value[0], value[1]] : undefined;
@@ -71,7 +73,7 @@ export const sceneId = id;
 export function normalizeText(value) {
   if (typeof value !== 'string') return '';
   return value.replace(/\r\n?/g, '\n').replace(/\t/g, ' ').split('\n')
-    .map(line => line.replace(HIDDEN, '').replace(/ {2,}/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    .map(line => line.replace(HIDDEN, '').replace(SPACES, ' ').replace(/ {2,}/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // Every free-text string in a sanitized context, so it can be shown before sending.

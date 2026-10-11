@@ -63,14 +63,19 @@ this account can read, and `coven run` cannot turn that shell off. So design
 tasks run `codex exec` directly with the user config ignored and the shell,
 exec, sub-agent, app, plugin, browser, computer-use and web-search features off
 (`desktop/studio-codex.js`, verified on codex-cli 0.162.1: asked to read a file,
-it cannot). Codex still receives your global `~/.codex/AGENTS.md`, and the prompt
-includes the workspace path, which contains your account name.
+it cannot). Codex still receives anything in your global `~/.codex/AGENTS.md`
+(keep secrets out of that file) and the workspace path, which contains your
+account name.
 
 **What you approve.** Each task's dialog shows the whole task (up to 1,000
 characters), the whole project brief (up to 2,000), the scope and every place
 and road name shared. These are exactly the strings sent: hidden characters are
-removed and runs of spaces and blank lines collapse before both. Selection scope
-sends only the selected objects. Object IDs must be region slugs or `@arrival`.
+removed, other space characters become plain spaces, and runs of spaces and blank
+lines collapse before both. Selection scope sends only the selected objects.
+Object IDs and building or road kinds are short slugs (for example `tree-3`,
+`footway`) and are not listed. Request IDs, revisions and hashes stay with the
+host and are never sent, and the project ID in the workspace path must be a
+UUID.
 
 **Page boundary.** As with the agent chat, the bridge exists only in documents
 loaded at a Studio path, the main process checks the committed URL, and setup

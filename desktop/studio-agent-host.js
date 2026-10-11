@@ -95,7 +95,8 @@ export function createStudioAgentHost({ root, env = process.env, execute = runSt
       if (!provider || !validId(input.chatId) || !validId(input.requestId) || !provider.models.some(model => model.id === input.modelId) || !['ask', 'allow'].includes(input.mode)
         || typeof input.message !== 'string' || !input.message.trim() || input.message.length > MAX_MESSAGE || Buffer.byteLength(JSON.stringify(input.context ?? null)) > MAX_CONTEXT) throw Error('Invalid agent message.');
       // One reply at a time across every chat, so one user gesture cannot fan out into many runs.
-      if (active.size) throw Error('The agent is still answering. Wait or stop it first.');
+      // A reply already stopped (New chat, Stop) is only cleaning up and does not count.
+      if ([...active.values()].some(run => !run.control.signal.aborted)) throw Error('The agent is still answering. Wait or stop it first.');
       const now = Date.now();
       while (sent.length && now - sent[0] > RATE.windowMs) sent.shift();
       if (sent.length >= RATE.sends) throw Error('Too many agent messages in the last few minutes. Wait a moment and try again.');

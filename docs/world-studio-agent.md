@@ -44,7 +44,9 @@ page only picks IDs from that table.
   empty private workspace under the app profile (`studio-agent/codex`). The
   read-only sandbox still lets its shell *read* any file, so Studio also passes
   `--ignore-user-config --ignore-rules` and disables the shell, exec, sub-agent,
-  app, plugin, browser, computer-use and web-search features (`desktop/studio-codex.js`). That also drops your Codex
+  app, plugin, MCP, automation, browser, computer-use, web-search, voice and
+  memory features, including ones that are off by default today, so an upgrade
+  cannot turn one on (`desktop/studio-codex.js`). That also drops your Codex
   MCP servers, rules and configured model; Codex uses its default model. Codex
   returns each reply whole.
 - The first message to each provider asks for native consent, because your
@@ -74,9 +76,9 @@ The chat runs inside the hosted site, so Studio treats page script as untrusted:
 **Remaining exposure.** With both providers' tools off, an agent knows only what
 the page sends it, plus what the CLI itself injects. On `claude` 2.1.296 that
 includes your Claude account email (`--bare` would remove it, but it also
-disables subscription sign-in). Codex still loads your global
-`~/.codex/AGENTS.md`; only a separate `CODEX_HOME` would stop that, which would
-mean copying credentials. Both CLIs also see the workspace path, which contains
+disables subscription sign-in). Codex still loads anything in your global
+`~/.codex/AGENTS.md`, so keep secrets out of that file; only a separate
+`CODEX_HOME` would stop that, which would mean copying credentials. Both CLIs also see the workspace path, which contains
 your account name. Script on the site could therefore ask the agent to repeat
 those, and could use your provider quota within the rate limit. The consent
 dialog says so. The Codex flags were verified on codex-cli 0.162.1; a later

@@ -25,9 +25,11 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
   let connection = null, busy = false, generation = 0, requestId = null, catalog = null, opener = null;
   const events = new AbortController();
   let settings = { projectId: crypto.randomUUID(), brief: '', name: 'World Designer', mode: 'familiar' };
-  try { const saved = JSON.parse(storage.getItem(SETTINGS_KEY)); if (saved && /^[\w-]{1,100}$/.test(saved.projectId) && typeof saved.brief === 'string' && saved.brief.length <= 8000) settings = { projectId: saved.projectId, brief: saved.brief.slice(0, 2000), name: typeof saved.name === 'string' ? saved.name : 'World Designer', mode: saved.mode === 'general' ? 'general' : 'familiar' }; } catch { /* Use a fresh project context; never repair exported region data. */ }
+  try { const saved = JSON.parse(storage.getItem(SETTINGS_KEY)); if (saved && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(saved.projectId) && typeof saved.brief === 'string' && saved.brief.length <= 8000) settings = { projectId: saved.projectId, brief: saved.brief.slice(0, 2000), trimmed: saved.brief.length > 2000, name: typeof saved.name === 'string' ? saved.name : 'World Designer', mode: saved.mode === 'general' ? 'general' : 'familiar' }; } catch { /* Use a fresh project context; never repair exported region data. */ }
   $('[data-brief]').value = settings.brief; $('[data-name]').value = settings.name; $('[data-path]').value = settings.mode;
   const say = text => { $('[data-state]').textContent = text; };
+  // Briefs are capped at 2,000 characters so the desktop confirmation can show them whole.
+  if (settings.trimmed) { delete settings.trimmed; say('Your saved project brief was over 2,000 characters, so Studio kept the first 2,000. Review it before sending.'); }
   function persist() { settings.brief = $('[data-brief]').value; settings.name = $('[data-name]').value; settings.mode = $('[data-path]').value; try { storage.setItem(SETTINGS_KEY, JSON.stringify(settings)); return true; } catch { say('Project preferences could not be saved. Your region is unchanged.'); return false; } }
   function render() {
     $('[data-setup]').hidden = Boolean(connection); $('[data-connected]').hidden = !connection;
