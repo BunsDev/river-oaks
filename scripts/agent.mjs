@@ -104,7 +104,7 @@ async function doctor(profile) {
     const check = spawnSync(command, ['--version'], { cwd: repository, stdio: 'ignore', timeout: 10000 });
     add(command, check.status === 0, `Install ${command} and ensure it is on PATH.`);
   }
-  if (commands.includes('npm')) add('node_modules', existsSync(join(repository, 'node_modules/.package-lock.json')), 'Run npm ci.');
+  if (commands.includes('pnpm')) add('node_modules', existsSync(join(repository, 'node_modules/.modules.yaml')), 'Run pnpm install --frozen-lockfile.');
   if (commands.includes('uv')) add('python environment', existsSync(join(repository, '.venv/pyvenv.cfg')), 'Run uv sync --locked.');
   for (const name of new Set(tasks.flatMap(t => t.requiresEnv ?? []))) {
     add(name, Boolean(process.env[name]?.trim()), `Set ${name} to an isolated test service; never use a production database.`);
@@ -115,7 +115,7 @@ async function doctor(profile) {
       const { chromium } = await import('playwright');
       installed = existsSync(chromium.executablePath());
     } catch { /* Missing dependency is reported without dumping environment data. */ }
-    add('chromium', installed, 'Run npx playwright install chromium; Linux also needs browser OS dependencies and Xvfb/Mesa for shared journeys.');
+    add('chromium', installed, 'Run pnpm exec playwright install chromium; Linux also needs browser OS dependencies and Xvfb/Mesa for shared journeys.');
   }
   const report = { schemaVersion: 1, profile, status: checks.every(c => c.status === 'passed') ? 'passed' : 'blocked', checks,
     scope: 'Prerequisite presence only; run verification to prove behavior. No secrets or env files are read.' };

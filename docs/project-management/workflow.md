@@ -8,7 +8,7 @@ A register entry records the next action, not a substitute for either source.
 ## Start or resume work
 
 1. Run `git status --short`, `git worktree list` and
-   `npm run --silent project:status -- --github --output .runtime/project-status.json`.
+   `pnpm run --silent project:status --github --output .runtime/project-status.json`.
    Create `.runtime` first when absent. This command reads Git and GitHub; it never
    fetches, checks out, edits tasks, deletes refs, or removes worktrees. Refresh
    `origin` explicitly before delivery or retirement decisions.
@@ -48,7 +48,7 @@ and retirement. Do not overwrite historical reports with new timestamps.
 
 ## Daily reconciliation and handoff
 
-Run `npm run --silent project:check -- --github` at session start and handoff.
+Run `pnpm run --silent project:check --github` at session start and handoff.
 Exit 0 means the register passed validation and no tracked reconciliation gaps
 were found; 1 means gaps such as unregistered branches, mismatched PR heads,
 expired ownership, or resurrected retired refs; 2 means input/tool failure.

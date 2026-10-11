@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data/raw/landscape"
 OUTPUT = ROOT / "preview/public/assets/landscape"
-CLI = ["npx", "--yes", "@gltf-transform/cli@4.3.0"]
+CLI = ["pnpm", "dlx", "@gltf-transform/cli@4.3.0"]
 
 
 def run(*arguments):

@@ -84,8 +84,8 @@ allows.
 
 To verify, run `node --test preview/tests/beast-forms.test.js
 preview/tests/romance-look.test.js preview/tests/foot-placement.test.js`,
-`npm run test:server`, `npm run test:experience -- player-forms beast-movement`
-and `npm run test:shared -- required`.
+`pnpm run test:server`, `pnpm run test:experience player-forms beast-movement`
+and `pnpm run test:shared required`.
 
 ## Reference direction
 

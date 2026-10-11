@@ -32,10 +32,10 @@ not the shared simulation. It does not move your character to the lens position.
 
 ```sh
 node --test preview/tests/photo-camera.test.js
-RIVER_OAKS_E2E_REPORT=photo-mode.json npm run test:experience -- photo-mode
-npm run test:desktop
-npm run test:desktop:photo
-npm run build
+RIVER_OAKS_E2E_REPORT=photo-mode.json pnpm run test:experience photo-mode
+pnpm run test:desktop
+pnpm run test:desktop:photo
+pnpm run build
 ```
 
 The browser journey checks real rendered PNG pixels, output dimensions, successful

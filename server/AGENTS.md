@@ -7,10 +7,10 @@ Read `docs/multiplayer.md` and the endpoint's callers before editing. `api/serve
   authority. Development fixture identities must never reach production routes.
 - Cover HTTP and WebSocket behavior together when changing tickets, sessions or
   shared commands. Keep Redis and in-memory implementations contract-compatible.
-- Run `npm run test:server` from the root. Redis cases skip without `REDIS_URL`;
+- Run `pnpm run test:server` from the root. Redis cases skip without `REDIS_URL`;
   use an isolated test database and verify zero unexpected skips for Redis work.
   Tests own random namespaces; never FLUSHDB or use production Redis.
-- Run `npm run test:shared` for browser-visible transport/account changes.
+- Run `pnpm run test:shared` for browser-visible transport/account changes.
   Synthetic identity tests do not establish real WorkOS or hosted routing acceptance.
 - Never log credentials, session cookies, raw provider tokens or private profile data.
 

@@ -40,7 +40,7 @@ Start the bridge with `TYPESAFE_API_KEY` in its environment and a pinned `JEV_AU
 
 ```sh
 TYPESAFE_API_KEY='op://Development/Jev API Key/password' op run -- uv run river-oaks serve
-npm run dev
+pnpm run dev
 ```
 
 Choose **Start Jev auto visit** in the viewport. For neighborhood support, first begin a scenario under **People → Help neighbors**. WASD, dragging, Escape, or **Stop auto visit** returns control. Offline or uncertain inference is visibly waiting; no local rule is presented as a Jev decision. Server-provided API keys are never returned to the browser. To supply your own key, open **Settings → Jev API key** and select **Use key**. The bridge keeps this override in memory for both auto visits and resident reactions. **Use server key** restores the original configuration; restarting the bridge also clears the override.

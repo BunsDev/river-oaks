@@ -142,7 +142,14 @@ async (page, { worldMapEnabled = false } = {}) => {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await host.focus(); await page.keyboard.press('Alt+1');
+  const introClaim = page.waitForResponse(response => response.url().includes('/api/profile/claim-intro'));
   await page.locator('#community-local').selectOption(await page.locator('#community-local option').evaluateAll(options=>options.find(option=>option.value.startsWith('store-')).value)); await page.locator('#community-meet').click();
+  // Meeting an indoor resident is also a first arrival. Dismiss the real welcome
+  // before testing the conversation/play-control handoff underneath it.
+  if ((await (await introClaim).json()).firstVisit) {
+    await page.locator('.store-intro button').click();
+    await page.locator('.store-intro').waitFor({ state: 'hidden' });
+  }
   await page.locator('#community-dialogue').waitFor({ state: 'visible' });
   await host.focus(); await page.keyboard.press('Control+Shift+b');
   check(!await page.locator('#community-dialogue').isVisible() && await dock.isVisible(), 'Requesting play controls dismisses a competing compact conversation');

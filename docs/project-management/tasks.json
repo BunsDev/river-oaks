@@ -159,21 +159,38 @@
       "branches": [
         "codex/store-intros-signin-delivery-20261009"
       ],
-      "owner": "codex:01a12983",
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Coordinated owner thread 01a12983 owns PR198 push and merge; preserve local changes and reconcile local/PR head divergence at delivery.",
-      "filesOwned": [],
+      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
+      "updatedAt": "2026-10-11T06:55:54.717716+00:00",
+      "nextAction": "Push verified lifecycle-main reconciliation, pass required hosted checks on final head, then squash merge PR198. Integration owner will record exact merge proof after landing.",
+      "filesOwned": [
+        "package.json",
+        "AGENTS.md",
+        "docs/agent-workflow.md",
+        "docs/project-management/workflow.md",
+        "docs/project-management/tasks.json",
+        "docs/superpowers/plans/2026-10-11-pr198-merge.md"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "pnpm run verify",
+        "pnpm run verify full (runtime verified before docs/tooling-only main reconciliation)",
+        "pnpm run verify tooling",
+        "Required hosted checks on final PR head"
       ],
       "observed": {
-        "head": "84b88c34d95f7844f6997091b9ed587a2853bd38",
-        "dirtyPaths": 7,
-        "mergeInProgress": false,
+        "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
+        "dirtyPaths": 14,
+        "mergeInProgress": true,
         "activeProcess": true
       },
       "pr": 198,
-      "leaseUntil": "2026-10-11T08:20:29.781585+00:00"
+      "leaseUntil": "2026-10-11T08:55:54.717716+00:00",
+      "ledger": "docs/superpowers/plans/2026-10-11-pr198-merge.md",
+      "evidence": [
+        {
+          "head": "bc94c21fc95c2c84abdf751d90e426561e828994",
+          "verification": "Local full: 17 tasks passed; 414 Redis tests, six experience journeys, 19 shared journeys. All hosted checks passed, including unchanged security retry. Core and 27 tooling tests also pass after docs/tooling-only main d3dbe63 reconciliation."
+        }
+      ]
     },
     {
       "id": "login-aesthetic",

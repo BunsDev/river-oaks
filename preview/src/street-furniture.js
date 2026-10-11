@@ -1,3 +1,4 @@
+import { winstonBed, insideReferenceBed } from './reference-planting.js';
 import { STREET, isWalkway, streetSection, sidewalkOffset, crossingDistance } from './street-profile.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { buildPlanterPlanting, matureTreePlacements } from './landscape-models.js';
@@ -64,7 +65,8 @@ export function treePits(world) {
     }
     return yaw;
   };
-  return matureTreePlacements(world).map(({ position: [x, y, z] }) => [x, y, z, TREE_GRATE, streetYaw(x, -z)]);
+  const bed=winstonBed(world);
+  return matureTreePlacements(world).filter(({position:[x,,z]})=>!insideReferenceBed(bed,x,-z)).map(({ position: [x, y, z] }) => [x, y, z, TREE_GRATE, streetYaw(x, -z)]);
 }
 
 // Cast-iron grate: concentric square slot rings broken by radial ties, a

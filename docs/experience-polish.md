@@ -12,9 +12,9 @@ Commands uses player goals such as Explore, People, Character and Camera.
 Run the browser acceptance suite with:
 
 ```sh
-npm run test:experience
+pnpm run test:experience
 # Run one flow while iterating:
-npm run test:experience -- experience
+pnpm run test:experience experience
 ```
 
 The runner starts its own authenticated town fixture and Vite server and runs each flow in a fresh Chromium context. It writes results to `data/reports/experience.json` and screenshots to `output/playwright/`. It covers desktop, phone, and short landscape layouts; focus and Escape behavior; reduced motion; vehicles; companion conversations; touch movement; loading progress; graphics preferences across reloads; and clear view. The UI-polish flow covers theme changes and interrupted panel motion; the unicorn flow checks retained artwork in its studio fixture. Provider decision checks use mocked replies. Optional services can be unavailable during the suite.
@@ -22,12 +22,12 @@ The runner starts its own authenticated town fixture and Vite server and runs ea
 Run shared-play acceptance with:
 
 ```sh
-npm run test:shared
+pnpm run test:shared
 # Run one mode while iterating:
-npm run test:shared -- development
-npm run test:shared -- development-world
-npm run test:shared -- development-publish
-npm run test:shared -- required
+pnpm run test:shared development
+pnpm run test:shared development-world
+pnpm run test:shared development-publish
+pnpm run test:shared required
 ```
 
 The runner owns its test servers on available loopback ports and temporary moderation state. It leaves existing services running. Ctrl+C, SIGTERM, and SIGHUP close the browser and servers, remove temporary state, and record an interrupted result. Results go to `data/reports/shared-experience.json`; screenshots go to `output/playwright/`.
@@ -41,10 +41,10 @@ Manual driving takes over immediately on a movement key or pad press, including 
 Run native window and renderer recovery checks with:
 
 ```sh
-RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 npm run test:desktop:e2e -- --dev
+RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run test:desktop:e2e --dev
 ```
 
-For native vehicle checks, start `npm run desktop:dev`, then run `node desktop/vehicles-e2e.js` in a second terminal. If Vite selected a port other than 5174, set `RIVER_OAKS_DEV_URL` to that URL with `?motion-debug=1`. The test covers both vehicles, immediate keyboard and movement-pad takeover, companion flight, and landing.
+For native vehicle checks, start `pnpm run desktop:dev`, then run `node desktop/vehicles-e2e.js` in a second terminal. If Vite selected a port other than 5174, set `RIVER_OAKS_DEV_URL` to that URL with `?motion-debug=1`. The test covers both vehicles, immediate keyboard and movement-pad takeover, companion flight, and landing.
 
 ## Rendering changes
 
