@@ -1,8 +1,8 @@
 # TypeSafe Place landing page
 
-Dedicated static source for https://typesafe.place/. `npm run build` copies these public files into `dist/preview/landing-page`.
+Dedicated static source for https://typesafe.place/. `pnpm run build` copies these public files into `dist/preview/landing-page`.
 
-Run `npm run dev:landing` and open http://127.0.0.1:5181/landing-page/ for live editing. HTML, CSS, and asset changes reload automatically. Run `npm run dev` separately for the game on port 5173; local waitlist links redirect there and preserve shared-world queries. Both servers bind to localhost. The landing dev server does not change production routing.
+Run `pnpm run dev:landing` and open http://127.0.0.1:5181/landing-page/ for live editing. HTML, CSS, and asset changes reload automatically. Run `pnpm run dev` separately for the game on port 5173; local waitlist links redirect there and preserve shared-world queries. Both servers bind to localhost. The landing dev server does not change production routing.
 
 Vercel serves the landing page at the root and the game at `/play` on hosted aliases. The build places physical index files at both paths so Vercel's filesystem routing serves them without an HTML rewrite. Local Vite and acceptance hosts keep their game entry at `/`. Shared legacy root query links forward to `/play`. Production uses `PUBLIC_ORIGIN=https://typesafe.place` and `AUTH_RETURN_PATH=/play`; the Redis namespace and cookie name stay stable.
 

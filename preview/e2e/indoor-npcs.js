@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin='http://127.0.0.1:5180',checks=[],errors=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   const ready=tab=>tab.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host').dataset.playerReady==='true');
@@ -12,7 +13,7 @@ async page => {
   check(options.length>0&&options.length===indoor.length&&options.every(id=>indoor.includes(id)),'The NPC directory contains only building residents');
   check(await page.evaluate(()=>window.__riverPeople().every(person=>person.id.startsWith('store-'))),'Rendered NPC identities belong to buildings');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   check(await page.locator('#nearby-people button').count()===0,'Outdoor players have no nearby NPC interactions');
   await page.locator('#community-local').selectOption(options[0]);
   await page.locator('#community-meet').click();

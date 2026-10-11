@@ -197,7 +197,7 @@ test('desktop device credentials exchange for verified GitHub and Magic Auth ses
   const emailSession = await exchange();
   assert.equal(emailSession.status, 200);
   const emailIdentity = await (await app.request('/auth/session', { headers: { cookie: cookie(emailSession, 'river_oaks_session') } })).json();
-  assert.equal(emailIdentity.user.name, 'resident');
+  assert.equal(emailIdentity.user.name, 'Visitor #user_1');
   app.workos.setUser({ emailVerified: false });
   assert.equal((await exchange()).status, 403);
   app.workos.setUser({ emailVerified: true });
@@ -429,4 +429,19 @@ test('canonical game callback returns to /play and rejects unsafe return paths',
     const invalid = await fixture(t, { returnPath });
     assert.equal((await invalid.request('/auth/login')).status, 503);
   }
+});
+
+test('missing GitHub lookups receive distinct stable account fallbacks', async t => {
+  const app = await fixture(t);
+  app.workos.mintDistinctSessions();
+  const names = [];
+  for (const userId of ['user_1', 'user_2']) {
+    app.workos.setUserId(userId);
+    app.workos.userManagement.getUserIdentities = async () => [];
+    const { sessionCookie } = await app.login();
+    const read = async () => (await (await app.request('/auth/session', { headers: { cookie: sessionCookie } })).json()).user.name;
+    names.push(await read());
+    assert.equal(await read(), `Visitor #${userId}`);
+  }
+  assert.equal(new Set(names).size, 2);
 });

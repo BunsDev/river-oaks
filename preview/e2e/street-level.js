@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[], errors=[];
   const check=(ok,label)=>{if(!ok) throw new Error(label); checks.push(label);};
   page.on('pageerror',error=>errors.push(error.message));
@@ -54,7 +55,7 @@ async page => {
   await close();
   await page.keyboard.press('Escape');
   check(await page.locator('#walking-hud').isVisible(),'Escape never enters an aerial mode');
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('#destination').selectOption({label:'Cartier'});
   await travel(()=>page.locator('#visit-destination').click());
   const atCartier=()=>page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent==='Cartier'&&!document.querySelector('#walking-hud').dataset.inside,null,{timeout:15000}).then(()=>true,()=>false);

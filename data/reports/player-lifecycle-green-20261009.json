@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-10-09T19:25:29.003Z",
+  "results": [
+    {
+      "name": "player-lifecycle",
+      "status": "passed",
+      "seconds": 9.258,
+      "result": {
+        "checks": [
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "live controller handles camera input"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases host keyboard listeners"
+          },
+          {
+            "passed": true,
+            "message": "disposed controller releases window blur listener"
+          },
+          {
+            "passed": true,
+            "message": "disposal is idempotent"
+          },
+          {
+            "passed": true,
+            "message": "disposal cancels queued appearance request"
+          },
+          {
+            "passed": true,
+            "message": "late appearance reply cannot mutate the disposed controller"
+          },
+          {
+            "passed": true,
+            "message": "late reply cannot schedule the next queued appearance"
+          },
+          {
+            "passed": true,
+            "message": "late identity snapshots stay inert"
+          }
+        ],
+        "queuedRequests": 0,
+        "requests": [
+          "rowan-human"
+        ],
+        "errors": []
+      }
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   page.on('pageerror',error=>errors.push(error.message));
@@ -6,7 +7,7 @@ async page => {
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';},null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   const id='store-osm-node-8172494967-person-9';
   await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();

@@ -11,7 +11,7 @@ and existing shared creations remain available with creation tools off.
 
 ## Develop locally with WorkOS
 
-`npm run dev` starts WorkOS authentication and the shared town inside the Vite
+`pnpm run dev` starts WorkOS authentication and the shared town inside the Vite
 dev server. Configure the Staging WorkOS application and enable GitHub
 social login and Magic Auth email codes in its dashboard, and register
 `http://127.0.0.1:5173/auth/callback`. Both play modes require sign-in and
@@ -20,10 +20,14 @@ first approver. That account is automatically approved and can review requests
 from the Waitlist requests control. Verified email sign-in also creates a pending
 request; a valid invitation can approve it. See [email access and invitations](email-access.md)
 for issuance, assignment, expiration, and security limits. Each player must use a separate WorkOS
-account. The automated acceptance runner uses isolated temporary local
-identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
+account. Players normally appear under their verified GitHub handle. Email-only
+accounts, unavailable GitHub lookups, and disallowed names (including Resident)
+receive a stable `Visitor #<account ID>` name automatically. The full public
+account ID keeps fallbacks unique across accounts and separate from valid GitHub
+handles; existing stored names are checked again before being displayed.
+The automated acceptance runner uses isolated temporary local identities under `RIVER_OAKS_ACCEPTANCE_FIXTURE=1`.
 For a separate checkout while the default ports are in use, run
-`RIVER_OAKS_DEV_TOWN_PORT=8797 npm run dev -- --port 5179`. The preview proxies
+`RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run dev --port 5179`. The preview proxies
 auth, multiplayer, and landmark traffic to that checkout's own town on the
 chosen loopback port.
 
@@ -33,8 +37,8 @@ chosen loopback port.
 - Play-mode flags, saved mode preferences, and `?play=` parameters are retired
   and have no effect. Account appearance and landmarks remain server-owned;
   old device-only gameplay data is not imported into accounts.
-- `npm run server -- --dev` runs the town as its own process for a separate
-  `npm run dev`; the dev server then uses it instead of starting its own.
+- `pnpm run server --dev` runs the town as its own process for a separate
+  `pnpm run dev`; the dev server then uses it instead of starting its own.
 
 Development identities exist only for the explicit acceptance fixture on a
 loopback `http` origin, outside `NODE_ENV=production`, and never on Vercel.
@@ -105,6 +109,23 @@ validated by the shared world and shown on every nearby player's avatar. They
 expire after a few seconds, have a brief cooldown, and do not change building
 or wish permissions.
 
+When another player is within 2.6 meters, on foot and in sight in the same room,
+**Say hello** appears over the world. Choose the person, wave, or invite them to
+**Shake hands** or **Dance together**. The recipient chooses **Accept** or
+**Decline**; the sender can cancel. Invitations expire after 15 seconds.
+
+An accepted handshake checks clear ground before bringing both people within
+arm's reach. Both avatars face each other and use a shared palm target. Dancing
+uses a shared rhythm. Handshakes last 4.2 seconds; dancing lasts 14 seconds.
+Either participant can choose **Stop**, walk away, or travel to end the activity.
+Sitting, watering, changing appearance or movement mode, and leaving also end it.
+Seated, riding, flying, and all-fours movement cannot start paired greetings.
+The town validates consent, reach, sight lines, alignment and timing; checkpoint
+recovery retains the invitation or activity with its original expiration.
+Reduced-motion clients retain the invitation controls and activity text without
+the gesture animation. These interactions are between signed-in players;
+shop-resident conversations keep their existing behavior.
+
 The People panel lets each signed-in resident edit a short profile with a
 tagline, bio, pronouns, and up to eight interests. A profile is readable only
 by someone currently meeting that resident in a world or by an accepted
@@ -112,7 +133,9 @@ contact. Profiles are shared across worlds, versioned across devices, and
 persist in Redis outside room checkpoints. Editing a profile does not grant
 building or wish permissions.
 
-The People panel also includes town chat. Messages are visible to everyone in
+Town chat has a collapsible dock at the lower left of the game view. Closing
+the dock retains a draft; unread messages offer a jump back to the latest
+message. People is a separate expandable panel at the upper right. Messages are visible to everyone in
 the room, attributed to the signed-in player, and kept as a rolling 40-message
 history across reconnects. The server limits messages to 280 characters and
 one send per second per account; chat history clears when the town is reset.
@@ -189,7 +212,7 @@ indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
 The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://typesafe.place`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
 
-Run `npm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
+Run `pnpm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
 ## Resident names
 
@@ -232,7 +255,7 @@ The local Redis tests exercise cross-instance logout and ban enforcement; the ho
 
 ## Run the Redis API locally
 
-Use Node 22.12 or newer and configure `REDIS_URL`, `REDIS_NAMESPACE=river-oaks:development:v1`, WorkOS credentials, and a localhost `PUBLIC_ORIGIN` in private `.env`. Run `npm run server:redis` and `npm run dev` in separate terminals. The Redis server exposes APIs and WebSockets; Vite serves the frontend. The standalone server below remains available for development without Redis.
+Use Node 22.12 or newer and configure `REDIS_URL`, `REDIS_NAMESPACE=river-oaks:development:v1`, WorkOS credentials, and a localhost `PUBLIC_ORIGIN` in private `.env`. Run `pnpm run server:redis` and `pnpm run dev` in separate terminals. The Redis server exposes APIs and WebSockets; Vite serves the frontend. The standalone server below remains available for development without Redis.
 
 ## Run the current standalone server
 
@@ -241,12 +264,12 @@ The implementation below serves the frontend, WorkOS authentication, and multipl
 After configuring the private environment and WorkOS URLs below, run from the repository root:
 
 ```sh
-npm ci
-npm run build
-npm start
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm start
 ```
 
-`npm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
+`pnpm start` reads `.env` when present and serves `dist/preview` alongside the API on `127.0.0.1:8787`. Your TLS proxy exposes that listener at the public origin. A static-only deployment cannot host the shared town.
 
 ## Session verification boundary
 
@@ -285,7 +308,7 @@ REDIS_URL=redis://127.0.0.1:<test-port> node --test server/tests/redis-auth.test
 ```
 
 Every Redis-backed server test skips without `REDIS_URL`. CI's `preview` job runs a
-pinned Redis 7.4 service and sets `REDIS_URL` for `npm run test:server`, so all of
+pinned Redis 7.4 service and sets `REDIS_URL` for `pnpm run test:server`, so all of
 them run there without skips when Redis is healthy.
 
 These are local cryptographic boundary tests, not proof of WorkOS's hosted key
@@ -406,14 +429,14 @@ Use a WorkOS development environment and register `http://127.0.0.1:5173/auth/ca
 Start the Vite preview and its local town server:
 
 ```sh
-npm run dev
+pnpm run dev
 ```
 
 Open `http://127.0.0.1:5173/` consistently. Vite starts the town server on port `8787` and proxies authentication, multiplayer API requests, waitlist requests, moderation requests, and WebSocket connections there. Leave `PUBLIC_ORIGIN` unset for this flow so the callback and cookies use the Vite origin. Vite's `/health` route belongs to the optional sidecar; check town health directly at `http://127.0.0.1:8787/health`.
 
-Local HTTP cookies omit `Secure`. Both the standalone server and the default `npm run dev` flow use WorkOS. Run the automated server tests with `npm run test:server`; they don't replace a live GitHub sign-in check.
+Local HTTP cookies omit `Secure`. Both the standalone server and the default `pnpm run dev` flow use WorkOS. Run the automated server tests with `pnpm run test:server`; they don't replace a live GitHub sign-in check.
 
-On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a npm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `npm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.
+On CPU-only Linux CI, run `RIVER_OAKS_SHARED_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2 xvfb-run -a pnpm run test:shared` after installing Playwright's Chromium and system dependencies. This opt-in profile uses Mesa/OpenGL and draws the real town geometry and skinned avatars at quarter resolution with surface-normal shading, without HDR preprocessing, MSAA, shadows, ambient occlusion, or reflection captures. Mesa is capped at two worker threads to limit contention with the browser clients and town server. Both multiplayer clients use the same 60-second navigation budget. Navigation waits for document commit followed by explicit game readiness; shared gameplay, avatar loading, keyboard, and recovery assertions remain in place. It is not visual-quality or performance acceptance; the separate reflection WebGL smoke retains the real PCF shadow path. Normal `pnpm run test:shared`, development, and production rendering are unchanged. The profile is disabled in production builds. CI retains the report and failure screenshots for seven days.
 
 ## Scheduled gatherings
 
@@ -424,8 +447,8 @@ not alter building, wish, home-entry, or publishing permissions.
 
 ## Measure browser capacity
 
-Run `npm run audit:multiplayer:render` on a machine with hardware WebGL2 after
-installing Chromium with `npx playwright install chromium`. It creates its own
+Run `pnpm run audit:multiplayer:render` on a machine with hardware WebGL2 after
+installing Chromium with `pnpm exec playwright install chromium`. It creates its own
 ephemeral loopback town and synthetic guests, exercises dynamic joins, movement,
 gestures, reconnects and ordinary departures, then closes its owned services.
 The default tests 1/8/16/32 players at fixed Sharpest quality in desktop and
@@ -455,11 +478,11 @@ After that grace, departure releases it. A compatible region revision keeps
 furniture but disconnects players, so it leaves no stale occupancy. Checkpoint
 recovery validates slots, unique occupancy and the exact furniture-derived pose.
 
-Private world checkpoints write version 4 and read valid versions 1 (original
-district only), 2, 3 and 4. Seat reservations require version 3 or later; custom
-assemblies require version 4. The version-4 coordinator atomically takes over
+Private world checkpoints write version 5 and read valid versions 1 (original
+district only), 2, 3, 4 and 5. Seat reservations require version 3 or later; custom
+assemblies require version 4; paired interactions require version 5. The version-5 coordinator atomically takes over
 older leases. Commit fencing prevents an older writer from publishing or
-trimming commands. Do not roll back older code against version-4 checkpoints.
+trimming commands. Do not roll back older code against version-5 checkpoints.
 Browser protocol 2 is required: version-1 and unversioned clients must refresh
 before joining.
 This prevents older renderers from applying snapshots with unknown geometry.

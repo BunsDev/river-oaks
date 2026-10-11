@@ -1,0 +1,43 @@
+{
+  "createdAt": "2026-10-09T19:24:35.175Z",
+  "results": [
+    {
+      "name": "player-lifecycle",
+      "status": "failed",
+      "seconds": 10.235,
+      "error": "Error: {\"failed\":[{\"passed\":false,\"message\":\"disposed controller releases host keyboard listeners\"},{\"passed\":false,\"message\":\"disposed controller releases window blur listener\"},{\"passed\":false,\"message\":\"disposal is idempotent\"},{\"passed\":false,\"message\":\"disposed controller releases host keyboard listeners\"},{\"passed\":false,\"message\":\"disposed controller releases window blur listener\"},{\"passed\":false,\"message\":\"disposal is idempotent\"},{\"passed\":false,\"message\":\"disposed controller releases host keyboard listeners\"},{\"passed\":false,\"message\":\"disposed controller releases window blur listener\"},{\"passed\":false,\"message\":\"disposal is idempotent\"},{\"passed\":false,\"message\":\"disposal cancels queued appearance request\"},{\"passed\":false,\"message\":\"late appearance reply cannot mutate the disposed controller\"},{\"passed\":false,\"message\":\"late identity snapshots stay inert\"}],\"queuedRequests\":1,\"requests\":[\"rowan-human\"]}\n    at eval (preview/e2e/player-lifecycle.js:64:26)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/preview/e2e/experience-runner.js:44:22",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:54100/",
+          "ready": "true",
+          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
+          "renderStats": "{\"calls\":1368,\"triangles\":5132538,\"geometries\":232,\"textures\":189}",
+          "quality": "{\"mode\":\"auto\",\"scale\":1,\"occlusion\":true,\"fps\":30}",
+          "pipeline": "{\"samples\":4,\"ao\":true,\"bloom\":true,\"renderScale\":1,\"aoScale\":1,\"transmissionScale\":1}",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": [
+            1440,
+            1000,
+            1440,
+            1000
+          ]
+        }
+      ]
+    }
+  ]
+}

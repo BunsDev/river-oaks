@@ -9,6 +9,8 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/desktop/exchange'), '/auth/desktop/exchange');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/multiplayer&ticket=xyz'), '/multiplayer?ticket=xyz');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/worlds'), '/api/worlds');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/debug-reports'), '/api/debug-reports');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/debug-reports/get&id=abc-123'), '/api/debug-reports/get?id=abc-123');
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/world-data&world=moon-garden'), '/api/world-data?world=moon-garden');
   for(const action of ['load','save','discard','apply'])assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/world-draft/${action}`),`/api/world-draft/${action}`);
   for (const action of ['list', 'add', 'remove']) assert.equal(normalizeVercelRoute(`/api/server?_river_path=/api/landmarks/${action}`), `/api/landmarks/${action}`);
@@ -20,6 +22,17 @@ test('rewritten routes retain OAuth/socket parameters without accepting arbitrar
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/auth/login&_river_path=/auth/logout'), '/not-found');
   assert.equal(normalizeVercelRoute('/auth/session?_river_path=/auth/logout'), '/auth/session');
   assert.equal(normalizeVercelRoute('//%'), '/not-found');
+});
+
+test('store intro claims reach the hosted profile API through the configured rewrite', () => {
+  const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  const route = '/api/profile/claim-intro';
+  const rewrite = config.rewrites.find(item => item.source === route);
+  assert.ok(rewrite);
+  assert.equal(normalizeVercelRoute(route), route);
+  assert.equal(normalizeVercelRoute(rewrite.destination), route);
+  assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`), `${route}?world=moon-garden`);
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/profile/claim-intro&_river_path=/auth/logout'), '/not-found');
 });
 
 test('Vercel rewrites every resident social and group action to the server entry',()=>{

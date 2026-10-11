@@ -1,0 +1,30 @@
+{
+  "createdAt": "2026-10-09T19:29:10.813Z",
+  "results": [
+    {
+      "name": "multiplayer-lifecycle",
+      "status": "failed",
+      "seconds": 2.584,
+      "error": "Error: [{\"passed\":false,\"message\":\"/auth/session: disposed connect cannot create a WebSocket\"},{\"passed\":false,\"message\":\"/auth/session: late completion cannot publish a snapshot\"},{\"passed\":false,\"message\":\"/auth/session: disposal aborts the owned HTTP request\"},{\"passed\":false,\"message\":\"disposal during session read prevents requesting a ticket\"},{\"passed\":false,\"message\":\"/api/multiplayer/ticket: disposed connect cannot create a WebSocket\"},{\"passed\":false,\"message\":\"/api/multiplayer/ticket: late completion cannot publish a snapshot\"},{\"passed\":false,\"message\":\"/api/multiplayer/ticket: disposal aborts the owned HTTP request\"},{\"passed\":false,\"message\":\"connected state and snapshot are cleared synchronously\"},{\"passed\":false,\"message\":\"socket close and queued frames cannot publish after disposal\"}]\n    at eval (preview/e2e/multiplayer-lifecycle.js:61:26)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-memory-20261009/preview/e2e/experience-runner.js:44:22",
+      "pageErrors": [],
+      "consoleErrors": [],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:56732/src/world-contract.js",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": null
+        }
+      ]
+    }
+  ]
+}

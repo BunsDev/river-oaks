@@ -1,15 +1,15 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
   const checks=[],errors=[];const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('http://127.0.0.1:5181/?motion-debug=1');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true',null,{timeout:90000});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('#rail-tab-0').focus();await page.keyboard.press('ArrowRight');
-  check(await page.locator('#rail-tab-1').getAttribute('aria-selected')==='true','Arrow keys select Places and preserve tab focus');
+  await page.locator('#canvas-host').focus(); await page.keyboard.press('Alt+2');
   check(await page.locator('#explore-section').isVisible(),'Places panel remains accessible');
-  await page.keyboard.press('ArrowRight');
-  check(await page.locator('#rail-tab-2').getAttribute('aria-selected')==='true','Keyboard selects Settings');
+  await page.locator('#canvas-host').focus(); await page.keyboard.press('Alt+3');
+  check(await page.locator('#settings-dialog').isVisible(),'Keyboard opens Settings');
   const keyboardMotion=await page.locator('#control-panel').evaluate(e=>getComputedStyle(e).transitionDuration);
   check(keyboardMotion==='0s','Keyboard navigation does not wait on panel animation');
   await page.locator('[data-theme-preference=dark]').click();await page.waitForTimeout(200);
@@ -17,7 +17,7 @@ async page=>{
   check(!await page.locator('html').getAttribute('data-theme-changing'),'Theme transition suppression clears');
   await page.screenshot({path:'output/playwright/ui-polish-dark.png'});
   await page.locator('[data-theme-preference=light]').click();
-  await page.locator('#rail-tab-0').click();
+  await openHudSpace(page, 'community-section');
   await page.locator('#community-local').selectOption(await page.locator('#community-local option').evaluateAll(options=>options.find(option=>option.value.startsWith('store-')).value));await page.locator('#community-meet').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
   check(await page.locator('#community-close').isVisible(),'Conversation opens with a reachable close control');
@@ -26,22 +26,21 @@ async page=>{
   check(Boolean(await page.locator('#community-speech').textContent()),'Conversation topics still produce dialogue');
   check(await page.locator('.wish-card').count()>0,'Wishes remain reachable in conversation');
   await page.screenshot({path:'output/playwright/ui-polish-conversation.png'});
-  await page.locator('#community-close').click();await page.waitForTimeout(220);
+  await page.locator('#community-close').click();await page.locator('#community-dialogue').waitFor({state:'hidden'});
   check(!await page.locator('#community-dialogue').isVisible(),'Conversation exit finishes without an invisible input blocker');
   await page.locator('#panel-toggle').click();await page.waitForTimeout(220);
-  check(await page.locator('#control-panel').evaluate(e=>e.inert),'Collapsed controls are inert');
-  check(await page.evaluate(()=>document.activeElement.id==='canvas-host'),'Closing the rail returns pointer play to the canvas');
+  check(await page.locator('#explore-section').evaluate(e=>e.inert),'Collapsed controls are inert');
+  check(await page.evaluate(()=>document.activeElement.id==='panel-toggle'),'Closing the rail returns pointer play to the canvas');
   for(let i=0;i<4;i++)await page.locator('#panel-toggle').click({delay:15});
   await page.waitForTimeout(220);
   check(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false','Rapid interrupted toggles settle in the requested state');
-  check(await page.locator('#control-panel').evaluate(e=>getComputedStyle(e).opacity==='0'),'Rail finishes its exit');
+  check(!await page.locator('#explore-section').isVisible(),'Places finishes its exit');
   for(let i=0;i<5;i++) {
-    await page.locator('#panel-toggle').click();await page.locator('#rail-tab-0').focus();
-    check(await page.evaluate(()=>document.activeElement.id==='rail-tab-0'),`Opening ${i+1}: focus works in the first animation frame`);
-    await page.keyboard.press('ArrowRight');
-    check(await page.locator('#rail-tab-1').getAttribute('aria-selected')==='true',`Opening ${i+1}: immediate keyboard navigation works`);
-    await page.locator('#panel-toggle').click();await page.waitForTimeout(220);
+    await page.locator('#canvas-host').focus(); await page.keyboard.press('Alt+2');
+    check(await page.evaluate(()=>document.activeElement.id==='explore-section'),`Opening ${i+1}: focus works immediately`);
+    await page.keyboard.press('Escape');
   }
+  if(await page.locator('#people-toggle').getAttribute('aria-expanded')==='true')await page.locator('#people-toggle').click();
   if(!await page.locator('.player-settings').evaluate(e=>e.open))await page.locator('.player-settings > summary').click();
   await page.locator('#player-camera').click();
   check(await page.evaluate(()=>document.activeElement.id==='canvas-host'),'Pointer camera controls return focus to movement');

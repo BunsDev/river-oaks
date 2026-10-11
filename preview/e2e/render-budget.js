@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const check=(condition,message)=>{if(!condition)throw new Error(message);},errors=[],samples=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:3840,height:2160});await page.emulateMedia({reducedMotion:'no-preference'});
@@ -10,7 +11,7 @@ async page => {
   // Measure the full-quality budget: Sharpest pins native resolution and AO,
   // where Auto would trade resolution for frame rate on a busy GPU.
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=settings-section]').click();await page.locator('[data-quality=sharp]').click();
+  await openHudSpace(page, 'settings-section', 'Graphics');await page.locator('[data-quality=sharp]').click();
   await page.waitForFunction(()=>JSON.parse(document.querySelector('#canvas-host').dataset.quality||'{}').mode==='sharp');
   await page.locator('#panel-toggle').click();
   const measure=async label=>{

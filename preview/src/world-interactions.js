@@ -1,3 +1,4 @@
+import { winstonBed } from './reference-planting.js';
 import { storefrontBenchSpots, laneFixtures } from './street-fixtures.js';
 import { SEAT_REACH, resolveSeat, seatSlots } from './shared-seating.js';
 
@@ -60,6 +61,11 @@ export function boutiquePlanters(world) {
   for (const store of world.stores ?? []) {
     const dining = ['restaurant', 'ice_cream'].includes(store.category);
     if (dining || store.name === 'Le Colonial' || !Array.isArray(store.facade) || !Array.isArray(store.outward)) continue;
+    const bed=store.name==='Harry Winston' && winstonBed(world);
+    if(bed) {
+      [bed.shrubs[0],bed.shrubs.at(-1)].forEach(({position:[x,north]},index)=>planters.push({id:`planter:${store.id}:${index}`,kind:'boxwood',x,north}));
+      continue;
+    }
     const [x, north] = store.facade, [nx, ny] = store.outward;
     [-1.6, 1.6].forEach((across, index) => planters.push({ id: `planter:${store.id}:${index}`, kind: 'boxwood',
       x: x - ny * across + nx * 1.05, north: north + nx * across + ny * 1.05 }));

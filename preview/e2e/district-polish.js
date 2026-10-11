@@ -1,4 +1,5 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   await page.unrouteAll({behavior:'ignoreErrors'});
   const checks = [], errors = [];
   const check = (value, label) => { if (!value) throw new Error(label); checks.push(label); };
@@ -16,7 +17,7 @@ async page => {
   await page.locator('#walking-controls-toggle').click();
   await page.screenshot({path:'output/playwright/district-polish-desktop.png'});
   await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   await page.locator('#community-more').evaluate(el=>{el.open=true;});
   await page.locator('#community-local').selectOption('store-osm-node-8172494969-person-2');
   await page.locator('#community-meet').click();

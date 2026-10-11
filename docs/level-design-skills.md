@@ -139,7 +139,7 @@ missing-map diagnosis. See [Unreal setup](unreal.md) before map generation.
 
 ### Browser preview
 
-- Start with `npm run dev` after installing dependencies as described in the root
+- Start with `pnpm run dev` after installing dependencies as described in the root
   README. Shared-town admission is required; follow the existing local auth/fixture
   setup in [the agent workflow](agent-workflow.md).
 - Inspect [`walking.js`](../preview/src/walking.js),

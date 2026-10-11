@@ -50,7 +50,7 @@ try {
   });
   await writeFile(`${raw}oak.glb`, Buffer.from(baked.encoded, 'base64'));
   await writeFile(`${raw}options.json`, JSON.stringify(baked.options, null, 2));
-  const run = (...args) => execFileSync('npx', ['--yes', '@gltf-transform/cli@4.3.0', ...args], { cwd: root, stdio: 'inherit' });
+  const run = (...args) => execFileSync('pnpm', ['dlx', '@gltf-transform/cli@4.3.0', ...args], { cwd: root, stdio: 'inherit' });
   run('weld', `${raw}oak.glb`, `${raw}oak-welded.glb`);
   run('webp', `${raw}oak-welded.glb`, `${output}ez-oak-high.glb`, '--quality', '88');
   // Keep the exact same skeleton at all distances. Lower levels omit embedded

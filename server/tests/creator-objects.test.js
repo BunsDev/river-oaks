@@ -95,7 +95,7 @@ test('a version 3 checkpoint preserves occupied furniture while new geometry req
   const world=town(),placed=world.command(owner,{type:'build',action:'place',kind:'seat',finish:'rose',position:[-12,2.4],yaw:0});
   assert.equal(placed.ok,true);
   assert.equal(world.command(owner,{type:'sit',buildId:placed.item.id,slot:0}).ok,true);
-  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,4);
+  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,5);
   checkpoint.version=3;
   const restored=createSharedWorld(data);
   assert.equal(restored.restore(signed(checkpoint)).ok,true,'valid old seated state remains recoverable');

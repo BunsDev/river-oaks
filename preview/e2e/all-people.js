@@ -1,11 +1,12 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const errors=[],visits=[];page.on('pageerror',error=>errors.push(error.message));
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
   const origin=page.url().startsWith('http')?await page.evaluate(()=>location.origin):'http://127.0.0.1:5181';
   await page.goto(`${origin}/?motion-debug=1`);
   await page.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return (document.querySelector('#canvas-host')?.dataset.multiplayer==='joined')&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true'&&d.carriageDriverReady==='true';});
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   const ids=await page.locator('#community-local option').evaluateAll(options=>options.map(option=>option.value));
   const expected=await page.evaluate(()=>Number(document.querySelector('#canvas-host').dataset.storePeopleTotal)+1);

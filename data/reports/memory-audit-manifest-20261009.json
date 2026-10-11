@@ -1,0 +1,126 @@
+{
+  "baseCommit": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
+  "branch": "fix/memory-performance-20261009",
+  "scope": "Uncommitted memory/lifetime fixes and measured allocation/material optimization across browser, server, native. Local verified scope; no universal absence-of-leaks claim.",
+  "sourceSha256": {
+    "config/agent-workflow.json": "be4a7cbb28ba710af09a1a76c2ab2fe1068c0843cdc1f5d1475ed9d685c265ec",
+    "preview/e2e/experience-runner.js": "d4490b99c6b551ac91655e390d458a63974b31c96f8d83653a8d93adb52b0c13",
+    "preview/e2e/memory-churn.js": "1af67d0d8872adc093b94a6779b883ffa828f2b891e1a66bdfa0e67cb03448a4",
+    "preview/e2e/multiplayer-lifecycle.js": "2acc4c39093657b6922b412a3fd832c9b0023c43d108fa2cad2016e80f932888",
+    "preview/e2e/player-lifecycle.js": "e35c98983e25d6c5cc8ccc417e34e8f70d509df7b8153f92e5b6877de94ec8b1",
+    "preview/src/avatars.js": "414e399fa07643475526c9d6fcb7ce128308e19d37d77ce97271780b2be3c70e",
+    "preview/src/multiplayer-client.js": "5abe377f5822c0d130865369c7f88f1f3bf2956fc2d6275491fdb529f875f70c",
+    "preview/src/player-avatar.js": "8c2879a1e42616cc8448e671db7f7a66aa2ac5a4460608240112e62545f3b279",
+    "preview/src/reference-archetypes.js": "daf9ac7e2f68102aca6b1dd13eead9f4f841c854633cf020f11fd1d5f6eec48b",
+    "preview/src/remote-players.js": "58216d81de53aa7d14f7cff1385bf0f2e9fc0204a80e4a9a33601c1887b9ca04",
+    "preview/src/store-people.js": "80c8f127357e3f82b49e5bdb34303d87bc5d3642ec442c2f76a947d84487c44e",
+    "preview/tests/avatar-load-lifecycle.test.js": "df557fd862340c7c9803149d64267b9c6e2765d3e38889d1b3f7d703ddaf170e",
+    "preview/tests/reference-batching.test.js": "2cbfaa8da4e7fb4c7bf22b1cc11e04d7d961b000fdd1f58467bdc2575ce48df0",
+    "preview/tests/remote-players.test.js": "1d0c415084cdb31c974a7e6633d860e6b16d80e2062af736cfbcc2bb66d249be",
+    "server/app.js": "63ce6726e0574401ee5de621ea69e2fbdf09b8ff605e5805b41014dcc62780dc",
+    "server/tests/shared-transport.test.js": "13c294e4430e32c680a525d2c559074406e581641518a9b491a7e6dfc981d0cb",
+    "server/tests/town-lifecycle.test.js": "5c70eb3e5e633fab05fcb0e13b33034c9b67cb05fb7eb592554f90fbbf3905bd",
+    "server/town.js": "4213c9464c063da26e84ffe04c89e3778d43f088f187bbbfc1af2fb07dd1fb50",
+    "unreal/Source/RiverOaks/Private/RiverMarkerBackend.cpp": "c2a5f09b63e19e14d937431e1d5f5b1bf21777ec4cca2b1962a06d5f4f6cf0f6",
+    "unreal/Source/RiverOaks/Private/RiverOaksHumans.cpp": "8ad094b75d9220e28d89f059779c086d825bcf6fc5764031b78ffd3da2fc8fea",
+    "unreal/Source/RiverOaks/Private/RiverSkeletalBackend.cpp": "59c242866affa692418ce2ee9bc27966d41d23f6cf457180004fae3cb5d59834",
+    "unreal/Source/RiverOaks/Private/Tests/RiverHumanLifetimeTests.cpp": "0450c465eef139e77d46879308f1f2882bfd2cce93ed3611a2fca5d897c2fe99",
+    "unreal/Source/RiverOaks/Public/RiverMarkerBackend.h": "920ee56ece99e5b6403684b5d50fac1ba43f426ae818aa298fd6e43c2906d696",
+    "unreal/Source/RiverOaks/Public/RiverOaksHumans.h": "a2c23c0b03848fbcb055e62690e1be45fdcf28a2285dd51df1cd4ceb7b08e264",
+    "unreal/Source/RiverOaks/Public/RiverSkeletalBackend.h": "b91fa17535dc4cdba8fcb9616c2d75bb71cbc923e344b14d203b720f2d25be6e"
+  },
+  "evidence": {
+    "full": {
+      "status": "passed",
+      "stages": 17,
+      "receipt": "memory-full-profile-final-20261009.json",
+      "redis": "owned disposable loopback instance, stopped; persistence disabled"
+    },
+    "preview": {
+      "passed": 2513,
+      "skipped": 1,
+      "skip": "existing Vince glazing approach"
+    },
+    "server": {
+      "passed": 394,
+      "skipped": 0
+    },
+    "pythonAfterNativeEdits": {
+      "passed": 141,
+      "warnings": 2
+    },
+    "native": {
+      "editorBuild": "Succeeded",
+      "gameBuild": "Succeeded",
+      "contractsPassed": 28,
+      "warnings": 0,
+      "failed": 0,
+      "notRun": 0,
+      "receipt": "memory-native-lifetime-final-20261009.json"
+    },
+    "desktop": {
+      "status": "passed",
+      "checks": 11,
+      "pageErrors": 0,
+      "receipt": "memory-desktop-green-20261009.json"
+    },
+    "serverRetention": {
+      "lifetimes": 96,
+      "clients": 768,
+      "retainedWorldsAfterGC": 0,
+      "retainedControllersAfterGC": 0,
+      "receipt": "server-memory-retention-20261009.json"
+    },
+    "browserChurn": {
+      "rebuilds": 18,
+      "geometries": 232,
+      "listeners": 362,
+      "warmAndFinalTextures": 187,
+      "warmHeapBytes": 77113160,
+      "finalHeapBytes": 78227728,
+      "scope": "No monotonic growth in this workload; earlier source hashes recorded in receipt",
+      "receipt": "memory-churn-extended-20261009.json"
+    },
+    "pairedCrowd": {
+      "status": "passed",
+      "order": [
+        "baseline",
+        "patched",
+        "patched",
+        "baseline"
+      ],
+      "players": 32,
+      "frameP95Ms": [
+        33.4,
+        33.4,
+        33.4,
+        33.4
+      ],
+      "cpuSubmissionP95Ms": [
+        30.5,
+        29.0,
+        29.5,
+        30.4
+      ],
+      "matchingSnapshotCallsBefore": 4164,
+      "matchingSnapshotCallsAfter": 3876,
+      "matchingSnapshotTriangles": 14355423,
+      "receipt": "memory-render-paired-20261009.json",
+      "claim": "Fewer draw calls and modest sampled CPU reduction; no proven frame-rate gain"
+    },
+    "review": {
+      "status": "passed",
+      "findings": 0,
+      "independentFocusedTests": 32,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Read-only fresh-context review of all changed production files and added tests; no hosted CI or production claim."
+    }
+  },
+  "limits": [
+    "Historical reports retain their tested source hashes; final full/native receipts apply to current edits.",
+    "One existing preview skip and two Python warnings.",
+    "Native rendered GPU long soak, physical mobile, packaged release, live authentication/providers, hosted CI and production acceptance not performed.",
+    "No commit, push, merge or publication. Preserve undelivered worktree."
+  ]
+}

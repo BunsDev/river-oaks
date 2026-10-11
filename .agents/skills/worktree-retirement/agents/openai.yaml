@@ -1,0 +1,4 @@
+interface:
+  display_name: "River Oaks Worktree Retirement"
+  short_description: "Retire delivered branches with restoration proof"
+  default_prompt: "Use $worktree-retirement to audit and safely reduce River Oaks local worktrees and branches."

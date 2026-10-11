@@ -19,7 +19,7 @@ she loved him before she knew.
 
 Where the two layers meet is **not decided yet**: whether the four other gods are residents, companions that
 arrive with a player, or voices that only the familiars use. The cast entries below describe temperament, not
-placement. Nothing in the game today renders a god or a companion as a character.
+placement. Prince Jev and Jevica already appear in the game; the additional mythological cast and the god identities described here are not implemented.
 
 ## The neighborhood
 
@@ -70,7 +70,7 @@ Six readings of one incident:
 Someone apologizes to Artemis.
 
 The systems this episode leans on (capacity, private RSVPs, cancellation, Jevica's override) already exist.
-The characters do not.
+The additional mythological cast and these story roles are not implemented.
 
 ## Episode two (hypothetical): The Favor
 

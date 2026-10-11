@@ -137,3 +137,25 @@
 @media (prefers-reduced-motion: reduce) {
   :root[data-theme] .multiplayer-roster button { transition: none; }
 }
+
+.nearby-greetings {
+  position: absolute; z-index: 14; top: 76px; left: 50%; transform: translateX(-50%);
+  width: min(340px, calc(100% - 24px)); box-sizing: border-box; padding: 14px;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: var(--panel); color: var(--ink); box-shadow: 0 8px 28px #0003;
+  font-family: inherit; font-size: 12px; line-height: 1.45; pointer-events: auto;
+}
+.nearby-greetings[hidden], .nearby-greetings [hidden] { display: none; }
+.nearby-greetings strong { display: block; margin-bottom: 8px; font-size: 15px; }
+.nearby-greetings label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.nearby-greetings select { width: 100%; min-width: 0; }
+.nearby-greetings p { margin: 8px 0; font-size: 12px; color: var(--muted); }
+.nearby-greetings p:empty { margin: 0; }
+.greeting-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.nearby-greetings :is(button, select) {
+  min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--accent-soft); color: var(--ink); font: inherit; cursor: pointer;
+}
+.nearby-greetings button:disabled { opacity: .5; cursor: wait; }
+.nearby-greetings :is(button,select):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 600px) { .nearby-greetings { top: 56px; padding: 12px; } }

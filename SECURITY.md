@@ -17,7 +17,7 @@ server instead (see `docs/multiplayer.md`).
 
 ## How secrets are kept out of the repository
 
-- A pre-commit hook (`.githooks/pre-commit`, enabled by `npm install`) runs
+- A pre-commit hook (`.githooks/pre-commit`, enabled by `pnpm install`) runs
   `scripts/check_secrets.py`, which blocks credential files and scans staged
   changes with gitleaks using `.gitleaks.toml`. It fails closed when gitleaks is
   missing.

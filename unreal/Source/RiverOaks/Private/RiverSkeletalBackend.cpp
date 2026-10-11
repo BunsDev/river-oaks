@@ -48,15 +48,15 @@ FRiverHumanCapabilities FRiverSkeletalBackend::Probe() const
 
 USkeletalMeshComponent* FRiverSkeletalBackend::ComponentFor(int32 Handle) const
 {
-    return PoseLedger.IsLive(Handle) && Humans.IsValidIndex(Handle)
-        ? Humans[Handle].Component.Get() : nullptr;
+    const FHuman* Human = Humans.Find(Handle);
+    return PoseLedger.IsLive(Handle) && Human ? Human->Component.Get() : nullptr;
 }
 
 int32 FRiverSkeletalBackend::NumLiveComponents() const
 {
     int32 Live = 0;
-    for (const FHuman& Human : Humans)
-        if (Human.Component.IsValid()) ++Live;
+    for (const auto& Entry : Humans)
+        if (Entry.Value.Component.IsValid()) ++Live;
     return Live;
 }
 
@@ -91,8 +91,8 @@ int32 FRiverSkeletalBackend::CreateHuman(const FString& AgentId, const FRiverApp
     Anim->ApplyLocomotion(NAME_None, 0.f);
 
     const int32 Handle = PoseLedger.Create();
-    while (Humans.Num() <= Handle) Humans.AddDefaulted();
-    FHuman& Human = Humans[Handle];
+    if (Handle == INDEX_NONE) { Component->DestroyComponent(); return INDEX_NONE; }
+    FHuman& Human = Humans.Add(Handle);
     Human.Component = Component;
     // Neutral Interchange imports face +Y. Rotate geometry and skeleton together.
     Human.MeshToRoot = FTransform(FRotator(0, -90, 0).Quaternion(),
@@ -105,7 +105,7 @@ void FRiverSkeletalBackend::DestroyHuman(int32 Handle)
     auto* Component = ComponentFor(Handle);
     if (!PoseLedger.Destroy(Handle)) return;
     if (Component) Component->DestroyComponent();
-    if (Humans.IsValidIndex(Handle)) Humans[Handle] = FHuman();
+    Humans.Remove(Handle);
 }
 
 bool FRiverSkeletalBackend::ApplyPose(int32 Handle, const FRiverHumanPose& Pose)
@@ -143,6 +143,8 @@ void FRiverSkeletalBackend::Tick(float DeltaSeconds) {}
 
 void FRiverSkeletalBackend::DestroyComponents()
 {
-    for (int32 Handle = 0; Handle < Humans.Num(); ++Handle) DestroyHuman(Handle);
+    TArray<int32> Handles;
+    Humans.GetKeys(Handles);
+    for (const int32 Handle : Handles) DestroyHuman(Handle);
     Humans.Reset();
 }

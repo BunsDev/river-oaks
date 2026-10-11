@@ -32,7 +32,7 @@ possible attacks have been eliminated or a deployed penetration test.
 | Static assets | Canonical path, traversal/symlink and waitlist tests; private no-store cache policy for protected assets | CDN normalization and cache isolation require deployed acceptance |
 | Desktop | Sandbox, context isolation, no Node integration, exact-origin navigation, denied permissions/downloads, external-link confirmation, packaged fuse tests | Signed release/notarization and real macOS testing remain release gates |
 | Local voice / decision bridge | Host checks; JSON request validation; bounded voice requests/concurrency/cache/timeouts; model integrity checks | Local processes and machine administrators are trusted; protect API keys and do not expose the loopback bridge publicly |
-| Dependencies and delivery | npm audit, Python locked-runtime audit, dependency review, SHA-pinned Actions, secret scans, CodeQL, weekly Dependabot updates | Advisory databases have unknowns; native libraries and deployment images need separate release review |
+| Dependencies and delivery | pnpm audit, Python locked-runtime audit, dependency review, SHA-pinned Actions, secret scans, CodeQL, weekly Dependabot updates | Advisory databases have unknowns; native libraries and deployment images need separate release review |
 
 ## Verification cadence
 
@@ -48,15 +48,15 @@ the schedule is not an autonomous incident-response service.
 Local commands (use an isolated Redis database and a supported Node runtime):
 
 ```sh
-npm ci
-npx playwright install chromium
-REDIS_URL=redis://127.0.0.1:16389 npm run test:server
-npm test
-npm run test:desktop
-npm run build
-npm run test:security:e2e
-npm run test:shared
-npm audit --audit-level=moderate
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+REDIS_URL=redis://127.0.0.1:16389 pnpm run test:server
+pnpm test
+pnpm run test:desktop
+pnpm run build
+pnpm run test:security:e2e
+pnpm run test:shared
+pnpm audit --audit-level=moderate
 uv export --frozen --all-extras --no-hashes --no-dev --no-emit-project --format requirements-txt --output-file /tmp/river-requirements-audit.txt
 uvx pip-audit==2.10.1 --no-deps --disable-pip -r /tmp/river-requirements-audit.txt
 python3 scripts/check_secrets.py --all

@@ -189,7 +189,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, token: githubToken, fetcher: githubFetch, now,
     store: createRedisGitHubNameStore({ redis, key: `${namespace}:auth:github` }) });
   // Residents are shown by GitHub username; only an admin account is Jevica.
-  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, githubId: account?.githubId });
+  const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // Sessions from before usernames were stored, or whose lookup failed, are
   // named from the per-user record, which is refreshed at most every 10 minutes.
   const named = async (user, record) => {

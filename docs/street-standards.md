@@ -80,7 +80,7 @@ rendered ground support, intersection coverage, fixture clearance, pedestrian-wa
 classification and honest constraint reporting. Existing navigation, walking,
 curb-descent and vehicle tests exercise the shared movement behavior.
 
-Run `npm test`, `npm run test:server`, `npm run test:desktop`,
-`npm run desktop:package`, and `node desktop/e2e.js --dev`.
+Run `pnpm test`, `pnpm run test:server`, `pnpm run test:desktop`,
+`pnpm run desktop:package`, and `node desktop/e2e.js --dev`.
 Desktop reports include the loaded street profile. See [desktop development](desktop.md)
 for launching the native app and testing the packaged executable.

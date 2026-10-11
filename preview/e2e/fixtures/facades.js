@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { buildDistrictBuildings, buildDistrictDetail } from '../../src/district.js';
 import { buildDistrictFantasy } from '../../src/district-fantasy.js';
 import { buildRoads } from '../../src/street-roads.js';
+import { buildMatureTrees } from '../../src/landscape-models.js';
 import { atmosphereFor } from '../../src/atmosphere.js';
 import { configureMaterials, loadEnvironment } from '../../src/materials.js';
 
@@ -30,6 +31,8 @@ for (let row = 0; row < terrain.height; row++) for (let column = 0; column < ter
 }
 const groundGeometry = new THREE.BufferGeometry(); groundGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); groundGeometry.setIndex(indices); groundGeometry.computeVertexNormals();
 const ground = new THREE.Mesh(groundGeometry, new THREE.MeshStandardMaterial({ color: '#c9c3b8', roughness: 0.9 })); ground.receiveShadow = true;
+const trees = new URLSearchParams(location.search).has('landscape') ? buildMatureTrees({ ...world, vegetation: await (await fetch('/data/district-vegetation.json')).json() }) : null;
+if (trees) { scene.add(trees); await trees.userData.ready; }
 const buildings = buildDistrictBuildings(world), fantasy = buildDistrictFantasy(world);
 scene.add(ground, buildRoads(world), buildings, buildings.userData.interiors, buildDistrictDetail(world));
 buildings.add(fantasy);
@@ -37,6 +40,8 @@ buildings.add(fantasy);
 // Street-level stations matching each reference photograph: [camera, target], east/north/height above the frontage.
 const base = world.stores.find(store => store.name === 'Hermès').facade[2];
 const views = {
+  'harry-close': { label: 'HARRY WINSTON · STREET-LEVEL REFERENCE STUDY', camera: [-2771.5, -1356.5, 1.8], target: [-2758, -1359, 5.3] },
+  harry: { label: 'HARRY WINSTON · WEST FRONTAGE', camera: [-2774, -1356, 1.8], target: [-2758, -1359, 5.4] },
   cartier: { label: 'CARTIER · SOUTH-WEST CORNER', camera: [-2770, -1300, 1.8], target: [-2749, -1281, 6.2] },
   'cartier-entry': { label: 'CARTIER · MAPPED SOUTH ENTRANCE', camera: [-2746, -1301, 1.8], target: [-2746, -1284.8, 6] },
   hermes: { label: 'HERMÈS · WEST FRONTAGE', camera: [-2772, -1305.5, 2.0], target: [-2757.5, -1318, 8.0] },
@@ -69,19 +74,29 @@ const views = {
   steak: { label: 'STEAK 48 · WESTHEIMER CORNER', camera: [-2872, -1434, 1.8], target: [-2885, -1420, 6] },
   'grey-house': { label: 'GREY HOUSE · FROM WESTHEIMER', camera: [-2812, -1452, 1.8], target: [-2860, -1418, 9] },
   west: { label: 'OVERVIEW · FROM THE SOUTH-EAST', camera: [-2735, -1460, 60], target: [-2820, -1320, 0] },
+  // Registered to user-supplied Street View screenshots (1908 x 1146): position, aim and lens
+  // fitted so the frontage lines up with the photograph; compare at that size.
+  'sv-davidoff': { label: 'DAVIDOFF OF GENEVA AND LE COLONIAL · STREET VIEW 2023', camera: [-2751.7, -1376.8, 2.26], target: [-2758.3, -1394.8, 7.9], fov: 90.8, roll: -1.0 },
+  'sv-equinox': { label: 'EQUINOX ENTRANCE AND OFFICE LOBBY · STREET VIEW 2023', camera: [-2730.05, -1373.85, 2.2], target: [-2734.4, -1391.4, 10.8], fov: 87.4 },
+  'sv-saint-bernard': { label: 'SAINT BERNARD · STREET VIEW 2023', camera: [-2685.8, -1403.25, 2.2], target: [-2704.5, -1396.2, 3.1], fov: 90 },
 };
 function view(name, { hour = 15, fantasyVisible = true } = {}) {
-  const { label, camera: [cx, cn, ch], target: [tx, tn, th] } = views[name];
+  const { label, camera: [cx, cn, ch], target: [tx, tn, th], fov = 62, roll = 0 } = views[name];
+  if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
   const sky = atmosphereFor(hour, 'clear');
   sun.position.set(tx + Math.cos(sky.angle) * 450, base + Math.max(30, Math.sin(sky.angle) * 550), -tn + 190); sun.target.position.set(tx, base, -tn);
   sun.intensity = sky.sunIntensity; sun.color.copy(sky.sunColor);
   fantasy.visible = fantasyVisible;
-  camera.position.set(cx, base + ch, -cn); camera.lookAt(tx, base + th, -tn); camera.updateMatrixWorld();
+  camera.position.set(cx, base + ch, -cn); camera.lookAt(tx, base + th, -tn);
+  if (roll) camera.rotateZ(roll * Math.PI / 180);
+  camera.updateMatrixWorld();
+  trees?.userData.update(camera.position);
   buildings.userData.updateDoors?.([], 0.016);
   renderer.render(scene, camera);
   document.querySelector('#label').textContent = label;
   return { draws: renderer.info.render.calls, triangles: renderer.info.render.triangles };
 }
 window.facadeFixture = { THREE, view, views, world, scene, camera, renderer };
-view('hermes');
+await Promise.all(scene.children.flatMap(root => { const pending=[];root.traverse(item=>{if(item.userData.ready)pending.push(item.userData.ready);});return pending; }));
+view(new URLSearchParams(location.search).get('view') ?? 'hermes');
 document.body.dataset.ready = 'true';

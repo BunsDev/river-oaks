@@ -66,8 +66,8 @@ test('shipped reference looks retain their intended surfaces while bounding acce
     ['man-workwear', 13140, 20], ['kai-formal-beast', 13140, 20],
     ['kai-explorer', 9020, 20], ['kai-explorer-beast', 9020, 20],
     ['kai-noir', 14484, 20], ['kai-noir-beast', 14484, 20],
-    ['forest-aristocrat', 152400, 80], ['forest-aristocrat-beast', 152400, 80],
-    ['forest-aristocrat-feminine', 171184, 80], ['forest-aristocrat-feminine-beast', 171184, 80],
+    ['forest-aristocrat', 152400, 40], ['forest-aristocrat-beast', 152400, 40],
+    ['forest-aristocrat-feminine', 171184, 55], ['forest-aristocrat-feminine-beast', 171184, 55],
   ];
   for (const [id, triangles, maxDraws] of cases) {
     const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);
@@ -87,5 +87,38 @@ test('shipped reference looks retain their intended surfaces while bounding acce
     look.dispose(); assert.equal(released, geometries.size, id);
     assert.ok(pieces.every(mesh => mesh.parent?.parent === null), `${id}: attachment groups detach`);
     avatar.dispose();
+  }
+});
+
+test('forest blossoms share two outfit-owned materials without sharing across avatars', async () => {
+  for (const id of ['forest-aristocrat', 'forest-aristocrat-feminine']) {
+    const appearance = sharedAppearance(id), source = await loadCharacterRig(appearance.rig);
+    const instances = Array.from({ length: 2 }, () => {
+      const avatar = instantiateAvatar(source, { targetHeight: source.height, id });
+      const look = createReferenceStyle(avatar, appearance);
+      const flowers = new Map(['f5efe0', 'd9b25a'].map(color => [color, new Set()]));
+      avatar.model.traverse(mesh => {
+        if (mesh.isMesh && !Array.isArray(mesh.material)) flowers.get(mesh.material.color?.getHexString())?.add(mesh.material);
+      });
+      return { avatar, look, flowers };
+    });
+    let disposedFirst = false, released = 0, releasedOther = 0;
+    try {
+      for (const color of ['f5efe0', 'd9b25a']) {
+        assert.equal(instances[0].flowers.get(color).size, 1, `${id}: identical blossom surfaces must batch`);
+        assert.equal(instances[1].flowers.get(color).size, 1);
+        const [first] = instances[0].flowers.get(color), [second] = instances[1].flowers.get(color);
+        assert.notEqual(first, second, 'one outfit cannot dispose another avatar\'s material');
+        first.addEventListener('dispose', () => released++);
+        second.addEventListener('dispose', () => releasedOther++);
+      }
+      instances[0].look.dispose(); disposedFirst = true;
+      assert.equal(released, 2, 'both shared blossom materials dispose once per outfit');
+      assert.equal(releasedOther, 0, 'another outfit remains usable');
+    } finally {
+      if (!disposedFirst) instances[0].look.dispose();
+      instances[1].look.dispose();
+      for (const { avatar } of instances) avatar.dispose();
+    }
   }
 });

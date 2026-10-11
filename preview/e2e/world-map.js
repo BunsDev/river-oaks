@@ -1,11 +1,12 @@
 async page => {
+  const { openHudSpace } = await import('./hud-navigation.js');
   const origin='http://127.0.0.1:5173',checks=[],errors=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${origin}/?world=garden-2&motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   const surface=page.locator('.world-map-surface');
   await surface.waitFor({state:'visible'});
   check(await page.locator('.world-map-road').count()>0&&await page.locator('.world-map-building').count()>0,
@@ -79,7 +80,7 @@ async page => {
   await page.goto(`${origin}/?motion-debug=1`,{waitUntil:'commit'});
   await page.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=explore-section]').click();
+  await openHudSpace(page, 'explore-section');
   await page.locator('.world-map-surface').waitFor({state:'visible'});
   check(await page.locator('.world-map-landmark').count()===0,'Another world omits map landmarks saved in the configured alternate world');
   check(errors.length===0,`No browser errors: ${errors.join('; ')}`);

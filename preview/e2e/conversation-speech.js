@@ -1,4 +1,5 @@
 async page=>{
+  const { openHudSpace } = await import('./hud-navigation.js');
  const checks=[],errors=[],runs=[];let voiceRequests=0;
  const check=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
  page.on('pageerror',e=>errors.push(e.message));
@@ -25,7 +26,7 @@ async page=>{
    await page.locator('#community-dialogue').waitFor({state:'hidden'});
   }
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='false')await page.locator('#panel-toggle').click();
-  await page.locator('[data-section=community-section]').click();
+  await openHudSpace(page, 'community-section');
   if(!await page.locator('#community-more').evaluate(e=>e.open))await page.locator('#community-more > summary').click();
   await page.locator('#community-local').selectOption(id);await page.locator('#community-meet').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});

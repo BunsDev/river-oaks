@@ -1,0 +1,47 @@
+{
+  "createdAt": "2026-10-09T12:55:48.289Z",
+  "results": [
+    {
+      "name": "store-intro",
+      "status": "passed",
+      "seconds": 36.432,
+      "result": {
+        "passed": true,
+        "checks": [
+          "confirmed entry starts Harry Winston intro",
+          "sequence cuts from actual exterior to interior",
+          "camera sequence does not move player",
+          "Escape restores walking focus",
+          "movement works after skip",
+          "second entry does not replay intro",
+          "account marker survives browser reload",
+          "reduced motion keeps the walking camera still",
+          "natural completion restores walking focus",
+          "real account service suppresses repeat claims",
+          "no browser runtime errors"
+        ],
+        "errors": [],
+        "claims": [
+          {
+            "firstVisit": true
+          },
+          {
+            "firstVisit": false
+          },
+          {
+            "firstVisit": false
+          },
+          {
+            "firstVisit": false
+          },
+          {
+            "firstVisit": true
+          },
+          {
+            "firstVisit": true
+          }
+        ]
+      }
+    }
+  ]
+}
