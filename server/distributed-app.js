@@ -6,6 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { sendFrame } from './backpressure.js';
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
+import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -44,6 +45,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   let stopped = false, ticking = false;
   const send = (ws, value, options) => sendFrame(ws, value, options);
   const access = req => {
+    if (req[ADMITTED]) return true;
     const ip = rateLimitKey(address(req));
     return localAccess(ip) && security.allow('access', ip, 1000, 60_000);
   };

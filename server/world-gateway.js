@@ -1,3 +1,5 @@
+import { createClientAddress, rateLimitKey } from './client-address.js';
+import { createRateLimiter } from './rate-limit.js';
 import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { createWorldLandmarks } from './world-landmarks.js';
@@ -83,7 +85,10 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     pending.set(id,load);
     return load;
   }
-  const router=createWorldRouter({worldFor,configuredWorldId,handleRequest});
+  // The same per-address budget the worlds apply, run once at the front door.
+  const routerAddress=address??createClientAddress(trustedProxyIPs),localGate=createRateLimiter(1000,60_000);
+  const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
+  const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
     await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
   },async close() {
