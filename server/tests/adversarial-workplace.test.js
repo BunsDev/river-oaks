@@ -61,7 +61,7 @@ test('another account cannot read, steer or settle the owner\'s work through any
   // Every action, replayed by a second account with the owner's real identifiers.
   const probes = {
     artifact: {artifactId: task.artifactId}, delete: {artifactId: task.artifactId}, cancel: {taskId: task.id}, pause: {taskId: task.id},
-    resume: {taskId: task.id}, ack: {noticeId: `result:${task.id}`}, revoke: {grantId: grant.id, expectedRevision: grant.revision},
+    resume: {taskId: task.id}, forget: {taskId: task.id}, ack: {noticeId: `result:${task.id}`}, revoke: {grantId: grant.id, expectedRevision: grant.revision},
   };
   for (const [action, data] of Object.entries(probes)) {
     const response = await api.post('intruder', action, data);
