@@ -1353,18 +1353,15 @@
         "browser": "workplace journey passed 5/5; workplace-room graybox passed",
         "review": "independent subagent review: 3 confirmed + 6 plausible defects fixed with regressions"
       },
-      "evidence": {
-        "pr": 227,
-        "mergeSha": "a13c4e4e1b169f66ebaa56290ae211d296e5f355",
-        "reviewedHead": "f35958a",
-        "hostedChecks": "11/11 green on f35958a",
-        "closes": [
-          217,
-          218,
-          219,
-          220
-        ]
-      }
+      "evidence": [
+        {
+          "pr": 227,
+          "reviewedHead": "f35958a239c7c243921ed1e18d62a0a1e6bdc285",
+          "merge": "a13c4e4e1b169f66ebaa56290ae211d296e5f355",
+          "tree": "2415d7e746deed805c621470bc704c0e2886b927",
+          "checks": "All 11 final-head hosted checks passed on f35958a. Local at 122db7f: server 447/0/0 skipped with isolated Redis; client 2591 pass, 1 pre-existing skip; core verify passed earlier at a1dd1e3; workplace journey 5/5 and workplace-room harness passed. Closes #217-#220."
+        }
+      ]
     },
     {
       "id": "map-ui-readability",
