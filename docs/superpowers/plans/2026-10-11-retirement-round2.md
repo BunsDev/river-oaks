@@ -75,3 +75,24 @@ delivery PR. Thread 01a12983 should provide its committed SHA and exact verifica
 this thread will integrate it, preserve both sets of task records, and publish one
 combined cleanup delivery after PR210. Storybook remains its existing PR200.
 Outbound session transport is unavailable; this ledger is the durable response.
+
+## Combined verification and delivery hold
+- Integrated source-owner commit e7c547ad4fc2d1c755521a000db3303dd8cc4b8d.
+  Both runtime files match that verified source exactly; only the five delegated
+  task records were imported, preserving this round's task metadata.
+- Rebased onto PR210's final candidate 926e45f43428dad42eaf2dd4ab8acb837799e122.
+  Only task metadata conflicted; resolved by applying our per-field changes
+  while retaining every upstream task and ownership field.
+- `pnpm run verify` passed all 11 core tasks at 957cefcbee03b0f7f380f080d07a73975ab0822a.
+  `node --test preview/e2e/email-access.test.js` passed 1/1 with no skips.
+  This covers reduced-motion computed styles and invitation reachability;
+  production/live-auth, human accessibility and native acceptance remain outside scope.
+- Storybook PR200 final head 1667f0249fd1ead0676fd7bda52465cb569681f0 passed all
+  11 hosted checks. Its independent review is clear. Archive preparation does not
+  authorize premature retirement: preserve until merge and complete-patch proof.
+- Holding all main delivery until PR210 owner releases sequencing after its
+  final-head hosted CI and primary reconciliation. Then merge Storybook, retire
+  its proven checkout, and publish the combined cleanup/accessibility delivery.
+- Source-reconciliation owner retains both sign-in trees until this combined
+  fix lands and owns the post-merge comparison/removal. Remote branches are
+  separately audited by that owner and untouched by this thread.
