@@ -33,7 +33,9 @@
     "agent:list": "node scripts/agent.mjs list",
     "verify": "node scripts/agent.mjs verify",
     "test:agent": "node --test scripts/tests/*.test.js",
-    "test:desktop:photo": "node desktop/photo-e2e.js"
+    "test:desktop:photo": "node desktop/photo-e2e.js",
+    "project:status": "node scripts/project-status.mjs",
+    "project:check": "node scripts/project-status.mjs --check"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",

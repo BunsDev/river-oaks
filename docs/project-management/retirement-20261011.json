@@ -1,0 +1,209 @@
+{
+  "observedAt": "2026-10-11T06:12:31.697611+00:00",
+  "before": {
+    "worktrees": 24,
+    "localBranches": 26
+  },
+  "after": {
+    "worktrees": 17,
+    "localBranches": 17
+  },
+  "removedWorktrees": 8,
+  "removedLocalBranches": 11,
+  "concurrentNewWorktrees": [
+    "codex/places-studio-integration-20261011"
+  ],
+  "reusedWorktree": "memory audit checkout reused for project-lifecycle; its ignored diagnostics preserved",
+  "archiveVerification": {
+    "bundle": "/Users/buns/worktree-backups/river-oaks-20261011/retired-history.bundle",
+    "sha256": "bde06d23feefe89f8c22d36bedcdf85baa465f66178150dd3d8bd045cdf75624",
+    "restoredRefs": 11,
+    "fsck": "passed",
+    "restoration": "git fetch <bundle> refs/tags/archive/worktree-prune/20261011-round1/<name>:refs/heads/recovered/<name>"
+  },
+  "results": [
+    {
+      "branch": "feat/debug-report",
+      "sha": "52bd4d28af01795887f9fd8310b985255fe6a207",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/.worktrees/river-oaks/debug-report",
+      "pr": 206,
+      "reviewedHead": "52bd4d28af01795887f9fd8310b985255fe6a207",
+      "merge": "7d0ac8a3ebe79e66ac1c3901fc89abd788ae3081",
+      "ancestral": true,
+      "evidence": "Ancestor of origin/main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/feat-debug-report",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/feat-debug-report-evidence.tar",
+        "sha256": "9a08d429f1e7889d6cf3ba9b7d7379dfd20bb333671a18f8d3192bc165bd08df",
+        "verifiedFiles": 30
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "fix/optional-bridge-proxy",
+      "sha": "ad702ce713427a71788218ad6e5949b638b30b63",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-bridge-proxy-20261009",
+      "pr": 199,
+      "reviewedHead": "ad702ce713427a71788218ad6e5949b638b30b63",
+      "merge": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/fix-optional-bridge-proxy",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/fix-optional-bridge-proxy-evidence.tar",
+        "sha256": "614d7a46f483d8a01b3168c8167e01bc2718aea3de6ad7688b03ca430f8495ef",
+        "verifiedFiles": 7
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "feat/game-hud-20261009",
+      "sha": "bbb44d12f71e3f9c6d8cf0e24289b6dc28eff0e3",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-game-hud-20261009",
+      "pr": 208,
+      "reviewedHead": "bbb44d12f71e3f9c6d8cf0e24289b6dc28eff0e3",
+      "merge": "20edac0bb75d7c4e7b51e987d717e9f39413d0eb",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/feat-game-hud-20261009",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/feat-game-hud-20261009-evidence.tar",
+        "sha256": "ccdb55f2d051e7197aad701ffd31769fb3e57b0a4d59b93b1709e496d179e08a",
+        "verifiedFiles": 120
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "feat/interactive-greetings-20261009",
+      "sha": "4aa5360d6fd45b2b228561fa80dbbb99fb565a1d",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-greetings-20261009",
+      "pr": 203,
+      "reviewedHead": "4aa5360d6fd45b2b228561fa80dbbb99fb565a1d",
+      "merge": "397733ad7d3e776ea8376aeace3458db6a47b6d2",
+      "ancestral": true,
+      "evidence": "Ancestor of origin/main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/feat-interactive-greetings-20261009",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/feat-interactive-greetings-20261009-evidence.tar",
+        "sha256": "006ae4a414fe90d54f4a107945761308c81ce35837f5d8ff195adf8efaf7ef83",
+        "verifiedFiles": 18
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "feat/hardware-acceleration-warning",
+      "sha": "993c85d2a48a0616554d2e9d900f45b6dd7acee8",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-hardware-acceleration-20261009",
+      "pr": 205,
+      "reviewedHead": "8070fc94dd6cc72dcef7c954f2196638f4d727f3",
+      "merge": "99a6b94e810b1d11284339357a368498a3355e1c",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/feat-hardware-acceleration-warning",
+      "supersessionReview": "PR204 explicitly superseded by205; later diff adds pointer-events fix, regression and delivery ledger; no distinct lost work.",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/feat-hardware-acceleration-warning-evidence.tar",
+        "sha256": "8084e4f708449b8fdbc8fa9c78cd41bfb09c9bf863165e3af5d3d7104bcce4bc",
+        "verifiedFiles": 11
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "fix/town-checkpoint-recovery-20261008",
+      "sha": "ba70fbb00c07a49c1ba7d6534babb8bf095acb13",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-login-20261008",
+      "pr": 187,
+      "reviewedHead": "ba70fbb00c07a49c1ba7d6534babb8bf095acb13",
+      "merge": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/fix-town-checkpoint-recovery-20261008",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/fix-town-checkpoint-recovery-20261008-evidence.tar",
+        "sha256": "aa67305a3e2adcca31f7fc2fe4a0df6ae541aa623fb820978be4aeab17d81dc0",
+        "verifiedFiles": 28
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "test/storefront-traversal-20261008",
+      "sha": "bde6583acc797285259bfe38c6f826d317050667",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-storefront-test-20261008",
+      "pr": 184,
+      "reviewedHead": "bde6583acc797285259bfe38c6f826d317050667",
+      "merge": "62123f0a05042ab9e03ddcf4c721186bcc95ef74",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/test-storefront-traversal-20261008",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/test-storefront-traversal-20261008-evidence.tar",
+        "sha256": "b559bde46984d5494f5ec59b653572471661e1e9b177ecbd9f1bf8b8101fe259",
+        "verifiedFiles": 24
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "feat/unique-player-names",
+      "sha": "8070fc94dd6cc72dcef7c954f2196638f4d727f3",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-unique-names-20261009",
+      "pr": 205,
+      "reviewedHead": "8070fc94dd6cc72dcef7c954f2196638f4d727f3",
+      "merge": "99a6b94e810b1d11284339357a368498a3355e1c",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/feat-unique-player-names",
+      "outcome": "retired",
+      "ignoredEvidence": {
+        "archive": "/Users/buns/worktree-backups/river-oaks-20261011/feat-unique-player-names-evidence.tar",
+        "sha256": "36bd457d34b2e73a4e37d8d2107a1756e188eb0b160eef6d046537756a72c4bb",
+        "verifiedFiles": 17
+      },
+      "worktreeRemoved": true
+    },
+    {
+      "branch": "fix/memory-performance-20261009",
+      "sha": "e732218b002ea7b7e12d3c9c25da7a08c30dcc86",
+      "worktree": null,
+      "pr": 207,
+      "reviewedHead": "e732218b002ea7b7e12d3c9c25da7a08c30dcc86",
+      "merge": "c98351ac1ba478eeb6e3c218caf5306c2471723f",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/fix-memory-performance-20261009",
+      "outcome": "retired"
+    },
+    {
+      "branch": "fix/login-experience-20261008",
+      "sha": "9b4f2807eb150f0db4b73e28c0af6066aa8a492f",
+      "worktree": null,
+      "pr": 187,
+      "reviewedHead": "ba70fbb00c07a49c1ba7d6534babb8bf095acb13",
+      "merge": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "ancestral": false,
+      "evidence": "Reviewed PR head contains this tip; complete aggregate changed paths match merged commit; merge is on main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/fix-login-experience-20261008",
+      "supersessionReview": "PR187 contains this revision plus verified checkpoint recovery and release integration; later changes reviewed.",
+      "outcome": "retired"
+    },
+    {
+      "branch": "codex/streetview-realism-20261008",
+      "sha": "22d00439cebf818e983dab0ce855eb3883ed5bda",
+      "worktree": null,
+      "pr": 191,
+      "reviewedHead": "3480ca971f33357a411bc3fd8638b4ebff2ec66e",
+      "merge": "c64ef6f1d0d528f3260f930c0289dada1a19e1f1",
+      "ancestral": true,
+      "evidence": "Ancestor of origin/main",
+      "archiveRef": "refs/tags/archive/worktree-prune/20261011-round1/codex-streetview-realism-20261008",
+      "outcome": "retired"
+    }
+  ],
+  "scope": "No remote branch deletion; no dirty worktree removal; no interrupted active processes or in-progress merges."
+}
