@@ -50,3 +50,21 @@ passed travel/landmarks and game HUD; the initial Events keyboard attempt was
 replaced by waiting for loading dismissal and the visible Commands button, then
 passed. Original failed and passing receipts are retained unchanged in
 output/playwright alongside screenshots.
+
+## Hosted compatibility correction
+Final-head hosted run38124374196 exposed two older shared journeys that still
+assumed the former UI: rail-shared required Events, and resident-names attempted
+the hidden compact map player list without expanding the atlas. The actual Events
+absence and shared map journeys passed. Updated those two tests to use the real
+map command/expand control, retaining permission, focus and naming-security checks.
+Both focused shared journeys passed locally with full Metal rendering. The resident
+journey now requires a visible safe-name row instead of optionally skipping it.
+Independent review found no weakened assertions. Original hosted failure artifact
+is preserved in .runtime/ci/pr223-565facd; passing receipts remain unchanged under
+output/playwright/pr223-*-fixed.json. Required hosted verification will restart on
+the corrected head before any merge.
+
+Corrected verification completed: shared rail17 and resident-name24 assertions
+passed; fresh `pnpm run verify` passed all11 core tasks. Only the two legacy
+journeys and task/ledger records changed; application runtime remains identical
+to the independently reviewed minimap implementation.

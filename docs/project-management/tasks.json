@@ -318,9 +318,9 @@
       "branches": [
         "codex/signin-typesafe-coven-20261009"
       ],
-      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
-      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
-      "nextAction": "Deliver recovered admin reduced-motion and narrow-screen invitation checks, then retire this superseded source using exact restored archive.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -332,7 +332,8 @@
         "activeProcess": false
       },
       "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
-      "leaseUntil": "2026-10-11T09:34:28.276875+00:00"
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
     },
     {
       "id": "store-intros-delivery",
@@ -385,9 +386,9 @@
       "branches": [
         "codex/typesafe-login-aesthetic-20261009"
       ],
-      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
-      "updatedAt": "2026-10-11T07:34:27.146435+00:00",
-      "nextAction": "Deliver recovered admin reduced-motion and narrow-screen invitation checks, then retire this superseded source using exact restored archive.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -399,21 +400,36 @@
         "activeProcess": false
       },
       "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
-      "leaseUntil": "2026-10-11T09:34:28.276921+00:00"
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
     },
     {
       "id": "cartier-pilot",
       "title": "Complete Cartier visual pilot",
-      "status": "blocked",
+      "status": "active",
       "branches": [
         "cody/cartier-visual-pilot"
       ],
-      "owner": null,
-      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
-      "nextAction": "Reconcile the October10 pilot against latest main; rerun recorded store-interiors cooldown and optional-bridge regressions, finish route benchmark, and obtain visual/moving-glass acceptance before delivery.",
-      "filesOwned": [],
+      "owner": "cody-cartier-01a12a17-a2e4-7331-bb7d-c1199ed41b22",
+      "updatedAt": "2026-10-11T08:34:20.428044+00:00",
+      "nextAction": "Repair reproduced browser harness failures, rerun local gates, and deliver a persistent visual review with measured performance limits.",
+      "filesOwned": [
+        "preview/src/cartier-pilot.js",
+        "preview/src/store-interiors.js",
+        "preview/src/district.js",
+        "preview/src/main.js",
+        "preview/e2e/cartier-pilot*.js",
+        "preview/e2e/store-interiors.js",
+        "preview/e2e/storefront-lighting.js",
+        "preview/tests/cartier-pilot.test.js",
+        "output/cartier-*",
+        "data/reports/cartier-pilot*"
+      ],
       "requiredChecks": [
-        "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
+        "node --test preview/tests/cartier-pilot.test.js preview/tests/store-rooms.test.js",
+        "pnpm run verify",
+        "pnpm run test:experience cartier-pilot cartier-pilot-walkthrough store-interiors storefront-lighting",
+        "Matched visual review; paired performance; true night remains unsupported"
       ],
       "observed": {
         "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
@@ -421,8 +437,8 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Distinct uncommitted pilot; historical core/pilot journeys passed but broader regressions failed and benchmark/human acceptance remain open.",
-      "ledger": "docs/superpowers/plans/2026-10-10-cartier-pilot-results.md"
+      "leaseUntil": "2026-10-11T10:34:20.428044+00:00",
+      "ledger": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/docs/superpowers/plans/2026-10-11-cartier-pilot-results.md"
     },
     {
       "id": "jevica-psyche",
@@ -499,9 +515,9 @@
       "branches": [
         "docs/storybook-companion-layer"
       ],
-      "owner": "/root:retirement-round2-20261011",
-      "updatedAt": "2026-10-11T07:28:13.035687+00:00",
-      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "filesOwned": [
         "docs/storybook.md"
       ],
@@ -517,7 +533,7 @@
         "activeProcess": false
       },
       "pr": 200,
-      "leaseUntil": "2026-10-11T09:28:13.035687+00:00",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
       "deliveryPr": 223
     },
     {
@@ -975,10 +991,10 @@
       "branches": [
         "chore/retirement-round2-20261011"
       ],
-      "owner": "/root:retirement-round2-20261011",
-      "leaseUntil": "2026-10-11T09:20:33.903475+00:00",
-      "updatedAt": "2026-10-11T07:20:33.903475+00:00",
-      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "ledger": "docs/superpowers/plans/2026-10-11-retirement-round2.md",
       "filesOwned": [
         "docs/project-management/",
@@ -1005,10 +1021,10 @@
       "branches": [
         "chore/reconcile-delivered-sources-20261011"
       ],
-      "owner": "codex:01a12983-1ffc-7ba0-93a0-f3026b435750",
-      "updatedAt": "2026-10-11T07:21:22.020747+00:00",
-      "leaseUntil": "2026-10-11T09:21:22.020747+00:00",
-      "nextAction": "Carry forward reduced-motion admin-review fix and narrow-screen invitation regression, verify and deliver; retire only fully accounted source copies with restored archives.",
+      "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "ledger": "docs/superpowers/plans/2026-10-11-delivered-source-retirement.md",
       "filesOwned": [
         "docs/project-management/tasks.json",
@@ -1022,7 +1038,8 @@
         "Exact SHA and file hashes; archive restoration check",
         "Clean unlocked inactive worktree before non-forced removal",
         "Post-removal ref/path verification; tooling and core before docs commit"
-      ]
+      ],
+      "handoff": "/Users/buns/worktree-backups/river-oaks-20261011-delivered-sources/pending-retirement-handoff/handoff.json"
     },
     {
       "id": "destination-minimap",
@@ -1032,8 +1049,8 @@
         "feat/destination-minimap-20261011"
       ],
       "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
-      "updatedAt": "2026-10-11T08:10:27.251174+00:00",
-      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
+      "updatedAt": "2026-10-11T08:43:24.620900+00:00",
+      "nextAction": "Deliver PR223 after corrected final-head hosted checks; then run the accepted archive/status/ownership guards and retire only proven source refs.",
       "ledger": "docs/superpowers/plans/2026-10-11-destination-minimap.md",
       "filesOwned": [
         "preview/src/places-ui.js",
@@ -1051,7 +1068,7 @@
         "Core verification and build",
         "Independent review and final-head hosted checks"
       ],
-      "leaseUntil": "2026-10-11T09:58:13.006965+00:00",
+      "leaseUntil": "2026-10-11T10:43:24.620900+00:00",
       "verification": {
         "core": "pnpm run verify: 11 tasks passed",
         "browser": "destination-minimap and Events final focused passed; Places/guide/rail navigation/game HUD passed",
