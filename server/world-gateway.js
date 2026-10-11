@@ -76,6 +76,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
           if(!target || target.meta?.template!=='region-v1')return {ok:false,error:'missing'};
           return target.room.request({type:'revise',actorId,expectedDraftVersion});
         }}:{}),
+        // One world per account (see distributed-app): remove them from the previous world, wherever it runs.
+        onMove:async(userId,fromWorldId)=>{const previous=await worldFor(fromWorldId).catch(()=>null);await previous?.game.disconnectUser(userId);},
         onBan:async userId=>{
           await Promise.all([...worlds.values()].filter(world=>world.id!==id).map(world=>world.game.disconnectUser(userId)));
         }});

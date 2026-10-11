@@ -36,7 +36,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000 } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -93,7 +93,17 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
         ws.close(4000, 'World region updated.'); continue;
       }
-      if (!active) { ws.close(4003, 'Session ended or account removed from the town.'); continue; }
+      if (!active) {
+        // Removed from this world. If the account's presence is now in another
+        // world it moved there (one world per account): close as "another tab",
+        // which the client treats as final, instead of reading like a ban.
+        if (connection.closing) continue;
+        connection.closing = true;
+        const close = moved => ws.close(moved ? 4009 : 4003, moved ? 'This account joined another world.' : 'Session ended or account removed from the town.');
+        if (!presence) { close(false); continue; }
+        void presence.getMany([identity.userId]).then(found => close(Boolean(found.get(identity.userId)) && found.get(identity.userId).worldId !== worldId), () => close(false));
+        continue;
+      }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
       send(ws, view.snapshot, { snapshot: true });
     }
@@ -317,7 +327,15 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
           if (!view) throw new Error('No committed town');
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           admissionStage = 'presence';
-          if (presence) await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
+          if (presence) {
+            // One world per account: arriving here removes the account from the
+            // world it was last in, so a few dozen accounts cannot fill every
+            // world. The removal runs in the background and never blocks entry.
+            const previous = (await presence.getMany([identity.userId])).get(identity.userId);
+            await presence.join(identity.userId, { id: worldId, title: worldTitle }, connectionId);
+            // The trusted owner accounts are exempt: they may edit one world while playing another.
+            if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
+          }
           if (ws.readyState !== WebSocket.OPEN) return false;
           send(ws, { ...view.snapshot, selfId: identity.userId });
           return true;

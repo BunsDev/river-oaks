@@ -25,7 +25,7 @@ import { securityHeaders } from './security-headers.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -276,7 +276,14 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           const result=world.join(identity);if(!result.ok){ws.close(1013,'The town is full. Try again shortly.');return;}
           joinedHere=true;
         } else world.rename(identity);
-        if(presence)await presence.join(identity.userId,{id:worldId,title:worldTitle},token);
+        // One world per account (as on the hosted gateway): arriving here removes
+        // the account from the world it was last in, in the background.
+        if(presence){
+          const previous=(await presence.getMany([identity.userId])).get(identity.userId);
+          await presence.join(identity.userId,{id:worldId,title:worldTitle},token);
+          // The trusted owner accounts are exempt: they may edit one world while playing another.
+          if(onMove&&!isAdmin(identity.userId)&&previous&&previous.worldId!==worldId)Promise.resolve(onMove(identity.userId,previous.worldId)).catch(()=>{});
+        }
         if(ws.readyState!==WebSocket.OPEN){
           if(presence)await presence.leave(identity.userId,token);
           if(joinedHere){world.leave(identity.userId);joinedHere=false;}
