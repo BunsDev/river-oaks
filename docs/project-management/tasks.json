@@ -1568,7 +1568,8 @@
         "server": "485 pass, 0 skipped with isolated Redis",
         "preview": "2596 pass, 1 skipped (pre-existing)",
         "core": "pnpm run verify: core passed"
-      }
+      },
+      "pr": 237
     },
     {
       "id": "map-ui-readability",
