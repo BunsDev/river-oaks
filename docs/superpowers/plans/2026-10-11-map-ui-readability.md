@@ -18,3 +18,5 @@ Checks/results:
 - `git diff --check` passed.
 
 Next: integrate into the authorized shortcut/map delivery PR #229, refresh after dependency PR #213, and complete final hosted CI and merge. Do not retire this source checkout until delivery evidence is recorded.
+
+Final integration: shortcuts and map polish are combined in PR #229 on top of main cd42d50e (dependency PRs #211–213 delivered). `pnpm run verify` passed all 11 tasks with an isolated PATH wrapper limiting `node --test` to two workers; 2589 preview passes / 1 skip, 298 server passes / 106 skips, 36 desktop passes, 141 Python passes. Final `pnpm run test:experience carriage destination-minimap` passed both journeys; receipt .runtime/final-map-rides.json. Independent review has no outstanding findings. Hosted exact-head checks and merge evidence remain the delivery gate.
