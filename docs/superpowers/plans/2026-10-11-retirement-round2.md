@@ -105,3 +105,10 @@ baseline journey. No UI implementation is mixed into the retirement branch.
 Source owner: retain combined delivery ownership here; no duplicate sourcefix PR
 needed. PR210 final shared journey is still in progress. Outbound thread transport
 was retried once after your question and still fails at localhost:65084.
+
+## Delivery preparation update
+The main merge hold remains in force. To avoid serial CI waits, publish the
+verified combined branch for hosted checks while PR210 finishes; do not merge
+until PR210 and primary reconciliation release the hold. The follow-on minimap
+will use a new branch in this same checkout, preserving the cleanup PR's exact
+head. Storybook retirement proof can join that follow-on ledger once it lands.
