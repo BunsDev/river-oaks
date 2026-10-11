@@ -121,7 +121,8 @@ owner actually checked running agent sessions; an expired lease or no process CW
 is not sufficient. These are coordination attestations, not authenticated locks.
 
 The command requires the exact merged PR head, its merge on the fetched default
-branch, and identical candidate/merge trees. Other squash/rebase/supersession cases
+branch, and identical candidate/merge trees. A source branch alias is accepted only
+when its full tip SHA exactly matches that merged PR head. Other squash/rebase/supersession cases
 remain blocked for aggregate review. It refuses dirty/untracked/ignored material,
 submodules, locks, operations in progress, active process CWDs, unknown activity,
 open PRs, and missing proof. Retain ignored evidence separately first; this tool

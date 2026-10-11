@@ -1358,14 +1358,14 @@
     {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "feat/map-ui-readability"
       ],
-      "owner": "codex:map-ui-readability-20261011",
-      "leaseUntil": "2026-10-11T13:50:22.593604+00:00",
-      "updatedAt": "2026-10-11T11:50:22.593604+00:00",
-      "nextAction": "Combined PR #229 refreshed onto cd42d50e; final local checks passed, then push and wait for required hosted checks before authorized squash merge.",
+      "owner": null,
+      "leaseUntil": null,
+      "updatedAt": "2026-10-11T12:15:51.403991+00:00",
+      "nextAction": "Delivered by PR #229. Preserve source and integration worktrees with local receipts until a separate lifecycle retirement audit; no implementation remains.",
       "filesOwned": [
         "preview/src/world-map.js",
         "preview/src/world-map.css",
@@ -1386,19 +1386,29 @@
         "review": "No remaining findings; badge edge correction verified across 90 combinations",
         "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
       },
-      "pr": 229
+      "pr": 229,
+      "evidence": [
+        {
+          "pr": "https://github.com/BunsDev/river-oaks/pull/229",
+          "reviewedHead": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b",
+          "merge": "9eaec796d9a0d5ed7e3730aa2ecd71efaa0e62e0",
+          "mergedAt": "2026-10-11T12:15:04Z",
+          "ci": "https://github.com/BunsDev/river-oaks/actions/runs/38137111001",
+          "proof": "All 10 final-head checks and Vercel passed; fetched origin/main has exact same tree as reviewed head; git diff HEAD origin/main exit 0."
+        }
+      ]
     },
     {
       "id": "jev-ride-shortcuts",
       "title": "Keyboard shortcuts for calling Jev and entering or exiting a ride",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/jev-ride-shortcuts"
       ],
-      "owner": "codex:jev-ride-shortcuts-20261011",
-      "leaseUntil": "2026-10-11T13:50:22.593604+00:00",
-      "updatedAt": "2026-10-11T11:50:22.593604+00:00",
-      "nextAction": "Combined PR #229 refreshed onto cd42d50e; final local checks passed, then push and wait for required hosted checks before authorized squash merge.",
+      "owner": null,
+      "leaseUntil": null,
+      "updatedAt": "2026-10-11T13:32:55.736Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/player-avatar.js",
         "preview/src/walking-ui.js",
@@ -1418,7 +1428,35 @@
         "gaps": "Core excludes Redis/full browser/native/live auth/human accessibility; existing reconciliation gaps remain.",
         "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
       },
-      "pr": 229
+      "pr": 229,
+      "evidence": [
+        {
+          "pr": "https://github.com/BunsDev/river-oaks/pull/229",
+          "reviewedHead": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b",
+          "merge": "9eaec796d9a0d5ed7e3730aa2ecd71efaa0e62e0",
+          "mergedAt": "2026-10-11T12:15:04Z",
+          "ci": "https://github.com/BunsDev/river-oaks/actions/runs/38137111001",
+          "proof": "All 10 final-head checks and Vercel passed; fetched origin/main has exact same tree as reviewed head; git diff HEAD origin/main exit 0."
+        }
+      ],
+      "retirement": {
+        "head": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b",
+        "releasedAt": "2026-10-11T13:24:24.726408+00:00",
+        "sessionsReviewedAt": "2026-10-11T13:24:24.726408+00:00",
+        "review": "Owning session completed PR #229; its checkout is now explicitly owned by enforced-local-pruning on a different branch. No checkout or ongoing task owns the old ref; review agents completed."
+      },
+      "retiredBranches": [
+        "feat/jev-ride-shortcuts"
+      ],
+      "archive": {
+        "feat/jev-ride-shortcuts": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/history.bundle",
+          "sha256": "eafa024dc6ee235458dbd54dad989a514a7651ff3446a6bf9c4577a8288fd155",
+          "tag": "refs/tags/archive/worktree-prune/3ea799a6-1b05-4c11-813c-e0fe5a83d0b9",
+          "head": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b"
+        }
+      }
     },
     {
       "id": "enforced-local-pruning",
@@ -1429,21 +1467,22 @@
       ],
       "owner": "codex-local-pruning-20261011",
       "leaseUntil": "2026-10-11T15:06:11.739617+00:00",
-      "updatedAt": "2026-10-11T13:17:09.088690+00:00",
-      "nextAction": "Commit/push reviewed implementation, pass hosted checks, merge; all real candidates preserved.",
+      "updatedAt": "2026-10-11T13:40:31.143153+00:00",
+      "nextAction": "Push final verified correction and await PR #241 hosted checks, then merge; jev branch retired with external restoration proof.",
       "ledger": "docs/superpowers/plans/2026-10-11-enforced-local-pruning.md",
       "filesOwned": [
-        "scripts/project-prune.mjs",
-        "scripts/project-ref-guard.mjs",
-        "scripts/install-project-hooks.mjs",
-        "scripts/install-hooks.sh",
+        ".agents/skills/worktree-retirement/SKILL.md",
         ".githooks/reference-transaction",
-        "scripts/project-status.mjs",
-        "scripts/tests/project-prune.test.js",
+        "AGENTS.md",
         "docs/project-management/workflow.md",
         "package.json",
-        "AGENTS.md",
-        ".agents/skills/worktree-retirement/SKILL.md"
+        "scripts/install-hooks.sh",
+        "scripts/install-project-hooks.mjs",
+        "scripts/project-prune.mjs",
+        "scripts/project-ref-guard.mjs",
+        "scripts/project-status.mjs",
+        "scripts/tests/project-prune.test.js",
+        "scripts/tests/project-status.test.js"
       ],
       "requiredChecks": [
         "node --test scripts/tests/*.test.js",
@@ -1451,10 +1490,12 @@
       ],
       "verification": {
         "core": "passed: .runtime/agent/core.json, .runtime/pruning-core-final.log",
-        "tooling": "38 passed, 0 failed, 0 skipped; real Git fixtures include restore-tested removal and adversarial safety checks",
-        "review": "Independent review: both P1 findings fixed with regressions; follow-up no actionable findings",
-        "localInstall": "Shared common-Git hooksPath installed; real map branch dry run blocked, no actual removals"
-      }
+        "tooling": "42 passed, 0 failed, 0 skipped; .runtime/pruning-final42.log",
+        "review": "Independent final review: no findings on maintenance exception or exact-tip source alias support",
+        "localInstall": "Shared common-Git hooksPath installed; real map branch dry run blocked, no actual removals",
+        "liveRetirement": "/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/manifest.json"
+      },
+      "pr": 241
     }
   ]
 }

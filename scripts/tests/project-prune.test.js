@@ -136,3 +136,23 @@ test('shared guard permits verified deletion of a packed branch from a linked ch
  const result=retire({...options(f),root:runner,loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
  assert.equal(result.status,'retired');assert.equal(f.git('-C',runner,'branch','--show-current'),'maintenance');
 });
+
+test('packing refs preserves all logical refs without allowing actual deletion',t=>{
+ const f=fixture(t);f.git('tag','archive/fixture',f.head);
+ const installer=new URL('../install-project-hooks.mjs',import.meta.url).pathname;
+ execFileSync(process.execPath,[installer],{cwd:f.root,stdio:'pipe'});
+ const before=f.git('show-ref');f.git('pack-refs','--all');assert.equal(f.git('show-ref'),before);
+ // An identical loose and packed ref must still require a permit for real deletion.
+ mkdirSync(join(f.root,'.git','refs','heads'),{recursive:true});
+ writeFileSync(join(f.root,'.git','refs','heads','feature'),f.head+'\n');
+ assert.throws(()=>f.git('update-ref','-d','refs/heads/feature',f.head));
+ assert.throws(()=>f.git('update-ref','-d','refs/tags/archive/fixture',f.head));
+ assert.equal(f.git('show-ref'),before);
+});
+
+test('an exact-tip source alias can retire while the task retains its other branch',t=>{
+ const f=fixture(t);f.git('branch','source-alias',f.head);f.task.branches.push('source-alias');f.save();
+ const result=retire({...options(f),branch:'source-alias',loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(result.status,'retired');assert.equal(f.git('rev-parse','feature'),f.head);assert.ok(existsSync(f.checkout));
+ const task=JSON.parse(readFileSync(f.tasksPath)).tasks[0];assert.equal(task.status,'delivered');assert.deepEqual(task.retiredBranches,['source-alias']);
+});

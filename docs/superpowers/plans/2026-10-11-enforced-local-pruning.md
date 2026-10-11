@@ -44,3 +44,27 @@ After correction: 40 tooling tests passed; follow-up safety review confirmed the
 packed-ref fallback remains fail-closed. A subsequent live retry refused a primary
 task-register merge conflict owned by another session. No real refs were removed;
 the verified backup and original branch are preserved pending reconciliation.
+
+## Live acceptance and maintenance compatibility
+
+After the register owner resolved its conflict, the guarded command retired only
+`feat/jev-ride-shortcuts` at `da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b`.
+The ref had no worktree; its old checkout is reused by this task. The primary task
+record is retired. Restore-verified archive manifest:
+`/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/manifest.json`.
+Bundle SHA-256: `eafa024dc6ee235458dbd54dad989a514a7651ff3446a6bf9c4577a8288fd155`.
+No actual worktree directories or remote refs were removed.
+
+A further real-Git check reproduced pack-refs maintenance emitting physical
+loose-copy deletion events. The hook permits these only when loose and packed
+OIDs both match and no packed-refs lock exists. Genuine logical deletion retains
+that lock and still requires a permit. The regression checks maintenance preserves
+all logical refs, while real branch/archive deletion still fails. Independent
+review checked this invariant against Git v2.55 files-backend source; 13 prune
+behavior tests passed. Existing source backups and failure receipts are preserved.
+
+Final local tooling gate: `pnpm run test:agent` — 42 passed, 0 failed/skipped,
+`.runtime/pruning-final42.log`. Exact-tip source aliases are accepted without
+weakening SHA/tree/open-PR checks; regression proves other branches survive and
+multi-branch tasks stay delivered until all refs retire. Independent final review
+reported no findings on either this case or the maintenance exception.

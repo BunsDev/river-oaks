@@ -58,7 +58,7 @@ export function planRetirement({root,branch,expectedHead,register,pulls,activity
   else {
     if(pulls.some(p=>p.state==='open'&&p.head?.ref===branch))block('open-pr');
     const pr=pulls.find(p=>p.number===task?.pr);
-    if(!pr?.merged_at||pr.head?.ref!==branch||pr.head.sha!==head||!pr.merge_commit_sha)block('exact-merged-pr-required');
+    if(!pr?.merged_at||pr.head?.sha!==head||!pr.merge_commit_sha)block('exact-merged-pr-required');
     else {
       const merge=pr.merge_commit_sha;
       if(git(root,['merge-base','--is-ancestor',merge,defaultRef],true)===null)block('merge-not-on-default');
