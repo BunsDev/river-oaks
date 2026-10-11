@@ -1,20 +1,55 @@
 import { STREET, isWalkway, streetSection, joinStreetSegments } from './street-profile.js';
 import { routeSegments, sampleRoute } from './geometry.js';
+import { junctionArms, junctionClearance } from './street-corners.js';
 
 export function createPedestrianNetwork(world) {
-  const segments=[],crossings=[],buckets=new Map(),bucketSize=12;
+  const segments=[],crossings=[],routes=[],buckets=new Map(),bucketSize=12;
   for(const road of world.roads ?? []) {
     const route=routeSegments(road.points);if(!route)continue;
     for(const segment of route.segments) {
       const a=[segment.start[0],-segment.start[2]],b=[segment.end[0],-segment.end[2]],width=road.width_m;
-      const item={a,b,width,road:road.id,walkway:isWalkway(road)};segments.push(item);
+      const item={a,b,width,road:road.id,walkway:isWalkway(road),from:segment.offset,to:segment.offset+segment.span};segments.push(item);
       const padding=width/2+STREET.sidewalkWidth+0.5;
       for(let x=Math.floor((Math.min(a[0],b[0])-padding)/bucketSize);x<=Math.floor((Math.max(a[0],b[0])+padding)/bucketSize);x++)for(let y=Math.floor((Math.min(a[1],b[1])-padding)/bucketSize);y<=Math.floor((Math.max(a[1],b[1])+padding)/bucketSize);y++) {const key=`${x},${y}`;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(item);}
     }
-    if(isWalkway(road))continue;
+    if(!isWalkway(road))routes.push([road,route]);
+  }
+  // A crossing stays clear of every junction on its street, so its ramp lands
+  // beyond the shared corner paving rather than inside another sidewalk.
+  const junctions=new Map();
+  for(const arms of junctionArms(segments))for(const arm of arms) {
+    const other=Math.max(0,...arms.filter(item=>item.segment.road!==arm.segment.road).map(item=>item.segment.width/2));
+    if(!other)continue;
+    if(!junctions.has(arm.segment.road))junctions.set(arm.segment.road,[]);
+    junctions.get(arm.segment.road).push({at:arm.end?arm.segment.to:arm.segment.from,clear:junctionClearance(other)});
+  }
+  // Mapped footways are drawn across the carriageway at plaza height; a
+  // crossing kept clear of them stays visible and does not double up.
+  const walkways=segments.filter(item=>item.walkway);
+  for(const item of segments) {
+    if(item.walkway)continue;
+    const dx=item.b[0]-item.a[0],dy=item.b[1]-item.a[1];
+    for(const walk of walkways) {
+      const ex=walk.b[0]-walk.a[0],ey=walk.b[1]-walk.a[1],denominator=dx*ey-dy*ex;
+      if(Math.abs(denominator)<1e-9)continue;
+      const wx=walk.a[0]-item.a[0],wy=walk.a[1]-item.a[1],t=(wx*ey-wy*ex)/denominator,u=(wx*dy-wy*dx)/denominator;
+      if(t<0||t>1||u<0||u>1)continue;
+      if(!junctions.has(item.road))junctions.set(item.road,[]);
+      junctions.get(item.road).push({at:item.from+(item.to-item.from)*t,clear:walk.width/2+STREET.crossingWidth/2+STREET.flareRun});
+    }
+  }
+  for(const [road,route] of routes) {
+    const nearby=junctions.get(road.id)??[],placed=[];
+    const valid=d=>d>0&&d<route.length&&nearby.every(j=>Math.abs(d-j.at)>=j.clear-1e-9);
+    const place=d=>valid(d)?d:nearby.flatMap(j=>[j.at-j.clear,j.at+j.clear]).filter(valid).sort((x,y)=>Math.abs(x-d)-Math.abs(y-d))[0]??d;
     const distances=route.length<18?[route.length/2]:[6,route.length-6];
     for(let d=35;d<route.length-12;d+=38)distances.push(d);
-    for(const distance of distances){const sample=sampleRoute(route,distance);crossings.push({center:[sample.position[0],-sample.position[2]],direction:[sample.direction[0],-sample.direction[1]],width:road.width_m,road:road.id});}
+    for(const candidate of distances) {
+      const distance=place(candidate);
+      if(placed.some(d=>Math.abs(d-distance)<STREET.crossingWidth+2*STREET.flareRun))continue;
+      placed.push(distance);
+      const sample=sampleRoute(route,distance);crossings.push({center:[sample.position[0],-sample.position[2]],direction:[sample.direction[0],-sample.direction[1]],width:road.width_m,road:road.id});
+    }
   }
   joinStreetSegments(segments);
   const crossingByRoad=new Map();for(const crossing of crossings){if(!crossingByRoad.has(crossing.road))crossingByRoad.set(crossing.road,[]);crossingByRoad.get(crossing.road).push(crossing);}

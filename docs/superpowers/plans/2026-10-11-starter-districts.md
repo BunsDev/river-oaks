@@ -26,3 +26,17 @@ Limits: no human accessibility review, per-template physical traversal acceptanc
 Local integration into the main checkout was verified separately without changing its unrelated staged edits. Val authorized commit and PR creation. Task remains active pending PR review and merge; do not retire this worktree.
 
 Pre-commit verification refreshed and passed in the isolated branch: 23 Studio tests, all 11 core-gate tasks, and World Studio browser acceptance. Logs: `.runtime/pr-studio-tests.log`, `.runtime/pr-core.log`, `.runtime/pr-browser.log`.
+
+## Handoff and main refresh (2026-10-11, session river-oaks-27)
+
+Val directed this session to finish the incomplete work. Cody's lease expired at 16:35Z, and no process was running in this worktree; ownership moved to `claude:river-oaks-27` in the register.
+
+PR #242 conflicted with `main` after #240 (World Studio agent chat) changed `preview/src/studio/main.js` and `studio.css`. The merge keeps both features: both module imports, `pagehide` disposes the template chooser and the agent chat, and both CSS blocks (their selectors do not overlap). Applying a template uses the same `doc.replace()` and `render()` path as **New region**, which already refreshes the agent chat; the chooser is a modal dialog, so the chat is inert while it is open. The register conflict was two entries appended at the same position.
+
+Verification on the merged tree, with dependencies freshly installed from `main`'s lockfile (the worktree previously symlinked the primary checkout's older `node_modules`):
+
+- `node --test preview/tests/studio-*.test.js`: 27 passed, 0 failed.
+- `pnpm run verify`: core passed, all 11 tasks; preview 2623 passed and 1 skipped, server 333 passed and 109 Redis-only skipped, desktop 42 passed. Receipt `.runtime/agent/core.json`, log `.runtime/merge-core.log`.
+- `RIVER_OAKS_E2E_REPORT=merge-world-studio-browser.json pnpm run test:experience world-studio`: passed (`create-transform-undo-save-reopen-pick-export-import-walk`, no page errors). Screenshots of the chooser and an opened template with the agent chat visible were inspected.
+
+Not run: Redis/full profile, human accessibility review, native Electron interaction with the chooser, and a live agent-chat request against a template. Merge requires hosted CI and Val's authorization.

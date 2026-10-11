@@ -82,3 +82,9 @@ or physical-device performance evidence. Screenshots live in
 ## World Designer
 
 The Electron editor now offers dedicated local familiar and general design-agent paths. See [setup, scope and verification](world-studio-designer.md). Remote Cave pairing remains incomplete.
+
+## Agent chat
+
+The **Describe the scene you imagine…** pill opens a side chat with a World Studio
+expert agent that runs through your Claude or Codex CLI. See
+[agent chat](world-studio-agent.md).

@@ -3,6 +3,7 @@ import { terrainHeight } from './geometry.js';
 import { physicalSurface, paverSurface } from './materials.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 import { STREET, isWalkway, streetOffset, streetSection, streetStations, streetPoint, crossingDistance } from './street-profile.js';
+import { streetCorners, cornerMouth } from './street-corners.js';
 
 export function buildRoads(world) {
   const network = createPedestrianNetwork(world);
@@ -22,6 +23,13 @@ export function buildRoads(world) {
           positions.push(x,terrainHeight(world.terrain,x,y)+(walkway ? STREET.plazaOffset + 0.004 : streetOffset(road.width_m,d,crossingDistance(network,road.id,[x,y]))),-y);uvs.push(x,-y);
         }
       }
+    }
+    // Each curb return's mouth: asphalt from where the two asphalt edges meet
+    // out to the gutter band that sidewalks.js lays along the curve.
+    if(!walkway)for(const corner of streetCorners(network.segments,network.crossings)) {
+      const {apex,edge,gutter}=cornerMouth(corner),arm=corner.arms[0];
+      const height=([x,y])=>terrainHeight(world.terrain,x,y)+streetOffset(arm.segment.width,arm.half-gutter,crossingDistance(network,arm.segment.road,[x,y]));
+      for(let i=1;i<edge.length;i++)for(const [x,y] of [apex,edge[i],edge[i-1]]){positions.push(x,height([x,y]),-y);uvs.push(x,-y);}
     }
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geometry.computeVertexNormals();
     const mesh=new THREE.Mesh(geometry,walkway?paverSurface({side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}):asphalt);

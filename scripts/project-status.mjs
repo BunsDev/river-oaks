@@ -77,7 +77,8 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
     const task=tasks.find(t=>t.branches.includes(branch.branch));
     const worktree=snapshot.worktrees.find(w=>w.branch===branch.branch);
     if(!task)gaps.push(`Unregistered branch: ${branch.branch}`);
-    if(task?.status==='retired')gaps.push(`Previously retired branch reappeared: ${branch.branch}`);
+    if(task?.status==='delivered'&&!worktree?.primary&&!['main','master',snapshot.defaultBranch].includes(branch.branch))gaps.push(`Pending local retirement: ${task.id} (${branch.branch}); run project:prune and reconcile blockers`);
+    if(task?.status==='retired'||task?.retiredBranches?.includes(branch.branch))gaps.push(`Previously retired branch reappeared: ${branch.branch}`);
     if(task?.status==='active'&&Date.parse(task.leaseUntil)<=now)gaps.push(`Expired ownership lease: ${task.id}; do not take over without reconciliation`);
     const matchingPRs=(pulls??[]).filter(p=>p.head?.ref===branch.branch);
     if(task?.pr&&pulls!==null){
@@ -98,7 +99,7 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
   return {schemaVersion:1,generatedAt:new Date(now).toISOString(),scope:'Read-only local Git and optional GitHub evidence. Review recommendations require fresh ownership, ignored-data and archive checks.',...snapshot,githubChecked:pulls!==null,tasks,gaps,branches};
 }
 
-function loadPulls(root) {
+export function loadPulls(root) {
   const remote=git(root,['remote','get-url','origin']);
   const match=/^(?:https:\/\/github\.com\/|git@github\.com:)([\w.-]+\/[\w.-]+?)(?:\.git)?$/.exec(remote);
   if(!match)throw new Error('GitHub evidence requires a github.com origin');

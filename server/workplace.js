@@ -4,6 +4,10 @@
 // duplicate runner loses its write instead of finishing a job twice. Work
 // advances in short atomic steps on the service (never in the render loop or
 // the world tick); a timer or the owner's next read can drive the next step.
+// Private text (each brief, draft and receipt) lives in its own `work:` key
+// with an exact expiry, written in the same atomic save as the owner
+// document, which keeps only metadata. An unrelated write therefore never
+// extends how long private text is stored.
 import { createHash, randomUUID } from 'node:crypto';
 import { WORKPLACE_LIMITS, WORKPLACE_PROTOCOL, STATION_IDS, TASK_STEPS, cleanText, validateEventPlan } from '../preview/src/workplace-contract.js';
 
@@ -15,26 +19,44 @@ const sha256 = value => createHash('sha256').update(value).digest('hex');
 const clip = (value, max) => [...String(value)].slice(0, max).join('').trim();
 const empty = () => ({companion: null, grant: null, offer: {state: 'offered', updatedAt: 0}, tasks: [], artifacts: [], notices: [], requests: []});
 
+// `side` lists writes to private keys that land atomically with the document:
+// {key, op: 'set', value, ttlMs}, {key, op: 'expire', ttlMs} or {key, op: 'del'}.
 export function createMemoryWorkplaceStore({now = Date.now} = {}) {
-  const records = new Map();
+  const records = new Map(), values = new Map();
+  const live = key => { const record = values.get(key);return record && record.until > now() ? record : null; };
   return {
     async load(key) {
       const record = records.get(key);
       // An expired document reads as absent but keeps its revision, so a stale writer still loses.
       return record && record.until > now() ? {revision: record.revision, value: JSON.parse(record.doc)} : {revision: record?.revision ?? 0, value: null};
     },
-    async save(key, expectedRevision, value, ttlMs) {
+    async read(key) { const record = live(key);return record ? JSON.parse(record.value) : null; },
+    async save(key, expectedRevision, value, ttlMs, side = []) {
       if ((records.get(key)?.revision ?? 0) !== expectedRevision) return false;
-      records.set(key, {revision: expectedRevision + 1, doc: JSON.stringify(value), until: now() + ttlMs});return true;
+      records.set(key, {revision: expectedRevision + 1, doc: JSON.stringify(value), until: now() + ttlMs});
+      for (const write of side) {
+        if (write.op === 'del' || write.ttlMs <= 0) values.delete(write.key);
+        else if (write.op === 'set') values.set(write.key, {value: JSON.stringify(write.value), until: now() + write.ttlMs});
+        else if (write.op === 'expire' && live(write.key)) values.get(write.key).until = now() + write.ttlMs;
+      }
+      return true;
     },
   };
 }
 
+// Every key shares the `{namespace}` hash tag, so one script can update them together.
 const SAVE = `
 local revision = tonumber(redis.call('HGET', KEYS[1], 'revision') or '0')
 if revision ~= tonumber(ARGV[1]) then return 0 end
 redis.call('HSET', KEYS[1], 'revision', revision + 1, 'doc', ARGV[2])
 redis.call('PEXPIRE', KEYS[1], ARGV[3])
+for i = 2, #KEYS do
+  local base = 3 + (i - 2) * 3
+  local op, value, ttl = ARGV[base + 1], ARGV[base + 2], tonumber(ARGV[base + 3])
+  if op == 'del' or ttl <= 0 then redis.call('DEL', KEYS[i])
+  elseif op == 'set' then redis.call('SET', KEYS[i], value, 'PX', ttl)
+  elseif op == 'expire' then redis.call('PEXPIRE', KEYS[i], ttl) end
+end
 return 1
 `;
 export function createRedisWorkplaceStore({redis, prefix}) {
@@ -45,8 +67,12 @@ export function createRedisWorkplaceStore({redis, prefix}) {
       const [revision, doc] = await redis.hmget(full(key), 'revision', 'doc');
       return doc ? {revision: Number(revision), value: JSON.parse(doc)} : {revision: 0, value: null};
     },
+    async read(key) { const value = await redis.get(full(key));return value ? JSON.parse(value) : null; },
     // Each write extends the document's life; an abandoned owner's data expires with the retention period.
-    async save(key, expectedRevision, value, ttlMs) { return await redis.eval(SAVE, 1, full(key), expectedRevision, JSON.stringify(value), Math.ceil(ttlMs)) === 1; },
+    async save(key, expectedRevision, value, ttlMs, side = []) {
+      const args = side.flatMap(write => [write.op, write.op === 'set' ? JSON.stringify(write.value) : '', write.op === 'del' ? 0 : Math.ceil(write.ttlMs)]);
+      return await redis.eval(SAVE, 1 + side.length, full(key), ...side.map(write => full(write.key)), expectedRevision, JSON.stringify(value), Math.ceil(ttlMs), ...args) === 1;
+    },
   };
 }
 
@@ -91,17 +117,33 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
   schedule = (fn, ms) => { const timer = setTimeout(fn, ms); timer.unref?.(); return timer; }, cancel = clearTimeout} = {}) {
   const limit = {...WORKPLACE_LIMITS, ...limits};
   const ownerKey = userId => `owner:${sha256(userId)}`;
+  const workKey = (userId, taskId) => `work:${sha256(userId)}:${taskId}`;
   const holder = userId => sha256(userId);
   const timers = new Map();let closed = false;
-  async function mutate(key, change, initial = empty, ttlMs = limit.retentionMs) {
+  async function mutate(key, change, initial = empty, ttlMs = limit.retentionMs, sideFor = () => []) {
     for (let tries = 0; tries < 8; tries++) {
       const {revision, value} = await store.load(key);
-      const doc = value ?? initial();
-      const result = change(doc);
+      const doc = value ?? initial(), before = structuredClone(doc);
+      const result = await change(doc);
       if (!result?.write) return result?.value;
-      if (await store.save(key, revision, doc, ttlMs)) return result.value;
+      if (await store.save(key, revision, doc, ttlMs, [...(result.side ?? []), ...sideFor(before, doc, result.side ?? [])])) return result.value;
     }
     return BUSY;
+  }
+  // Every owner-document change keeps the private keys in step: a task that
+  // finished gets the exact expiry of its retention period, and a task that
+  // was dropped has its key deleted in the same save.
+  function mutateOwner(userId, change) {
+    return mutate(ownerKey(userId), change, empty, limit.retentionMs, (before, doc, explicit) => {
+      const t = now(), side = [], touched = new Set(explicit.map(write => write.key)), kept = new Set(doc.tasks.map(task => task.id));
+      for (const task of before.tasks) if (!kept.has(task.id)) side.push({key: workKey(userId, task.id), op: 'del'});
+      for (const task of doc.tasks) {
+        if (ACTIVE.has(task.status) || task.storedUntil) continue;
+        task.storedUntil = task.finishedAt + limit.retentionMs;
+        if (!touched.has(workKey(userId, task.id))) side.push({key: workKey(userId, task.id), op: 'expire', ttlMs: task.storedUntil - t});
+      }
+      return side;
+    });
   }
   const grantActive = (doc, t) => Boolean(doc.grant && !doc.grant.revokedAt && doc.grant.expiresAt > t);
   const activeTask = doc => doc.tasks.find(task => ACTIVE.has(task.status));
@@ -129,7 +171,7 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     return changed;
   }
   // One atomic step of the active task. Returns how long until the next step.
-  function step(doc, t) {
+  async function step(doc, t, userId) {
     const task = activeTask(doc);
     if (!task) return {write: false, value: {waitMs: null}};
     // Checked before the paused case, so a paused task cannot outlive its grant.
@@ -155,7 +197,10 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     if (task.turns > limit.turns || task.toolCalls > limit.toolCalls) {finish(task, 'failed', t, 'budget_exceeded');notify(doc, `failed:${task.id}`, task.id, 'failed', t);return {write: true, value: {waitMs: null}};}
     task.checkpoints.push({step: name, at: t});task.updatedAt = t;task.fence += 1;
     if (name !== 'validating') {task.nextAt = t + stepMs;return {write: true, value: {waitMs: stepMs}};}
-    const plan = fixtureEventPlan(task.brief, task.context.places);
+    // The brief is read under the same compare-and-set: a changed document retries.
+    const work = await store.read(workKey(userId, task.id));
+    if (!work?.brief) {finish(task, 'failed', t, 'brief_expired');notify(doc, `failed:${task.id}`, task.id, 'failed', t);return {write: true, value: {waitMs: null}};}
+    const plan = fixtureEventPlan(work.brief, task.context.places);
     const bytes = plan ? new TextEncoder().encode(JSON.stringify(plan)).length : 0;
     if (!plan || !validateEventPlan(plan)) {finish(task, 'failed', t, plan ? 'invalid_artifact' : 'no_venues');notify(doc, `failed:${task.id}`, task.id, 'failed', t);return {write: true, value: {waitMs: null}};}
     if (doc.artifacts.length >= limit.artifacts || bytes > limit.artifactBytes) {finish(task, 'failed', t, 'artifact_limit');notify(doc, `failed:${task.id}`, task.id, 'failed', t);return {write: true, value: {waitMs: null}};}
@@ -163,19 +208,19 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     const receipt = {taskId: task.id, adapter: 'fixture.event_plan@1', fence: task.fence, grantId: task.grantId, grantRevision: task.grantRevision,
       worldId: task.context.worldId, attempts: task.attempts, steps: task.checkpoints.map(checkpoint => checkpoint.step), turns: task.turns, toolCalls: task.toolCalls,
       tools: ['places.list'], externalWrites: 0, paidCalls: 0, startedAt: task.startedAt, finishedAt: t,
-      briefSha256: sha256(JSON.stringify(task.brief)), planSha256: sha256(JSON.stringify(plan))};
-    doc.artifacts.push({id: artifactId, taskId: task.id, createdAt: t, expiresAt: t + limit.retentionMs, bytes, plan, receipt});
-    finish(task, 'completed', t);task.artifactId = artifactId;
+      briefSha256: sha256(JSON.stringify(work.brief)), planSha256: sha256(JSON.stringify(plan))};
+    doc.artifacts.push({id: artifactId, taskId: task.id, createdAt: t, expiresAt: t + limit.retentionMs, bytes});
+    finish(task, 'completed', t);task.artifactId = artifactId;task.storedUntil = t + limit.retentionMs;
     notify(doc, `result:${task.id}`, task.id, 'result_ready', t);
     if (doc.offer.state === 'accepted') doc.offer = {state: 'plan_ready', updatedAt: t};
-    return {write: true, value: {waitMs: null}};
+    return {write: true, value: {waitMs: null}, side: [{key: workKey(userId, task.id), op: 'set', value: {brief: work.brief, plan, receipt}, ttlMs: task.storedUntil - now()}]};
   }
   async function advance(userId) {
-    return mutate(ownerKey(userId), doc => step(doc, now()));
+    return mutateOwner(userId, doc => step(doc, now(), userId));
   }
   // The owner lost access: revoke the grant, which stops queued, paused and running work.
   async function suspend(userId) {
-    return mutate(ownerKey(userId), doc => {
+    return mutateOwner(userId, doc => {
       const t = now(), active = doc.tasks.filter(task => ACTIVE.has(task.status));
       if (!grantActive(doc, t) && !active.length) return {write: false};
       if (doc.grant && !doc.grant.revokedAt) Object.assign(doc.grant, {revokedAt: t, revision: doc.grant.revision + 1});
@@ -222,10 +267,10 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       return {write: held.length > 0, value: true};
     }, STATIONS, stationTtl());
   }
-  const taskView = task => ({id: task.id, kind: task.kind, status: task.status, reason: task.reason, brief: task.brief,
+  const taskView = (task, work) => ({id: task.id, kind: task.kind, status: task.status, reason: task.reason, brief: work?.brief ?? null,
     step: task.checkpoints.at(-1)?.step ?? null, checkpoints: task.checkpoints, attempts: task.attempts, turns: task.turns, toolCalls: task.toolCalls,
     createdAt: task.createdAt, startedAt: task.startedAt, finishedAt: task.finishedAt, artifactId: task.artifactId});
-  function view(doc, t, stationHeld) {
+  function view(doc, t, stationHeld, works) {
     // The stations document is the authority for which desk is held.
     const presence = doc.companion ? {mode: doc.companion.presence.mode, stationId: stationHeld} : null;
     if (presence?.mode === 'stationed' && !stationHeld) presence.mode = 'accompanying';
@@ -233,28 +278,34 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       companion: doc.companion ? {id: doc.companion.id, name: doc.companion.name, connection: 'fixture', presence} : null,
       grant: doc.grant ? {id: doc.grant.id, revision: doc.grant.revision, scope: doc.grant.scope, reads: ['public places in this world'], writes: [],
         expiresAt: doc.grant.expiresAt, revokedAt: doc.grant.revokedAt, active: grantActive(doc, t)} : null,
-      offer: doc.offer, tasks: doc.tasks.map(taskView),
-      artifacts: doc.artifacts.map(({id: artifactId, taskId, createdAt, expiresAt, bytes, plan}) => ({id: artifactId, taskId, title: plan.title, createdAt, expiresAt, bytes})),
+      offer: doc.offer, tasks: doc.tasks.map(task => taskView(task, works.get(task.id))),
+      // A draft whose private key is gone is no longer listed.
+      artifacts: doc.artifacts.filter(artifact => works.get(artifact.taskId)?.plan)
+        .map(({id: artifactId, taskId, createdAt, expiresAt, bytes}) => ({id: artifactId, taskId, title: works.get(taskId).plan.title, createdAt, expiresAt, bytes})),
       notices: doc.notices.filter(notice => !notice.readAt), limits: {artifacts: limit.artifacts, retentionDays: Math.round(limit.retentionMs / 86_400_000)}};
   }
   async function readState(userId) {
     const t = now();
     // Drive a due step first so a serverless deployment still makes progress.
     const advanced = await advance(userId);
-    const doc = await mutate(ownerKey(userId), doc => ({write: tidy(doc, t), value: doc}));
+    const doc = await mutateOwner(userId, doc => ({write: tidy(doc, t), value: doc}));
     if (advanced === BUSY || doc === BUSY) return BUSY;
+    const works = new Map(await Promise.all(doc.tasks.map(async task => [task.id, await store.read(workKey(userId, task.id))])));
     const map = (await stations()).stations ?? {};
     let held = heldBy(map, userId, t);
     // Reconcile: a desk is held only by a stationed companion.
     if (held && doc.companion?.presence.mode === 'stationed') held = typeof await reserve(userId, t) === 'string' ? held : null;
     else if (held) {await release(userId);held = null;}
     if (advanced?.waitMs != null) drive(userId, advanced.waitMs);
-    return view(doc, t, held);
+    return view(doc, t, held, works);
   }
   const ok = async userId => { const state = await readState(userId);return state === BUSY ? BUSY : {ok: true, state}; };
-  const owner = (actor, change) => mutate(ownerKey(actor.userId), doc => change(doc, now()));
+  const owner = (actor, change) => mutateOwner(actor.userId, doc => change(doc, now()));
   return {
     advance, state: async actor => ok(actor.userId),
+    // Called when the owner is banned or loses waitlist approval. The timer check
+    // alone misses a paused task or an idle grant, which have no timer.
+    suspend: userId => suspend(userId),
     async companion(actor, {name}) {
       const result = await owner(actor, (doc, t) => {
         if (doc.companion) return {write: false, value: {ok: false, reason: 'companion_limit'}};
@@ -308,11 +359,13 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
         if (doc.tasks.filter(task => ACTIVE.has(task.status)).length >= limit.activeTasks) return {write: false, value: {ok: false, reason: 'task_active'}};
         if (doc.artifacts.length >= limit.artifacts) return {write: false, value: {ok: false, reason: 'artifact_limit'}};
         const taskId = id(createId);
-        doc.tasks.push({id: taskId, kind: 'event_plan', status: 'queued', reason: null, brief, context: {worldId: context.worldId, places},
+        doc.tasks.push({id: taskId, kind: 'event_plan', status: 'queued', reason: null, context: {worldId: context.worldId, places},
           grantId: doc.grant.id, grantRevision: doc.grant.revision, fence: 0, attempts: 0, turns: 0, toolCalls: 0, checkpoints: [],
           createdAt: t, updatedAt: t, startedAt: null, finishedAt: null, deadline: null, nextAt: null, artifactId: null});
         doc.requests = [...doc.requests, {requestId, taskId}].slice(-limit.keptTasks);
-        return {write: true, value: {ok: true, taskId, accompanying: doc.companion.presence.mode === 'accompanying'}};
+        // Work in progress is bounded too: an unfinished brief expires with the retention period.
+        return {write: true, value: {ok: true, taskId, accompanying: doc.companion.presence.mode === 'accompanying'},
+          side: [{key: workKey(actor.userId, taskId), op: 'set', value: {brief}, ttlMs: limit.retentionMs}]};
       });
       if (!result.ok) return result;
       // Attendance is optional: with no free station the companion works beside the player.
@@ -341,7 +394,8 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       const t = now();
       const doc = await owner(actor, doc => ({write: false, value: doc}));
       const artifact = doc.artifacts?.find(item => item.id === artifactId && item.expiresAt > t);
-      return artifact ? {ok: true, artifact: {id: artifact.id, taskId: artifact.taskId, createdAt: artifact.createdAt, expiresAt: artifact.expiresAt, plan: artifact.plan, receipt: artifact.receipt}}
+      const work = artifact && await store.read(workKey(actor.userId, artifact.taskId));
+      return work?.plan ? {ok: true, artifact: {id: artifact.id, taskId: artifact.taskId, createdAt: artifact.createdAt, expiresAt: artifact.expiresAt, plan: work.plan, receipt: work.receipt}}
         : {ok: false, reason: 'artifact_missing'};
     },
     async delete(actor, {artifactId}) {
@@ -351,6 +405,18 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
         // Deleting a draft also forgets the brief that produced it.
         doc.artifacts = doc.artifacts.filter(item => item.id !== artifactId);
         forget(doc, new Set([artifact.taskId]));
+        return {write: true, value: {ok: true}};
+      });
+      return result.ok ? ok(actor.userId) : result;
+    },
+    // Forgets one finished task: its brief, any draft, notice and request id.
+    async forget(actor, {taskId}) {
+      const result = await owner(actor, doc => {
+        const task = doc.tasks.find(item => item.id === taskId);
+        if (!task) return {write: false, value: {ok: false, reason: 'task_missing'}};
+        if (ACTIVE.has(task.status)) return {write: false, value: {ok: false, reason: 'task_state'}};
+        doc.artifacts = doc.artifacts.filter(item => item.taskId !== taskId);
+        forget(doc, new Set([taskId]));
         return {write: true, value: {ok: true}};
       });
       return result.ok ? ok(actor.userId) : result;
