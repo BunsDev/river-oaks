@@ -13,9 +13,10 @@ try {
   const marker=join(destination,'.river-oaks-managed');
   if(existsSync(destination)&&!existsSync(marker))throw new Error('Unmanaged hook directory exists; preserve it for review.');
   mkdirSync(destination,{recursive:true});writeFileSync(marker,'1\n');
+  const nodePath="'"+process.execPath.replaceAll("'","'\\''")+"'";
   const files={
     'pre-commit':readFileSync(new URL('../.githooks/pre-commit',import.meta.url)),
-    'reference-transaction':'#!/bin/sh\nset -eu\nexec node "$(dirname "$0")/project-ref-guard.mjs" "$@"\n',
+    'reference-transaction':readFileSync(new URL('../.githooks/reference-transaction',import.meta.url),'utf8').replace("installed_node=''",()=>`installed_node=${nodePath}`),
     'project-ref-guard.mjs':readFileSync(new URL('./project-ref-guard.mjs',import.meta.url)),
   };
   for(const [name,contents] of Object.entries(files)){

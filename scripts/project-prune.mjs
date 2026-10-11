@@ -10,7 +10,7 @@ import { loadPulls, validateTasks } from './project-status.mjs';
 
 function git(root,args,optional=false) {
   try { return execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],env:{...process.env,GIT_TERMINAL_PROMPT:'0'}}).trimEnd(); }
-  catch(error) { if(optional)return null;throw new Error(`git ${args[0]} failed (${error.status??'unavailable'})`); }
+  catch(error) { if(optional)return null;throw new Error(`git ${args[0]} failed (${error.status??'unavailable'})`,{cause:error}); }
 }
 const shellQuote=value=>"'"+value.replaceAll("'","'\\''")+"'";
 const canonical=path=>existsSync(path)?realpathSync(path):join(canonical(dirname(resolve(path))),basename(path));

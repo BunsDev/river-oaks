@@ -29,3 +29,18 @@ Branch: `chore/enforced-local-pruning`. Reused owned ride-shortcuts checkout; no
 Git cannot intercept raw worktree removal or registration pruning; agents must use the supported command. Hooks prevent accidental ref deletion, not intentional configuration overrides. Older bootstrap scripts can override hooksPath. Unknown ownership, ignored evidence, submodules and differing aggregate trees require reconciliation. Task register is advisory coordination; the common lock serializes this tool, not arbitrary noncooperating Git/filesystem writers.
 
 No browser, Redis, native or live-auth checks added for this local tooling change. Latest-main integration (`62ba3db`) passed 20 focused paver/prune tests. The pending-retirement gate passed a red/green behavior regression; final tooling suite: 39 passed. Final prune/status behavior suite: 20 passed, including a restore command using a path with spaces, quotes and shell metacharacters. Hosted CI and delivery remain pending. Preserve this checkout and all task archives until exact delivery and retirement proof are recorded.
+
+## Packed-ref production check
+
+The first live application to the already-delivered `feat/jev-ride-shortcuts` branch
+created an external restore-verified bundle but correctly stopped at ref deletion.
+Git reports zero as the old OID for packed-ref deletion; the hook now resolves the
+current ref and still compares the exact permitted SHA. A real linked-worktree
+regression proves a wrong permit fails and a correct verified retirement succeeds.
+The shared wrapper retains GUI Node discovery and records the installer's Node
+path so nonstandard Node installations work without a shell PATH.
+
+After correction: 40 tooling tests passed; follow-up safety review confirmed the
+packed-ref fallback remains fail-closed. A subsequent live retry refused a primary
+task-register merge conflict owned by another session. No real refs were removed;
+the verified backup and original branch are preserved pending reconciliation.

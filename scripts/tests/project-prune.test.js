@@ -121,3 +121,18 @@ test('missing or expired deletion permits fail closed',t=>{
    assert.equal(f.git('rev-parse','spare'),f.merge);
  }
 });
+
+test('shared guard permits verified deletion of a packed branch from a linked checkout',t=>{
+ const f=fixture(t);f.git('pack-refs','--all');
+ const runner=join(f.root,'..','runner');f.git('worktree','add','-b','maintenance',runner);
+ const installer=new URL('../install-project-hooks.mjs',import.meta.url).pathname;
+ execFileSync(process.execPath,[installer],{cwd:runner,stdio:'pipe'});
+ const lock=join(f.root,'.git','river-oaks-retirement.lock');mkdirSync(lock);
+ writeFileSync(join(lock,'permit.json'),JSON.stringify({branch:'feature',head:f.merge,expiresAt:Date.now()+60_000}));
+ assert.throws(()=>f.git('update-ref','-d','refs/heads/feature',f.head));assert.equal(f.git('rev-parse','feature'),f.head);
+ rmSync(lock,{recursive:true});
+ execFileSync('/bin/sh',[join(f.git('config','core.hooksPath'),'reference-transaction'),'aborted'],{cwd:runner,env:{...process.env,PATH:'/usr/bin:/bin'},stdio:'pipe'});
+
+ const result=retire({...options(f),root:runner,loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(result.status,'retired');assert.equal(f.git('-C',runner,'branch','--show-current'),'maintenance');
+});
