@@ -53,6 +53,12 @@ billed.
   runners reject an unknown name. That shows the arguments reach them.
 - The PR's own run uses this workflow, because `pull_request` runs read the PR's
   merge commit. That run is the acceptance test.
+- Acceptance: PR run 38165724820 at `96e31bb` passed every job. Wall time was 5 min
+  48 s, against 23.5 min for the single job on `main`. Shard durations: shared
+  `worlds-and-creator` 4:14, `development` 4:41, `required` 4:56; experience
+  `streets` 5:04, `places` 5:42; checks 5:08; then `preview` itself in 2 s. GitHub
+  counts `preview` as the required context on the PR.
+- `river-oaks-c2` reviewed `96e31bb`: no findings.
 
 ## Next
 
