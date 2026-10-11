@@ -1,0 +1,122 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { planRetirement, retire } from '../project-prune.mjs';
+
+function fixture(t) {
+  const base=mkdtempSync(join(tmpdir(),'river-prune-'));
+  t.after(()=>rmSync(base,{recursive:true,force:true}));
+  const root=join(base,'repo'), checkout=join(base,'feature'); mkdirSync(root);
+  const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  git('init','-b','main');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid');
+  writeFileSync(join(root,'file'),'base');writeFileSync(join(root,'.gitignore'),'.runtime/\n');git('add','.');git('commit','-m','base');
+  git('worktree','add','-b','feature',checkout);
+  writeFileSync(join(checkout,'file'),'delivered');git('-C',checkout,'commit','-am','feature');
+  const head=git('rev-parse','feature');git('merge','--squash','feature');git('commit','-m','squash');
+  const merge=git('rev-parse','main');git('update-ref','refs/remotes/origin/main',merge);
+  const task={id:'fixture',status:'delivered',owner:null,branches:['feature'],pr:1,evidence:[{reviewedHead:head,merge}],retirement:{head,sessionsReviewedAt:new Date().toISOString(),releasedAt:new Date().toISOString()}};
+  const pulls=[{number:1,state:'closed',merged_at:new Date().toISOString(),merge_commit_sha:merge,head:{ref:'feature',sha:head}}];
+  const register={schemaVersion:1,tasks:[task]};const tasksPath=join(root,'tasks.json');
+  const save=()=>writeFileSync(tasksPath,JSON.stringify(register)); save();
+  return {root,checkout,git,head,merge,task,pulls,register,tasksPath,save,archiveRoot:join(base,'archives'),activity:{available:true,paths:[]}};
+}
+const options=f=>({...f,branch:'feature',expectedHead:f.head});
+test('dry-run accepts fully proved squash delivery without changing refs or worktrees',t=>{
+ const f=fixture(t);const p=planRetirement(options(f));assert.deepEqual(p.blockers,[]);assert.equal(f.git('rev-parse','feature'),f.head);assert.ok(existsSync(f.checkout));
+});
+test('fails closed for ownership, activity, ignored evidence, dirty files, locks and unknown remote',t=>{
+ const f=fixture(t);const run=()=>planRetirement(options(f)).blockers;
+ f.task.owner='session';assert.ok(run().includes('ownership-not-released'));f.task.owner=null;
+ f.task.retirement.head='0'.repeat(40);assert.ok(run().includes('session-release-missing-or-stale'));f.task.retirement.head=f.head;
+ f.activity.available=false;assert.ok(run().includes('activity-unknown'));f.activity.available=true;
+ f.activity.paths=[join(f.checkout,'nested')];assert.ok(run().includes('active-process'));f.activity.paths=[];
+ mkdirSync(join(f.checkout,'.runtime'));writeFileSync(join(f.checkout,'.runtime','receipt'),'preserve');assert.ok(run().includes('ignored-data'));rmSync(join(f.checkout,'.runtime'),{recursive:true});
+ writeFileSync(join(f.checkout,'draft'),'preserve');assert.ok(run().includes('dirty'));rmSync(join(f.checkout,'draft'));
+ f.git('worktree','lock',f.checkout);assert.ok(run().includes('locked'));f.git('worktree','unlock',f.checkout);
+ f.pulls=null;assert.ok(run().includes('github-unknown'));
+});
+test('rejects wrong head, default branch, open PR and extra undelivered work',t=>{
+ const f=fixture(t);assert.ok(planRetirement({...options(f),expectedHead:'0'.repeat(40)}).blockers.includes('head-changed'));
+ assert.ok(planRetirement({...options(f),branch:'main'}).blockers.includes('protected-branch'));
+ f.pulls.push({state:'open',head:{ref:'feature',sha:f.head}});assert.ok(planRetirement(options(f)).blockers.includes('open-pr'));f.pulls.pop();
+ writeFileSync(join(f.checkout,'file'),'extra');f.git('-C',f.checkout,'commit','-am','extra');assert.ok(planRetirement(options(f)).blockers.includes('head-changed'));
+});
+test('apply restore-tests exact-tip bundle, removes only selected ref and records restoration',t=>{
+ const f=fixture(t);const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(existsSync(f.checkout),false);assert.throws(()=>f.git('rev-parse','--verify','refs/heads/feature'));
+ const saved=JSON.parse(readFileSync(f.tasksPath));assert.equal(saved.tasks[0].status,'retired');
+ assert.ok(existsSync(result.bundle));assert.equal(f.git('rev-parse',result.tag),f.head);
+ const restored=join(f.archiveRoot,'recovery');f.git('init','--bare',restored);f.git('-C',restored,'fetch',result.bundle,`${result.tag}:refs/heads/recovered`);assert.equal(f.git('-C',restored,'rev-parse','recovered'),f.head);
+});
+test('changed ownership after archive prevents removal',t=>{
+ const f=fixture(t);let calls=0;
+ assert.throws(()=>retire({...options(f),loadEvidence:()=>{calls++;if(calls===2) f.task.owner='resumed';return {register:f.register,pulls:f.pulls,activity:f.activity};}}),/ownership-not-released/);
+ assert.ok(existsSync(f.checkout));assert.equal(f.git('rev-parse','feature'),f.head);
+});
+
+test('installed reference hook blocks direct branch deletion but permits verified retirement',t=>{
+ const f=fixture(t);
+ const hooks=join(f.root,'hooks');mkdirSync(hooks);
+ const modulePath=new URL('../project-ref-guard.mjs',import.meta.url).pathname;
+ writeFileSync(join(hooks,'reference-transaction'),`#!/bin/sh\nexec node '${modulePath.replaceAll("'","'\\''")}' "$@"\n`,{mode:0o755});
+ f.git('config','core.hooksPath',hooks);
+ assert.throws(()=>f.git('branch','-D','feature'));
+ // A branch without a worktree proves the rejection is from the hook, not Git's checkout guard.
+ f.git('branch','spare');assert.throws(()=>f.git('update-ref','-d','refs/heads/spare',f.git('rev-parse','spare')));
+ const result=retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+ assert.equal(result.status,'retired');assert.equal(f.git('rev-parse','spare'),f.merge);
+ assert.throws(()=>f.git('update-ref','-d',result.tag,f.head));
+});
+
+test('a checkout switching branches during final recheck is preserved',t=>{
+ const f=fixture(t);let calls=0;
+ assert.throws(()=>retire({...options(f),loadEvidence:()=>{
+   if(++calls===3)f.git('-C',f.checkout,'switch','-c','other-task');
+   return {register:f.register,pulls:f.pulls,activity:f.activity};
+ }}),/registrations changed/);
+ assert.ok(existsSync(f.checkout));assert.equal(f.git('-C',f.checkout,'branch','--show-current'),'other-task');
+ assert.equal(f.git('rev-parse','feature'),f.head);
+});
+
+test('new checkout appearing before ref deletion is preserved',t=>{
+ const f=fixture(t);f.git('worktree','remove',f.checkout);let calls=0;
+ assert.throws(()=>retire({...options(f),loadEvidence:()=>{
+   if(++calls===3)f.git('worktree','add',f.checkout,'feature');
+   return {register:f.register,pulls:f.pulls,activity:f.activity};
+ }}),/registrations changed|still checked out/);
+ assert.ok(existsSync(f.checkout));assert.equal(f.git('rev-parse','feature'),f.head);
+});
+
+test('hidden tracked edits under skip-worktree and assume-unchanged are preserved',t=>{
+ const f=fixture(t);
+ for(const flag of ['skip-worktree','assume-unchanged']) {
+   f.git('-C',f.checkout,'update-index',`--${flag}`,'file');writeFileSync(join(f.checkout,'file'),'uncommitted hidden work');
+   assert.ok(planRetirement(options(f)).blockers.includes('index-flags-require-review'));
+   assert.throws(()=>retire({...options(f),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})}),/index-flags/);
+   assert.equal(readFileSync(join(f.checkout,'file'),'utf8'),'uncommitted hidden work');
+   writeFileSync(join(f.checkout,'file'),'delivered');f.git('-C',f.checkout,'update-index',`--no-${flag}`,'file');
+ }
+});
+
+test('hook installation is shared across checkouts and preserves custom hooks',t=>{
+ const f=fixture(t);const installer=new URL('../install-project-hooks.mjs',import.meta.url).pathname;
+ execFileSync(process.execPath,[installer],{cwd:f.root,stdio:'pipe'});
+ const installed=f.git('config','core.hooksPath');assert.ok(installed.includes('river-oaks-hooks'));
+ f.git('branch','spare');assert.throws(()=>f.git('-C',f.checkout,'update-ref','-d','refs/heads/spare',f.merge));
+ execFileSync(process.execPath,[installer],{cwd:f.checkout,stdio:'pipe'});assert.equal(f.git('config','core.hooksPath'),installed);
+ f.git('config','core.hooksPath','custom-hooks');assert.throws(()=>execFileSync(process.execPath,[installer],{cwd:f.root,stdio:'pipe'}));assert.equal(f.git('config','core.hooksPath'),'custom-hooks');
+});
+
+test('missing or expired deletion permits fail closed',t=>{
+ const f=fixture(t);const installer=new URL('../install-project-hooks.mjs',import.meta.url).pathname;
+ execFileSync(process.execPath,[installer],{cwd:f.root,stdio:'pipe'});f.git('branch','spare');
+ const lock=join(f.root,'.git','river-oaks-retirement.lock');mkdirSync(lock);
+ for(const expiresAt of [undefined,null,Date.now()-1,Date.now()+120_000]) {
+   writeFileSync(join(lock,'permit.json'),JSON.stringify({branch:'spare',head:f.merge,expiresAt}));
+   assert.throws(()=>f.git('update-ref','-d','refs/heads/spare',f.merge));
+   assert.equal(f.git('rev-parse','spare'),f.merge);
+ }
+});

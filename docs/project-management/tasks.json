@@ -1419,6 +1419,42 @@
         "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
       },
       "pr": 229
+    },
+    {
+      "id": "enforced-local-pruning",
+      "title": "Enforce safe local branch and worktree retirement",
+      "status": "active",
+      "branches": [
+        "chore/enforced-local-pruning"
+      ],
+      "owner": "codex-local-pruning-20261011",
+      "leaseUntil": "2026-10-11T15:06:11.739617+00:00",
+      "updatedAt": "2026-10-11T13:17:09.088690+00:00",
+      "nextAction": "Commit/push reviewed implementation, pass hosted checks, merge; all real candidates preserved.",
+      "ledger": "docs/superpowers/plans/2026-10-11-enforced-local-pruning.md",
+      "filesOwned": [
+        "scripts/project-prune.mjs",
+        "scripts/project-ref-guard.mjs",
+        "scripts/install-project-hooks.mjs",
+        "scripts/install-hooks.sh",
+        ".githooks/reference-transaction",
+        "scripts/project-status.mjs",
+        "scripts/tests/project-prune.test.js",
+        "docs/project-management/workflow.md",
+        "package.json",
+        "AGENTS.md",
+        ".agents/skills/worktree-retirement/SKILL.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/*.test.js",
+        "pnpm run verify"
+      ],
+      "verification": {
+        "core": "passed: .runtime/agent/core.json, .runtime/pruning-core-final.log",
+        "tooling": "38 passed, 0 failed, 0 skipped; real Git fixtures include restore-tested removal and adversarial safety checks",
+        "review": "Independent review: both P1 findings fixed with regressions; follow-up no actionable findings",
+        "localInstall": "Shared common-Git hooksPath installed; real map branch dry run blocked, no actual removals"
+      }
     }
   ]
 }

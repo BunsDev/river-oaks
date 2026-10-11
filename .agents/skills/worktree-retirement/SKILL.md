@@ -28,12 +28,17 @@ local evidence archives, verified by hashes, separately from disposable generate
 caches. Do not print secrets, follow dependency symlinks for deletion, or overwrite
 archives. Keep restore commands and checksums in the manifest.
 
-Immediately before each mutation re-read all registrations, SHA, status including
-untracked/submodules, locks, and ownership. Any change means skip and reconcile.
-Use only non-forced `git worktree remove`; after removal, recheck no checkout owns
-the branch. Prefer `git branch -d`; for proven and restore-tested archive-backed
-refs use expected-SHA `git update-ref -d`. Never use `branch -D`, force removal,
-recursive directory deletion, or move branch tips to manufacture merge ancestry.
+Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` for a
+fresh dry run, and add `--apply` only for the authorized candidate. The command
+reads the primary task register, requires a fresh exact-head session release,
+restore-tests its own backup, rechecks each mutation and records postconditions.
+Run from a checkout outside the removal target. Reconcile blockers; never bypass
+the reference-transaction hook or directly remove a worktree to evade checks.
+
+The automated path intentionally preserves aggregate-tree mismatches, ignored
+material, submodules and hidden-index flags. Retain local evidence separately and
+resolve the precise blocker before rerunning; do not suppress a guard merely
+because a branch has a merged PR. Existing archives remain protected.
 
 Record each removal/skip and verify its postconditions. Recount live state, including
 concurrent new worktrees. Mark only the removed task refs retired; keep dirty or

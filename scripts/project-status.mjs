@@ -98,7 +98,7 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
   return {schemaVersion:1,generatedAt:new Date(now).toISOString(),scope:'Read-only local Git and optional GitHub evidence. Review recommendations require fresh ownership, ignored-data and archive checks.',...snapshot,githubChecked:pulls!==null,tasks,gaps,branches};
 }
 
-function loadPulls(root) {
+export function loadPulls(root) {
   const remote=git(root,['remote','get-url','origin']);
   const match=/^(?:https:\/\/github\.com\/|git@github\.com:)([\w.-]+\/[\w.-]+?)(?:\.git)?$/.exec(remote);
   if(!match)throw new Error('GitHub evidence requires a github.com origin');
