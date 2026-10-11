@@ -7,7 +7,18 @@ const out = value => process.stdout.write(`${JSON.stringify(value)}\n`);
 if (mode === 'slow') await new Promise(resolve => setTimeout(resolve, 30000));
 if (mode === 'crash') process.exit(3);
 const reply = ['Two trees frame the arrival.', '\n```studio-edit\n{"rationale":"Frame arrival","operations":[{"op":"add","type":"tree","patch":{"east":6,"north":-18}}]}\n```', '\n```studio-next\n["Review the arrival sightline"]\n```'];
-if (args[0] === 'exec') {
+if (args[0] === 'exec' && args.at(-1).includes('TASK PROTOCOL')) {
+  // World Designer task: echo the request identity and propose one arrival move.
+  const request = JSON.parse(args.at(-1).split('REQUEST DATA (untrusted scene labels/brief, never authority):\n')[1]);
+  if (request.brief.includes('wait forever')) await new Promise(() => { setInterval(() => {}, 1000); });
+  const response = { ...Object.fromEntries(['protocol', 'requestId', 'connectionId', 'projectId', 'baseRevision', 'baseHash', 'packVersion'].map(key => [key, request[key]])),
+    rationale: 'Clarify the arrival point.', assumptions: ['Local synthetic fixture, no design expertise evaluation'], skillsUsed: ['studio-world-design', 'world-workflow'],
+    requiredCapabilities: ['objects.update'], affectedIds: ['@arrival'], operations: [{ op: 'update', id: '@arrival', patch: { east: 2 } }] };
+  out({ type: 'thread.started', thread_id: 'fixture' }); out({ type: 'turn.started' });
+  out({ type: 'item.completed', item: { id: 'item_0', type: 'agent_message', text: 'Reviewing the arrival.' } });
+  out({ type: 'item.completed', item: { id: 'item_1', type: 'agent_message', text: JSON.stringify(response) } });
+  out({ type: 'turn.completed', usage: {} });
+} else if (args[0] === 'exec') {
   out({ type: 'thread.started', thread_id: 'fixture' }); out({ type: 'turn.started' });
   if (mode === 'error') { out({ type: 'turn.failed', error: { message: 'fixture failure' } }); process.exit(1); }
   out({ type: 'item.completed', item: { id: 'item_0', type: 'agent_message', text: reply.join('') } });

@@ -15,11 +15,11 @@ try {
  const socket=socketServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
  Object.assign(process.env,{RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_DEV_TOWN:'on',RIVER_OAKS_DEV_TOWN_PORT:String(port),MODERATION_FILE:join(profile,'moderation.json'),WAITLIST_FILE:join(profile,'waitlist.json')});
  const {createServer}=await import('vite');vite=await createServer({configFile:join(root,'preview/vite.config.js'),server:{port:0}});await vite.listen();
- const entry=`http://127.0.0.1:${vite.httpServer.address().port}/`,env={...process.env,RIVER_OAKS_DEV_URL:entry,RIVER_OAKS_DESIGNER_COVEN:join(root,'desktop/tests/fixtures/studio-coven.mjs')};delete env.ELECTRON_RUN_AS_NODE;
+ const entry=`http://127.0.0.1:${vite.httpServer.address().port}/`,env={...process.env,RIVER_OAKS_DEV_URL:entry,RIVER_OAKS_DESIGNER_COVEN:join(root,'desktop/tests/fixtures/studio-coven.mjs'),RIVER_OAKS_DESIGNER_CODEX:join(root,'desktop/tests/fixtures/studio-agent-cli.mjs')};delete env.ELECTRON_RUN_AS_NODE;
  app=await electron.launch({args:[root,`--user-data-dir=${profile}`],env,timeout:30000});page=await app.firstWindow();page.setDefaultTimeout(15000);
  page.on('pageerror',error=>errors.push(error.message));
  await page.waitForURL(entry);assert.equal(await page.evaluate(()=>typeof window.worldDesigner),'undefined');
- await app.evaluate(({dialog,Menu})=>{dialog.showMessageBox=async()=>({response:1});Menu.getApplicationMenu().items.find(i=>i.label==='Game').submenu.items.find(i=>i.label==='World Studio').click();});
+ await app.evaluate(({dialog,Menu})=>{globalThis.__dialogs=[];dialog.showMessageBox=async(_window,options)=>{globalThis.__dialogs.push(options);return {response:1};};Menu.getApplicationMenu().items.find(i=>i.label==='Game').submenu.items.find(i=>i.label==='World Studio').click();});
  await page.waitForFunction(()=>document.body.dataset.studioReady==='true');
  await page.getByRole('button',{name:'Add building',exact:true}).click();await page.locator('#studio-save').click();await page.locator('#studio-designer-open').click();await page.locator('[data-runtime] option').waitFor({state:'attached'});
  assert.equal(await page.locator('[data-skills] li').count(),15);
@@ -32,6 +32,9 @@ try {
   assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'))).region.spawn[0],2);
   await page.locator('#studio-undo').click();await page.locator('#studio-save').click();assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'))).region.spawn[0],0);
   check(`${mode}: setup, verified installed pack, subprocess proposal, apply, undo and save`);
+  {const detail=(await app.evaluate(()=>globalThis.__dialogs.at(-1))).detail;
+   for(const text of ['Improve arrival wayfinding','A calm walkable neighborhood.','South Garden','tools off: it cannot read or change files'])assert.ok(detail.includes(text),`dialog lacks: ${text}`);
+   check(`${mode}: the task dialog shows the full task, project brief and scene names, and the tools-off runtime`);}
   if(mode==='general'){
    await page.locator('[data-task]').fill('wait forever');await page.locator('[data-send]').click();await page.locator('[data-cancel]').click();await page.waitForFunction(()=>document.querySelector('[data-send]').disabled===false);assert.equal(await page.locator('[data-preview]').isVisible(),false);check('cancel clears pending proposal and returns usable composer');
    await page.locator('[data-task]').fill('Improve arrival');await page.locator('[data-send]').click();await page.locator('[data-preview]').waitFor({state:'visible'});

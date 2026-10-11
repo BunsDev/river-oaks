@@ -31,6 +31,15 @@ try {
  const unattended=await page.evaluate(()=>new Promise(resolve=>setTimeout(()=>window.studioAgent.send({chatId:'c',requestId:'r',providerId:'claude',modelId:'claude-haiku-5-5',mode:'ask',message:'hi',context:null}).then(()=>resolve('sent'),error=>resolve(error.message)),5500)));
  assert.match(unattended,/click or key press/);
  check('a send without a recent user gesture is refused before reaching the host');
+ // A blocked navigation must not switch the bridges off (did-start-navigation fires before will-navigate).
+ await page.evaluate(()=>{location.href='https://example.invalid/';});await page.waitForTimeout(500);
+ assert.equal(new URL(page.url()).pathname,'/studio.html');
+ assert.equal((await page.evaluate(()=>window.studioAgent.catalog())).providers.length,2);
+ check('a blocked navigation leaves Studio and its bridges working');
+ // Main checks the sender URL itself: a Studio page that pushState-renames itself loses access until it returns.
+ assert.match(await page.evaluate(async()=>{history.pushState(null,'','/play');try{await window.studioAgent.catalog();return 'allowed';}catch(error){return error.message;}}),/limited/);
+ assert.equal((await page.evaluate(async()=>{history.pushState(null,'','/studio.html');return (await window.studioAgent.catalog()).providers.length;})),2);
+ check('main refuses a Studio document renamed with pushState, end to end');
  const before=await count();
  await page.getByLabel('Ask the World Studio agent').fill('Frame the arrival with trees');await page.getByLabel('Ask the World Studio agent').press('Enter');
  await page.getByRole('button',{name:'Apply as one edit'}).waitFor();
@@ -47,6 +56,15 @@ try {
  assert.equal(calls.length,2);assert.equal(calls[0][0],'-p');assert.equal(calls[1][0],'exec');assert.match(calls[1].at(-1),/CONVERSATION SO FAR:\nUSER: Frame the arrival/);
  assert.equal(await app.evaluate(()=>globalThis.__agentConsents),2);
  check('host ran each fixed CLI once, kept chat history, and asked consent once per provider');
+ // One click fanning out into many sends still runs the CLI only once.
+ await page.evaluate(()=>{const button=document.createElement('button');button.id='burst';button.textContent='burst';button.style.cssText='position:fixed;top:0;left:0;z-index:99';
+  button.onclick=()=>{window.__burst=Promise.allSettled(Array.from({length:12},(_,i)=>window.studioAgent.send({chatId:`burst-${i}`,requestId:`burst-r${i}`,providerId:'claude',modelId:'claude-haiku-5-5',mode:'ask',message:'hi',context:null})))
+   .then(results=>results.filter(r=>r.status==='fulfilled').length);};document.body.append(button);});
+ await page.locator('#burst').click();const accepted=await page.evaluate(()=>window.__burst);
+ const after=(await readFile(log,'utf8')).trim().split('\n').length;
+ assert.equal(accepted,1);assert.equal(after,calls.length+1);
+ await page.evaluate(()=>document.querySelector('#burst').remove());
+ check('a burst of sends from one click runs the CLI once');
  await page.getByRole('button',{name:'New chat'}).click();assert.equal(await page.locator('.studio-agent-msg').count(),0);
  await page.locator('.studio-agent').press('Escape');assert.equal(await page.locator('.studio-agent').getAttribute('data-open'),'false');
  check('new chat clears the log and Escape collapses to the pill');

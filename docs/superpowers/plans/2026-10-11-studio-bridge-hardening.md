@@ -5,54 +5,64 @@ read-only audit of main (`ee7d8d6`) rated HIGH for the World Designer bridge. Th
 same class applies to the agent-chat bridge merged in #240 (`a9cfe01`).
 
 **Branch / worktree:** `fix/studio-bridge-hardening` in
-`../river-oaks-bridge-hardening-20261011`, from `a9cfe01`. c2 handed the
-`desktop/` bridge files to this task and stays in `server/`, `middleware.js` and
-`vercel.json`.
+`../river-oaks-bridge-hardening-20261011` (PR #243). c2 handed the `desktop/`
+bridge files to this task and stays in `server/`, `middleware.js` and
+`vercel.json`. Val chose (2026-10-11) to run World Designer tasks on the tool-less
+Codex path instead of `coven run`.
 
-## Findings and dispositions
+## Audit findings and dispositions
 
 | # | Finding | Disposition |
 | --- | --- | --- |
-| 1 | Designer: the whole renderer request went into the Codex prompt, the dialog showed only the task, and the agent's JSON returned unfiltered. | **Fixed.** The prompt is rebuilt from allowlisted fields and a sanitized scene. The dialog shows the task, project brief, scope and object count. The page gets back only allowlisted, length-capped proposal fields, with echo fields checked against the request. |
-| 1b | Designer: Coven's read-only Codex can still read any file. | **Open, disclosed.** `coven run` cannot pass Codex feature flags. The dialog and docs say so. Closing it needs a tool-less Coven mode (upstream). |
-| 1c | Agent chat (#240): Codex `--sandbox read-only` read `/etc/shells` and returned it (probe 2026-10-11). | **Fixed.** `--ignore-user-config --ignore-rules` plus disabled shell, exec, sub-agent, app, plugin, browser and computer-use features. A live adversarial probe through the host answered CANNOT. Verified on codex-cli 0.162.1. |
-| 1d | Agent chat: arbitrary renderer context, uncapped replies, unlimited sends. | **Fixed.** Allowlisted scene context with hidden characters stripped, 64 KiB reply cap (streamed deltas too), and 20 sends per 10 minutes. |
-| 1e | Claude CLI injects the account email even with `--setting-sources ''`. | **Open, disclosed.** `--bare` removes it but breaks subscription sign-in. CLAUDE.md is not loaded (probe). Slash commands are now disabled. |
-| 1f | Page script could start agent work with no user present. | **Mitigated.** The preload requires `navigator.userActivation.isActive` for designer connect and request and for agent send. The E2E confirms a call 5.5 s after load is refused. |
-| 2 | Sender check read `senderFrame.url`, which pushState can change, and the preload was exposed on `/play`. | **Fixed.** The preload exposes both bridges only at a Studio path. Main records the committed main-frame URL (`did-navigate`, reset on non-in-page navigation) and requires both it and the sender URL to be Studio. |
-| 3 | `coven help --all` ran before consent. | **Fixed.** Consent comes first, and declined consent runs nothing (test). |
-| 4 | Found while hardening: `desktop/package.js` copied an explicit file list that #240 did not extend. A packaged build from `a9cfe01` would fail at startup, because `main.js` imports `studio-agent-host.js`. Dev mode and every test use the source tree, so nothing caught it. | **Fixed.** The list moved to `desktop/package-files.js` and gained the agent host, guide and scene-context modules. `desktop/tests/package-files.test.js` walks `main.js`'s relative imports, and fails on #240's list (checked). |
+| 1 | Designer: the whole renderer request went into the prompt, the dialog showed only the task, and the agent's JSON returned unfiltered. Coven's read-only Codex could read any file. | **Fixed.** Tasks run on tool-less `codex exec` (`desktop/studio-codex.js`), with Coven kept for setup, ledger and readiness. The prompt is rebuilt from allowlisted fields. The dialog shows the full normalized task, brief, scope and every scene name, exactly as sent. Replies with extra fields are refused, and only bounded proposal fields return. |
+| 1c | Agent chat (#240): Codex `--sandbox read-only` read `/etc/shells` and returned it (probe). | **Fixed.** Same tool-less invocation, with web search also off. A live adversarial probe through the host answered CANNOT. Verified on codex-cli 0.162.1. |
+| 1d | Agent chat: arbitrary renderer context, uncapped replies, unlimited sends. | **Fixed.** Allowlisted scene context, a 64 KiB UTF-8 cap (streamed too), one reply at a time across chats, and 20 sends per 10 minutes. |
+| 1e | CLI-injected context: Claude adds the account email; Codex loads the global `~/.codex/AGENTS.md`, even with `--ignore-user-config` and `project_doc_max_bytes=0` (probes). Both see the workspace path, which contains the account name. | **Open, disclosed** in both consent dialogs and the docs. Removing them needs `--bare` (breaks subscription sign-in) or a separate `CODEX_HOME` (would copy credentials). |
+| 1f | Page script could start agent work unattended. | **Mitigated.** The preload requires `navigator.userActivation.isActive`. The E2E shows a send 5.5 s after load is refused. |
+| 2 | Sender check read `senderFrame.url`, which pushState can change, and the preload was exposed on `/play`. | **Fixed.** Bridges are exposed only at Studio paths. Main records the committed URL from `did-navigate` and requires both it and the sender URL. |
+| 3 | `coven help --all` ran before consent, with the full environment. | **Fixed.** It runs after consent, with only `PATH` and `HOME`. |
+| 4 | Found while hardening: #240's agent modules were missing from `desktop/package.js`, so a packaged build would fail at startup. | **Fixed.** The list lives in `desktop/package-files.js`, and `package-files.test.js` walks the import closure. It fails on #240's list, and it flagged `studio-codex.js` when that module was added. |
 
-## Verification
+## Review round 1 (river-oaks-c2 at `71feadc`: request changes)
 
-- `node --test desktop/tests/studio-designer-host.test.js`: 10/10. New tests:
-  allowlisted prompt and response, nothing executed before consent, and a
-  pushState or missing committed URL refused.
-- `node --test desktop/tests/studio-agent-host.test.js`: 8/8. New tests: hardened
-  Codex and Claude argv, scene allowlist, rate limit, and the 64 KiB reply and
-  delta cap.
-- `node --test desktop/tests/*.test.js`: 46/46, including the new packaging test.
-- `node desktop/agent-e2e.js`: passed, 7 checks. It now covers bridges absent on
-  `/play` (including after pushState to `/studio.html`) and a send without a
-  gesture being refused.
-- `node desktop/designer-e2e.js`: passed, 7 checks. The real button clicks
-  satisfy the gesture gate.
-- `node desktop/studio-e2e.js`: passed.
-- Live, one call each through `createStudioAgentHost`: Claude Haiku 5.5 and Codex
-  (default model) were each asked to read `/etc/shells`. Both answered CANNOT,
-  with no file content in the reply.
-- Core `pnpm run verify` and the `world-studio` browser journey: results are in
-  the PR.
+| # | Finding | Disposition |
+| --- | --- | --- |
+| B1 | The dialog didn't show what reached Codex: 600-character excerpt, invisible tag characters, selection scope still sending the region, unshown scene text, verbatim return channel. | **Fixed** (row 1). Task and brief are held to 1,000 and 2,000 characters after normalization (panel and protocol limits match), and longer text is refused before anything runs. Hidden characters are stripped by Unicode category. Selection scope sends only the selected objects. All scene names are listed. A longer saved brief is trimmed in view and its project ID kept. |
+| S1 | Clearing `loadedUrl` on `did-start-navigation` disabled both bridges after any blocked navigation. | **Fixed:** the line is deleted. A new E2E step fails with the line restored ("limited to the main Studio window") and passes without it. |
+| S2 | One click allowed 20 sends across chats. | **Fixed:** one reply runs at a time across all chats. The E2E fires 12 sends from one real click, and 1 runs. |
+| S3 | Raw designer errors (model-output parse errors, paths) reached the page. | **Fixed:** main replaces non-host errors (no `code`, not a `SyntaxError`, a known host prefix and no home path) with fixed messages. |
+| S4 | Codex flags not verified: web search, `~/.codex/AGENTS.md`. | **Verified.** Web search is off (`-c web_search="disabled"`, and the probe answers NO). AGENTS.md still loads (row 1e). The version is not pinned, to avoid breaking routine upgrades; the docs say to recheck. |
+| N1–N7 | Newlines deleted, silent repair, rate stamp after await, characters vs bytes, packaging-test blind spots, undocumented workspace path, `help` environment. | **Fixed:** newlines become spaces, bad replies are refused, the stamp comes before the first await, the cap is code-point-safe UTF-8, the test follows bare imports and refuses computed ones, the path is documented, and `help` gets a minimal environment. |
+
+## Verification (latest)
+
+- `node --test desktop/tests/*.test.js`: 47/47. New: Codex argv and reply parsing
+  (`studio-codex.test.js`); designer dialog equals the prompt text; tag
+  characters, padding, parcels and hidden keys never reach the prompt; selection
+  scope; over-length refusal; strict reply refusal; nothing executed before
+  consent; scene allowlist; burst and rate limit; byte cap; package closure.
+- `node --test preview/tests/studio-*.test.js`: 25/25.
+- `node desktop/agent-e2e.js`: passed, 9 checks, including blocked navigation, a
+  pushState rename refused by main end to end, and a one-click burst running 1.
+- `node desktop/designer-e2e.js`: passed, 9 checks, now with synthetic Coven and
+  Codex executables, plus the dialog-content check for both modes.
+- Live probes: hardened Codex and Claude each refused to read `/etc/shells`
+  through the host. Hardened Codex reports no web tool. Global AGENTS.md is
+  still injected (disclosed).
+- An unplanned real call: before the fixture option was added, one unit test's
+  second host resolved the real `codex` from PATH and made two small Codex
+  calls. Fixed; every test host now uses fixtures or stub `execute`s.
 
 ## Gaps
 
-- 1b and 1e above.
-- A gesture can still be borrowed: script running while the user clicks anywhere
-  in Studio could send within the 5 s activation window. That send is
-  rate-limited and has no tools.
-- Packaged and signed app not exercised.
+- Row 1e (CLI-injected context).
+- A borrowed gesture: script running at the moment of a user click can send one
+  message, one at a time and rate-limited, to a tool-less agent.
+- Packaged and signed build not exercised; the import-closure test covers the
+  file list only.
+- Codex flags are pinned to 0.162.1's feature set by documentation, not by code.
 
 ## Next step
 
-Push, open the PR, and ask river-oaks-c2 to review it. Merge only with user
-authorization, through the guard, in queue order.
+Re-request c2's review on the new head. Then rebase onto the current queue
+slot, rerun CI, and merge through the guard once green, approved and in turn.
