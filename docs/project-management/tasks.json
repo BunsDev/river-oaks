@@ -90,13 +90,13 @@
     {
       "id": "pending-integration",
       "title": "Finish owned pending-work integration",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "codex/integrate-pending-20261011"
       ],
-      "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
-      "nextAction": "PR198 is delivered. Complete PR210 feature delivery and primary staged reconciliation; preserve superseded trial receipts and original feature trees.",
+      "owner": null,
+      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
+      "nextAction": "PR198 and PR210 delivered; primary reconciled. Superseded trial changes and failure evidence are preserved for the cleanup owner to archive before retirement.",
       "filesOwned": [
         "preview/e2e/contextual-first-visit.js",
         "docs/superpowers/plans/2026-10-11-pending-integration.md"
@@ -107,30 +107,31 @@
       ],
       "observed": {
         "head": "8f78e30d3fdef5a0c27b290975e501f510579abf",
-        "dirtyPaths": 2,
         "mergeInProgress": false,
-        "activeProcess": false
+        "dirtyPaths": 2
       },
-      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "evidence": [
         {
-          "pr": 198,
-          "reviewedHead": "5f409a33c078f282481a79093b2dc2353a60fcb1",
-          "merge": "e561f9b7fdf071aa4bc95e38628264bb5b51c511"
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
         }
-      ]
+      ],
+      "pr": 210
     },
     {
       "id": "places-studio-integration",
       "title": "Finish places and studio integration",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "codex/places-studio-integration-20261011"
       ],
-      "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
-      "nextAction": "Push verified parser/cancel-restart fixes, pass final-head hosted checks and merge PR210, then reconcile primary.",
+      "owner": null,
+      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
+      "nextAction": "Retain source and local evidence until the cleanup owner completes exact-diff review, archives and restoration checks; no remaining implementation in this delivered local scope.",
       "filesOwned": [
         ".agents/skills/studio-world-design/SKILL.md",
         ".github/workflows/verify.yml",
@@ -219,11 +220,10 @@
         "Exact-head hosted checks and merged PR"
       ],
       "observed": {
-        "head": "64db466817ac9b3ccdb5dfca41f6639a847b898a",
-        "dirtyPaths": 0,
-        "mergeInProgress": false
+        "head": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+        "mergeInProgress": false,
+        "dirtyPaths": 0
       },
-      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "verification": {
         "candidate": "9ce3a4a",
@@ -243,7 +243,16 @@
         },
         "reviewFixes": "23 host/pack tests, seven native Designer checks and all 11 core tasks passed; cancellation regression failed before fix. Independent review has no required findings. Final-head hosted checks pending."
       },
-      "pr": 210
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ]
     },
     {
       "id": "repo-completion-ledger",
@@ -474,7 +483,7 @@
       ],
       "owner": "/root:retirement-round2-20261011",
       "updatedAt": "2026-10-11T07:28:13.035687+00:00",
-      "nextAction": "Wait for PR210 landing and exact-head Storybook CI, then merge PR200 and archive/retire the clean source checkout.",
+      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
       "filesOwned": [
         "docs/storybook.md"
       ],
@@ -490,18 +499,19 @@
         "activeProcess": false
       },
       "pr": 200,
-      "leaseUntil": "2026-10-11T09:28:13.035687+00:00"
+      "leaseUntil": "2026-10-11T09:28:13.035687+00:00",
+      "deliveryPr": 223
     },
     {
       "id": "primary-reconciliation",
       "title": "Reconcile staged primary checkout work",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "main"
       ],
-      "owner": "codex:01a12968-441e-7f02-ad26-e1c412abd3a8",
-      "updatedAt": "2026-10-11T07:35:39.803625+00:00",
-      "nextAction": "After exact PR210 merge proof, revalidate 27 staged paths, align only 17 delivered spatial/report paths and fast-forward primary; preserve divergent lock and nine unrelated staged draft/native files byte-for-byte.",
+      "owner": null,
+      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
+      "nextAction": "Primary is at PR210 merge; preserve the ten unrelated staged files and existing unique stash. Their separate tasks remain unfinished.",
       "filesOwned": [
         "data/reports/map-spatial-circulation-20261008.json",
         "data/reports/map-spatial-final-browser-20261008.json",
@@ -530,18 +540,26 @@
         "Verify remaining staged index hashes and original source worktrees after primary fast-forward"
       ],
       "observed": {
-        "head": "20edac0bb75d7c4e7b51e987d717e9f39413d0eb",
-        "dirtyPaths": 28,
+        "head": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
         "mergeInProgress": false,
-        "activeProcess": true
+        "dirtyPaths": 10
       },
-      "leaseUntil": "2026-10-11T09:35:39.803625+00:00",
       "ledger": "docs/superpowers/plans/2026-10-11-pending-integration.md",
       "verification": {
         "preservation": ".runtime/integration/primary-staged-original.patch",
         "sha256": "c4631e15712b9592ce377b7ef9b2b13ad44eedae32c8ed4882d90a58b605277a",
         "originalPaths": 28
-      }
+      },
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ]
     },
     {
       "id": "compact-sidebar",
@@ -609,24 +627,33 @@
     {
       "id": "places-guide",
       "title": "Reconcile places guide with studio integration",
-      "status": "blocked",
+      "status": "delivered",
       "branches": [
         "polish/places-guide"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T06:20:29.781585+00:00",
-      "nextAction": "Do not start another integration: compare this dirty source tree with codex/places-studio-integration-20261011 under that owner.",
+      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
+      "nextAction": "Retain source and local evidence until the cleanup owner completes exact-diff review, archives and restoration checks; no remaining implementation in this delivered local scope.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
       ],
       "observed": {
         "head": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
-        "dirtyPaths": 23,
         "mergeInProgress": false,
-        "activeProcess": false
+        "dirtyPaths": 23
       },
-      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity."
+      "blocker": "Ownership and outstanding work require reconciliation; do not infer permission from inactivity.",
+      "pr": 210,
+      "evidence": [
+        {
+          "pr": 210,
+          "reviewedHead": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+          "merge": "4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8",
+          "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
+          "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
+        }
+      ]
     },
     {
       "id": "retired-feat-debug-report",
@@ -924,7 +951,7 @@
       "owner": "/root:retirement-round2-20261011",
       "leaseUntil": "2026-10-11T09:20:33.903475+00:00",
       "updatedAt": "2026-10-11T07:20:33.903475+00:00",
-      "nextAction": "Pass published cleanup PR hosted checks; merge after PR210 primary reconciliation hold releases, then source owner retires both sign-in trees.",
+      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
       "ledger": "docs/superpowers/plans/2026-10-11-retirement-round2.md",
       "filesOwned": [
         "docs/project-management/",
@@ -941,7 +968,8 @@
         "core": "11 tasks passed at 957cefc",
         "browser": "email-access 1/1 passed",
         "review": "independent review clear"
-      }
+      },
+      "deliveryPr": 223
     },
     {
       "id": "reconcile-delivered-sources",
@@ -978,7 +1006,7 @@
       ],
       "owner": "codex:01a1220e-63d3-7d41-a313-bfb2b8e7e101",
       "updatedAt": "2026-10-11T08:10:27.251174+00:00",
-      "nextAction": "Commit verified minimap change, run final-head hosted checks and merge after the queued PR210/PR215 deliveries.",
+      "nextAction": "Deliver the consolidated reviewed result through PR223 after final-head checks against current main; then retire proven source refs and retain archives.",
       "ledger": "docs/superpowers/plans/2026-10-11-destination-minimap.md",
       "filesOwned": [
         "preview/src/places-ui.js",
@@ -1001,7 +1029,9 @@
         "core": "pnpm run verify: 11 tasks passed",
         "browser": "destination-minimap and Events final focused passed; Places/guide/rail navigation/game HUD passed",
         "review": "independent follow-up clear; focus and sizing fixes verified"
-      }
+      },
+      "deliveryPr": 223,
+      "pr": 223
     }
   ]
 }

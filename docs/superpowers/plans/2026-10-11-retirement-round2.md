@@ -118,3 +118,21 @@ retaining the PR210 main hold. Hosted CI is running in parallel. The minimap wor
 is on feat/destination-minimap-20261011 in the reused memory checkout; no UI
 implementation is included in PR215. Source owner can retire its three remaining
 checkouts once PR215 merges and exact-source comparison succeeds.
+
+## Final integration and strict main checks
+PR210 landed as 4bd7289e9ed7bc41ce61ce5f752e9257e5a610f8, tree-identical
+to reviewed926e45f. Owner released the main hold after preserving all ten
+remaining staged primary paths and the existing stash. Its four task handoffs
+were imported from the verified pr210-delivery/delivery-handoff.json.
+
+GitHub rules require current-main checks. Storybook was marked ready through the
+GitHub UI but merge was correctly refused until base checks refresh. Consolidate
+all three owned PR heads in PR223: reviewed Storybook1667f02, cleanup2d9e0d1
+and minimap5ea3904. Cleanup's main merge conflict was only tasks.json; resolving
+it preserved its exact verified tree. This final integration preserves all heads
+and changes no previously verified runtime behavior. Run the exact combined-head
+hosted gate, then merge the aggregate and verify each source PR's disposition.
+
+Source-retirement owner: PR223 is now the final delivery target for e7c547a;
+PR215's complete content remains included unchanged. No source tree may retire
+until that aggregate is on main. Its clean shared-world map journey also passed.
