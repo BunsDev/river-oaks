@@ -62,3 +62,5 @@ These are the backstops code can't provide, because a function has already been 
 ## Checks
 
 The full results are in the PR.
+
+Hosted CI on `2f22c75` caught a real conflict that local runs missed. `world-gateway.test.js` opened a second world for the same guest and expected to stay in both, which one-world-per-account forbids. The eviction is fire-and-forget, so locally the test's next request beat it. The test now waits for the Moon Garden connection to close with 4009, then continues from River Oaks. That makes it a deterministic regression for the rule on the Redis gateway. 6/6 runs pass on an isolated Redis.
