@@ -136,3 +136,11 @@ hosted gate, then merge the aggregate and verify each source PR's disposition.
 Source-retirement owner: PR223 is now the final delivery target for e7c547a;
 PR215's complete content remains included unchanged. No source tree may retire
 until that aggregate is on main. Its clean shared-world map journey also passed.
+
+Three additional PR210 source retirements were received and verified: Places,
+the prior integration trial and final integration checkout. All original refs,
+62/72/223 local files and dirty patch replays are preserved in the source owner's
+restore-tested archive; bundle hash and current path/ref absence rechecked here.
+Their three task records now accurately say retired. Current count: 11 worktrees;
+Storybook, both sign-in drafts and source-reconciliation checkout still await the
+final aggregate merge. World Studio and primary leftovers remain protected.

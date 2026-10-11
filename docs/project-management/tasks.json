@@ -90,13 +90,13 @@
     {
       "id": "pending-integration",
       "title": "Finish owned pending-work integration",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "codex/integrate-pending-20261011"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
-      "nextAction": "PR198 and PR210 delivered; primary reconciled. Superseded trial changes and failure evidence are preserved for the cleanup owner to archive before retirement.",
+      "updatedAt": "2026-10-11T08:17:17.849065+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
       "filesOwned": [
         "preview/e2e/contextual-first-visit.js",
         "docs/superpowers/plans/2026-10-11-pending-integration.md"
@@ -120,18 +120,27 @@
           "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
         }
       ],
-      "pr": 210
+      "pr": 210,
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/trial-integration",
+        "sha": "8f78e30d3fdef5a0c27b290975e501f510579abf",
+        "retainedFiles": 72,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "places-studio-integration",
       "title": "Finish places and studio integration",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "codex/places-studio-integration-20261011"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
-      "nextAction": "Retain source and local evidence until the cleanup owner completes exact-diff review, archives and restoration checks; no remaining implementation in this delivered local scope.",
+      "updatedAt": "2026-10-11T08:17:20.846141+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
       "filesOwned": [
         ".agents/skills/studio-world-design/SKILL.md",
         ".github/workflows/verify.yml",
@@ -252,7 +261,16 @@
           "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
           "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/final-integration",
+        "sha": "926e45f43428dad42eaf2dd4ab8acb837799e122",
+        "retainedFiles": 223,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "repo-completion-ledger",
@@ -627,13 +645,13 @@
     {
       "id": "places-guide",
       "title": "Reconcile places guide with studio integration",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "polish/places-guide"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T08:12:14.784257+00:00",
-      "nextAction": "Retain source and local evidence until the cleanup owner completes exact-diff review, archives and restoration checks; no remaining implementation in this delivered local scope.",
+      "updatedAt": "2026-10-11T08:17:15.537916+00:00",
+      "nextAction": "Delivered scope is retired. Restore the original ref and local evidence only from the verified PR210-source archive if needed.",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -653,7 +671,16 @@
           "tree": "f6a3d6fa5f081ab66df6d5e4ede5c86ddb90ee0f",
           "checks": "All ten final-head hosted checks passed; local full baseline17, final core11, focused23 and native Designer7 passed. See postmerge receipt for scope and earlier failure caveat."
         }
-      ]
+      ],
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/manifest.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-20261011-pr210-sources/source-history.bundle",
+        "sha256": "1ebda55269c0d4492df7cd89bf6402f39a966ef594dacba8cb2fc26620d49071",
+        "ref": "archive/worktree-prune/20261011-pr210-sources/places",
+        "sha": "e059ee0c2d9f52c09913d5669169a7e21dd4d4c1",
+        "retainedFiles": 62,
+        "restoration": "Full bundle refs/fsck and dirty patches/local file hashes verified by source owner; final path/ref absence rechecked."
+      }
     },
     {
       "id": "retired-feat-debug-report",
