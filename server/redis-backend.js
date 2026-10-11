@@ -53,6 +53,8 @@ export async function createRedisBackend(env = process.env) {
       workplaceSweep: env.VERCEL !== '1',
       // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
       workplaceCronSecret: env.CRON_SECRET || null,
+      // Signs the static-asset pass; the middleware verifies it with the same secret.
+      assetGateSecret: env.WORKOS_COOKIE_PASSWORD,
     });
     return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
       await gateway.close(); auth.close(); security.close(); redis.disconnect();

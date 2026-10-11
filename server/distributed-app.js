@@ -35,7 +35,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000 } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -77,7 +77,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     // Auth revocation / ban is persisted by the caller before this durable kick.
     return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
   }
-  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
+  const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
@@ -101,7 +101,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
     try {
       const url = new URL(req.url, 'http://localhost'), path = url.pathname;
       if (!(await access(req))) return json(res, 429, { error: 'Too many requests. Try again shortly.' });
-      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
+      if (['/auth/login', '/auth/email/start', '/auth/email/verify', '/auth/desktop/exchange', '/api/waitlist/invite-redeem', '/api/waitlist/invite-issue', '/api/waitlist/invite-update'].includes(path) && !(await signInStart(req))) return json(res, 429, { error: 'Too many attempts. Try again later.' });
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;

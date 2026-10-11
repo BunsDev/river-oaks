@@ -2,6 +2,7 @@ import { accountName } from '../preview/src/resident-names.js';
 import { guardWaitlistRequest } from './name-guard.js';
 import { timingSafeEqual } from 'node:crypto';
 import { validInviteCode, validInviteId } from './invitations.js';
+import { SESSION_COOKIE, assetGateCookie, readCookie, signAssetGate } from './asset-gate.js';
 
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string'
   && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -10,7 +11,9 @@ const json = (res, status, value) => {
   res.end(JSON.stringify(value));
 };
 
-export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {}, isBanned = async () => false }) {
+// `assetGateSecret` (hosted deployments) lets an approved status reply carry the
+// signed pass the static-asset middleware checks without calling the server.
+export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRevoke = async () => {}, isBanned = async () => false, assetGateSecret = null, now = Date.now }) {
   const adminIds = new Set(admins);
   return async (req, res, path) => {
     if (!['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/waitlist/invites',
@@ -22,6 +25,9 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
     if (await isBanned(identity.userId)) { json(res, 403, { error: 'access_denied' }); return true; }
     if (path === '/api/waitlist/status') {
       const record = await waitlist.request(identity);
+      const session = readCookie(req.headers.cookie, SESSION_COOKIE);
+      if (record.status === 'approved' && assetGateSecret && session)
+        res.appendHeader('Set-Cookie', assetGateCookie(await signAssetGate({ secret: assetGateSecret, session, now: now() }), String(origin).startsWith('https://')));
       json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) } });
       return true;
     }
