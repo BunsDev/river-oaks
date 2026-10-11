@@ -1730,6 +1730,38 @@
         "node desktop/studio-e2e.js",
         "pnpm run verify"
       ]
+    },
+    {
+      "id": "studio-prompt-polish",
+      "title": "Match the World Studio scene prompt and surfaces to TypeSafe Place",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-polish"
+      ],
+      "owner": "codex session 01a12992-ca4f-7953-bf53-2e8875f2cf15",
+      "leaseUntil": "2026-10-11T19:05:28.321598+00:00",
+      "updatedAt": "2026-10-11T17:22:40.174781+00:00",
+      "nextAction": "Deliver verified signed branch for review; preserve worktree and evidence until landed.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-prompt-polish.md",
+      "filesOwned": [
+        "preview/src/studio/studio.css",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/scene.js",
+        "preview/src/studio/viewport.js",
+        "preview/src/access-gate.css",
+        "preview/src/access-theme.css"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "Visual inspection of prompt and panel in light/dark, focus, hover and narrow screens"
+      ],
+      "verification": {
+        "core": "passed; 3180 total passing tests and 110 existing core-profile skips; .runtime/agent/core.json",
+        "browser": "world-studio passed 9.039s; data/reports/studio-prompt-polish.json",
+        "visual": "light/dark, focus/hover/typed/open/collapse, 320/390/1000px checks passed; local output/playwright/prompt-polish captures",
+        "source": "Shared login CSS extraction byte-identical; runtime hashes unchanged through gates"
+      }
     }
   ]
 }
