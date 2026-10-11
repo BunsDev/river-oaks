@@ -1,5 +1,6 @@
 import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
+import { startArtRotation } from './access-art-rotation.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
@@ -13,6 +14,10 @@ const review = $('#access-review'), reviewList = $('#access-review-list'), revie
 let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
 const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem');
 let reviewGeneration = 0, restoreReviewSettings = false;
+
+// The art rotates only while the gate is showing; it re-checks when the gate opens or closes.
+const artRotation = startArtRotation(document.querySelector('.access-scene'), { isOpen: () => !gate.hidden });
+new MutationObserver(() => artRotation.sync()).observe(gate, { attributes: true, attributeFilter: ['hidden'] });
 
 registerDiagnosticSource('access', () => ({ gate: gate.hidden ? 'entered' : gateState || 'checking', signedIn: Boolean(session?.authenticated), entered, admin: isAdmin }));
 // Every "Report a problem" control dispatches one event; the dialog loads on first use.

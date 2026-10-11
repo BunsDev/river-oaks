@@ -17,6 +17,80 @@
       "height": 1536,
       "bytes": 331797,
       "sha256": "ac2ebd0341221398b06d831653bab04ae2d0167ec90a7df68a05fc3dd0acd565"
+    },
+    {
+      "path": "/assets/login/jev-jevica-modest-standing.jpg",
+      "description": "Sign-in rotation, modest set: Both standing side by side facing the viewer, smiling.",
+      "origin": "Generated from the awake sign-in art (login-art-awake, #245) as the character and scene reference.",
+      "edit": {
+        "date": "2026-10-11",
+        "reason": "Modest variants requested for the rotating sign-in art: Jev in a long-sleeved tunic and cloak, Jevica in an opaque long-sleeved gown with a high neckline and no slit.",
+        "provider": "Higgsfield (user's workspace)",
+        "model": "nano_banana_pro",
+        "input_sha256": "a002986a3dd75c568a8808c527e1d36dc038c33b4e697479b08571db06295584",
+        "output": "https://d8j0ntlcm91z4.cloudfront.net/user_3F6aH94rniWD0ybPcYaeJG5tWcA/hf_20261011_233829_14564c16-a1f2-4a3f-80ea-0b23f2703f42.png",
+        "postprocess": "Resized to 1024 x 1536, JPEG quality 86, progressive, metadata stripped (ImageMagick)."
+      },
+      "width": 1024,
+      "height": 1536,
+      "bytes": 303801,
+      "sha256": "aeeecfaeefe5e39bf201a55b6b71297a436600c867267c25c16a07c82195eb45"
+    },
+    {
+      "path": "/assets/login/jev-jevica-modest-walk.jpg",
+      "description": "Sign-in rotation, modest set: Walking hand in hand along the colonnade.",
+      "origin": "Generated from the awake sign-in art (login-art-awake, #245) as the character and scene reference.",
+      "edit": {
+        "date": "2026-10-11",
+        "reason": "Modest variants requested for the rotating sign-in art: Jev in a long-sleeved tunic and cloak, Jevica in an opaque long-sleeved gown with a high neckline and no slit.",
+        "provider": "Higgsfield (user's workspace)",
+        "model": "nano_banana_pro",
+        "input_sha256": "a002986a3dd75c568a8808c527e1d36dc038c33b4e697479b08571db06295584",
+        "output": "https://d8j0ntlcm91z4.cloudfront.net/user_3F6aH94rniWD0ybPcYaeJG5tWcA/hf_20261011_234006_f80220cf-a74f-4cc3-8bdd-5030ac13ee8e.png",
+        "postprocess": "Resized to 1024 x 1536, JPEG quality 86, progressive, metadata stripped (ImageMagick)."
+      },
+      "width": 1024,
+      "height": 1536,
+      "bytes": 302497,
+      "sha256": "458fabb8140f6a9e7cd1d09faaf9ec56f3b5b3378a4789a1048f44a6e56076d7"
+    },
+    {
+      "path": "/assets/login/jev-jevica-modest-steps.jpg",
+      "description": "Sign-in rotation, modest set: Seated together on marble steps beside a fountain.",
+      "origin": "Generated from the awake sign-in art (login-art-awake, #245) as the character and scene reference.",
+      "edit": {
+        "date": "2026-10-11",
+        "reason": "Modest variants requested for the rotating sign-in art: Jev in a long-sleeved tunic and cloak, Jevica in an opaque long-sleeved gown with a high neckline and no slit.",
+        "provider": "Higgsfield (user's workspace)",
+        "model": "nano_banana_pro",
+        "input_sha256": "a002986a3dd75c568a8808c527e1d36dc038c33b4e697479b08571db06295584",
+        "output": "https://d8j0ntlcm91z4.cloudfront.net/user_3F6aH94rniWD0ybPcYaeJG5tWcA/hf_20261011_233828_6cc8881a-d8ff-4b76-8469-0be059994a02.png",
+        "postprocess": "Resized to 1024 x 1536, JPEG quality 86, progressive, metadata stripped (ImageMagick)."
+      },
+      "width": 1024,
+      "height": 1536,
+      "bytes": 307595,
+      "sha256": "05cc9dec0f69187d5c5380af1d96d0309d7cdbd4b0421ee65836e8ce44a4e6a2"
+    },
+    {
+      "path": "/assets/login/jev-jevica-modest-standing.mp4",
+      "description": "Sign-in rotation clip: the modest standing pair turn to each other and smile; breeze, drifting petals, slow push-in. Silent, 5 s.",
+      "origin": "Animated from the modest standing still (jev-jevica-modest-standing.jpg, before resizing) as both first and last frame.",
+      "edit": {
+        "date": "2026-10-11",
+        "reason": "A short animated clip for the rotating sign-in art.",
+        "provider": "Higgsfield (user's workspace)",
+        "model": "seedance_2_0",
+        "settings": "3:4, 720p, 5 s, std mode, generate_audio false",
+        "start_image_sha256": "2a94ca70aab769e6c4e6914da3b44248fceda6b1b62fda4b6bab5a20c9ae8bf1",
+        "output": "https://d8j0ntlcm91z4.cloudfront.net/user_3F6aH94rniWD0ybPcYaeJG5tWcA/hf_20261011_234028_dec4ac48-d97f-481f-809a-b13f0498b8ce.mp4",
+        "postprocess": "Re-encoded with ffmpeg: H.264 main, yuv420p, CRF 26, preset slow, no audio, +faststart, metadata stripped."
+      },
+      "width": 834,
+      "height": 1112,
+      "duration_s": 5.04,
+      "bytes": 931862,
+      "sha256": "edaf8dad8314579990e3db8f15429ba73f8cb64e3dd1e4ade90e762715252242"
     }
   ]
 }

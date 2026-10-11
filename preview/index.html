@@ -8,6 +8,8 @@
     <style>
       body:not(.access-granted) .app-shell { display: none !important; }
       .access-gate [hidden], .access-gate[hidden], .access-review[hidden], .access-tools[hidden], .access-tools [hidden] { display: none !important; }
+      /* Rotating art: only the active slide shows, from the first paint (the gate stylesheet loads later). */
+      .access-slide:not([data-active]) { opacity: 0; }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23455c4f'/%3E%3Cpath d='M9 25V8h8a5 5 0 010 10H9m7 0 8 7' stroke='%23e9ece5' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
   </head>
@@ -15,7 +17,12 @@
     <section class="access-gate" id="access-gate" aria-labelledby="access-title">
       <div class="access-layout">
       <aside class="access-scene" aria-label="About the district">
-        <img class="access-art" src="/assets/login/jev-jevica-golden-hour.jpg" width="1024" height="1536" alt="Jev, winged and dressed in ivory and gold, beside Jevica in a pink blossom gown among marble columns at golden hour" fetchpriority="high" decoding="async" />
+        <img class="access-art access-slide" data-active src="/assets/login/jev-jevica-modest-standing.jpg" width="1024" height="1536" alt="Jev, winged, in a long ivory and gold tunic and cloak, beside Jevica in a long-sleeved blush-pink gown among marble columns at golden hour" fetchpriority="high" decoding="async" />
+        <video class="access-art access-slide" data-src="/assets/login/jev-jevica-modest-standing.mp4" poster="/assets/login/jev-jevica-modest-standing.jpg" width="834" height="1112" muted playsinline preload="none" aria-hidden="true"></video>
+        <img class="access-art access-slide" data-src="/assets/login/jev-jevica-modest-walk.jpg" width="1024" height="1536" alt="Jev and Jevica walking hand in hand along a rose-covered colonnade at golden hour" decoding="async" aria-hidden="true" />
+        <img class="access-art access-slide" data-src="/assets/login/jev-jevica-modest-steps.jpg" width="1024" height="1536" alt="Jev and Jevica laughing together on marble steps beside a fountain, his wings folded behind them" decoding="async" aria-hidden="true" />
+        <img class="access-art access-slide" data-src="/assets/login/jev-jevica-golden-hour.jpg" width="1024" height="1536" alt="Jev, winged and dressed in ivory and gold, beside Jevica in a pink blossom gown among marble columns at golden hour" decoding="async" aria-hidden="true" />
+        <button class="access-art-pause" type="button" aria-pressed="false" aria-label="Pause the background art" hidden><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="access-art-pause-bars" fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/><path class="access-art-play" fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg></button>
         <a class="access-brand" href="/" aria-label="TypeSafe Place home"><span class="access-orbit" aria-hidden="true"></span>TypeSafe Place</a>
         <div class="access-scene-text">
           <span class="access-kicker">River Oaks · Houston, reimagined</span>
