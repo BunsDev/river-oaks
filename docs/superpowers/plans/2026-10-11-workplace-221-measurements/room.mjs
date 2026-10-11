@@ -1,5 +1,6 @@
 // Graybox fixture: frame time (vsync off, three runs), JS heap and renderer memory
-// across repeated entry (0, 20, 120, 320 cumulative), forced GC before each heap read.
+// across repeated entry, forced GC before each heap read. ENTRIES sets the batch sizes
+// (default 20,100,200; the long run used 20,100,200,500,500,500,500).
 import { startBrowserFixture } from '../../../../preview/e2e/fixture-server.js';
 import { chromium } from 'playwright';
 const browser = await chromium.launch({headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--disable-gpu-vsync', '--disable-frame-rate-limit']});
@@ -19,6 +20,6 @@ try {
   for (let i = 0; i < 3; i++) frames.push(await page.evaluate(() => window.workplaceFixture.frames(180)));
   const entries = [{entered: 0, ...await heap()}];
   let total = 0;
-  for (const n of [20, 100, 200]) { const g = await page.evaluate(times => window.workplaceFixture.reenter(times), n); total += n; entries.push({entered: total, geometries: g, ...await heap()}); }
+  for (const n of (process.env.ENTRIES ?? '20,100,200').split(',').map(Number)) { const g = await page.evaluate(times => window.workplaceFixture.reenter(times), n); total += n; entries.push({entered: total, geometries: g, ...await heap()}); }
   console.log(JSON.stringify({renderer, viewport: [1280, 800], frames, entries}, null, 2));
 } finally { await fixture.close?.();await browser.close(); }
