@@ -1699,6 +1699,28 @@
         "verifiedHead": "f6a95ec",
         "base": "a13c4e4"
       }
+    },
+    {
+      "id": "typesafe-place-season-1",
+      "title": "Add the reviewed TypeSafe Place Season 1 content calendar and production guide",
+      "status": "active",
+      "branches": [
+        "docs/typesafe-place-season-1"
+      ],
+      "owner": "charm-cave-river-oaks-20261011",
+      "updatedAt": "2026-10-11T17:30:00+00:00",
+      "leaseUntil": "2026-10-11T19:30:00+00:00",
+      "nextAction": "Open the PR and let hosted checks run; Val reviews and merges.",
+      "filesOwned": [
+        "docs/marketing/typesafe-place-season-1/",
+        "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md"
+      ],
+      "requiredChecks": [
+        "git diff --check",
+        "pnpm run verify security (secret guard)",
+        "Hosted CI before merge"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md"
     }
   ]
 }
