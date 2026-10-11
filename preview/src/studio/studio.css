@@ -27,6 +27,22 @@
 .studio-designer .studio-panel-title { position: sticky; top: -20px; margin: -20px -20px 12px; padding: 14px 20px; background: var(--sheet); border-bottom: 1px solid var(--line); z-index: 1; }
 .studio-designer .studio-panel-title .studio-caption { margin: 0 0 4px; }
 .studio-designer textarea:focus-visible, .studio-designer select:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+
+.studio-templates { width:min(1060px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); box-sizing:border-box; padding:24px; border:1px solid var(--sheet-line); border-radius:16px; color:var(--sheet-ink); background:var(--sheet); overflow:auto; }
+.studio-templates::backdrop { background:rgb(10 25 20 / 65%); }
+.studio-template-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.studio-template-heading h2 { margin:4px 0; font-size:28px; }
+.studio-template-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr)); gap:16px; margin:20px 0; }
+.studio-template-grid article { display:flex; flex-direction:column; padding:14px; border:1px solid var(--sheet-line); border-radius:10px; background:var(--sheet-tint); min-width:0; }
+.studio-template-grid svg { width:100%; height:160px; border-radius:6px; background:#dce7db; }
+.studio-template-grid h3 { font-size:18px; margin:16px 0 0; }
+.studio-templates p { font-size:13px; line-height:1.6; }
+.studio-template-tip { border-top:1px solid var(--sheet-line); padding-top:12px; }
+.studio-template-grid button { margin-top:auto; }
+.studio-templates button { min-height:40px; border:1px solid var(--sheet-line); border-radius:6px; padding:9px 12px; background:var(--sheet); color:var(--sheet-ink); cursor:pointer; }
+.studio-templates button.studio-primary { background:var(--forest); color:var(--on-forest); }
+.studio-templates button:focus-visible { outline:3px solid var(--sheet-accent); outline-offset:3px; }
+
 /* World Studio agent side chat. It stays dark over both editor themes, like a floating tool. */
 .studio-agent{--agent-bg:var(--gate-bg);--agent-raise:var(--gate-raised);--agent-field:var(--gate-field);--agent-line:var(--gate-line);--agent-ink:var(--gate-ink);--agent-muted:var(--gate-muted);--agent-accent:var(--gate-pink);--agent-on-accent:var(--gate-on-pink);position:absolute;left:50%;top:60px;bottom:52px;transform:translateX(-50%);width:min(580px,calc(100% - 32px));z-index:6;display:flex;flex-direction:column;justify-content:flex-end;color:var(--agent-ink);font-family:var(--gate-sans);pointer-events:none}
 .studio-agent>*{pointer-events:auto}body[data-mode=walk] .studio-agent{display:none}

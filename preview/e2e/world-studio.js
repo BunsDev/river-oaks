@@ -109,6 +109,32 @@ async (page) => {
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/playwright/world-studio-narrow.png'});
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
   if(overflow)throw Error('Editor overflows compact viewport');
+  // Starter chooser: no mutation on cancel, explicit replacement, all five render.
+  await page.setViewportSize({width:1280,height:900});
+  const savedBeforeTemplates=await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'));
+  await page.locator('#studio-templates').click();
+  await page.getByRole('dialog',{name:'Choose a district'}).waitFor();
+  if(await page.locator('.studio-template-grid article').count()!==5)throw Error('Missing district templates');
+  await page.screenshot({path:'output/playwright/world-studio-templates.png'});
+  await page.keyboard.press('Escape');
+  if(!await page.locator('#studio-templates').evaluate(el=>el===document.activeElement))throw Error('Chooser did not restore focus');
+  const names=['Market Street','Garden Neighborhood','Arts Courtyard','Civic Square','Innovation Campus'];
+  for(let i=0;i<names.length;i++){
+    await page.locator('#studio-templates').click();
+    if(i>0)page.once('dialog',dialog=>dialog.accept());
+    await page.getByRole('button',{name:`Use ${names[i]}`,exact:true}).click();
+    await page.getByRole('status').filter({hasText:`${names[i]} opened`}).waitFor();
+    await page.screenshot({path:`output/playwright/world-studio-template-${i+1}.png`});
+  }
+  await page.locator('#studio-templates').click();
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.getByRole('button',{name:'Use Market Street',exact:true}).click();
+  if(!await page.getByRole('dialog',{name:'Choose a district'}).isVisible())throw Error('Discard cancellation closed chooser');
+  await page.setViewportSize({width:390,height:844});
+  if(await page.locator('.studio-templates').evaluate(el=>el.scrollWidth>el.clientWidth))throw Error('Template chooser overflows narrow view');
+  await page.screenshot({path:'output/playwright/world-studio-templates-narrow.png'});
+  await page.keyboard.press('Escape');
+  if(await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'))!==savedBeforeTemplates)throw Error('Template silently overwrote saved draft');
   if(errors.length)throw Error(errors.join('\n'));
   return {passed:true,journey:'create-transform-undo-save-reopen-pick-export-import-walk',errors};
 }

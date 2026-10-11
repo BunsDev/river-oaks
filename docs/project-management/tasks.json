@@ -2053,6 +2053,47 @@
         "project-status validateTasks passes",
         "Hosted checks on the final head"
       ]
+    },
+    {
+      "id": "studio-starter-districts",
+      "title": "Five importable district starters and World Studio template chooser",
+      "status": "active",
+      "branches": [
+        "cody/starter-districts-20261011"
+      ],
+      "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
+      "leaseUntil": "2026-10-11T22:17:16+00:00",
+      "updatedAt": "2026-10-11T20:17:16+00:00",
+      "nextAction": "Queue turn reached. Merged main at 5f3c1bb (#244); only the register conflicted, resolved task by task. After re-verification: push, then gh-merge-when-green.sh 242; record merge evidence and mark delivered.",
+      "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
+      "filesOwned": [
+        "preview/public/data/starter-districts/",
+        "preview/src/studio/templates.js",
+        "preview/src/studio/template-picker.js",
+        "preview/src/studio/main.js",
+        "preview/src/studio/studio.css",
+        "preview/tests/studio-templates.test.js",
+        "docs/starter-districts.md",
+        "preview/e2e/world-studio.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-templates.test.js",
+        "pnpm run verify",
+        "Studio browser acceptance"
+      ],
+      "evidence": {
+        "verification": [
+          ".runtime/agent/core.json",
+          "data/reports/starter-districts-browser.json"
+        ],
+        "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
+      },
+      "pr": 242,
+      "handoff": {
+        "at": "2026-10-11T18:42:28+00:00",
+        "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
+        "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
+      }
     }
   ]
 }

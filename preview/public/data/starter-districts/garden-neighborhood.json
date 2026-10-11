@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "bounds_m": [
+    -80,
+    -80,
+    80,
+    80
+  ],
+  "terrain": {
+    "width": 5,
+    "height": 5,
+    "heights_m": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "spawn": [
+    0,
+    -64
+  ],
+  "roads": [
+    {
+      "id": "garden-loop",
+      "name": "Garden Loop",
+      "kind": "footway",
+      "width_m": 4,
+      "points": [
+        [
+          0,
+          -40
+        ],
+        [
+          40,
+          -40
+        ],
+        [
+          40,
+          40
+        ],
+        [
+          0,
+          40
+        ],
+        [
+          -40,
+          40
+        ],
+        [
+          -40,
+          -40
+        ],
+        [
+          0,
+          -40
+        ]
+      ]
+    },
+    {
+      "id": "garden-walk",
+      "name": "Garden Walk",
+      "kind": "footway",
+      "width_m": 4,
+      "points": [
+        [
+          0,
+          -68
+        ],
+        [
+          0,
+          -40
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          40
+        ]
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "west-home-1",
+      "center": [
+        -60,
+        -24
+      ],
+      "size": [
+        16,
+        18,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    },
+    {
+      "id": "west-home-2",
+      "center": [
+        -60,
+        24
+      ],
+      "size": [
+        16,
+        18,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    },
+    {
+      "id": "east-home-1",
+      "center": [
+        60,
+        -24
+      ],
+      "size": [
+        16,
+        18,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    },
+    {
+      "id": "east-home-2",
+      "center": [
+        60,
+        24
+      ],
+      "size": [
+        16,
+        18,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    },
+    {
+      "id": "northwest-home",
+      "center": [
+        -20,
+        61
+      ],
+      "size": [
+        18,
+        16,
+        8
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    },
+    {
+      "id": "northeast-home",
+      "center": [
+        20,
+        61
+      ],
+      "size": [
+        18,
+        16,
+        8
+      ],
+      "yaw_deg": 0,
+      "kind": "residential"
+    }
+  ],
+  "trees": [
+    {
+      "id": "tree-1",
+      "position": [
+        -23,
+        -22
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-2",
+      "position": [
+        -23,
+        0
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-3",
+      "position": [
+        -23,
+        22
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-4",
+      "position": [
+        23,
+        -22
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-5",
+      "position": [
+        23,
+        0
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-6",
+      "position": [
+        23,
+        22
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-7",
+      "position": [
+        -60,
+        -61
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-8",
+      "position": [
+        -30,
+        -61
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-9",
+      "position": [
+        30,
+        -61
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-10",
+      "position": [
+        60,
+        -61
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    }
+  ],
+  "places": [
+    {
+      "id": "place-welcome-garden",
+      "name": "Welcome Garden",
+      "position": [
+        0,
+        -64
+      ]
+    },
+    {
+      "id": "place-village-green",
+      "name": "Village Green",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "place-east-neighbors",
+      "name": "East Neighbors",
+      "position": [
+        40,
+        0
+      ]
+    },
+    {
+      "id": "place-west-neighbors",
+      "name": "West Neighbors",
+      "position": [
+        -40,
+        0
+      ]
+    },
+    {
+      "id": "place-north-garden",
+      "name": "North Garden",
+      "position": [
+        0,
+        40
+      ]
+    }
+  ]
+}
