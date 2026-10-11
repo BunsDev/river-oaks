@@ -2108,14 +2108,13 @@
     {
       "id": "studio-retirement-register",
       "title": "Record retirement of the Studio agent-chat and bridge-hardening branches in the shared register",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/studio-tasks-retired"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-11T20:03:42+00:00",
-      "updatedAt": "2026-10-11T18:03:42+00:00",
-      "nextAction": "Merge the docs-only register PR in queue order, then release this task and retire docs/studio-tasks-retired with project:prune.",
+      "owner": null,
+      "updatedAt": "2026-10-11T20:43:58.112Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
       "filesOwned": [
         "docs/project-management/tasks.json"
@@ -2124,7 +2123,34 @@
         "pnpm run test:agent",
         "pnpm run project:status",
         "hosted Verify"
-      ]
+      ],
+      "pr": 248,
+      "evidence": [
+        {
+          "pr": 248,
+          "reviewedHead": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7",
+          "merge": "6644d575d127bb80e6aadb086ed6b76f51afcf4b",
+          "tree": "281efbbab3871e477e1f74fb2a8fb9241df3be84",
+          "checks": "All 17 hosted checks passed on the final head; merged by gh-merge-when-green.sh in queue order. test:agent 44/44 and project:status passed locally."
+        }
+      ],
+      "retirement": {
+        "head": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7",
+        "releasedAt": "2026-10-11T20:43:27+00:00",
+        "sessionsReviewedAt": "2026-10-11T20:43:27+00:00"
+      },
+      "retiredBranches": [
+        "docs/studio-tasks-retired"
+      ],
+      "archive": {
+        "docs/studio-tasks-retired": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-InYhsb/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-InYhsb/history.bundle",
+          "sha256": "082b98cb5c1f1be1aaeeccfd7826916e050c97ba54b88677b5d2dac8015eb162",
+          "tag": "refs/tags/archive/worktree-prune/38991e71-23f5-44d4-bade-f82b4b5ad9d6",
+          "head": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7"
+        }
+      }
     },
     {
       "id": "studio-prompt-polish",
@@ -2347,6 +2373,34 @@
         "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
         "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
       }
+    },
+    {
+      "id": "desktop-host-errors",
+      "title": "Replace the desktop IPC error prefix allowlist with a HostError class (bridge-hardening review N4)",
+      "status": "active",
+      "branches": [
+        "fix/desktop-host-errors"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-11T22:43:27+00:00",
+      "updatedAt": "2026-10-11T20:43:27+00:00",
+      "nextAction": "PR #250 approved by river-oaks-c2; merge after #249 and #254 in queue order.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "desktop/host-error.js",
+        "desktop/main.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js"
+      ],
+      "requiredChecks": [
+        "node --test desktop/tests/*.test.js",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "pnpm run verify",
+        "hosted Verify"
+      ]
     }
   ]
 }

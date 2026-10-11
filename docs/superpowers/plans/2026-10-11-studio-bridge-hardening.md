@@ -43,7 +43,7 @@ Codex path instead of `coven run`.
 | N1 | Other space characters and filler characters survived. | **Fixed.** `\p{Zs}` becomes a plain space, and the Hangul fillers and U+2800 are hidden. |
 | N2 | New chat then an immediate send was refused briefly. | **Fixed.** Aborted runs don't count as busy. |
 | N3 | A long saved brief was cut silently. | **Fixed.** The panel says it kept the first 2,000 characters. |
-| N4 | `publicError` uses a prefix allowlist. | **Deferred.** It fails safe (unknown messages become the fallback). A host-error class is a follow-up refactor. |
+| N4 | `publicError` uses a prefix allowlist. | **Fixed in a follow-up** (`fix/desktop-host-errors`): the hosts throw `HostError` (`desktop/host-error.js`), and only those messages reach the page. Parse errors, file-system errors and any other `Error` get the fixed fallback. |
 | N5 | The designer dialog didn't mention the workspace path. | **Fixed.** Both dialogs now say "anything in" `AGENTS.md`, and the docs say to keep secrets out of it. |
 
 ## Verification (latest)

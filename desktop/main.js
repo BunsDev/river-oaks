@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
 import { createStudioDesignerHost, designerSenderAllowed, designerConsentDetail } from './studio-designer-host.js';
 import { createStudioAgentHost } from './studio-agent-host.js';
+import { publicError } from './host-error.js';
 import { navigationAllowed, windowBounds } from './runtime.js';
 import { photoDownloadAllowed } from './photo-download.js';
 import { studioDownloadAllowed } from './studio-download.js';
@@ -27,14 +28,6 @@ if (dev) {
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password) throw new Error('Desktop development requires a loopback Vite URL.');
   if (!clientId && process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE !== '1') throw new Error('Desktop development requires WORKOS_CLIENT_ID for the current Staging application.');
 }
-
-// Host errors are written for people; anything else (a parse error quoting model
-// output, a file path with the account name) is replaced before it reaches the page.
-const HOST_ERROR = /^(Designer|Design|Invalid|Existing designer|Familiar|Coven|Codex|Claude|The designer|The agent|Agent|Too many|Keep the task|Select an object|This region|This Coven|Installed design|Studio navigation|The proposal|Use 1–64)/;
-const publicError = (error, fallback) => {
-  const message = error instanceof Error && !(error instanceof SyntaxError) && !error.code ? error.message : '';
-  return Error(HOST_ERROR.test(message) && !/(^|[\s'"(])\/(Users|home|private|var)\//.test(message) ? message : fallback);
-};
 
 async function saveWindow() {
   if (!window || window.isDestroyed()) return;
