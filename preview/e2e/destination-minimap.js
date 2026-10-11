@@ -30,12 +30,14 @@ async page => {
   }
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.keyboard.press('Escape');
+  await page.locator('#places .world-map-surface').waitFor({ state: 'visible' });
   check(await page.locator('#places .world-map-surface').isVisible(), 'Closing restores the live compact map');
   check(await page.locator('#places-open').evaluate(el => el === document.activeElement), 'Closing restores focus to the expand control');
   await page.locator('#places .world-map-surface').focus();
   await page.keyboard.press('Enter');
   check(await page.locator('#places-dialog').isVisible(), 'The compact map expands from the keyboard');
   await page.keyboard.press('Escape');
+  await page.locator('#places .world-map-surface').waitFor({ state: 'visible' });
   check(await page.locator('#places .world-map-surface').evaluate(el => el === document.activeElement), 'Keyboard expansion restores focus to the compact map');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator('#explore-section').screenshot({ path: 'output/playwright/destination-minimap-compact.png' });
