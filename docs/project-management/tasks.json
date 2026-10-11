@@ -1354,6 +1354,71 @@
         "browser": "workplace journey passed 5/5; workplace-room graybox passed",
         "review": "independent subagent review: 3 confirmed + 6 plausible defects fixed with regressions"
       }
+    },
+    {
+      "id": "map-ui-readability",
+      "title": "Improve district map hierarchy and selection readability",
+      "status": "active",
+      "branches": [
+        "feat/map-ui-readability"
+      ],
+      "owner": "codex:map-ui-readability-20261011",
+      "leaseUntil": "2026-10-11T13:50:22.593604+00:00",
+      "updatedAt": "2026-10-11T11:50:22.593604+00:00",
+      "nextAction": "Combined PR #229 refreshed onto cd42d50e; final local checks passed, then push and wait for required hosted checks before authorized squash merge.",
+      "filesOwned": [
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/src/places-guide.css",
+        "preview/tests/world-map.test.js",
+        "preview/e2e/destination-minimap.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/world-map.test.js",
+        "pnpm run test:experience destination-minimap",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-map-ui-readability.md",
+      "verification": {
+        "core": "11 tasks passed; .runtime/agent/core.json",
+        "browser": "destination-minimap passed across themes/viewports; edge regression red/green",
+        "shared": "development-world passed both journeys",
+        "review": "No remaining findings; badge edge correction verified across 90 combinations",
+        "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
+      },
+      "pr": 229
+    },
+    {
+      "id": "jev-ride-shortcuts",
+      "title": "Keyboard shortcuts for calling Jev and entering or exiting a ride",
+      "status": "active",
+      "branches": [
+        "feat/jev-ride-shortcuts"
+      ],
+      "owner": "codex:jev-ride-shortcuts-20261011",
+      "leaseUntil": "2026-10-11T13:50:22.593604+00:00",
+      "updatedAt": "2026-10-11T11:50:22.593604+00:00",
+      "nextAction": "Combined PR #229 refreshed onto cd42d50e; final local checks passed, then push and wait for required hosted checks before authorized squash merge.",
+      "filesOwned": [
+        "preview/src/player-avatar.js",
+        "preview/src/walking-ui.js",
+        "preview/e2e/carriage.js",
+        "docs/character-forms.md",
+        "preview/src/rail-navigation.js"
+      ],
+      "requiredChecks": [
+        "pnpm run test:experience carriage",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-jev-ride-shortcuts.md",
+      "verification": {
+        "browser": "pnpm run test:experience carriage passed twice after implementation; 21 checks; .runtime/jev-ride-shortcuts-browser.json",
+        "core": "pnpm run verify passed; 11 tasks; .runtime/agent/core.json",
+        "diff": "git diff --check passed; source diff and rendered button hints reviewed",
+        "gaps": "Core excludes Redis/full browser/native/live auth/human accessibility; existing reconciliation gaps remain.",
+        "combinedCore": "Final combined tree: pnpm run verify passed 11 tasks with Node test concurrency 2; .runtime/agent/core.json in ride-shortcuts worktree"
+      },
+      "pr": 229
     }
   ]
 }
