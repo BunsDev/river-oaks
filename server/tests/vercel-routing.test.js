@@ -30,7 +30,9 @@ test('store intro claims reach the hosted profile API through the configured rew
   const rewrite = config.rewrites.find(item => item.source === route);
   assert.ok(rewrite);
   assert.equal(normalizeVercelRoute(route), route);
+  assert.equal(normalizeVercelRoute(rewrite.destination), route);
   assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`), `${route}?world=moon-garden`);
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/profile/claim-intro&_river_path=/auth/logout'), '/not-found');
 });
 
 test('Vercel rewrites every resident social and group action to the server entry',()=>{
