@@ -8,6 +8,23 @@ async (page) => {
   await openHudSpace(page, 'settings-section', 'World');
   await page.getByRole('link', { name: 'Open World Studio' }).click({ timeout: 10000 });
   await page.waitForSelector('body[data-studio-ready="true"]',{timeout:20000});
+  const checkPrompt=async()=>{
+    const prompt=page.getByLabel('Ask the World Studio agent');
+    await prompt.focus();
+    const look=await prompt.evaluate(input=>{
+      const field=getComputedStyle(input),pill=getComputedStyle(input.closest('.studio-agent-pill'));
+      const panel=getComputedStyle(document.querySelector('.studio-agent-panel'));
+      return {fieldOutline:field.outlineStyle,pillOutline:pill.outlineStyle,pillWidth:pill.outlineWidth,background:pill.backgroundColor,surface:panel.backgroundColor};
+    });
+    if(look.fieldOutline!=='none'||look.pillOutline!=='solid'||look.pillWidth!=='2px'||look.background!==look.surface)throw Error(`Scene prompt lost its unified themed focus: ${JSON.stringify(look)}`);
+    await page.keyboard.press('Tab');
+    const open=page.getByRole('button',{name:'Open agent chat'});
+    if(!await open.evaluate(button=>button===document.activeElement&&getComputedStyle(button).outlineStyle==='solid'))throw Error('Prompt action lost keyboard focus');
+    await page.keyboard.press('Enter');
+    await page.getByRole('region',{name:'World Studio agent'}).waitFor();
+    await page.locator('.studio-agent').press('Escape');
+    if(!await prompt.evaluate(input=>input===document.activeElement))throw Error('Chat collapse did not restore prompt focus');
+  };
   // Appearance follows the OS by default and honors the game's explicit Light/Dark choice.
   const appearance=async()=>{
     const {theme,header,box}=await page.evaluate(()=>({theme:document.documentElement.dataset.theme,header:getComputedStyle(document.querySelector('.studio-header')).backgroundColor,box:document.querySelector('#studio-viewport canvas').getBoundingClientRect().toJSON()}));
@@ -18,10 +35,12 @@ async (page) => {
   await page.emulateMedia({colorScheme:'dark'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   let look=await appearance();
   if(look.header!=='rgb(24, 32, 28)'||!look.dark)throw Error(`Dark system appearance left the Studio light: ${JSON.stringify(look)}`);
+  await checkPrompt();
   await page.screenshot({path:'output/playwright/world-studio-dark.png'});
   await page.evaluate(()=>localStorage.setItem('river-oaks-appearance','light'));await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
   look=await appearance();
   if(look.theme!=='light'||look.header!=='rgb(245, 248, 246)'||look.dark)throw Error(`Explicit Light preference was ignored: ${JSON.stringify(look)}`);
+  await checkPrompt();
   await page.evaluate(()=>localStorage.removeItem('river-oaks-appearance'));await page.emulateMedia({colorScheme:'light'});
   await page.reload();await page.waitForSelector('body[data-studio-ready="true"]');
   await page.locator('#studio-designer-open').click();

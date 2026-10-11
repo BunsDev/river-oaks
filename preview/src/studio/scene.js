@@ -24,7 +24,7 @@ export function buildStudioWorld(region) {
     buildings:region.buildings.map(b=>({...b,center:[...b.center,terrainHeight(terrain,...b.center)]})),
     stores:[], walkSpawn:[...region.spawn,terrainHeight(terrain,...region.spawn)] };
 }
-export function createStudioScene(region) {
+export function createStudioScene(region, theme = 'light') {
   assertStudioBudget(region);
   const group = new THREE.Group(),items = new Map(), world = buildStudioWorld(region);
   const material = color => new THREE.MeshStandardMaterial({ color, roughness:.88 });
@@ -66,8 +66,16 @@ export function createStudioScene(region) {
   mesh(new THREE.ConeGeometry(.7,1.8,4),spawnMat,spawn).position.y=.9;
   const grid=new THREE.GridHelper(Math.max(e-w,n-s),Math.max(4,Math.ceil(Math.max(e-w,n-s)/4)),'#8ca697','#b5c6b9');
   grid.position.set((w+e)/2,Math.min(...region.terrain.heights_m)+.045,-(s+n)/2);group.add(grid);
+  grid.material.transparent=true;
+  function setAppearance(theme) {
+    const dark=theme==='dark';
+    ground.material.color.set(dark?'#344b3b':'#8c9f83');
+    roadMaterial.color.set(dark?'#58685a':'#a0ae9b');
+    grid.material.opacity=dark?.3:.45;
+  }
+  setAppearance(theme);
   group.updateMatrixWorld(true);
-  return {group,items,world};
+  return {group,items,world,setAppearance};
 }
 export function disposeStudioScene(group) {
   const geometries=new Set(),materials=new Set();

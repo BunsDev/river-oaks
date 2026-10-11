@@ -1732,6 +1732,57 @@
       ]
     },
     {
+      "id": "studio-prompt-polish",
+      "title": "Match the World Studio scene prompt and surfaces to TypeSafe Place",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-polish"
+      ],
+      "owner": "codex session 01a12992-ca4f-7953-bf53-2e8875f2cf15",
+      "leaseUntil": "2026-10-11T20:29:48.733630+00:00",
+      "updatedAt": "2026-10-11T18:29:48.733630+00:00",
+      "nextAction": "User authorized protected landing of PR #246. Await exact-head hosted checks after the asset-only main update to 4849d62; coordinate concurrent River Oaks merges and retain local evidence.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-prompt-polish.md",
+      "filesOwned": [
+        "preview/src/studio/studio.css",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/scene.js",
+        "preview/src/studio/viewport.js",
+        "preview/src/access-gate.css",
+        "preview/src/access-theme.css"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "Visual inspection of prompt and panel in light/dark, focus, hover and narrow screens"
+      ],
+      "verification": {
+        "core": "3191 passing tests and 111 existing core-profile skips on 8c81; runtime source unchanged by the subsequent login-art-only main update. .runtime/prompt-polish-rebase-8c81/core.json",
+        "browser": "After main 4849 update, build passed and world-studio passed 10.967s; .runtime/prompt-polish-rebase-4849/verification.json",
+        "visual": "light/dark, focus/hover/typed/open/collapse, 320/390/1000px checks passed; local output/playwright/prompt-polish captures",
+        "source": "Shared login CSS extraction byte-identical; runtime hashes unchanged through gates"
+      },
+      "pr": 246,
+      "evidence": [
+        {
+          "pr": "https://github.com/BunsDev/river-oaks/pull/246",
+          "verifiedSourceHead": "99bb582c9d2777eeb20f00dc8c5fc8a8c5c95ae3",
+          "base": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "checks": "Core and World Studio journey passed; local visual captures inspected."
+        },
+        {
+          "base": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "verifiedRebasedHead": "1443b2cd631eb5e9b85df3ee993f474f3c32c7e7",
+          "checks": "Fresh core and World Studio journey passed after reconciling current main; all tracked source hashes unchanged during checks. Subsequent changes update only this task and its ledger."
+        },
+        {
+          "base": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "verifiedRebasedHead": "1a88bf0bd95d6c8f3be86374934221870e2af07f",
+          "checks": "Only upstream login artwork and its source record changed; both own commits have identical range-diff. Fresh production build and Studio journey passed; all tracked hashes unchanged during verification. Prior head 2db64ea passed all ten hosted checks."
+        }
+      ]
+    },
+    {
       "id": "studio-starter-districts",
       "title": "Five importable district starters and World Studio template chooser",
       "status": "active",
@@ -1739,9 +1790,9 @@
         "cody/starter-districts-20261011"
       ],
       "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
-      "leaseUntil": "2026-10-11T20:42:28+00:00",
-      "updatedAt": "2026-10-11T18:42:28+00:00",
-      "nextAction": "Taken over from river-oaks-27. Merged main at 4849d62 (only the register conflicted). After re-verification, push when river-oaks-c2's queue reaches #242 (after #244), merge latest main again if needed, then merge with ~/.claude/scripts/gh-merge-when-green.sh 242 and record merge evidence.",
+      "leaseUntil": "2026-10-11T21:01:09+00:00",
+      "updatedAt": "2026-10-11T19:01:09+00:00",
+      "nextAction": "Merged main at c1695a9 (#246 Studio prompt restyle; studio.css and world-studio.js merged automatically, register resolved task by task). After re-verification: when river-oaks-c2's queue reaches #242, merge the latest main, push, then gh-merge-when-green.sh 242; record merge evidence and mark delivered.",
       "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
       "filesOwned": [
         "preview/public/data/starter-districts/",
