@@ -58,7 +58,14 @@ async page => {
     });
     const target = path.at(-1);
     check(Math.hypot(end.pose.position[0] - target[0], end.pose.position[2] + target[1]) < 0.4, `${name}: normal keyboard walking reaches the storefront`);
-    check(Math.hypot(end.pose.position[0] - end.server.position[0], end.pose.position[2] + end.server.position[1]) < 0.5, `${name}: server position agrees with the walker`);
+    // The town's snapshot trails the walker by a tick or two when it stops. A
+    // refused move never converges, so wait briefly and still fail on a real gap.
+    const agreed = await page.waitForFunction(() => {
+      const town = window.__riverMultiplayer(), pose = window.__riverCarriage().pose.position;
+      const server = town.snapshot.players.find(player => player.id === town.selfId)?.position;
+      return server && Math.hypot(pose[0] - server[0], pose[2] + server[1]) < 0.5;
+    }, null, { timeout: 3000 }).then(() => true, () => false);
+    check(agreed, `${name}: server position agrees with the walker (${Math.hypot(end.pose.position[0] - end.server.position[0], end.pose.position[2] + end.server.position[1]).toFixed(2)} m when it stopped)`);
     const length = samples.slice(1).reduce((sum, sample, i) => sum + Math.hypot(sample.position[0] - samples[i].position[0], sample.position[2] - samples[i].position[2]), 0);
     routes.push({ name, path, seconds: (Date.now() - started) / 1000, length, samples, end });
     console.log(`Spatial street reached ${name}: ${length.toFixed(1)} m in ${routes.at(-1).seconds.toFixed(1)} s`);
