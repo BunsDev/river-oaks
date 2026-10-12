@@ -56,3 +56,53 @@ test('street names stay upright for reversed geometry and tolerate invalid input
   assert.deepEqual(worldMap.mapRoadLabels([{name:'Broken',points:[[NaN,0],[0,0]]}],projection),[]);
   assert.deepEqual(worldMap.mapRoadLabels([],null),[]);
 });
+
+// Absolute M/L/H/V coordinates of a marker path, or the circle an arc path draws.
+const extent=d=>{
+  const arc=d.match(/^M (\S+) (\S+) a (\S+)/);
+  if(arc){const [x,y,r]=arc.slice(1).map(Number);return [x,y-r,x+2*r,y+r];}
+  const xs=[],ys=[];let x=0,y=0;
+  for(const [,command,args] of d.matchAll(/([MLHVZ])\s*([^MLHVZ]*)/g)){
+    const values=args.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if(command==='H')x=values[0];else if(command==='V')y=values[0];
+    else if(command!=='Z')for(let i=0;i<values.length;i+=2){x=values[i];y=values[i+1];xs.push(x);ys.push(y);continue;}
+    if(command==='H'||command==='V'){xs.push(x);ys.push(y);}
+  }
+  return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+};
+
+test('each kind of place has its own map silhouette, centred on the place so a click selects it',()=>{
+  const places=[{kind:'arrival'},{kind:'shop',category:'Shopping & culture'},{kind:'shop',category:'Dining'},
+    {kind:'shop',category:'Jewelry & accessories'},{kind:'spot',category:'Beauty & wellness'},{kind:'shop',category:'Homes'},{kind:'spot'}];
+  const shapes=places.map(worldMap.placeShape);
+  assert.deepEqual(shapes,['sparkle','square','plate','gem','flower','house','dot']);
+  for(const shape of shapes){
+    const [x0,y0,x1,y1]=extent(worldMap.markerPath(shape,400,300,9.5));
+    // Within a map unit or so of the anchor: nearestMapPlace selects within 20.
+    assert.ok(Math.abs((x0+x1)/2-400)<1.5&&Math.abs((y0+y1)/2-300)<1.5,`${shape} is centred`);
+    assert.ok(x1-x0>12&&x1-x0<30&&y1-y0>12&&y1-y0<30,`${shape} is marker sized`);
+  }
+});
+
+test('the map arrow points where the walker faces and turns the short way round',()=>{
+  // Walking forward moves (-sin yaw, -cos yaw) on the north-up map; the arrow is drawn up.
+  for(const yaw of [0,Math.PI/2,-Math.PI/2,Math.PI,2.3,-0.7]){
+    const angle=worldMap.headingDegrees(yaw)*Math.PI/180,arrow=[Math.sin(angle),-Math.cos(angle)];
+    assert.ok(Math.hypot(arrow[0]+Math.sin(yaw),arrow[1]+Math.cos(yaw))<1e-9,`yaw ${yaw}`);
+  }
+  assert.equal(worldMap.unwrapDegrees(null,42),42);
+  assert.equal(worldMap.unwrapDegrees(170,-170),190);
+  assert.equal(worldMap.unwrapDegrees(-170,170),-190);
+  assert.equal(worldMap.unwrapDegrees(720,10),730);
+  assert.equal(worldMap.unwrapDegrees(30,40),40);
+});
+
+test('the map key names the symbols this map can show',()=>{
+  const labels=places=>worldMap.mapLegend(places,false).map(key=>key.label);
+  assert.deepEqual(labels([{kind:'arrival'},{kind:'shop',category:'Dining'},{kind:'shop',category:'Beauty & wellness'}]),
+    ['You','Arrival','Dining','Beauty','Saved place','Player']);
+  assert.deepEqual(labels([{kind:'spot'}]),['You','Destination','Saved place','Player']);
+  assert.ok(worldMap.mapLegend([],true).some(key=>key.label==='Parcel'));
+  for(const key of worldMap.mapLegend([{kind:'arrival'},{kind:'shop',category:'Jewelry & accessories'}],true))
+    assert.match(worldMap.legendPath(key.shape),/^M /,`${key.label} has a drawn key`);
+});

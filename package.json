@@ -15,9 +15,9 @@
     "test": "node --test preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
     "test:shared": "node preview/e2e/shared-runner.js",
-    "test:security:e2e": "node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
-    "test:reflections:webgl": "node preview/e2e/reflections-webgl.js",
-    "test:trees:webgl": "node preview/e2e/landscape-trees.js",
+    "test:security:e2e": "node scripts/browser-lock.mjs 'security browser tests' -- node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
+    "test:reflections:webgl": "node scripts/browser-lock.mjs 'reflections' -- node preview/e2e/reflections-webgl.js",
+    "test:trees:webgl": "node scripts/browser-lock.mjs 'landscape trees' -- node preview/e2e/landscape-trees.js",
     "assets:trees": "node scripts/prepare_ez_tree.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
@@ -69,7 +69,11 @@
     "preproject:status": "node scripts/enforce-pnpm.mjs",
     "preproject:check": "node scripts/enforce-pnpm.mjs",
     "project:prune": "node scripts/project-prune.mjs",
-    "preproject:prune": "node scripts/enforce-pnpm.mjs"
+    "plans:index": "node scripts/plans-index.mjs",
+    "preplans:index": "node scripts/enforce-pnpm.mjs",
+    "preproject:prune": "node scripts/enforce-pnpm.mjs",
+    "land": "node scripts/land-pr.mjs",
+    "preland": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",
@@ -87,5 +91,5 @@
     "vite": "8.3.3"
   },
   "main": "desktop/main.js",
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
 }

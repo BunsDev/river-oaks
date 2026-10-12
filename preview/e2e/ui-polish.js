@@ -20,6 +20,12 @@ async page=>{
   await openHudSpace(page, 'community-section');
   await page.locator('#community-local').selectOption(await page.locator('#community-local option').evaluateAll(options=>options.find(option=>option.value.startsWith('store-')).value));await page.locator('#community-meet').click();
   await page.locator('#community-dialogue').waitFor({state:'visible'});
+  // Meeting a store's local can be a first visit, whose intro hides the HUD
+  // until it ends or is skipped (on main too); skip it before checking controls.
+  if(await page.locator('.store-intro[open]').waitFor({state:'visible',timeout:3000}).then(()=>true,()=>false)){
+    await page.keyboard.press('Escape');await page.locator('.store-intro[open]').waitFor({state:'hidden'});
+  }
+  await page.locator('#community-close').waitFor({state:'visible',timeout:5000}).catch(()=>{});
   check(await page.locator('#community-close').isVisible(),'Conversation opens with a reachable close control');
   await page.locator('#community-about').click();
   await page.waitForTimeout(300);

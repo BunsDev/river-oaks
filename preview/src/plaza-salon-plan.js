@@ -1,0 +1,121 @@
+// The Dior-Toulouse plaza furnished as an open-air salon under its grove of
+// ten trees: a curved timber bench with dusty-pink cushions around a travertine
+// coffee table, a round timber table and two travertine chess tables with café
+// armchairs, travertine planters along the footway, smoked-bronze lantern posts,
+// a small music stage near Toulouse, and string lights strung through the
+// grove. Art direction follows Val's reference set (2026-10-12); everything is
+// authored geometry, no image pixels.
+//
+// World data only, no THREE: the browser draws from this plan, and the walking
+// model (browser, townspeople and the authoritative town) blocks the same
+// footprints, so every process must import it rather than copy it. Furniture
+// positions are fixed and independent of the tree data, so a town loaded with
+// or without the vegetation dataset blocks and seats identically; only the
+// string lights follow whichever trees the world has in the plaza. Positions are
+// [east, north] metres; a heading follows the avatar convention
+// atan2(dx, -dnorth), which is also the Three.js yaw of a model facing local +Z.
+import { treeSupports } from './tree-placements.js';
+
+const DIOR = 'osm-node-8172494958';
+// The open paving between the Dior and Etro blocks.
+const PLAZA = { west: -2809, east: -2776, south: -1305, north: -1291 };
+const LIGHT_HEIGHT = 3.35, POST_HEIGHT = 3.1, MAX_STRAND = 9;
+
+const heading = ([x, north], [tx, tn]) => Math.atan2(tx - x, -(tn - north));
+const along = ([x, north], angle, distance) => [x + Math.sin(angle) * distance, north - Math.cos(angle) * distance];
+
+// Chairs pulled up to a table: `angles` are the headings from the table to each chair.
+function chairsAround(id, centre, distance, angles) {
+  return angles.map((angle, index) => {
+    const [x, north] = along(centre, angle, distance);
+    return { id: `${id}-${index}`, x, north, heading: heading([x, north], centre) };
+  });
+}
+
+// String lights: a minimum spanning web over the grove's trunks and the lantern
+// posts (deterministic Prim's algorithm), so every anchor is lit and no strand
+// crosses the plaza further than MAX_STRAND metres.
+function lightWeb(anchors) {
+  if (anchors.length < 2) return [];
+  const joined = new Set([0]), strands = [];
+  while (joined.size < anchors.length) {
+    let best = null;
+    for (const i of joined) anchors.forEach((to, j) => {
+      if (joined.has(j)) return;
+      const length = Math.hypot(to.x - anchors[i].x, to.north - anchors[i].north);
+      if (length <= MAX_STRAND && (!best || length < best.length - 1e-9)) best = { i, j, length };
+    });
+    if (!best) break;
+    joined.add(best.j); strands.push({ from: anchors[best.i], to: anchors[best.j] });
+  }
+  return strands;
+}
+
+export function plazaSalonPlan(world) {
+  if (world?.scene !== 'district' || !world.stores?.some(store => store.id === DIOR)) return null;
+  const round = { id: 'round', x: -2797.0, north: -1299.2, radius: 0.8 };
+  const chess = [{ id: 'chess-west', x: -2793.0, north: -1301.4 }, { id: 'chess-east', x: -2786.4, north: -1300.4 }];
+  // The bench backs onto the Etro block and opens north, to the grove and Dior.
+  const bench = { id: 'bench', x: -2781.4, north: -1302.0, seatRadius: 1.42, backRadius: 2.02, opening: Math.PI, span: Math.PI * 1.18 };
+  const chairs = [
+    ...chairsAround('round', [round.x, round.north], 1.22, [Math.PI / 4, Math.PI * 3 / 4, Math.PI * 5 / 4, Math.PI * 7 / 4]),
+    ...chess.flatMap(table => chairsAround(table.id, [table.x, table.north], 0.86, [Math.PI / 2, -Math.PI / 2])),
+  ];
+  // Long planters edge the footway between the grove's northern trunks; the
+  // Dior entrance (east ≈ -2784.7) stays open.
+  const planters = [-2802.9, -2793.0].map((x, index) => ({ id: `planter:${index}`, x, north: -1292.85, heading: 0 }));
+  const stage = { id: 'stage', x: -2806.0, north: -1300.6, radius: 1.3 };
+  stage.heading = heading([stage.x, stage.north], [round.x, round.north]);
+  const lanterns = [[-2805.9, -1294.2], [-2778.7, -1295.8], [-2797.4, -1303.0], [-2786.6, -1303.4]]
+    .map(([x, north], index) => ({ id: `lantern:${index}`, x, north, heading: heading([x, north], [-2792.5, -1298.5]), height: POST_HEIGHT }));
+  const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
+    .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
+  const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
+  return { round, chess, bench, chairs, planters, lanterns, stage, trees, strands, postHeight: POST_HEIGHT };
+}
+
+// Footprints the walking model blocks: [east, north, radius, height]. Chairs and
+// the bench's seat strip stay open, as storefront benches are, because sitting
+// and standing up must land on a free position (server/world.js sit()).
+export function plazaSalonFootprints(world) {
+  const plan = plazaSalonPlan(world);
+  if (!plan) return [];
+  const footprints = [
+    [plan.round.x, plan.round.north, plan.round.radius, 0.76],
+    ...plan.chess.map(table => [table.x, table.north, 0.42, 0.76]),
+    [plan.bench.x, plan.bench.north, 0.44, 0.42],
+    ...plan.lanterns.map(post => [post.x, post.north, 0.16, plan.postHeight]),
+    [plan.stage.x, plan.stage.north, plan.stage.radius, 0.24],
+  ];
+  // Planters and the bench back are long: a row of overlapping discs.
+  for (const planter of plan.planters) for (const offset of [-0.62, 0, 0.62])
+    footprints.push([planter.x + Math.cos(planter.heading) * offset, planter.north + Math.sin(planter.heading) * offset, 0.3, 0.6]);
+  const { bench } = plan, back = bench.opening + Math.PI;
+  for (let step = 0; step <= 10; step++) {
+    const angle = back - bench.span / 2 + bench.span * step / 10;
+    const [x, north] = along([bench.x, bench.north], angle, bench.backRadius);
+    footprints.push([x, north, 0.17, 0.9]);
+  }
+  return footprints;
+}
+
+// Seats in the shared seating model: a bench place is 'bench:<id>' with one slot
+// per place. The bench seats three facing its coffee table; each chair seats one.
+export function plazaSalonSeats(world) {
+  const plan = plazaSalonPlan(world);
+  if (!plan) return [];
+  const seats = [], { bench } = plan, back = bench.opening + Math.PI;
+  [-0.42, 0, 0.42].forEach((share, slot) => {
+    const angle = back + bench.span * share * 0.82;
+    const [x, north] = along([bench.x, bench.north], angle, bench.seatRadius);
+    const facing = heading([x, north], [bench.x, bench.north]);
+    seats.push({ buildId: 'bench:plaza-salon-bench', slot, kind: 'bench', title: 'Curved bench', x, north, heading: facing, height: 0.53,
+      approach: along([x, north], facing, 0.62) });
+  });
+  for (const chair of plan.chairs) seats.push({ buildId: `bench:plaza-salon-${chair.id}`, slot: 0, kind: 'bench',
+    title: chair.id.startsWith('chess') ? 'Chess table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
+    // Chairs face their table, so people step in from behind.
+    approach: along([chair.x, chair.north], chair.heading, -0.82) });
+  // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
+  return seats.map(seat => ({ ...seat, storeId: DIOR, id: `${seat.buildId}:${seat.slot}` }));
+}

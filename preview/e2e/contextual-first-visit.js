@@ -64,10 +64,19 @@ async initialPage => {
   await page.waitForFunction(() => document.querySelector('#walking-hud').dataset.primaryAction === 'talk');
   check(await page.locator('.walking-primary > #walking-talk').isVisible(), 'Inside, the reachable conversation becomes primary');
   await page.screenshot({ path: `output/playwright/contextual-indoor-${touch ? 'touch' : 'desktop'}.png` });
+  // The town must confirm travel and focus before the conversation opens, so a press
+  // can be refused. Wait for what the visitor sees, not only the dialog.
+  const notices = () => page.evaluate(() => [...document.querySelectorAll('#community-encounter-notice, .multiplayer-roster p[role=status]')].map(node => node.textContent.trim()).filter(Boolean).join(' | '));
+  const noticesBefore = await notices();
   if (touch) await page.locator('#walking-talk').tap();
   else { await page.locator('#walking-talk').focus(); await page.keyboard.press('Enter'); }
-  await page.locator('#community-dialogue').waitFor({ state: 'visible' });
-  check(true, 'The primary action opens the actual conversation');
+  const talked = await page.waitForFunction(noticesBefore => {
+    if (!document.querySelector('#community-dialogue').hidden) return 'opened';
+    const now = [...document.querySelectorAll('#community-encounter-notice, .multiplayer-roster p[role=status]')].map(node => node.textContent.trim()).filter(Boolean).join(' | ');
+    return now && now !== noticesBefore ? `refused: ${now}` : false;
+  }, noticesBefore, { timeout: 60000 }).then(result => result.jsonValue(), () => 'no conversation and no notice within 60 s');
+  check(talked === 'opened', talked === 'opened' ? 'The primary action opens the actual conversation'
+    : `Talk press: ${talked}; town replies ${JSON.stringify(replies.slice(-4))}`);
   await page.locator('#community-close').focus(); await page.keyboard.press('Escape');
   check(await host.evaluate(node => node === document.activeElement), 'Conversation dismissal restores world focus');
   await reveal('#walking-enter');
@@ -136,7 +145,14 @@ async initialPage => {
     await context.addCookies(cookies);
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
-    const touch = await visit(page, { touch: true }).catch(async error => { await page.screenshot({ path: 'output/playwright/contextual-touch-failure.png' }); throw error; });
+    // The runner only sees the first context, so record this page before it closes.
+    // The name matches the experience-*-failure.png pattern CI uploads.
+    const touch = await visit(page, { touch: true }).catch(async error => {
+      const state = await page.evaluate(() => ({ dialogHidden: document.querySelector('#community-dialogue')?.hidden, hud: { ...document.querySelector('#walking-hud')?.dataset }, navigation: performance.getEntriesByType('navigation')[0]?.type, connected: window.__riverMultiplayer?.().connected })).catch(() => null);
+      await page.screenshot({ path: 'output/playwright/experience-contextual-touch-failure.png' }).catch(() => {});
+      error.message += ` (touch page: ${JSON.stringify(state)})`;
+      throw error;
+    });
     return { desktop, touch };
   } finally { await context.close(); }
 }

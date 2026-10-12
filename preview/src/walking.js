@@ -3,6 +3,7 @@ import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 import { beastTraversal } from './beast-traversal.js';
+import { plazaSalonFootprints } from './plaza-salon-plan.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -64,6 +65,13 @@ export function createWalkingEnvironment(world, placedObjects = []) {
   // A stable district altitude ceiling prevents corrections as terrain changes
   // beneath the bubble. Client motion and shared pose/checkpoint validation use it.
   const flightCeiling=Math.max(32,...roofs.map(roof=>roof.top+5-Math.min(...roof.ring.map(([x,z])=>groundAt(x,z)))));
+  // Plaza salon furniture (plaza-salon-plan.js) blocks bodies and low flight like a
+  // placed object. One box around the plaza keeps every other query to a compare.
+  const props = plazaSalonFootprints(world).map(([east, north, radius, height]) => ({ x: east, z: -north, radius, height }));
+  const propBox = props.length ? { minX: Math.min(...props.map(p => p.x - p.radius)) - 2, maxX: Math.max(...props.map(p => p.x + p.radius)) + 2,
+    minZ: Math.min(...props.map(p => p.z - p.radius)) - 2, maxZ: Math.max(...props.map(p => p.z + p.radius)) + 2 } : null;
+  const propAt = (x, y, z, radius, halfHeight = 0) => propBox && x > propBox.minX && x < propBox.maxX && z > propBox.minZ && z < propBox.maxZ
+    && props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height);
   const baseIsFree = (x, z) => {
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
     const room = roomFor(x, z, RADIUS);
@@ -77,19 +85,20 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     if(x<west+margin||x>east-margin||z<-north+margin||z>-south-margin)return false;
     const room=roomFor(x,z,margin);
     if(room)return !roomBlocked(room,x,-z,margin);
+    if(propAt(x,groundAt(x,z)+.9,z,margin,.9))return false;
     return !obstacles.some(o=>x>o.minX-radius&&x<o.maxX+radius&&z>o.minZ-radius&&z<o.maxZ+radius&&overlaps(x,z,o.ring,margin));
   };
   const isFree = (x,z) => {
     if(!baseIsFree(x,z))return false;
-    if(!placedObjects.length)return true;
+    if(!placedObjects.length && !propBox)return true;
     // Every obstacle tests the same candidate position. Resolve its surface
     // once, while keeping later queries fresh for moving objects and terrain.
     const y=groundAt(x,z)+.9;
-    return !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
+    return !propAt(x,y,z,RADIUS,.9) && !placedObjects.some(object=>object.contains(x,y,z,RADIUS,.9));
   };
   const canFly = (x, altitude, z) => {
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
-    if(placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
+    if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
     return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
   };
   const hasSightLine=(from,to)=>{

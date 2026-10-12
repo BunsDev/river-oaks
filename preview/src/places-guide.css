@@ -1,89 +1,180 @@
-/* The rail offers one entry; collections and management live in the travel guide. */
-:root[data-theme] #control-panel .places-launcher{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:14px;text-align:left;border:1px solid var(--hud-hairline,var(--line));border-radius:12px;background:var(--hud-tile,var(--soft));color:var(--ink);font-family:inherit;cursor:pointer}
-.places-launcher strong{display:block;font-size:13px;font-weight:600}
-.places-launcher small{display:block;margin-top:4px;font-size:11px;line-height:1.5;color:var(--muted)}
-.places-launcher>span:last-child{font-size:22px;color:var(--muted)}
-.places-guide{--places:var(--accent);box-sizing:border-box;width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:20px;background:var(--hud-glass,var(--panel));backdrop-filter:var(--hud-filter);color:var(--ink);box-shadow:0 24px 100px #0007;font-family:inherit;overflow:hidden}
-.places-guide[open]{display:flex;flex-direction:column}
-.places-guide::backdrop{background:#07191799;backdrop-filter:blur(8px)}
-.places-guide header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 24px 18px;flex-shrink:0}
-.places-guide .places-eyebrow{margin:0 0 6px;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
-.places-guide h2{margin:0;font-size:25px;font-weight:500;letter-spacing:-.035em;line-height:1.2}
-.places-guide :is(button,input,summary,a){font-family:inherit}
-.places-guide button,.places-guide .places-list a{min-height:36px;border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);border-radius:8px;padding:7px 12px;background:transparent;color:var(--ink);font-size:12px;line-height:1.4;cursor:pointer;text-decoration:none;box-sizing:border-box}
-.places-guide button:hover,.places-guide .places-list a:hover,.places-guide summary:hover{background:var(--accent-soft)}
-.places-guide button:disabled{opacity:.5;cursor:wait}
-.places-guide :is(button,input,summary,a):focus-visible,.places-launcher:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.places-guide kbd{margin-left:6px;font-size:10px;color:var(--muted)}
-.places-guide .places-tabs{display:flex;gap:4px;margin:0 24px;padding:4px;background:color-mix(in srgb,var(--ink) 5%,transparent);border-radius:12px;flex-shrink:0}
-.places-guide .places-tabs button{flex:1;border-color:transparent;color:var(--muted)}
-.places-guide .places-tabs button[aria-selected=true]{background:var(--hud-raised,var(--panel));color:var(--ink);box-shadow:0 1px 5px #0001}
-.places-guide-content{padding:20px 24px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
-.places-guide .places-group>summary{display:none}
-.places-guide [hidden]{display:none!important}
-.places-guide .places-search-label{display:grid;gap:7px;font-size:12px;color:var(--muted)}
-.places-guide input{box-sizing:border-box;width:100%;min-width:0;min-height:40px;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);border-radius:9px;padding:9px 12px;background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font-size:13px}
-.places-guide input::placeholder{color:var(--muted);opacity:1}
-.places-guide :is(#places-results,#places-no-results,#landmarks-empty){font-size:12px;line-height:1.5;color:var(--muted);margin:12px 0}
-.places-guide .places-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.places-guide .places-list li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:62px;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
-.places-guide .place-label{display:grid;gap:3px;min-width:0}
-.places-guide .place-name{font-size:13px;font-weight:500;overflow-wrap:anywhere}
-.places-guide .place-kind{font-size:11px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
-.places-guide .places-list li>button,.places-guide .places-list li>a{background:var(--accent-soft)}
-.places-guide .place-more{position:relative}
-.places-guide .place-more>summary{display:grid;place-items:center;width:36px;min-height:36px;border-radius:8px;list-style:none;cursor:pointer;font-size:12px;color:var(--muted)}
-.places-guide .place-more>summary::-webkit-details-marker{display:none}
-.places-guide .place-more-actions{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}
-.places-guide .places-list li:has(.place-more[open]){grid-template-columns:minmax(0,1fr) auto auto}
-.places-guide .place-more[open]{grid-column:1/-1}
-.places-guide .place-more[open]>summary{position:absolute;right:0;bottom:100%}
-.places-guide .landmark-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
-.places-guide footer{padding:12px 24px 16px;border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent);flex-shrink:0}
-.places-guide #places-status{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:0 0 6px}
-.places-guide #places-status:empty{margin:0}
-.places-guide .places-live-note{margin:0;font-size:11px;color:var(--muted)}
-#places-dialog .world-map{margin-top:20px}
-@media(max-width:480px){.places-guide header{padding:20px 16px 16px}.places-guide .places-tabs{margin-inline:16px}.places-guide-content{padding:16px}.places-guide footer{padding:12px 16px}.places-guide h2{font-size:22px}.places-guide kbd{display:none}}
-@media(pointer:coarse){.places-guide :is(button,input,.places-list a),.places-guide .place-more>summary{min-height:44px}.places-guide .place-more>summary{width:44px}}
+/* The Places guide: a quiet rail entry, and a district atlas for browsing,
+   searching and saving destinations. Built on the HUD tokens (hud-glass.css),
+   so both themes follow data-theme; no light-dark(), which the production
+   build lowers to a media query that ignores an explicit theme choice. */
+:root{--place-shop:#2c7466;--place-spot:#2c7466;--place-arrival:#356a9c;--place-landmark:#7a5ab0;--place-link:#5f6670;
+  --place-shopping:#2c7466;--place-dining:#b2552f;--place-jewelry:#9a7440;--place-beauty:#a5527e;--place-homes:#4f6b8a;
+  --places-icon-dining:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3v6a2 2 0 0 0 4 0V3'/%3E%3Cpath d='M8 11v10'/%3E%3Cpath d='M17 21V3c-1.8 1.2-3 3.8-3 7v4h3'/%3E%3C/svg%3E");--places-icon-jewelry:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 4h11l3.5 5-9 11-9-11z'/%3E%3Cpath d='M3 9h18'/%3E%3Cpath d='m9.5 4 2.5 5 2.5-5'/%3E%3C/svg%3E");--places-icon-beauty:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 3l1.7 5.1L18 10l-5.3 1.9L11 17l-1.7-5.1L4 10l5.3-1.9z'/%3E%3Cpath d='M18.5 15.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z'/%3E%3C/svg%3E");--places-icon-homes:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 11 12 4l8 7'/%3E%3Cpath d='M6 9.5V20h12V9.5'/%3E%3Cpath d='M10 20v-5h4v5'/%3E%3C/svg%3E");
+  --places-icon-shop:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 8.5h13l-1.1 11.2a1.5 1.5 0 0 1-1.5 1.3H8.1a1.5 1.5 0 0 1-1.5-1.3z'/%3E%3Cpath d='M9 10V7a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E");--places-icon-spot:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E");--places-icon-arrival:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 21V4'/%3E%3Cpath d='M6 4.5h10.5l-2.2 4 2.2 4H6'/%3E%3C/svg%3E");--places-icon-landmark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 3.5h10v17l-5-3.4-5 3.4z'/%3E%3C/svg%3E");
+  --places-icon-link:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'/%3E%3C/svg%3E");--places-icon-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6'/%3E%3Cpath d='m15 15 5 5'/%3E%3C/svg%3E");--places-icon-close:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 6.5l11 11M17.5 6.5l-11 11'/%3E%3C/svg%3E");--places-icon-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m13 6 6 6-6 6'/%3E%3C/svg%3E");--places-icon-pin:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E")}
+:root[data-theme=dark]{--place-shop:#72c6b0;--place-spot:#72c6b0;--place-arrival:#93bdea;--place-landmark:#c3a8f0;--place-link:#b9c0c9;
+  --place-shopping:#72c6b0;--place-dining:#f0a07a;--place-jewelry:#dcb878;--place-beauty:#e7a0c8;--place-homes:#a9c1dd}
+.place-icon::before,.places-search-icon,.places-close>span,.places-launcher-arrow::before,#control-panel #places-here::before{background:currentColor;-webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
 
-@media(prefers-reduced-transparency:reduce){.places-guide{background:var(--panel);backdrop-filter:none}.places-guide::backdrop{backdrop-filter:none}}
-@supports not (backdrop-filter:blur(1px)){.places-guide{background:var(--panel)}}
-
-/* A district atlas: slate glass, pale stone and champagne cartography. */
-.places-guide{width:min(1080px,calc(100vw - 32px));--atlas-stone:#d9d3c4;--atlas-brass:#c6aa76}
-.places-guide h2{font-family:var(--font-display,inherit);font-size:30px}
-.places-atlas-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);min-height:0;overflow:auto;overscroll-behavior:contain}
-.places-map-stage{padding:0 22px 22px;min-width:0}
-.places-browser{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--hud-hairline,var(--line));padding-top:4px}
-.places-guide .places-tabs{margin-inline:18px}
-.places-guide-content{padding:14px 18px;max-height:520px}
-.places-guide .places-list .place-name{border:0;padding:4px 0;min-height:32px;text-align:left;background:none;font-size:13px;font-weight:600;color:var(--ink)}
-.places-guide .places-list .place-name:hover{color:var(--accent);text-decoration:underline;text-underline-offset:4px}
-#places-dialog .world-map{border:0;margin:0;padding:0}
-#places-dialog .world-map>summary{display:none}
-#places-dialog .world-map-surface{border:0;border-radius:14px;box-shadow:inset 0 0 0 1px #ffffff14,0 8px 24px #0002}
-#places-dialog .world-map-actions{margin-top:12px}
-#places-dialog .world-map-hint{margin-top:12px;font-size:13px;min-height:1.4em}
+/* Rail: where you are, the live minimap, and one way into the atlas. */
+#control-panel #places-here{display:inline-flex;align-items:center;gap:7px;max-width:100%;margin:0;padding:6px 12px 6px 9px;border-radius:999px;background:var(--hud-tile,var(--soft));font-size:12px;line-height:1.35;color:var(--hud-muted,var(--muted))}
+#control-panel #places-here::before{content:'';--icon:var(--places-icon-pin);flex:none;width:15px;height:15px;color:var(--hud-action,var(--accent))}
+#control-panel #places-here strong{color:var(--ink);font-weight:600}
 #control-panel #places .world-map{padding:0;border:0;margin:12px 0 0}
 #control-panel #places .world-map>summary,#control-panel #places .world-map>:not(.world-map-surface){display:none}
-#control-panel #places .world-map-surface{border:0;border-radius:14px;box-shadow:0 0 0 1px #ffffff14;cursor:zoom-in}
-:root[data-theme] #control-panel .places-launcher{margin-top:10px;background:transparent;border:0;padding:10px 0 4px;min-height:48px}
-#control-panel .storefront-access{margin-top:16px;border-top:1px solid var(--hud-hairline,var(--line));padding-top:12px}
-#control-panel .storefront-access>summary{cursor:pointer;font-size:12px;color:var(--muted);min-height:32px}
+#control-panel #places .world-map-surface{border:0;border-radius:var(--hud-tile-radius,12px);box-shadow:0 0 0 1px var(--hud-hairline,#ffffff14);cursor:zoom-in;transition:box-shadow .18s ease}
+#control-panel #places .world-map-surface:hover{box-shadow:0 0 0 1px var(--hud-hairline,#ffffff14),0 6px 18px rgb(0 0 0 / .14)}
+:root[data-theme] #control-panel .places-launcher{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;min-height:60px;margin-top:12px;padding:12px 12px 12px 14px;text-align:left;border:1px solid var(--hud-hairline,var(--line));border-radius:var(--hud-tile-radius,12px);background:var(--hud-tile,var(--soft));color:var(--ink);cursor:pointer;transition:background .16s ease,border-color .16s ease}
+:root[data-theme] #control-panel .places-launcher:hover{background:var(--hud-tile-hover,var(--accent-soft))}
+.places-launcher-copy{display:grid;gap:3px;min-width:0}
+.places-launcher strong{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.places-launcher small{font-size:11.5px;line-height:1.4;color:var(--hud-muted,var(--muted))}
+.places-launcher-arrow{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:999px;background:var(--hud-action,var(--accent));color:var(--hud-on-action,#fff);transition:transform .18s ease}
+.places-launcher-arrow::before{content:'';--icon:var(--places-icon-arrow);width:16px;height:16px}
+.places-launcher:hover .places-launcher-arrow{transform:translateX(2px)}
+
+/* Legacy storefront directory, kept for direct arrival and entry. */
+#control-panel .storefront-access{margin-top:14px;border-top:1px solid var(--hud-hairline,var(--line));padding-top:10px}
+#control-panel .storefront-access>summary{cursor:pointer;font-size:12px;color:var(--hud-muted,var(--muted));min-height:32px}
+#control-panel #district-directory{display:grid;gap:8px;border-left:0;padding-left:0}
+#control-panel #district-directory :is(input,select){box-sizing:border-box;width:100%;min-height:40px;border:1px solid var(--hud-hairline,var(--line));border-radius:var(--hud-control-radius,9px);background:var(--hud-tile,var(--soft));color:var(--ink);font:inherit;font-size:13px;padding:8px 12px}
+#control-panel #district-directory .store-detail{margin:4px 0 0;padding:12px 14px;border-radius:var(--hud-tile-radius,12px);background:var(--hud-tile,var(--soft))}
+#control-panel #district-directory :is(#visit-destination,#enter-destination){min-height:40px;border-radius:999px;font-weight:600}
+#control-panel #district-directory #visit-destination{background:var(--hud-action,var(--accent));border-color:transparent;color:var(--hud-on-action,#fff)}
 #control-panel .district-summary{display:none}
+
+/* The atlas. */
+.places-guide{--places:var(--hud-action,var(--accent));box-sizing:border-box;width:min(1100px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--hud-hairline,color-mix(in srgb,var(--ink) 14%,transparent));border-radius:var(--hud-sheet-radius,20px);background:var(--hud-glass,var(--panel));-webkit-backdrop-filter:var(--hud-filter,blur(24px));backdrop-filter:var(--hud-filter,blur(24px));box-shadow:inset 0 1px 0 var(--hud-highlight,#fff3),var(--hud-shadow,0 24px 64px #0003);color:var(--ink);overflow:hidden}
+.places-guide[open]{display:flex;flex-direction:column;animation:places-in .22s cubic-bezier(.2,.8,.2,1)}
+.places-guide[open]::backdrop{animation:places-fade .22s ease}
+@keyframes places-in{from{opacity:0;transform:translateY(8px) scale(.985)}}
+@keyframes places-fade{from{opacity:0}}
+.places-guide::backdrop{background:rgb(7 25 23 / .5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.places-guide [hidden]{display:none!important}
+.places-guide :is(button,input,summary,a){font-family:inherit}
+.places-guide :is(button,input,summary,a):focus-visible{outline:2px solid var(--hud-focus,var(--accent));outline-offset:2px}
+.places-guide header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:22px 22px 16px 24px;flex-shrink:0}
+.places-guide .places-eyebrow{margin:0 0 6px;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--hud-muted,var(--muted))}
+.places-guide h2{margin:0;font-family:var(--font-display,inherit);font-size:30px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+.places-guide .places-close{display:grid;place-items:center;flex:none;width:38px;height:38px;padding:0;border:1px solid var(--hud-hairline,transparent);border-radius:999px;background:var(--hud-tile,transparent);color:var(--ink);cursor:pointer;transition:background .16s ease}
+.places-guide .places-close:hover{background:var(--hud-tile-hover,var(--accent-soft))}
+.places-guide .places-close>span{--icon:var(--places-icon-close);width:18px;height:18px}
+.places-atlas-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);min-height:0;overflow:auto;overscroll-behavior:contain}
+.places-map-stage{padding:0 20px 20px 24px;min-width:0}
+.places-browser{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--hud-hairline,var(--line))}
+
+/* Tabs: a segmented control with live counts. */
+.places-guide .places-tabs{display:flex;gap:4px;margin:0 18px;padding:4px;border-radius:var(--hud-tile-radius,12px);background:var(--hud-tile,color-mix(in srgb,var(--ink) 5%,transparent));flex-shrink:0}
+.places-guide .places-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;min-height:36px;padding:6px 10px;border:0;border-radius:9px;background:transparent;color:var(--hud-muted,var(--muted));font-size:13px;font-weight:500;cursor:pointer;transition:background .16s ease,color .16s ease}
+.places-guide .places-tabs button[aria-selected=true]{background:var(--hud-raised,var(--panel));color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .08),0 2px 8px rgb(0 0 0 / .06)}
+.places-tab-count{min-width:22px;padding:1px 7px;border-radius:999px;background:var(--hud-tile,color-mix(in srgb,var(--ink) 8%,transparent));font-size:11px;font-variant-numeric:tabular-nums;line-height:1.5}
+.places-tab-count:empty{display:none}
+.places-guide-content{padding:16px 18px 18px;min-height:0;max-height:560px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.places-guide .places-group>summary{display:none}
+
+/* Search and filters. */
+.places-guide .places-search-label{position:relative;display:block}
+.places-guide .places-search-icon{position:absolute;left:13px;top:50%;width:17px;height:17px;margin-top:-8.5px;--icon:var(--places-icon-search);color:var(--hud-muted,var(--muted));pointer-events:none}
+.places-guide input{box-sizing:border-box;width:100%;min-width:0;min-height:44px;border:1px solid var(--hud-hairline,color-mix(in srgb,var(--ink) 18%,transparent));border-radius:var(--hud-tile-radius,12px);padding:10px 14px;background:var(--hud-tile,color-mix(in srgb,var(--ink) 4%,transparent));color:var(--ink);font-size:14px;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+.places-guide #places-search{padding-left:40px}
+.places-guide input::placeholder{color:var(--hud-muted,var(--muted));opacity:1}
+.places-guide input:focus-visible{outline:none;border-color:var(--hud-focus,var(--accent));background:var(--hud-raised,var(--panel));box-shadow:0 0 0 3px color-mix(in srgb,var(--hud-focus,var(--accent)) 22%,transparent)}
+.places-guide .places-filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 2px}
+.places-guide .places-filters button{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:4px 11px;border:1px solid var(--hud-hairline,var(--line));border-radius:999px;background:transparent;color:var(--ink);font-size:12px;font-weight:500;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.places-guide .places-filters button:hover{background:var(--hud-tile,var(--accent-soft))}
+.places-guide .places-filters button[aria-pressed=true]{background:var(--hud-action,var(--accent));border-color:transparent;color:var(--hud-on-action,#fff)}
+.places-filter-count{font-size:11px;font-variant-numeric:tabular-nums;opacity:.7}
+.places-guide #places-results,.places-guide #landmarks-empty{margin:12px 2px 8px;font-size:12px;line-height:1.5;color:var(--hud-muted,var(--muted))}
+.places-guide #places-no-results{display:grid;justify-items:center;gap:10px;margin:8px 0;padding:28px 16px;border:1px dashed var(--hud-hairline,var(--line));border-radius:var(--hud-tile-radius,12px);text-align:center;font-size:13px;color:var(--hud-muted,var(--muted))}
+.places-guide #places-no-results p{margin:0}
+.places-guide #places-no-results button,.places-guide .place-more-actions button,.places-guide .landmark-add button{min-height:34px;padding:6px 14px;border:1px solid var(--hud-hairline,var(--line));border-radius:999px;background:var(--hud-tile,transparent);color:var(--ink);font-size:12px;font-weight:500;cursor:pointer}
+.places-guide :is(#places-no-results,.place-more-actions) button:hover{background:var(--hud-tile-hover,var(--accent-soft))}
+
+/* Destination rows: a kind icon, the name and kind, then Go. */
+.places-guide .places-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.places-guide .places-list li{--kind:var(--place-link);display:grid;grid-template-columns:36px minmax(0,1fr) auto auto;align-items:center;column-gap:12px;min-height:56px;padding:8px 6px 8px 8px;border-radius:var(--hud-tile-radius,12px);transition:background .16s ease}
+.places-guide .places-list li:hover,.places-guide .places-list li:focus-within{background:var(--hud-tile,color-mix(in srgb,var(--ink) 4%,transparent))}
+.places-guide .places-list li[data-kind=shop]{--kind:var(--place-shop)}
+.places-guide .places-list li[data-kind=spot]{--kind:var(--place-spot)}
+.places-guide .places-list li[data-kind=arrival]{--kind:var(--place-arrival)}
+.places-guide .places-list li[data-kind=landmark]{--kind:var(--place-landmark)}
+.places-guide .place-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--kind) 15%,transparent);color:var(--kind)}
+.places-guide .place-icon::before{content:'';--icon:var(--places-icon-link);width:18px;height:18px}
+.places-guide li[data-kind=shop] .place-icon::before{--icon:var(--places-icon-shop)}
+.places-guide li[data-kind=spot] .place-icon::before{--icon:var(--places-icon-spot)}
+.places-guide li[data-kind=arrival] .place-icon::before{--icon:var(--places-icon-arrival)}
+.places-guide li[data-kind=landmark] .place-icon::before{--icon:var(--places-icon-landmark)}
+/* A store's category sets its colour and symbol. */
+.places-guide .places-list li[data-category=shopping]{--kind:var(--place-shopping)}
+.places-guide .places-list li[data-category=dining]{--kind:var(--place-dining)}
+.places-guide .places-list li[data-category=jewelry]{--kind:var(--place-jewelry)}
+.places-guide .places-list li[data-category=beauty]{--kind:var(--place-beauty)}
+.places-guide .places-list li[data-category=homes]{--kind:var(--place-homes)}
+.places-guide li[data-category=shopping] .place-icon::before{--icon:var(--places-icon-shop)}
+.places-guide li[data-category=dining] .place-icon::before{--icon:var(--places-icon-dining)}
+.places-guide li[data-category=jewelry] .place-icon::before{--icon:var(--places-icon-jewelry)}
+.places-guide li[data-category=beauty] .place-icon::before{--icon:var(--places-icon-beauty)}
+.places-guide li[data-category=homes] .place-icon::before{--icon:var(--places-icon-homes)}
+.places-guide .place-label{display:grid;gap:2px;min-width:0}
+.places-guide .places-list .place-name{justify-self:start;max-width:100%;min-height:0;padding:0;border:0;background:none;color:var(--ink);font-size:14px;font-weight:600;letter-spacing:-.005em;line-height:1.3;text-align:left;overflow-wrap:anywhere;cursor:pointer}
+.places-guide .places-list .place-name:hover{color:var(--hud-action,var(--accent))}
+.places-guide .place-kind{font-size:11.5px;line-height:1.35;color:var(--hud-muted,var(--muted));overflow-wrap:anywhere}
+.places-guide .place-kind::first-letter{text-transform:uppercase}
+.places-guide .places-list li>:is(button,a){display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:5px 13px;border:0;border-radius:999px;background:var(--hud-action,var(--accent));color:var(--hud-on-action,#fff);font-size:12px;font-weight:600;line-height:1;text-decoration:none;cursor:pointer;transition:filter .16s ease,transform .16s ease}
+.places-guide .places-list li>:is(button,a)::after{content:'';width:13px;height:13px;background:currentColor;-webkit-mask:var(--places-icon-arrow) center/contain no-repeat;mask:var(--places-icon-arrow) center/contain no-repeat}
+.places-guide .places-list li>:is(button,a):hover{filter:brightness(1.08);transform:translateX(1px)}
+.places-guide .places-list li>button:disabled{opacity:.5;cursor:wait}
+.places-guide .place-more{position:relative}
+.places-guide .place-more>summary{display:grid;place-items:center;width:32px;height:32px;border-radius:999px;list-style:none;cursor:pointer;font-size:11px;letter-spacing:.08em;color:var(--hud-muted,var(--muted));transition:background .16s ease}
+.places-guide .place-more>summary:hover,.places-guide .place-more[open]>summary{background:var(--hud-tile-hover,var(--accent-soft));color:var(--ink)}
+.places-guide .place-more>summary::-webkit-details-marker{display:none}
+.places-guide .place-more-actions{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 2px}
+.places-guide .place-more[open]{grid-column:2/-1}
+.places-guide .place-more[open]>summary{position:absolute;right:0;bottom:100%}
+
+/* Saved places. */
+.places-guide .landmark-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.places-guide .landmark-add button{min-height:44px;padding-inline:18px;border:0;background:var(--hud-action,var(--accent));color:var(--hud-on-action,#fff);font-weight:600}
+
+/* Footer: what just happened, and a hint. */
+.places-guide footer{padding:12px 24px 16px;border-top:1px solid var(--hud-hairline,var(--line));flex-shrink:0}
+.places-guide #places-status{margin:0 0 4px;font-size:12.5px;font-weight:500;line-height:1.5;overflow-wrap:anywhere}
+.places-guide #places-status:empty{margin:0}
+.places-guide #places-status[data-tone=error]{color:#b3261e}
+:root[data-theme=dark] .places-guide #places-status[data-tone=error]{color:#ffb4ab}
+.places-guide .places-live-note{margin:0;font-size:11.5px;color:var(--hud-muted,var(--muted))}
+
+/* The live map inside the atlas. */
+#places-dialog .world-map{border:0;margin:0;padding:0}
+#places-dialog .world-map>summary{display:none}
+#places-dialog .world-map-surface{border:0;border-radius:16px;box-shadow:inset 0 0 0 1px rgb(255 255 255 / .08),0 10px 30px rgb(0 0 0 / .16)}
+#places-dialog .world-map-legend{gap:6px;margin:14px 0 10px}
+#places-dialog .world-map-legend li{padding:3px 9px 3px 7px;border-radius:999px;background:var(--hud-tile,transparent)}
+#places-dialog .world-map-hint{margin:10px 0 12px;font-size:13px;line-height:1.5;min-height:1.5em;color:var(--hud-muted,var(--muted))}
+#places-dialog .world-map-actions{gap:8px}
+#places-dialog .world-map-actions button{min-height:38px;padding:6px 16px;border:1px solid var(--hud-hairline,var(--line));border-radius:999px;background:var(--hud-tile,transparent);color:var(--ink);font-size:12.5px;font-weight:500}
+#places-dialog .world-map-actions button:first-child{border-color:transparent;background:var(--hud-action,var(--accent));color:var(--hud-on-action,#fff);font-weight:600}
+#places-dialog .world-map-actions button:disabled{opacity:.42}
+
+@media(min-width:701px){#places-dialog .places-map-stage .world-map-surface{width:min(100%,max(240px,calc(100dvh - 380px)));margin-inline:auto}}
 @media(max-width:700px){
   .places-guide{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:18px}
+  .places-guide header{padding:18px 16px 12px}
   .places-guide h2{font-size:24px}
-  .places-guide header{padding:18px 16px 14px}
   .places-atlas-layout{display:block}
-  .places-map-stage{padding:0 16px 14px}
-  #places-dialog .world-map-surface{width:min(100%,420px);margin-inline:auto}
+  .places-map-stage{padding:0 16px 12px}
+  /* A shorter map on phones, so destinations are visible without scrolling past it. */
+  #places-dialog .world-map-surface{width:min(100%,30dvh,380px);margin-inline:auto}
+  #places-dialog .world-map-legend{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:10px -16px 6px;padding:0 16px}
+  #places-dialog .world-map-legend::-webkit-scrollbar{display:none}
+  #places-dialog .world-map-hint{min-height:0;margin:6px 0 10px;font-size:12px}
+  #places-dialog .world-map-actions button{min-height:34px;padding:5px 13px}
+  /* One scrolling row of filters instead of two wrapped lines. */
+  .places-guide .places-filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-12px;padding-inline:12px}
+  .places-guide .places-filters::-webkit-scrollbar{display:none}
+  .places-guide .places-filters button{flex:none}
   .places-browser{border-left:0;border-top:1px solid var(--hud-hairline,var(--line));padding-top:14px}
-  .places-guide-content{max-height:none;overflow:visible;padding-inline:16px}
+  .places-guide-content{max-height:none;overflow:visible;padding:14px 12px 16px}
   .places-guide .places-tabs{margin-inline:16px}
-  .places-guide .places-list li{min-height:60px;gap:8px}
-  .places-guide footer{padding:10px 16px}
+  .places-guide footer{padding:10px 16px 14px}
 }
-@media(prefers-reduced-motion:reduce){.places-guide *,.places-launcher{animation:none!important;transition:none!important}}
-@media(min-width:701px){#places-dialog .places-map-stage .world-map-surface{width:min(100%,max(220px,calc(100dvh - 390px)));margin-inline:auto}}
+@media(max-width:420px){.places-guide .places-list li{grid-template-columns:32px minmax(0,1fr) auto auto;column-gap:10px}.places-guide .place-icon{width:32px;height:32px}}
+@media(pointer:coarse){.places-guide :is(.places-tabs button,.places-filters button,.places-list li>:is(button,a),#places-no-results button,.place-more-actions button),.places-guide .place-more>summary{min-height:44px}.places-guide .place-more>summary{width:44px;height:44px}}
+@media(prefers-reduced-transparency:reduce){.places-guide{background:var(--panel);-webkit-backdrop-filter:none;backdrop-filter:none}.places-guide::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}}
+@supports not (backdrop-filter:blur(1px)){.places-guide{background:var(--panel)}}
+@media(prefers-reduced-motion:reduce){.places-guide,.places-guide *,.places-guide::backdrop,.places-launcher,.places-launcher *{animation:none!important;transition:none!important}}

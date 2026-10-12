@@ -36,6 +36,7 @@ import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
+import { buildPlazaSalon } from './plaza-salon.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -426,8 +427,9 @@ function populateWorld(data) {
   const streetEnvironment=createWalkingEnvironment(data);
   const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
-  // Rising terrain must not show through walk-in floors (render only).
-  roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground,roads,sidewalks);
+  // Rising terrain must not show through walk-in floors (render only). Roads and
+  // sidewalks never rise above a room floor, so only the terrain surface pays for it.
+  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground.children[0]);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
@@ -442,6 +444,8 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
+  // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
+  worldGroup.add(buildPlazaSalon(data));
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -784,7 +788,7 @@ function updateBuilder() {
   if (key === builderAim) return;
   builderAim = key;
   const verdict = evaluatePlacement({ environment: walkingEnvironment(false), roads: builderRoads.roads, kind, assembly:builder.assembly, yaw:builder.yaw, position: target, feet: poseFeet(pose),
-    builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
+    builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], locals: snapshot?.locals ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
   buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, assembly:builder.assembly, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
   buildControls.aimAt(target, verdict);
 }

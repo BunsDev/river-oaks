@@ -1,11 +1,12 @@
 import { startBrowserFixture } from './fixture-server.js';
 import { chromium } from 'playwright';
+import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'ui-improvements', 'nearby-encounters'];
+const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'ui-improvements', 'nearby-encounters'];
 const names = process.argv.slice(2);
 // Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
 // Chromium's headless SwiftShader path stalls on the district scene.
@@ -21,6 +22,8 @@ for (const file of await readdir(join(root, 'preview/e2e'))) {
 if (names.some(name => !selectable.includes(name))) throw new Error(`Choose page harnesses from: ${selectable.join(', ')}`);
 const results = [];
 let browser, fixture;
+// Local runs take turns with other sessions' browser runs (scripts/browser-lock.mjs).
+const releaseBrowserLock = await holdBrowserLock('experience journeys');
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   browser = await chromium.launch({ headless: !software,
@@ -71,4 +74,5 @@ try {
 } finally {
   await browser?.close();
   await fixture?.close();
+  releaseBrowserLock();
 }

@@ -2,6 +2,7 @@ import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createAuth } from './auth.js';
+import { magicOptions } from './magic-auth.js';
 import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { createModeration } from './moderation.js';
@@ -64,7 +65,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
-    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout });
+    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout, magic: magicOptions(env, origin) });
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   async function applyRegion(id,expectedDraftVersion,actorId) {
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};

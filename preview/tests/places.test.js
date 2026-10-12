@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LANDMARK_LIMIT, destinationFromSearch, nearestPlace, openSpotNear, placeLink, placesOf, positionLink } from '../src/places.js';
+import { STORE_CATEGORIES, categorySlug, storeCategory } from '../src/store-categories.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const memoryStorage = () => { const map = new Map(); return { getItem: k => map.has(k) ? map.get(k) : null, setItem: (k, v) => map.set(k, String(v)), map }; };
@@ -94,4 +95,15 @@ test('an open spot is the position itself, a near ring, or nothing within reach'
   assert.ok(near && Math.hypot(...near) > 1 && Math.hypot(...near) <= 1.21, 'the first clear ring is used');
   assert.equal(openSpotNear(blockedDisc, [0, 0], 0.8), null, 'nothing clear within reach refuses');
   assert.equal(openSpotNear(() => true, [NaN, 0]), null);
+});
+
+test('every storefront destination browses under its store category; arrival has none', () => {
+  const places = placesOf(world), byId = new Map(world.stores.map(store => [store.id, store]));
+  for (const place of places.filter(p => p.kind !== 'arrival')) assert.equal(place.category, storeCategory(byId.get(place.ref)), place.name);
+  assert.equal(places.find(p => p.kind === 'arrival').category, undefined);
+  assert.ok(new Set(places.map(p => p.category).filter(Boolean)).size >= 3, 'the district offers several categories to filter by');
+  assert.deepEqual([['restaurant', 'Dining'], ['ice_cream', 'Dining'], ['jewelry', 'Jewelry & accessories'], ['perfumery', 'Beauty & wellness'], ['home', 'Homes'], ['clothes', 'Shopping & culture']]
+    .map(([tag]) => storeCategory({ category: tag })), ['Dining', 'Dining', 'Jewelry & accessories', 'Beauty & wellness', 'Homes', 'Shopping & culture']);
+  assert.deepEqual(STORE_CATEGORIES.map(([slug, label]) => categorySlug(label) === slug), STORE_CATEGORIES.map(() => true));
+  assert.equal(categorySlug(undefined), null);
 });

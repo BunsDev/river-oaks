@@ -1,5 +1,7 @@
+import { storeCategory } from './store-categories.js';
+
 const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-const category = store => store.category === 'home' ? 'Homes' : ['restaurant', 'ice_cream'].includes(store.category) ? 'Dining' : ['jewelry', 'fashion_accessories'].includes(store.category) ? 'Jewelry & accessories' : ['beauty', 'hairdresser', 'fitness_centre', 'wellness', 'perfumery', 'optician'].includes(store.category) ? 'Beauty & wellness' : 'Shopping & culture';
+const category = storeCategory;
 const presets = { daylight: { hour: 13, weather: 'clear' }, pink: { hour: 17.5, weather: 'clear' }, mist: { hour: 16, weather: 'haze' } };
 
 export function setupDistrictUI({ onArrive, onEnter, onAtmosphere, describeStore, canEnter = () => true }) {
