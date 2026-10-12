@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
 import { createRedisSecurity } from '../redis-security.js';
+import { TICKET_TTL_MS } from '../ticket-policy.js';
 
 test('each user holds at most 3 live tickets, and the table does not fill from 171 accounts', {skip: !process.env.REDIS_URL, timeout: 60_000}, async t => {
   const redis = new Redis(process.env.REDIS_URL);redis.on('error', () => {});
@@ -24,4 +25,11 @@ test('each user holds at most 3 live tickets, and the table does not fill from 1
   for (let i = 0; i < 171; i++) for (let j = 0; j < 3; j++) assert.ok(await security.issueTicket(user(`account-${i}`)), `account-${i} #${j}`);
   assert.ok(await security.issueTicket(user('newcomer')), 'a real player can still get a ticket');
   assert.equal(await security.consumeTicket(await security.issueTicket(user('newcomer')), user('newcomer')), true);
+  // A slow page may open its socket late: the ticket lasts its whole lifetime, then expires.
+  const slow = await security.issueTicket(user('slow'));
+  time += TICKET_TTL_MS - 1000;
+  assert.equal(await security.consumeTicket(slow, user('slow')), true, 'usable 59 s after issue');
+  const stale = await security.issueTicket(user('late'));
+  time += TICKET_TTL_MS + 1;
+  assert.equal(await security.consumeTicket(stale, user('late')), false, 'refused after its lifetime');
 });
