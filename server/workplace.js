@@ -187,8 +187,11 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     doc.notices.push({id: noticeId, taskId, kind, createdAt: t, readAt: null});
     doc.notices = doc.notices.slice(-limit.notices);
   };
+  // A task's draft goes with it: its private key is deleted with the task, and a
+  // leftover draft entry would stay hidden yet count against the draft limit.
   function forget(doc, taskIds) {
     doc.tasks = doc.tasks.filter(task => !taskIds.has(task.id));
+    doc.artifacts = doc.artifacts.filter(artifact => !taskIds.has(artifact.taskId));
     doc.notices = doc.notices.filter(notice => !taskIds.has(notice.taskId));
     doc.requests = doc.requests.filter(request => !taskIds.has(request.taskId));
   }
