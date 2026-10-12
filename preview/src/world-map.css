@@ -59,6 +59,9 @@
 :is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:var(--map-target);stroke-width:4.5;stroke-dasharray:9 7;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:world-map-turn 7s linear infinite}
 @keyframes world-map-turn{to{transform:rotate(1turn)}}
 @media (prefers-reduced-motion:reduce){:is(#control-panel,.places-guide) :is(.world-map-self-halo,.world-map-target){animation:none} :is(#control-panel,.places-guide) :is(.world-map-self,.world-map-place){transition:none}}
+/* Software rendering (see hud-glass.css): SVG children are not composited, so each animation
+   frame repaints the whole map, drop shadows included. */
+:root[data-rendering=software] :is(.world-map-self-halo,.world-map-target){animation:none}:root[data-rendering=software] .world-map-self{transition:none}:root[data-rendering=software] .world-map-buildings{filter:none}
 :is(#control-panel,.places-guide) .world-map-overlay [hidden]{display:none}
 :is(#control-panel,.places-guide) .world-map-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0;padding:0;list-style:none;font-size:11px;line-height:1.4;color:var(--muted)}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list){margin:5px 0;color:var(--ink);font-size:12px}
