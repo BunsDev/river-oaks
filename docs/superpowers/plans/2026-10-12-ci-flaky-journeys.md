@@ -61,6 +61,50 @@ sockets, and its backed-off retries crossed the test's 60 s wait. It predates #2
 socket-count diagnostics. The 15 s ticket expiry is being decided with the
 server-hardening owner.
 
-## contextual-first-visit (separate change)
+## contextual-first-visit: make the failure explain itself
 
-Its root cause is still being traced. It ships as its own change, so this fix isn't held up.
+Failure: `locator.waitFor: Timeout 60000ms` waiting for a visible `#community-dialogue`.
+It has always failed in the touch pass, right after the Talk action became primary.
+In 59 passing CI runs the conversation opens 0.14–0.43 s after that point.
+
+Root cause: not confirmed. CI kept no evidence from the failing page:
+- The runner's report and its screenshot come from the first page, which was
+  already at `about:blank`.
+- The touch pass's own screenshot was named `contextual-touch-failure.png`,
+  outside the uploaded `experience-*-failure.png` pattern.
+
+Ruled out:
+- the decisions backend: opening a conversation never calls `/v1`;
+- a resident moving: indoor residents stay put;
+- walking out of reach;
+- the travel cooldown under normal timing.
+
+Every remaining path is silent to the journey: a refused travel or focus, a
+handler that gives up, the 8-second "did not confirm" timer firing late on a
+stalled page, or an access-check reload. 12 normal and 13 CPU-throttled local
+runs didn't reproduce it.
+
+Change (task `contextual-first-visit-evidence`), with no retry and no longer
+timeout:
+- After the Talk press, wait for what the visitor sees: the conversation, or a
+  new refusal in the encounter notice or the town status line. A refusal fails
+  at once with that text and the last town replies. A silent failure still
+  times out at 60 s, now with those replies attached.
+- On a touch-pass failure, add the page's state to the error before its context
+  closes: dialog hidden, walking-HUD data, navigation type and connection. Save
+  the screenshot as `experience-contextual-touch-failure.png`, so CI uploads it.
+
+Checks:
+- The journey passes normally.
+- A probe copy refuses the Talk press's travel on the touch pass
+  (`routeWebSocket`, `travel_cooldown`). The journey failed right away (30 s for
+  the whole run) with `Talk press: refused: Wait a moment before travelling
+  again … town replies [... {"ok":false,"error":"travel_cooldown"} ...]` and the
+  touch page state, and wrote `experience-contextual-touch-failure.png`.
+
+- `pnpm run verify`: core passed, all 11 tasks (tooling 57; preview 2651 passed,
+  1 skipped; server 361 passed, 116 Redis-only skipped; desktop 49). That ran on
+  `7c3f4ea`. Fast-forwarding to `main` at `cb09601` added only #261's
+  journey-and-ledger change, which the core gate doesn't run.
+
+Next: the next CI failure of this journey names its cause; fix that cause then.
