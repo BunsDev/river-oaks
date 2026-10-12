@@ -76,7 +76,8 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   const key = suffix => `${prefix}:${suffix}`;
   const execute = (script, keys, args) => redis.eval(script, keys.length, ...keys.map(key), ...args);
   const limited = async (scope, id, limit, windowMs) => {
-    if (!text(id, 256) || !Number.isInteger(limit) || limit < 1 || limit > 10000 || !Number.isInteger(windowMs) || windowMs < 1 || windowMs > 3600000) return false;
+    // Windows run up to a day so daily spend budgets (chauffeur_daily) can count.
+    if (!text(id, 256) || !Number.isInteger(limit) || limit < 1 || limit > 10000 || !Number.isInteger(windowMs) || windowMs < 1 || windowMs > 86_400_000) return false;
     // The id is hashed so client-chosen text never becomes part of a key name.
     const bucket = createHash('sha256').update(id).digest('base64url');
     return await execute(LIMIT, [`limit:${scope}:${bucket}:${Math.floor(now() / windowMs)}`], [limit, windowMs]) === 1;
