@@ -112,7 +112,18 @@ elseif p.op == 'session-put' then
     local old = redis.call('HGET', KEYS[3], oldest)
     removeSession(oldest, old and cjson.decode(old) or nil)
   end
-  if redis.call('HLEN', KEYS[3]) >= ${MAX_SESSIONS} then return false end
+  -- A full table gives up its oldest session (earliest expiry) instead of
+  -- refusing every sign-in, so a flood of new accounts cannot lock everyone out.
+  while redis.call('HLEN', KEYS[3]) >= ${MAX_SESSIONS} do
+    local oldest = redis.call('ZRANGE', KEYS[4], 0, 0)[1]
+    if not oldest then return false end
+    local old = redis.call('HGET', KEYS[3], oldest)
+    removeSession(oldest, old and cjson.decode(old) or nil)
+  end
+  -- Eviction may have taken one of this account's own sessions.
+  local kept = {}
+  for _, id in ipairs(owned) do if redis.call('HEXISTS', KEYS[3], id) == 1 then table.insert(kept, id) end end
+  owned = kept
   save(p.record)
   redis.call('ZADD', KEYS[4], p.record.expiresAt, p.record.sessionId)
   redis.call('HSET', KEYS[5], p.record.cookieHash, p.record.sessionId)
@@ -181,7 +192,7 @@ function json(res, status, value) {
 }
 
 /** Durable auth only. The caller owns Redis and cross-instance WS invalidation. */
-export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {} } = {}) {
+export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin), local = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
@@ -301,8 +312,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     else { res.writeHead(302, { Location: returnPath }); res.end(); }
   }
 
-  const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS });
-  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
+  const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS, dailySends: magic.dailySends, addressSends: magic.addressSends });
+  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now, verifyHuman: magic.verifyHuman });
 
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;

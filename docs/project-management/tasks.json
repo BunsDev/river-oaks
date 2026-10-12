@@ -2525,6 +2525,30 @@
         "Hosted CI"
       ],
       "issues": []
+    },
+    {
+      "id": "server-hardening-followups",
+      "title": "Finish the server-hardening follow-ups: email sign-in budget and challenge, invite index, session and waitlist caps, CSP, dev proxy, desktop cookie fuse, pinned base image",
+      "status": "active",
+      "branches": [
+        "fix/server-hardening-followups"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T00:47:00+00:00",
+      "leaseUntil": "2026-10-12T04:47:00+00:00",
+      "nextAction": "Implement each follow-up from docs/superpowers/plans/2026-10-11-server-hardening.md with a focused regression, verify, open the PR, and merge with gh-merge-when-green.sh (Val approved 2026-10-12).",
+      "ledger": "docs/superpowers/plans/2026-10-12-server-hardening-followups.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-hardening-2-20261012",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-12-server-hardening-followups.md",
+        "server/tests/hardening2-*.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "pnpm run verify full with isolated Redis",
+        "Hosted CI"
+      ],
+      "issues": []
     }
   ]
 }
