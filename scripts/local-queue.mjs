@@ -32,7 +32,9 @@ export function createQueue({ file, lock, pid = process.pid, host = hostname(), 
       withLock(() => {
         const entries = live(read()), queued = entries.find(entry => key(entry) === id);
         if (queued && !mine(queued, id)) throw new Error(`${id} is already queued by ${queued.owner} (pid ${queued.pid}).`);
-        if (!queued) entries.push({ id, pid, host, owner, queuedAt: now() });
+        // A landing entry also carries "pr" so the lander from #272, which reads only that
+        // key, still sees it while checkouts change over.
+        if (!queued) entries.push({ id, ...(Number.isInteger(id) ? { pr: id } : {}), pid, host, owner, queuedAt: now() });
         write(entries);
       });
     },

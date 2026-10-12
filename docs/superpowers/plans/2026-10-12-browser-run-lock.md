@@ -14,6 +14,10 @@ Owner: Claude Code session `46fc41e0-26d1-4116-956a-7cac77a13769`. Task
 - `scripts/local-queue.mjs`: the first-come queue from `land-pr.mjs` (#272), moved
   here so both tools share it. Entries are keyed by `id`, and older landing entries
   keyed by `pr` are still read. `land-pr.mjs` imports it.
+- Change-over: river-oaks-3b noticed that `main`'s lander (#272) reads only `pr`. It
+  showed this branch's entry as `#undefined` and could miss it in its duplicate check.
+  Landing entries now carry both `id` and `pr`, and a regression test covers both
+  directions. The live entry for #277 was patched under the queue lock.
 - `scripts/browser-lock.mjs`:
   - `holdBrowserLock(name)` resolves when it is this run's turn and returns the
     release function, which also runs on process exit.

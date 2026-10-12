@@ -115,3 +115,16 @@ test('a session waits for its turn before touching the pull request', async t =>
   assert.equal(waited, 1);
   assert.equal(result.status, 'merged');
 });
+
+// Checkouts update at different times, so the lander from #272 (which keys
+// entries by "pr") and this one share a queue file during the change-over.
+test('landing entries stay readable by the earlier lander, and its entries by this one', async t => {
+  const { readFileSync, writeFileSync } = await import('node:fs');
+  const dir = scratch(t), file = join(dir, 'queue.json');
+  queueAt(dir, 1).enqueue(10);
+  assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).map(entry => [entry.id, entry.pr]), [[10, 10]]);
+  writeFileSync(file, JSON.stringify([{ pr: 12, pid: 3, host: 'here', owner: 'older lander', queuedAt: 'then' }]));
+  const mine = queueAt(dir, 4);
+  assert.throws(() => mine.enqueue(12), /already queued by older lander/);
+  assert.deepEqual(mine.list().map(entry => entry.id), [12]);
+});
