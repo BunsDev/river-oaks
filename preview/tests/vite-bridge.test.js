@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
+import { createServer, request } from 'node:http';
 import { bridgeDevServer } from '../vite-bridge.js';
 
 async function listen(server, port = 0) {
@@ -99,4 +99,25 @@ test('Vite handles bridge outages without its generic proxy stack trace', async 
   }
   assert.deepEqual(errors, []);
   assert.equal(warnings.filter(message => message.includes('Optional decision/voice bridge')).length, 1);
+});
+
+test('only loopback pages reach the bridge: rebinding hosts and other sites are refused', async t => {
+  let calls = 0;
+  const bridge = createServer((req, res) => { calls++; res.end('{"ok":true}'); });
+  const port = await listen(bridge);
+  t.after(() => close(bridge));
+  const { origin } = await fixture(t, port);
+  const send = headers => new Promise((resolve, reject) => {
+    const url = new URL('/v1/settings/elevenlabs', origin);
+    const req = request({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'POST', headers: { 'Content-Type': 'text/plain', ...headers } }, res => { res.resume(); res.on('end', () => resolve(res.statusCode)); });
+    req.on('error', reject); req.end('{}');
+  });
+  const { port: vitePort } = new URL(origin);
+  for (const headers of [{ host: `attacker.example:${vitePort}` }, { host: `127.0.0.1:${vitePort}`, origin: 'https://attacker.example' },
+    { host: `127.0.0.1:${vitePort}`, origin: 'null' }, { host: `localhost.attacker.example:${vitePort}` }])
+    assert.equal(await send(headers), 403, JSON.stringify(headers));
+  assert.equal(calls, 0, 'refused requests never reach the bridge');
+  for (const headers of [{ host: `127.0.0.1:${vitePort}`, origin: `http://127.0.0.1:${vitePort}` }, { host: `localhost:${vitePort}` }, { host: `[::1]:${vitePort}`, origin: `http://[::1]:${vitePort}` }])
+    assert.equal(await send(headers), 200, JSON.stringify(headers));
+  assert.equal(calls, 3);
 });
