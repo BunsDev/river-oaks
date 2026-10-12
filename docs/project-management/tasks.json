@@ -2029,21 +2029,48 @@
     {
       "id": "register-sweep-20261011",
       "title": "Commit two retirement records that exist only in the primary's live register (desktop-host-errors, workplace-delivery-records)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/register-sweep-20261011"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T23:38:00+00:00",
-      "leaseUntil": "2026-10-12T01:38:00+00:00",
-      "nextAction": "Merge this docs-only register PR with gh-merge-when-green.sh (Val approved 2026-10-11), then release this task and retire docs/register-sweep-20261011 with project:prune.",
+      "owner": null,
+      "updatedAt": "2026-10-11T23:47:59.730Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "docs/project-management/tasks.json (desktop-host-errors, workplace-delivery-records, register-sweep-20261011)"
       ],
       "requiredChecks": [
         "project:status validates the register",
         "Hosted CI"
-      ]
+      ],
+      "pr": 255,
+      "deliveryPr": 255,
+      "evidence": [
+        {
+          "pr": 255,
+          "reviewedHead": "934d8d6aceced3bfa9043e3bcafaf96f3d884d4d",
+          "merge": "9048c3d99e60284ff9be493447b1e77c11d3abc7",
+          "tree": "4e79e07e39f1a8ecb3e684d7be1feddb1de26053",
+          "checks": "All hosted checks passed on 934d8d6 (guard CLEAN); docs-only register change; project:status validated the register before push."
+        }
+      ],
+      "retirement": {
+        "head": "934d8d6aceced3bfa9043e3bcafaf96f3d884d4d",
+        "releasedAt": "2026-10-11T23:47:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:47:31+00:00"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261011"
+      ],
+      "archive": {
+        "docs/register-sweep-20261011": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-wtpWOx/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-wtpWOx/history.bundle",
+          "sha256": "7deb96ae3009ee677a6e33dde3d0076afa3a3ec74dd37c3cf3492a9e0c3fa960",
+          "tag": "refs/tags/archive/worktree-prune/c847aec6-dad1-49bf-8309-3f1b0bc5e039",
+          "head": "934d8d6aceced3bfa9043e3bcafaf96f3d884d4d"
+        }
+      }
     },
     {
       "id": "studio-agent-chat",
@@ -2502,14 +2529,13 @@
     {
       "id": "explore-destinations-ui",
       "title": "Make the Places panel's destination explorer sleek and modern (search, destination list, saved places, destination picker)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/explore-destinations-ui"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-12T01:25:00+00:00",
-      "leaseUntil": "2026-10-12T05:25:00+00:00",
-      "nextAction": "Capture the current Places panel, redesign it (layout, typography, cards, states, light and dark), keep every selector the journeys use, verify with unit tests, places-guide/destination-minimap/rail-navigation journeys and before/after screenshots, then PR.",
+      "owner": null,
+      "updatedAt": "2026-10-12T02:15:15.776Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-12-explore-destinations-ui.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-explore-ui-20261012",
       "filesOwned": [
@@ -2524,19 +2550,99 @@
         "pnpm run verify",
         "Hosted CI"
       ],
-      "issues": []
+      "issues": [],
+      "pr": 263,
+      "deliveryPr": 263,
+      "evidence": [
+        {
+          "pr": 263,
+          "reviewedHead": "bb0ff35b5944ec5a5bcef528104dbed07c75978a",
+          "merge": "f004502544a5e1223c0319cc75b38b3f4e01972d",
+          "tree": "77e488ab308b98268b19f53699d16437c34de94d",
+          "checks": "All 17 hosted checks passed on bb0ff35 (guard CLEAN, first attempt). Local: preview 2652 pass, 1 pre-existing skip; core verify; ten UI journeys pass including the extended places-guide."
+        }
+      ],
+      "retirement": {
+        "head": "bb0ff35b5944ec5a5bcef528104dbed07c75978a",
+        "releasedAt": "2026-10-12T02:14:17+00:00",
+        "sessionsReviewedAt": "2026-10-12T02:14:17+00:00"
+      },
+      "retiredBranches": [
+        "feat/explore-destinations-ui"
+      ],
+      "archive": {
+        "feat/explore-destinations-ui": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-oZsJba/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-oZsJba/history.bundle",
+          "sha256": "a5cbe0dad0f476336cfaf1de2eb4b5080389a5f903829de898511beef65f5d9d",
+          "tag": "refs/tags/archive/worktree-prune/2d76cf92-7a40-45b0-9ebe-0bdde05c8d04",
+          "head": "bb0ff35b5944ec5a5bcef528104dbed07c75978a"
+        }
+      }
+    },
+    {
+      "id": "chauffeur-daily-budget",
+      "title": "Fix the chauffeur daily budget: Redis refuses 24-hour windows, so every paid driving decision reports budget_exhausted; the memory town ignores the scope",
+      "status": "retired",
+      "branches": [
+        "fix/chauffeur-daily-budget"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T01:58:42.060Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-chauffeur-budget-20261012",
+      "filesOwned": [
+        "server/redis-security.js (limit bounds)",
+        "server/chauffeur.js",
+        "server/town.js (chauffeur wiring)",
+        "server/redis-backend.js (chauffeur wiring)",
+        "server/tests/hardening-chauffeur-budget.test.js"
+      ],
+      "requiredChecks": [
+        "server tests with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "issues": [],
+      "pr": 259,
+      "deliveryPr": 259,
+      "evidence": [
+        {
+          "pr": 259,
+          "reviewedHead": "ff51eccc61ce2d005cdd4de4bfe0e54a23d654c3",
+          "merge": "06859cd732c8bcd9843603322aca3eee3d4a62f1",
+          "tree": "542d1ee69759c0767284f951471b58d72691d168",
+          "checks": "All hosted checks passed on ff51ecc (guard CLEAN). Local: server+scripts 558/558 with isolated Redis; both Redis budget tests fail on the old one-hour bound; core verify passed."
+        }
+      ],
+      "retirement": {
+        "head": "ff51eccc61ce2d005cdd4de4bfe0e54a23d654c3",
+        "releasedAt": "2026-10-12T01:58:10+00:00",
+        "sessionsReviewedAt": "2026-10-12T01:58:10+00:00"
+      },
+      "retiredBranches": [
+        "fix/chauffeur-daily-budget"
+      ],
+      "archive": {
+        "fix/chauffeur-daily-budget": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-GuV2Ew/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-GuV2Ew/history.bundle",
+          "sha256": "35b776b5042027666558dea3dd515d9da258176a03bfd8e68111206a007ef2b5",
+          "tag": "refs/tags/archive/worktree-prune/2f44ece4-d957-4a07-b570-09f06e6730bf",
+          "head": "ff51eccc61ce2d005cdd4de4bfe0e54a23d654c3"
+        }
+      }
     },
     {
       "id": "server-hardening-followups",
       "title": "Finish the server-hardening follow-ups: email sign-in budget and challenge, invite index, session and waitlist caps, CSP, dev proxy, desktop cookie fuse, pinned base image",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/server-hardening-followups"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-12T00:47:00+00:00",
-      "leaseUntil": "2026-10-12T04:47:00+00:00",
-      "nextAction": "Implement each follow-up from docs/superpowers/plans/2026-10-11-server-hardening.md with a focused regression, verify, open the PR, and merge with gh-merge-when-green.sh (Val approved 2026-10-12).",
+      "owner": null,
+      "updatedAt": "2026-10-12T02:26:39.995Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-12-server-hardening-followups.md",
       "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-hardening-2-20261012",
       "filesOwned": [
@@ -2546,6 +2652,54 @@
       "requiredChecks": [
         "pnpm run verify",
         "pnpm run verify full with isolated Redis",
+        "Hosted CI"
+      ],
+      "issues": [],
+      "pr": 264,
+      "deliveryPr": 264,
+      "evidence": [
+        {
+          "pr": 264,
+          "reviewedHead": "e0429178ea40d62ef65343b3ec9bbf17f66e5048",
+          "merge": "f7d10aa4472a61adc7992817b7f02d1072cc2aef",
+          "tree": "d80c1c5cce33778d4a5b00301bd28825a71ed56b",
+          "checks": "All 17 hosted checks passed (guard CLEAN). Local: server+scripts 599/599 with isolated Redis; preview 2652 pass, 1 pre-existing skip; core verify; world-publish shared journey; independent review addressed (0 critical/high, 2 medium, 6 low)."
+        }
+      ],
+      "retirement": {
+        "head": "e0429178ea40d62ef65343b3ec9bbf17f66e5048",
+        "releasedAt": "2026-10-12T02:26:15+00:00",
+        "sessionsReviewedAt": "2026-10-12T02:26:15+00:00"
+      },
+      "retiredBranches": [
+        "fix/server-hardening-followups"
+      ],
+      "archive": {
+        "fix/server-hardening-followups": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-p5vq4q/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-p5vq4q/history.bundle",
+          "sha256": "be290bb27bf7cf8c05145c9939ec52bd8e4e2aa750b08b769b35ec2f499be81f",
+          "tag": "refs/tags/archive/worktree-prune/7d2c29fa-f765-4675-83d3-a69cd25fc402",
+          "head": "e0429178ea40d62ef65343b3ec9bbf17f66e5048"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261012",
+      "title": "Commit four retirement records that exist only in the primary's live register (chauffeur-daily-budget, explore-destinations-ui, server-hardening-followups, register-sweep-20261011)",
+      "status": "active",
+      "branches": [
+        "docs/register-sweep-20261012"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T02:34:00+00:00",
+      "leaseUntil": "2026-10-12T04:34:00+00:00",
+      "nextAction": "Merge this docs-only register PR with gh-merge-when-green.sh (Val approved 2026-10-12), then release this task and retire docs/register-sweep-20261012 with project:prune.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (the four records above and this entry)"
+      ],
+      "requiredChecks": [
+        "project:status validates the register",
         "Hosted CI"
       ],
       "issues": []
