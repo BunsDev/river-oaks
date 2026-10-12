@@ -2703,6 +2703,38 @@
         "Hosted CI"
       ],
       "issues": []
+    },
+    {
+      "id": "plaza-salon",
+      "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
+      "status": "active",
+      "branches": [
+        "feat/plaza-salon"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-12T04:05:03+00:00",
+      "updatedAt": "2026-10-12T02:05:03+00:00",
+      "nextAction": "Open the PR, coordinate a merge slot with river-oaks-c2, merge through gh-merge-when-green.sh.",
+      "ledger": "docs/superpowers/plans/2026-10-12-plaza-salon.md",
+      "filesOwned": [
+        "preview/src/plaza-salon-plan.js",
+        "preview/src/plaza-salon.js",
+        "preview/tests/plaza-salon.test.js",
+        "preview/e2e/plaza-salon.js",
+        "preview/src/walking.js (props hook)",
+        "preview/src/world-interactions.js (benchSeats)",
+        "preview/src/shared-seating-ui.js (benchLabel)",
+        "preview/src/main.js (one add line)"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run test:server",
+        "pnpm run build",
+        "pnpm run verify",
+        "visual review",
+        "plaza-salon, spatial-streets, places, reference-facades, street-level, debug-tools journeys",
+        "shared sit-and-water journey"
+      ]
     }
   ]
 }
