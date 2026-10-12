@@ -2473,6 +2473,27 @@
           "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774"
         }
       }
+    },
+    {
+      "id": "storybook-decisions",
+      "title": "Record Val's placement decisions in the storybook",
+      "status": "active",
+      "branches": [
+        "docs/storybook-decisions"
+      ],
+      "owner": "charm:claude-code be104992-c453-47f6-8d26-e9c8ea166a46",
+      "updatedAt": "2026-10-12T00:09:11.995442+00:00",
+      "leaseUntil": "2026-10-12T02:09:11.995442+00:00",
+      "nextAction": "Open a draft PR with the storybook decisions and this claim; Val reviews and merges. Mark delivered with merge evidence afterwards.",
+      "filesOwned": [
+        "docs/storybook.md"
+      ],
+      "requiredChecks": [
+        "All relative links and anchors in docs/storybook.md resolve",
+        "pnpm run --silent project:check",
+        "Secrets scan on the diff",
+        "Exact-head hosted checks; Val's review"
+      ]
     }
   ]
 }
