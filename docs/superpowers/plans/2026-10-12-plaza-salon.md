@@ -55,7 +55,29 @@ from `0983a49`. The blocked `dior-promenade` worktree edits
 
 ## Verification
 
-Run on `feat/plaza-salon` from `0983a49`, before rebasing onto `f7d10aa`.
+On the head rebased onto `839d288` (#268), after the earlier runs below:
+
+- `pnpm test`: 2663 pass, 1 skip, 0 fail.
+- `pnpm run test:server` with Redis: 542/542.
+- `pnpm run build`: ok.
+- `pnpm run verify`: core passed.
+- Journeys: `plaza-salon` and `places` passed, and the shared `sit-and-water`
+  passed.
+- `spatial-streets` failed 2 of 3 times at the Dior leg with "server position
+  agrees with the walker". This is a race in the journey, not a collision
+  disagreement:
+  - A diagnostic copy logged both positions when the walker stopped (gaps of
+    0.06, 0.36 and 0.19 m) and then every 500 ms. The town's snapshot reached
+    exactly the walker's position within 0.5–1 s every time, with no walking
+    notice.
+  - The Hermès to Dior route stays 3.66 m clear of the nearest salon
+    footprint.
+  - The journey now waits up to 3 s for the snapshot to converge. A refused
+    move never converges, so a real disagreement still fails, and the message
+    reports the gap at the stop.
+  - With the wait, the first run passed all three legs (Dior 42.4 m, Equinox 136.8 m, Hermès 96.0 m). Later runs are reported on the PR.
+
+Earlier runs, on `feat/plaza-salon` from `0983a49`, before rebasing onto `f7d10aa`:
 
 - `node --test preview/tests/plaza-salon.test.js`: 6/6.
 - `pnpm test`: 2657 pass, 1 skip, 0 fail. The storefront-bench test in
@@ -66,7 +88,8 @@ Run on `feat/plaza-salon` from `0983a49`, before rebasing onto `f7d10aa`.
 - `pnpm run verify`: core passed (`.runtime/agent/core.json`); Python 141 passed.
 - Experience journeys (Metal ANGLE, `RIVER_OAKS_E2E_REPORT` redirected so the
   tracked report was not overwritten):
-  - passed: `plaza-salon`, `places`, `reference-facades`, `spatial-streets`;
+  - passed: `plaza-salon`, `places`, `reference-facades`, `spatial-streets`
+    (Dior 42.7 m, Equinox 136.6 m, Hermès 94.8 m);
   - failed: `debug-tools` and `street-level`. Both fail identically on a plain
     export of main `f7d10aa`, without this change. The open town chat dock
     intercepts debug-tools' canvas click at (40, 900), and street-level waits

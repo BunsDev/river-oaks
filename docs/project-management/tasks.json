@@ -2724,7 +2724,8 @@
         "preview/src/walking.js (props hook)",
         "preview/src/world-interactions.js (benchSeats)",
         "preview/src/shared-seating-ui.js (benchLabel)",
-        "preview/src/main.js (one add line)"
+        "preview/src/main.js (one add line)",
+        "preview/e2e/spatial-streets.js (wait for server convergence)"
       ],
       "requiredChecks": [
         "pnpm test",
