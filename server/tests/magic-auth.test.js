@@ -54,6 +54,19 @@ for (const mode of ['memory', 'redis']) {
     const data = await profile.json(); assert.equal(data.user.name, 'Visitor #user_email'); assert.equal(f.identityCalls(), 0);
     f.user({ emailVerified: false }); assert.equal((await f.peer('/auth/desktop/exchange', { refreshToken: 'private-desktop-refresh' })).status, 403);
   });
+  run('a global daily send budget pauses email sign-in without calling WorkOS until the next UTC day', async t => {
+    const f = await fixture(t, mode, { magic: { dailySends: 1 } });
+    f.advance(86_400_000 - (Date.now() % 86_400_000) + 1000);
+    assert.deepEqual(await (await f.request('/auth/email/start', { email: 'private@example.com' })).json(), { sent: true });
+    f.advance(61_000);
+    const paused = await f.peer('/auth/email/start', { email: 'private@example.com' });
+    assert.equal(paused.status, 503); assert.deepEqual(await paused.json(), { error: 'email_paused' });
+    assert.equal(cookie(paused), undefined, 'no verification state is created');
+    assert.equal(f.calls(), 1, 'the over-budget start never reaches WorkOS');
+    f.advance(86_400_000);
+    assert.deepEqual(await (await f.request('/auth/email/start', { email: 'private@example.com' })).json(), { sent: true }, 'a new day restores the budget');
+    assert.equal(f.calls(), 2);
+  });
   run('cooldown is shared and case normalized; expired state cannot authenticate', async t => {
     const f = await fixture(t, mode), start = await f.request('/auth/email/start', { email: 'private@example.com' });
     const otherBrowser = await f.peer('/auth/email/start', { email: 'PRIVATE@example.com' });
@@ -125,6 +138,22 @@ for (const mode of ['memory', 'redis']) test(`${mode} magic store caps admission
   assert.equal(await start('d'), 'ok');
   assert.equal(await store.transaction({ op: 'attempt', id: 'a', owner: 'probe' }) ?? null, null, 'the oldest state was evicted');
   assert.notEqual(await store.transaction({ op: 'attempt', id: 'c', owner: 'probe' }) ?? null, null, 'newer states survive');
+});
+
+for (const mode of ['memory', 'redis']) test(`${mode} magic store spends the daily send budget atomically`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+  const { createMagicStore } = await import('../magic-auth.js');
+  const namespace = `{magic-budget:${randomUUID()}}`;
+  const redis = mode === 'redis' ? new Redis(process.env.REDIS_URL) : undefined;
+  if (redis) await redis.ping();
+  let time = 1_800_057_600_000 + 1000;
+  const store = createMagicStore({ redis, namespace, now: () => time, dailySends: 2 });
+  t.after(async () => { store.close(); if (redis) { const keys = await redis.keys(`${namespace}:auth:*`); if (keys.length) await redis.del(...keys); await redis.quit(); } });
+  const start = id => store.transaction({ op: 'start', id, emailHash: id, record: { email: `${id}@example.com`, attempts: 0, expiresAt: time + 600000 } });
+  const results = await Promise.all(['a', 'b', 'c', 'd', 'e'].map(start));
+  assert.deepEqual(results.sort(), ['budget', 'budget', 'budget', 'ok', 'ok'], 'exactly the budget is admitted, even concurrently');
+  time += 86_400_000;
+  assert.equal(await start('f'), 'ok');
+  if (redis) assert.ok(await redis.pttl(`${namespace}:auth:magic-sends:${Math.floor(time / 86_400_000)}`) > 86_400_000, 'the day counter expires on its own');
 });
 
 for (const mode of ['memory', 'redis']) {

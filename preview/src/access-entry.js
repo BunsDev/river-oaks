@@ -104,7 +104,11 @@ $('#access-email-form').addEventListener('submit', async event => {
     $('#access-email-verify').hidden = false;
     $('#access-email-status').textContent = 'Check your inbox for a six-digit code. It expires in 10 minutes. Wait a minute before requesting another.';
     $('#access-email-code').focus();
-  } catch { $('#access-email-status').textContent = 'We couldn’t send a code. Check your email address and try again shortly.'; }
+  } catch (error) {
+    $('#access-email-status').textContent = error.message === 'email_paused'
+      ? 'Email sign-in has reached today’s limit. Sign in with GitHub, or try email again tomorrow.'
+      : 'We couldn’t send a code. Check your email address and try again shortly.';
+  }
   finally { button.disabled = false; }
 });
 $('#access-email-verify').addEventListener('submit', async event => {

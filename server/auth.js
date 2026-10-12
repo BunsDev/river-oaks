@@ -38,7 +38,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -169,7 +169,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     } catch { return null; }
   }
 
-  const magicStore = createMagicStore({ now, maxStates });
+  const magicStore = createMagicStore({ now, maxStates, dailySends: magic.dailySends });
   const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
 
   async function handle(req, res) {
