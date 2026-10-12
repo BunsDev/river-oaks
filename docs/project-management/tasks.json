@@ -2507,9 +2507,9 @@
         "docs/typesafe-place-season-1"
       ],
       "owner": "charm-cave-river-oaks-20261011",
-      "updatedAt": "2026-10-12T01:50:00+00:00",
-      "leaseUntil": "2026-10-12T03:50:00+00:00",
-      "nextAction": "PR #247 updated: season starts Oct 11 (Day 1 rendered), banked Day 3 returns Oct 12, Day 2 onward keeps its date. Wait for hosted checks, then Val reviews and merges with the guard script.",
+      "updatedAt": "2026-10-12T06:05:00+00:00",
+      "leaseUntil": "2026-10-12T08:05:00+00:00",
+      "nextAction": "PR #247 reverted to the Oct 12 plan (Day 1 posts Mon Oct 12; Day 3 banked again, built as a bonus). Bring the branch up to date with main, wait for hosted checks, then Val merges with pnpm run land.",
       "filesOwned": [
         "docs/marketing/typesafe-place-season-1/",
         "docs/superpowers/plans/2026-10-11-typesafe-place-season-1.md"

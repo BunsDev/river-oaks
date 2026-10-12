@@ -94,3 +94,25 @@ is not part of this repository.
 Val reviews the Day 1 cut and posts it tonight. If it does not post on Oct 11,
 revert to the Oct 12 plan (Day 1 on Oct 12, Day 3 banked again). Then Val
 reviews and merges this PR with the guard script.
+
+## Update, 2026-10-12 00:55 CDT: back to the October 12 plan
+
+Day 1 did not post on October 11. Val chose "post Day 1 tonight instead", which
+is the revert rule recorded above. Day 1 posts Mon Oct 12, Day 3 is banked
+again, and nothing else moves.
+
+- **Workbook.** Restored to the October 12 plan at 69719c2 (sha256 `b6334e33…acef`,
+  which the revert script requires). Then five cells changed: Day 1 Status Ready,
+  Day 1 Owner, the Calendar header note, Publishing status, and Planning note 11.
+  Day 3's rows from the Oct 11 move-up are gone again.
+- **Guide.** Restored to the 69719c2 text, plus three notes: the October 11–12
+  history, and Day 3 marked built and ready as a bonus in the banked list and
+  in its brief.
+
+### Checks (this update)
+
+- The workbook was diffed cell by cell (values and styles) against the 69719c2
+  revision with openpyxl: exactly those five cells differ. Every table range
+  matches, and the Calendar runs Mon Oct 12 to Sat Nov 7 with 27 posts.
+- The guide diff against 69719c2 is the three added notes only.
+- `git diff --check` and the secret guard (results in the PR).

@@ -9,9 +9,9 @@ This package turns the existing cast, Loch Bar scene ideas, and confessional dir
 
 **Deliverable status:** 30 written episode briefs, dialogue or edit text for every day, shot plans, director briefs, Instagram and TikTok captions, optional Story prompts, continuity references, and a results tracker. The new episodes have not been rendered or published by this task. All calendar dates are planning targets.
 
-**Relaunch, October 11, 2026:** launch moved from October 9 to Monday, October 12. Light Days 3, 10 and 17 are cut from the schedule and banked (their briefs stay below, marked *Banked*), which keeps the party episode on October 31 and the season end on November 7. Day numbers remain production IDs; the workbook's **Post #** column is the viewer-facing order (1–28).
+**Relaunch, October 11, 2026:** launch moved from October 9 to Monday, October 12. Light Days 3, 10 and 17 are cut from the schedule and banked (their briefs stay below, marked *Banked*), which keeps the party episode on October 31 and the season end on November 7. Day numbers remain production IDs; the workbook's **Post #** column is the viewer-facing order (1–27).
 
-**Moved up, October 11, 2026 (evening):** Val approved Day 1 and asked for the season to start that day. Day 1 posts Sunday, October 11, and banked Day 3 returns on Monday, October 12. Day 2 keeps October 13 and every later post keeps its date, so the party stays on October 31 and the season still ends November 7. Days 10 and 17 stay banked.
+**October 11–12:** Day 1 was rendered on the evening of October 11, and the season was briefly moved up to start that day. Day 1 did not post on October 11, so this October 12 plan stands: Day 1 posts Monday, October 12, and Day 3 is banked again. Day 3 has since been built from the approved Oct 8 dance clip and is ready as a bonus.
 
 ## 1. The season
 
@@ -39,7 +39,7 @@ The party is worthwhile even for somebody who only dances and goes home happy. A
 
 | Dates | Arc | Concrete change |
 |---|---|---|
-| Oct 11–17 | The invitation | Jevica owns an intimidating invitation and makes solo arrivals explicitly welcome. |
+| Oct 12–17 | The invitation | Jevica owns an intimidating invitation and makes solo arrivals explicitly welcome. |
 | Oct 18–23 | The plan | Two incompatible evenings become one welcome with optional ways to spend time. |
 | Oct 24–29 | The hosts | Ares learns to welcome, Athena and Dionysus share responsibility, and Jevica delegates. |
 | Oct 30–Nov 5 | The party and follow-through | The fictional Halloween party delivers joy, and one freely chosen connection continues afterward. |
@@ -62,7 +62,7 @@ Jevica is the protagonist, not simply the referee. Her decisions create the main
 
 ## 3. Publishing rhythm
 
-**One core vertical episode each day, uploaded separately to Instagram and TikTok.** This means **28 creative episodes and 56 planned platform uploads**. Optional Stories provide a second, lighter touchpoint; they are not additional required Reels.
+**One core vertical episode each day, uploaded separately to Instagram and TikTok.** This means **27 creative episodes and 54 planned platform uploads**. Optional Stories provide a second, lighter touchpoint; they are not additional required Reels.
 
 The working account assumption is Jevica's existing Instagram and TikTok presence, with TypeSafe Place clearly identified as the series world. Exact handles are not assumed. If the brand accounts become the primary home, keep this single story sequence and adapt first-person captions into third person. Do not create a separate daily workload for every character.
 
@@ -80,7 +80,7 @@ The workbook starts every post at **6:30 p.m. America/Chicago**. This is an edit
 
 Chicago is UTC−05:00 through October 31 in this calendar and UTC−06:00 from November 1. Use the named timezone in any later scheduler, so the local time remains 6:30 p.m.
 
-The season launches October 11: Day 1 was approved and rendered that evening, and banked Day 3 fills October 12. Produce the opening posts (Days 1, 3, 2, 4, 5 and 6) as a launch pack, and lock all six character voices first, because all six speak in week one. If Day 1 does not post on October 11, revert to the October 12 plan (Day 1 on October 12, Day 3 banked again; nothing else moves). If launch then slips to October 13, cut Day 5 next; if it slips further, use the masquerade fallback below. Build toward a three-post buffer first; a seven-post buffer is the steady-state goal, not a claim that the footage already exists. Edit due dates in the workbook are the post date minus three days; the launch pack is due October 11–13, and Day 23 is due October 25 so the season payoff is finished early. If the launch date moves again, move dependent story episodes together. If Halloween no longer fits, change the fictional occasion to a masquerade and revise the dated cards and captions.
+The season launches October 12. Produce the opening posts (Days 1, 2, 4, 5 and 6) as a launch pack, and lock all six character voices first, because all six speak in week one. Go/no-go: Day 1 final in both platform versions by noon October 12. If launch slips to October 13, cut Day 5 next; if it slips further, use the masquerade fallback below. Build toward a three-post buffer first; a seven-post buffer is the steady-state goal, not a claim that the footage already exists. Edit due dates in the workbook are the post date minus three days; the launch pack is due October 12–13, and Day 23 is due October 25 so the season payoff is finished early. If the launch date moves again, move dependent story episodes together. If Halloween no longer fits, change the fictional occasion to a masquerade and revise the dated cards and captions.
 
 ## 4. Calendar at a glance
 
@@ -88,36 +88,35 @@ Story = principal plot scene. Light = lower-complexity character clip. Recap = e
 
 | Post # | Day | Date | Format | Episode | Hook | Length |
 |---|---|---|---|---|---|---|
-| 1 | 1 | Sun 10-11 | Story | A Small Gathering | I gave the gods a group chat. | 24s |
-| 2 | 3 | Mon 10-12 | Light | Researching the Vibe | Me researching the vibe while they debate chair placement. | 10s |
-| 3 | 2 | Tue 10-13 | Story | Two Versions of the Same Night | I told them both they could plan the party. | 22s |
-| 4 | 4 | Wed 10-14 | Story | Why Does the Invite Say Applicants? | Ares turned our party invitation into an audition. | 29s |
-| 5 | 5 | Thu 10-15 | Light | Athena Has Notes | I don't object to parties. | 20s |
-| 6 | 6 | Fri 10-16 | Story | Can I Come Alone? | One question made me rewrite the entire invitation. | 28s |
-| 7 | 7 | Sat 10-17 | Recap | Previously: An Admissions Process | How our open house became an admissions process. | 22s |
-| 8 | 8 | Sun 10-18 | Story | Two Parties. Both Mine. | My assistant found two parties. They're both mine. | 28s |
-| 9 | 9 | Mon 10-19 | Story | The Convenient Explanation | Could we call it a scheduling glitch? | 26s |
-| 10 | 11 | Tue 10-20 | Story | The Rehearsal Walkout | Our first guest left. It was a rehearsal. | 29s |
-| 11 | 12 | Wed 10-21 | Light | Ares Breaks the Ice | They asked me to break the ice. | 14s |
-| 12 | 13 | Thu 10-22 | Story | A Corner, Not Another Committee | The solution was the part of the room nobody noticed. | 31s |
-| 13 | 14 | Fri 10-23 | Recap | One Night, Finally | Two schedules. One room. One guest who walked out. | 22s |
-| 14 | 15 | Sat 10-24 | Story | Nobody Gets Past Me | We gave Ares the door. He misunderstood. | 28s |
-| 15 | 16 | Sun 10-25 | Story | Welcome Training | Ares is practicing being approachable. | 30s |
-| 16 | 18 | Mon 10-26 | Story | Athena and Dionysus Negotiate | The planner and the party friend finally agree on something. | 22s |
-| 17 | 19 | Tue 10-27 | Light | Casual, Apparently | I said casual. My nervous system heard state dinner. | 16s |
-| 18 | 20 | Wed 10-28 | Story | Whose Job Is Your Night? | Jev asked who was responsible for me having fun. | 29s |
-| 19 | 21 | Thu 10-29 | Recap | The Second Rehearsal | Same gods. Much better hosts. | 24s |
-| 20 | 22 | Fri 10-30 | Story | The Last-Minute Addition | My assistant asked one excellent question: optional? | 31s |
-| 21 | 23 | Sat 10-31 | Story | The Guest List | For once, the gods got the party right. | 40s |
-| 22 | 24 | Sun 11-01 | Light | Athena Denies Everything | Athena would like to explain the dancing footage. | 15s |
-| 23 | 25 | Mon 11-02 | Story | Did You Mean That? | The party ended. One promise didn't. | 27s |
-| 24 | 26 | Tue 11-03 | Light | A Worthy Repeat Opponent | Ares has not made a friend. Apparently. | 13s |
-| 25 | 27 | Wed 11-04 | Story | Ask for the Mistake | Ares asked his companion for praise. Athena asked for the problem. | 32s |
-| 26 | 28 | Thu 11-05 | Recap | What Actually Changed | The best part wasn't on the schedule. | 25s |
-| 27 | 29 | Fri 11-06 | Story | Twelve Entire Minutes | I got to be a guest at my own party. For twelve minutes. | 24s |
-| 28 | 30 | Sat 11-07 | Light | Obviously Me | I said somebody else should host. They all volunteered. | 18s |
+| 1 | 1 | Mon 10-12 | Story | A Small Gathering | I gave the gods a group chat. | 24s |
+| 2 | 2 | Tue 10-13 | Story | Two Versions of the Same Night | I told them both they could plan the party. | 22s |
+| 3 | 4 | Wed 10-14 | Story | Why Does the Invite Say Applicants? | Ares turned our party invitation into an audition. | 29s |
+| 4 | 5 | Thu 10-15 | Light | Athena Has Notes | I don't object to parties. | 20s |
+| 5 | 6 | Fri 10-16 | Story | Can I Come Alone? | One question made me rewrite the entire invitation. | 28s |
+| 6 | 7 | Sat 10-17 | Recap | Previously: An Admissions Process | How our open house became an admissions process. | 22s |
+| 7 | 8 | Sun 10-18 | Story | Two Parties. Both Mine. | My assistant found two parties. They're both mine. | 28s |
+| 8 | 9 | Mon 10-19 | Story | The Convenient Explanation | Could we call it a scheduling glitch? | 26s |
+| 9 | 11 | Tue 10-20 | Story | The Rehearsal Walkout | Our first guest left. It was a rehearsal. | 29s |
+| 10 | 12 | Wed 10-21 | Light | Ares Breaks the Ice | They asked me to break the ice. | 14s |
+| 11 | 13 | Thu 10-22 | Story | A Corner, Not Another Committee | The solution was the part of the room nobody noticed. | 31s |
+| 12 | 14 | Fri 10-23 | Recap | One Night, Finally | Two schedules. One room. One guest who walked out. | 22s |
+| 13 | 15 | Sat 10-24 | Story | Nobody Gets Past Me | We gave Ares the door. He misunderstood. | 28s |
+| 14 | 16 | Sun 10-25 | Story | Welcome Training | Ares is practicing being approachable. | 30s |
+| 15 | 18 | Mon 10-26 | Story | Athena and Dionysus Negotiate | The planner and the party friend finally agree on something. | 22s |
+| 16 | 19 | Tue 10-27 | Light | Casual, Apparently | I said casual. My nervous system heard state dinner. | 16s |
+| 17 | 20 | Wed 10-28 | Story | Whose Job Is Your Night? | Jev asked who was responsible for me having fun. | 29s |
+| 18 | 21 | Thu 10-29 | Recap | The Second Rehearsal | Same gods. Much better hosts. | 24s |
+| 19 | 22 | Fri 10-30 | Story | The Last-Minute Addition | My assistant asked one excellent question: optional? | 31s |
+| 20 | 23 | Sat 10-31 | Story | The Guest List | For once, the gods got the party right. | 40s |
+| 21 | 24 | Sun 11-01 | Light | Athena Denies Everything | Athena would like to explain the dancing footage. | 15s |
+| 22 | 25 | Mon 11-02 | Story | Did You Mean That? | The party ended. One promise didn't. | 27s |
+| 23 | 26 | Tue 11-03 | Light | A Worthy Repeat Opponent | Ares has not made a friend. Apparently. | 13s |
+| 24 | 27 | Wed 11-04 | Story | Ask for the Mistake | Ares asked his companion for praise. Athena asked for the problem. | 32s |
+| 25 | 28 | Thu 11-05 | Recap | What Actually Changed | The best part wasn't on the schedule. | 25s |
+| 26 | 29 | Fri 11-06 | Story | Twelve Entire Minutes | I got to be a guest at my own party. For twelve minutes. | 24s |
+| 27 | 30 | Sat 11-07 | Light | Obviously Me | I said somebody else should host. They all volunteered. | 18s |
 
-Banked, not scheduled: Day 10 (Two Minutes of Joy) and Day 17 (Artemis Saw It First). Day 3 (Researching the Vibe) returned on October 12 when Day 1 moved up a day. No recap uses them; reuse them as bonus Stories or swap them back in if a slot opens.
+Banked, not scheduled: Day 3 (Researching the Vibe; built October 12 and ready as a bonus), Day 10 (Two Minutes of Joy) and Day 17 (Artemis Saw It First). No recap uses them; reuse them as bonus Stories or swap them back in if a slot opens.
 
 ## 5. A production system you can sustain
 
@@ -295,7 +294,7 @@ The workbook carries a full director brief for each day. This guide provides the
 
 ### Day 01 — A Small Gathering
 
-**Planned post:** Sun, 2026-10-11, America/Chicago (UTC-05:00), the evening it was rendered, after Val reviews the cut. The 6:30 p.m. slot had already passed.\
+**Planned post:** Mon, 2026-10-12, 6:30 p.m. America/Chicago (UTC-05:00)\
 **Format:** Story · **Production:** Standard · **Final duration target:** 24s\
 **Cast:** Jevica, Jev · **Setting:** Lounge
 
@@ -410,8 +409,7 @@ Dionysus: R10 DIONYSUS reference sheet.
 
 ### Day 03 — Researching the Vibe
 
-**Planned post:** Mon, 2026-10-12, 6:30 p.m. America/Chicago (UTC-05:00)\
-Cut in the October 12 relaunch, then swapped back in on October 11 when Day 1 moved up a day. No recap depends on this episode.\
+**Banked, not scheduled.** Cut in the October 12 relaunch; no recap depends on this episode. Reuse as a bonus Story or swap back in if a slot opens. Built October 12 from the approved Oct 8 dance clip (9s loop, silent); both platform exports exist.\
 **Format:** Light · **Production:** Light · **Final duration target:** 10s\
 **Cast:** Jevica · **Setting:** Loch Bar-inspired lounge
 
@@ -453,7 +451,7 @@ Slider: How much planning is too much planning?
 
 **References:** Jevica: R08 primary front view; R06 three-quarter view; R02 profile; R03 back view.
 
-**Dependency and continuity:** Posts between Day 1 and Day 2; optional callback to Day 1's group chat. Safe to swap with another light post.
+**Dependency and continuity:** Optional callback to Days 1–2; safe to swap with another light post.
 
 ---
 
