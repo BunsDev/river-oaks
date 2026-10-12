@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 try {
@@ -13,16 +13,25 @@ try {
   const marker=join(destination,'.river-oaks-managed');
   if(existsSync(destination)&&!existsSync(marker))throw new Error('Unmanaged hook directory exists; preserve it for review.');
   mkdirSync(destination,{recursive:true});writeFileSync(marker,'1\n');
-  const nodePath="'"+process.execPath.replaceAll("'","'\\''")+"'";
+  const quote=value=>"'"+value.replaceAll("'","'\\''")+"'",nodePath=quote(process.execPath);
   const files={
     'pre-commit':readFileSync(new URL('../.githooks/pre-commit',import.meta.url)),
     'reference-transaction':readFileSync(new URL('../.githooks/reference-transaction',import.meta.url),'utf8').replace("installed_node=''",()=>`installed_node=${nodePath}`),
     'project-ref-guard.mjs':readFileSync(new URL('./project-ref-guard.mjs',import.meta.url)),
+    // The pre-commit hook runs this installed copy, so committing on a checked-out
+    // branch (for example a fork PR under review) never runs that branch's code.
+    'scripts/check_secrets.py':readFileSync(new URL('./check_secrets.py',import.meta.url)),
+    '.gitleaks.toml':readFileSync(new URL('../.gitleaks.toml',import.meta.url)),
+    // Merge driver for the task register; .gitattributes selects it.
+    'merge-task-register':readFileSync(new URL('../.githooks/merge-task-register',import.meta.url),'utf8').replace("installed_node=''",()=>`installed_node=${nodePath}`),
+    'merge-task-register.mjs':readFileSync(new URL('./merge-task-register.mjs',import.meta.url)),
   };
   for(const [name,contents] of Object.entries(files)){
-    const target=join(destination,name),temp=`${target}.${randomUUID()}`;
+    const target=join(destination,name),temp=`${target}.${randomUUID()}`;mkdirSync(dirname(target),{recursive:true});
     writeFileSync(temp,contents,{mode:0o755});renameSync(temp,target);
   }
   git(['config','--local','core.hooksPath',destination]);
-  process.stdout.write('Installed shared secret and local ref retirement guards for all worktrees.\n');
+  git(['config','--local','merge.task-register.name','Task register merge by task id']);
+  git(['config','--local','merge.task-register.driver',`${quote(join(destination,'merge-task-register'))} %O %A %B %P`]);
+  process.stdout.write('Installed shared secret and local ref retirement guards and the task register merge driver for all worktrees.\n');
 } catch(error){process.stderr.write(`install-project-hooks: ${error.message}\n`);process.exitCode=1;}

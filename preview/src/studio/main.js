@@ -1,4 +1,6 @@
 import './studio.css';
+import { createDistrict } from './templates.js';
+import { mountTemplatePicker } from './template-picker.js';
 import { mountAgentChat } from './agent-chat.js';
 import { mountDesignerPanel } from './designer-panel.js';
 import { blankRegion } from '../region-draft.js';
@@ -6,7 +8,7 @@ import { createStudioDocument, parseRegion, MAX_REGION_BYTES, STORAGE_KEY } from
 import { createStudioViewport } from './viewport.js';
 
 export function startStudio(host) {
-  host.innerHTML=`<header class="studio-header"><a class="studio-brand" href="/play" title="Return to the world">TypeSafe Place<span>World Studio</span></a><div class="studio-file-tools"><button id="studio-designer-open">World Designer</button><button id="studio-new">New region</button><label class="studio-open">Open JSON<input id="studio-import" type="file" accept=".json,application/json"></label><button id="studio-export">Export JSON</button><button id="studio-save" class="studio-primary">Save on device</button></div><a class="studio-return" href="/play">Back to world ↗</a></header>
+  host.innerHTML=`<header class="studio-header"><a class="studio-brand" href="/play" title="Return to the world">TypeSafe Place<span>World Studio</span></a><div class="studio-file-tools"><button id="studio-designer-open">World Designer</button><button id="studio-new">New region</button><button id="studio-templates">District templates</button><label class="studio-open">Open JSON<input id="studio-import" type="file" accept=".json,application/json"></label><button id="studio-export">Export JSON</button><button id="studio-save" class="studio-primary">Save on device</button></div><a class="studio-return" href="/play">Back to world ↗</a></header>
     <div class="studio-workspace"><aside class="studio-scene-panel" aria-label="Scene"><div class="studio-panel-title"><h1>Region</h1><span id="studio-count"></span></div><p class="studio-caption">A private draft · metres</p><div class="studio-palette" aria-label="Add to region"><button data-add="building" aria-label="Add building">▱ Building</button><button data-add="tree" aria-label="Add tree">♧ Tree</button><button data-add="place" aria-label="Add place">⌖ Place</button></div><h2>Scene objects</h2><div id="studio-items" class="studio-items"></div><div class="studio-scene-note">Roads, terrain and parcels are preserved from your region file. This view shows a blockout of your world.</div></aside>
     <section class="studio-stage" aria-label="World viewport"><div class="studio-toolbar" role="toolbar" aria-label="Viewport tools"><div><button data-tool="translate" aria-pressed="true">Move <kbd>W</kbd></button><button data-tool="rotate" aria-pressed="false">Rotate <kbd>E</kbd></button><button data-tool="scale" aria-pressed="false">Size <kbd>R</kbd></button></div><div><button id="studio-undo" aria-label="Undo" title="Undo (⌘/Ctrl Z)">↶</button><button id="studio-redo" aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)">↷</button></div><button id="studio-walk" class="studio-play">Walk through</button></div><div id="studio-viewport" tabindex="0" aria-label="Interactive 3D viewport"></div><div class="studio-view-tools"><button id="studio-frame">Frame selection</button><button id="studio-region">Frame region</button><span id="studio-hint">Drag to orbit · right-drag to pan · scroll to zoom</span></div></section>
     <aside class="studio-inspector" aria-label="Object properties"><div class="studio-panel-title"><h2>Inspector</h2><span id="studio-kind">Selection</span></div><h3 id="studio-selected">Choose an object</h3><form id="studio-properties" autocomplete="off"></form><button id="studio-delete" class="studio-delete" hidden>Delete object</button><p class="studio-inspector-note">Moves snap to 0.5 m. Rotation snaps to 22.5°. Use the fields for precise values.</p><div class="studio-document-note"><strong>Yours to shape</strong><p>Save keeps a draft on this device. Export makes a portable region file. Your edits never change a live shared world.</p><button id="studio-reopen">Reopen saved draft</button></div></aside></div>
@@ -46,7 +48,7 @@ export function startStudio(host) {
     }
     $('#studio-delete').hidden=!item||item.type==='arrival';$('#studio-delete').disabled=walking;
     $('#studio-frame').disabled=!item||walking;$('#studio-region').disabled=walking;
-    for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-reopen,#studio-import'))button.disabled=walking;
+    for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-templates,#studio-reopen,#studio-import'))button.disabled=walking;
   }
   function render(){if (doc.revision !== renderedRevision) { designer?.changed(); renderedRevision = doc.revision; } if(!doc.items.some(item=>item.id===selected))selected=null;viewport.render(doc.value,selected);renderPanels();}
   function setWalk(enabled){
@@ -62,6 +64,12 @@ export function startStudio(host) {
   $('#studio-delete').addEventListener('click',()=>run(()=>{doc.remove(selected);render();say('Object deleted. Undo restores it.');}));
   $('#studio-save').addEventListener('click',()=>run(()=>{doc.save(localStorage);renderPanels();say('Draft saved on this device.');}));
   $('#studio-new').addEventListener('click',()=>run(()=>{if(!acceptDiscard())return;importGeneration++;doc.replace(blankRegion());selected=null;render();viewport.frameRegion();say('New region. Save to replace the device draft, or export a separate file.');}));
+  const templates=mountTemplatePicker(host,{choose:template=>{
+    if(walking||!acceptDiscard())return false;
+    try {const region=createDistrict(template.id);doc.replace(region);importGeneration++;selected=null;render();viewport.frameRegion();say(`${template.name} opened. ${template.firstEdit} Save or export to keep your version.`);return true;}
+    catch(error){say(error.message);return false;}
+  }});
+  $('#studio-templates').addEventListener('click',()=>templates.open());
   $('#studio-reopen').addEventListener('click',()=>run(()=>{if(!acceptDiscard())return;importGeneration++;if(!doc.restore(localStorage)){say('No saved draft on this device yet.');return;}selected=null;render();viewport.frameRegion();say('Saved draft reopened.');}));
   $('#studio-export').addEventListener('click',()=>run(()=>{
     const blob=new Blob([JSON.stringify(doc.value)],{type:'application/json'});if(blob.size>MAX_REGION_BYTES)throw Error('Region exceeds the 128 KiB export limit.');
@@ -76,7 +84,7 @@ export function startStudio(host) {
   $('#studio-walk').addEventListener('click',()=>setWalk(!walking));
   const events=new AbortController();
   window.addEventListener('keydown',event=>{
-    if(walking||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+    if(host.querySelector('dialog[open]')||walking||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
     if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='s'){event.preventDefault();$('#studio-save').click();}
     else if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='z'){event.preventDefault();$(event.shiftKey?'#studio-redo':'#studio-undo').click();}
     else if(!event.metaKey&&!event.ctrlKey&&!event.altKey){
@@ -87,7 +95,7 @@ export function startStudio(host) {
   },{signal:events.signal});
   window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY)say('The saved draft changed in another tab. Export your edits before reopening.');},{signal:events.signal});
   window.addEventListener('beforeunload',event=>{if(doc.dirty){event.preventDefault();event.returnValue='';}},{signal:events.signal});
-  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();designer?.dispose();agent?.dispose();viewport.dispose();}},{signal:events.signal});
+  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();designer?.dispose();templates.dispose();agent?.dispose();viewport.dispose();}},{signal:events.signal});
   designer = mountDesignerPanel(host, { doc, selected: () => selected, apply: render, canEdit: () => !walking });
   agent = mountAgentChat($('.studio-stage'), { doc, selected: () => selected, apply: render, canEdit: () => !walking });
   $('#studio-designer-open').addEventListener('click', event => designer.open(event.currentTarget));

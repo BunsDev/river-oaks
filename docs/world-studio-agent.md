@@ -35,20 +35,54 @@ you. Roads and terrain stay read-only.
 ## Desktop host
 
 `desktop/studio-agent-host.js` owns the executables, arguments and models; the
-page only picks IDs from that table. IPC is limited to the main Studio window.
+page only picks IDs from that table.
 
-- Claude runs as `claude -p --output-format stream-json` with no tools, no MCP
-  servers, no settings sources and no saved session, so replies stream as they
-  arrive.
-- Codex runs as `codex exec --json --sandbox read-only --ephemeral` in an empty
-  private workspace under the app profile (`studio-agent/codex`). It returns
-  each reply whole. Codex's read-only sandbox may still run read-only commands
-  in that workspace.
+- **Claude** runs as `claude -p --output-format stream-json` with no tools, no
+  slash commands, no MCP servers, no settings sources (so no `CLAUDE.md`) and no
+  saved session. Replies stream as they arrive.
+- **Codex** runs as `codex exec --json --sandbox read-only --ephemeral` in an
+  empty private workspace under the app profile (`studio-agent/codex`). The
+  read-only sandbox still lets its shell *read* any file, so Studio also passes
+  `--ignore-user-config --ignore-rules` and disables the shell, exec, sub-agent,
+  app, plugin, MCP, automation, browser, computer-use, web-search, voice and
+  memory features, including ones that are off by default today, so an upgrade
+  cannot turn one on (`desktop/studio-codex.js`). That also drops your Codex
+  MCP servers, rules and configured model; Codex uses its default model. Codex
+  returns each reply whole.
 - The first message to each provider asks for native consent, because your
   messages and the scene snapshot go to that provider and usage may be billed.
   It asks again after the app restarts.
 - The host keeps up to 48 KiB of chat history per conversation, in memory only.
   Navigation, a renderer crash or quitting cancels running replies.
+
+### Page boundary
+
+The chat runs inside the hosted site, so Studio treats page script as untrusted:
+
+- The bridge exists only in a document loaded at `/studio` or `/studio.html`.
+  The main process checks the URL of the last committed main-frame load, which
+  `history.pushState` cannot change.
+- A message needs a recent click or key press in Studio (`navigator.userActivation`),
+  so script alone cannot start agent work unattended. Only one reply runs at a
+  time across all chats, so one gesture cannot fan out into many runs, and at
+  most 20 messages are sent in any 10 minutes.
+- The scene snapshot is rebuilt from an allowlist of object and road fields.
+  Unknown keys, terrain heights, parcels and ownership data are dropped, and
+  hidden control and bidirectional characters are stripped from labels.
+- Replies, including streamed text, are capped at 64 KiB (UTF-8).
+- Errors that are not the host's own messages are replaced before they reach
+  the page, so file paths and model output do not leak through them.
+
+**Remaining exposure.** With both providers' tools off, an agent knows only what
+the page sends it, plus what the CLI itself injects. On `claude` 2.1.296 that
+includes your Claude account email (`--bare` would remove it, but it also
+disables subscription sign-in). Codex still loads anything in your global
+`~/.codex/AGENTS.md`, so keep secrets out of that file; only a separate
+`CODEX_HOME` would stop that, which would mean copying credentials. Both CLIs also see the workspace path, which contains
+your account name. Script on the site could therefore ask the agent to repeat
+those, and could use your provider quota within the rate limit. The consent
+dialog says so. The Codex flags were verified on codex-cli 0.162.1; a later
+release may add features, so recheck after upgrading.
 
 GUI launches often lack your shell `PATH`, so the host also searches
 `~/.local/bin`, `/opt/homebrew/bin` and `/usr/local/bin`. Set

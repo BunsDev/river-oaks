@@ -36,7 +36,8 @@ export function createDesignerSession(doc) {
     begin({ brief, scope = 'selection', selectedIds = [], projectBrief = '' }) {
       cancel();
       if (!connection) fail('Connect a designer first.');
-      if (!boundedString(brief) || typeof projectBrief !== 'string' || projectBrief.length > 8000) fail('Keep the task within 4,000 characters and project brief within 8,000.');
+      // The desktop confirmation shows the whole task and brief, so both stay short enough to read.
+      if (!boundedString(brief, 1000) || typeof projectBrief !== 'string' || projectBrief.length > 2000) fail('Keep the task within 1,000 characters and project brief within 2,000.');
       if (!['selection', 'region'].includes(scope)) fail('Choose a context scope.');
       const items = doc.items, ids = [...new Set(selectedIds)];
       if (scope === 'selection' && (!ids.length || ids.some(id => !items.some(item => item.id === id)))) fail('Select an object to share, or choose the whole region.');

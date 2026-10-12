@@ -1,3 +1,5 @@
+import { createClientAddress, rateLimitKey } from './client-address.js';
+import { createRateLimiter } from './rate-limit.js';
 import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { createWorldLandmarks } from './world-landmarks.js';
@@ -18,7 +20,7 @@ import { createRedisPresence } from './presence.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false}={}) {
+  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -67,13 +69,15 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,workplaceCronSecret,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
           if(!target || target.meta?.template!=='region-v1')return {ok:false,error:'missing'};
           return target.room.request({type:'revise',actorId,expectedDraftVersion});
         }}:{}),
+        // One world per account (see distributed-app): remove them from the previous world, wherever it runs.
+        onMove:async(userId,fromWorldId)=>{const previous=await worldFor(fromWorldId).catch(()=>null);await previous?.game.disconnectUser(userId);},
         onBan:async userId=>{
           await Promise.all([...worlds.values()].filter(world=>world.id!==id).map(world=>world.game.disconnectUser(userId)));
         }});
@@ -83,7 +87,10 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     pending.set(id,load);
     return load;
   }
-  const router=createWorldRouter({worldFor,configuredWorldId,handleRequest});
+  // The same per-address budget the worlds apply, run once at the front door.
+  const routerAddress=address??createClientAddress(trustedProxyIPs),localGate=createRateLimiter(1000,60_000);
+  const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
+  const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
   return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
     await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
   },async close() {

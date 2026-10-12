@@ -1,11 +1,13 @@
-// Coworking studio (fixture): the #218 graybox with a stand-in companion. It
-// is a labeled fixture site, never placed in the district. The companion's
+// Coworking studio (fixture): the #218 plan with a stand-in companion, rendered
+// as the finished office (default) or the graybox (?finish=graybox). It is a
+// labeled fixture site, never placed in the district. The companion's
 // pose comes only from companionPresentation(presence, task): idle life never
 // reads as work. window.workplaceFixture.show(state, camera) renders a state;
 // frames(n) samples frame time; dispose() checks the room releases cleanly.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { planWorkplaceRoom, buildWorkplaceGraybox, findRoute, AVATAR_ENVELOPE } from '../../src/workplace-room.js';
+import { buildWorkplaceOffice, OFFICE_VIEWS } from '../../src/workplace-office.js';
 import { companionPresentation } from '../../src/workplace-contract.js';
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -20,7 +22,9 @@ Object.assign(sun.shadow.camera, {left: -6, right: 6, top: 6, bottom: -6});scene
 const outside = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({color: '#77706a', roughness: 0.95}));
 outside.rotation.x = -Math.PI / 2;outside.position.y = -0.06;outside.receiveShadow = true;scene.add(outside);
 const room = planWorkplaceRoom();
-let graybox = buildWorkplaceGraybox(THREE, room);scene.add(graybox.object);
+const finish = new URLSearchParams(location.search).get('finish') === 'graybox' ? 'graybox' : 'office';
+const build = finish === 'graybox' ? buildWorkplaceGraybox : buildWorkplaceOffice;
+let graybox = build(THREE, room);scene.add(graybox.object);
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.05, 80);
 const world = ([x, d], y = 0) => new THREE.Vector3(x, y, -d);
 
@@ -61,16 +65,17 @@ function show(state = 'arriving', cameraName = 'CAM-01', {progress = 1, time = 0
   if (presentation.pose === 'offstage') companion.visible = false;
   else pose(companion, spec.at, {seated: presentation.pose.startsWith('seated'), facing: presentation.pose.startsWith('seated') ? station.facing : 0, working: presentation.working, time});
   pose(player, state.startsWith('seated') ? room.review.socket : [room.entrance[0] + 0.8, room.entrance[1] + 0.4], {facing: state.startsWith('seated') ? Math.PI / 2 : 0});
-  const view = room.cameras[cameraName];
+  const view = room.cameras[cameraName] ?? OFFICE_VIEWS[cameraName];
   camera.position.set(...view.position.map((value, index) => index === 2 ? -value : value));camera.lookAt(view.target[0], view.target[1], -view.target[2]);
   camera.aspect = innerWidth / innerHeight;camera.updateProjectionMatrix();
   label.textContent = `${room.site.label} · ${view.label} · ${presentation.label}`;
+  graybox.update?.(time);
   renderer.render(scene, camera);
   current = {state, camera: cameraName, presentation};
   return {state, camera: cameraName, presentation, companionVisible: companion.visible, position: companion.visible ? spec.at : null};
 }
 window.workplaceFixture = {
-  room, path, show,
+  room, path, show, finish,
   frames(count = 120) {
     const samples = [];
     for (let i = 0; i < count; i++) { const start = performance.now();show(current.state, current.camera, {time: i / 60});renderer.getContext().finish();samples.push(performance.now() - start); }
@@ -79,7 +84,7 @@ window.workplaceFixture = {
   },
   reenter(times = 10) {
     const before = renderer.info.memory.geometries;
-    for (let i = 0; i < times; i++) { graybox.dispose();graybox = buildWorkplaceGraybox(THREE, room);scene.add(graybox.object);show(current.state, current.camera); }
+    for (let i = 0; i < times; i++) { graybox.dispose();graybox = build(THREE, room);scene.add(graybox.object);show(current.state, current.camera); }
     return {before, after: renderer.info.memory.geometries};
   },
 };

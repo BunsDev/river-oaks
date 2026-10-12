@@ -1,5 +1,6 @@
 import policy from '../src/river_oaks/chauffeur-policy.json' with { type: 'json' };
 import { isJevicaAdmin } from './admin.js';
+import { createRateLimiter } from './rate-limit.js';
 import { timingSafeEqual } from 'node:crypto';
 
 const number = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max;
@@ -37,7 +38,28 @@ export function chauffeurChoices(packet) {
   return candidates;
 }
 
-export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey, model = 'jev-1.13.0', fetcher = fetch, isAdmin = isJevicaAdmin }) {
+// Spend control for the paid provider: a global daily budget across every
+// owner session (so a stolen session cannot run up calls without end), and a
+// breaker that pauses calls for a minute after three failures in a row instead
+// of retrying at full rate. Either one answers with no provider call, and the
+// car falls back to local driving.
+export const CHAUFFEUR_DAILY_LIMIT = 6000;
+const FAILURES_BEFORE_PAUSE = 3, PAUSE_MS = 60_000;
+// CHAUFFEUR_DAILY_LIMIT caps paid driving decisions per day across all owners.
+export const chauffeurDailyLimit = env => Math.min(10_000, Math.max(1, Number.parseInt(env.CHAUFFEUR_DAILY_LIMIT ?? '', 10) || CHAUFFEUR_DAILY_LIMIT));
+// The single-process town keeps the same budgets as Redis, in memory: one
+// counter per scope, id, limit and window, so the per-owner pace and the shared
+// daily budget never spend each other's allowance.
+export function createLocalChauffeurSecurity({ isBanned, now = Date.now }) {
+  const limiters = new Map();
+  return { isBanned, async allow(scope, id, limit, windowMs) {
+    const key = `${scope}:${limit}:${windowMs}`;
+    if (!limiters.has(key)) limiters.set(key, createRateLimiter(limit, windowMs, 4096, now));
+    return limiters.get(key)(id);
+  } };
+}
+export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey, model = 'jev-1.13.0', fetcher = fetch, isAdmin = isJevicaAdmin, dailyLimit = CHAUFFEUR_DAILY_LIMIT, now = Date.now }) {
+  let failures = 0, pausedUntil = 0;
   return async (req, res) => {
     if (new URL(req.url, origin).pathname !== '/api/chauffeur') return false;
     if (req.method !== 'POST') { json(res, 405, { error: 'Use POST.' }); return true; }
@@ -58,6 +80,8 @@ export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey,
     } catch { json(res, 400, { error: 'Invalid driving request.' }); return true; }
     const result = { schema_version: 1, tick: packet.tick, generation: packet.generation, candidate_id: null, source: 'unavailable', reason: 'not_configured', confidence: null };
     if (apiKey && Object.keys(candidates).length) {
+      if (now() < pausedUntil) { result.reason = 'provider_paused'; json(res, 200, result); return true; }
+      if (!await security.allow('chauffeur_daily', 'global', dailyLimit, 86_400_000)) { result.reason = 'budget_exhausted'; json(res, 200, result); return true; }
       try {
         const response = await fetcher('https://api.typesafe.ai/v1/systemone', {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(1200),
@@ -74,7 +98,11 @@ export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey,
           || probabilities[answer.choice] < Math.max(...Object.values(probabilities))) throw new Error('Invalid answer');
         const accepted = answer.confidence >= policy.thresholds[answer.choice];
         Object.assign(result, { source: accepted ? 'jev' : 'uncertain', reason: accepted ? 'accepted' : 'low_confidence', candidate_id: accepted ? answer.choice : null, confidence: answer.confidence });
-      } catch { result.reason = 'provider_unavailable'; }
+        failures = 0;
+      } catch {
+        result.reason = 'provider_unavailable';
+        if (++failures >= FAILURES_BEFORE_PAUSE) { failures = 0; pausedUntil = now() + PAUSE_MS; }
+      }
     }
     json(res, 200, result); return true;
   };

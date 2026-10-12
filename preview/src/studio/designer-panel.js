@@ -13,10 +13,10 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
     <details><summary>World Design skill pack</summary><p data-pack></p><ul data-skills></ul><p>Installed skills provide guidance. They do not establish that a design check was performed.</p></details>
     <button data-connect class="studio-primary">Set up and connect</button></section>
     <section data-connected hidden><p data-identity></p><button data-disconnect>Disconnect</button></section>
-    <label>Project brief<textarea data-brief rows="3" maxlength="8000" placeholder="Purpose, audience, style, references and constraints"></textarea></label>
+    <label>Project brief<textarea data-brief rows="3" maxlength="2000" placeholder="Purpose, audience, style, references and constraints"></textarea></label>
     <label>Share with the designer<select data-scope><option value="selection">Selected object only</option><option value="region">Whole region</option></select></label>
     <p data-context class="studio-caption"></p><p class="studio-caption">The brief and chosen scene context are shared when you send. No screenshots or unrelated project memory are attached.</p>
-    <label>Design task<textarea data-task rows="3" maxlength="4000" placeholder="Review the arrival and propose clearer wayfinding"></textarea></label>
+    <label>Design task<textarea data-task rows="3" maxlength="1000" placeholder="Review the arrival and propose clearer wayfinding"></textarea></label>
     <div class="studio-designer-actions"><button data-send class="studio-primary" disabled>Ask designer</button><button data-cancel disabled>Cancel</button></div>
     <p class="studio-caption">Supports buildings, trees, places and arrival. Roads and terrain can be reviewed and preserved.</p>
     <section data-preview hidden><h3>Proposed changes</h3><p data-rationale></p><pre data-diff></pre><p data-evidence></p><div class="studio-designer-actions"><button data-apply class="studio-primary">Apply as one edit</button><button data-reject>Reject</button></div></section>`;
@@ -25,9 +25,11 @@ export function mountDesignerPanel(host, { doc, selected, apply, canEdit = () =>
   let connection = null, busy = false, generation = 0, requestId = null, catalog = null, opener = null;
   const events = new AbortController();
   let settings = { projectId: crypto.randomUUID(), brief: '', name: 'World Designer', mode: 'familiar' };
-  try { const saved = JSON.parse(storage.getItem(SETTINGS_KEY)); if (saved && /^[\w-]{1,100}$/.test(saved.projectId) && typeof saved.brief === 'string' && saved.brief.length <= 8000) settings = { projectId: saved.projectId, brief: saved.brief, name: typeof saved.name === 'string' ? saved.name : 'World Designer', mode: saved.mode === 'general' ? 'general' : 'familiar' }; } catch { /* Use a fresh project context; never repair exported region data. */ }
+  try { const saved = JSON.parse(storage.getItem(SETTINGS_KEY)); if (saved && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(saved.projectId) && typeof saved.brief === 'string' && saved.brief.length <= 8000) settings = { projectId: saved.projectId, brief: saved.brief.slice(0, 2000), trimmed: saved.brief.length > 2000, name: typeof saved.name === 'string' ? saved.name : 'World Designer', mode: saved.mode === 'general' ? 'general' : 'familiar' }; } catch { /* Use a fresh project context; never repair exported region data. */ }
   $('[data-brief]').value = settings.brief; $('[data-name]').value = settings.name; $('[data-path]').value = settings.mode;
   const say = text => { $('[data-state]').textContent = text; };
+  // Briefs are capped at 2,000 characters so the desktop confirmation can show them whole.
+  if (settings.trimmed) { delete settings.trimmed; say('Your saved project brief was over 2,000 characters, so Studio kept the first 2,000. Review it before sending.'); }
   function persist() { settings.brief = $('[data-brief]').value; settings.name = $('[data-name]').value; settings.mode = $('[data-path]').value; try { storage.setItem(SETTINGS_KEY, JSON.stringify(settings)); return true; } catch { say('Project preferences could not be saved. Your region is unchanged.'); return false; } }
   function render() {
     $('[data-setup]').hidden = Boolean(connection); $('[data-connected]').hidden = !connection;

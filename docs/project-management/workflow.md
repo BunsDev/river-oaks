@@ -46,6 +46,27 @@ Maintain `nextAction`, `updatedAt` and the ledger at each meaningful boundary:
 claim, reproduced defect, verification, PR creation/head change, merge, handoff,
 and retirement. Do not overwrite historical reports with new timestamps.
 
+## Register merges and stashes
+
+The primary checkout's `tasks.json` is the live register, an uncommitted edit that
+branches also change. `.gitattributes` routes it through a merge driver that
+`pnpm install` installs with the other shared hooks (`install-project-hooks.mjs`).
+Branch merges, rebases and stash pops then merge the register by task id:
+
+- An entry changed on one side takes that side, including a deletion.
+- An entry changed on both sides takes the newer `updatedAt`.
+- A deletion never discards an edit made on the other side.
+
+Without the driver, for example in a fresh clone before `pnpm install`, Git falls
+back to its line merge.
+
+A GUI client's pull can stash the live register and leave it stashed. `project:check`
+reports any stash that holds register edits. To recover, merge that stash's
+register into the live one by task id, keeping the newer `updatedAt` and every
+id. Write the result atomically, refusing if the file changed, then drop the stash.
+If the register contains conflict markers, `project:status` names them; resolve
+them the same way.
+
 ## Daily reconciliation and handoff
 
 Run `pnpm run --silent project:check --github` at session start and handoff.

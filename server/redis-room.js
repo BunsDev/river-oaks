@@ -195,8 +195,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           result={ok:true,player:world.rename(operation.identity)};
         } else result=world.join(operation.identity);
         if(result.ok && avatarPreferences) {
-          const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
-          result.player=world.applyAccountAppearance(operation.identity.userId,preference);
+          // A full or broken appearance store (or a look removed from the catalog)
+          // must not keep anyone out of the town: they keep the default look.
+          try {
+            const preference=await avatarPreferences.initialize(operation.identity.userId,world.accountAppearance(operation.identity.userId));
+            result.player=world.applyAccountAppearance(operation.identity.userId,preference);
+          } catch {console.warn(JSON.stringify({event:'room_appearance_unavailable',worldId}));}
         }
         if(result.ok)connections.set(operation.identity.userId,{identity:operation.identity,connectionId:operation.connectionId,lastSeen:time,leftAt:null});
         return result;
@@ -223,10 +227,27 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       return result;
     }
     const replies=[];
+    // Each operation is isolated. A throw used to abort the tick before the
+    // commit trimmed the queue, so the same entry re-threw on every later tick
+    // and the world froze. Now it fails alone: a malformed entry is dropped
+    // with the batch, and a failing operation is answered and undone.
     for(const raw of batch) {
-      const entry=JSON.parse(raw);
-      if(!record(entry) || typeof entry.id!=='string' || !/^[a-f0-9-]{36}$/.test(entry.id))throw new Error('Invalid durable operation');
-      replies.push({key:`${tag}:reply:${entry.id}`,result:await apply(entry.operation)});
+      let entry=null;
+      try {entry=JSON.parse(raw);} catch { /* dropped below */ }
+      if(!record(entry) || typeof entry.id!=='string' || !/^[a-f0-9-]{36}$/.test(entry.id)) {
+        console.warn(JSON.stringify({event:'room_operation_dropped',worldId}));
+        continue;
+      }
+      const operation=entry.operation, joining=operation?.type==='join' ? operation.identity?.userId : null;
+      const wasPlaying=joining ? world.players.has(joining) : false;
+      let result;
+      try {result=await apply(operation);}
+      catch {
+        if(joining && !wasPlaying && connections.get(joining)?.connectionId!==operation.connectionId)world.leave(joining);
+        console.warn(JSON.stringify({event:'room_operation_failed',worldId,type:operation?.type??null}));
+        result=rejected('operation_failed');
+      }
+      replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
     if(closed){cached=null;return null;}
     const revision=(previous?.revision??0)+1;

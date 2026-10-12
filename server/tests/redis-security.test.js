@@ -85,8 +85,9 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     assert.ok(await store.issueTicket(user));
   });
   await run('global ticket capacity is bounded and expiry reclaims it', async ({ store, advance }) => {
-    const tickets = await Promise.all(Array.from({ length: 520 }, (_, i) => store.issueTicket({ userId: `user-${i}`, sessionId: `session-${i}` })));
-    assert.equal(tickets.filter(Boolean).length, 512);
+    // The table holds 4096 live tickets (each user at most 3; see hardening-tickets.test.js).
+    const tickets = await Promise.all(Array.from({ length: 4100 }, (_, i) => store.issueTicket({ userId: `user-${i}`, sessionId: `session-${i}` })));
+    assert.equal(tickets.filter(Boolean).length, 4096);
     advance(15001);
     assert.ok(await store.issueTicket({ userId: 'new-user', sessionId: 'new-session' }));
   });

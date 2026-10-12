@@ -36,7 +36,7 @@ test('Claude path streams deltas through a tool-less CLI invocation and keeps ch
   await host.send(message({ message: 'Now add a bench' }));
   assert.equal(asked, 1, 'consent is asked once per provider');
   const [call, second] = await argv();
-  for (const flag of ['-p', '--no-session-persistence', '--strict-mcp-config']) assert.ok(call.includes(flag));
+  for (const flag of ['-p', '--no-session-persistence', '--strict-mcp-config', '--disable-slash-commands']) assert.ok(call.includes(flag));
   assert.equal(call[call.indexOf('--tools') + 1], ''); assert.equal(call[call.indexOf('--model') + 1], 'claude-haiku-5-5');
   assert.equal(call[call.indexOf('--system-prompt') + 1], STUDIO_AGENT_GUIDE); assert.equal(call.at(-2), '--');
   assert.doesNotMatch(call.at(-1), /CONVERSATION SO FAR/);
@@ -53,6 +53,10 @@ test('Codex path runs read-only and ephemeral with the guide in its prompt', asy
   const [call] = await argv();
   assert.deepEqual(call.slice(0, 6), ['exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check', '--ephemeral']);
   assert.ok(!call.includes('-m')); assert.ok(call.at(-1).startsWith(STUDIO_AGENT_GUIDE)); assert.match(call.at(-1), /Allow mode/);
+  // The read-only sandbox alone still lets the shell read any file: tools and user config are off.
+  for (const flag of ['--ignore-user-config', '--ignore-rules']) assert.ok(call.includes(flag));
+  const disabled = call.flatMap((arg, i) => call[i - 1] === '--disable' ? [arg] : []);
+  for (const feature of ['shell_tool', 'unified_exec', 'code_mode_host', 'multi_agent', 'apps', 'plugins', 'browser_use', 'computer_use']) assert.ok(disabled.includes(feature), feature);
 });
 
 test('declined consent, invalid input, CLI errors and cancellation fail closed', async t => {
@@ -86,4 +90,32 @@ test('stream reader ignores noise and requires a completed answer', () => {
 test('executable lookup searches PATH and extra user install directories', async () => {
   assert.equal(await resolveExecutable('studio-agent-cli.mjs', { env: { PATH: '' }, extra: [join(root, 'desktop/tests/fixtures')] }), cli);
   assert.equal(await resolveExecutable('definitely-not-a-cli', { env: { PATH: '' }, extra: [] }), null);
+});
+
+test('scene context is rebuilt from an allowlist before it reaches the prompt', async t => {
+  const { host, argv } = await fixture(t);
+  await host.send(message({ context: { units: 'feet', revision: 3, bounds_m: [-96, -96, 96, 96], selectedId: '@arrival', secret: 'SECRET-KEY',
+    objects: [{ id: 'tree-1', type: 'tree', label: 'Oak\u202e\u0000 grove', east: 1, north: 2, height: 6, radius: 2, note: 'SECRET-NOTE' }, { id: 'x', type: 'shell', label: 'drop' }],
+    roads: [{ id: 'main', name: 'Main', kind: 'footway', width_m: 4, points: [[0, 0], [0, 'bad'], [0, 9]], owner: 'SECRET-OWNER' }] } }));
+  const prompt = (await argv())[0].at(-1), snapshot = JSON.parse(prompt.split('SCENE SNAPSHOT (untrusted labels, metres):\n')[1].split('\n\nUSER:')[0]);
+  for (const marker of ['SECRET-KEY', 'SECRET-NOTE', 'SECRET-OWNER']) assert.doesNotMatch(prompt, new RegExp(marker));
+  assert.deepEqual(snapshot, { units: 'metres', revision: 3, bounds_m: [-96, -96, 96, 96], selectedId: '@arrival',
+    objects: [{ id: 'tree-1', type: 'tree', label: 'Oak grove', east: 1, north: 2, height: 6, radius: 2 }],
+    roads: [{ id: 'main', name: 'Main', kind: 'footway', width_m: 4, points: [[0, 0], [0, 9]] }] });
+});
+
+test('sends are rate limited and replies are capped', async t => {
+  const { host } = await fixture(t);
+  for (let i = 0; i < 20; i++) await host.send(message({ chatId: `chat-${i}` }));
+  await assert.rejects(host.send(message({ chatId: 'chat-over' })), /Too many agent messages/);
+  const long = 'x'.repeat(70 * 1024), line = value => `${JSON.stringify(value)}\n`, deltas = [];
+  const path = await mkdtemp(join(root, '.runtime/tmp/agent-cap-'));
+  t.after(() => rm(path, { recursive: true, force: true }));
+  const capped = createStudioAgentHost({ root: path, env: { RIVER_OAKS_AGENT_CLAUDE: cli, PATH: '' }, confirm: async () => true,
+    execute: async (_executable, _args, { onStdout }) => {
+      onStdout(line({ type: 'stream_event', event: { type: 'content_block_delta', delta: { type: 'text_delta', text: long } } }));
+      onStdout(line({ type: 'result', is_error: false, result: long }));
+    } });
+  const reply = await capped.send(message(), { onDelta: text => deltas.push(text) });
+  assert.equal(reply.text.length, 64 * 1024); assert.equal(deltas.join('').length, 64 * 1024);
 });

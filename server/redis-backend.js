@@ -1,4 +1,4 @@
-import { createChauffeurRoute } from './chauffeur.js';
+import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import { readFile } from 'node:fs/promises';
 import Redis from 'ioredis';
 import { createRedisAuth } from './redis-auth.js';
@@ -44,13 +44,18 @@ export async function createRedisBackend(env = process.env) {
       githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId),
     });
-    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL});
+    // Redis counts the daily budget in UTC-day windows across every gateway.
+    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
     gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),
       workplaceEnabled: env.RIVER_OAKS_WORKPLACE === '1',
       workplaceSweep: env.VERCEL !== '1',
+      // Vercel Cron sends it as a Bearer token; without it the sweep route stays closed.
+      workplaceCronSecret: env.CRON_SECRET || null,
+      // Signs the static-asset pass; the middleware verifies it with the same secret.
+      assetGateSecret: env.WORKOS_COOKIE_PASSWORD,
     });
     return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
       await gateway.close(); auth.close(); security.close(); redis.disconnect();

@@ -1,5 +1,4 @@
-import { createChauffeurRoute } from './chauffeur.js';
-import { createRateLimiter } from './rate-limit.js';
+import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createAuth } from './auth.js';
@@ -100,15 +99,15 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
+        onMove:(userId,fromWorldId)=>games.get(fromWorldId)?.game.disconnectUser(userId,4009,'This account joined another world.'),
         moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),
         trustedProxyIPs:(env.TRUSTED_PROXY_IPS??'').split(',').map(value=>value.trim()).filter(Boolean)});
       const entry={game,world,meta};games.set(id,entry);return entry;
     })().finally(()=>pending.delete(id));
     pending.set(id,load);return load;
   }
-  const drivingLimit=createRateLimiter(40,60000);
-  const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,
-    security:{isBanned:id=>moderation.isBanned(id),allow:(_scope,id)=>drivingLimit(id)},...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
+  const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
+    security:createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)}),...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
     if(closing)return closing;

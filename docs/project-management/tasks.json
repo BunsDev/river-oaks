@@ -1367,14 +1367,13 @@
     {
       "id": "workplace-221-adversarial",
       "title": "Workplace #221: adversarial suite, operations write-up, measurements, profiles, evidence and decision (handed off by river-oaks-55)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "test/workplace-221-adversarial"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T10:50:00+00:00",
-      "leaseUntil": "2026-10-11T12:50:00+00:00",
-      "nextAction": "After #227 merges: rebase #230 onto main and merge it; run doctor/core/full on main; independent evidence review; post the #221 evidence comment and update #214.",
+      "owner": null,
+      "updatedAt": "2026-10-11T20:04:20.626Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
       "filesOwned": [
         "server/tests/adversarial-workplace.test.js",
@@ -1400,19 +1399,45 @@
         "server": "455 pass, 0 skipped with isolated Redis",
         "core": "pnpm run verify: core passed",
         "measurements": "payload +3.7 KB gzip; graybox p95 <=0.6 ms; heap plateaus ~9.0 MB over 2,320 entries; completion p50 6.0 s; recovery 3.1 s after replacement (attempts 0/1)"
+      },
+      "deliveryPr": 230,
+      "evidence": [
+        {
+          "pr": 230,
+          "reviewedHead": "4148fcf2225a5c2f24ba6bb3890fd16c7a1345ca",
+          "merge": "6f57eacf23fede9812cc24fa220f0cd6c77db1b9",
+          "tree": "39e29dc203e7dd4506e17d644cfeb9c9c1d9a1a4",
+          "checks": "All 11 hosted checks passed on the merged head after one flaky preview rerun (multiplayer-dev). Local: server 458/0/0 with isolated Redis; adversarial 11/11; core verify passed; verify full passed at ded52a6 before the final rebase."
+        }
+      ],
+      "retirement": {
+        "head": "4148fcf2225a5c2f24ba6bb3890fd16c7a1345ca",
+        "releasedAt": "2026-10-11T19:59:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T19:59:31+00:00"
+      },
+      "retiredBranches": [
+        "test/workplace-221-adversarial"
+      ],
+      "archive": {
+        "test/workplace-221-adversarial": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-4YnUkH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-4YnUkH/history.bundle",
+          "sha256": "0839f1f13aa9ca8b4256e522b0691dba86eaf2958df97dba2c851fc47192e50a",
+          "tag": "refs/tags/archive/worktree-prune/2819c9e7-7ae8-4702-aafc-8bcd462fc613",
+          "head": "4148fcf2225a5c2f24ba6bb3890fd16c7a1345ca"
+        }
       }
     },
     {
       "id": "workplace-retention-status",
       "title": "Workplace gaps from #221: exact retention via per-draft keys, owner forget of finished briefs, stale panel status",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/workplace-retention-status"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T11:41:00+00:00",
-      "leaseUntil": "2026-10-11T13:41:00+00:00",
-      "nextAction": "After #227 and #230 merge: rebase onto main, retarget PR #232, run verify full on the final head, pass hosted CI, merge with the guard.",
+      "owner": null,
+      "updatedAt": "2026-10-11T20:04:36.623Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-retention-status.md",
       "filesOwned": [
         "server/workplace.js (storage and forget; agreed with river-oaks-55)",
@@ -1444,19 +1469,45 @@
         "core": "pnpm run verify: core passed",
         "browser": "workplace journey passed",
         "mutations": "derived side writes: 5 cases fail; stale mark: 1 case fails"
+      },
+      "deliveryPr": 232,
+      "evidence": [
+        {
+          "pr": 232,
+          "reviewedHead": "b78e636ea42ec3b2cf23ede5ddbb5182283faa1c",
+          "merge": "ee7d8d6ca67974cedfd504358a13dd1aced08538",
+          "tree": "3dc4b66e7b09285fd541daad73784684dc865f17",
+          "checks": "Hosted checks green on b78e636 (preview passed 14:55Z) before the owner merged it. Local: server 471/0/0 with Redis; preview 2594 pass, 1 pre-existing skip; core verify; workplace journey passed."
+        }
+      ],
+      "retirement": {
+        "head": "b78e636ea42ec3b2cf23ede5ddbb5182283faa1c",
+        "releasedAt": "2026-10-11T19:59:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T19:59:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/workplace-retention-status"
+      ],
+      "archive": {
+        "fix/workplace-retention-status": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-BaytYa/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-BaytYa/history.bundle",
+          "sha256": "9dc8af55b1232278b50f6c5ea23ca67aba606e50557e18701d0970ed479bbc7a",
+          "tag": "refs/tags/archive/worktree-prune/6b4171a5-c0db-444f-ad57-26adcfa1098c",
+          "head": "b78e636ea42ec3b2cf23ede5ddbb5182283faa1c"
+        }
       }
     },
     {
       "id": "workplace-task-sweep",
       "title": "Workplace gap from #221: unattended recovery of orphaned tasks via a due index and periodic sweep",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/workplace-task-sweep"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T11:52:00+00:00",
-      "leaseUntil": "2026-10-11T13:52:00+00:00",
-      "nextAction": "Open the PR stacked on #232; after #227, #230 and #232 merge, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
+      "owner": null,
+      "updatedAt": "2026-10-11T20:04:52.406Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-task-sweep.md",
       "filesOwned": [
         "server/workplace.js (due index and sweep; agreed with river-oaks-55)",
@@ -1483,19 +1534,45 @@
         "core": "pnpm run verify: core passed",
         "mutations": "no index writes: 7 cases fail; no stale cleanup: 1 case fails"
       },
-      "pr": 235
+      "pr": 235,
+      "deliveryPr": 235,
+      "evidence": [
+        {
+          "pr": 235,
+          "reviewedHead": "92a18c1a337b5d27394c1e28756222d74f6e17a9",
+          "merge": "a4412e8ab0ac9acbef0d634046287f45831c9da6",
+          "tree": "76a9fa3e6f9e07b6ce65c931198fc640b8262fb1",
+          "checks": "All hosted checks passed (guard CLEAN). Local on 92a18c1: server 480/0/0 with Redis; room tests 7/7. Also delivered #236's room-envelope commits."
+        }
+      ],
+      "retirement": {
+        "head": "92a18c1a337b5d27394c1e28756222d74f6e17a9",
+        "releasedAt": "2026-10-11T19:59:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T19:59:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/workplace-task-sweep"
+      ],
+      "archive": {
+        "fix/workplace-task-sweep": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-b7cuMi/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-b7cuMi/history.bundle",
+          "sha256": "febd247c262ee01fae21131b0d7792eceb5fd533f400e534c44a86a7cc9dbe3d",
+          "tag": "refs/tags/archive/worktree-prune/9f7537c4-710e-42bf-8303-0523aa796b9a",
+          "head": "92a18c1a337b5d27394c1e28756222d74f6e17a9"
+        }
+      }
     },
     {
       "id": "workplace-room-envelope",
       "title": "Workplace gap from #221: door height, measured seated bounds and depth-aware routes in the coworking room plan",
-      "status": "active",
+      "status": "delivered",
       "branches": [
         "fix/workplace-room-envelope"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-11T12:01:00+00:00",
-      "leaseUntil": "2026-10-11T14:01:00+00:00",
-      "nextAction": "Open the PR stacked on #235; after the stack merges, rebase onto main, retarget, run verify full, pass hosted CI, merge with the guard.",
+      "owner": null,
+      "updatedAt": "2026-10-11T19:59:31+00:00",
+      "nextAction": "Delivered through #235. Needs aggregate review before retiring the branch: #236 merged into #235's branch as ea9899a, and #235's later rebase left that merge off main. So project:prune refuses fix/workplace-room-envelope (314bd62) and the worktree river-oaks-workplace-room-20261011 (merge-not-on-default). Every file #236 changed is byte-identical on main at 6b67d73, except tasks.json, which main supersedes.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-room-envelope.md",
       "filesOwned": [
         "preview/src/workplace-room.js (agreed with river-oaks-55)",
@@ -1524,7 +1601,158 @@
         "core": "pnpm run verify: core passed",
         "measurement": "22 looks standing + seated; tallest 2.45 m; widest seated 1.264 m"
       },
-      "pr": 236
+      "pr": 236,
+      "deliveryPr": 235,
+      "evidence": [
+        {
+          "pr": 236,
+          "reviewedHead": "314bd62d3f534a5b0ed28a0fe8f26a6c4fd33ef0",
+          "merge": "a4412e8ab0ac9acbef0d634046287f45831c9da6",
+          "tree": "76a9fa3e6f9e07b6ce65c931198fc640b8262fb1",
+          "checks": "#236 was merged by the owner into #235's branch (ea9899a) and reached main through #235's merge a4412e8. Local: room tests 7/7, workplace-room harness passed, preview 2596 pass."
+        }
+      ]
+    },
+    {
+      "id": "workplace-vercel-sweep",
+      "title": "Workplace gap from #221: scheduled sweep on Vercel via Vercel Cron and a CRON_SECRET-guarded drain route",
+      "status": "retired",
+      "branches": [
+        "fix/workplace-vercel-sweep"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T20:05:08.812Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md",
+      "filesOwned": [
+        "server/workplace.js (sweep drain; agreed with river-oaks-55)",
+        "server/distributed-app.js (sweep route)",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/vercel-routing.js",
+        "vercel.json (rewrite, crons)",
+        "api/server.js (flag-off short circuit)",
+        "server/tests/cron-workplace.test.js",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-vercel-sweep.md",
+        ".env.example (CRON_SECRET name only)"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Guarded route on a live Redis gateway",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-room-envelope (PR #236), stacked until it merges",
+      "deliveryNote": "Production needs CRON_SECRET set in Vercel by the owner before the route accepts the cron; the agent does not change Vercel settings.",
+      "verification": {
+        "cron": "5 pass; 3 mutations caught",
+        "server": "485 pass, 0 skipped with isolated Redis",
+        "preview": "2596 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed"
+      },
+      "pr": 237,
+      "deliveryPr": 237,
+      "evidence": [
+        {
+          "pr": 237,
+          "reviewedHead": "6a157ab951c9d2a19958dc6b859f3105f95b15c2",
+          "merge": "97f8208dbfb633fa5b6b8b8273e2fddf56d24fbc",
+          "tree": "a1d115ce95af87a665e51a6c34290309f4af44fb",
+          "checks": "All 17 hosted checks passed on the parallel preview workflow (guard CLEAN). Local: server 485/0/0 with Redis. CRON_SECRET set in Vercel Production on 2026-10-11."
+        }
+      ],
+      "retirement": {
+        "head": "6a157ab951c9d2a19958dc6b859f3105f95b15c2",
+        "releasedAt": "2026-10-11T19:59:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T19:59:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/workplace-vercel-sweep"
+      ],
+      "archive": {
+        "fix/workplace-vercel-sweep": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-CGaqx5/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-CGaqx5/history.bundle",
+          "sha256": "fb8c5fe450ce551907219ac97c805a4d285842ce0f89ce965803b27807fa3f17",
+          "tag": "refs/tags/archive/worktree-prune/cdad5b2c-a838-4863-873e-15ff492c2484",
+          "head": "6a157ab951c9d2a19958dc6b859f3105f95b15c2"
+        }
+      }
+    },
+    {
+      "id": "workplace-erase",
+      "title": "Workplace gap from #221: an owner 'erase my workplace' action that deletes every stored trace atomically",
+      "status": "retired",
+      "branches": [
+        "fix/workplace-erase"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T20:04:04.699Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-erase.md",
+      "filesOwned": [
+        "server/workplace.js (erase; agreed with river-oaks-55)",
+        "preview/src/workplace-contract.js (erase action)",
+        "preview/src/workplace-ui.js (erase control)",
+        "server/vercel-routing.js",
+        "vercel.json (workplace routes)",
+        "server/tests/erase-workplace.test.js",
+        "preview/tests/panel-workplace.test.js",
+        "server/tests/adversarial-workplace.test.js (probe list)",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-11-workplace-erase.md"
+      ],
+      "requiredChecks": [
+        "Workplace server suites on memory and isolated Redis",
+        "Panel tests",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "dependsOn": "workplace-vercel-sweep (PR #237), stacked until it merges",
+      "verification": {
+        "erase": "5 server + 1 panel pass; delete mutation caught (4 cases); desk release redundant with read reconciliation",
+        "server": "490 pass, 0 skipped with isolated Redis",
+        "preview": "2597 pass, 1 skipped (pre-existing)",
+        "core": "pnpm run verify: core passed",
+        "browser": "workplace journey passed"
+      },
+      "pr": 238,
+      "deliveryPr": 238,
+      "evidence": [
+        {
+          "pr": 238,
+          "reviewedHead": "29b4de1a8669ca16f66a4de3e63bf8ee102df876",
+          "merge": "6b67d73bb1324d31da6b99ea7352376e10d9f8ca",
+          "tree": "12c619aac8f34d4d9f741179a543ddacf7c0ca29",
+          "checks": "All 11 hosted checks passed (guard CLEAN). Local: server 490/0/0 with Redis; preview 2597 pass, 1 pre-existing skip; workplace journey passed."
+        }
+      ],
+      "retirement": {
+        "head": "29b4de1a8669ca16f66a4de3e63bf8ee102df876",
+        "releasedAt": "2026-10-11T19:59:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T19:59:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/workplace-erase"
+      ],
+      "archive": {
+        "fix/workplace-erase": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-Tq9sF1/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-Tq9sF1/history.bundle",
+          "sha256": "003395d99ab3520dc14ddb655e46a90797aa1e048f94ca7299ceccd36917d379",
+          "tag": "refs/tags/archive/worktree-prune/3b09a89e-7e13-46ad-a4b0-552bf83d25b8",
+          "head": "29b4de1a8669ca16f66a4de3e63bf8ee102df876"
+        }
+      }
     },
     {
       "id": "map-ui-readability",
@@ -1669,16 +1897,164 @@
       "pr": 241
     },
     {
+      "id": "server-hardening",
+      "title": "Harden the server against abuse: production interruptions and lag, remote code execution, and owner-billed costs",
+      "status": "retired",
+      "branches": [
+        "fix/server-hardening"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T20:18:05.882Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-server-hardening.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-11-server-hardening.md",
+        "server/tests/hardening-*.test.js",
+        "preview/tests/hardening-*.test.js",
+        "scripts/tests/hardening-*.test.js",
+        "server/asset-gate.js",
+        "middleware.js",
+        "server/redis-room.js",
+        "server/redis-security.js",
+        "server/distributed-app.js",
+        "server/world-router.js",
+        "server/world-gateway.js",
+        "server/app.js",
+        "server/town.js",
+        "server/waitlist-routes.js",
+        "server/chauffeur.js",
+        "server/redis-auth.js",
+        "server/magic-auth.js",
+        "server/redis-backend.js",
+        "vercel.json (asset headers)",
+        "preview/src/prince-companion.js",
+        "preview/src/chauffeur.js",
+        ".githooks/pre-commit",
+        "scripts/install-project-hooks.mjs",
+        ".env.example (CHAUFFEUR_DAILY_LIMIT)"
+      ],
+      "requiredChecks": [
+        "Focused regressions per finding",
+        "Full server suite with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI on the final head"
+      ],
+      "notes": "Server files touched are listed per finding in the ledger and coordinated with other active sessions before editing.",
+      "verification": {
+        "preview": "2617 pass, 1 skipped (pre-existing)",
+        "server_and_scripts": "536 pass, 0 skipped with isolated Redis",
+        "core": "pnpm run verify: core passed (75aada6)",
+        "fixes": "14 findings fixed, each with a regression that failed before the change"
+      },
+      "pr": 244,
+      "deliveryPr": 244,
+      "evidence": [
+        {
+          "pr": 244,
+          "reviewedHead": "d05eaf80bf653b1c56b04ff7bb05a1c6710b9c57",
+          "merge": "5f3c1bb133740f0706f850e8fcc71d9b404787b3",
+          "tree": "54ece7162a437f818c2055b80cb54a6fd0709f3a",
+          "checks": "All 17 hosted checks passed on d05eaf8 (guard CLEAN). Hosted CI on 2f22c75 first caught a real race: world-gateway.test.js kept one guest in two worlds, against one-world-per-account. d05eaf8 fixes the test (6/6 on Redis). Local: server+scripts 555/555 with isolated Redis; preview 2626 pass, 1 pre-existing skip."
+        }
+      ],
+      "retirement": {
+        "head": "d05eaf80bf653b1c56b04ff7bb05a1c6710b9c57",
+        "releasedAt": "2026-10-11T20:17:37+00:00",
+        "sessionsReviewedAt": "2026-10-11T20:17:37+00:00"
+      },
+      "retiredBranches": [
+        "fix/server-hardening"
+      ],
+      "archive": {
+        "fix/server-hardening": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-vXov4o/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-vXov4o/history.bundle",
+          "sha256": "a870a2aa2b090bb0a872056bafab973c934322edda60d6656e3f410f2fc39c92",
+          "tag": "refs/tags/archive/worktree-prune/9c3ea7ad-ea99-43f9-b56b-fe0e2066074e",
+          "head": "d05eaf80bf653b1c56b04ff7bb05a1c6710b9c57"
+        }
+      }
+    },
+    {
+      "id": "workplace-delivery-records",
+      "title": "Record delivery and retirement of the workplace #221 stack (#230, #232, #235/#236, #237, #238) and the server hardening (#244)",
+      "status": "retired",
+      "branches": [
+        "docs/workplace-delivered"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T21:05:28.708Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-workplace-221-adversarial.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json (delivery records)"
+      ],
+      "requiredChecks": [
+        "project:status validates the register",
+        "Hosted CI"
+      ],
+      "issues": [
+        221,
+        214
+      ],
+      "pr": 254,
+      "deliveryPr": 254,
+      "evidence": [
+        {
+          "pr": 254,
+          "reviewedHead": "dfff311e37169dc8b2948cbcb20954e6491ae710",
+          "merge": "9f8e7d8852dc8832bb3d1a0a4e3a9126c5df8511",
+          "tree": "0d81aaa9ef7e3194c363aeefc7e97f6ec3984436",
+          "checks": "All hosted checks passed on dfff311 (guard CLEAN); docs-only register change; project:status validated the register before push."
+        }
+      ],
+      "retirement": {
+        "head": "dfff311e37169dc8b2948cbcb20954e6491ae710",
+        "releasedAt": "2026-10-11T21:04:59+00:00",
+        "sessionsReviewedAt": "2026-10-11T21:04:59+00:00"
+      },
+      "retiredBranches": [
+        "docs/workplace-delivered"
+      ],
+      "archive": {
+        "docs/workplace-delivered": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-35nHpd/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-35nHpd/history.bundle",
+          "sha256": "ac2ef39cc0ec56e5e857c71817ac8b3c8d81c756570ac101a95b31c93adf346b",
+          "tag": "refs/tags/archive/worktree-prune/4d49305b-229f-45fe-a966-ca48124e90bc",
+          "head": "dfff311e37169dc8b2948cbcb20954e6491ae710"
+        }
+      }
+    },
+    {
+      "id": "register-sweep-20261011",
+      "title": "Commit two retirement records that exist only in the primary's live register (desktop-host-errors, workplace-delivery-records)",
+      "status": "active",
+      "branches": [
+        "docs/register-sweep-20261011"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-11T23:38:00+00:00",
+      "leaseUntil": "2026-10-12T01:38:00+00:00",
+      "nextAction": "Merge this docs-only register PR with gh-merge-when-green.sh (Val approved 2026-10-11), then release this task and retire docs/register-sweep-20261011 with project:prune.",
+      "filesOwned": [
+        "docs/project-management/tasks.json (desktop-host-errors, workplace-delivery-records, register-sweep-20261011)"
+      ],
+      "requiredChecks": [
+        "project:status validates the register",
+        "Hosted CI"
+      ]
+    },
+    {
       "id": "studio-agent-chat",
       "title": "World Studio side chat with an expert agent over the Claude or Codex CLI",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/studio-agent-chat"
       ],
-      "owner": "claude-code session 84d929e5-0c68-4073-958d-1ca8c11181d2",
-      "leaseUntil": "2026-10-11T14:57:06+00:00",
-      "updatedAt": "2026-10-11T12:59:49+00:00",
-      "nextAction": "PR #240 open; await hosted CI and review. Merge only with user authorization via ~/.claude/scripts/gh-merge-when-green.sh, taking turns with the river-oaks-f8 session.",
+      "owner": null,
+      "updatedAt": "2026-10-11T17:59:58.711Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-studio-agent-chat.md",
       "filesOwned": [
         "preview/src/studio/agent-chat.js",
@@ -1694,11 +2070,434 @@
         "node desktop/studio-e2e.js",
         "pnpm run verify"
       ],
-      "evidence": {
-        "pr": "https://github.com/BunsDev/river-oaks/pull/240",
-        "verifiedHead": "f6a95ec",
-        "base": "a13c4e4"
+      "evidence": [
+        {
+          "pr": 240,
+          "reviewedHead": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12",
+          "merge": "a9cfe017740d25ea3ad09a42fea768cf12cf2fb7",
+          "tree": "c4e9fefb13d9c7e910fb8f2915feddb6b9048d77",
+          "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh. Local core verify, Studio unit (58), agent Electron E2E, designer/studio Electron E2E and world-studio browser journey passed. Packaged build was not exercised (see studio-bridge-hardening)."
+        }
+      ],
+      "retirement": {
+        "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "pr": 240,
+      "retiredBranches": [
+        "feat/studio-agent-chat"
+      ],
+      "archive": {
+        "feat/studio-agent-chat": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-tKZdOB/history.bundle",
+          "sha256": "92bc447263911e5a5cca6678eab2dcdcbbb110cbdf1c8087bee148c8721d3586",
+          "tag": "refs/tags/archive/worktree-prune/e8790513-6677-40df-b484-38e4e177b229",
+          "head": "d56cfc5a3aeb63c5092e725f2f4acafd3a4a5d12"
+        }
       }
+    },
+    {
+      "id": "studio-bridge-hardening",
+      "title": "Harden the Studio desktop bridges (World Designer and agent chat) against page-script steering and file reads",
+      "status": "retired",
+      "branches": [
+        "fix/studio-bridge-hardening"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:00:19.461Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "desktop/studio-preload.cjs",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-scene-context.js",
+        "desktop/main.js"
+      ],
+      "requiredChecks": [
+        "node --test desktop/tests/studio-*.test.js",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "node desktop/studio-e2e.js",
+        "pnpm run verify"
+      ],
+      "pr": 243,
+      "evidence": [
+        {
+          "pr": 243,
+          "reviewedHead": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+          "merge": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "tree": "dbb7093a5b0ffc6b7341a9c47cd1dfd1ed27f74d",
+          "checks": "All 11 hosted checks passed on the final head; merged by gh-merge-when-green.sh after river-oaks-c2 approval (PR comment) at 014e2a0 (identical patches rebased). Local core verify, desktop units 47, Studio units 25, agent-e2e 9, designer-e2e 9, studio-e2e and world-studio journey passed; live hardened-CLI file-read probes refused."
+        }
+      ],
+      "retirement": {
+        "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2",
+        "releasedAt": "2026-10-11T17:57:46+00:00",
+        "sessionsReviewedAt": "2026-10-11T17:57:46+00:00"
+      },
+      "retiredBranches": [
+        "fix/studio-bridge-hardening"
+      ],
+      "archive": {
+        "fix/studio-bridge-hardening": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-gXTyUH/history.bundle",
+          "sha256": "d2268f8126319211d199821a5263f9d665e1998abe9cb9e49647908ffa02832b",
+          "tag": "refs/tags/archive/worktree-prune/70a97fd7-f4a6-45d2-8164-b6ec47f29272",
+          "head": "08d78f25fb66b3365b921afcf47edb11217ca7c2"
+        }
+      }
+    },
+    {
+      "id": "studio-retirement-register",
+      "title": "Record retirement of the Studio agent-chat and bridge-hardening branches in the shared register",
+      "status": "retired",
+      "branches": [
+        "docs/studio-tasks-retired"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T20:43:58.112Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "docs/project-management/tasks.json"
+      ],
+      "requiredChecks": [
+        "pnpm run test:agent",
+        "pnpm run project:status",
+        "hosted Verify"
+      ],
+      "pr": 248,
+      "evidence": [
+        {
+          "pr": 248,
+          "reviewedHead": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7",
+          "merge": "6644d575d127bb80e6aadb086ed6b76f51afcf4b",
+          "tree": "281efbbab3871e477e1f74fb2a8fb9241df3be84",
+          "checks": "All 17 hosted checks passed on the final head; merged by gh-merge-when-green.sh in queue order. test:agent 44/44 and project:status passed locally."
+        }
+      ],
+      "retirement": {
+        "head": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7",
+        "releasedAt": "2026-10-11T20:43:27+00:00",
+        "sessionsReviewedAt": "2026-10-11T20:43:27+00:00"
+      },
+      "retiredBranches": [
+        "docs/studio-tasks-retired"
+      ],
+      "archive": {
+        "docs/studio-tasks-retired": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-InYhsb/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-InYhsb/history.bundle",
+          "sha256": "082b98cb5c1f1be1aaeeccfd7826916e050c97ba54b88677b5d2dac8015eb162",
+          "tag": "refs/tags/archive/worktree-prune/38991e71-23f5-44d4-bade-f82b4b5ad9d6",
+          "head": "bc3fa1af598fc5e8339b44fa063dd524fa1983c7"
+        }
+      }
+    },
+    {
+      "id": "studio-prompt-polish",
+      "title": "Match the World Studio scene prompt and surfaces to TypeSafe Place",
+      "status": "active",
+      "branches": [
+        "fix/studio-prompt-polish"
+      ],
+      "owner": "codex session 01a12992-ca4f-7953-bf53-2e8875f2cf15",
+      "leaseUntil": "2026-10-11T20:29:48.733630+00:00",
+      "updatedAt": "2026-10-11T18:29:48.733630+00:00",
+      "nextAction": "User authorized protected landing of PR #246. Await exact-head hosted checks after the asset-only main update to 4849d62; coordinate concurrent River Oaks merges and retain local evidence.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-prompt-polish.md",
+      "filesOwned": [
+        "preview/src/studio/studio.css",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/scene.js",
+        "preview/src/studio/viewport.js",
+        "preview/src/access-gate.css",
+        "preview/src/access-theme.css"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "Visual inspection of prompt and panel in light/dark, focus, hover and narrow screens"
+      ],
+      "verification": {
+        "core": "3191 passing tests and 111 existing core-profile skips on 8c81; runtime source unchanged by the subsequent login-art-only main update. .runtime/prompt-polish-rebase-8c81/core.json",
+        "browser": "After main 4849 update, build passed and world-studio passed 10.967s; .runtime/prompt-polish-rebase-4849/verification.json",
+        "visual": "light/dark, focus/hover/typed/open/collapse, 320/390/1000px checks passed; local output/playwright/prompt-polish captures",
+        "source": "Shared login CSS extraction byte-identical; runtime hashes unchanged through gates"
+      },
+      "pr": 246,
+      "evidence": [
+        {
+          "pr": "https://github.com/BunsDev/river-oaks/pull/246",
+          "verifiedSourceHead": "99bb582c9d2777eeb20f00dc8c5fc8a8c5c95ae3",
+          "base": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "checks": "Core and World Studio journey passed; local visual captures inspected."
+        },
+        {
+          "base": "8c81ba5dec70f2a19859acc3b1905d9903dba431",
+          "verifiedRebasedHead": "1443b2cd631eb5e9b85df3ee993f474f3c32c7e7",
+          "checks": "Fresh core and World Studio journey passed after reconciling current main; all tracked source hashes unchanged during checks. Subsequent changes update only this task and its ledger."
+        },
+        {
+          "base": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "verifiedRebasedHead": "1a88bf0bd95d6c8f3be86374934221870e2af07f",
+          "checks": "Only upstream login artwork and its source record changed; both own commits have identical range-diff. Fresh production build and Studio journey passed; all tracked hashes unchanged during verification. Prior head 2db64ea passed all ten hosted checks."
+        }
+      ]
+    },
+    {
+      "id": "paver-texture-realism",
+      "title": "Sidewalk pavers re-authored from the Kettering Drive Street View reference",
+      "status": "delivered",
+      "branches": [
+        "feat/paver-texture-realism"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #231. Retire the local worktree and branch feat/paver-texture-realism with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/paver-textures.js",
+        "preview/tests/paver-textures.test.js"
+      ],
+      "pr": 231,
+      "deliveryPr": 231,
+      "evidence": [
+        {
+          "pr": 231,
+          "reviewedHead": "1b60689ef024530d849b29b776e306fbdfe8488e",
+          "merge": "62ba3db8ec1687c297890d7578874055ef6278f8",
+          "tree": "c672c2712be513a10610cdfea0379d1f53f538c2",
+          "checks": "All 11 final-head hosted checks passed on 1b60689. Local at 1b60689: paver-textures 9/9, pnpm test 2602 pass 0 fail, build passed."
+        }
+      ]
+    },
+    {
+      "id": "sidewalk-corners",
+      "title": "Curb returns with one paving field per junction corner; crossings kept clear of corners and footways",
+      "status": "delivered",
+      "branches": [
+        "feat/sidewalk-corners"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #233. Retire the local worktree and branch feat/sidewalk-corners with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/street-corners.js",
+        "preview/src/sidewalks.js",
+        "preview/src/street-roads.js",
+        "preview/src/pedestrian-network.js",
+        "preview/tests/street-corners.test.js",
+        "preview/e2e/fixtures/corners.html",
+        "preview/e2e/fixtures/corners.js"
+      ],
+      "pr": 233,
+      "deliveryPr": 233,
+      "evidence": [
+        {
+          "pr": 233,
+          "reviewedHead": "88496d97efa72ed2f27fa53a2b6085b1d1c937a8",
+          "merge": "c4a871bca555f4ffbc246b7f84c3597b6b905264",
+          "tree": "729cb0cd7cb680e5d2c8cf23d2bd72119b1ede15",
+          "checks": "All 11 final-head hosted checks passed on 88496d9. Local at 88496d9: street-corners 6/6, pnpm test 2615 pass 1 pre-existing skip, build passed; pnpm run verify core passed at f0e1c9f; 39 corners rendered before/after via the corners fixture."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-sidewalk-corners.md"
+    },
+    {
+      "id": "plant-diversity",
+      "title": "Seeded, layered River Oaks planting in lane planters and the Harry Winston curb bed",
+      "status": "delivered",
+      "branches": [
+        "feat/plant-diversity"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #234. Retire the local worktree and branch feat/plant-diversity with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/src/planting-palette.js",
+        "preview/src/procedural-plants.js",
+        "preview/src/landscape-models.js",
+        "preview/src/reference-planting.js",
+        "preview/tests/plant-diversity.test.js"
+      ],
+      "pr": 234,
+      "deliveryPr": 234,
+      "evidence": [
+        {
+          "pr": 234,
+          "reviewedHead": "6849af1a9605e912ea0f28ffb3c3a510982250bd",
+          "merge": "e2fc2ff672d44cace8860d935a6ce25c9e290746",
+          "tree": "e5fc6e2394e4fb675cb95b3cf96eec8dc5c9f2aa",
+          "checks": "All 11 final-head hosted checks passed on 6849af1 (preview after one rerun of the flaky email-access browser test). Local at 6849af1: plant-diversity 6/6, pnpm test 2621 pass 1 pre-existing skip, build passed."
+        }
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-plant-diversity.md"
+    },
+    {
+      "id": "login-art-awake",
+      "title": "Sign-in art edited so Jevica is upright and awake; provenance recorded",
+      "status": "delivered",
+      "branches": [
+        "feat/login-art-awake"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "nextAction": "Delivered by #245. Retire the local worktree and branch feat/login-art-awake with project:prune once this register is on the primary checkout.",
+      "filesOwned": [
+        "preview/public/assets/login/jev-jevica-golden-hour.jpg",
+        "preview/public/assets/login/sources.json"
+      ],
+      "pr": 245,
+      "deliveryPr": 245,
+      "evidence": [
+        {
+          "pr": 245,
+          "reviewedHead": "1811f71d16574d791c629afde7d0d2401062c12b",
+          "merge": "4849d621b4af88fc0180a295184f7ddf782b9b32",
+          "tree": "55b0a1768fd23a7fbfb71ddb6e91fea8855f7c54",
+          "checks": "All 11 final-head hosted checks passed on 1811f71. Local at 3bd3a44: pnpm test 2621 pass 1 pre-existing skip, build passed; signed-out gate rendered at 1440x900 and 390x844."
+        }
+      ]
+    },
+    {
+      "id": "street-visuals-register",
+      "title": "Record the paver, corner, planting and login-art deliveries and retire their worktrees",
+      "status": "active",
+      "branches": [
+        "docs/street-visuals-delivered"
+      ],
+      "owner": "claude:river-oaks-f8",
+      "updatedAt": "2026-10-11T18:40:00+00:00",
+      "leaseUntil": "2026-10-11T20:40:00+00:00",
+      "nextAction": "Merge this register PR after the queued PRs (c2's #237, #238, #244; #242; #248; #249). Then, from a clean primary on main, add fresh retirement records and run project:prune for feat/paver-texture-realism, feat/sidewalk-corners, feat/plant-diversity and feat/login-art-awake. Remote branch deletion is not authorized.",
+      "requiredChecks": [
+        "project-status validateTasks passes",
+        "Hosted checks on the final head"
+      ]
+    },
+    {
+      "id": "studio-starter-districts",
+      "title": "Five importable district starters and World Studio template chooser",
+      "status": "active",
+      "branches": [
+        "cody/starter-districts-20261011"
+      ],
+      "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
+      "leaseUntil": "2026-10-11T22:17:16+00:00",
+      "updatedAt": "2026-10-11T20:17:16+00:00",
+      "nextAction": "Queue turn reached. Merged main at 5f3c1bb (#244); only the register conflicted, resolved task by task. After re-verification: push, then gh-merge-when-green.sh 242; record merge evidence and mark delivered.",
+      "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
+      "filesOwned": [
+        "preview/public/data/starter-districts/",
+        "preview/src/studio/templates.js",
+        "preview/src/studio/template-picker.js",
+        "preview/src/studio/main.js",
+        "preview/src/studio/studio.css",
+        "preview/tests/studio-templates.test.js",
+        "docs/starter-districts.md",
+        "preview/e2e/world-studio.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/studio-templates.test.js",
+        "pnpm run verify",
+        "Studio browser acceptance"
+      ],
+      "evidence": {
+        "verification": [
+          ".runtime/agent/core.json",
+          "data/reports/starter-districts-browser.json"
+        ],
+        "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
+      },
+      "pr": 242,
+      "handoff": {
+        "at": "2026-10-11T18:42:28+00:00",
+        "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
+        "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
+      }
+    },
+    {
+      "id": "desktop-host-errors",
+      "title": "Replace the desktop IPC error prefix allowlist with a HostError class (bridge-hardening review N4)",
+      "status": "retired",
+      "branches": [
+        "fix/desktop-host-errors"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T21:15:08.915Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-studio-bridge-hardening.md",
+      "filesOwned": [
+        "desktop/host-error.js",
+        "desktop/main.js",
+        "desktop/studio-agent-host.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-command.js",
+        "desktop/studio-codex.js"
+      ],
+      "requiredChecks": [
+        "node --test desktop/tests/*.test.js",
+        "node desktop/agent-e2e.js",
+        "node desktop/designer-e2e.js",
+        "pnpm run verify",
+        "hosted Verify"
+      ],
+      "pr": 250,
+      "evidence": [
+        {
+          "pr": 250,
+          "reviewedHead": "83c03cee2bef6bf343c43675775dfd0d5dd8a774",
+          "merge": "77278c7e733395dcafde018050ecd887c647fc46",
+          "tree": "12c3c8e66279cdaf158b07fc694e8af8e1aeb939",
+          "checks": "All 17 hosted checks passed on the final head; approved by river-oaks-c2 (PR comment); merged by gh-merge-when-green.sh in queue order. Local core verify, desktop units 49, agent-e2e 9 and designer-e2e 9 passed."
+        }
+      ],
+      "retirement": {
+        "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774",
+        "releasedAt": "2026-10-11T21:14:31+00:00",
+        "sessionsReviewedAt": "2026-10-11T21:14:31+00:00"
+      },
+      "retiredBranches": [
+        "fix/desktop-host-errors"
+      ],
+      "archive": {
+        "fix/desktop-host-errors": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-l9vuPO/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-l9vuPO/history.bundle",
+          "sha256": "7ed344582f9a6c38957cb516c012a78404619ee7468f9ac37da038f1a04ae688",
+          "tag": "refs/tags/archive/worktree-prune/7b995d71-4975-4725-a596-0fb1ca254c00",
+          "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774"
+        }
+      }
+    },
+    {
+      "id": "town-connect-deadline",
+      "title": "Keep a slow-but-open town connection instead of abandoning it at 12 s (email-access flake since #253)",
+      "status": "active",
+      "branches": [
+        "fix/town-connect-deadline"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-12T02:55:15+00:00",
+      "updatedAt": "2026-10-12T00:55:15+00:00",
+      "nextAction": "Extract the connection deadline into a tested helper (open vs first-snapshot budgets, starvation-aware), wire into multiplayer-client, verify, open PR.",
+      "ledger": "docs/superpowers/plans/2026-10-12-town-connect-deadline.md",
+      "filesOwned": [
+        "preview/src/multiplayer-client.js",
+        "preview/src/connection-deadline.js",
+        "preview/tests/connection-deadline.test.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/connection-deadline.test.js",
+        "pnpm test",
+        "pnpm run verify",
+        "RIVER_OAKS email-access e2e",
+        "hosted Verify"
+      ]
     },
     {
       "id": "typesafe-place-season-1",

@@ -33,9 +33,11 @@ export function createMemoryWorkplaceStore({now = Date.now} = {}) {
       return record && record.until > now() ? {revision: record.revision, value: JSON.parse(record.doc)} : {revision: record?.revision ?? 0, value: null};
     },
     async read(key) { const record = live(key);return record ? JSON.parse(record.value) : null; },
+    // A null value deletes the document (erase); its revision restarts at 0, as in Redis.
     async save(key, expectedRevision, value, ttlMs, side = []) {
       if ((records.get(key)?.revision ?? 0) !== expectedRevision) return false;
-      records.set(key, {revision: expectedRevision + 1, doc: JSON.stringify(value), until: now() + ttlMs});
+      if (value === null) records.delete(key);
+      else records.set(key, {revision: expectedRevision + 1, doc: JSON.stringify(value), until: now() + ttlMs});
       for (const write of side) {
         if (write.op === 'zadd') index(write.key).set(write.value, write.score);
         else if (write.op === 'zrem') index(write.key).delete(write.value);
@@ -56,8 +58,11 @@ export function createMemoryWorkplaceStore({now = Date.now} = {}) {
 const SAVE = `
 local revision = tonumber(redis.call('HGET', KEYS[1], 'revision') or '0')
 if revision ~= tonumber(ARGV[1]) then return 0 end
-redis.call('HSET', KEYS[1], 'revision', revision + 1, 'doc', ARGV[2])
-redis.call('PEXPIRE', KEYS[1], ARGV[3])
+if ARGV[2] == '' then redis.call('DEL', KEYS[1])
+else
+  redis.call('HSET', KEYS[1], 'revision', revision + 1, 'doc', ARGV[2])
+  redis.call('PEXPIRE', KEYS[1], ARGV[3])
+end
 for i = 2, #KEYS do
   local base = 3 + (i - 2) * 3
   local op, value, number = ARGV[base + 1], ARGV[base + 2], tonumber(ARGV[base + 3])
@@ -86,7 +91,7 @@ export function createRedisWorkplaceStore({redis, prefix}) {
     async save(key, expectedRevision, value, ttlMs, side = []) {
       const args = side.flatMap(write => [write.op, write.op === 'set' ? JSON.stringify(write.value) : write.op.startsWith('z') ? write.value : '',
         write.op === 'zadd' ? write.score : write.op === 'del' || write.op === 'zrem' ? 0 : Math.ceil(write.ttlMs)]);
-      return await redis.eval(SAVE, 1 + side.length, full(key), ...side.map(write => full(write.key)), expectedRevision, JSON.stringify(value), Math.ceil(ttlMs), ...args) === 1;
+      return await redis.eval(SAVE, 1 + side.length, full(key), ...side.map(write => full(write.key)), expectedRevision, value === null ? '' : JSON.stringify(value), Math.ceil(ttlMs), ...args) === 1;
     },
     async due(key, at, count) {
       const flat = await redis.zrangebyscore(full(key), '-inf', at === Infinity ? '+inf' : at, 'WITHSCORES', 'LIMIT', 0, count);
@@ -134,8 +139,10 @@ export function fixtureEventPlan(brief, places) {
 // request, so it asks before every unattended step.
 // `sweepMs` (long-lived services only; 0 is off) periodically drives every
 // overdue task in the due index, so a task whose instance died still finishes.
+// Serverless hosts call `sweep({drain: true, budgetMs})` from a scheduled route
+// instead: each overdue task is stepped to completion within the budget.
 export function createWorkplace({now = Date.now, store = createMemoryWorkplaceStore({now}), createId = randomUUID, limits = {}, stepMs = 1500,
-  allowed = async () => true, sweepMs = 0,
+  allowed = async () => true, sweepMs = 0, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
   schedule = (fn, ms) => { const timer = setTimeout(fn, ms); timer.unref?.(); return timer; }, cancel = clearTimeout} = {}) {
   const limit = {...WORKPLACE_LIMITS, ...limits};
   const ownerKey = userId => `owner:${sha256(userId)}`;
@@ -149,7 +156,7 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       const doc = value ?? initial(), before = structuredClone(doc);
       const result = await change(doc);
       if (!result?.write) return result?.value;
-      if (await store.save(key, revision, doc, ttlMs, [...(result.side ?? []), ...sideFor(before, doc, result.side ?? [])])) return result.value;
+      if (await store.save(key, revision, result.erase ? null : doc, ttlMs, [...(result.side ?? []), ...sideFor(before, doc, result.side ?? [])])) return result.value;
     }
     return BUSY;
   }
@@ -269,17 +276,26 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
       catch { /* The next read or sweep retries. */ }
     }, delay));
   }
-  // Every instance may sweep; compare-and-set lets each step land once.
-  async function sweep() {
-    for (const {member, score} of await store.due(DUE, now(), 50)) {
-      if (closed || timers.has(member)) continue;
+  // Every instance may sweep; compare-and-set lets each step land once. A timer
+  // host hands each task back to its timers; a drain (serverless) keeps stepping
+  // it, owners in parallel, until it settles or the budget would be exceeded.
+  async function sweep({drain = false, budgetMs = 0} = {}) {
+    const started = now(), due = (await store.due(DUE, started, 50)).filter(({member}) => !closed && !timers.has(member));
+    let steps = 0;
+    await Promise.all(due.map(async ({member, score}) => {
       try {
-        const result = await unattended(member);
-        if (result?.waitMs != null) drive(member, result.waitMs);
+        let result = await unattended(member);steps++;
+        while (drain && result?.waitMs != null && now() - started + result.waitMs <= budgetMs) {
+          await sleep(result.waitMs);
+          result = await unattended(member);steps++;
+        }
+        if (result === BUSY) return;
+        if (result?.waitMs != null) { if (!drain) drive(member, result.waitMs); }
         // Nothing to run (the document expired or the task settled elsewhere): drop a stale entry.
-        else if (result !== BUSY) await store.undue(DUE, member, score);
+        else await store.undue(DUE, member, score);
       } catch { /* The next sweep retries. */ }
-    }
+    }));
+    return {owners: due.length, steps};
   }
   let sweeper = null;
   const loop = () => { if (closed || !sweepMs) return;sweeper = schedule(async () => { try { await sweep(); } finally { loop(); } }, sweepMs); };
@@ -349,6 +365,7 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
     // Called when the owner is banned or loses waitlist approval. The timer check
     // alone misses a paused task or an idle grant, which have no timer.
     suspend: userId => suspend(userId),
+    sweep: options => sweep(options),
     async companion(actor, {name}) {
       const result = await owner(actor, (doc, t) => {
         if (doc.companion) return {write: false, value: {ok: false, reason: 'companion_limit'}};
@@ -451,6 +468,15 @@ export function createWorkplace({now = Date.now, store = createMemoryWorkplaceSt
         return {write: true, value: {ok: true}};
       });
       return result.ok ? ok(actor.userId) : result;
+    },
+    // Erases the whole workplace: emptying the document lets the save delete every
+    // private key and the due entry with it; then the desk and any timer go.
+    async erase(actor) {
+      const result = await owner(actor, doc => { Object.assign(doc, empty());return {write: true, erase: true, value: {ok: true}}; });
+      if (result === BUSY) return BUSY;
+      const timer = timers.get(actor.userId);if (timer) {cancel(timer);timers.delete(actor.userId);}
+      if (await release(actor.userId) === BUSY) return BUSY;
+      return ok(actor.userId);
     },
     // Forgets one finished task: its brief, any draft, notice and request id.
     async forget(actor, {taskId}) {

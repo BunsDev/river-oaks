@@ -69,11 +69,13 @@ test('another account cannot read, steer or settle the owner\'s work through any
     const text = await response.text();
     for (const secret of [task.id, task.artifactId, grant.id, 'Mina']) assert.equal(text.includes(secret), false, `${action} leaked ${secret}`);
   }
+  // Erase names no owner: an intruder can only erase their own (empty) workplace.
+  assert.equal((await api.post('intruder', 'erase', {confirm: 'erase'})).status, 200);
   assert.equal(JSON.stringify(await api.read('owner')), before, 'the owner\'s document is untouched');
   // The intruder's own projections carry nothing of the owner's.
   const theirs = JSON.stringify(await api.read('intruder')) + JSON.stringify(await (await api.post('intruder', 'occupancy')).json());
   for (const secret of [task.id, task.artifactId, grant.id, 'Mina', 'owner']) assert.equal(theirs.includes(secret), false, secret);
-  assert.ok(WORKPLACE_ACTIONS.every(action => action in probes || ['state', 'companion', 'grant', 'offer', 'submit', 'presence', 'occupancy'].includes(action)),
+  assert.ok(WORKPLACE_ACTIONS.every(action => action in probes || ['state', 'companion', 'grant', 'offer', 'submit', 'presence', 'occupancy', 'erase'].includes(action)),
     'every owner-scoped action has a cross-account probe');
 });
 

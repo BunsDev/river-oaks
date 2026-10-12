@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "bounds_m": [
+    -80,
+    -80,
+    80,
+    80
+  ],
+  "terrain": {
+    "width": 5,
+    "height": 5,
+    "heights_m": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "spawn": [
+    0,
+    -64
+  ],
+  "roads": [
+    {
+      "id": "civic-axis",
+      "name": "Civic Axis",
+      "kind": "footway",
+      "width_m": 8,
+      "points": [
+        [
+          0,
+          -68
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          34
+        ]
+      ]
+    },
+    {
+      "id": "cross-square",
+      "name": "Cross Square",
+      "kind": "footway",
+      "width_m": 8,
+      "points": [
+        [
+          -66,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          66,
+          0
+        ]
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "public-hall",
+      "center": [
+        0,
+        59
+      ],
+      "size": [
+        36,
+        22,
+        22
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "library",
+      "center": [
+        -39,
+        32
+      ],
+      "size": [
+        22,
+        20,
+        13
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "community-house",
+      "center": [
+        39,
+        32
+      ],
+      "size": [
+        22,
+        20,
+        10
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "visitor-pavilion",
+      "center": [
+        -39,
+        -33
+      ],
+      "size": [
+        22,
+        20,
+        7
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    },
+    {
+      "id": "meeting-house",
+      "center": [
+        39,
+        -33
+      ],
+      "size": [
+        22,
+        20,
+        9
+      ],
+      "yaw_deg": 0,
+      "kind": "retail"
+    }
+  ],
+  "trees": [
+    {
+      "id": "tree-1",
+      "position": [
+        -65,
+        -55
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-2",
+      "position": [
+        -65,
+        -25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-3",
+      "position": [
+        -65,
+        25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-4",
+      "position": [
+        -65,
+        55
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-5",
+      "position": [
+        65,
+        -55
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-6",
+      "position": [
+        65,
+        -25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-7",
+      "position": [
+        65,
+        25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-8",
+      "position": [
+        65,
+        55
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-9",
+      "position": [
+        -18,
+        -52
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-10",
+      "position": [
+        18,
+        -52
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-11",
+      "position": [
+        -18,
+        25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    },
+    {
+      "id": "tree-12",
+      "position": [
+        18,
+        25
+      ],
+      "height_m": 9,
+      "crown_radius_m": 3
+    }
+  ],
+  "places": [
+    {
+      "id": "place-civic-arrival",
+      "name": "Civic Arrival",
+      "position": [
+        0,
+        -64
+      ]
+    },
+    {
+      "id": "place-assembly-square",
+      "name": "Assembly Square",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "place-hall-forecourt",
+      "name": "Hall Forecourt",
+      "position": [
+        0,
+        34
+      ]
+    },
+    {
+      "id": "place-library-walk",
+      "name": "Library Walk",
+      "position": [
+        -60,
+        0
+      ]
+    },
+    {
+      "id": "place-community-walk",
+      "name": "Community Walk",
+      "position": [
+        60,
+        0
+      ]
+    }
+  ]
+}

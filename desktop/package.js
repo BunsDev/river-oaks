@@ -2,6 +2,7 @@ import { buildWorldDesignPack } from '../scripts/studio-skill-pack.js';
 import { packager } from '@electron/packager';
 import { flipFuses } from '@electron/fuses';
 import { DESKTOP_FUSES } from './fuses.js';
+import { DESKTOP_FILES } from './package-files.js';
 import { cp, mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -12,7 +13,7 @@ const stage = await mkdtemp(join(tmpdir(), 'river-oaks-package-'));
 try {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   await mkdir(join(stage, 'desktop'));
-  for (const file of ['main.js', 'runtime.js', 'auth.js', 'photo-download.js', 'studio-download.js', 'studio-designer-host.js', 'studio-command.js', 'studio-preload.cjs']) await cp(join(root, 'desktop', file), join(stage, 'desktop', file));
+  for (const file of DESKTOP_FILES) await cp(join(root, 'desktop', file), join(stage, 'desktop', file));
   await mkdir(join(stage, 'scripts'));
   await cp(join(root, 'scripts/studio-skill-pack.js'), join(stage, 'scripts/studio-skill-pack.js'));
   await writeFile(join(stage, 'desktop/world-design-pack.json'), JSON.stringify(await buildWorldDesignPack(root)));
