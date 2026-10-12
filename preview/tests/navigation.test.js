@@ -61,3 +61,24 @@ test('shipped district has reachable public stops and bounded routes', () => {
   }
   assert.ok(connected>=24,`Only ${connected} of ${stops.length} stops connected`);
 });
+
+// A waypoint at a fixture edge leaves a walker no room to reach it: the
+// spatial-streets journey stalled for minutes at (-2753.28, -1382.61), 0.08 m
+// from a slanted edge, on routes between these stores.
+test('route waypoints keep clearance from fixtures on the real district', () => {
+  const district = JSON.parse(fs.readFileSync(new URL('../public/data/district.json', import.meta.url)));
+  const nav = createResidentNavigation(district), visit = name => district.stores.find(store => store.name === name).visit;
+  const clearance = point => {
+    for (let r = 0.02; r <= 0.3; r += 0.02) for (let i = 0; i < 24; i++) {
+      const angle = i / 24 * Math.PI * 2;
+      if (!nav.free([point[0] + Math.cos(angle) * r, point[1] + Math.sin(angle) * r])) return r;
+    }
+    return Infinity;
+  };
+  for (const [from, to] of [['Equinox', 'Hermès'], ['Dior', 'Equinox'], ['Hermès', 'Dior']]) {
+    const route = nav.route(visit(from), visit(to));
+    checkRoute(nav, route, visit(from), visit(to));
+    for (const point of route.slice(0, -1))
+      assert.ok(clearance(point) >= 0.3, `${from} -> ${to}: waypoint ${point.map(v => v.toFixed(2))} has ${clearance(point).toFixed(2)} m clearance`);
+  }
+});
