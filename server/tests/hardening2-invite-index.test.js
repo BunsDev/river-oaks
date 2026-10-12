@@ -18,7 +18,9 @@ async function fixture(t, options = {}) {
   const table = `${prefix}:waitlist:invites`;
   const approve = async userId => { await waitlist.request({ userId, name: userId }); await waitlist.decide({ userId, approved: true, actorId: 'admin' }); };
   const plant = (ownerId, at = time) => { const invite = newInvite(ownerId, 'admin', at); return redis.hset(table, invite.id, JSON.stringify(invite)).then(() => invite); };
-  return { redis, waitlist, table, approve, plant, advance: ms => { time += ms; } };
+  // Forget every owner index under this test's own prefix, as if written by an older server.
+  const dropIndexes = async () => { const keys = await redis.keys(`${prefix}:waitlist:invites:owner:*`); if (keys.length) await redis.del(...keys); };
+  return { redis, waitlist, table, approve, plant, dropIndexes, advance: ms => { time += ms; } };
 }
 const ids = list => list.map(invite => invite.id).sort();
 
@@ -28,7 +30,7 @@ redisTest('an owner from before the index is indexed once, then listing reads on
   const starters = await f.waitlist.listInvites({ userId: 'owner-a' });
   assert.equal(starters.length, 2, 'starter invites are listed');
   // Rows written before the index existed (a direct write, as on old servers).
-  await f.redis.del(...(await f.redis.keys('*:waitlist:invites:owner:*')));
+  await f.dropIndexes();
   const legacy = [await f.plant('owner-a'), await f.plant('owner-a')];
   const others = await f.waitlist.listInvites({ userId: 'owner-b' });
   const first = await f.waitlist.listInvites({ userId: 'owner-a' });
@@ -44,14 +46,18 @@ redisTest('an owner from before the index is indexed once, then listing reads on
   assert.equal((await f.waitlist.listInvites({ userId: 'admin' })).length >= 7, true, 'administrators still see the whole table');
 });
 
-redisTest('revoking an owner reaches every one of their invites, legacy included, and nobody else\'s', async t => {
+redisTest('revoking an owner reaches every one of their invites, legacy and unindexed included, and nobody else\'s', async t => {
   const f = await fixture(t);
   await f.approve('owner-a'); await f.approve('owner-b');
-  await f.redis.del(...(await f.redis.keys('*:waitlist:invites:owner:*')));
+  await f.dropIndexes();
   await f.plant('owner-a');
+  // The index is now complete for owner-a; an older server then writes an invite without indexing it.
+  await f.waitlist.listInvites({ userId: 'owner-a' });
+  const unindexed = await f.plant('owner-a');
+  assert.equal((await f.waitlist.listInvites({ userId: 'owner-a' })).some(invite => invite.id === unindexed.id), false, 'the listing does not see it');
   await f.waitlist.revokeInvites({ userId: 'owner-a', actorId: 'admin' });
   const statuses = owner => f.redis.hvals(f.table).then(rows => rows.map(raw => JSON.parse(raw)).filter(i => i.ownerId === owner).map(i => i.status));
-  assert.deepEqual([...new Set(await statuses('owner-a'))], ['revoked']);
+  assert.deepEqual([...new Set(await statuses('owner-a'))], ['revoked'], 'revocation reads the whole table, so the unindexed invite is revoked too');
   assert.deepEqual([...new Set(await statuses('owner-b'))], ['active']);
 });
 

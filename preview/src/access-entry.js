@@ -130,6 +130,7 @@ $('#access-email-form').addEventListener('submit', async event => {
     $('#access-email-status').textContent = error.message === 'email_paused'
       ? 'Email sign-in has reached today’s limit. Sign in with GitHub, or try email again tomorrow.'
       : error.message === 'challenge_failed' ? 'The check didn’t go through. Complete it again, then send the code.'
+      : error.message === 'email_limited' ? 'This connection has requested several codes today. Sign in with GitHub, or try again tomorrow.'
       : 'We couldn’t send a code. Check your email address and try again shortly.';
   }
   finally {

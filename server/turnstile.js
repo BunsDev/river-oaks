@@ -6,7 +6,7 @@
 export const TURNSTILE_ACTION = 'email_sign_in';
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-export function createTurnstileVerifier({ secret, fetcher = fetch, timeoutMs = 5000 }) {
+export function createTurnstileVerifier({ secret, hostname = null, fetcher = fetch, timeoutMs = 5000 }) {
   if (typeof secret !== 'string' || !secret) throw new Error('Turnstile needs a secret key');
   return async token => {
     if (typeof token !== 'string' || !token || token.length > 2048) return false;
@@ -16,7 +16,9 @@ export function createTurnstileVerifier({ secret, fetcher = fetch, timeoutMs = 5
       });
       if (!response.ok) return false;
       const result = await response.json();
-      return result?.success === true && result.action === TURNSTILE_ACTION;
+      // A token minted on another hostname the site key allows (localhost, a
+      // preview) is not accepted here.
+      return result?.success === true && result.action === TURNSTILE_ACTION && (!hostname || result.hostname === hostname);
     } catch { return false; }
   };
 }

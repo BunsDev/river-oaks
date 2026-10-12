@@ -120,6 +120,10 @@ elseif p.op == 'session-put' then
     local old = redis.call('HGET', KEYS[3], oldest)
     removeSession(oldest, old and cjson.decode(old) or nil)
   end
+  -- Eviction may have taken one of this account's own sessions.
+  local kept = {}
+  for _, id in ipairs(owned) do if redis.call('HEXISTS', KEYS[3], id) == 1 then table.insert(kept, id) end end
+  owned = kept
   save(p.record)
   redis.call('ZADD', KEYS[4], p.record.expiresAt, p.record.sessionId)
   redis.call('HSET', KEYS[5], p.record.cookieHash, p.record.sessionId)
@@ -308,7 +312,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
     else { res.writeHead(302, { Location: returnPath }); res.end(); }
   }
 
-  const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS, dailySends: magic.dailySends });
+  const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS, dailySends: magic.dailySends, addressSends: magic.addressSends });
   const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now, verifyHuman: magic.verifyHuman });
 
   async function handle(req, res) {

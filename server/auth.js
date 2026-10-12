@@ -179,7 +179,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     } catch { return null; }
   }
 
-  const magicStore = createMagicStore({ now, maxStates, dailySends: magic.dailySends });
+  const magicStore = createMagicStore({ now, maxStates, dailySends: magic.dailySends, addressSends: magic.addressSends });
   const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now, verifyHuman: magic.verifyHuman });
 
   async function handle(req, res) {

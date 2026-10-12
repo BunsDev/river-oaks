@@ -164,25 +164,24 @@ if existing then
   redis.call('HSET', KEYS[1], ARGV[1], updated)
   return updated
 end
-local function indexPending()
-  -- Requests made before the pending index existed go first (score 0).
+local limit = tonumber(ARGV[4])
+if redis.call('HLEN', KEYS[1]) >= limit and redis.call('EXISTS', KEYS[3]) == 0 then
+  -- Once, the first time the list fills: index requests made before the
+  -- pending index existed. They are the oldest, so they score 0 and go first;
+  -- NX keeps the real request time of anything already indexed.
   local all = redis.call('HGETALL', KEYS[1])
   for i = 1, #all, 2 do
-    if cjson.decode(all[i + 1]).status == 'pending' then redis.call('ZADD', KEYS[2], 0, all[i]) end
+    if cjson.decode(all[i + 1]).status == 'pending' then redis.call('ZADD', KEYS[2], 'NX', 0, all[i]) end
   end
+  redis.call('SET', KEYS[3], '1')
 end
-local limit, rebuilt = tonumber(ARGV[4]), false
 while redis.call('HLEN', KEYS[1]) >= limit do
   local oldest = redis.call('ZRANGE', KEYS[2], 0, 0)[1]
-  if not oldest then
-    if rebuilt then return false end
-    indexPending(); rebuilt = true
-  else
-    redis.call('ZREM', KEYS[2], oldest)
-    -- Index entries for requests decided since are skipped, never evicted.
-    local raw = redis.call('HGET', KEYS[1], oldest)
-    if raw and cjson.decode(raw).status == 'pending' then redis.call('HDEL', KEYS[1], oldest) end
-  end
+  if not oldest then return false end
+  redis.call('ZREM', KEYS[2], oldest)
+  -- Index entries for requests decided since are skipped, never evicted.
+  local raw = redis.call('HGET', KEYS[1], oldest)
+  if raw and cjson.decode(raw).status == 'pending' then redis.call('HDEL', KEYS[1], oldest) end
 end
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
 if cjson.decode(ARGV[2]).status == 'pending' then redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[1]) end
@@ -196,7 +195,7 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     // The owner whose invite index this call may read or extend.
     const indexOwner = payload.op === 'issue' ? payload.invite.ownerId : payload.userId ?? null;
     const ownerIndex = `${prefix}:waitlist:invites:owner:${createHash('sha256').update(indexOwner ?? '').digest('base64url')}`;
-    const raw = await redis.eval(INVITE_TRANSACTION, 4, users, audit, invites, ownerIndex, JSON.stringify({
+    const raw = await redis.eval(INVITE_TRANSACTION, 5, users, audit, invites, ownerIndex, `${prefix}:waitlist:invites:pruned`, JSON.stringify({
       ...payload, indexOwner, capacity: inviteCapacity, retention: INVITE_RETENTION,
       now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
       starter: payload.userId && payload.op !== 'list-owner' ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
@@ -207,7 +206,7 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     async request(identity) {
       if (!validId(identity?.userId)) throw new Error('Invalid waitlist identity');
       const record = recordFor(identity, adminIds, now);
-      const raw = await redis.eval(REQUEST, 2, users, pending, record.userId, JSON.stringify(record), now(), maxRequests);
+      const raw = await redis.eval(REQUEST, 3, users, pending, `${prefix}:waitlist:pending-indexed`, record.userId, JSON.stringify(record), now(), maxRequests);
       if (!raw) throw new Error('Waitlist capacity reached');
       const existing = JSON.parse(raw);
       return adminIds.has(identity.userId) ? { ...existing, status: 'approved' } : existing;

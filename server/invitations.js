@@ -56,9 +56,14 @@ end
 -- before it refuses a new one.
 local function makeRoom(needed)
   if redis.call('HLEN', KEYS[3]) + needed <= p.capacity then return true end
-  for _, raw in ipairs(redis.call('HVALS', KEYS[3])) do
-    local invite = cjson.decode(raw)
-    if invite.expires <= p.now - p.retention then redis.call('HDEL', KEYS[3], invite.id) end
+  -- The scan runs at most once an hour (KEYS[5]), so a table full of current
+  -- invites does not pay for a full read on every request.
+  if redis.call('EXISTS', KEYS[5]) == 0 then
+    for _, raw in ipairs(redis.call('HVALS', KEYS[3])) do
+      local invite = cjson.decode(raw)
+      if invite.expires <= p.now - p.retention then redis.call('HDEL', KEYS[3], invite.id) end
+    end
+    redis.call('SET', KEYS[5], '1', 'PX', 3600000)
   end
   return redis.call('HLEN', KEYS[3]) + needed <= p.capacity
 end
@@ -78,8 +83,11 @@ if p.op == 'list-owner' then
   local found = ownedInvites()
   return #found == 0 and '[]' or cjson.encode(found)
 elseif p.op == 'revoke-owner' then
-  for _, invite in ipairs(ownedInvites()) do
-    if invite.status == 'active' then
+  -- Revocation reads the whole table, not the index: an older server version
+  -- (a rolling deploy or a rollback) may have written invites it never indexed.
+  for _, raw in ipairs(redis.call('HVALS', KEYS[3])) do
+    local invite = cjson.decode(raw)
+    if invite.ownerId == p.userId and invite.status == 'active' then
       invite.status = 'revoked'; invite.revokedAt = p.at; saveInvite(invite)
     end
   end
@@ -93,8 +101,9 @@ elseif p.op == 'decide' then
   record.decidedAt = p.at
   record.decidedBy = p.actorId
   if not p.approved then
-    for _, invite in ipairs(ownedInvites()) do
-      if invite.status == 'active' then
+    for _, raw in ipairs(redis.call('HVALS', KEYS[3])) do
+      local invite = cjson.decode(raw)
+      if invite.ownerId == p.userId and invite.status == 'active' then
         invite.status = 'revoked'; invite.revokedAt = p.at; saveInvite(invite)
       end
     end

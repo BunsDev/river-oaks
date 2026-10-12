@@ -62,3 +62,17 @@ if (process.env.REDIS_URL) test('redis: requests from before the pending index, 
   assert.equal(ids.filter(id => id.startsWith('legacy')).length, 1, 'a legacy pending request made room');
   assert.equal(await redis.hlen(`${prefix}:waitlist:users`), 3);
 });
+
+if (process.env.REDIS_URL) test('redis: requests from before the pending index give way before newer ones', async t => {
+  let time = 1_800_000_000_000;
+  const [, open] = stores.find(([name]) => name === 'redis');
+  const { waitlist, redis, prefix } = await open(t, { admins: ['admin'], now: () => time, maxRequests: 3 });
+  await redis.hset(`${prefix}:waitlist:users`, 'legacy', JSON.stringify({ userId: 'legacy', name: 'legacy', email: '', status: 'pending', requestedAt: new Date(time).toISOString() }));
+  for (const userId of ['newer-1', 'newer-2']) { time += 1000; await waitlist.request({ userId, name: userId }); }
+  time += 1000; await waitlist.request({ userId: 'newcomer', name: 'newcomer' });
+  assert.deepEqual((await waitlist.list()).map(record => record.userId).sort(), ['newcomer', 'newer-1', 'newer-2'], 'the legacy request, the oldest, made room');
+  // The one-time index never runs again, so a later full list does not rescan the table.
+  assert.equal(await redis.get(`${prefix}:waitlist:pending-indexed`), '1');
+  time += 1000; await waitlist.request({ userId: 'another', name: 'another' });
+  assert.deepEqual((await waitlist.list()).map(record => record.userId).sort(), ['another', 'newcomer', 'newer-2']);
+});

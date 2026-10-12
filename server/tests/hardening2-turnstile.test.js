@@ -41,3 +41,12 @@ test('Turnstile is on only when the server has a secret key', () => {
   assert.equal(typeof magicOptions({ TURNSTILE_SECRET_KEY: 'secret' }).verifyHuman, 'function');
   assert.throws(() => createTurnstileVerifier({ secret: '' }));
 });
+
+test('a token minted on another hostname is refused when the site is known', async () => {
+  const answer = hostname => async () => ({ ok: true, json: async () => ({ success: true, action: TURNSTILE_ACTION, hostname }) });
+  assert.equal(await createTurnstileVerifier({ secret: 's', hostname: 'typesafe.place', fetcher: answer('typesafe.place') })('token'), true);
+  assert.equal(await createTurnstileVerifier({ secret: 's', hostname: 'typesafe.place', fetcher: answer('localhost') })('token'), false);
+  assert.equal(await createTurnstileVerifier({ secret: 's', hostname: 'typesafe.place', fetcher: answer(undefined) })('token'), false);
+  const options = magicOptions({ TURNSTILE_SECRET_KEY: 's', VITE_TURNSTILE_SITE_KEY: 'k' }, 'https://typesafe.place');
+  assert.equal(typeof options.verifyHuman, 'function');
+});

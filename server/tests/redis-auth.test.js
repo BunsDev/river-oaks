@@ -237,6 +237,26 @@ integration('state and session admission caps are atomic across nodes', async t 
   assert.equal(await f.redis.zcard(f.keys[3]), MAX_SESSIONS, 'the expiry index stays in step');
 });
 
+// A full table may evict the signing-in account's own oldest session; its list
+// of sessions must not keep the evicted id.
+integration('evicting an account\'s own session from a full table leaves no stale id behind', async t => {
+  const f = await fixture(t);
+  const sessions = [], expiry = [];
+  for (let i = 0; i < MAX_SESSIONS; i++) {
+    const own = i === 0;
+    sessions.push(`seed-${i}`, JSON.stringify({ sessionId: `seed-${i}`, cookieHash: `hash-${i}`, expiresAt: f.now() + (own ? 1000 : 60_000), ...(own ? { userId: 'user_1' } : {}) }));
+    expiry.push(f.now() + (own ? 1000 : 60_000), `seed-${i}`);
+  }
+  await f.redis.hset(f.keys[2], ...sessions); await f.redis.zadd(f.keys[3], ...expiry);
+  await f.redis.hset(f.keys[5], 'user_1', JSON.stringify(['seed-0']));
+  assert.equal((await f.login()).response.status, 302);
+  const owned = JSON.parse(await f.redis.hget(f.keys[5], 'user_1'));
+  assert.equal(owned.includes('seed-0'), false, 'the evicted session is gone from the account\'s list');
+  assert.equal(owned.length, 1);
+  assert.equal(await f.redis.hexists(f.keys[2], owned[0]), 1, 'the list names the new, live session');
+  assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS);
+});
+
 // One account could sign in over and over until the shared session table was
 // full, locking every other account out for the seven-day session lifetime.
 integration('one account keeps only its newest sessions, so repeated sign-ins cannot fill the table', async t => {
