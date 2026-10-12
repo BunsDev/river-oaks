@@ -10,6 +10,7 @@ const git = (root, args, optional = false) => {
   catch (error) { if (optional) return null; throw new Error(`git ${args[0]} failed (${error.status ?? 'unavailable'})`); }
 };
 const lines = value => value ? value.split('\n') : [];
+const REGISTER = 'docs/project-management/tasks.json';
 export function inspectGit(root) {
   root = resolve(root);
   const main = git(root,['symbolic-ref','--quiet','refs/remotes/origin/HEAD'],true)
@@ -35,7 +36,10 @@ export function inspectGit(root) {
     const paths=lines(raw).filter(line=>line.startsWith('n')).map(line=>line.slice(1));activityAvailable=true;
     for(const w of worktrees)w.active=paths.some(p=>p===w.path||p.startsWith(w.path+'/'));
   } catch { /* Unknown activity prevents automatic conclusions; no mutation is available here. */ }
-  return {root,main,mainHead,defaultBranch,activityAvailable,branches,worktrees};
+  // A GUI client's pull can stash the live register and never restore it.
+  const stashedRegister=lines(git(root,['stash','list','--format=%H%x09%gd%x09%gs'],true)).map(line=>{const [sha,ref,subject]=line.split('\t');return {sha,ref,subject};})
+    .filter(stash=>git(root,['diff','--name-only',`${stash.sha}^1`,stash.sha,'--',REGISTER],true));
+  return {root,main,mainHead,defaultBranch,activityAvailable,branches,worktrees,stashedRegister};
 }
 
 export function classify(item, pulls, defaultBranch='main') {
@@ -93,6 +97,7 @@ export function reconcile(snapshot, register, pulls, now=Date.now()) {
     }
     return {...branch,taskId:task?.id??null,taskStatus:task?.status??null,worktree:worktree?.path??null,prs:matchingPRs.map(p=>({number:p.number,state:p.state,mergedAt:p.merged_at,head:p.head.sha})),...classify({...branch,...worktree,registeredOwner:task?.status==='active'&&Boolean(task.owner)},pulls,snapshot.defaultBranch)};
   });
+  for(const stash of snapshot.stashedRegister??[])gaps.push(`Task register edits are held in ${stash.ref} (${stash.subject}); merge them into the live register by task id, then drop that stash`);
   for(const task of tasks){
     if(!['retired','queued'].includes(task.status)&&!task.branches.some(b=>snapshot.branches.some(x=>x.branch===b)))gaps.push(`${task.id}: no local branch; locate remote/session before changing status`);
   }
@@ -116,7 +121,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
     const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name);if(i<0)return null;if(!args[i+1]||args[i+1].startsWith('--'))throw new Error(`Missing value for ${name}`);return args[i+1];};
     const allowed=new Set(['--repo','--tasks','--output','--github','--check']);
     for(let i=0;i<args.length;i++){if(!allowed.has(args[i]))throw new Error(`Unknown argument: ${args[i]}`);if(['--repo','--tasks','--output'].includes(args[i]))i++;}
-    const root=resolve(option('--repo')??process.cwd()),register=JSON.parse(readFileSync(resolve(root,option('--tasks')??'docs/project-management/tasks.json'),'utf8'));
+    const root=resolve(option('--repo')??process.cwd()),text=readFileSync(resolve(root,option('--tasks')??REGISTER),'utf8');
+    if(/^(<{7}|>{7})( |$)/m.test(text))throw new Error('Task register has conflict markers; merge it by task id (see docs/project-management/workflow.md)');
+    const register=JSON.parse(text);
     const errors=validateTasks(register);if(errors.length)throw new Error(errors.join('\n'));
     const snapshot=inspectGit(root),pulls=args.includes('--github')?loadPulls(root):null;
     const report=reconcile(snapshot,register,pulls);const json=JSON.stringify(report,null,2)+'\n';

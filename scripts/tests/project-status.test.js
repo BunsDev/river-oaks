@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { classify, validateTasks, inspectGit, reconcile } from '../project-status.mjs';
 
 const delivered = { primary:false, branch:'fix/done', head:'a'.repeat(40), dirty:false, locked:false, active:false, merging:false, ancestorMain:true };
@@ -78,4 +78,27 @@ test('protected default and primary branches never become retirement debt', () =
     const r=reconcile(snapshot,{tasks:[task]},[]);
     assert.ok(!r.gaps.some(gap=>gap.includes('Pending local retirement')));
   }
+});
+
+test('register edits held in a stash are reported until merged back', t => {
+  const root=mkdtempSync(join(tmpdir(),'river-project-stash-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']});
+  git('init','-q','-b','main');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid');
+  mkdirSync(join(root,'docs','project-management'),{recursive:true});
+  const file=join(root,'docs','project-management','tasks.json');
+  writeFileSync(file,'{"schemaVersion":1,"tasks":[]}\n');writeFileSync(join(root,'other'),'one');git('add','.');git('commit','-q','-m','base');
+  writeFileSync(join(root,'other'),'two');git('stash','push','-q','-m','unrelated');
+  assert.deepEqual(inspectGit(root).stashedRegister,[]);
+  writeFileSync(file,'{"schemaVersion":1,"tasks":[{"id":"live"}]}\n');git('stash','push','-q','-m','!!GitHub_Desktop<main>');
+  const snapshot=inspectGit(root);
+  assert.deepEqual(snapshot.stashedRegister.map(s=>s.ref),['stash@{0}']);
+  assert.ok(reconcile(snapshot,{tasks:[]},null).gaps.some(g=>g.includes('stash@{0}')&&g.includes('GitHub_Desktop')));
+});
+test('a register with conflict markers is named as such instead of a JSON parse error', t => {
+  const root=mkdtempSync(join(tmpdir(),'river-project-markers-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  mkdirSync(join(root,'docs','project-management'),{recursive:true});
+  writeFileSync(join(root,'docs','project-management','tasks.json'),'{\n<<<<<<< Updated upstream\n  "tasks": []\n=======\n  "tasks": [1]\n>>>>>>> Stashed changes\n}\n');
+  const run=spawnSync(process.execPath,[new URL('../project-status.mjs',import.meta.url).pathname,'--repo',root],{encoding:'utf8'});
+  assert.equal(run.status,2);
+  assert.match(run.stderr,/conflict markers/);
 });
