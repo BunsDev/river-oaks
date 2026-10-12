@@ -142,7 +142,7 @@ These are account-level controls that code can't provide, because a function has
 | Cloudflare Turnstile keys (`TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`) | **On** in Production. Set both or neither: a secret without the site key refuses every email start (the server logs a warning). The site key is built in, so changing it needs a redeploy. To switch the check off without a code change, remove the secret and redeploy. |
 | Redis eviction policy | **`noeviction`** (Redis Cloud via the Vercel Marketplace integration) |
 | Vercel Spend Management hard pause | **On** (set by Val, 2026-10-12): a $60 on-demand budget for team 0xBuns with Pause on, so production deployments pause when it is reached. Alerts fire at 50%, 75% and 100%; the webhook is off. The budget resets each billing period. |
-| Redis memory alert at 70% | **Owner to set**: `vercel integration open redis` → database → Alerts |
+| Redis memory alert at 70% | **Not available** (checked by Val, 2026-10-12). The Redis Cloud console that `vercel integration open redis` opens shows no alert controls for `river-oaks-town`, on the database or on the subscription. Production used 4.3 MB of its 250 MB on 2026-10-12. Under `noeviction` a full database refuses writes, so sign-ins and joins would fail; nothing is dropped. Check usage in that console now and then. |
 | WorkOS | GitHub OAuth and Magic Auth on the Production environment |
 
 Preserve the two-invite/30-day policy, existing player movement budgets, and
