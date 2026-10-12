@@ -14,7 +14,8 @@ const streetSpace = (x, z) => environment.isFree(x, z) && !environment.roomAt(x,
 const forward = heading => [Math.sin(heading), -Math.cos(heading)];
 
 test('every storefront bench offers two places, side by side, facing the street', () => {
-  const spots = storefrontBenchSpots(world), seats = benchSeats(world);
+  // The plaza salon's chairs and curved bench join the same list; plaza-salon.test.js covers them.
+  const spots = storefrontBenchSpots(world), seats = benchSeats(world).filter(seat => !seat.buildId.startsWith('bench:plaza-salon-'));
   assert.ok(spots.length > 3);
   assert.equal(seats.length, spots.length * 2);
   for (const spot of spots) {
@@ -30,7 +31,7 @@ test('every storefront bench offers two places, side by side, facing the street'
       assert.ok(Math.abs(ahead - 0.75) < 1e-9, 'stand up in front of the bench');
     }
   }
-  assert.deepEqual(benchSeats(world), seats, 'stable across calls and processes');
+  assert.deepEqual(benchSeats(world), benchSeats(JSON.parse(JSON.stringify(world))), 'stable across calls and processes');
 });
 
 test("Jevica's garden seats hold two and her lounge chairs one, exactly where the shared seating model puts them", () => {
