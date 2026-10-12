@@ -39,6 +39,7 @@ export const BUILD_REASONS = {
   road: 'Keep clear of the road.',
   creation: 'Too close to another creation.',
   player: 'Someone is standing there.',
+  resident: 'A neighbor is standing there.',
   reach: 'Move closer to place it there.',
 };
 export const segmentDistance = (x, y, a, b) => {

@@ -35,7 +35,9 @@ async page=>{
     if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed=true;break;}
   }
   check(aimed,`The complete assembly has a valid placement (${await page.locator('#build-hint').textContent()})`);
-  await page.locator('#build-place').click();
+  // Click the ground under the preview, as the hint says. The panel button would
+  // move the pointer off the canvas, which drops the aim back a few steps ahead.
+  await page.mouse.down();await page.mouse.up();
   await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.builds.some(item=>item.assembly?.name==='Rose glass sculpture'));
   const item=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds.find(item=>item.assembly?.name==='Rose glass sculpture'));
   check(item.assembly.parts.length===2&&item.assembly.parts[1].material==='glass','Authority confirms the full assembly and its material');
@@ -56,11 +58,13 @@ async page=>{
     const before=await guest.evaluate(()=>window.__riverCreatorObjects().resources);
     await page.locator('#build-list .shared-build-row').filter({hasText:'Rose glass sculpture'}).getByRole('button',{name:'Edit parts'}).click();
     await page.locator('#creator-part').selectOption('0');await page.locator('#creator-color').fill('#336699');
+    let aimed2=false;
     for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]){
       await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);await page.waitForTimeout(300);
-      if(await page.locator('#build-hint').getAttribute('data-valid')==='true')break;
+      if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed2=true;break;}
     }
-    await page.locator('#build-place').click();
+    check(aimed2,`The edited assembly has a valid placement (${await page.locator('#build-hint').textContent()})`);
+    await page.mouse.down();await page.mouse.up();
     await page.waitForFunction(id=>window.__riverMultiplayer().snapshot.builds.find(item=>item.id===id)?.assembly.parts[0].color==='#336699',item.id);
     check(true,'Jevica edits confirmed parts through the builder controls');
     await guest.waitForFunction(id=>window.__riverCreatorObjects().rendered.find(item=>item.id===id)?.parts[0].color==='336699',item.id);
@@ -69,11 +73,13 @@ async page=>{
     await guest.waitForFunction(id=>!window.__riverCreatorObjects().rendered.some(item=>item.id===id),item.id);
     check(true,'Removal reaches the other browser and releases its object');
     await page.locator('#design-list .shared-build-row').filter({hasText:'Rose glass sculpture'}).getByRole('button',{name:'Place a copy'}).click();
+    let aimed3=false;
     for(const [x,y]of [[.5,.72],[.42,.74],[.58,.74],[.5,.8],[.35,.7],[.65,.7],[.2,.7],[.25,.8],[.15,.85],[.3,.9],[.1,.72],[.18,.64]]){
       await page.mouse.move(canvas.x+canvas.width*x,canvas.y+canvas.height*y);await page.waitForTimeout(300);
-      if(await page.locator('#build-hint').getAttribute('data-valid')==='true')break;
+      if(await page.locator('#build-hint').getAttribute('data-valid')==='true'){aimed3=true;break;}
     }
-    await page.locator('#build-place').click();
+    check(aimed3,`The saved copy has a valid placement (${await page.locator('#build-hint').textContent()})`);
+    await page.mouse.down();await page.mouse.up();
     await page.waitForFunction(old=>window.__riverMultiplayer().snapshot.builds.some(item=>item.id!==old&&item.assembly?.name==='Rose glass sculpture'),item.id);
     const copy=await page.evaluate(()=>window.__riverMultiplayer().snapshot.builds.find(item=>item.assembly?.name==='Rose glass sculpture'));
     check(JSON.stringify(copy.assembly)===JSON.stringify(item.assembly),'Saved copies preserve the original parts rather than later edits');

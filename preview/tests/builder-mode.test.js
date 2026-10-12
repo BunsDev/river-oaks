@@ -65,3 +65,23 @@ test('creator preview accounts for a flying visitor full collision volume',async
     players:[{id:'other',position:[-10.4,3.4,0],altitude:1.2}],selfId:'owner'});
   assert.equal(verdict.reason,'player');assert.equal(verdict.valid,false);
 });
+
+test('the preview refuses a spot where a resident stands, as the town does', async () => {
+  const { newAssembly } = await import('../src/creator-object.js'), { buildGeometry, BUILD_REASONS } = await import('../src/shared-build.js');
+  const { JEVICA_ACCOUNT_IDS } = await import('../src/jevica-accounts.js');
+  const owner = JEVICA_ACCOUNT_IDS[0], assembly = newAssembly(), kind = buildGeometry({ kind: 'object', assembly });
+  let time = 1000;
+  const town = createSharedWorld(world, { now: () => time });
+  town.join({ userId: owner, name: 'Jevica' });
+  // Step off the resident who shares the spawn, so only the resident is in the way.
+  time += 1000;
+  assert.equal(town.command(owner, { type: 'pose', position: [-12, -2.4, 0], yaw: 0, altitude: 0 }).ok, true);
+  const snapshot = town.snapshot(), feet = snapshot.players[0].position;
+  const position = snapshot.locals.find(local => !local.indoor && Math.hypot(local.position[0] - feet[0], local.position[1] - feet[1]) < 3).position.slice(0, 2);
+  const preview = evaluatePlacement({ environment, roads, kind, assembly, yaw: 0, position, feet, builds: snapshot.builds, players: snapshot.players, locals: snapshot.locals, selfId: owner });
+  time += 3000;
+  const result = town.command(owner, { type: 'build', action: 'place', kind: 'object', finish: 'rose', assembly, position, yaw: 0 });
+  assert.equal(result.ok, false);
+  assert.equal(result.message, BUILD_REASONS.resident, 'the town names the reason instead of a code');
+  assert.deepEqual([preview.valid, preview.reason, preview.message], [false, 'resident', BUILD_REASONS.resident]);
+});
