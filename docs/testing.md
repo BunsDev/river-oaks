@@ -2,9 +2,9 @@
 
 Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geometry, in-process HTTP transports, and temporary repositories. They do not download live GIS, call paid Jev inference, or require a GPU.
 
-Run `pnpm test` for simulation and UI contracts, `pnpm run test:server` for authentication, shared state, transport, and abuse controls, `pnpm run test:desktop` for native contracts, and `pnpm run build` for the production bundle. `pnpm run dev` requires GitHub sign-in and waitlist approval, then joins the shared town. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
+Run `pnpm test` for simulation and UI contracts, `pnpm run test:server` for authentication, shared state, transport, and abuse controls, `pnpm run test:desktop` for native contracts, and `pnpm run build` for the production bundle. `pnpm run dev` requires sign-in (GitHub or an email code) and waitlist approval, then joins the shared town. `pnpm run test:security:e2e` runs the email-access browser test, which serves the built app with the real CSP, against a local WorkOS fixture. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
 
-Run `pnpm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `pnpm run test:shared` for development onboarding plus authenticated two-player and keyboard recovery fixtures. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
+Run `pnpm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `pnpm run test:shared` for the shared-town journeys. It runs five modes (`development`, `development-world`, `development-publish`, `required`, `creator`) with about 19 journeys, including onboarding, authenticated two-player play, travel, publishing, seating and keyboard recovery. Pass mode names to run some (`pnpm run test:shared development-publish`), or set `RIVER_OAKS_SHARED_JOURNEY=<name>` for one journey. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
 
 For an interactive two-player check, run `node server/tests/browser-fixture.js`, then:
 
@@ -67,7 +67,7 @@ Run `node preview/e2e/experience-runner.js <name>` for an authenticated town fix
 
 `preview/e2e/flight-refusal.js` presses B inside a shop and checks that the refusal is announced where the player is looking: a notice centred just above the walking console that names the reason (indoors, in a ride, or no room overhead), keeps Jevica on the ground, and dismisses itself.
 
-`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it against `pnpm run dev`.
+`preview/e2e/debug-tools.js` opens the [debug tools](debug-tools.md) with F3 and checks every overlay against the district data: 9 colliders, 39 roads, 30 rooms, the walkable grid and ground triangles. It also checks the cursor readout, the polygon inspector (without starting a conversation), wireframe restore and the desktop menu event. Run it with `pnpm run test:experience debug-tools`, which uses its own fixture server and needs no sign-in.
 
 For pointer regressions, use the authenticated loopback runner:
 
@@ -101,6 +101,42 @@ or 6 cm at 60 Hz. Run it through the same Playwright CLI after starting dev. The
 fixture uses deterministic frames and does not establish facial expression quality,
 continuous collision, target-GPU performance or native Unreal parity.
 
+## Hosted CI
+
+`.github/workflows/verify.yml` runs on every PR and push to `main`, on Mondays at 08:23 UTC, and on manual dispatch:
+
+- **`dependency-review`:** PRs only.
+- **`verify`:** a Python 3.11 and 3.13 matrix: locked `uv sync`, Ruff, pytest, pip-audit of the locked runtime, the secret scan, and the offline demo (whose exit 2 is expected).
+- **`preview checks`:** pnpm audit, tooling, unit, server (with a Redis service) and desktop tests, the build, the security browser e2e and WebGL reflections.
+- **`preview shared (required | development | worlds-and-creator)`:** the shared-town journeys, in three parallel shards.
+- **`preview experience (streets | places)`:** the experience journeys, in two parallel shards.
+- **`preview`:** an aggregate job that fails unless every shard succeeded. This is the check the `main` ruleset requires.
+
+GitHub's default CodeQL setup and the Vercel preview add their own checks. On failure, shards upload screenshots as artifacts named by shard, for example `shared-town-failure-<shard>`, `experience-failure-<shard>` and `security-browser-failure`.
+
+Known intermittent journeys, all of which have passed on rerun:
+
+- `spatial-streets`: "Hermès: stalled". Since #270 its Dior check waits for the server snapshot to converge.
+- `multiplayer-dev`: the landmark-teleport step.
+- `contextual-first-visit`: a 60 s `waitFor`.
+- `email access`: waiting for the connected roster. The client connect deadline (#260) and interior render cost (#268) addressed it.
+- `creator-objects`: #271.
+
+Rerun only the failed jobs (`gh run rerun <id> --failed`) and confirm a second pass before treating one as a regression.
+
+```mermaid
+%% diagram: ci-pipeline (placeholder; replace this block with the real diagram)
+flowchart LR
+  pending["Diagram pending: Hosted CI and the merge gate"]
+```
+<details><summary>Diagram prompt: ci-pipeline</summary>
+
+Draw the GitHub Actions graph for .github/workflows/verify.yml on a pull request: dependency-review, verify (Python 3.11 and 3.13 matrix: uv sync, ruff, pytest, pip-audit, demo), preview checks (audit, tooling, unit tests, server tests with Redis service, desktop tests, build, security browser e2e, reflections), preview shared shards (required, development, worlds-and-creator) and preview experience shards (streets, places) running in parallel, all feeding the aggregate 'preview' job that fails unless every shard succeeded, plus CodeQL analyses and the Vercel preview check. Then show the merge path: ~/.claude/scripts/gh-merge-when-green.sh waits for statusCheckRollup and mergeStateStatus CLEAN, refuses BEHIND (rebase first) and unsigned commits, and merges. Note the known flaky journeys and the rerun-failed-jobs step.
+
+See [the diagram index](diagrams.md) for the convention.
+
+</details>
+
 ## Frame budget and HUD
 
 `preview/tests/frame-budget.test.js` checks that each skeleton uploads once per
@@ -119,7 +155,7 @@ chip. `render-budget.js` pins Sharpest, since it measures the full-quality
 budget. Frame times on a shared GPU vary with load, so compare against an
 unmodified checkout in interleaved runs before claiming a change.
 
-The installed secret hook runs on commits in this checkout. New clones must install it. CI scans the worktree and complete fetched history; require its checks in branch protection to enforce the merge gate. Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
+`pnpm install` installs the secret hook once in the shared Git directory, so it applies to every worktree of the clone. CI scans the worktree and complete fetched history. The `main` ruleset requires the aggregate `preview` check (see below). Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
 
 ## Manual Jev key override
 

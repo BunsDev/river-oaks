@@ -1,6 +1,8 @@
 # Task ownership and retirement
 
-`tasks.json` is the current task register. Dated ledgers under
+`tasks.json` is the task register. The primary checkout's uncommitted copy is the live
+register; claims, releases and `project:prune` use it, and a branch's copy can be
+stale (see [register sweeps](#register-sweeps)). Dated ledgers under
 `docs/superpowers/plans/` retain implementation and verification history. GitHub
 is authoritative for PR state; local Git is authoritative for files and refs.
 A register entry records the next action, not a substitute for either source.
@@ -9,6 +11,9 @@ A register entry records the next action, not a substitute for either source.
 
 1. Run `git status --short`, `git worktree list` and
    `pnpm run --silent project:status --github --output .runtime/project-status.json`.
+   It reads the register in the checkout you run it from. From a feature
+   worktree, pass `--tasks <primary>/docs/project-management/tasks.json` to check
+   the live register.
    Create `.runtime` first when absent. This command reads Git and GitHub; it never
    fetches, checks out, edits tasks, deletes refs, or removes worktrees. Refresh
    `origin` explicitly before delivery or retirement decisions.
@@ -18,7 +23,11 @@ A register entry records the next action, not a substitute for either source.
    inspect and coordinate; it does not mean abandoned.
 3. Update the register before editing: stable `id`, concrete `title`, exact
    `branches`, `owner` (session identifier), `leaseUntil`, `updatedAt`, `nextAction`,
-   `ledger`, `requiredChecks`, and `filesOwned`. Keep one task owner per branch.
+   `ledger`, `requiredChecks`, and `filesOwned`, with `status` (`queued`, `active`,
+   `blocked`, `delivered` or `retired`). Keep one task owner per branch. Status and
+   prune find a task's PR only through `pr` (a number). Delivered and retired tasks
+   need `evidence`, an array of `{pr, reviewedHead, merge, tree, checks}`. Retired
+   tasks also need `archive`. `deliveryPr` is informational.
    An active claim is a coordination record, not a lock enforced by the tool.
    Inspect the diff again before saving because other agents may update the file.
 4. Use `active` only with a named owner and a bounded lease (normally two hours).
@@ -88,15 +97,26 @@ A GUI client's pull can stash the live register and leave it stashed. `project:c
 reports any stash that holds register edits. To recover, merge that stash's
 register into the live one by task id, keeping the newer `updatedAt` and every
 id. Write the result atomically, refusing if the file changed, then drop the stash.
-If the register contains conflict markers, `project:status` names them; resolve
-them the same way.
+If the register contains conflict markers, `project:status` fails validation and
+exits 2. Find them with `grep -n '^<<<<<<<' docs/project-management/tasks.json`
+and resolve them the same way.
 
 ## Daily reconciliation and handoff
 
 Run `pnpm run --silent project:check --github` at session start and handoff.
 Exit 0 means the register passed validation and no tracked reconciliation gaps
-were found; 1 means gaps such as unregistered branches, mismatched PR heads,
-expired ownership, delivered tasks retaining local branches, or resurrected retired refs; 2 means input/tool failure.
+were found. 1 means reconciliation gaps:
+
+- unregistered branches or mismatched PR heads;
+- expired ownership;
+- delivered tasks that still have local branches;
+- resurrected retired refs;
+- a stash that holds register edits;
+- a recorded PR that can't be found;
+- a delivered task whose PR isn't merged, or a merged PR whose task isn't delivered;
+- an unqueued, unretired task with no local branch.
+
+2 means an input or tool failure, including a register that fails validation.
 None of these exit codes proves that the project is complete or safe to delete.
 Without `--github`, remote delivery is explicitly unknown. Process CWDs are only
 positive activity evidence; absence is not proof that no agent owns a task.
@@ -114,7 +134,7 @@ or external PM service; run it at these explicit lifecycle boundaries.
 
 ## Safe retirement
 
-Use the `worktree-retirement` project skill. Retirement is a separate decision
+Use the `worktree-retirement` project skill (`.agents/skills/worktree-retirement/SKILL.md`). Retirement is a separate decision
 from delivery. Recheck clean tracked/untracked state, locks, active processes and
 sessions, open PRs, exact refs and ignored data immediately before mutation.
 Preserve primary/default, dirty, active, open-PR, missing-proof and uncertain work.
@@ -143,8 +163,14 @@ recorded tag from the bundle into a **new** recovery branch. Create a separate
 worktree from that branch. Restore local evidence from its verified archive after
 inspection; never apply private state to a live service automatically.
 
-The 2026-10-11 round is recorded in `retirement-20261011.json`; bundles and local
-artifacts live under `~/worktree-backups/river-oaks-20261011/`. The register captures
+The 2026-10-11 rounds are recorded in `retirement-20261011.json`,
+`retirement-20261011-round2.json`, `retirement-20261011-final.json`,
+`retirement-delivered-sources-20261011.json` and
+`retirement-dependencies-20261011.json`. Their bundles and local artifacts live
+under `~/worktree-backups/` (`river-oaks-20261011*`,
+`river-oaks-dependencies-20261011`). Later `project:prune` runs write a
+`manifest.json` next to each bundle under their archive root (default
+`~/worktree-backups/river-oaks/`). The register captures
 known unfinished work rather than treating this round as global task completion.
 
 ## Enforced local retirement
@@ -155,7 +181,10 @@ A blocked cleanup stays visible until its evidence is reconciled; do not relabel
 the task active or retired to hide the gap.
 
 Use `pnpm run project:prune --branch <branch> --expected-head <full-sha>` to
-refresh GitHub/Git evidence and report blockers. Add `--apply` to retire that exact
+refresh GitHub/Git evidence and report blockers. It fetches `origin` and calls the
+GitHub API, so it needs network access and `gh` authentication. Exit 0 means
+eligible (or retired with `--apply`), 1 means a dry run found blockers, and 2 means
+an error, including a blocked `--apply`. Add `--apply` to retire that exact
 local branch and its worktree. There is no bulk, force, remote-delete or age-based
 mode. The command reads the **primary checkout's** task register so stale copies in
 feature worktrees cannot release another owner's work.
@@ -169,9 +198,17 @@ is not sufficient. These are coordination attestations, not authenticated locks.
 The command requires the exact merged PR head, its merge on the fetched default
 branch, and identical candidate/merge trees. A source branch alias is accepted only
 when its full tip SHA exactly matches that merged PR head. Other squash/rebase/supersession cases
-remain blocked for aggregate review. It refuses dirty/untracked/ignored material,
-submodules, locks, operations in progress, active process CWDs, unknown activity,
-open PRs, and missing proof. Retain ignored evidence separately first; this tool
+remain blocked for aggregate review. It refuses:
+
+- dirty, untracked or ignored material;
+- index flags (assume-unchanged or skip-worktree) and submodules;
+- locks, operations in progress, active process CWDs and unknown activity;
+- protected or primary branches;
+- a changed head, or a previously retired branch reappearing;
+- open PRs and missing proof.
+
+`node_modules`, `.venv`, `dist` and other caches count as ignored data, so archive
+evidence such as `.runtime` and `output/playwright` first, then remove the caches. Retain ignored evidence separately first; this tool
 never deletes cache directories or private files to make a checkout removable.
 
 Apply takes a common-Git-directory lock, preserves the exact tip in a unique
@@ -192,10 +229,42 @@ reconciling it; the tool never steals a lock.
 `pnpm install` (prepare) and `sh scripts/install-hooks.sh` install a shared
 reference-transaction hook alongside the secret guard in the common Git directory.
 All existing worktrees use that absolute hook path, independent of their revision.
-Custom hook paths are preserved and require manual integration. It rejects direct local branch deletion (including `branch -D` and
+Custom hook paths are preserved and require manual integration. It rejects direct local branch deletion inside any ref transaction (including `branch -D`, and by the same rule `branch -m`; `main` and `master` can never be deleted, even with a permit) and
 `update-ref -d`) and deletion of archive tags. The guarded command grants a short
 exact-ref/SHA permit only after verification. Normal commits, fetches and pushes
 are unaffected. Git offers no hook for `git worktree remove` or registration pruning: use this command as
 the supported removal path. Hooks are an accidental-deletion guard, not a security
 boundary; an explicit hooks override (including an older bootstrap resetting hooksPath) can
 bypass them. This command does not install a background cleanup scheduler.
+
+## Register sweeps
+
+Branches commit their own register entries, but `project:prune` writes retirement
+records only to the primary's live file. Releases and other sessions' updates also
+land there first. So the live register runs ahead of `main`.
+
+When it has drifted, open a docs-only register sweep PR from current `main`, on a
+`docs/register-sweep-<date>` branch:
+
+1. Copy the live entries exactly as written: only your own, or the whole live file
+   when the owners agree. Confirm first that no committed entry is newer than its
+   live counterpart.
+2. Claim the sweep as its own task.
+3. Validate with `project:status`, and merge.
+
+The merge driver keeps later live edits on the next fast-forward of the primary.
+The sweep's own retirement record is live-only until the next sweep.
+Examples: #255, #269, and the docs refresh of 2026-10-12.
+
+```mermaid
+%% diagram: task-lifecycle-and-retirement (placeholder; replace this block with the real diagram)
+flowchart LR
+  pending["Diagram pending: Task lifecycle and safe retirement"]
+```
+<details><summary>Diagram prompt: task-lifecycle-and-retirement</summary>
+
+Draw a flowchart of one task from claim to retirement in the task register. States: queued/active (claimed with owner, branch, leaseUntil) -> blocked (optional) -> delivered (exact PR, reviewed head, merge commit, tree, checks as an evidence array) -> retired. Then the retirement path run by `pnpm run project:prune`: owner releases (owner null, no leaseUntil, retirement {head, releasedAt, sessionsReviewedAt} within 2 h, in the PRIMARY checkout's live tasks.json) -> archive ignored evidence and clear regenerable caches -> dry run (blockers: ownership-not-released, dirty, ignored-data, exact-merged-pr-required, merge-not-on-default, aggregate-tree-review-required, active-process) -> --apply: lock, archive tag, bundle, restore into a fresh bare repo, fsck, non-forced worktree removal, expected-SHA ref deletion through the reference-transaction hook permit -> register updated to retired. Show the side path for superseded branches (blocked for aggregate review, archived but kept) and the register merge driver reconciling live and committed copies by task id.
+
+See [the diagram index](../diagrams.md) for the convention.
+
+</details>
