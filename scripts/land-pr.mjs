@@ -5,47 +5,14 @@
 // lander updates the branch from main, waits for Verify (rerunning failed jobs
 // once for known flakes), and merges only through the merge guard.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
-import { homedir, hostname } from 'node:os';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { createQueue } from './local-queue.mjs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const isAlive = pid => { try { process.kill(pid, 0); return true; } catch (error) { return error.code === 'EPERM'; } };
-const pause = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-
-// The queue file is shared state, so every change happens under a short lock.
-export function createQueue({ file, lock, pid = process.pid, host = hostname(), alive = isAlive, now = () => new Date().toISOString() }) {
-  const withLock = action => {
-    for (let tries = 0; ; tries++) {
-      try { mkdirSync(lock); break; } catch (error) {
-        if (error.code !== 'EEXIST') throw error;
-        // The lock guards a few milliseconds of work; one older than 30 s was abandoned.
-        try { if (Date.now() - statSync(lock).mtimeMs > 30000) { rmdirSync(lock); continue; } } catch { continue; }
-        if (tries > 400) throw new Error(`The landing queue lock is held: ${lock}`);
-        pause(25);
-      }
-    }
-    try { return action(); } finally { rmdirSync(lock); }
-  };
-  const read = () => { try { return JSON.parse(readFileSync(file, 'utf8')); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } };
-  const write = entries => { const temporary = `${file}.${pid}`; writeFileSync(temporary, JSON.stringify(entries, null, 2) + '\n'); renameSync(temporary, file); };
-  // An entry whose process has died would block everyone behind it.
-  const live = entries => entries.filter(entry => entry.host !== host || alive(entry.pid));
-  const mine = (entry, pr) => entry.pr === pr && entry.pid === pid && entry.host === host;
-  return {
-    enqueue(pr, owner = `pid ${pid}`) {
-      withLock(() => {
-        const entries = live(read()), queued = entries.find(entry => entry.pr === pr);
-        if (queued && !mine(queued, pr)) throw new Error(`#${pr} is already queued by ${queued.owner} (pid ${queued.pid}).`);
-        if (!queued) entries.push({ pr, pid, host, owner, queuedAt: now() });
-        write(entries);
-      });
-    },
-    position(pr) { return withLock(() => { const entries = live(read()); write(entries); return entries.findIndex(entry => mine(entry, pr)); }); },
-    dequeue(pr) { withLock(() => write(live(read()).filter(entry => !mine(entry, pr)))); },
-    list() { return withLock(() => live(read())); },
-  };
-}
+// The queue is shared with local browser runs; see local-queue.mjs.
+export { createQueue };
 
 async function waitFor(check, sleep, poll, limit, what) {
   for (let polls = 0; polls < limit; polls++) { const value = await check(); if (value) return value; await sleep(poll); }
@@ -118,7 +85,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const queue = createQueue({ file: join(common, 'river-oaks-land-queue.json'), lock: join(common, 'river-oaks-land-queue.lock') });
   if (args[0] === '--status') {
     const entries = queue.list();
-    process.stdout.write(entries.length ? entries.map((entry, index) => `${index + 1}. #${entry.pr}  ${entry.owner}  pid ${entry.pid}  since ${entry.queuedAt}`).join('\n') + '\n' : 'The landing queue is empty.\n');
+    process.stdout.write(entries.length ? entries.map((entry, index) => `${index + 1}. #${entry.id}  ${entry.owner}  pid ${entry.pid}  since ${entry.queuedAt}`).join('\n') + '\n' : 'The landing queue is empty.\n');
   } else {
     const pr = Number(args[0]), ownerIndex = args.indexOf('--owner'), owner = ownerIndex >= 0 ? args[ownerIndex + 1] : process.env.RIVER_OAKS_LAND_OWNER;
     const guardPath = process.env.RIVER_OAKS_MERGE_GUARD ?? join(homedir(), '.claude', 'scripts', 'gh-merge-when-green.sh');

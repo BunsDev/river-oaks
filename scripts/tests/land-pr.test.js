@@ -53,7 +53,7 @@ test('an entry left by a process that has died is dropped', t => {
   const survivor = queueAt(dir, 2, pid => pid !== 1);
   survivor.enqueue(11);
   assert.equal(survivor.position(11), 0);
-  assert.deepEqual(survivor.list().map(entry => entry.pr), [11]);
+  assert.deepEqual(survivor.list().map(entry => entry.id), [11]);
 });
 
 test('a pull request already queued by a live session is not queued twice', t => {

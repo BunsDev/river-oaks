@@ -70,6 +70,24 @@ pnpm run land --status                # who is queued
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
 
+## Local browser runs take turns
+
+Browser journeys from several sessions at once starve this machine. On 2026-10-11,
+load averages of 285 to 384 made journeys fail with dropped town connections and
+timeouts that looked like code bugs. The shared town and experience runners, and the
+security, reflections and trees scripts, now take turns through a queue in the
+common Git directory (`scripts/browser-lock.mjs`):
+
+- **While another run holds the lock,** a run prints who holds it and waits.
+- **Released on any exit,** including a failure or an interrupt. An entry left by a
+  process that died is dropped.
+- **Nested runs pass straight through:** a run started by a run that holds the lock
+  doesn't wait on it.
+- **Hosted CI skips the lock** (`CI=true`), as does `RIVER_OAKS_BROWSER_LOCK=off`
+  for a deliberate exception.
+- **Wrap any other heavy command** with
+  `node scripts/browser-lock.mjs <name> -- <command>`.
+
 ## Register merges and stashes
 
 The primary checkout's `tasks.json` is the live register, an uncommitted edit that

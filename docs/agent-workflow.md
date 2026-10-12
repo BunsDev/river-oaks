@@ -64,7 +64,8 @@ proves fixture behavior, not visual quality. On macOS, run the browser profile
 directly. Browser tasks have longer deadlines and require functioning WebGL2.
 
 For a changed browser interaction, also run its named journey, for example:
-`pnpm run test:experience hud-and-quality`. Desktop changes may require
+`pnpm run test:experience hud-and-quality`. Local browser runs from different
+sessions take turns; see [Local browser runs take turns](project-management/workflow.md#local-browser-runs-take-turns). Desktop changes may require
 `pnpm run test:desktop:e2e`. Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
