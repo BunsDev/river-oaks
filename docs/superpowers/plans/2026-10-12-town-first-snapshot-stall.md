@@ -56,7 +56,7 @@ GPU users keep the glass.
 | `pnpm run test:experience hardware-acceleration` | Passes. With the five source files reverted it fails: `{"rendering":null,"sheet":"blur(24px) …","card":"blur(28px) …","veil":"blur(4px) …","drift":"liquid-drift"}` |
 | `pnpm run verify` (core) | Passed |
 | `pnpm run test:security:e2e` (local GPU) | 2/2 (email access 5.7 s locally, against 50–117 s on CI's software renderer) |
-| Hosted `preview checks`, four reruns | Pending |
+| Hosted `preview checks`, four attempts on cd9d486 (run 38217397738) | 4/4 passed; email access 87, 60, 49, 57 s. At the old ~60% failure rate, four passes by chance is about 2.6%. The same run's places shard failed once on `store-intro` ("sequence cuts from actual exterior to interior", a 3.1 s timed camera check); nothing in `preview/src` waits on an animation event, so the CSS change can't block it. |
 
 ## Gaps
 
@@ -68,5 +68,5 @@ GPU users keep the glass.
 
 ## Next step
 
-Open the PR. Rerun `preview checks` until it has passed four times in a row, then
-`pnpm run land`.
+#281 is open and proven. Land it with `pnpm run land 281`, then requeue #278. river-oaks-3b
+follows with `world-map-paint-cost`.
