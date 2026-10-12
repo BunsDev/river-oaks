@@ -123,9 +123,12 @@ GitHub merge queue. A branch that is behind is rebased (or merged with `main`), 
 its checks rerun before merging. Commits must be signed.
 
 Several agent sessions often work in one repository at once. Each claims its task
-in the primary checkout's live register, works in its own sibling worktree on its
-own branch, and takes a merge turn: others wait while one PR's checks run. After a
-merge, the next PR rebases onto the new `main`, so its CI reruns. Known flaky
+in the primary checkout's live register and works in its own sibling worktree on
+its own branch. To merge, run `pnpm run land <pr>` ([landing a pull request](project-management/workflow.md#landing-a-pull-request)).
+It queues the PR with every other session on this machine, updates the branch from
+`main` on its turn, waits for Verify, reruns failed jobs once, and merges through
+the guard. After a merge, the next queued PR updates from the new `main`, so its
+CI reruns. Known flaky
 journeys (see testing) are rerun once with "rerun failed jobs" before being
 treated as regressions.
 
@@ -137,7 +140,7 @@ sequenceDiagram
 ```
 <details><summary>Diagram prompt: merge-queue</summary>
 
-Draw a sequence diagram of several agent sessions sharing one repository safely. Participants: Session A, Session B, the primary checkout (Val's dev server and the live task register), GitHub (PRs, CI), and the merge guard. Steps: each session claims a task in the live register and works in its own sibling worktree on its own branch -> opens a PR -> asks the others for the next merge turn -> runs gh-merge-when-green.sh, which waits for green checks and refuses a branch that is BEHIND -> after a merge the next session rebases onto main and its CI reruns -> sessions ping each other with the merge commit -> a register sweep PR commits live-only records -> project:prune retires the delivered worktree and branch. Show the failure branch where a PR merged out of turn moves main and every queued PR must rebase.
+Draw a sequence diagram of several agent sessions sharing one repository safely. Participants: Session A, Session B, the primary checkout (Val's dev server and the live task register), the local landing queue (common Git directory), GitHub (PRs, Verify CI), and the merge guard (gh-merge-when-green.sh). Steps: each session claims a task in the live register and works in its own sibling worktree on its own branch -> opens a PR -> runs `pnpm run land <pr>`, which queues it in the common Git directory shared by every worktree (`pnpm run land --status` shows the queue) -> on its turn the lander updates the branch from main with GitHub's update-branch (verified commits), waits for Verify, reruns failed jobs once, and merges only through the guard -> if main moves first it updates and goes again; it stops on a conflict, a repeat failure or a guard refusal -> a register sweep PR later commits live-only records -> project:prune retires the delivered worktree and branch. Show the failure branch where a PR merged outside the queue moves main and the queued PR must update and rerun.
 
 See [the diagram index](diagrams.md) for the convention.
 

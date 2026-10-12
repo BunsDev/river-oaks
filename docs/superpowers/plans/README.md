@@ -20,11 +20,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-workplace-room-envelope](2026-10-11-workplace-room-envelope.md)<br>Workplace room: door height, measured seated bounds, depth-aware routes (#221 gap) | `workplace-room-envelope` | delivered | #235 | 2026-10-11 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (39)
+## Retired (40)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-connect-deadline` | retired | #260 | 2026-10-12 |
+| [2026-10-12-shared-landing-queue](2026-10-12-shared-landing-queue.md)<br>Shared landing queue | `shared-landing-queue` | retired | #272 | 2026-10-12 |
 | [2026-10-12-server-hardening-followups](2026-10-12-server-hardening-followups.md)<br>Server hardening follow-ups (2026-10-12) | `server-hardening-followups` | retired | #264 | 2026-10-12 |
 | [2026-10-12-register-merge-driver](2026-10-12-register-merge-driver.md)<br>Task register merge driver | `register-merge-driver` | retired | #258 | 2026-10-12 |
 | [2026-10-12-plaza-salon](2026-10-12-plaza-salon.md)<br>Plaza salon at Dior–Toulouse — 2026-10-12 | `plaza-salon` | retired | #270 | 2026-10-12 |

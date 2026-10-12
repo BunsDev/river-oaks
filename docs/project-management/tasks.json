@@ -3896,15 +3896,18 @@
         "feat/liquid-glass-hud"
       ],
       "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-12T06:51:32+00:00",
-      "updatedAt": "2026-10-12T03:51:32+00:00",
-      "nextAction": "Capture current modal, minimap and Map button; restyle in multiplayer.css and the minimap/HUD CSS (not access-gate.css, owned by studio-prompt-polish); light and dark; verify.",
+      "leaseUntil": "2026-10-12T07:19:34+00:00",
+      "updatedAt": "2026-10-12T04:19:34+00:00",
+      "nextAction": "PR #274 open (e09c9d5 on f662e93); next merge turn after c2's #273; then fast-forward the primary for Val's dev server.",
       "ledger": "docs/superpowers/plans/2026-10-12-liquid-glass-hud.md",
       "filesOwned": [
         "preview/src/multiplayer.css (.multiplayer-gate)",
-        "preview/src/rail-navigation.js (minimap)",
-        "preview/src/places-guide.css",
-        "preview/src/sidebar.js (Map button)"
+        "preview/src/hud-glass.css (--liquid-* tokens)",
+        "preview/src/game-hud.css (#panel-toggle)",
+        "preview/src/sidebar.js (Map button)",
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/tests/world-map.test.js"
       ],
       "requiredChecks": [
         "pnpm test",
@@ -3912,19 +3915,19 @@
         "pnpm run verify",
         "destination-minimap, places, places-guide, connection-required journeys",
         "visual review light and dark"
-      ]
+      ],
+      "pr": 274
     },
     {
       "id": "shared-landing-queue",
       "title": "Land PRs through a queue shared by local sessions (pnpm run land), replacing hand-run merge coordination",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/shared-landing-queue-20261012"
       ],
-      "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
-      "leaseUntil": "2026-10-12T06:09:20+00:00",
-      "updatedAt": "2026-10-12T04:09:20+00:00",
-      "nextAction": "PR #272 open at f242696 (10 tests, core passed). Landing it with `pnpm run land 272` as the first end-to-end use; then retire the worktree and tell the other sessions.",
+      "owner": null,
+      "updatedAt": "2026-10-12T04:18:20.179Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-12-shared-landing-queue.md",
       "filesOwned": [
         "scripts/land-pr.mjs",
@@ -3938,7 +3941,62 @@
         "pnpm run verify",
         "land its own PR with it"
       ],
-      "pr": 272
+      "pr": 272,
+      "evidence": [
+        {
+          "pr": 272,
+          "reviewedHead": "f24269693108733e4179b5a3b1d39593e39939eb",
+          "merge": "f662e93358becc56e2f6c8ea7adeca857c94b3cb",
+          "tree": "9d43fc245a4b8d78c2d0c63deaaaadf260b9bb2e",
+          "checks": "10 unit tests against a fake GitHub (red first); core verify 11/11; landed end to end by `pnpm run land 272` itself: queued, waited for Verify on f242696, merge guard merged at 2026-10-12T04:17:26Z, queue empty afterwards."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/shared-landing-queue-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/shared-landing-queue-evidence-20261012.sha256"
+      },
+      "retirement": {
+        "head": "f24269693108733e4179b5a3b1d39593e39939eb",
+        "releasedAt": "2026-10-12T04:17:55+00:00",
+        "sessionsReviewedAt": "2026-10-12T04:17:55+00:00"
+      },
+      "retiredBranches": [
+        "feat/shared-landing-queue-20261012"
+      ],
+      "archive": {
+        "feat/shared-landing-queue-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-CBYj19/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-CBYj19/history.bundle",
+          "sha256": "5f349c963442e1d109488f3fc70a5a850ab599d3da7ab0af161710bc083fce78",
+          "tag": "refs/tags/archive/worktree-prune/5b14ba0b-1486-48e8-a0a7-4797fddef5d2",
+          "head": "f24269693108733e4179b5a3b1d39593e39939eb"
+        }
+      }
+    },
+    {
+      "id": "workplace-cap-drafts",
+      "title": "Drop a draft with its task when the finished-task cap drops it, so a hidden draft cannot hold the draft limit",
+      "status": "active",
+      "branches": [
+        "fix/workplace-cap-drafts"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T04:16:00+00:00",
+      "leaseUntil": "2026-10-12T06:16:00+00:00",
+      "nextAction": "forget() drops the tasks' artifacts too; regression on memory and Redis; verify, PR after #273, merge.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-workplace-cap-20261012",
+      "filesOwned": [
+        "server/workplace.js (forget)",
+        "server/tests/workplace-cap-drafts.test.js"
+      ],
+      "requiredChecks": [
+        "server tests with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "issues": [
+        221
+      ]
     }
   ]
 }
