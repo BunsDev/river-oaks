@@ -7,6 +7,7 @@ import { worldVisitUrl } from './world-portal.js';
 import { createWorldMap } from './world-map.js';
 import './world-map.css';
 import { createPlacesGuide } from './places-guide.js';
+import { categorySlug } from './store-categories.js';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
@@ -24,7 +25,9 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, is
 
   function row(place, { removable = false } = {}) {
     const item = document.createElement('li');
-    item.dataset.placeId = place.id;
+    item.dataset.placeId = place.id; item.dataset.kind = place.kind;
+    if (categorySlug(place.category)) item.dataset.category = categorySlug(place.category);
+    const icon = document.createElement('span'); icon.className = 'place-icon'; icon.setAttribute('aria-hidden', 'true');
     const name = document.createElement('button'); name.type = 'button'; name.className = 'place-name'; name.textContent = place.name;
     name.setAttribute('aria-label', `Show ${place.name} on map`);
     name.addEventListener('click', () => {
@@ -33,7 +36,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, is
     });
     const kind = document.createElement('span'); kind.className = 'place-kind';
     kind.textContent = place.kind === 'landmark' && place.worldId
-      ? `${KIND_LABEL.landmark} · ${place.worldTitle ?? place.worldId}` : KIND_LABEL[place.kind] ?? place.kind;
+      ? `${KIND_LABEL.landmark} · ${place.worldTitle ?? place.worldId}` : place.category ?? KIND_LABEL[place.kind] ?? place.kind;
     const crossWorld = place.kind === 'landmark' && place.worldId && place.worldId !== worldIdFromSearch(location.search);
     const go = document.createElement(crossWorld ? 'a' : 'button');
     if (crossWorld) go.href = positionLink(place.position, place.yaw ?? 0, worldVisitUrl(place.worldId));
@@ -49,7 +52,7 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, is
     const more = document.createElement('details'); more.className = 'place-more';
     const summary = document.createElement('summary'); summary.textContent = '•••'; summary.setAttribute('aria-label', `More options for ${place.name}`);
     const actions = document.createElement('div'); actions.className = 'place-more-actions'; actions.append(share);
-    more.append(summary, actions); item.append(label, go, more);
+    more.append(summary, actions); item.append(icon, label, go, more);
     if (removable) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove landmark ${place.name}`);
       remove.addEventListener('click', async () => {
