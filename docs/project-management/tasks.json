@@ -2482,9 +2482,9 @@
         "docs/storybook-decisions"
       ],
       "owner": "charm:claude-code be104992-c453-47f6-8d26-e9c8ea166a46",
-      "updatedAt": "2026-10-12T00:09:11.995442+00:00",
+      "updatedAt": "2026-10-12T00:11:11.691425+00:00",
       "leaseUntil": "2026-10-12T02:09:11.995442+00:00",
-      "nextAction": "Open a draft PR with the storybook decisions and this claim; Val reviews and merges. Mark delivered with merge evidence afterwards.",
+      "nextAction": "Val reviews draft PR #257 (https://github.com/BunsDev/river-oaks/pull/257). After merge, mark delivered with the merge SHA and hosted-check evidence.",
       "filesOwned": [
         "docs/storybook.md"
       ],
@@ -2493,7 +2493,8 @@
         "pnpm run --silent project:check",
         "Secrets scan on the diff",
         "Exact-head hosted checks; Val's review"
-      ]
+      ],
+      "pr": 257
     }
   ]
 }
