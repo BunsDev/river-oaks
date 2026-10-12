@@ -12,7 +12,8 @@ const GROUPS = [
   ['Delivered, awaiting local retirement', task => task.status === 'delivered'],
   ['Retired', task => task.status === 'retired'],
 ];
-const cell = text => String(text ?? '').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+// Table cells: escape backslashes first, then pipes, so neither can end a cell.
+const cell = text => String(text ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
 const titleOf = text => text.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? null;
 const prsIn = text => [...new Set([...text.matchAll(/(?<![\w/])#(\d{2,4})\b/g)].map(match => Number(match[1])))].slice(0, 3);
 
