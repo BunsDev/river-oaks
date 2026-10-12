@@ -46,6 +46,30 @@ Maintain `nextAction`, `updatedAt` and the ledger at each meaningful boundary:
 claim, reproduced defect, verification, PR creation/head change, merge, handoff,
 and retirement. Do not overwrite historical reports with new timestamps.
 
+## Landing a pull request
+
+`main` requires an up-to-date branch, so merges are serial. GitHub's merge queue
+needs an organization-owned repository, so sessions on this machine share a local
+queue instead:
+
+```sh
+pnpm run land <pr> [--owner <name>]   # take a turn, update, verify, merge
+pnpm run land --status                # who is queued
+```
+
+- **The queue:** the queue and its lock live in the common Git directory, so every
+  worktree shares them. An entry whose process has died is dropped.
+- **On its turn:** the lander updates the branch from `main` with GitHub's
+  update-branch, whose commits are verified, and waits for Verify. If Verify fails
+  it reruns the failed jobs once; if they fail again, it stops. Then it hands the
+  merge to `~/.claude/scripts/gh-merge-when-green.sh`, or the path in
+  `RIVER_OAKS_MERGE_GUARD`, and refuses if the guard is missing.
+- **When main moves first:** the lander updates the branch and goes again.
+- **It stops on:** a conflict with `main`, or any other refusal by the guard.
+
+The queue only orders sessions that use it. Landing still needs the same merge
+authorization as any other merge.
+
 ## Register merges and stashes
 
 The primary checkout's `tasks.json` is the live register, an uncommitted edit that
