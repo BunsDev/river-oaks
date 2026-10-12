@@ -30,3 +30,11 @@ the cache; the others log a warning, which is harmless.
 
 - `actionlint`: clean.
 - The version parse was checked locally (`Version 1.64.0` becomes `1.64.0`).
+- Hosted proof on this PR's run 38210371692:
+  - Attempt 1: `Cache not found for input keys: playwright-Linux-1.64.0`. The jobs
+    downloaded Chrome, FFmpeg and the headless shell, and a successful job saved
+    the cache.
+  - Attempt 2 (rerun): all six browser jobs logged `Cache restored from key:
+    playwright-Linux-1.64.0`, with 0 downloads from Playwright's CDN.
+- Both attempts failed only on the email-access browser test. That's the 15 s
+  town-ticket problem #276 fixes, so this lands after #276.
