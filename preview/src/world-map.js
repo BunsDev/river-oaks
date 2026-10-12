@@ -136,25 +136,33 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   // A survey-dot grid and a heading-cone gradient, scoped to this map instance.
   const defs=svg('defs'),grid=svg('pattern',{id:`${id}-grid`,width:25,height:25,patternUnits:'userSpaceOnUse'});
   grid.append(svg('circle',{cx:12.5,cy:12.5,r:1.6,class:'world-map-grid-dot'}));
-  const glow=svg('radialGradient',{id:`${id}-cone`,cx:0,cy:0,r:70,gradientUnits:'userSpaceOnUse'});
-  glow.append(svg('stop',{offset:'0',class:'world-map-cone-near'}),svg('stop',{offset:'1',class:'world-map-cone-far'}));
-  defs.append(grid,glow);
+  defs.append(grid);
   const paper=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-grid',fill:`url(#${id}-grid)`});
   const parcels=svg('g',{class:'world-map-parcels'}),roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
   const casings=svg('g',{class:'world-map-casings'}),centres=svg('g',{class:'world-map-centres'});
   const roadLabels=node('div',null,'world-map-road-labels');roadLabels.setAttribute('aria-hidden','true');
-  const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
-  // You: a pulsing halo, a soft cone where you are looking, and a navigation arrow.
-  const self=svg('g',{class:'world-map-self',hidden:''});
-  self.append(svg('circle',{class:'world-map-self-halo',r:24}),
-    svg('path',{class:'world-map-self-cone',d:'M 0 0 L -30 -62 A 69 69 0 0 1 30 -62 Z',fill:`url(#${id}-cone)`}),
+  // Places and players draw on a second, filter-free layer, so a player moving or a
+  // marker growing on hover never repaints the drawing (and its shadows) beneath.
+  const live=svg('svg',{viewBox:`0 0 ${SIZE} ${SIZE}`,'aria-hidden':'true',preserveAspectRatio:'none',class:'world-map-live'});
+  const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'});
+  // You and the chosen point are HTML above both, moved and animated with composited
+  // transforms: a breathing halo, a soft cone where you are looking, and an arrow.
+  const self=node('div',null,'world-map-self');self.hidden=true;
+  const selfArt=svg('svg',{viewBox:'-70 -70 140 140','aria-hidden':'true'}),selfDefs=svg('defs');
+  const glow=svg('radialGradient',{id:`${id}-cone`,cx:0,cy:0,r:70,gradientUnits:'userSpaceOnUse'});
+  glow.append(svg('stop',{offset:'0',class:'world-map-cone-near'}),svg('stop',{offset:'1',class:'world-map-cone-far'}));
+  selfDefs.append(glow);
+  selfArt.append(selfDefs,svg('path',{class:'world-map-self-cone',d:'M 0 0 L -30 -62 A 69 69 0 0 1 30 -62 Z',fill:`url(#${id}-cone)`}),
     svg('path',{class:'world-map-self-arrow',d:'M 0 -16 L 12 12 L 0 5 L -12 12 Z'}));
+  self.append(node('span',null,'world-map-self-halo'),selfArt);
   let heading=null,placed=null;
-  const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
+  const target=node('span',null,'world-map-target');target.hidden=true;
+  const place=(element,[x,y])=>{element.style.setProperty('--x',(x/10).toFixed(3));element.style.setProperty('--y',(y/10).toFixed(3));};
   const targetLabel=node('div',null,'world-map-selection-label');targetLabel.hidden=true;
   const north=node('span','N','world-map-north');north.setAttribute('aria-label','North is up');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target);art.append(defs,ground,paper,parcels,casings,roads,centres,buildings,markers,people,overlay);surface.append(art,roadLabels,north,scale,targetLabel);
+  art.append(defs,ground,paper,parcels,casings,roads,centres,buildings);live.append(markers,people);
+  surface.append(art,live,roadLabels,self,target,north,scale,targetLabel);
   const legend=node('ul',null,'world-map-legend');legend.setAttribute('aria-label','Map key');
   const renderLegend=()=>legend.replaceChildren(...mapLegend(places,parcels.childElementCount>0).map(({kind,shape,category,label})=>{
     const item=node('li'),symbol=node('span',null,`world-map-key world-map-key-${kind}`),art=svg('svg',{viewBox:'-12 -12 24 24'});
@@ -242,18 +250,18 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
       const [cx,cy]=mapPoint(position),yaw=getYaw?.();
       if(Number.isFinite(yaw))heading=unwrapDegrees(heading,headingDegrees(yaw));
       // Glide between the half-second updates, but jump on travel or first sight.
-      const jump=!placed||self.hasAttribute('hidden')||Math.hypot(cx-placed[0],cy-placed[1])>60;
-      if(jump)self.style.transition='none';
-      self.style.transform=`translate(${cx}px,${cy}px) rotate(${heading??0}deg)`;self.removeAttribute('hidden');
-      if(jump){self.getBoundingClientRect();self.style.transition='';}
+      const jump=!placed||self.hidden||Math.hypot(cx-placed[0],cy-placed[1])>60;
+      if(jump)self.classList.add('world-map-jump');
+      place(self,[cx,cy]);self.style.setProperty('--heading',`${(heading??0).toFixed(2)}deg`);self.hidden=false;
+      if(jump){self.getBoundingClientRect();self.classList.remove('world-map-jump');}
       placed=[cx,cy];
-    }else self.setAttribute('hidden','');
+    }else self.hidden=true;
     if(selected){
-      const [cx,cy]=mapPoint(selected.position);target.setAttribute('cx',cx);target.setAttribute('cy',cy);target.removeAttribute('hidden');
+      const [cx,cy]=mapPoint(selected.position);place(target,[cx,cy]);target.hidden=false;
       targetLabel.style.left=`clamp(96px, ${cx/10}%, calc(100% - 96px))`;targetLabel.style.top=`${cy/10}%`;
       targetLabel.classList.toggle('above',cy>SIZE/2);targetLabel.title=selected.name;
       targetLabel.textContent=selected.name;targetLabel.removeAttribute('hidden');
-    }else {target.setAttribute('hidden','');targetLabel.setAttribute('hidden','');}
+    }else {target.hidden=true;targetLabel.setAttribute('hidden','');}
   }
   function select(next){
     selected=next;

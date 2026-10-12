@@ -45,6 +45,11 @@ cause and fix it, without loosening the test.
   - **Map button:** the lens stops turning (`game-hud.css`).
   - **District map:** no halo or target animation, no `.world-map-self` transition, and
     building drop shadows off (`world-map.css`).
+    *Correction:* as written here these did not take effect. The base map rules
+    are scoped through `:is(#control-panel,.places-guide)`, whose id outranks
+    `:root[data-rendering=software] …`. They took effect with river-oaks-3b's
+    `world-map-paint-cost` PR, which also adds the map to the
+    hardware-acceleration journey's probes.
 
 GPU users keep the glass.
 
