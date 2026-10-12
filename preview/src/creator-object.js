@@ -1,4 +1,6 @@
 // Creator geometry is data, never executable code or a remote asset URL.
+import { personElevation } from './person-position.js';
+
 export const MAX_OBJECT_PARTS=16,MAX_ASSEMBLY_BYTES=6144;
 export const OBJECT_SHAPES=['box','sphere','cylinder'];
 export const OBJECT_MATERIALS=['matte','metal','gloss','glass'];
@@ -69,6 +71,15 @@ export function objectCollider(item){
 }
 
 // Match the walking controller's standing capsule and flight bubble.
+// A resident's whole grounded-to-lifted column, so undoing a wish or lowering a
+// Force hold cannot return them through confirmed geometry. The town and the
+// builder preview share this rule.
+export function blocksResident(collider,local){
+  if(!collider)return false;
+  const ground=local.position[2],up=personElevation(local);
+  return collider.contains(local.position[0],(ground+up)/2+.9,-local.position[1],.35,.9+Math.abs(up-ground)/2);
+}
+
 export function blocksPlayer(collider,player){
   if(!collider)return false;
   const [east,north,ground=0]=player.position,altitude=player.altitude??0;

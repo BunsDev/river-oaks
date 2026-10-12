@@ -788,7 +788,7 @@ function updateBuilder() {
   if (key === builderAim) return;
   builderAim = key;
   const verdict = evaluatePlacement({ environment: walkingEnvironment(false), roads: builderRoads.roads, kind, assembly:builder.assembly, yaw:builder.yaw, position: target, feet: poseFeet(pose),
-    builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
+    builds: snapshot?.builds ?? [], players: snapshot?.players ?? [], locals: snapshot?.locals ?? [], selfId: multiplayer?.identity?.id, moving: builder.moving });
   buildLayer?.setGhost({ kind: kindId, finish: builder.moving?.finish ?? builder.finish, assembly:builder.assembly, position: target, ground: verdict.ground, yaw: builder.yaw, valid: verdict.valid });
   buildControls.aimAt(target, verdict);
 }
