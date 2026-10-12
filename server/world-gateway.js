@@ -27,7 +27,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
   const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
     allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id),
-    // A long-lived gateway sweeps for tasks orphaned by another instance; serverless relies on owner reads.
+    // A long-lived gateway sweeps for tasks orphaned by another instance; on Vercel the
+    // per-minute cron drain (/api/workplace-sweep) and owner reads advance them.
     sweepMs:workplaceSweep?5000:0}):null;
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});

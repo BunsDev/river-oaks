@@ -1,15 +1,51 @@
-.multiplayer-gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; overflow-y: auto; background: #153f4266; backdrop-filter: blur(12px); }
+/* The town gate: the district stays in view through a light veil, and the card is
+   liquid glass (tokens in hud-glass.css): a tinted, saturated blur with a specular
+   rim and slowly drifting caustics. */
+.multiplayer-gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; overflow-y: auto; }
+/* The veil is its own layer: a backdrop filter on the gate itself would become the
+   card's backdrop root, and the card's glass would never blur the district. */
+.multiplayer-gate::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(110% 80% at 50% 42%, rgb(255 255 255 / .06), rgb(10 36 40 / .34));
+  -webkit-backdrop-filter: blur(4px) saturate(1.2); backdrop-filter: blur(4px) saturate(1.2); }
+:root[data-theme=dark] .multiplayer-gate::before { background: radial-gradient(110% 80% at 50% 42%, rgb(20 44 48 / .1), rgb(3 10 12 / .56)); }
 .multiplayer-gate[hidden], .multiplayer-gate [hidden] { display: none; }
-.multiplayer-welcome { box-sizing: border-box; width: min(420px, 100%); padding: clamp(24px, 5vw, 36px); border: 1px solid #d9e8df; border-radius: 24px; background: #fffefa; color: #153f42; box-shadow: 0 24px 80px #153f422b; font: 14px/1.6 var(--entry-font, "Avenir Next", Avenir, sans-serif); }
-.multiplayer-welcome .access-orbit { margin-bottom: 16px; color: #507f80; }
+.multiplayer-welcome { position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; width: min(440px, 100%); padding: clamp(26px, 5vw, 38px);
+  border: 1px solid var(--liquid-rim-soft); border-radius: 34px; background: linear-gradient(155deg, var(--liquid-tint), var(--liquid-tint-deep));
+  -webkit-backdrop-filter: var(--liquid-filter); backdrop-filter: var(--liquid-filter);
+  box-shadow: inset 0 1px 0 var(--liquid-rim), inset 0 -1px 1px var(--liquid-rim-soft), inset 0 0 30px rgb(255 255 255 / .06), var(--liquid-shadow);
+  color: var(--liquid-ink); font: 14px/1.6 var(--entry-font, "Avenir Next", Avenir, sans-serif); }
+/* Specular rim: brightest where the light enters, top left, fading around the edge. */
+.multiplayer-welcome::before { content: ""; position: absolute; inset: 0; z-index: 2; padding: 1.5px; border-radius: inherit; pointer-events: none;
+  background: conic-gradient(from 200deg, var(--liquid-rim), transparent 22%, transparent 48%, var(--liquid-rim-soft) 62%, transparent 78%, var(--liquid-rim));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+/* Caustics: light pooled inside the glass. */
+.multiplayer-welcome::after { content: ""; position: absolute; inset: -35%; z-index: -1; pointer-events: none;
+  background: radial-gradient(32% 26% at 26% 22%, var(--liquid-sheen), transparent 70%), radial-gradient(30% 28% at 78% 80%, var(--liquid-caustic), transparent 72%),
+    radial-gradient(26% 24% at 84% 18%, var(--liquid-caustic-cool), transparent 72%);
+  animation: liquid-drift 16s ease-in-out infinite alternate; }
+@keyframes liquid-drift { to { transform: translate3d(5%, 4%, 0) rotate(10deg); } }
+.multiplayer-welcome .access-kicker { color: #7d2449; }
+:root[data-theme=dark] .multiplayer-welcome .access-kicker { color: #f2a6c8; }
+.multiplayer-welcome .access-orbit { margin-bottom: 16px; color: var(--liquid-accent); filter: drop-shadow(0 0 6px var(--liquid-caustic-cool)); }
 .multiplayer-welcome h1 { margin: 8px 0 12px; font: 600 27px/1.2 var(--entry-font, "Avenir Next", Avenir, sans-serif); letter-spacing: -.045em; }
 .multiplayer-welcome h1:focus { outline: none; }
-.multiplayer-welcome p { margin: 0 0 20px; line-height: 1.6; color: #59716c; }
-.multiplayer-welcome #multiplayer-status { padding: 14px 16px; border: 1px solid #d9e8df; border-radius: 12px; background: #f2f5ee; color: #153f42; font-size: 13px; }
-.multiplayer-primary { display: block; padding: 12px 16px; border-radius: 10px; text-align: center; background: #153f42; color: #fffefa; font-weight: 600; text-decoration: none; }
-.multiplayer-welcome button { border: 1px solid #b7cac1; border-radius: 10px; background: #fffefa; color: #153f42; font: 600 13px/1.3 var(--entry-font, "Avenir Next", Avenir, sans-serif); margin-right: 8px; cursor: pointer; }
-.multiplayer-welcome button:hover { background: #d9e8df; }
-.multiplayer-welcome button:focus-visible, .multiplayer-primary:focus-visible { outline: 3px solid #507f80; outline-offset: 3px; }
+.multiplayer-welcome p { margin: 0 0 20px; line-height: 1.6; color: var(--liquid-muted); }
+/* The status sits in a recessed well. While the town is still answering (no action
+   offered) a bead of light runs along its lower edge. */
+.multiplayer-welcome #multiplayer-status { position: relative; overflow: hidden; padding: 14px 16px; border: 1px solid var(--liquid-rim-soft); border-radius: 16px;
+  background: var(--liquid-well); box-shadow: inset 0 1px 3px rgb(0 0 0 / .08), inset 0 -1px 0 var(--liquid-rim-soft); color: var(--liquid-ink); font-size: 13px; }
+.multiplayer-welcome:not(:has(> :is(a, button):not([hidden]))) #multiplayer-status::after { content: ""; position: absolute; inset: auto 0 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--liquid-accent), #e0679a, transparent) no-repeat; background-size: 45% 100%; animation: liquid-bead 1.8s ease-in-out infinite; }
+@keyframes liquid-bead { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+.multiplayer-primary { display: block; padding: 12px 16px; border-radius: 999px; text-align: center; font-weight: 600; text-decoration: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--liquid-accent) 82%, #fff), var(--liquid-accent)); color: var(--liquid-on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .45), 0 8px 20px color-mix(in srgb, var(--liquid-accent) 35%, transparent); }
+.multiplayer-welcome button { border: 1px solid var(--liquid-rim-soft); border-radius: 999px; background: var(--liquid-well); color: var(--liquid-ink);
+  box-shadow: inset 0 1px 0 var(--liquid-rim-soft), 0 2px 8px rgb(0 0 0 / .06); font: 600 13px/1.3 var(--entry-font, "Avenir Next", Avenir, sans-serif); margin-right: 8px; cursor: pointer; }
+.multiplayer-welcome button:hover { background: color-mix(in srgb, var(--liquid-well) 50%, var(--liquid-rim)); }
+:root[data-theme=dark] .multiplayer-welcome button:hover { background: rgb(255 255 255 / .16); }
+@media (prefers-reduced-motion: reduce) { .multiplayer-welcome::after, .multiplayer-welcome #multiplayer-status::after { animation: none; } }
+.multiplayer-welcome button:focus-visible, .multiplayer-primary:focus-visible { outline: 3px solid var(--liquid-accent); outline-offset: 3px; }
 .multiplayer-welcome button, .multiplayer-roster button { min-height: 44px; padding: 8px 12px; }
 .multiplayer-roster { padding: 14px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 14px; }
 .multiplayer-person { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
