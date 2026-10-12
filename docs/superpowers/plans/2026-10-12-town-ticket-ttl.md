@@ -25,6 +25,14 @@ both servers.
   count and `#canvas-host[data-multiplayer]`.
 - The town-connect-deadline ledger is corrected: the email-access flake
   predates #253 (run 38153200219, attempt 1).
+- Docs that #273 added now give the 60 s lifetime:
+  - the "Join tickets" row in `docs/security-review.md`, which also notes
+    that both servers cap three live tickets per user, and the
+    single-process 512-ticket table;
+  - the join-sequence prompts in `docs/multiplayer.md` and
+    `docs/diagrams.md`.
+
+  The plans index is regenerated with `pnpm run plans:index`.
 
 ## Verification
 
@@ -35,8 +43,10 @@ both servers.
   - Redis keys expire with the ticket.
 - `redis-security.test.js` "tickets expire after their lifetime" used to check
   the first ticket issued. Under the per-user cap that ticket was already
-  retired, so expiry was never what refused it. The test now checks the newest
-  live ticket.
+  retired, so expiry was never what refused it. Now the second-newest live
+  ticket is accepted one second before the lifetime ends and the newest is
+  refused one millisecond after. That positive control was river-oaks-c2's
+  review suggestion.
 - On `f662e93`:
   - `pnpm test`: 2664 pass, 1 skip.
   - `REDIS_URL=… pnpm run test:server` with a local Redis: 544/544.
@@ -44,6 +54,10 @@ both servers.
   - `pnpm run verify`: core passed.
   - `pnpm run test:security:e2e`: 2/2, twice. Email access joins with exactly
     one town socket.
+- Rebased onto `c5f3b4f` (#273) with the docs and the positive control:
+  - `pnpm test`: 2667 pass, 1 skip.
+  - `test:server` with Redis: 546/546.
+  - `pnpm run verify`: core passed.
 
 ## Next step
 

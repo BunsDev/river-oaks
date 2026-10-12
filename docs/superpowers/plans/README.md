@@ -4,11 +4,12 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (3)
+## Active and blocked (4)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
+| [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
 | [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |
 | [2026-10-11-studio-prompt-polish](2026-10-11-studio-prompt-polish.md)<br>World Studio scene prompt polish | `studio-prompt-polish` | active | #246 | 2026-10-11 |
 
@@ -65,10 +66,11 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (64)
+## Historical, not in the register (65)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
 | [2026-10-09-world-studio](2026-10-09-world-studio.md)<br>World Studio implementation plan | — |
 | [2026-10-09-world-studio-designer](2026-10-09-world-studio-designer.md)<br>World Studio dual-path Designer implementation | — |
 | [2026-10-09-unique-player-names](2026-10-09-unique-player-names.md)<br>Unique player fallback names | #205, #204 |

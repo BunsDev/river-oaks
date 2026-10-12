@@ -54,7 +54,7 @@ See [the diagram index](diagrams.md) for the convention.
 | Waitlist | 10,000 | oldest *pending* request gives way; approved and refused residents are never removed |
 | Invites | 50,000 | invites more than 90 days past expiry are forgotten (at most one scan an hour); otherwise refused |
 | Invite listing per account | 20 per minute | 429 |
-| Join tickets (Redis) | 15 s, single use, 3 live per user (a new one retires the oldest), 10 per minute, 4,096 total | refused |
+| Join tickets | 60 s, single use, 3 live per user on both servers (a new one retires the oldest), 10 per minute; 4,096 total with Redis, 512 in a single process | refused (503 when the single-process table is full) |
 | Worlds per account | one at a time (owner accounts exempt) | old socket closes with 4009 |
 | Paid chauffeur decisions (`CHAUFFEUR_DAILY_LIMIT`) | 40 per minute per owner; 6,000 per UTC day across owners (max 10,000); three provider failures pause calls for 60 s | `budget_exhausted` / `provider_paused`, local driving continues |
 
