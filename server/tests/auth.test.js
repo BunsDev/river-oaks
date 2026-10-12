@@ -344,6 +344,15 @@ test('one account keeps only its newest sessions, so repeated sign-ins cannot fi
   assert.equal(await signedIn(cookies.at(-1)), true);
 });
 
+test('a full session table signs out its oldest session instead of refusing every sign-in', async (t) => {
+  const app = await fixture(t, { maxSessions: 3 });
+  app.workos.mintDistinctSessions();
+  const cookies = [];
+  for (const user of ['user_a', 'user_b', 'user_c', 'user_d', 'user_e']) { app.workos.setUserId(user); cookies.push((await app.login()).sessionCookie); app.advance(1000); }
+  const signedIn = async cookie => (await (await app.request('/auth/session', { headers: { cookie } })).json()).authenticated;
+  assert.deepEqual(await Promise.all(cookies.map(signedIn)), [false, false, true, true, true], 'the two oldest sessions made room; new sign-ins were never refused');
+});
+
 test('absolute session expiry cannot be extended by refresh', async (t) => {
   const app = await fixture(t);
   const { sessionCookie } = await app.login();

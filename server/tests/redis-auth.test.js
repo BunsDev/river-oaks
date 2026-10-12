@@ -229,8 +229,12 @@ integration('state and session admission caps are atomic across nodes', async t 
   for (let i = 0; i < MAX_SESSIONS - 1; i++) { sessions.push(`seed-${i}`, JSON.stringify({sessionId:`seed-${i}`,cookieHash:`hash-${i}`,expiresAt:f.now()+60_000})); expiry.push(f.now()+60_000, `seed-${i}`); }
   await f.redis.hset(f.keys[2], ...sessions); await f.redis.zadd(f.keys[3], ...expiry);
   const callbacks = await Promise.all(starts.map((start,index) => [f.a,f.b][index].request(start.path,{headers:start.headers})));
-  assert.deepEqual(callbacks.map(response=>response.status).sort(), [302,503]);
+  // A full session table gives up its oldest session instead of refusing every
+  // sign-in, and it never grows past the cap.
+  assert.deepEqual(callbacks.map(response=>response.status).sort(), [302,302]);
   assert.equal(await f.redis.hlen(f.keys[2]), MAX_SESSIONS);
+  assert.equal(await f.redis.hexists(f.keys[2], 'seed-0'), 0, 'the oldest session made room');
+  assert.equal(await f.redis.zcard(f.keys[3]), MAX_SESSIONS, 'the expiry index stays in step');
 });
 
 // One account could sign in over and over until the shared session table was

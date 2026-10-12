@@ -13,7 +13,12 @@ const recordFor = (identity, admins, now, autoApprove = false) => ({
 const compare = (a, b) => a.requestedAt.localeCompare(b.requestedAt);
 
 /** Approval is independent of the town checkpoint and survives process restarts. */
-export async function createFileWaitlist(path, { admins = [], now = Date.now, autoApprove = false } = {}) {
+// Requests waiting for a decision. A full list gives up its oldest pending
+// request instead of refusing every new one, so a flood of sign-ups cannot lock
+// out real people; approved and refused residents are never removed. Someone
+// whose request gave way simply asks again the next time they sign in.
+export const MAX_WAITLIST_REQUESTS = 10_000;
+export async function createFileWaitlist(path, { admins = [], now = Date.now, autoApprove = false, maxRequests = MAX_WAITLIST_REQUESTS } = {}) {
   const adminIds = new Set(admins);
   let records = new Map(), invites = new Map(), audit = [], queue = Promise.resolve();
   try {
@@ -60,8 +65,12 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
           const next = new Map(records); next.set(existing.userId, existing); await persist(next);
         }
         if (existing) return adminIds.has(identity.userId) || autoApprove ? { ...existing, status: 'approved' } : existing;
-        if (records.size >= 10000) throw new Error('Waitlist capacity reached');
         const record = recordFor(identity, adminIds, now, autoApprove), next = new Map(records);
+        while (next.size >= maxRequests) {
+          const oldest = [...next.values()].filter(entry => entry.status === 'pending').reduce((a, b) => !a || b.requestedAt < a.requestedAt ? b : a, null);
+          if (!oldest) throw new Error('Waitlist capacity reached');
+          next.delete(oldest.userId);
+        }
         next.set(record.userId, record); await persist(next);
         return record;
       });
@@ -154,13 +163,33 @@ if existing then
   redis.call('HSET', KEYS[1], ARGV[1], updated)
   return updated
 end
-if redis.call('HLEN', KEYS[1]) >= 10000 then return false end
+local function indexPending()
+  -- Requests made before the pending index existed go first (score 0).
+  local all = redis.call('HGETALL', KEYS[1])
+  for i = 1, #all, 2 do
+    if cjson.decode(all[i + 1]).status == 'pending' then redis.call('ZADD', KEYS[2], 0, all[i]) end
+  end
+end
+local limit, rebuilt = tonumber(ARGV[4]), false
+while redis.call('HLEN', KEYS[1]) >= limit do
+  local oldest = redis.call('ZRANGE', KEYS[2], 0, 0)[1]
+  if not oldest then
+    if rebuilt then return false end
+    indexPending(); rebuilt = true
+  else
+    redis.call('ZREM', KEYS[2], oldest)
+    -- Index entries for requests decided since are skipped, never evicted.
+    local raw = redis.call('HGET', KEYS[1], oldest)
+    if raw and cjson.decode(raw).status == 'pending' then redis.call('HDEL', KEYS[1], oldest) end
+  end
+end
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
+if cjson.decode(ARGV[2]).status == 'pending' then redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[1]) end
 return ARGV[2]`;
-export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now } = {}) {
+export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS } = {}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^[A-Za-z0-9:{}_-]{1,160}$/.test(prefix)) throw new Error('Invalid waitlist configuration');
   const adminIds = new Set(admins), users = `${prefix}:waitlist:users`, audit = `${prefix}:waitlist:audit`;
-  const invites = `${prefix}:waitlist:invites`;
+  const invites = `${prefix}:waitlist:invites`, pending = `${prefix}:waitlist:pending`;
   const transaction = async payload => {
     const time = now();
     const raw = await redis.eval(INVITE_TRANSACTION, 3, users, audit, invites, JSON.stringify({
@@ -173,7 +202,7 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     async request(identity) {
       if (!validId(identity?.userId)) throw new Error('Invalid waitlist identity');
       const record = recordFor(identity, adminIds, now);
-      const raw = await redis.eval(REQUEST, 1, users, record.userId, JSON.stringify(record));
+      const raw = await redis.eval(REQUEST, 2, users, pending, record.userId, JSON.stringify(record), now(), maxRequests);
       if (!raw) throw new Error('Waitlist capacity reached');
       const existing = JSON.parse(raw);
       return adminIds.has(identity.userId) ? { ...existing, status: 'approved' } : existing;

@@ -112,7 +112,14 @@ elseif p.op == 'session-put' then
     local old = redis.call('HGET', KEYS[3], oldest)
     removeSession(oldest, old and cjson.decode(old) or nil)
   end
-  if redis.call('HLEN', KEYS[3]) >= ${MAX_SESSIONS} then return false end
+  -- A full table gives up its oldest session (earliest expiry) instead of
+  -- refusing every sign-in, so a flood of new accounts cannot lock everyone out.
+  while redis.call('HLEN', KEYS[3]) >= ${MAX_SESSIONS} do
+    local oldest = redis.call('ZRANGE', KEYS[4], 0, 0)[1]
+    if not oldest then return false end
+    local old = redis.call('HGET', KEYS[3], oldest)
+    removeSession(oldest, old and cjson.decode(old) or nil)
+  end
   save(p.record)
   redis.call('ZADD', KEYS[4], p.record.expiresAt, p.record.sessionId)
   redis.call('HSET', KEYS[5], p.record.cookieHash, p.record.sessionId)

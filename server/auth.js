@@ -38,7 +38,7 @@ function json(res, status, value) {
 }
 
 /** Single-process auth: restarting intentionally invalidates all local sessions. */
-export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES, magic = {} } = {}) {
+export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPath = '/', workos, githubToken = null, githubFetch = fetch, now = Date.now, onLogout = () => {}, maxStates = MAX_STATES, maxSessions = MAX_SESSIONS, magic = {} } = {}) {
   let base;
   try {
     const parsed = new URL(origin);
@@ -81,6 +81,15 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     const owned = [...sessions.values()].filter(record => record.userId === userId);
     for (const record of owned.slice(0, Math.max(0, owned.length - MAX_SESSIONS_PER_USER + 1))) removeSession(record);
   }
+  // A full table gives up its oldest session (earliest expiry) instead of
+  // refusing every sign-in, so a flood of new accounts cannot lock everyone out.
+  function makeRoomInTable() {
+    while (sessions.size >= maxSessions) {
+      let oldest = null;
+      for (const record of sessions.values()) if (!oldest || record.expiresAt < oldest.expiresAt) oldest = record;
+      removeSession(oldest);
+    }
+  }
   function cleanup() {
     const time = now();
     for (const [state, value] of states) if (value.expiresAt <= time) states.delete(state);
@@ -104,7 +113,8 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     const previous = sessions.get(verified.sessionId);
     if (previous) removeSession(previous);
     makeRoomFor(verified.user.id);
-    if (!enabled || sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return; }
+    if (!enabled) { json(res, 503, { error: 'auth_busy' }); return; }
+    makeRoomInTable();
     const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
       csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
     sessions.set(record.sessionId, record);
@@ -218,7 +228,6 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
         if (!pending || !pending.codeVerifier || pending.expiresAt <= now() || !equal(state, browserState)
           || !query.get('code') || query.get('error')) { json(res, 400, { error: 'invalid_auth_callback' }); return true; }
         states.delete(state); // Consume before the code exchange, including failed exchanges.
-        if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
         let result;
         phase = 'callback.exchange';
         try {
@@ -286,7 +295,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
         const previous = sessions.get(verified.sessionId);
         if (previous) removeSession(previous);
         makeRoomFor(verified.user.id);
-        if (sessions.size >= MAX_SESSIONS) { json(res, 503, { error: 'auth_busy' }); return true; }
+        makeRoomInTable();
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
           csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
         sessions.set(record.sessionId, record); cookies.set(record.cookieHash, record.sessionId);
