@@ -1,6 +1,7 @@
 import { placeLink, positionLink } from './places.js';
 import { worldIdFromSearch } from './world-contract.js';
 import { travelRefusal } from './travel-message.js';
+import { categorySlug } from './store-categories.js';
 
 const SVG='http://www.w3.org/2000/svg', SIZE=1000, PAD=36;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -78,27 +79,89 @@ export function mapRoadLabels(roads,projection){
   return labels;
 }
 
+// Each kind of place has its own silhouette, centred on its position so a click
+// on the shape still lands on the place: a sparkle for arrival, a shopping-bag
+// square, a dinner plate, a cut gem, a flower for beauty and wellness, a house.
+const MARKER_SHAPES={arrival:'sparkle',shopping:'square',dining:'plate',jewelry:'gem',beauty:'flower',homes:'house'};
+export const placeShape=place=>MARKER_SHAPES[place?.kind==='arrival'?'arrival':categorySlug(place?.category)]??'dot';
+const star=(x,y,points,outer,inner)=>Array.from({length:points*2},(_,i)=>{
+  const angle=-Math.PI/2+i*Math.PI/points,radius=i%2?inner:outer;
+  return `${(x+Math.cos(angle)*radius).toFixed(2)},${(y+Math.sin(angle)*radius).toFixed(2)}`;
+}).join(' L ');
+const circle=(x,y,r)=>`M ${x-r} ${y} a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 ${-2*r} 0 Z`;
+export function markerPath(shape,x,y,size=8){
+  const s=size;
+  switch(shape){
+    case 'sparkle':return `M ${star(x,y,4,s*1.35,s*.42)} Z`;
+    case 'square':return `M ${x-s*.88} ${y-s*.88} H ${x+s*.88} V ${y+s*.88} H ${x-s*.88} Z`;
+    case 'plate':return `${circle(x,y,s)} ${circle(x,y,s*.42)}`;
+    case 'gem':return `M ${x-s} ${y-s*.3} L ${x-s*.48} ${y-s} H ${x+s*.48} L ${x+s} ${y-s*.3} L ${x} ${y+s} Z`;
+    case 'flower':return `M ${star(x,y,5,s*1.12,s*.52)} Z`;
+    case 'house':return `M ${x} ${y-s} L ${x+s} ${y-s*.15} V ${y+s*.9} H ${x-s} V ${y-s*.15} Z`;
+    default:return circle(x,y,s);
+  }
+}
+// The walker's yaw turns forward to (-sin yaw, -cos yaw) on this north-up map,
+// so an arrow drawn pointing up is rotated by -yaw. Unwrap against the last angle
+// so a turn through south eases the short way round instead of spinning.
+const KEY_PATHS={arrow:'M 0 -9 L 7 7 L 0 3 L -7 7 Z',diamond:'M 0 -8 L 7 0 L 0 8 L -7 0 Z',ring:circle(0,0,6),parcel:'M -7 -7 H 7 V 7 H -7 Z'};
+export const legendPath=shape=>KEY_PATHS[shape]??markerPath(shape,0,0,7);
+const CATEGORY_KEYS=[['shopping','Shopping'],['dining','Dining'],['jewelry','Jewelry'],['beauty','Beauty'],['homes','Homes']];
+// The key lists the symbols this map can show: every kind of place it holds,
+// saved places and players (both can appear at any time), and parcels if any.
+export function mapLegend(places,hasParcels=false){
+  const list=places??[],present=new Set(list.map(place=>categorySlug(place.category)).filter(Boolean));
+  return [{kind:'self',shape:'arrow',label:'You'},
+    ...(list.some(place=>place.kind==='arrival')?[{kind:'place',shape:'sparkle',label:'Arrival'}]:[]),
+    ...CATEGORY_KEYS.filter(([slug])=>present.has(slug)).map(([slug,label])=>({kind:'place',shape:MARKER_SHAPES[slug],category:slug,label})),
+    ...(list.some(place=>place.kind!=='arrival'&&!categorySlug(place.category))?[{kind:'place',shape:'dot',label:'Destination'}]:[]),
+    {kind:'landmark',shape:'diamond',label:'Saved place'},{kind:'peer',shape:'ring',label:'Player'},
+    ...(hasParcels?[{kind:'parcel',shape:'parcel',label:'Parcel'}]:[])];
+}
+export const headingDegrees=yaw=>-yaw*180/Math.PI;
+export function unwrapDegrees(previous,next){
+  if(!Number.isFinite(previous))return next;
+  return previous+((((next-previous)%360)+540)%360-180);
+}
+let mapInstances=0;
+
 export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,shareBase,say,copy}){
+  const id=`world-map-${++mapInstances}`;
   const section=node('details',null,'world-map');section.open=true;
   const summary=node('summary','World map');
   const surface=node('div',null,'world-map-surface');surface.tabIndex=0;surface.setAttribute('role','group');
   surface.setAttribute('aria-label','World map. Click to choose a destination, or use arrow keys to move a destination. Tab to its action button.');
   const art=svg('svg',{viewBox:`0 0 ${SIZE} ${SIZE}`,'aria-hidden':'true',preserveAspectRatio:'none'});
   const ground=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-ground'});
+  // A survey-dot grid and a heading-cone gradient, scoped to this map instance.
+  const defs=svg('defs'),grid=svg('pattern',{id:`${id}-grid`,width:25,height:25,patternUnits:'userSpaceOnUse'});
+  grid.append(svg('circle',{cx:12.5,cy:12.5,r:1.6,class:'world-map-grid-dot'}));
+  const glow=svg('radialGradient',{id:`${id}-cone`,cx:0,cy:0,r:70,gradientUnits:'userSpaceOnUse'});
+  glow.append(svg('stop',{offset:'0',class:'world-map-cone-near'}),svg('stop',{offset:'1',class:'world-map-cone-far'}));
+  defs.append(grid,glow);
+  const paper=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-grid',fill:`url(#${id}-grid)`});
   const parcels=svg('g',{class:'world-map-parcels'}),roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
+  const casings=svg('g',{class:'world-map-casings'}),centres=svg('g',{class:'world-map-centres'});
   const roadLabels=node('div',null,'world-map-road-labels');roadLabels.setAttribute('aria-hidden','true');
   const markers=svg('g',{class:'world-map-markers'}),people=svg('g',{class:'world-map-people'}),overlay=svg('g',{class:'world-map-overlay'});
-  const self=svg('circle',{class:'world-map-self',r:11,hidden:''});
+  // You: a pulsing halo, a soft cone where you are looking, and a navigation arrow.
+  const self=svg('g',{class:'world-map-self',hidden:''});
+  self.append(svg('circle',{class:'world-map-self-halo',r:24}),
+    svg('path',{class:'world-map-self-cone',d:'M 0 0 L -30 -62 A 69 69 0 0 1 30 -62 Z',fill:`url(#${id}-cone)`}),
+    svg('path',{class:'world-map-self-arrow',d:'M 0 -16 L 12 12 L 0 5 L -12 12 Z'}));
+  let heading=null,placed=null;
   const target=svg('circle',{class:'world-map-target',r:15,hidden:''});
   const targetLabel=node('div',null,'world-map-selection-label');targetLabel.hidden=true;
-  const north=node('span','N ↑','world-map-north');
+  const north=node('span','N','world-map-north');north.setAttribute('aria-label','North is up');
   const scale=node('span',null,'world-map-scale');
-  overlay.append(self,target);art.append(ground,parcels,roads,buildings,markers,people,overlay);surface.append(art,roadLabels,north,scale,targetLabel);
+  overlay.append(self,target);art.append(defs,ground,paper,parcels,casings,roads,centres,buildings,markers,people,overlay);surface.append(art,roadLabels,north,scale,targetLabel);
   const legend=node('ul',null,'world-map-legend');legend.setAttribute('aria-label','Map key');
-  for(const [kind,label] of [['self','You'],['place','Destination'],['landmark','Saved place'],['peer','Player'],['parcel','Parcel']]){
-    const item=node('li'),symbol=node('span',null,`world-map-key world-map-key-${kind}`);symbol.setAttribute('aria-hidden','true');
-    item.append(symbol,document.createTextNode(label));legend.append(item);
-  }
+  const renderLegend=()=>legend.replaceChildren(...mapLegend(places,parcels.childElementCount>0).map(({kind,shape,category,label})=>{
+    const item=node('li'),symbol=node('span',null,`world-map-key world-map-key-${kind}`),art=svg('svg',{viewBox:'-12 -12 24 24'});
+    symbol.setAttribute('aria-hidden','true');if(category)symbol.dataset.category=category;
+    art.append(svg('path',{d:legendPath(shape),'fill-rule':'evenodd'}));
+    symbol.append(art);item.append(symbol,document.createTextNode(label));return item;
+  }));
   const parcelDetails=node('details',null,'world-map-parcel-list'),parcelSummary=node('summary','Land parcels · 0'),parcelList=node('ul');
   parcelDetails.append(parcelSummary,parcelList);parcelDetails.hidden=true;
   const peopleDetails=node('details',null,'world-map-player-list'),peopleSummary=node('summary','People here · 0'),peopleList=node('ul');
@@ -125,7 +188,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     position:[(parcel.bounds_m[0]+parcel.bounds_m[2])/2,(parcel.bounds_m[1]+parcel.bounds_m[3])/2],
     area:Math.round((parcel.bounds_m[2]-parcel.bounds_m[0])*(parcel.bounds_m[3]-parcel.bounds_m[1])),ownerId:parcel.ownerId});
   function renderStatic(){
-    parcels.replaceChildren();roads.replaceChildren();buildings.replaceChildren();roadLabels.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
+    parcels.replaceChildren();casings.replaceChildren();roads.replaceChildren();centres.replaceChildren();buildings.replaceChildren();roadLabels.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
     if(!projection||!world)return;
     const plots=authoredParcels();parcelDetails.hidden=!plots.length;parcelSummary.textContent=`Land parcels · ${plots.length}`;
     for(const parcel of plots){
@@ -138,10 +201,15 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     for(const road of world.roads??[]){
       if(!Array.isArray(road.points)||road.points.length<2||!road.points.every(finitePair))continue;
       const walking=['footway','pedestrian','path'].includes(road.kind);
-      const line=svg('polyline',{points:points(road.points),class:`world-map-road${walking?' world-map-path':''}`,
-        'stroke-width':walking?clamp((road.width_m??2)*projection.scale,2,5):clamp((road.width_m??4)*projection.scale,3,24)});
+      const width=walking?clamp((road.width_m??2)*projection.scale,2,5):clamp((road.width_m??4)*projection.scale,3,24);
+      const line=svg('polyline',{points:points(road.points),class:`world-map-road${walking?' world-map-path':''}`,'stroke-width':width});
       if(road.name){const title=svg('title');title.textContent=road.name;line.append(title);}
       roads.append(line);
+      // Streets get a kerb casing and, when named and wide enough, a dashed centre line.
+      if(!walking){
+        casings.append(svg('polyline',{points:points(road.points),class:'world-map-road-casing','stroke-width':width+5}));
+        if(road.name&&road.kind!=='service'&&width>=9)centres.append(svg('polyline',{points:points(road.points),class:'world-map-road-centre'}));
+      }
     }
     for(const building of world.buildings??[]){
       const ring=buildingFootprint(building);
@@ -154,7 +222,9 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     }
     for(const place of places){
       if(!finitePair(place.position)||!projection.contains(place.position))continue;
-      const [cx,cy]=mapPoint(place.position),marker=svg('circle',{cx,cy,r:place.kind==='arrival'?10:8,class:'world-map-place'});
+      const [cx,cy]=mapPoint(place.position),shape=placeShape(place);
+      const marker=svg('path',{d:markerPath(shape,cx,cy,place.kind==='arrival'?11.5:9.5),class:'world-map-place','data-shape':shape,'fill-rule':'evenodd'});
+      const category=categorySlug(place.category);if(category)marker.dataset.category=category;
       const title=svg('title');title.textContent=place.name;marker.append(title);markers.append(marker);
     }
     for(const mark of currentMarks()){
@@ -162,13 +232,21 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
       const [x,y]=mapPoint(mark.position),diamond=svg('polygon',{points:`${x},${y-9} ${x+8},${y} ${x},${y+9} ${x-8},${y}`,class:'world-map-landmark'});
       const title=svg('title');title.textContent=mark.name;diamond.append(title);markers.append(diamond);
     }
+    renderLegend();
     refresh();
   }
   function refresh(){
     if(!projection)return;
     const position=getPosition();
     if(finitePair(position)&&projection.contains(position)){
-      const [cx,cy]=mapPoint(position);self.setAttribute('cx',cx);self.setAttribute('cy',cy);self.removeAttribute('hidden');
+      const [cx,cy]=mapPoint(position),yaw=getYaw?.();
+      if(Number.isFinite(yaw))heading=unwrapDegrees(heading,headingDegrees(yaw));
+      // Glide between the half-second updates, but jump on travel or first sight.
+      const jump=!placed||self.hasAttribute('hidden')||Math.hypot(cx-placed[0],cy-placed[1])>60;
+      if(jump)self.style.transition='none';
+      self.style.transform=`translate(${cx}px,${cy}px) rotate(${heading??0}deg)`;self.removeAttribute('hidden');
+      if(jump){self.getBoundingClientRect();self.style.transition='';}
+      placed=[cx,cy];
     }else self.setAttribute('hidden','');
     if(selected){
       const [cx,cy]=mapPoint(selected.position);target.setAttribute('cx',cx);target.setAttribute('cy',cy);target.removeAttribute('hidden');

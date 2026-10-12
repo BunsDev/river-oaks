@@ -5,7 +5,13 @@ export function setupSidebar() {
   const panel = document.querySelector('#control-panel');
   const trigger = document.querySelector('#panel-toggle');
   let controls = null;
-  trigger.innerHTML = '<span aria-hidden="true">⌖</span><span>Map</span><kbd>⌘B</kbd>';
+  // A glass lens holding a folded district map: three panels, a walked route and a pin.
+  trigger.innerHTML = '<span class="map-lens" aria-hidden="true"><svg viewBox="0 0 24 24">'
+    + '<path class="map-lens-paper" d="M3 6.6 8.6 4.6 15.4 6.6 21 4.6V17.4L15.4 19.4 8.6 17.4 3 19.4Z"/>'
+    + '<path class="map-lens-fold" d="M8.6 4.6 15.4 6.6V19.4L8.6 17.4Z"/>'
+    + '<path class="map-lens-route" d="M5.4 15.6C7.6 13.4 9.6 15.4 11.6 12.8S14.6 9.4 17.2 10.2"/>'
+    + '<path class="map-lens-pin" d="M18 3.2a2.7 2.7 0 0 1 2.7 2.7c0 2-2.7 4.6-2.7 4.6s-2.7-2.6-2.7-4.6A2.7 2.7 0 0 1 18 3.2Z"/>'
+    + '<circle class="map-lens-pin-eye" cx="18" cy="5.9" r=".95"/></svg></span><span>Map</span><kbd>⌘B</kbd>';
   trigger.querySelector('kbd').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘B' : 'Ctrl B';
   trigger.setAttribute('aria-label', 'Map');
   trigger.setAttribute('aria-controls', 'explore-section');
