@@ -18,7 +18,9 @@ pnpm run agent:doctor
 pnpm run agent:list
 ```
 
-Install Gitleaks before committing; the guard fails closed without it. Bootstrap
+`pnpm install` (its `prepare` step) already installs the shared Git hooks and the
+task-register merge driver. `scripts/install-hooks.sh` also checks that Gitleaks
+is present. Install Gitleaks before committing; the guard fails closed without it. Bootstrap
 downloads locked dependencies. Browser installation is separate and explicit:
 `pnpm exec playwright install chromium` (Linux CI uses `--with-deps`). Optional voice,
 GIS, native assets and provider keys are not required for the core gate.
@@ -31,13 +33,13 @@ it is not an unattended test fixture.
 
 | Command | Scope |
 | --- | --- |
-| `pnpm run verify tooling` | Agent runner failure/timeout/prerequisite regressions and catalog consistency |
+| `pnpm run verify tooling` | `test:agent`: runner failure/timeout/prerequisite regressions, catalog consistency, the task-register merge driver, project status/prune, secret and ref hooks, pnpm policy, skill views and the plans index |
 | `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
 | `pnpm run verify web` | Agent, preview, server, desktop unit tests; production web/landing build |
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
 | `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
 | `pnpm run verify security` | Worktree and full local Git-history secret scan |
-| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, contextual action/photo/command journeys and all shared-town journeys |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, ten experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets) and all shared-town journeys |
 | `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
 `pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when
@@ -61,7 +63,7 @@ RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 RIVER_OAKS_EXPERIENC
 
 The shared runner uses temporary identities and owned servers; CPU rendering
 proves fixture behavior, not visual quality. On macOS, run the browser profile
-directly. Browser tasks have longer deadlines and require functioning WebGL2.
+directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have longer deadlines; the others use the 10-minute default. All browser tasks require functioning WebGL2.
 
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different
@@ -69,8 +71,11 @@ sessions take turns; see [Local browser runs take turns](project-management/work
 `pnpm run test:desktop:e2e`. Native changes require the build and automation
 commands in [Unreal setup](unreal.md); source-only hosts can run
 `RiverOaks.Contracts` after a native build. These are not silently included in
-`full`, which covers the listed local runtime checks. The hosted Python-version matrix and
-Python dependency audit remain separate CI gates. Live WorkOS, hosted routing, packaged
+`full`, which covers the listed local runtime checks. The hosted Python-version matrix,
+the Python dependency audit and PR dependency review remain separate CI gates. CI's
+experience journeys differ slightly from `verify full`'s list: CI also runs
+`destination-minimap` but not `player-lifecycle` or `multiplayer-lifecycle`
+(`.github/workflows/verify.yml`, `config/agent-workflow.json`). Live WorkOS, hosted routing, packaged
 apps, real voice, human keyboard/VoiceOver and target GPU performance require
 separate acceptance evidence appropriate to the change.
 
@@ -92,6 +97,9 @@ The offline demo's expected exit 2 is a tested domain result (missing real-world
 acceptance inputs), not a waiver for other tasks. Existing browser reports remain
 in `data/reports/` and screenshots in `output/playwright/`; inspect `git status`
 after acceptance runs and keep evidence changes separate from source changes.
+Local browser runs rewrite the tracked `data/reports/experience.json` and
+`data/reports/shared-experience.json`; restore them unless the run is the
+evidence you intend to commit (CI writes `ci-experience.json` instead).
 
 A failed gate needs diagnosis at its owning seam. Do not weaken a threshold,
 turn off auth, add sleeps, or count skipped checks as a fix. Record unrelated
@@ -106,6 +114,38 @@ changes, tests, proof gaps and next action. Commit/push/merge/deploy require the
 user's task authorization; successful local verification alone grants none.
 
 `pnpm-lock.yaml` is the sole JavaScript lockfile. Install and public-script guards reject other package managers and versions; CI uses frozen installs. Electron and esbuild are the only approved dependency build scripts. Historical reports retain the commands actually run at their recorded revision.
+
+## CI, the merge gate and parallel sessions
+
+Hosted CI is described in [testing](testing.md#hosted-ci). The `main` ruleset requires
+the aggregate `preview` check. A PR merges only when it is up to date with `main`
+and every check is green. `verify.yml` has no `merge_group` trigger, so there is no
+GitHub merge queue. A branch that is behind is rebased (or merged with `main`), and
+its checks rerun before merging. Commits must be signed.
+
+Several agent sessions often work in one repository at once. Each claims its task
+in the primary checkout's live register and works in its own sibling worktree on
+its own branch. To merge, run `pnpm run land <pr>` ([landing a pull request](project-management/workflow.md#landing-a-pull-request)).
+It queues the PR with every other session on this machine, updates the branch from
+`main` on its turn, waits for Verify, reruns failed jobs once, and merges through
+the guard. After a merge, the next queued PR updates from the new `main`, so its
+CI reruns. Known flaky
+journeys (see testing) are rerun once with "rerun failed jobs" before being
+treated as regressions.
+
+```mermaid
+%% diagram: merge-queue (placeholder; replace this block with the real diagram)
+sequenceDiagram
+  participant P as Diagram pending
+  Note over P: Parallel sessions and the merge queue
+```
+<details><summary>Diagram prompt: merge-queue</summary>
+
+Draw a sequence diagram of several agent sessions sharing one repository safely. Participants: Session A, Session B, the primary checkout (Val's dev server and the live task register), the local landing queue (common Git directory), GitHub (PRs, Verify CI), and the merge guard (gh-merge-when-green.sh). Steps: each session claims a task in the live register and works in its own sibling worktree on its own branch -> opens a PR -> runs `pnpm run land <pr>`, which queues it in the common Git directory shared by every worktree (`pnpm run land --status` shows the queue) -> on its turn the lander updates the branch from main with GitHub's update-branch (verified commits), waits for Verify, reruns failed jobs once, and merges only through the guard -> if main moves first it updates and goes again; it stops on a conflict, a repeat failure or a guard refusal -> a register sweep PR later commits live-only records -> project:prune retires the delivered worktree and branch. Show the failure branch where a PR merged outside the queue moves main and the queued PR must update and rerun.
+
+See [the diagram index](diagrams.md) for the convention.
+
+</details>
 
 ## Project lifecycle
 

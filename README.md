@@ -6,7 +6,7 @@ for prerequisites and `pnpm run verify` for the core gate.
 
 
 An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
-Compose and share a moment with **Commands → Photo mode**: creative lens controls,
+Compose and share a moment with **Commands → Camera · Photo mode**: creative lens controls,
 social crops, film looks, and clean PNG downloads. [Photo controls and sharing](docs/photo-mode.md).
 
 ## Level design skills
@@ -24,16 +24,20 @@ Run `pnpm install --frozen-lockfile` then `pnpm run desktop:dev` to open River O
 Jev's garage offers a compact pink four-wheel glass-canopy car and rose motorcycle, with
 gold spinners, fitted passenger clothing and optional **Jev smart drive** through
 the API. Streets provide two 3.59 m clear lanes with Palo Alto-derived gutters,
-curbs and ramps. See [vehicle controls](docs/character-forms.md#royal-vehicles-and-prince-jev)
+curbs and ramps. See [vehicle controls](docs/character-forms.md#controls-and-rendering)
 and [street geometry](docs/street-standards.md).
 
-Approved residents can find and host scheduled gatherings in **Places → Events**,
-RSVP privately, and visit named meeting points across shared worlds.
-See [world events](docs/world-events.md).
+Find your next stop in the **Map** panel's **Explore destinations** atlas. It
+covers 31 destinations browsable by store category (Shopping & culture, Dining,
+Jewelry & accessories, Beauty & wellness), with search, a live map, Go, shareable
+links and private saved places across worlds. See [places](docs/places.md). (The
+gatherings panel was removed from the client; its service remains, see
+[world events](docs/world-events.md).) An opt-in, draft-only workplace test with
+a companion is off by default; see [workplace operations](docs/workplace-operations.md).
 
 ## Run the live showcase
 
-Players join the shared town after signing in with GitHub through WorkOS and receiving waitlist approval. Browser and desktop play require a town connection, even when only one player is online. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://sim.jev.works`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
+Players join the shared town after signing in through WorkOS, with GitHub or an email code behind a Cloudflare Turnstile check, and receiving waitlist approval. The desktop app signs in with GitHub. Browser and desktop play require a town connection, even when only one player is online. Signed-in players in the shared town see each other as their selected appearance, can use town chat, and share residents, wishes, consequences, and community resources. See [multiplayer setup and deployment](docs/multiplayer.md) for `https://typesafe.place`, WorkOS callback settings, waitlist approval, and the Node server. Local development also requires WorkOS; isolated browser acceptance fixtures use temporary local identities.
 
 District geometry and visual assets are bundled; no GIS download is required. `pnpm run dev` starts the shared town alongside Vite. For optional Jev chauffeur, companion, and speech services, run the bridge in a separate terminal:
 
@@ -49,17 +53,17 @@ pnpm run dev
 
 Open **http://127.0.0.1:5173/**. The walkable River Oaks District at 4444 Westheimer uses bundled OpenStreetMap geometry, 30 storefront destinations, and 98 indoor staff and guest encounters. Streets show connected players and Jevica's companion/chauffeur. The server owns residents, wishes, scenarios, and shared resources.
 
-The left rail groups controls into **People**, **Places**, and **Settings**. If the connection is lost, gameplay pauses behind a reconnect screen. There is no offline gameplay mode.
+The **Map** panel (top left) and **People** panel (top right) sit over the street, and **Settings** opens as a dialog. If the connection is lost, gameplay pauses behind a reconnect screen. There is no offline gameplay mode.
 
 
-**Cmd/Ctrl+B** toggles exploration; **Cmd/Ctrl+Shift+B** toggles play controls.
+**Cmd/Ctrl+B** toggles the Map panel; **Cmd/Ctrl+Shift+B** toggles play controls.
 **Cmd/Ctrl+K** opens searchable commands, **?** shows contextual keyboard help,
-**Alt+1/2/3** selects People/Places/Settings, and **/** searches destinations.
-Escape returns from a rail to the world. Rail choices and the selected tab are
+**Alt+1/2/3** opens People/Map/Settings, and **/** searches storefronts.
+Escape returns from a panel to the world. Each panel's open state is
 remembered; shortcuts leave text entry and modal dialogs alone.
 [Rail layout and keyboard review](docs/rail-navigation.md)
 
-The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. Z sits on a nearby bench or seat, stands up again, or waters a nearby planter; townspeople rest on the storefront benches too. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
+The approved administrator starts as Jevica in third person; other approved accounts start as Sable. Jevica and her multiplayer Jev and vehicle controls belong to that administrator. Shared-town players can select from the other looks built on seven shipped rigs, including fox, wolf, lynx, and human styles. **Meet someone nearby** opens a conversation with a nearby resident; the People panel ranks encounters by distance. WASD walks, dragging looks around, Shift walks faster, and E talks to someone within reach. Z sits on a nearby bench or seat, stands up again, or waters a nearby planter; townspeople rest on the storefront benches and in the open-air salon on the Dior–Toulouse plaza too. V switches the camera; B takes off or lands, Space rises and C descends. The scene covers the roughly 254 × 290 m River Oaks District footprint at Westheimer and Westcreek.
 
 Every destination now has a walk-in interior: press **Step inside** (or F at a door) to enter a furnished boutique, salon, gallery, cinema lobby or dining room with sales associates, guests and mannequins, then F again to step back out. Rooms are planned from the mapped footprints and furnished with original procedural fixtures; see [visual evidence](docs/visual-fidelity.md#boutique-interiors). The side trigger collapses controls for a native UHD render surface. System/Light/Dark appearance keeps the controls readable around the district’s TypeSafe neutral and pink palette.
 
@@ -81,7 +85,7 @@ uv run --extra voice river-oaks serve
 
 On macOS, install eSpeak NG once with `brew install espeak-ng`. After upgrading from an older voice setup, rerun the model fetch command above to install the duration-capable model.
 
-In **People & place → Spoken dialogue**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload unless an ElevenLabs key is configured for Jev; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
+In **Settings → Audio**, choose **Kokoro · local neural voices**. It runs on the local CPU after the initial approximately 142 MB model download, without an inference account or API charge. The 24 encounter presets are distinct generic voices, not celebrity imitations. **Device voices · local only** uses installed English voices when available. Speech defaults off on reload unless an ElevenLabs key is configured for Jev; muting, changing person, hiding the tab, or closing the conversation cancels playback. Kokoro speech includes phoneme timings that drive the speaker’s mouth. Speech geometry loads on demand and is released from the figure after playback; device voices and older untimed audio retain neutral mouths. One job at a time and a bounded cache keep synthesis out of the render loop. See [showcase controls and limitations](docs/showcase.md).
 
 The **Scenario lab** runs an illustrative neighborhood-service economy. Change demand, service fees, hourly wages, staffing, and storms; watch jobs, queues, revenue, and costs. Decisions travel through the same loopback Jev bridge, with visible live/local/safety provenance. Without a configured key, it runs local fallback and says so. Jev makes reactive micro-decisions; schedules and accounting follow deterministic rules. The browser is a development showcase, not the final UE5 renderer. See [controls and model assumptions](docs/showcase.md) and [local showcase evidence](data/reports/preview-smoke.json).
 
@@ -123,7 +127,7 @@ See [verification results](data/reports/verification.md), [GIS layout](data/repo
 
 Copy `.env.example` to the ignored `.env` file and set `TYPESAFE_API_KEY` locally. Keep it out of Unreal assets and logs.
 
-You can also open **Settings → Jev API key** in the preview and select **Use key**.
+You can also open **Settings → Account → Jev API key** in the preview and select **Use key**.
 This manual override configures the running local bridge, including its independent
 Python and Unreal simulation tools; it does not run a browser-owned simulation. It stays in server memory until the bridge restarts. The browser
 does not save it, and the bridge never returns the key. Select **Use server key**
@@ -152,7 +156,7 @@ python3 scripts/check_secrets.py --all
 gitleaks git --log-opts=--all --redact --no-banner --ignore-gitleaks-allow
 ```
 
-The installed Git hook scans the **staged index**, blocks credential filenames even when force-added, and fails closed if Gitleaks is missing. CI runs the same protection plus a full-history scan, lint, Python 3.11/3.13 tests, preview behavior tests/build on Node 24, and an offline pipeline smoke test. Actions and the scanner archive are pinned. New clones must run `scripts/install-hooks.sh`; require the `Verify` checks in repository branch protection before relying on CI as a merge gate.
+The installed Git hook scans the **staged index**, blocks credential filenames even when force-added, and fails closed if Gitleaks is missing. CI runs the same protection plus a full-history scan, dependency review and pnpm/pip audits, lint, Python 3.11/3.13 tests, unit and Redis-backed server tests, the security browser e2e, preview build and parallel browser journeys on Node 24, an offline pipeline smoke test, and a Monday schedule. Actions and the scanner archive are pinned. `pnpm install` installs the hooks for every worktree (`scripts/install-hooks.sh` also checks for Gitleaks). The `main` ruleset requires the aggregate `preview` check; see [testing](docs/testing.md#hosted-ci).
 
 Tests target observable failure modes: missing ArcGIS pages, coordinate/containment corruption, mismatched canopy placement, malformed Jev answers, bounded timeouts, overloaded HTTP requests, schedule preservation, and real secret-guard rejection in temporary Git repositories. They do not substitute for Unreal compilation, visual inspection, privacy review, or GPU profiling. [Testing approach](docs/testing.md)
 
@@ -183,4 +187,4 @@ and [character controls](docs/character-forms.md).
 
 Street geometry retains the Houston map and applies [Palo Alto street details](docs/street-standards.md).
 
-Prince Jev now follows Jevica into bubble flight with articulated angel wings and smooth obstacle-aware banking. Use **Walk with Prince Jev**, then **Take flight**. His ElevenLabs voice defaults to Adam (`s3TPKV1kjDlVtZbl4Ksh`); configure the key and optional voice ID in **Settings → ElevenLabs API key**. See [character controls](docs/character-forms.md).
+Prince Jev now follows Jevica into bubble flight with articulated angel wings and smooth obstacle-aware banking. Use **Walk with Prince Jev**, then **Take flight**. His ElevenLabs voice defaults to Adam (`s3TPKV1kjDlVtZbl4Ksh`); configure the key and optional voice ID in **Settings → Audio → ElevenLabs API key**. See [character controls](docs/character-forms.md).

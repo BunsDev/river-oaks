@@ -69,6 +69,8 @@
     "preproject:status": "node scripts/enforce-pnpm.mjs",
     "preproject:check": "node scripts/enforce-pnpm.mjs",
     "project:prune": "node scripts/project-prune.mjs",
+    "plans:index": "node scripts/plans-index.mjs",
+    "preplans:index": "node scripts/enforce-pnpm.mjs",
     "preproject:prune": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
     "preland": "node scripts/enforce-pnpm.mjs"

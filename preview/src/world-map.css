@@ -1,21 +1,64 @@
 :is(#control-panel,.places-guide) .world-map{margin:2px 0 8px;padding:0 0 10px;border-bottom:1px solid var(--line)}
 :is(#control-panel,.places-guide) .world-map>summary{min-height:36px;font-size:13px;font-weight:650;color:var(--places);cursor:pointer}
-:is(#control-panel,.places-guide) .world-map-surface{position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:1px solid #668784;border-radius:12px;background:#162d32;cursor:crosshair;touch-action:manipulation}
+/* The map as a lens of liquid glass over a drawn district: paper by day, night
+   streets in the dark theme. Every colour below is a token on the surface. */
+:is(#control-panel,.places-guide) .world-map-surface{--map-ground:#e8dcc5;--map-grid:#cdbd9c;--map-building:#fffcf5;--map-building-edge:#d6c4a2;--map-building-side:#b9a17a;
+  --map-road:#ffffff;--map-road-casing:#c4b08b;--map-road-centre:#d9a654;--map-path:#947d56;--map-label:#5f523f;--map-label-halo:#fbf7ee;
+  --map-ring:#fffaf0;--map-self:#1f6f63;--map-self-glow:rgb(44 116 102 / .32);--map-target:#c0577f;--map-landmark:#8a64c0;--map-peer:#2c7466;
+  --map-chip:rgb(255 252 245 / .72);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
+  position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:0;border-radius:22px;background:var(--map-ground);cursor:crosshair;touch-action:manipulation;
+  box-shadow:0 0 0 1px var(--map-rim),0 0 0 5px var(--map-bezel),0 0 0 6px rgb(0 0 0 / .06),0 14px 34px var(--map-shade)}
+:root[data-theme=dark] :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#0f2327;--map-grid:#1d3b40;--map-building:#27474e;--map-building-edge:#36606a;--map-building-side:#081619;
+  --map-road:#6f9692;--map-road-casing:#09181b;--map-road-centre:rgb(236 200 132 / .55);--map-path:#5c837f;--map-label:#d3e3de;--map-label-halo:#0f2327;
+  --map-ring:#0f2327;--map-self:#b5eee6;--map-self-glow:rgb(181 238 230 / .3);--map-target:#ffd88f;--map-landmark:#d6b6f2;--map-peer:#b5eee6;
+  --map-chip:rgb(13 29 32 / .7);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
+/* Glass lip: a bright inner edge and a soft vignette over the drawing. */
+:is(#control-panel,.places-guide) .world-map-surface::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 var(--map-rim),inset 0 0 0 1px rgb(255 255 255 / .12),inset 0 0 42px rgb(0 0 0 / .14);
+  background:radial-gradient(120% 70% at 18% 0%,rgb(255 255 255 / .22),transparent 46%)}
 :is(#control-panel,.places-guide) .world-map-surface:focus-visible{outline:3px solid var(--places);outline-offset:3px}
 :is(#control-panel,.places-guide) .world-map-surface svg{display:block;width:100%;height:100%}
-:is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:#fff8ee;font:700 10px/1.2 system-ui,sans-serif;pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-north{top:12px;right:12px;letter-spacing:.08em;padding:9px 10px;border:1px solid #68878666;border-radius:8px;background:#162d32e8}
-:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;width:var(--world-map-scale-width);padding-top:5px;border-top:2px solid #b6c9c6;text-align:center;color:#c2d2cf;text-shadow:0 1px 2px #162d32}
-:is(#control-panel,.places-guide) .world-map-ground{fill:#162d32}
+:is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:var(--map-chip-ink);font:700 10px/1.2 system-ui,sans-serif;pointer-events:none}
+/* A compass chip: a two-tone needle over N. */
+:is(#control-panel,.places-guide) .world-map-north{top:12px;right:12px;display:grid;justify-items:center;gap:2px;min-width:30px;padding:6px 7px 5px;border:1px solid var(--map-rim);border-radius:999px;
+  background:var(--map-chip);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);letter-spacing:.08em;box-shadow:0 4px 12px var(--map-shade)}
+:is(#control-panel,.places-guide) .world-map-north::before{content:"";width:8px;height:14px;background:linear-gradient(90deg,var(--map-target) 50%,color-mix(in srgb,var(--map-target) 55%,#000) 50%);
+  clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%)}
+/* A surveyor's scale bar: alternating segments over the distance. */
+:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;width:var(--world-map-scale-width);padding-top:6px;text-align:center;text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo)}
+:is(#control-panel,.places-guide) .world-map-scale::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;border:1px solid var(--map-chip-ink);border-radius:2px;
+  background:repeating-linear-gradient(90deg,var(--map-chip-ink) 0 25%,var(--map-ring) 25% 50%)}
+:is(#control-panel,.places-guide) .world-map-ground{fill:var(--map-ground)}
+:is(#control-panel,.places-guide) .world-map-grid-dot{fill:var(--map-grid)}
 :is(#control-panel,.places-guide) .world-map-parcel{fill:#dd9ac8;fill-opacity:.3;stroke:#f0bfdb;stroke-width:4;stroke-dasharray:10 6;cursor:pointer}
 :is(#control-panel,.places-guide) .world-map-parcel.selected{fill-opacity:.5;stroke:#fff0c8;stroke-width:7;stroke-dasharray:none}
-:is(#control-panel,.places-guide) .world-map-road{fill:none;stroke:#688786;stroke-linecap:round;stroke-linejoin:round}
-:is(#control-panel,.places-guide) .world-map-building{fill:#29454a;stroke:#466064;stroke-width:1.5}
-:is(#control-panel,.places-guide) .world-map-place{fill:#edc88a;stroke:#162d32;stroke-width:3}
-:is(#control-panel,.places-guide) .world-map-landmark{fill:#dfb4d0;stroke:#162d32;stroke-width:3}
-:is(#control-panel,.places-guide) .world-map-peer{fill:#162d32;stroke:#b5eee6;stroke-width:4}
-:is(#control-panel,.places-guide) .world-map-self{fill:#b5eee6;stroke:#fff;stroke-width:5}
-:is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:#ffe2a4;stroke-width:5}
+:is(#control-panel,.places-guide) .world-map-road{fill:none;stroke:var(--map-road);stroke-linecap:round;stroke-linejoin:round}
+:is(#control-panel,.places-guide) .world-map-road-casing{fill:none;stroke:var(--map-road-casing);stroke-linecap:round;stroke-linejoin:round}
+:is(#control-panel,.places-guide) .world-map-road-centre{fill:none;stroke:var(--map-road-centre);stroke-width:1.8;stroke-dasharray:12 10;stroke-linecap:round}
+/* Buildings as lifted tiles: rounded footprints with a cast side and a soft shadow. */
+:is(#control-panel,.places-guide) .world-map-buildings{filter:drop-shadow(3px 5px 0 var(--map-building-side)) drop-shadow(0 7px 8px var(--map-shade))}
+:is(#control-panel,.places-guide) .world-map-building{fill:var(--map-building);stroke:var(--map-building-edge);stroke-width:5;stroke-linejoin:round;paint-order:stroke}
+/* Places wear their category's colour and silhouette, cut out of the map by a ring. */
+:is(#control-panel,.places-guide) .world-map-place{fill:var(--place-shop);stroke:var(--map-ring);stroke-width:3.5;stroke-linejoin:round;paint-order:stroke;transform-box:fill-box;transform-origin:center;transition:transform .18s ease}
+:is(#control-panel,.places-guide) .world-map-place[data-shape=sparkle]{fill:var(--place-arrival)}
+:is(#control-panel,.places-guide) .world-map-place[data-category=dining]{fill:var(--place-dining)}
+:is(#control-panel,.places-guide) .world-map-place[data-category=jewelry]{fill:var(--place-jewelry)}
+:is(#control-panel,.places-guide) .world-map-place[data-category=beauty]{fill:var(--place-beauty)}
+:is(#control-panel,.places-guide) .world-map-place[data-category=homes]{fill:var(--place-homes)}
+:is(#control-panel,.places-guide) .world-map-place:hover{transform:scale(1.3)}
+:is(#control-panel,.places-guide) .world-map-landmark{fill:var(--map-landmark);stroke:var(--map-ring);stroke-width:3.5;stroke-linejoin:round;paint-order:stroke}
+:is(#control-panel,.places-guide) .world-map-peer{fill:var(--map-ring);stroke:var(--map-peer);stroke-width:4}
+/* You: a breathing halo, a cone of view, and an arrow that turns with you. */
+:is(#control-panel,.places-guide) .world-map-self{transition:transform .5s linear}
+:is(#control-panel,.places-guide) .world-map-self-halo{fill:var(--map-self-glow);transform-box:fill-box;transform-origin:center;animation:world-map-breathe 2.6s ease-in-out infinite}
+:is(#control-panel,.places-guide) .world-map-cone-near{stop-color:var(--map-self);stop-opacity:.42}
+:is(#control-panel,.places-guide) .world-map-cone-far{stop-color:var(--map-self);stop-opacity:0}
+:is(#control-panel,.places-guide) .world-map-self-arrow{fill:var(--map-self);stroke:var(--map-ring);stroke-width:3.5;stroke-linejoin:round;paint-order:stroke}
+@keyframes world-map-breathe{50%{transform:scale(1.35);opacity:.45}}
+/* The chosen point: a turning dashed ring. */
+:is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:var(--map-target);stroke-width:4.5;stroke-dasharray:9 7;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:world-map-turn 7s linear infinite}
+@keyframes world-map-turn{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){:is(#control-panel,.places-guide) :is(.world-map-self-halo,.world-map-target){animation:none} :is(#control-panel,.places-guide) :is(.world-map-self,.world-map-place){transition:none}}
 :is(#control-panel,.places-guide) .world-map-overlay [hidden]{display:none}
 :is(#control-panel,.places-guide) .world-map-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0;padding:0;list-style:none;font-size:11px;line-height:1.4;color:var(--muted)}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list){margin:5px 0;color:var(--ink);font-size:12px}
@@ -31,15 +74,22 @@
 :is(#control-panel,.places-guide) .world-map-actions button:disabled{opacity:.45;cursor:default}
 :is(#control-panel,.places-guide) .world-map-status{min-height:1em;margin:5px 0 0;font-size:11px;line-height:1.4;color:var(--muted)}
 
-:is(#control-panel,.places-guide) .world-map-path{stroke:#426268;stroke-linecap:butt}
-:is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--font-sans,system-ui);letter-spacing:.015em;color:#c7d8d3;text-shadow:0 1px 2px #162d32,0 -1px 2px #162d32;pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 11px;border:1px solid #edc88a88;border-radius:8px;background:#14292ef5;box-shadow:0 3px 12px #0003;color:#fff1d7;font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
+/* Footways as a line of footsteps. */
+:is(#control-panel,.places-guide) .world-map-path{stroke:var(--map-path);stroke-dasharray:0 9;stroke-linecap:round}
+:is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:italic 600 10px/1.2 var(--font-sans,system-ui);letter-spacing:.06em;color:var(--map-label);text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo),0 0 1px var(--map-label-halo);pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 12px;border:1px solid var(--map-rim);border-radius:999px;background:var(--map-chip);-webkit-backdrop-filter:blur(12px) saturate(1.7);backdrop-filter:blur(12px) saturate(1.7);box-shadow:inset 0 1px 0 var(--map-rim),0 6px 16px var(--map-shade);color:var(--map-chip-ink);font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-selection-label.above{margin-top:-20px;transform:translate(-50%,-100%)}
 :is(#control-panel,.places-guide) .world-map-legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
-:is(#control-panel,.places-guide) .world-map-key{display:inline-block;width:8px;height:8px;box-sizing:border-box;flex:none;border-radius:50%}
-:is(#control-panel,.places-guide) .world-map-key-self{background:#b5eee6;box-shadow:0 0 0 1px #426268,0 0 0 3px #b5eee633}
-:is(#control-panel,.places-guide) .world-map-key-place{background:#edc88a;box-shadow:0 0 0 1px #75684d}
-:is(#control-panel,.places-guide) .world-map-key-peer{border:2px solid #73b7ad}
-:is(#control-panel,.places-guide) .world-map-key-landmark{background:#dfb4d0;border:1px solid #986d8a;border-radius:1px;transform:rotate(45deg)}
-:is(#control-panel,.places-guide) .world-map-key-parcel{border:1px dashed #bd84a8;border-radius:1px}
+:is(#control-panel,.places-guide) .world-map-key{display:inline-grid;place-items:center;width:15px;height:15px;flex:none}
+:is(#control-panel,.places-guide) .world-map-key svg{width:15px;height:15px;overflow:visible}
+:is(#control-panel,.places-guide) .world-map-key path{fill:var(--place-shop);stroke:var(--ink);stroke-opacity:.25;stroke-width:1.5;stroke-linejoin:round}
+:is(#control-panel,.places-guide) .world-map-key-place:not([data-category]) path{fill:var(--place-arrival)}
+:is(#control-panel,.places-guide) .world-map-key[data-category=dining] path{fill:var(--place-dining)}
+:is(#control-panel,.places-guide) .world-map-key[data-category=jewelry] path{fill:var(--place-jewelry)}
+:is(#control-panel,.places-guide) .world-map-key[data-category=beauty] path{fill:var(--place-beauty)}
+:is(#control-panel,.places-guide) .world-map-key[data-category=homes] path{fill:var(--place-homes)}
+:is(#control-panel,.places-guide) .world-map-key-self path{fill:var(--hud-action,#2c7466);stroke-opacity:.4}
+:is(#control-panel,.places-guide) .world-map-key-landmark path{fill:var(--place-landmark)}
+:is(#control-panel,.places-guide) .world-map-key-peer path{fill:none;stroke:var(--hud-action,#2c7466);stroke-opacity:1;stroke-width:2.5}
+:is(#control-panel,.places-guide) .world-map-key-parcel path{fill:#dd9ac84d;stroke:#bd84a8;stroke-opacity:1;stroke-dasharray:3 2}

@@ -456,13 +456,13 @@
     {
       "id": "cartier-pilot",
       "title": "Complete Cartier visual pilot",
-      "status": "active",
+      "status": "blocked",
       "branches": [
         "cody/cartier-visual-pilot"
       ],
-      "owner": "cody-cartier-01a12a17-a2e4-7331-bb7d-c1199ed41b22",
-      "updatedAt": "2026-10-11T08:34:20.428044+00:00",
-      "nextAction": "Repair reproduced browser harness failures, rerun local gates, and deliver a persistent visual review with measured performance limits.",
+      "owner": "cody-cartier-review-20261011",
+      "updatedAt": "2026-10-11T11:27:57.258688+00:00",
+      "nextAction": "Review output/cartier-review-20261011/review.html in the Cartier worktree; accept visual direction or specify refinements. Preserve uncommitted work and decide performance/night follow-up scope.",
       "filesOwned": [
         "preview/src/cartier-pilot.js",
         "preview/src/store-interiors.js",
@@ -487,19 +487,28 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "leaseUntil": "2026-10-11T10:34:20.428044+00:00",
-      "ledger": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/docs/superpowers/plans/2026-10-11-cartier-pilot-results.md"
+      "leaseUntil": "2026-10-11T13:19:42.348299+00:00",
+      "ledger": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/docs/superpowers/plans/2026-10-11-cartier-pilot-results.md",
+      "previousOwner": "cody-cartier-01a12a17-a2e4-7331-bb7d-c1199ed41b22",
+      "blocker": "Local implementation and selected checks verified; Val visual review pending. Absolute performance target missed; true-night world support outside current bounded pilot.",
+      "evidence": {
+        "report": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/docs/superpowers/plans/2026-10-11-cartier-pilot-results.md",
+        "review": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/output/cartier-review-20261011/review.html",
+        "core": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/output/cartier-review-20261011/core-receipt.json",
+        "browser": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-cartier-pilot-20261009/data/reports/cartier-pilot-review-accepted-checks-20261011.json",
+        "remoteDelivery": null
+      }
     },
     {
       "id": "jevica-psyche",
       "title": "Complete Jevica and Psyche character work",
-      "status": "blocked",
+      "status": "queued",
       "branches": [
         "cody/jevica-psyche-20261009"
       ],
       "owner": "Cody:cody-jev-playables-20261011",
-      "updatedAt": "2026-10-11T07:31:33.413197+00:00",
-      "nextAction": "Coordinate with Cody under cody-jev-playables-20261011; preserve candidates and complete cloth/facial adapters, real rendered behavior and current verification before delivery.",
+      "updatedAt": "2026-10-11T19:54:40.373808+00:00",
+      "nextAction": "Val chose option A for Jevica (2026-10-11): reskin the shipped jevica.glb via preview/src/jevica-costume.js; Meshy candidate is appearance reference only; drop Jevica from ?playables=meshy and keep candidates/jevica.glb unstaged. Jev continues the candidate path. Full next action: /Users/buns/.coven/workspaces/familiars/cody/handoffs/jevica-recreation-20261009.json",
       "filesOwned": [],
       "requiredChecks": [
         "Read scoped AGENTS.md and task ledger; verify changed behavior before commit and required hosted checks before merge."
@@ -510,8 +519,9 @@
         "mergeInProgress": false,
         "activeProcess": false
       },
-      "blocker": "Actively owned authored-character integration; candidate animation/facial failures remain documented. Do not retire.",
-      "ledger": "docs/superpowers/plans/2026-10-11-jev-playables.md"
+      "blocker": null,
+      "ledger": "docs/superpowers/plans/2026-10-11-jev-playables.md",
+      "note": "Owner decision recorded 2026-10-11; preserve the sibling's uncommitted worktree edits and candidates. Do not retire."
     },
     {
       "id": "sdk-phase1",
@@ -1243,17 +1253,17 @@
     {
       "id": "dependency-prs-211-213",
       "title": "Review, verify and merge dependency PRs 211, 212 and 213",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "chore/dependency-merge-20261011",
         "dependabot/github_actions/actions-a35a28a5a6",
         "dependabot/uv/python-minor-and-patch-28a06b9ac5",
         "dependabot/npm_and_yarn/pnpm-minor-and-patch-20b518a76c"
       ],
-      "owner": "codex:01a12a36-ff30-7b13-944b-58f6c69719ce",
-      "leaseUntil": "2026-10-11T11:09:14.387089+00:00",
-      "updatedAt": "2026-10-11T09:14:37.006628+00:00",
-      "nextAction": "Core and native Electron fixture passed; full local gate running. Wait for PR211 final-head preview then squash and refresh PR212.",
+      "owner": null,
+      "leaseUntil": null,
+      "updatedAt": "2026-10-11T13:07:50.697452+00:00",
+      "nextAction": "No dependency delivery or local retirement work remains. Restore exact source/evidence from the archive manifest if needed. Primary local ledger/task edits remain preserved; unrelated lifecycle gaps belong to their owners.",
       "ledger": "docs/superpowers/plans/2026-10-11-dependency-prs-211-213.md",
       "filesOwned": [
         ".github/workflows/verify.yml",
@@ -1269,15 +1279,225 @@
         "Electron fixture acceptance for dependency update",
         "Exact merge SHA/tree evidence"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "pr": 211,
+          "reviewedHead": "fa0c79d26298e3bee63de3d470c899855638680d",
+          "merge": "021e78bb6619493234f4f1225ce00450314fdf96",
+          "mergedAt": "2026-10-11T09:33:51Z",
+          "base": "eb62862615f8a2ef5798e4eff213f811431a9e79",
+          "checks": [
+            {
+              "name": "CodeQL",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/runs/114434484099"
+            },
+            {
+              "name": "preview",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127357244/job/114434386017"
+            },
+            {
+              "name": "verify (3.11)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127357244/job/114434385947"
+            },
+            {
+              "name": "verify (3.13)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127357244/job/114434385944"
+            },
+            {
+              "name": "dependency-review",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127357244/job/114434385928"
+            },
+            {
+              "name": "Analyze (javascript-typescript)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127355496/job/114434382180"
+            },
+            {
+              "name": "Analyze (python)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127355496/job/114434382174"
+            },
+            {
+              "name": "Analyze (actions)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127355496/job/114434382171"
+            },
+            {
+              "name": "Analyze (c-cpp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127355496/job/114434382157"
+            },
+            {
+              "name": "Analyze (csharp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38127355496/job/114434382044"
+            }
+          ],
+          "url": "https://github.com/BunsDev/river-oaks/pull/211",
+          "treeVerified": true
+        },
+        {
+          "pr": 212,
+          "reviewedHead": "b4a5dab359889177702d673f77f9deb810adab4e",
+          "base": "6597f359798724355fea842052ae19b82e162ed4",
+          "checks": [
+            {
+              "name": "CodeQL",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/runs/114449052297"
+            },
+            {
+              "name": "dependency-review",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132294968/job/114448939286"
+            },
+            {
+              "name": "verify (3.11)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132294968/job/114448939254"
+            },
+            {
+              "name": "preview",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132294968/job/114448939239"
+            },
+            {
+              "name": "verify (3.13)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132294968/job/114448939123"
+            },
+            {
+              "name": "Analyze (actions)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132292912/job/114448935682"
+            },
+            {
+              "name": "Analyze (javascript-typescript)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132292912/job/114448935656"
+            },
+            {
+              "name": "Analyze (python)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132292912/job/114448935548"
+            },
+            {
+              "name": "Analyze (c-cpp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132292912/job/114448935444"
+            },
+            {
+              "name": "Analyze (csharp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38132292912/job/114448935283"
+            }
+          ],
+          "merge": "366b8b15dcef1373f2f88ee52dbb8ebf7d64b7d4",
+          "mergedAt": "2026-10-11T10:52:14Z",
+          "treeVerified": true,
+          "url": "https://github.com/BunsDev/river-oaks/pull/212"
+        },
+        {
+          "pr": 213,
+          "reviewedHead": "56e558ca2752635e34eaa7caeedceb2c1a67f8b0",
+          "base": "383b3451a2c05edcb162863720928b000d9c0316",
+          "checks": [
+            {
+              "name": "CodeQL",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/runs/114457921369"
+            },
+            {
+              "name": "verify (3.11)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135294915/job/114457814573"
+            },
+            {
+              "name": "dependency-review",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135294915/job/114457814516"
+            },
+            {
+              "name": "verify (3.13)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135294915/job/114457814474"
+            },
+            {
+              "name": "preview",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135294915/job/114457814398"
+            },
+            {
+              "name": "Analyze (c-cpp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135292688/job/114457809724"
+            },
+            {
+              "name": "Analyze (javascript-typescript)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135292688/job/114457809721"
+            },
+            {
+              "name": "Analyze (actions)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135292688/job/114457809688"
+            },
+            {
+              "name": "Analyze (python)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135292688/job/114457809682"
+            },
+            {
+              "name": "Analyze (csharp)",
+              "conclusion": "success",
+              "details_url": "https://github.com/BunsDev/river-oaks/actions/runs/38135292688/job/114457809501"
+            }
+          ],
+          "merge": "cd42d50e70f545ccc9e9292bd324183b0a3ef972",
+          "mergedAt": "2026-10-11T11:46:26Z",
+          "treeVerified": true,
+          "url": "https://github.com/BunsDev/river-oaks/pull/213"
+        }
+      ],
       "verification": {
         "candidateBase": "eb62862615f8a2ef5798e4eff213f811431a9e79",
         "combinedTree": "7e0260811bed10f3c4df7206349944e26d3410ef",
         "core": "11 tasks passed; isolated Redis; .runtime/agent/core.json in deps checkout",
         "native": "desktop fixture --dev passed",
         "review": "Independent reviewer: no blocking defects; shapely.ops.transform deprecation is follow-up only",
-        "full": "running"
-      }
+        "full": "PASSED all 17 tasks on unchanged combined tree. 27 tooling; 2586 preview passed/one pre-existing skip; 415 Redis; 36 desktop; 141 Python; security2; experience10; shared19. Earlier greetings/spatial readiness failures preserved and passed unchanged.",
+        "concurrentMain": "PR224 documentation/evidence, PR225 desktop:dev .env.local, and PR226 World Studio theme changes preserved. Final integration candidate920f8e04dc33bb17b1a9d456cf2c35ce89fc6564 exactly equals PR213 head56e558ca; new full gate running after runtime change.",
+        "after226": "PASSED17/17 full-profile tasks across preserved interrupted first5 + resumed remaining12 receipts. Final tree920f8e04 equals mergecd42d50e. Node test concurrency2; owned runtime/Redis stopped. Completion12:05:26Z.",
+        "preservedPrimary": "Primary auto-pulled cd42d50 then stash restoration conflicted in pnpm-lock.yaml. Exact original staged blob806bf721 and working SHA archived. Resolved two Vite blocks to merged8.3.3 while retaining original staged osx-sign2.7.1; other original transitive updates already in main. Ruby YAML/versions checks passed. Nine other original dirty files remain byte-identical.",
+        "finalTree": "920f8e04dc33bb17b1a9d456cf2c35ce89fc6564",
+        "finalCounts": "tooling27; preview2587 passed/one existing skip; Redis415; desktop36; Python141; security2; experience10; shared19.",
+        "checkout": "Retired after exact ancestry, source bundle restore/fsck, 189 evidence hashes and immediate clean/ownership/process guards. Remote branches untouched.",
+        "lifecycle": "8/8 project-status tests passed. project:check --github exit1:17 unrelated gaps, none for this task. Final25 worktrees/24 branches; initial11/12. No removals."
+      },
+      "archive": {
+        "manifest": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/manifest.json",
+        "repositoryManifest": "docs/project-management/retirement-dependencies-20261011.json",
+        "bundle": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/source-history.bundle",
+        "sha256": "0004d46e74d5edcb85edd33bfc1d1869f90ae70963509e5cec3a5d23d9744f5e",
+        "originalHead": "cd42d50e70f545ccc9e9292bd324183b0a3ef972",
+        "archiveTag": "archive/dependency-prs-211-213/20261011",
+        "evidence": "/Users/buns/worktree-backups/river-oaks-dependencies-20261011/local-evidence.tar",
+        "evidenceSha256": "908cfd73664841342e9854ef96ddba27d02d8940f5abff14baf86d1ae945c91d",
+        "restoreVerified": true
+      },
+      "retiredRefs": [
+        {
+          "branch": "chore/dependency-merge-20261011",
+          "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-deps-20261011",
+          "head": "cd42d50e70f545ccc9e9292bd324183b0a3ef972",
+          "retiredAt": "2026-10-11T13:07:50.697452+00:00"
+        }
+      ]
     },
     {
       "id": "workplace-review",
@@ -1312,12 +1532,11 @@
       "title": "Workplace first slice (#214): contract/grants, fixture-site graybox, fixture event_plan task, draft-only panel, evidence",
       "status": "delivered",
       "branches": [
-        "feat/workplace-slice-20261011",
-        "docs/workplace-slice-delivered"
+        "feat/workplace-slice-20261011"
       ],
-      "owner": "claude:river-oaks-55",
-      "updatedAt": "2026-10-11T12:50:00+00:00",
-      "nextAction": "Delivered by #227. #221 evidence and follow-ups (#228 merged into #227; #230 onward) are owned by river-oaks-c2 under workplace-221-adversarial and its stacked entries. Retire the worktree river-oaks-workplace-20261011 after this register PR merges.",
+      "owner": null,
+      "updatedAt": "2026-10-12T03:03:49.297998+00:00",
+      "nextAction": "Residual ref feat/workplace-slice-20261011 (122db7f, ancestor of main, no worktree) needs a decision; prune requires an exact merged-PR head.",
       "ledger": "docs/superpowers/plans/2026-10-11-workplace-slice.md",
       "filesOwned": [
         "preview/src/workplace-contract.js",
@@ -1362,7 +1581,13 @@
           "tree": "2415d7e746deed805c621470bc704c0e2886b927",
           "checks": "All 11 final-head hosted checks passed on f35958a. Local at 122db7f: server 447/0/0 skipped with isolated Redis; client 2591 pass, 1 pre-existing skip; core verify passed earlier at a1dd1e3; workplace journey 5/5 and workplace-room harness passed. Closes #217-#220."
         }
-      ]
+      ],
+      "handoff": {
+        "at": "2026-10-12T03:03:49.297998+00:00",
+        "from": "claude:river-oaks-55",
+        "to": null,
+        "reason": "Owner session river-oaks-55 has ended; Val authorized a reduction round 2026-10-12. The docs branch moved to task workplace-slice-delivered-docs (PR #239). feat/workplace-slice-20261011 stays: its tip 122db7f is in main but is not PR #227 exact head, so project:prune cannot retire it."
+      }
     },
     {
       "id": "workplace-221-adversarial",
@@ -1757,14 +1982,14 @@
     {
       "id": "map-ui-readability",
       "title": "Improve district map hierarchy and selection readability",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/map-ui-readability"
       ],
       "owner": null,
       "leaseUntil": null,
-      "updatedAt": "2026-10-11T12:15:51.403991+00:00",
-      "nextAction": "Delivered by PR #229. Preserve source and integration worktrees with local receipts until a separate lifecycle retirement audit; no implementation remains.",
+      "updatedAt": "2026-10-12T03:09:56.957Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/world-map.js",
         "preview/src/world-map.css",
@@ -1795,7 +2020,24 @@
           "ci": "https://github.com/BunsDev/river-oaks/actions/runs/38137111001",
           "proof": "All 10 final-head checks and Vercel passed; fetched origin/main has exact same tree as reviewed head; git diff HEAD origin/main exit 0."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b",
+        "releasedAt": "2026-10-12T03:03:49.297998+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:03:49.297998+00:00"
+      },
+      "retiredBranches": [
+        "feat/map-ui-readability"
+      ],
+      "archive": {
+        "feat/map-ui-readability": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Fqvkkc/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Fqvkkc/history.bundle",
+          "sha256": "1e740ed3f371a3c0fd00e7f285e4ab2442b842bbab05d2cf4b2960e988e41ec9",
+          "tag": "refs/tags/archive/worktree-prune/3e6ec94f-b7b0-4692-9238-3a8ca4a126af",
+          "head": "da23a2c1a3fbed97a1e409eaa73c7e7d88b46a9b"
+        }
+      }
     },
     {
       "id": "jev-ride-shortcuts",
@@ -1860,14 +2102,13 @@
     {
       "id": "enforced-local-pruning",
       "title": "Enforce safe local branch and worktree retirement",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "chore/enforced-local-pruning"
       ],
-      "owner": "codex-local-pruning-20261011",
-      "leaseUntil": "2026-10-11T15:06:11.739617+00:00",
-      "updatedAt": "2026-10-11T13:40:31.143153+00:00",
-      "nextAction": "Push final verified correction and await PR #241 hosted checks, then merge; jev branch retired with external restoration proof.",
+      "owner": null,
+      "updatedAt": "2026-10-12T03:09:11.291Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-enforced-local-pruning.md",
       "filesOwned": [
         ".agents/skills/worktree-retirement/SKILL.md",
@@ -1894,7 +2135,40 @@
         "localInstall": "Shared common-Git hooksPath installed; real map branch dry run blocked, no actual removals",
         "liveRetirement": "/Users/buns/worktree-backups/river-oaks/retirement-Tp9klo/manifest.json"
       },
-      "pr": 241
+      "pr": 241,
+      "handoff": {
+        "at": "2026-10-12T03:03:49.297998+00:00",
+        "from": "codex-local-pruning-20261011",
+        "to": null,
+        "reason": "Lease expired 2026-10-11T16:41Z; PR #241 merged with an identical tree; worktree clean with no process; no recent Codex rollout mentions it. Reconciled to delivered for Val's 2026-10-12 reduction round."
+      },
+      "evidence": [
+        {
+          "pr": 241,
+          "reviewedHead": "fce08a9a1351627e92f0bbb41f65aa936591e9eb",
+          "merge": "eafa4e6dca410fe99b14703433c3b2810c643ab5",
+          "tree": "28d6e38889fb60c612ed4a46c9acf682e398290d",
+          "mergedAt": "2026-10-11T16:15:42Z",
+          "checks": "PR #241 merged; merge tree equals branch tree; worktree clean after archiving evidence to ~/worktree-backups/river-oaks/reduction-20261012/"
+        }
+      ],
+      "retirement": {
+        "head": "fce08a9a1351627e92f0bbb41f65aa936591e9eb",
+        "releasedAt": "2026-10-12T03:03:49.297998+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:03:49.297998+00:00"
+      },
+      "retiredBranches": [
+        "chore/enforced-local-pruning"
+      ],
+      "archive": {
+        "chore/enforced-local-pruning": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-TO4TeH/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-TO4TeH/history.bundle",
+          "sha256": "7cc519d6f68ad689aaa49a239a6be0cbd65a98abad28cabb9248224a72cf4744",
+          "tag": "refs/tags/archive/worktree-prune/6e9a3723-bc41-4d8e-b388-f77a142d8e82",
+          "head": "fce08a9a1351627e92f0bbb41f65aa936591e9eb"
+        }
+      }
     },
     {
       "id": "server-hardening",
@@ -2279,13 +2553,13 @@
     {
       "id": "paver-texture-realism",
       "title": "Sidewalk pavers re-authored from the Kettering Drive Street View reference",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/paver-texture-realism"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T18:40:00+00:00",
-      "nextAction": "Delivered by #231. Retire the local worktree and branch feat/paver-texture-realism with project:prune once this register is on the primary checkout.",
+      "updatedAt": "2026-10-11T23:40:30.029Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/paver-textures.js",
         "preview/tests/paver-textures.test.js"
@@ -2300,18 +2574,35 @@
           "tree": "c672c2712be513a10610cdfea0379d1f53f538c2",
           "checks": "All 11 final-head hosted checks passed on 1b60689. Local at 1b60689: paver-textures 9/9, pnpm test 2602 pass 0 fail, build passed."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "1b60689ef024530d849b29b776e306fbdfe8488e",
+        "releasedAt": "2026-10-11T23:38:39+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:39+00:00"
+      },
+      "retiredBranches": [
+        "feat/paver-texture-realism"
+      ],
+      "archive": {
+        "feat/paver-texture-realism": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-WRb5ON/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-WRb5ON/history.bundle",
+          "sha256": "f46d335ff4251d4ed30eb7b794a7e8f806c6fc6c91fc24405a9a8540df761919",
+          "tag": "refs/tags/archive/worktree-prune/2a44527a-5aa9-4dfe-a7b2-3df7dc3ae755",
+          "head": "1b60689ef024530d849b29b776e306fbdfe8488e"
+        }
+      }
     },
     {
       "id": "sidewalk-corners",
       "title": "Curb returns with one paving field per junction corner; crossings kept clear of corners and footways",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/sidewalk-corners"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T18:40:00+00:00",
-      "nextAction": "Delivered by #233. Retire the local worktree and branch feat/sidewalk-corners with project:prune once this register is on the primary checkout.",
+      "updatedAt": "2026-10-11T23:40:47.119Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/street-corners.js",
         "preview/src/sidewalks.js",
@@ -2332,18 +2623,35 @@
           "checks": "All 11 final-head hosted checks passed on 88496d9. Local at 88496d9: street-corners 6/6, pnpm test 2615 pass 1 pre-existing skip, build passed; pnpm run verify core passed at f0e1c9f; 39 corners rendered before/after via the corners fixture."
         }
       ],
-      "ledger": "docs/superpowers/plans/2026-10-11-sidewalk-corners.md"
+      "ledger": "docs/superpowers/plans/2026-10-11-sidewalk-corners.md",
+      "retirement": {
+        "head": "88496d97efa72ed2f27fa53a2b6085b1d1c937a8",
+        "releasedAt": "2026-10-11T23:38:39+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:39+00:00"
+      },
+      "retiredBranches": [
+        "feat/sidewalk-corners"
+      ],
+      "archive": {
+        "feat/sidewalk-corners": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Ebb2Q9/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Ebb2Q9/history.bundle",
+          "sha256": "f5b1b9bdd7e67ff63496532bbdf7c50ea50fc566129c35c0eb333aa244844c69",
+          "tag": "refs/tags/archive/worktree-prune/8a92ec43-4ba4-4a1f-ada6-dde343779f91",
+          "head": "88496d97efa72ed2f27fa53a2b6085b1d1c937a8"
+        }
+      }
     },
     {
       "id": "plant-diversity",
       "title": "Seeded, layered River Oaks planting in lane planters and the Harry Winston curb bed",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/plant-diversity"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T18:40:00+00:00",
-      "nextAction": "Delivered by #234. Retire the local worktree and branch feat/plant-diversity with project:prune once this register is on the primary checkout.",
+      "updatedAt": "2026-10-11T23:41:51.099Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/src/planting-palette.js",
         "preview/src/procedural-plants.js",
@@ -2362,18 +2670,35 @@
           "checks": "All 11 final-head hosted checks passed on 6849af1 (preview after one rerun of the flaky email-access browser test). Local at 6849af1: plant-diversity 6/6, pnpm test 2621 pass 1 pre-existing skip, build passed."
         }
       ],
-      "ledger": "docs/superpowers/plans/2026-10-11-plant-diversity.md"
+      "ledger": "docs/superpowers/plans/2026-10-11-plant-diversity.md",
+      "retirement": {
+        "head": "6849af1a9605e912ea0f28ffb3c3a510982250bd",
+        "releasedAt": "2026-10-11T23:38:39+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:39+00:00"
+      },
+      "retiredBranches": [
+        "feat/plant-diversity"
+      ],
+      "archive": {
+        "feat/plant-diversity": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-lPe24F/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-lPe24F/history.bundle",
+          "sha256": "93ced75db10f8755627c4bb26f51137788481876092a91a21373364ad1961fdb",
+          "tag": "refs/tags/archive/worktree-prune/dcc5911c-5bef-42f4-819a-ae83e08d0902",
+          "head": "6849af1a9605e912ea0f28ffb3c3a510982250bd"
+        }
+      }
     },
     {
       "id": "login-art-awake",
       "title": "Sign-in art edited so Jevica is upright and awake; provenance recorded",
-      "status": "delivered",
+      "status": "retired",
       "branches": [
         "feat/login-art-awake"
       ],
       "owner": null,
-      "updatedAt": "2026-10-11T18:40:00+00:00",
-      "nextAction": "Delivered by #245. Retire the local worktree and branch feat/login-art-awake with project:prune once this register is on the primary checkout.",
+      "updatedAt": "2026-10-11T23:42:17.185Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "preview/public/assets/login/jev-jevica-golden-hour.jpg",
         "preview/public/assets/login/sources.json"
@@ -2388,35 +2713,78 @@
           "tree": "55b0a1768fd23a7fbfb71ddb6e91fea8855f7c54",
           "checks": "All 11 final-head hosted checks passed on 1811f71. Local at 3bd3a44: pnpm test 2621 pass 1 pre-existing skip, build passed; signed-out gate rendered at 1440x900 and 390x844."
         }
-      ]
+      ],
+      "retirement": {
+        "head": "1811f71d16574d791c629afde7d0d2401062c12b",
+        "releasedAt": "2026-10-11T23:38:39+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:39+00:00"
+      },
+      "retiredBranches": [
+        "feat/login-art-awake"
+      ],
+      "archive": {
+        "feat/login-art-awake": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-uINxqq/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-uINxqq/history.bundle",
+          "sha256": "de31a4282e1c82612d19565501c8276be6b3670055cba27507ee5d684197a517",
+          "tag": "refs/tags/archive/worktree-prune/749c8383-3e86-4add-8e48-b260ed39580b",
+          "head": "1811f71d16574d791c629afde7d0d2401062c12b"
+        }
+      }
     },
     {
       "id": "street-visuals-register",
       "title": "Record the paver, corner, planting and login-art deliveries and retire their worktrees",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/street-visuals-delivered"
       ],
-      "owner": "claude:river-oaks-f8",
-      "updatedAt": "2026-10-11T18:40:00+00:00",
-      "leaseUntil": "2026-10-11T20:40:00+00:00",
-      "nextAction": "Merge this register PR after the queued PRs (c2's #237, #238, #244; #242; #248; #249). Then, from a clean primary on main, add fresh retirement records and run project:prune for feat/paver-texture-realism, feat/sidewalk-corners, feat/plant-diversity and feat/login-art-awake. Remote branch deletion is not authorized.",
+      "owner": null,
+      "updatedAt": "2026-10-12T00:07:28.049Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "requiredChecks": [
         "project-status validateTasks passes",
         "Hosted checks on the final head"
-      ]
+      ],
+      "pr": 251,
+      "deliveryPr": 251,
+      "evidence": [
+        {
+          "pr": 251,
+          "reviewedHead": "621417e7724d6c52a67a3ca1caa538d8da6adb71",
+          "merge": "d195907513945ea3dce34e45628b79cd4704e421",
+          "tree": "150b5c37668b59bf94934bf1fdb6cfc274b69b16",
+          "checks": "All 17 final-head hosted checks passed on 621417e. Local: validateTasks passed; scripts/tests/project-*.test.js 24/24; pnpm test 2623 pass 1 pre-existing skip."
+        }
+      ],
+      "retirement": {
+        "head": "621417e7724d6c52a67a3ca1caa538d8da6adb71",
+        "releasedAt": "2026-10-12T00:06:58+00:00",
+        "sessionsReviewedAt": "2026-10-12T00:06:58+00:00"
+      },
+      "retiredBranches": [
+        "docs/street-visuals-delivered"
+      ],
+      "archive": {
+        "docs/street-visuals-delivered": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SBvrBo/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SBvrBo/history.bundle",
+          "sha256": "bd7ed6d2be2674816aa89ddea999f636ef3ad5ba848d2e04476483f75cb26ab2",
+          "tag": "refs/tags/archive/worktree-prune/4c88ed91-97d0-4ca1-8b2f-dd8e372c3b0b",
+          "head": "621417e7724d6c52a67a3ca1caa538d8da6adb71"
+        }
+      }
     },
     {
       "id": "studio-starter-districts",
       "title": "Five importable district starters and World Studio template chooser",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "cody/starter-districts-20261011"
       ],
-      "owner": "claude-code session 46fc41e0-26d1-4116-956a-7cac77a13769",
-      "leaseUntil": "2026-10-11T22:17:16+00:00",
-      "updatedAt": "2026-10-11T20:17:16+00:00",
-      "nextAction": "Queue turn reached. Merged main at 5f3c1bb (#244); only the register conflicted, resolved task by task. After re-verification: push, then gh-merge-when-green.sh 242; record merge evidence and mark delivered.",
+      "owner": null,
+      "updatedAt": "2026-10-11T23:41:24.536Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-11-starter-districts.md",
       "filesOwned": [
         "preview/public/data/starter-districts/",
@@ -2433,18 +2801,54 @@
         "pnpm run verify",
         "Studio browser acceptance"
       ],
-      "evidence": {
-        "verification": [
-          ".runtime/agent/core.json",
-          "data/reports/starter-districts-browser.json"
-        ],
-        "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip"
-      },
+      "evidence": [
+        {
+          "pr": 242,
+          "reviewedHead": "2dedb6d81a30bb4e03b4b599d67cea8fa367e201",
+          "merge": "691a9cf882cae732a791da3a4d697a6121d0b5fe",
+          "checks": "Final head verified locally on main 5f3c1bb: Studio 27/27, core passed, World Studio browser journey with no page errors. Hosted run 38171709255: attempt 1 hit the known email-access and multiplayer-dev flakes; the rerun of failed jobs passed all 17 checks. Merged by gh-merge-when-green.sh at 2026-10-11T20:31:42Z.",
+          "earlierEvidence": {
+            "verification": [
+              ".runtime/agent/core.json",
+              "data/reports/starter-districts-browser.json"
+            ],
+            "artifacts": "/Users/buns/Documents/starter-districts-20261011/starter-districts.zip",
+            "localIntegrationReceipt": "/Users/buns/Documents/GitHub/BunsDev/river-oaks/.runtime/template-integration-20261011/receipt.json",
+            "pr": "https://github.com/BunsDev/river-oaks/pull/242",
+            "head": "f708247fda251f98dcbf2c63354a95592702e905"
+          },
+          "tree": "6cda2fdb8853489aae804864f7edc4830852d49b"
+        }
+      ],
       "pr": 242,
       "handoff": {
-        "at": "2026-10-11T18:42:28+00:00",
-        "from": "claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf; that session never started.",
-        "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue"
+        "at": "2026-10-11T18:41:50+00:00",
+        "from": "cody-template-integration-20261011; then claude:river-oaks-27 (session 1b1e8bd7), which continued at 17:49Z into session 7019fbdf. That session never started (empty transcript) and is not among the live peers.",
+        "authorizedBy": "Val, 2026-10-11: take over #242 and merge it in its place in river-oaks-c2's queue",
+        "preserved": "Previous owner's untracked reports in the #242 worktree are left untouched."
+      },
+      "retirement": {
+        "head": "2dedb6d81a30bb4e03b4b599d67cea8fa367e201",
+        "releasedAt": "2026-10-11T23:38:47+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:47+00:00"
+      },
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/studio-starter-districts-evidence-20261011",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/studio-starter-districts-evidence-20261011.sha256",
+        "files": 41,
+        "contents": "Worktree .runtime (receipts and logs), output/playwright screenshots, and the five untracked browser reports, two of them from earlier owners (merge-world-studio-browser.json, starter-districts-browser.json)."
+      },
+      "retiredBranches": [
+        "cody/starter-districts-20261011"
+      ],
+      "archive": {
+        "cody/starter-districts-20261011": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-HD7wrP/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-HD7wrP/history.bundle",
+          "sha256": "add87549142b0fe69614f78a31480af0f5d78f1bf8fac14769a10ef35d7204e1",
+          "tag": "refs/tags/archive/worktree-prune/7be1979d-dea2-4640-9317-02146916f036",
+          "head": "2dedb6d81a30bb4e03b4b599d67cea8fa367e201"
+        }
       }
     },
     {
@@ -2504,14 +2908,13 @@
     {
       "id": "town-connect-deadline",
       "title": "Keep a slow-but-open town connection instead of abandoning it at 12 s (email-access flake since #253)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "fix/town-connect-deadline"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-12T02:55:15+00:00",
-      "updatedAt": "2026-10-12T00:55:15+00:00",
-      "nextAction": "Extract the connection deadline into a tested helper (open vs first-snapshot budgets, starvation-aware), wire into multiplayer-client, verify, open PR.",
+      "owner": null,
+      "updatedAt": "2026-10-12T01:21:21.915Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-12-town-connect-deadline.md",
       "filesOwned": [
         "preview/src/multiplayer-client.js",
@@ -2524,7 +2927,34 @@
         "pnpm run verify",
         "RIVER_OAKS email-access e2e",
         "hosted Verify"
-      ]
+      ],
+      "pr": 260,
+      "evidence": [
+        {
+          "pr": 260,
+          "reviewedHead": "bc982677fc263c951c71624677dcf0fdd7ade32b",
+          "merge": "7c3f4ea5d148d37a77836fe188d130e0fcfc1d35",
+          "tree": "0e7c84621d7ff64de04d1c4d533f4494df7525be",
+          "checks": "All 17 hosted checks passed on the final head; approved by river-oaks-c2 (PR comment); merged by gh-merge-when-green.sh in queue order. Core verify, 5 new unit tests, security e2e 2/2 locally, and an A/B main-thread starvation probe (old client times out like CI; new client 1 socket, 0 closes)."
+        }
+      ],
+      "retirement": {
+        "head": "bc982677fc263c951c71624677dcf0fdd7ade32b",
+        "releasedAt": "2026-10-12T01:20:38+00:00",
+        "sessionsReviewedAt": "2026-10-12T01:20:38+00:00"
+      },
+      "retiredBranches": [
+        "fix/town-connect-deadline"
+      ],
+      "archive": {
+        "fix/town-connect-deadline": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-7UsHL4/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-7UsHL4/history.bundle",
+          "sha256": "cb426850c7d92849d5cf4de7103b2206ef2e2a2fa302f944fd93c24f492c987d",
+          "tag": "refs/tags/archive/worktree-prune/ed7e9a5c-76cf-47e0-a93b-42fde82a3731",
+          "head": "bc982677fc263c951c71624677dcf0fdd7ade32b"
+        }
+      }
     },
     {
       "id": "explore-destinations-ui",
@@ -2687,14 +3117,13 @@
     {
       "id": "register-sweep-20261012",
       "title": "Commit four retirement records that exist only in the primary's live register (chauffeur-daily-budget, explore-destinations-ui, server-hardening-followups, register-sweep-20261011)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "docs/register-sweep-20261012"
       ],
-      "owner": "claude:river-oaks-c2",
-      "updatedAt": "2026-10-12T02:34:00+00:00",
-      "leaseUntil": "2026-10-12T04:34:00+00:00",
-      "nextAction": "Merge this docs-only register PR with gh-merge-when-green.sh (Val approved 2026-10-12), then release this task and retire docs/register-sweep-20261012 with project:prune.",
+      "owner": null,
+      "updatedAt": "2026-10-12T02:55:45.409Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "docs/project-management/tasks.json (the four records above and this entry)"
       ],
@@ -2702,19 +3131,46 @@
         "project:status validates the register",
         "Hosted CI"
       ],
-      "issues": []
+      "issues": [],
+      "pr": 269,
+      "deliveryPr": 269,
+      "evidence": [
+        {
+          "pr": 269,
+          "reviewedHead": "444dd451312665b88a69756e282b8d968916e1e6",
+          "merge": "e55c3866fcf8ec85090c22789fd5bc8ca5364a05",
+          "tree": "6504df673f23e0b750f69c262664a1c83c5df1e6",
+          "checks": "All 17 hosted checks passed on 444dd45 (guard CLEAN, first attempt after a rebase onto #268; the earlier head lost a run to the known spatial-streets Hermès stall). Docs-only; project:status validated the register."
+        }
+      ],
+      "retirement": {
+        "head": "444dd451312665b88a69756e282b8d968916e1e6",
+        "releasedAt": "2026-10-12T02:54:57+00:00",
+        "sessionsReviewedAt": "2026-10-12T02:54:57+00:00"
+      },
+      "retiredBranches": [
+        "docs/register-sweep-20261012"
+      ],
+      "archive": {
+        "docs/register-sweep-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-4EsU63/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks-workplace-20261011/retirement-4EsU63/history.bundle",
+          "sha256": "99d3cde3d0f8bb5fb818c139b3031a8d57b6283d2edbf50aa98e833525d3cda2",
+          "tag": "refs/tags/archive/worktree-prune/9bd391ad-55fa-423c-8a80-b85223f04e12",
+          "head": "444dd451312665b88a69756e282b8d968916e1e6"
+        }
+      }
     },
     {
       "id": "plaza-salon",
       "title": "Furnish the Dior-Toulouse plaza as a café and chess promenade (Val's reference set: curved bench, café armchairs, chess and timber tables, travertine planters, bronze lanterns, string lights)",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/plaza-salon"
       ],
-      "owner": "claude:river-oaks-3b",
-      "leaseUntil": "2026-10-12T04:05:03+00:00",
-      "updatedAt": "2026-10-12T02:05:03+00:00",
-      "nextAction": "Open the PR, coordinate a merge slot with river-oaks-c2, merge through gh-merge-when-green.sh.",
+      "owner": null,
+      "updatedAt": "2026-10-12T03:21:30.566Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "ledger": "docs/superpowers/plans/2026-10-12-plaza-salon.md",
       "filesOwned": [
         "preview/src/plaza-salon-plan.js",
@@ -2733,8 +3189,813 @@
         "pnpm run build",
         "pnpm run verify",
         "visual review",
-        "plaza-salon, spatial-streets, places, reference-facades, street-level, debug-tools journeys",
-        "shared sit-and-water journey"
+        "spatial-streets journey"
+      ],
+      "pr": 270,
+      "evidence": [
+        {
+          "pr": 270,
+          "reviewedHead": "641ca6bf3b0afb7e74c5a5d967c938598a097dc2",
+          "merge": "ee111a466d9bd266db5ae9bf415b2ab7dca5de7b",
+          "tree": "39288b84bc408e74ac999bf1961db14f1963c83f",
+          "checks": "All 17 hosted checks passed on the final head (including preview experience streets and places, shared required and development); merged by gh-merge-when-green.sh in a merge turn agreed with river-oaks-c2. Locally: pnpm test 2663/1 skip, test:server 542/542 with Redis, build, core verify, plaza-salon/places/sit-and-water/shared-seating journeys, spatial-streets 2/2 with the convergence wait, visual review at 15:00 and 19:00."
+        }
+      ],
+      "retirement": {
+        "head": "641ca6bf3b0afb7e74c5a5d967c938598a097dc2",
+        "releasedAt": "2026-10-12T03:20:10+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:20:55+00:00"
+      },
+      "retiredBranches": [
+        "feat/plaza-salon"
+      ],
+      "archive": {
+        "feat/plaza-salon": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-dZ9wrE/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-dZ9wrE/history.bundle",
+          "sha256": "32e100fb3d4e4d44787148431926fa4ad60871ce13f876a61a69c2df89bcd3b2",
+          "tag": "refs/tags/archive/worktree-prune/f49a7e57-dbfb-4f2e-90b8-a40c7f519520",
+          "head": "641ca6bf3b0afb7e74c5a5d967c938598a097dc2"
+        }
+      }
+    },
+    {
+      "id": "luxe-interiors-office",
+      "title": "Refresh every boutique interior with a luxe finish pass and build a futuristic luxury office for the workplace room",
+      "status": "retired",
+      "branches": [
+        "feat/luxe-interiors-office"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T23:41:38.735889+00:00",
+      "nextAction": "None. Retired: PR #253 merged as d24b379; local branch and worktree pruned (archive tag and bundle verified by restore and fsck); remote branch deleted at the merged head.",
+      "filesOwned": [
+        "preview/src/interior-luxe.js",
+        "preview/src/room-ground-clip.js",
+        "preview/src/workplace-office.js",
+        "preview/src/store-interiors.js (finish hooks)",
+        "preview/src/main.js (ground clip hook)",
+        "preview/e2e/fixtures/workplace.*",
+        "preview/tests/interior-luxe.test.js",
+        "preview/tests/room-ground-clip.test.js",
+        "preview/tests/workplace-office.test.js",
+        "docs/superpowers/plans/2026-10-11-luxe-interiors-office.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/workplace-office.test.js preview/tests/workplace-room.test.js preview/tests/interior-luxe.test.js preview/tests/room-ground-clip.test.js",
+        "pnpm run verify",
+        "pnpm run test:experience workplace-room store-interiors storefront-lighting (last two pre-existing failures on a4412e8)",
+        "Val visual review of stores and office"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-luxe-interiors-office.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-luxe-interiors-20261011",
+      "notes": "store-interiors.js receives only small hooks; Cartier pilot (blocked on review) keeps its owned seam.",
+      "evidence": [
+        {
+          "pr": 253,
+          "url": "https://github.com/BunsDev/river-oaks/pull/253",
+          "reviewedHead": "5a066676df4d154c1af92441235d7802df9d4819",
+          "merge": "d24b379bcda9b55c18355315d9bd4fa34f7211c8",
+          "mergedAt": "2026-10-11T19:59:23Z",
+          "approval": "Val approved stores and office on 2026-10-11 and asked to merge",
+          "checks": "17/17 hosted checks green on 5a06667 (multiplayer-dev re-run once); local core passed on 332e65e (same code); workplace-room and workplace journeys passed",
+          "ledger": "docs/superpowers/plans/2026-10-11-luxe-interiors-office.md",
+          "tree": "a6304b53d50dce02147cc76e924f35b82e5c6427"
+        }
+      ],
+      "pr": 253,
+      "retirement": {
+        "head": "5a066676df4d154c1af92441235d7802df9d4819",
+        "releasedAt": "2026-10-11T23:39:20.821357+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:39:20.821357+00:00"
+      },
+      "retiredBranches": [
+        "feat/luxe-interiors-office"
+      ],
+      "archive": {
+        "feat/luxe-interiors-office": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-UITf8S/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-UITf8S/history.bundle",
+          "sha256": "abed25434244a5f79f17f5d998769e4eed54f75420ed6e0354bcf3cc18e7800b",
+          "tag": "refs/tags/archive/worktree-prune/314662cc-af6c-41be-9618-72012f329e1d",
+          "head": "5a066676df4d154c1af92441235d7802df9d4819"
+        }
+      },
+      "remoteBranchDeleted": {
+        "branch": "feat/luxe-interiors-office",
+        "head": "5a066676df4d154c1af92441235d7802df9d4819",
+        "at": "2026-10-11T23:41:38.735889+00:00",
+        "authorizedBy": "Val, 2026-10-11 (\"pls proceed\")"
+      }
+    },
+    {
+      "id": "primary-staged-handoff-20261011",
+      "title": "Deliver or relocate the files left staged in the primary main checkout",
+      "status": "retired",
+      "branches": [
+        "docs/primary-ledgers-20261011"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T23:39:37.027Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-primary-staged-handoff.md",
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-07-desktop-refresh.md",
+        "docs/superpowers/plans/2026-10-08-typesafe-walkability.md",
+        "docs/superpowers/plans/2026-10-11-dependency-prs-211-213.md",
+        "docs/superpowers/plans/2026-10-11-enforced-local-pruning.md",
+        "docs/project-management/retirement-dependencies-20261011.json",
+        "docs/superpowers/plans/2026-10-11-primary-staged-handoff.md"
+      ],
+      "requiredChecks": [
+        "git diff --check",
+        "pnpm run verify security",
+        "pnpm run verify tooling",
+        "hosted CI"
+      ],
+      "pr": 249,
+      "evidence": [
+        {
+          "pr": 249,
+          "reviewedHead": "8d374df12b277d3736ae9bec7eb5b85feed943ce",
+          "merge": "d206571d80bd94296cdb5f484b238dcb77df9263",
+          "checks": "Docs only: git diff --check clean, check_secrets --all and gitleaks clean. Hosted run 38173379743: the known multiplayer-dev flake once, then all 17 checks green on rerun; merged by gh-merge-when-green.sh at 2026-10-11T20:55:33Z.",
+          "tree": "df240dec2b6ca4c9004be82540ffd764482f04c9"
+        }
+      ],
+      "retirement": {
+        "head": "8d374df12b277d3736ae9bec7eb5b85feed943ce",
+        "releasedAt": "2026-10-11T23:38:47+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:47+00:00"
+      },
+      "retiredBranches": [
+        "docs/primary-ledgers-20261011"
+      ],
+      "archive": {
+        "docs/primary-ledgers-20261011": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-bTX7lu/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-bTX7lu/history.bundle",
+          "sha256": "b28dd47fb47e7a30e69151279a3f9dde3078048738b3e07d0cc2315dbd464759",
+          "tag": "refs/tags/archive/worktree-prune/1ceedf78-3763-47e4-acb3-a6b475174929",
+          "head": "8d374df12b277d3736ae9bec7eb5b85feed943ce"
+        }
+      }
+    },
+    {
+      "id": "ci-parallel-preview",
+      "title": "Run the required preview check's suites in parallel jobs so each merge waits about 8 minutes instead of 24",
+      "status": "retired",
+      "branches": [
+        "ci/parallel-preview-20261011"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-11T23:39:19.674Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-11-ci-parallel-preview.md",
+      "filesOwned": [
+        ".github/workflows/verify.yml",
+        "docs/superpowers/plans/2026-10-11-ci-parallel-preview.md"
+      ],
+      "requiredChecks": [
+        "actionlint",
+        "hosted CI: preview aggregate and every shard green on the PR's own run"
+      ],
+      "pr": 252,
+      "evidence": [
+        {
+          "pr": 252,
+          "reviewedHead": "9e2d8b27f8c5108101666a3509dbceed0402c310",
+          "merge": "51150eec53c4558fecdab6405ad317d8f827b96d",
+          "checks": "Acceptance run 38165724820 at 96e31bb: every job green in 5 min 48 s (the old single preview job took 23.5 min). Final head 9e2d8b2 run 38166193332: contextual-first-visit hit its known waitFor flake once and passed on rerun of the failed jobs; all 17 checks green; merged by gh-merge-when-green.sh. river-oaks-c2 reviewed: no findings.",
+          "tree": "e385d132ad3d86ce1ae489a2019998327ca01b61"
+        }
+      ],
+      "retirement": {
+        "head": "9e2d8b27f8c5108101666a3509dbceed0402c310",
+        "releasedAt": "2026-10-11T23:38:47+00:00",
+        "sessionsReviewedAt": "2026-10-11T23:38:47+00:00"
+      },
+      "retiredBranches": [
+        "ci/parallel-preview-20261011"
+      ],
+      "archive": {
+        "ci/parallel-preview-20261011": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-D6RqsP/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-D6RqsP/history.bundle",
+          "sha256": "4975d00dad8a111b8cf1d32539c6682108ce27e3629afa8c4589a2ce2859d4c3",
+          "tag": "refs/tags/archive/worktree-prune/bcc5eca5-429b-4551-b229-e97a556a5571",
+          "head": "9e2d8b27f8c5108101666a3509dbceed0402c310"
+        }
+      }
+    },
+    {
+      "id": "login-art-rotation",
+      "title": "Rotating sign-in art: three modest stills and a short animated clip, with pause and reduced-motion support",
+      "status": "retired",
+      "branches": [
+        "feat/login-art-rotation"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T00:06:31.470Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/access-art-rotation.js",
+        "preview/tests/access-art-rotation.test.js",
+        "preview/index.html",
+        "preview/src/access-gate.css",
+        "preview/src/access-entry.js",
+        "preview/public/assets/login/*"
+      ],
+      "pr": 256,
+      "deliveryPr": 256,
+      "evidence": [
+        {
+          "pr": 256,
+          "reviewedHead": "0689ada8917eae50c46e85cb8f68245273dd2933",
+          "merge": "640abe301d9e35599b9b79947339138ffa8cae59",
+          "tree": "f703e6dcc20d577dfad0da53f353bccf09af37a0",
+          "checks": "All 17 final-head hosted checks passed on 0689ada (preview shared (development) after one rerun of the multiplayer-dev landmark-teleport flake). Local at 0689ada: access-art-rotation 7/7, pnpm test 2646 pass 1 pre-existing skip, build passed; browser check desktop/reduced-motion/phone with no errors."
+        }
+      ],
+      "retirement": {
+        "head": "0689ada8917eae50c46e85cb8f68245273dd2933",
+        "releasedAt": "2026-10-12T00:05:58+00:00",
+        "sessionsReviewedAt": "2026-10-12T00:05:58+00:00"
+      },
+      "retiredBranches": [
+        "feat/login-art-rotation"
+      ],
+      "archive": {
+        "feat/login-art-rotation": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-RdBp2C/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-RdBp2C/history.bundle",
+          "sha256": "d76de5fcbd1bb0145914b0d87830941334edbb854e132ab7e34e6c2e50ff99dd",
+          "tag": "refs/tags/archive/worktree-prune/2c70934f-9238-4542-82c1-93dab00b3a78",
+          "head": "0689ada8917eae50c46e85cb8f68245273dd2933"
+        }
+      }
+    },
+    {
+      "id": "register-merge-driver",
+      "title": "Merge the task register by task id in every git merge, rebase and stash pop, and report register edits held in a stash",
+      "status": "retired",
+      "branches": [
+        "fix/register-merge-driver-20261012"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T00:58:46.884Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-12-register-merge-driver.md",
+      "filesOwned": [
+        "scripts/merge-task-register.mjs",
+        ".githooks/merge-task-register",
+        ".gitattributes",
+        "scripts/install-project-hooks.mjs",
+        "scripts/project-status.mjs",
+        "scripts/tests/merge-task-register.test.js",
+        "scripts/tests/project-status.test.js",
+        "docs/project-management/workflow.md",
+        "docs/superpowers/plans/2026-10-12-register-merge-driver.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/merge-task-register.test.js scripts/tests/project-status.test.js scripts/tests/hardening-hooks.test.js",
+        "pnpm run verify",
+        "hosted CI"
+      ],
+      "pr": 258,
+      "evidence": [
+        {
+          "pr": 258,
+          "reviewedHead": "ff0ef00ae3d1304de857454eb3938748e47ec8b8",
+          "merge": "a79a82dad05a7207e5b2613c3f6dc5c8ae73911f",
+          "tree": "f65696ec91be2ff0afae4ebf52b7bc685d94a480",
+          "checks": "24 focused tests (driver, status, hooks) and core verify 11/11 passed; replay of the real 23:52Z conflict matched the hand resolution (61 tasks); hosted run 38189493335 green on first attempt; merged by gh-merge-when-green.sh at 2026-10-12T00:57:17Z. Rolled out: primary pulled to a79a82d (65 live tasks kept), install-project-hooks rerun from main, installed driver exercised on copies of the live register with a node-less PATH."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/register-merge-driver-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/register-merge-driver-evidence-20261012.sha256",
+        "files": 2
+      },
+      "retirement": {
+        "head": "ff0ef00ae3d1304de857454eb3938748e47ec8b8",
+        "releasedAt": "2026-10-12T00:58:14+00:00",
+        "sessionsReviewedAt": "2026-10-12T00:58:14+00:00"
+      },
+      "retiredBranches": [
+        "fix/register-merge-driver-20261012"
+      ],
+      "archive": {
+        "fix/register-merge-driver-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-I5XtLY/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-I5XtLY/history.bundle",
+          "sha256": "7619846ca9ae4cc059d6259f920a361bc13c84cc60ecdddefcadb96706426230",
+          "tag": "refs/tags/archive/worktree-prune/b386b05e-5327-4bbc-9f08-dffc2d2f30fd",
+          "head": "ff0ef00ae3d1304de857454eb3938748e47ec8b8"
+        }
+      }
+    },
+    {
+      "id": "ci-flaky-journeys",
+      "title": "Fix the three flaky CI journeys: multiplayer-dev landmark teleport, email-access browser test, contextual-first-visit",
+      "status": "retired",
+      "branches": [
+        "fix/ci-flaky-journeys-20261012"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T01:50:36.311Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-12-ci-flaky-journeys.md",
+      "filesOwned": [
+        "preview/e2e/multiplayer-dev.js",
+        "docs/superpowers/plans/2026-10-12-ci-flaky-journeys.md"
+      ],
+      "requiredChecks": [
+        "each fixed journey locally, plus a slowed-frame reproduction where feasible",
+        "pnpm run verify",
+        "hosted CI preview shards"
+      ],
+      "pr": 261,
+      "evidence": [
+        {
+          "pr": 261,
+          "reviewedHead": "4975395e2d050b6ae098b15a7aef52fa041c6da8",
+          "merge": "cb096018f3e2e2b758cbad95b6b99c4ed3c6605c",
+          "tree": "4933d7b9379894d748f1d849415f73c3e509381b",
+          "checks": "Stalled-render reproduction: main's journey fails with the CI error, the fix passes. Core verify 11/11 on main 7c3f4ea; journey passed there. Hosted run 38192586761: creator-objects flaked once (known), the rerun of failed jobs passed all 17 checks; merged by gh-merge-when-green.sh at 2026-10-12T01:49:33Z. Email-access flake fixed separately in #260 (river-oaks-3b)."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/ci-flaky-journeys-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/ci-flaky-journeys-evidence-20261012.sha256",
+        "files": 19
+      },
+      "retirement": {
+        "head": "4975395e2d050b6ae098b15a7aef52fa041c6da8",
+        "releasedAt": "2026-10-12T01:50:08+00:00",
+        "sessionsReviewedAt": "2026-10-12T01:50:08+00:00"
+      },
+      "retiredBranches": [
+        "fix/ci-flaky-journeys-20261012"
+      ],
+      "archive": {
+        "fix/ci-flaky-journeys-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-O0HacW/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-O0HacW/history.bundle",
+          "sha256": "6c2756772cd045729188e2f52e8a64d27c0763c249e8ec5ff936834fcf3cb952",
+          "tag": "refs/tags/archive/worktree-prune/52543e5a-bcae-4845-9dca-837ca74be071",
+          "head": "4975395e2d050b6ae098b15a7aef52fa041c6da8"
+        }
+      }
+    },
+    {
+      "id": "interior-cpu-cost",
+      "title": "Cut #253's CPU-renderer load and frame cost (ground clip mask, deferred floor textures)",
+      "status": "retired",
+      "branches": [
+        "fix/interior-cpu-cost"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T02:58:39.033352+00:00",
+      "nextAction": "None. Retired: #268 merged as 839d288; local branch and worktree pruned and restore-verified; remote branch deleted at the merged head.",
+      "filesOwned": [
+        "preview/src/room-ground-clip.js",
+        "preview/src/interior-luxe.js",
+        "preview/src/main.js (clip dispose)",
+        "preview/tests/room-ground-clip.test.js",
+        "docs/superpowers/plans/2026-10-11-interior-cpu-cost.md"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/room-ground-clip.test.js preview/tests/interior-luxe.test.js",
+        "pnpm run verify",
+        "pnpm run test:security:e2e (CI, Mesa)"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-11-interior-cpu-cost.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-interior-cpu-20261011",
+      "pr": 268,
+      "evidence": [
+        {
+          "pr": 268,
+          "reviewedHead": "677242b4944a0e2763bf3c75a8d4dad0735796ba",
+          "merge": "839d288bad870dbcd3659d2594a70f362e7b1ed6",
+          "tree": "aaed5a997c5f519f99d8bcf8915feea9cd844aeb",
+          "checks": "17/17 hosted checks green on 677242b (Email access step passed, 91 s); local core passed on 677242b; SwiftShader join time 256-266 s on #253 vs 128-161 s with the fix (pre-#253 100-165 s)",
+          "approval": "Val asked to merge, 2026-10-11"
+        }
+      ],
+      "retirement": {
+        "head": "677242b4944a0e2763bf3c75a8d4dad0735796ba",
+        "releasedAt": "2026-10-12T02:48:06.901143+00:00",
+        "sessionsReviewedAt": "2026-10-12T02:48:06.901143+00:00"
+      },
+      "retiredBranches": [
+        "fix/interior-cpu-cost"
+      ],
+      "archive": {
+        "fix/interior-cpu-cost": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-Y0qT2r/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-Y0qT2r/history.bundle",
+          "sha256": "63769025775bf8bb68d9581d35c735f8b6355de27b5a9a1d8f9ae51f2b6288b0",
+          "tag": "refs/tags/archive/worktree-prune/29e04280-c534-4940-9f30-0f8744fc1b9a",
+          "head": "677242b4944a0e2763bf3c75a8d4dad0735796ba"
+        }
+      },
+      "remoteBranchDeleted": {
+        "branch": "fix/interior-cpu-cost",
+        "head": "677242b4944a0e2763bf3c75a8d4dad0735796ba",
+        "at": "2026-10-12T02:58:39.033352+00:00",
+        "authorizedBy": "Val, 2026-10-12 (\"yes pls do\")"
+      }
+    },
+    {
+      "id": "town-ticket-ttl",
+      "title": "Lengthen the town ticket to 60 s and make email-access diagnose reconnect cascades (follow-up to #260)",
+      "status": "active",
+      "branches": [
+        "fix/town-ticket-ttl"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-12T07:22:29+00:00",
+      "updatedAt": "2026-10-12T03:22:29+00:00",
+      "nextAction": "PAUSED with uncommitted edits in ../river-oaks-ticket-ttl-20261012 (ticket-policy.js, app.js, redis-security.js, two tests). Remaining: update the two server tests that still assume 15 s, email-access socket diagnostics, ledger correction; verify; PR. Do not discard the worktree.",
+      "ledger": "docs/superpowers/plans/2026-10-12-town-connect-deadline.md",
+      "filesOwned": [
+        "server/app.js",
+        "server/redis-security.js",
+        "server/tests/hardening-tickets.test.js",
+        "preview/e2e/email-access.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm run test:server (with REDIS_URL)",
+        "pnpm run test:security:e2e",
+        "pnpm run verify",
+        "hosted Verify"
+      ]
+    },
+    {
+      "id": "contextual-first-visit-evidence",
+      "title": "Make the contextual-first-visit talk step report what the visitor sees, and keep its touch-pass failure evidence in CI",
+      "status": "retired",
+      "branches": [
+        "test/contextual-first-visit-evidence-20261012"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T02:02:54.922Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-12-ci-flaky-journeys.md",
+      "filesOwned": [
+        "preview/e2e/contextual-first-visit.js"
+      ],
+      "requiredChecks": [
+        "pnpm run test:experience contextual-first-visit",
+        "forced-refusal run reports the notice",
+        "pnpm run verify",
+        "hosted CI"
+      ],
+      "pr": 262,
+      "evidence": [
+        {
+          "pr": 262,
+          "reviewedHead": "8b5385d40ebd3ffdb759d383d46043f255dd0b46",
+          "merge": "0983a4930ab44d8fbf9f1b270421cbeb8622757c",
+          "tree": "3e827f8cec0a17dbf1c1854e5a2c222c2ea2c43e",
+          "checks": "Journey passes; forced travel_cooldown probe fails right away with the refusal text, town replies and touch page state, and writes experience-contextual-touch-failure.png; core verify 11/11; hosted run 38193659590 green on first attempt; merged by gh-merge-when-green.sh at 2026-10-12T02:02:05Z."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/contextual-first-visit-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/contextual-first-visit-evidence-20261012.sha256",
+        "files": 13
+      },
+      "retirement": {
+        "head": "8b5385d40ebd3ffdb759d383d46043f255dd0b46",
+        "releasedAt": "2026-10-12T02:02:35+00:00",
+        "sessionsReviewedAt": "2026-10-12T02:02:35+00:00"
+      },
+      "retiredBranches": [
+        "test/contextual-first-visit-evidence-20261012"
+      ],
+      "archive": {
+        "test/contextual-first-visit-evidence-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-H1Lv43/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-H1Lv43/history.bundle",
+          "sha256": "b68bcdb3f22b955afd04d668c3c35b094d7bbc71513ec273cc119e280ba9adbd",
+          "tag": "refs/tags/archive/worktree-prune/7bc595e9-98d3-43a0-9cc2-5ba257437f99",
+          "head": "8b5385d40ebd3ffdb759d383d46043f255dd0b46"
+        }
+      }
+    },
+    {
+      "id": "creator-objects-flake",
+      "title": "Find and fix the cause of the flaky creator-objects shared-town journey",
+      "status": "retired",
+      "branches": [
+        "fix/creator-objects-flake-20261012"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T03:41:11.145Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-12-ci-flaky-journeys.md",
+      "filesOwned": [
+        "preview/src/creator-object.js",
+        "preview/src/builder-mode.js",
+        "preview/src/main.js",
+        "preview/src/shared-build.js",
+        "server/world.js",
+        "preview/tests/builder-mode.test.js",
+        "preview/e2e/creator-objects.js",
+        "docs/superpowers/plans/2026-10-12-ci-flaky-journeys.md"
+      ],
+      "requiredChecks": [
+        "red/green reproduction",
+        "pnpm run verify",
+        "hosted CI"
+      ],
+      "pr": 271,
+      "evidence": [
+        {
+          "pr": 271,
+          "reviewedHead": "87c45584e9dde830efbe24b55b3fd8409ce2f2e3",
+          "merge": "88a6cc640d51cf89016d041efab06f12d0bff7d5",
+          "tree": "08a2eb77b445c84ce817f8259319cbfdf054ba77",
+          "checks": "Unit red/green (resident parity test); 75 focused tests; core verify 11/11 on e55c386; journey 11/11 fixed vs main 4/6 failing locally; after merging #270, the local journey hit machine-load failures (load average 285) in the town connection, unrelated code; hosted run 38200068063 at the merged head passed all checks on first attempt, including the worlds-and-creator shard; merged by gh-merge-when-green.sh at 2026-10-12T03:39:31Z."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/creator-objects-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/creator-objects-evidence-20261012.sha256",
+        "files": 109
+      },
+      "retirement": {
+        "head": "87c45584e9dde830efbe24b55b3fd8409ce2f2e3",
+        "releasedAt": "2026-10-12T03:40:50+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:40:50+00:00"
+      },
+      "retiredBranches": [
+        "fix/creator-objects-flake-20261012"
+      ],
+      "archive": {
+        "fix/creator-objects-flake-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-hNuFUp/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-hNuFUp/history.bundle",
+          "sha256": "55ad45e9a089699b1678e82d8b6b0714b54aac618e62ecce7f03e634d6962635",
+          "tag": "refs/tags/archive/worktree-prune/bb9486a6-4df2-4237-ab07-a132be88c89b",
+          "head": "87c45584e9dde830efbe24b55b3fd8409ce2f2e3"
+        }
+      }
+    },
+    {
+      "id": "desktop-dev-env-local",
+      "title": "Local desktop dev environment (PR #225), registered for retirement",
+      "status": "retired",
+      "branches": [
+        "chore/desktop-dev-env-local"
+      ],
+      "owner": null,
+      "pr": 225,
+      "updatedAt": "2026-10-12T03:06:44.737Z",
+      "evidence": [
+        {
+          "pr": 225,
+          "reviewedHead": "20293836ff1f233017f2590539c3c031dd723d7f",
+          "merge": "6597f359798724355fea842052ae19b82e162ed4",
+          "tree": "a34ab727eba982edb57584e76d70952ee4b6e2d2",
+          "mergedAt": "2026-10-11T10:24:09Z",
+          "checks": "PR #225 merged; merge tree equals branch tree; worktree clean after archiving evidence to ~/worktree-backups/river-oaks/reduction-20261012/"
+        }
+      ],
+      "retirement": {
+        "head": "20293836ff1f233017f2590539c3c031dd723d7f",
+        "releasedAt": "2026-10-12T03:03:49.297998+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:03:49.297998+00:00"
+      },
+      "registeredBy": "claude:6136f6c0-2b65-4eef-92a0-9ce4bb13c5f4 (river-oaks-38)",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "retiredBranches": [
+        "chore/desktop-dev-env-local"
+      ],
+      "archive": {
+        "chore/desktop-dev-env-local": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-9mJdMw/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-9mJdMw/history.bundle",
+          "sha256": "00bb82aebbeb9835ba90e5c61266cf7bf8244ce0014a8b1587d4bcf443ce7d44",
+          "tag": "refs/tags/archive/worktree-prune/7cecd0e3-3bf9-4dd5-85e5-3828beedd415",
+          "head": "20293836ff1f233017f2590539c3c031dd723d7f"
+        }
+      }
+    },
+    {
+      "id": "studio-system-theme",
+      "title": "Studio system theme (PR #226), registered for retirement",
+      "status": "retired",
+      "branches": [
+        "feat/studio-system-theme"
+      ],
+      "owner": null,
+      "pr": 226,
+      "updatedAt": "2026-10-12T03:07:38.509Z",
+      "evidence": [
+        {
+          "pr": 226,
+          "reviewedHead": "67e256d97d9d2ebef78c3b9ec8f4d96836f18e74",
+          "merge": "383b3451a2c05edcb162863720928b000d9c0316",
+          "tree": "3622a9d0cc74c8ad71aca939c504372cad487f00",
+          "mergedAt": "2026-10-11T11:20:16Z",
+          "checks": "PR #226 merged; merge tree equals branch tree; worktree clean after archiving evidence to ~/worktree-backups/river-oaks/reduction-20261012/"
+        }
+      ],
+      "retirement": {
+        "head": "67e256d97d9d2ebef78c3b9ec8f4d96836f18e74",
+        "releasedAt": "2026-10-12T03:03:49.297998+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:03:49.297998+00:00"
+      },
+      "registeredBy": "claude:6136f6c0-2b65-4eef-92a0-9ce4bb13c5f4 (river-oaks-38)",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "retiredBranches": [
+        "feat/studio-system-theme"
+      ],
+      "archive": {
+        "feat/studio-system-theme": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-RUT09A/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-RUT09A/history.bundle",
+          "sha256": "52a30cd23e1e51f8eb5e7c3a4b93765afc4c192e662742d377e9efb38a236e64",
+          "tag": "refs/tags/archive/worktree-prune/b5cd7a2e-21c5-413a-b501-fc7ba1e6204f",
+          "head": "67e256d97d9d2ebef78c3b9ec8f4d96836f18e74"
+        }
+      }
+    },
+    {
+      "id": "workplace-slice-delivered-docs",
+      "title": "Workplace slice delivery record (PR #239), split from workplace-slice for retirement",
+      "status": "retired",
+      "branches": [
+        "docs/workplace-slice-delivered"
+      ],
+      "owner": null,
+      "pr": 239,
+      "updatedAt": "2026-10-12T03:08:23.958Z",
+      "evidence": [
+        {
+          "pr": 239,
+          "reviewedHead": "961e52002bddb991f65caa551915c8b182d6ab48",
+          "merge": "17bc0ce844ad5b64a57bbd91e035201a8b57270f",
+          "tree": "dafadc52cdd757c1ee9885e1f6f3b404a3556268",
+          "mergedAt": "2026-10-11T14:05:55Z",
+          "checks": "PR #239 merged; merge tree equals branch tree; worktree clean after archiving evidence to ~/worktree-backups/river-oaks/reduction-20261012/"
+        }
+      ],
+      "retirement": {
+        "head": "961e52002bddb991f65caa551915c8b182d6ab48",
+        "releasedAt": "2026-10-12T03:03:49.297998+00:00",
+        "sessionsReviewedAt": "2026-10-12T03:03:49.297998+00:00"
+      },
+      "registeredBy": "claude:6136f6c0-2b65-4eef-92a0-9ce4bb13c5f4 (river-oaks-38)",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "retiredBranches": [
+        "docs/workplace-slice-delivered"
+      ],
+      "archive": {
+        "docs/workplace-slice-delivered": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-QOVBHm/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-QOVBHm/history.bundle",
+          "sha256": "78fc3f868a6e1149f6941ea24b929ba2b7143e6b63e7de2afb676bf0c29331e0",
+          "tag": "refs/tags/archive/worktree-prune/5ba52ed8-cd3d-48ec-9041-0c9ed41e08ce",
+          "head": "961e52002bddb991f65caa551915c8b182d6ab48"
+        }
+      }
+    },
+    {
+      "id": "docs-refresh-20261012",
+      "title": "Bring docs and plans up to date with the code (security, email access, places, workplace, process), add a plans index, and add Mermaid diagram placeholders with prompts",
+      "status": "active",
+      "branches": [
+        "docs/refresh-20261012"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T03:49:00+00:00",
+      "leaseUntil": "2026-10-12T07:49:00+00:00",
+      "nextAction": "Audit docs against code (three read-only reviewers), apply evidence-backed fixes, generate docs/superpowers/plans/README.md from the register, add Mermaid placeholders with prompts, verify, PR, merge.",
+      "ledger": "docs/superpowers/plans/2026-10-12-docs-refresh.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-docs-refresh-20261012",
+      "filesOwned": [
+        "docs/*.md (targeted fixes)",
+        "docs/superpowers/plans/README.md",
+        "docs/superpowers/plans/2026-10-12-*.md (own ledgers)"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "issues": []
+    },
+    {
+      "id": "liquid-glass-hud",
+      "title": "Liquid-glass connection modal and a more inventive district map and Map button (Val's request)",
+      "status": "active",
+      "branches": [
+        "feat/liquid-glass-hud"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-12T07:19:34+00:00",
+      "updatedAt": "2026-10-12T04:19:34+00:00",
+      "nextAction": "PR #274 open (e09c9d5 on f662e93); next merge turn after c2's #273; then fast-forward the primary for Val's dev server.",
+      "ledger": "docs/superpowers/plans/2026-10-12-liquid-glass-hud.md",
+      "filesOwned": [
+        "preview/src/multiplayer.css (.multiplayer-gate)",
+        "preview/src/hud-glass.css (--liquid-* tokens)",
+        "preview/src/game-hud.css (#panel-toggle)",
+        "preview/src/sidebar.js (Map button)",
+        "preview/src/world-map.js",
+        "preview/src/world-map.css",
+        "preview/tests/world-map.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run build",
+        "pnpm run verify",
+        "destination-minimap, places, places-guide, connection-required journeys",
+        "visual review light and dark"
+      ],
+      "pr": 274
+    },
+    {
+      "id": "shared-landing-queue",
+      "title": "Land PRs through a queue shared by local sessions (pnpm run land), replacing hand-run merge coordination",
+      "status": "retired",
+      "branches": [
+        "feat/shared-landing-queue-20261012"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-12T04:18:20.179Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "ledger": "docs/superpowers/plans/2026-10-12-shared-landing-queue.md",
+      "filesOwned": [
+        "scripts/land-pr.mjs",
+        "scripts/tests/land-pr.test.js",
+        "package.json",
+        "docs/project-management/workflow.md",
+        "docs/superpowers/plans/2026-10-12-shared-landing-queue.md"
+      ],
+      "requiredChecks": [
+        "node --test scripts/tests/land-pr.test.js",
+        "pnpm run verify",
+        "land its own PR with it"
+      ],
+      "pr": 272,
+      "evidence": [
+        {
+          "pr": 272,
+          "reviewedHead": "f24269693108733e4179b5a3b1d39593e39939eb",
+          "merge": "f662e93358becc56e2f6c8ea7adeca857c94b3cb",
+          "tree": "9d43fc245a4b8d78c2d0c63deaaaadf260b9bb2e",
+          "checks": "10 unit tests against a fake GitHub (red first); core verify 11/11; landed end to end by `pnpm run land 272` itself: queued, waited for Verify on f242696, merge guard merged at 2026-10-12T04:17:26Z, queue empty afterwards."
+        }
+      ],
+      "evidenceArchive": {
+        "path": "/Users/buns/worktree-backups/river-oaks/shared-landing-queue-evidence-20261012",
+        "sha256": "/Users/buns/worktree-backups/river-oaks/shared-landing-queue-evidence-20261012.sha256"
+      },
+      "retirement": {
+        "head": "f24269693108733e4179b5a3b1d39593e39939eb",
+        "releasedAt": "2026-10-12T04:17:55+00:00",
+        "sessionsReviewedAt": "2026-10-12T04:17:55+00:00"
+      },
+      "retiredBranches": [
+        "feat/shared-landing-queue-20261012"
+      ],
+      "archive": {
+        "feat/shared-landing-queue-20261012": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-CBYj19/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-CBYj19/history.bundle",
+          "sha256": "5f349c963442e1d109488f3fc70a5a850ab599d3da7ab0af161710bc083fce78",
+          "tag": "refs/tags/archive/worktree-prune/5b14ba0b-1486-48e8-a0a7-4797fddef5d2",
+          "head": "f24269693108733e4179b5a3b1d39593e39939eb"
+        }
+      }
+    },
+    {
+      "id": "workplace-cap-drafts",
+      "title": "Drop a draft with its task when the finished-task cap drops it, so a hidden draft cannot hold the draft limit",
+      "status": "active",
+      "branches": [
+        "fix/workplace-cap-drafts"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T04:16:00+00:00",
+      "leaseUntil": "2026-10-12T06:16:00+00:00",
+      "nextAction": "forget() drops the tasks' artifacts too; regression on memory and Redis; verify, PR after #273, merge.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-workplace-cap-20261012",
+      "filesOwned": [
+        "server/workplace.js (forget)",
+        "server/tests/workplace-cap-drafts.test.js"
+      ],
+      "requiredChecks": [
+        "server tests with isolated Redis",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "issues": [
+        221
       ]
     }
   ]
