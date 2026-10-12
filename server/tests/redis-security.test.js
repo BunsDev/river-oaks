@@ -80,9 +80,13 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     const user = { userId: 'user-a', sessionId: 'session-a' };
     const tickets = await Promise.all(Array.from({ length: 15 }, () => store.issueTicket(user)));
     assert.equal(tickets.filter(Boolean).length, 10);
-    // The newest is still live under the per-user cap, so only expiry can refuse it.
-    advance(TICKET_TTL_MS + 1);
-    assert.equal(await store.consumeTicket(tickets.filter(Boolean).at(-1), user), false, 'expired after its lifetime');
+    // The two newest are still live under the per-user cap: one is accepted just
+    // before the lifetime ends, the other refused just after, so only expiry refuses it.
+    const [earlier, newest] = tickets.filter(Boolean).slice(-2);
+    advance(TICKET_TTL_MS - 1000);
+    assert.equal(await store.consumeTicket(earlier, user), true, 'valid until its lifetime ends');
+    advance(1001);
+    assert.equal(await store.consumeTicket(newest, user), false, 'expired after its lifetime');
     // The account may ask again once its one-minute issuance window has passed.
     advance(Math.max(0, 60_001 - (TICKET_TTL_MS + 1)));
     assert.ok(await store.issueTicket(user));
