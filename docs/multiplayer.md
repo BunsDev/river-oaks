@@ -210,7 +210,7 @@ The same roster drives the server, browser, room counts, and rendered people.
 Old full-population checkpoints migrate into this roster and preserve active
 indoor wishes. See the [performance audit](multiplayer-performance-audit.md).
 
-The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://typesafe.place`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets).
+The selected target is **`0xbuns/river-oaks` on Vercel**, serving `https://typesafe.place`. `vercel.json` packages the Vite frontend and `api/server.js` Node WebSocket backend in `iad1`, with a 300-second function limit. The project has Fluid compute enabled. Connections reconnect before the function limit and recover the shared town. See [Vercel WebSockets](https://vercel.com/docs/functions/websockets). `sim.jev.works` permanently redirects to `typesafe.place` (`vercel.json` redirects). `middleware.js` gates game assets with a signed pass (see [the security review](security-review.md#static-asset-gate)). A per-minute Vercel Cron calls `/api/workplace-sweep` (see [workplace operations](workplace-operations.md)).
 
 Run `pnpm run test:shared` for development onboarding and authenticated fixture journeys, including mobile controls and keyboard reconnect/sign-out. See [acceptance commands and scope](experience-polish.md). This does not use live WorkOS accounts.
 
@@ -225,19 +225,34 @@ Every signed-in resident is shown by their GitHub username, everywhere another p
 
 ## Shared storage and coordination
 
-Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json).
+```mermaid
+%% diagram: join-sequence (placeholder; replace this block with the real diagram)
+sequenceDiagram
+  participant P as Diagram pending
+  Note over P: Joining a world
+```
+<details><summary>Diagram prompt: join-sequence</summary>
 
-The Redis backend stores OAuth state, email verification challenges, sessions, single-use socket tickets, request limits, bans, and the last 10,000 audit records. Session refresh and logout use atomic transactions across instances. Bans persist without an expiry, and banning invalidates outstanding connection tickets. Login requires a verified WorkOS email; new GitHub users complete WorkOS's emailed verification code after OAuth. The code cannot start an email-only session. Missing configuration fails closed.
+Draw a sequence diagram of a signed-in, approved resident joining a world. Participants: Browser client (preview/src/multiplayer-client.js), Vercel function (distributed app), Redis security store, Redis room. Steps: POST /api/multiplayer/ticket?world=<id> with CSRF -> server checks session, ban, waitlist approval, one-world rule -> issues a single-use ticket (live for 15 s, at most 3 live per user; a new one retires the user's oldest) -> client opens wss://<host>/multiplayer?ticket=...&world=...&protocol=2 -> server consumes the ticket atomically and admits the connection -> snapshot sent -> client watchConnection deadlines (12 s to open, 45 s for the first snapshot, late timers restart up to 4 times). Add alt branches: the account joins another world (old socket closed with 4009 'joined another world'; admins exempt), ticket expired (401), room operation failure isolated (three consecutive failures before close).
+
+See [the diagram index](diagrams.md) for the convention.
+
+</details>
+
+
+Marketplace Redis **`river-oaks-town`** is connected to Production: 250 MB, persistence enabled, region `iad1`, high availability off, approved at $6/month (plan `26492`). Vercel supplies encrypted `REDIS_URL`. See the [provisioning receipt](../data/reports/redis-provisioning.json). The database is Redis Cloud with the `noeviction` policy (checked 2026-10-12), so a full database refuses writes instead of silently evicting sessions or rate-limit counters. A 70% memory alert in the Redis Cloud console is an owner setting.
+
+The Redis backend stores OAuth state, email verification challenges, Magic Auth sign-in states, cooldowns and daily send counters, sessions, single-use socket tickets, request limits, bans, and the last 10,000 audit records. Session refresh and logout use atomic transactions across instances. Bans persist without an expiry, and banning invalidates outstanding connection tickets. Login requires a verified WorkOS email; new GitHub users complete WorkOS's emailed verification code after OAuth. That verification code completes the GitHub sign-in; it cannot start an email-only session. Email-only sign-in uses Magic Auth (see [email access](email-access.md)). Missing configuration fails closed.
 
 One renewable Redis lease controls simulation writes. A fenced transaction commits the compressed world checkpoint, public snapshot, consumed operation batch, and command acknowledgments together. A replacement instance restores residents, wishes, movement budgets, cooldowns, and conversation holds. An expired lease cannot overwrite the replacement's state. The world pauses without players; it does not simulate all elapsed offline time.
 
-Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
+Disconnects have a ten-second reconnect grace. A new tab replaces the account's existing connection without clearing its wishes. An account is in one world at a time: joining another world closes the old socket with code 4009 ("joined another world"). Owner accounts are exempt, so they can edit one world while playing another. Logout and bans remove the player and owned wishes. The backend bounds command queues and coalesces waiting movement updates without reordering travel actions.
 
 Vehicle exits use the server-checked travel command before completing the local
 dismount. This keeps the seat-to-ground transition from being rejected as an
 ordinary walking-speed violation. A refused exit keeps the rider seated.
 
-Production defaults to Redis namespace `river-oaks:production:v1`. Preview and local Redis servers must explicitly set a different `REDIS_NAMESPACE`; previews reject the default production namespace. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
+Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 
 `WORLD_ID` can expose an alternate configured world and defaults to `river-oaks`.
 Jevica can publish up to 16 additional worlds on the same origin from Explore;
@@ -249,9 +264,9 @@ checkpoint compatibility, and the current limits of this first extraction.
 
 Local tests cover separate backend instances sharing the real Marketplace database in random test namespaces, session refresh/revocation races, writer replacement, and durable state. The [Redis browser acceptance](../data/reports/redis-multiplayer-e2e.json) verifies peer avatars, shared wish effects, reload recovery, walking, and logout across those instances. `vercel build --prod` successfully packages the function and frontend. The [staged deployment receipt](../data/reports/vercel-multiplayer-staging.json) records hosted frontend HTTP 200, missing-credentials auth HTTP 503, and anonymous ticket/WebSocket HTTP 401. On the protected acceptance alias, two real WorkOS accounts signed in through the dedicated TypeSafe application, joined the same hosted roster, and each rejoined after a reload. Signing out the second account removed it from the first account's roster. A later hosted run kept a wish active while the alias moved to a new deployment: the first account rejoined there with the wish intact, and a temporary ban disconnected the second account and denied a new ticket. Unban restored its access; the wish was undone and both accounts signed out.
 
-The TypeSafe WorkOS project has a dedicated **TypeSafe Place** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M40WBV2ST9M3SRBGA8THBXBD`). Keep the local `.env` client ID and API key from the same Staging environment; a removed environment's client ID produces WorkOS's “Invalid client ID” page. Register `http://127.0.0.1:5173/auth/callback` as the Staging callback and `http://127.0.0.1:5173/` as its sign-out return URL. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, and the matching `WORKOS_API_KEY` are configured in Vercel Production. Enable GitHub social login, device authorization, Magic Auth, and Magic Auth email delivery. The server accepts verified `GitHubOAuth` and `MagicAuth` sessions, including sessions exchanged from the desktop device flow; other authentication methods remain unsupported. Preview deployments need their own authorized origin, cookie secret, and Redis namespaces. Do not copy production state into previews.
+The TypeSafe WorkOS project has a dedicated **TypeSafe Place** AuthKit application in Production (`client_01M3ZHFZDKDSTJ2RNSMP5V9SKV`) and a separate development application in Staging (`client_01M40WBV2ST9M3SRBGA8THBXBD`). Keep the local `.env` client ID and API key from the same Staging environment; a removed environment's client ID produces WorkOS's “Invalid client ID” page. Register `http://127.0.0.1:5173/auth/callback` as the Staging callback and `http://127.0.0.1:5173/` as its sign-out return URL. `PUBLIC_ORIGIN`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_CLIENT_ID`, the matching `WORKOS_API_KEY`, `CRON_SECRET`, and the Turnstile keys (`TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`) are configured in Vercel Production. Enable GitHub social login, device authorization, Magic Auth, and Magic Auth email delivery. The server accepts verified `GitHubOAuth` and `MagicAuth` sessions, including sessions exchanged from the desktop device flow; other authentication methods remain unsupported. Preview deployments need their own authorized origin, cookie secret, and Redis namespaces. Do not copy production state into previews.
 
-The local Redis tests exercise cross-instance logout and ban enforcement; the hosted run confirms the ban and unban behavior, but does not identify which Vercel worker handled each browser. The candidate was staged with `--skip-domain` on the protected `river-oaks-acceptance-0xbuns.vercel.app` alias. After promoting a deployment, smoke-check sign-in, session, and anonymous ticket rejection on `sim.jev.works`. The original single-process acceptance report is not Vercel acceptance evidence.
+The local Redis tests exercise cross-instance logout and ban enforcement; the hosted run confirms the ban and unban behavior, but does not identify which Vercel worker handled each browser. The candidate was staged with `--skip-domain` on the protected `river-oaks-acceptance-0xbuns.vercel.app` alias. After promoting a deployment, smoke-check sign-in, session, and anonymous ticket rejection on `typesafe.place`. The original single-process acceptance report is not Vercel acceptance evidence.
 
 ## Run the Redis API locally
 
@@ -323,11 +338,12 @@ deployment; it does not attest deployment of this follow-up patch.
 Callback rejection logs contain fixed booleans, never token claims, cookies,
 authorization codes or user identities.
 
-The 20-minute one-use state lifetime accommodates email-code redirects. The
-1,000-entry cap is unchanged; abandoned attempts occupy slots until expiry,
-so longer retention reduces capacity during sustained abandoned-login traffic.
-Successful callbacks consume their state immediately. Capacity remains bounded
-and returns after expiry; this change does not add a login rate limiter.
+The 20-minute one-use state lifetime accommodates email-code redirects. Pending
+sign-ins are capped at 20,000. On Redis, a full table evicts the oldest pending
+sign-in; the standalone server answers `auth_busy` until entries expire.
+Successful callbacks consume their state immediately. Sign-in starts are also
+limited to 20 per address per 20 minutes, and `/auth` and `/api` to 1,000
+requests per address per minute.
 
 ## Configure WorkOS and private settings
 
@@ -346,11 +362,11 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 
 | Variable | Value |
 | --- | --- |
-| `AUTH_RETURN_PATH` | `/play` for the hosted landing page; defaults to `/` locally |
+| `AUTH_RETURN_PATH` | `/play` for the hosted landing page; defaults to `/` locally. Any other value disables auth |
 | `PUBLIC_ORIGIN` | `https://typesafe.place`, with no trailing slash or path |
 | `WORKOS_API_KEY` | API key from the matching WorkOS environment |
 | `WORKOS_CLIENT_ID` | Client ID from that same environment |
-| `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters |
+| `WORKOS_COOKIE_PASSWORD` | Random secret of at least 32 characters; also keys the hosted asset-gate pass |
 | `GITHUB_TOKEN` | Optional. A GitHub token with no scopes, used only to look up public GitHub usernames by account ID. Without it the lookup is anonymous and limited to 60 an hour per server address |
 | `HOST` | `127.0.0.1` behind a host proxy, or `0.0.0.0` inside the container |
 | `PORT` | `8787` unless your platform requires another port |
@@ -361,7 +377,13 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `WAITLIST_ADMIN_USER_IDS` | Comma-separated WorkOS user IDs that may approve requests; approvers are automatically approved |
 | `WAITLIST_FILE` | Standalone server only: private persistent waitlist store |
 | `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |
-| `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none |
+| `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none. Ignored on Vercel, which uses `x-vercel-forwarded-for` |
+| `WORLD_ID` | Optional alternate configured world; defaults to `river-oaks` |
+| `CRON_SECRET` | Vercel only: bearer secret for the workplace sweep cron |
+| `EMAIL_SIGNIN_DAILY_LIMIT`, `EMAIL_SIGNIN_DAILY_PER_ADDRESS` | Optional email-code budgets (defaults 2,000 per day and 10 per address per day); see [email access](email-access.md) |
+| `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
+| `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
+| `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
 
 Generate a cookie secret locally:
 
@@ -371,7 +393,7 @@ node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.
 
 Store that output privately. Keep WorkOS credentials and the cookie secret out of Git, build arguments, browser bundles, and `VITE_` variables. HTTPS sessions use `Secure`, `HttpOnly`, and `SameSite=Lax` cookies.
 
-Both play modes require WorkOS authentication through GitHub, a verified email, and waitlist approval. A signed-in account creates a pending request; an approver uses the in-game Waitlist requests control to approve or decline it. Decisions persist separately from the town checkpoint, and revocation closes active multiplayer connections. Development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
+Both play modes require WorkOS authentication through GitHub or an email code, a verified email, and waitlist approval. A signed-in account creates a pending request; an approver uses the in-game Waitlist requests control to approve or decline it. Decisions persist separately from the town checkpoint, and revocation closes active multiplayer connections. Development identities never run on a public origin, in production mode or on Vercel. Missing or invalid authentication configuration makes auth endpoints return `503`; a successful `/health` response alone does not prove authentication is configured.
 
 ## Standalone mode: one instance and file moderation
 
@@ -389,9 +411,11 @@ Keep `moderation.json`, `moderation.json.audit.jsonl`, and its rotated `.previou
 
 The root `Dockerfile` builds the frontend and runs the server as the unprivileged `node` user. It includes the shared simulation source and district data needed at runtime. Build from the repository root:
 
-The Dockerfile builds the town-only frontend. Configure WorkOS and Redis
-for the runtime environment; clients require admission and a valid town
-snapshot before gameplay begins.
+The Dockerfile builds the town-only frontend and runs `server/start.js`, the
+**standalone** town: one instance with file moderation and a file waitlist, and
+no Redis. Configure WorkOS for the runtime environment. Clients require
+admission and a valid town snapshot before gameplay begins. The base image is
+pinned by digest; Dependabot proposes updates.
 
 ```sh
 docker build -t river-oaks:local .
@@ -406,11 +430,11 @@ docker run -d --name river-oaks --restart unless-stopped \
   river-oaks:local
 ```
 
-Create `.env.production` privately with the WorkOS settings above before running the container. The named volume preserves moderation across container replacements. If you use a bind mount instead, make it writable by the container's `node` user (UID 1000). Run only one container against that volume.
+Create `.env.production` privately with the WorkOS settings above before running the container. The named volume preserves moderation and the waitlist (`.runtime/waitlist.json`, with approvals and invitations) across container replacements; back up both. If you use a bind mount instead, make it writable by the container's `node` user (UID 1000). Run only one container against that volume.
 
 ## Configure the TLS proxy
 
-Terminate TLS for `sim.jev.works` and forward all paths to the single Node listener. Preserve request cookies, the `Origin` header, and response `Set-Cookie` headers. Forward WebSocket upgrades at `/multiplayer`, including the query string containing the short-lived connection ticket. Use an idle timeout longer than the server's 15-second WebSocket heartbeat, such as 60 seconds.
+Terminate TLS for your origin (production uses `typesafe.place` on Vercel, not this container path) and forward all paths to the single Node listener. Preserve request cookies, the `Origin` header, and response `Set-Cookie` headers. Forward WebSocket upgrades at `/multiplayer`, including the query string containing the short-lived connection ticket. Use an idle timeout longer than the standalone server's 30-second WebSocket ping, such as 60 seconds. (The hosted Redis backend heartbeats every 5 seconds and renews connections before its 270-second lifetime.)
 
 Route `/auth/*`, `/api/*`, and `/multiplayer` directly to Node without caching or HTML fallback. Exclude WebSocket ticket query strings and authentication callback query strings from access logs. Redirect public HTTP traffic to HTTPS. The Node listener itself speaks HTTP; `PUBLIC_ORIGIN` determines the external authentication URLs and secure-cookie behavior.
 
@@ -432,7 +456,7 @@ Start the Vite preview and its local town server:
 pnpm run dev
 ```
 
-Open `http://127.0.0.1:5173/` consistently. Vite starts the town server on port `8787` and proxies authentication, multiplayer API requests, waitlist requests, moderation requests, and WebSocket connections there. Leave `PUBLIC_ORIGIN` unset for this flow so the callback and cookies use the Vite origin. Vite's `/health` route belongs to the optional sidecar; check town health directly at `http://127.0.0.1:8787/health`.
+Open `http://127.0.0.1:5173/` consistently. Vite starts the town server on port `8787` and proxies authentication, multiplayer API requests, waitlist requests, moderation requests, and WebSocket connections there. Leave `PUBLIC_ORIGIN` unset for this flow so the callback and cookies use the Vite origin. Vite's `/health` route belongs to the optional sidecar; check town health directly at `http://127.0.0.1:8787/health`. The Vite proxy to the sidecar (`/v1`, `/health`) refuses a non-loopback Host or Origin with 403 `forbidden_host`, keeping the bridge's DNS-rebinding guard intact.
 
 Local HTTP cookies omit `Secure`. Both the standalone server and the default `pnpm run dev` flow use WorkOS. Run the automated server tests with `pnpm run test:server`; they don't replace a live GitHub sign-in check.
 
@@ -546,4 +570,4 @@ shared voice remains deferred in its plan.
 
 Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. All vehicle movement retains road, pedestrian and collision checks.
 
-Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.13.0`). The endpoint requires an approved owner session, canonical Origin, CSRF token and a shared Redis rate budget. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.
+Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.13.0`). The endpoint requires an approved owner session, canonical Origin and CSRF token. It's limited to 40 decisions per minute per owner and `CHAUFFEUR_DAILY_LIMIT` (default 6,000, max 10,000) per UTC day across owners; three provider failures in a row pause calls for 60 seconds. On Redis these budgets are shared across instances; the standalone server keeps them in memory. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.

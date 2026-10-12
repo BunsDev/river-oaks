@@ -1,5 +1,21 @@
 # Rail navigation and keyboard review
 
+> **Current layout (checked 2026-10-12).** The left rail's tab row has been
+> replaced:
+>
+> - The **Map** panel sits top left (Cmd/Ctrl+B or Alt+2): a "You're at" pill,
+>   the minimap, the **Explore destinations** launcher, the Worlds directory (only
+>   with `VITE_WORLD_MAP=true`), and a **Storefront access** disclosure.
+> - The **People** panel sits top right (Alt+1).
+> - **Settings** is a dialog (Alt+3) with Appearance, Graphics, Audio, World,
+>   Account and About tabs. They use Up/Down/Home/End; the atlas tabs use
+>   Left/Right/Home/End.
+> - Only each panel's open state is remembered.
+> - The Events panel has been removed.
+>
+> The review below records the 2026-10-05 design. Where it describes a tab row or
+> an Events section, the layout above supersedes it.
+
 Scope: left People / Places / Settings rail, right play rail, multiplayer content,
 contextual walking / conversation / bird HUDs, and their keyboard handoffs.
 Also inspected the world studio's region inspector and the developer debug panel.
@@ -35,18 +51,18 @@ Also inspected the world studio's region inspector and the developer debug panel
 
 | Key | Action |
 | --- | --- |
-| Cmd/Ctrl+B | Toggle left exploration rail (Commands: “Explore · show or hide”, also found by “rail” or “sidebar”) |
+| Cmd/Ctrl+B | Toggle the Map panel (Commands: “Map · show or hide minimap”) |
 | Cmd/Ctrl+Shift+B | Toggle right play rail (Commands: “Activities · show or hide”, also found by “play” or “rail”) |
 | Cmd/Ctrl+K | Search commands |
 | ? | Commands with current gameplay keys expanded |
-| Alt+1 / Alt+2 / Alt+3 | People / Places / Settings |
-| / | Focus destination search |
-| Arrow keys / Home / End | Select a tab while the tab row is focused |
+| Alt+1 / Alt+2 / Alt+3 | People / Map / Settings |
+| / | Focus the storefront search inside Map → Storefront access (the atlas has its own search, focused when it opens) |
+| Arrow keys / Home / End | Move between tabs in Settings (Up/Down) or the atlas (Left/Right) |
 | Escape | Dismiss current rail/menu and return focus |
 | H | Toggle clear view |
 
-Command search lists rail show/hide toggles after the commands that open something,
-so typing a tab name such as “places” or “people” and pressing Enter opens that tab.
+Command search lists show/hide toggles after the commands that open something,
+so typing a panel name such as “map” or “people” and pressing Enter opens it.
 
 All shortcuts have button alternatives. The Commands menu filters unavailable
 actions from server-confirmed capabilities.

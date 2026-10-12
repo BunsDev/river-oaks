@@ -33,4 +33,4 @@
   - `places-guide` now also checks that the Dining filter shows exactly the Dining places, with `aria-pressed`, and that "Show all places" clears search and filter.
   - `destination-minimap` failed once on unmodified `main` under machine load, then passed here.
 - **`ui-polish` fix (journey only):** after Meet, a store's first-visit intro hides the HUD on `main` too; a probe saw it open with `store-introducing` on the body. The journey's close-control check raced the intro, and this branch lost the race. The journey now skips an intro if one starts, then checks; it passed twice in a row.
-- **Before and after:** `places-guide` screenshots of the rail and the atlas, light and dark, at 1440 and 390 px wide, are kept outside the repo.
+- **Before and after:** `places-guide` screenshots of the rail and the atlas, light and dark, at 1440 and 390 px wide, are kept outside the repo in `~/worktree-backups/river-oaks-workplace-20261011/explore-destinations-ui/`. The before set was regenerated from `0983a49`, the last `main` before #263, after the first copy was lost.

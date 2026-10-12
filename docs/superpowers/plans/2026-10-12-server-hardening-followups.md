@@ -82,3 +82,9 @@ There were no critical or high findings. All eight findings are addressed:
    - The waitlist's one-time index (item 3) never rescans.
 
 Checks after the fixes: the affected server suites (redis-auth, magic-auth, auth, waitlist, invitations and all `hardening2-*`) pass 134 of 134 on an isolated Redis. The tests for items 2 and 4 fail with their fix reverted.
+
+### Production, after merge (2026-10-12)
+
+- **#264 deployed as `f7d10aa`.** The CSP header is live. The landing page loads all 7 fonts and the sign-in screen plays its art clip, both with zero CSP violations and no page errors in a real browser.
+- **Turnstile on at 03:22 UTC.** Val set `TURNSTILE_SECRET_KEY` (sensitive) and gave the site key. `VITE_TURNSTILE_SITE_KEY` was set, then production was redeployed once. A start without a token gets 403 `challenge_failed`, with no email sent. Focusing the email field renders the "Verify you are human" widget with no CSP violations.
+- **Still Val's:** a Vercel Spend Management hard pause and a Redis Cloud 70% memory alert. Steps are in `docs/security-review.md` under "Production owner settings".

@@ -14,7 +14,8 @@ Read the scoped AGENTS.md in the subsystem you change.
    [the lifecycle workflow](docs/project-management/workflow.md). Claim the exact
    task/branch, record your session owner and next action, and reuse an owned
    checkout before creating another. Expired or missing ownership is not discard
-   permission.
+   permission. Claim and release in the primary checkout's live `tasks.json`.
+   From a worktree, check it with `project:check --tasks <primary>/docs/project-management/tasks.json`.
 3. Read the owning module, its callers, tests, and linked subsystem docs before
    editing. Keep patches small; do not reformat large unrelated files.
 4. Run `pnpm run agent:doctor` after installing dependencies. Use
@@ -32,7 +33,8 @@ Read the scoped AGENTS.md in the subsystem you change.
 - Run focused checks while iterating, then `pnpm run verify` for the core gate.
   Run `pnpm run verify full` with an isolated Redis service and browser prerequisites
   for Redis, dependency audit, and browser coverage. The hosted CI matrix remains
-  a separate merge gate. See the workflow for Linux rendering setup.
+  a separate merge gate: `main` requires the aggregate `preview` check on a branch
+  that is up to date with `main`. See the workflow for Linux rendering setup.
 - Core success excludes Redis, browser, native, live auth, and production acceptance.
   A skip is not evidence. Read console test counts and `.runtime/agent/<profile>.json`.
 - Never commit without verification. Do not merge, publish, deploy, or resolve

@@ -52,6 +52,9 @@ These are the backstops code can't provide, because a function has already been 
 
 ## Follow-ups (not done here)
 
+**Update 2026-10-12:** #264 delivered these, apart from two that stay open on purpose. Starter invites are a product decision. The desktop cookie-encryption fuse waits for Developer ID signing. See `2026-10-12-server-hardening-followups.md`.
+
+
 - A per-owner invite index, so listing doesn't read the whole table; prune redeemed and expired invites.
 - Session (10,000) and waitlist (10,000, never pruned) caps still refuse when full. Filling them takes many real accounts. Fix with per-user and pending-only caps plus an admin purge.
 - Starter invites for invite-approved accounts let the invite tree grow quickly. That's a product decision.
