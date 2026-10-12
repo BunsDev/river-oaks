@@ -67,6 +67,17 @@ for (const mode of ['memory', 'redis']) {
     assert.deepEqual(await (await f.request('/auth/email/start', { email: 'private@example.com' })).json(), { sent: true }, 'a new day restores the budget');
     assert.equal(f.calls(), 2);
   });
+  run('with Turnstile on, a failed check spends neither email budget nor WorkOS', async t => {
+    const f = await fixture(t, mode, { magic: { verifyHuman: async token => token === 'passed-check' } });
+    for (const body of [{ email: 'private@example.com' }, { email: 'private@example.com', turnstileToken: 'forged' }]) {
+      const refused = await f.request('/auth/email/start', body);
+      assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: 'challenge_failed' });
+      assert.equal(cookie(refused), undefined);
+    }
+    assert.equal(f.calls(), 0);
+    assert.deepEqual(await (await f.peer('/auth/email/start', { email: 'private@example.com', turnstileToken: 'passed-check' })).json(), { sent: true });
+    assert.equal(f.calls(), 1);
+  });
   run('cooldown is shared and case normalized; expired state cannot authenticate', async t => {
     const f = await fixture(t, mode), start = await f.request('/auth/email/start', { email: 'private@example.com' });
     const otherBrowser = await f.peer('/auth/email/start', { email: 'PRIVATE@example.com' });

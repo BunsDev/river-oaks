@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { createTurnstileVerifier } from './turnstile.js';
 
 const COOKIE = 'river_oaks_magic_state';
 const TTL = 10 * 60_000, COOLDOWN = 60_000, DAY = 86_400_000;
@@ -8,7 +9,8 @@ const TTL = 10 * 60_000, COOLDOWN = 60_000, DAY = 86_400_000;
 export const EMAIL_SIGNIN_DAILY_LIMIT = 2000;
 export const emailSignInDailyLimit = env => Math.min(100_000, Math.max(1, Number.parseInt(env.EMAIL_SIGNIN_DAILY_LIMIT ?? '', 10) || EMAIL_SIGNIN_DAILY_LIMIT));
 // Email sign-in guards read from the environment, shared by both servers.
-export const magicOptions = env => ({ dailySends: emailSignInDailyLimit(env) });
+export const magicOptions = env => ({ dailySends: emailSignInDailyLimit(env),
+  verifyHuman: env.TURNSTILE_SECRET_KEY ? createTurnstileVerifier({ secret: env.TURNSTILE_SECRET_KEY }) : null });
 const token = () => randomBytes(32).toString('base64url');
 const digest = value => createHash('sha256').update(value).digest('base64url');
 export const normalizeAuthEmail = value => typeof value === 'string' && value.trim().length <= 254
@@ -100,7 +102,7 @@ export function createMagicStore({ redis, namespace, now = Date.now, maxStates =
   return { transaction, close() { states.clear(); cooldowns.clear(); sends.clear(); } };
 }
 
-export function createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store, now = Date.now }) {
+export function createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store, now = Date.now, verifyHuman = null }) {
   return async function handleMagic(req, res, path) {
     if (req.headers.origin !== base) { json(res, 403, { error: 'invalid_origin' }); return; }
     if (req.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') { json(res, 415, { error: 'unsupported_media_type' }); return; }
@@ -112,6 +114,8 @@ export function createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie
     if (path === '/auth/email/start') {
       const email = normalizeAuthEmail(body.email);
       if (!email) { json(res, 400, { error: 'invalid_email' }); return; }
+      // With Turnstile on, only a verified browser may spend the email budget.
+      if (verifyHuman && !await verifyHuman(body.turnstileToken)) { json(res, 403, { error: 'challenge_failed' }); return; }
       const state = token();
       const admission = await store.transaction({ op: 'start', id: digest(state), emailHash: digest(email), record: { email, attempts: 0, expiresAt: now() + TTL } });
       // A throttled request has not sent mail or created browser state. Keep

@@ -92,11 +92,33 @@ const post = (path, data) => api(path, { method: 'POST', headers: {
   'Content-Type': 'application/json', ...(session?.csrfToken ? { 'X-CSRF-Token': session.csrfToken } : {}),
 }, body: JSON.stringify(data) });
 
+// Cloudflare Turnstile guards email sign-in when the build has a site key. The
+// widget loads on first use of the email field, so GitHub sign-in never loads it.
+const turnstileKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+let challengeToken = null, challengeWidget = null;
+function showChallenge() {
+  if (!turnstileKey || document.querySelector('script[data-turnstile]')) return;
+  const container = $('#access-email-challenge'); container.hidden = false;
+  const script = Object.assign(document.createElement('script'), { src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', async: true });
+  script.dataset.turnstile = '';
+  script.addEventListener('load', () => {
+    challengeWidget = window.turnstile.render(container, { sitekey: turnstileKey, action: 'email_sign_in',
+      callback: token => { challengeToken = token; }, 'expired-callback': () => { challengeToken = null; }, 'error-callback': () => { challengeToken = null; } });
+  });
+  document.head.append(script);
+}
+$('#access-email').addEventListener('focus', showChallenge, { once: true });
+
 $('#access-email-form').addEventListener('submit', async event => {
   event.preventDefault();
   const button = event.currentTarget.querySelector('button'); button.disabled = true;
+  if (turnstileKey && !challengeToken) {
+    showChallenge(); button.disabled = false;
+    $('#access-email-status').textContent = 'Complete the check under the email field, then send the code.';
+    return;
+  }
   try {
-    const result = await post('/auth/email/start', { email: $('#access-email').value.trim() });
+    const result = await post('/auth/email/start', { email: $('#access-email').value.trim(), ...(turnstileKey ? { turnstileToken: challengeToken } : {}) });
     if (!result.sent) {
       $('#access-email-status').textContent = 'A code was requested recently. Use it in the browser where you requested it, or wait a minute and request another here.';
       return;
@@ -107,9 +129,14 @@ $('#access-email-form').addEventListener('submit', async event => {
   } catch (error) {
     $('#access-email-status').textContent = error.message === 'email_paused'
       ? 'Email sign-in has reached today’s limit. Sign in with GitHub, or try email again tomorrow.'
+      : error.message === 'challenge_failed' ? 'The check didn’t go through. Complete it again, then send the code.'
       : 'We couldn’t send a code. Check your email address and try again shortly.';
   }
-  finally { button.disabled = false; }
+  finally {
+    button.disabled = false;
+    // Turnstile tokens are single-use: get a fresh one for any later attempt.
+    if (challengeWidget !== null) { window.turnstile.reset(challengeWidget); challengeToken = null; }
+  }
 });
 $('#access-email-verify').addEventListener('submit', async event => {
   event.preventDefault();

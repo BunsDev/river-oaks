@@ -170,7 +170,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
   }
 
   const magicStore = createMagicStore({ now, maxStates, dailySends: magic.dailySends });
-  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
+  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now, verifyHuman: magic.verifyHuman });
 
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;

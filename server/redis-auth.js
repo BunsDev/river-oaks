@@ -302,7 +302,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   }
 
   const magicStore = createMagicStore({ redis, namespace, now, maxStates: MAX_PENDING_SIGN_INS, dailySends: magic.dailySends });
-  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now });
+  const handleMagic = createMagicAuth({ sdk, clientId, cookiePassword, base, setCookie, readCookie, json, finishSignIn, store: magicStore, now, verifyHuman: magic.verifyHuman });
 
   async function handle(req, res) {
     const path = new URL(req.url, base || 'http://localhost').pathname;
