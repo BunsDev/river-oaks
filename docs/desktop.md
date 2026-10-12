@@ -1,6 +1,21 @@
 # River Oaks desktop
 
-The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://typesafe.place/play`; its browser profile retains the approved session until sign-out or expiry.
+The desktop application runs River Oaks in Electron. Playing requires an online connection, WorkOS sign-in through GitHub in the system browser, and waitlist approval. The packaged app opens the hosted game at `https://typesafe.place/play`; its browser profile retains the approved session until sign-out or expiry. Email-code sign-in is not offered in the app. The session cookie is stored unencrypted for now (see the cookie-encryption note below).
+
+```mermaid
+%% diagram: desktop-sign-in (placeholder; replace this block with the real diagram)
+sequenceDiagram
+  participant P as Diagram pending
+  Note over P: Desktop sign-in and session
+```
+<details><summary>Diagram prompt: desktop-sign-in</summary>
+
+Draw a sequence diagram of the Electron desktop thin client signing in. Participants: Desktop main process (desktop/main.js, desktop/auth.js), system browser, WorkOS, hosted game (typesafe.place) /auth/desktop/exchange, Electron session cookie store. Show device sign-in in the system browser, the refresh-token exchange at /auth/desktop/exchange (rate-limited per address), the sealed session cookie written to session.defaultSession with an expiry, and the packaged window loading only the hosted https origin. Note the fuses (RunAsNode off, NODE_OPTIONS off, inspect off, asar integrity on, file protocol privileges off) and that cookie encryption stays off until Developer ID signing ships.
+
+See [the diagram index](diagrams.md) for the convention.
+
+</details>
+
 
 ## Live development
 
@@ -47,7 +62,7 @@ A renderer crash reloads the current app (world or Studio) once automatically. R
 
 The renderer has no Node access. A narrow Studio-only preload API exposes designer catalog/setup/request/cancel/disconnect; every call verifies the exact main frame and origin. Native confirmation precedes setup and each provider task. Sandbox, context isolation, navigation restrictions, and denied device permissions follow [Electron's security guidance](https://www.electronjs.org/docs/latest/tutorial/security). WorkOS device sign-in opens in the system browser, and external HTTPS references ask before opening there. The packaged window stays on the exact River Oaks origin.
 
-Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. Check a build with `pnpm exec electron-fuses read --app "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
+Packaging also sets the app's [Electron fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) (`desktop/fuses.js`). `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are ignored, so another local program cannot run code as River Oaks or inherit its macOS permissions, and the app runs only from its integrity-checked `app.asar`. File-protocol privileges are off, and `strictlyRequireAllFuses` makes packaging fail when a new Electron adds a fuse nobody has decided on. `EnableCookieEncryption` is deliberately off: the app is ad-hoc signed, so each update would ask for Keychain access to the cookie key, and declining would leave sessions unreadable. Turn it on in the same release that adds Developer ID signing and notarization (a release gate in the [security review](security-review.md)). Check a build with `pnpm exec electron-fuses read --app "dist/desktop/TypeSafe Place-darwin-arm64/TypeSafe Place.app"`. Because the inspector is off, Playwright cannot drive a packaged build; `desktop/e2e.js` runs against the development Electron.
 
 ## Verification
 
@@ -59,7 +74,7 @@ pnpm run build
 RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8797 pnpm run test:desktop:e2e --dev
 ```
 
-The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. Development acceptance returns an offline fixture response for optional decision/speech requests, so it never calls a configured provider. A live packaged-app check requires signing in with an approved WorkOS GitHub account after the Production provider is configured. Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. macOS can drop a fullscreen request made during a Space switch or another app's transition; the fullscreen check then asks once more and records it under `fullscreenRetries` in the report, so a real fullscreen failure still fails. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
+The end-to-end command uses a loopback-only acceptance identity and its own town port; it leaves a running development preview alone. Development acceptance returns an offline fixture response for optional decision/speech requests, so it never calls a configured provider. A live packaged-app check requires signing in with an approved WorkOS GitHub account (the Production provider is configured). Electron tests exercise real assets, keyboard movement, shops, dialogue, preference persistence, fullscreen, isolation, blocked external navigation, and deliberate renderer-crash recovery. macOS can drop a fullscreen request made during a Space switch or another app's transition; the fullscreen check then asks once more and records it under `fullscreenRetries` in the report, so a real fullscreen failure still fails. Each run uses a temporary profile and records frame timing, GPU feature status, and asset failures in `data/reports/desktop-*.json`; screenshots go to `output/playwright/desktop-*.png`. Frame measurements describe this machine, scene, window, and workload, not a universal 60 fps guarantee.
 
 Current vehicle and angel-flight integration: `node desktop/vehicles-e2e.js` against the live development URL on port 5174. Provider decisions are mocked in that test; real ElevenLabs playback requires an account key with access to the selected voice.
 

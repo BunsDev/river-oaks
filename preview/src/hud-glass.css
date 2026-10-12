@@ -40,13 +40,48 @@
   --hud-on-action: #f4fbf8;
   --hud-focus: #a8ecd6;
 }
+/* Liquid glass, for surfaces that float over everything (the town gate, the Map
+   lens): thinner tint, stronger saturation, a specular rim and pooled light.
+   The tint stays at least half opaque behind text in both themes. */
+:root {
+  --liquid-tint: rgb(255 253 248 / .7);
+  --liquid-tint-deep: rgb(250 247 240 / .58);
+  --liquid-filter: blur(28px) saturate(1.9) brightness(1.18);
+  --liquid-rim: rgb(255 255 255 / .92);
+  --liquid-rim-soft: rgb(255 255 255 / .34);
+  --liquid-sheen: rgb(255 255 255 / .62);
+  --liquid-caustic: rgb(255 190 222 / .48);
+  --liquid-caustic-cool: rgb(160 230 210 / .42);
+  --liquid-well: rgb(255 255 255 / .44);
+  --liquid-shadow: 0 1px 1px rgb(16 28 22 / .05), 0 20px 50px rgb(10 34 36 / .22), 0 44px 100px rgb(10 34 36 / .16);
+  --liquid-ink: #0f3437;
+  --liquid-muted: #2a4541;
+  --liquid-accent: #24695c;
+  --liquid-on-accent: #f6fcf9;
+}
+:root[data-theme=dark] {
+  --liquid-tint: rgb(20 32 34 / .52);
+  --liquid-tint-deep: rgb(10 18 20 / .42);
+  --liquid-filter: blur(28px) saturate(1.7) brightness(.8);
+  --liquid-rim: rgb(255 255 255 / .4);
+  --liquid-rim-soft: rgb(255 255 255 / .11);
+  --liquid-sheen: rgb(255 255 255 / .15);
+  --liquid-caustic: rgb(231 160 200 / .26);
+  --liquid-caustic-cool: rgb(114 198 176 / .24);
+  --liquid-well: rgb(255 255 255 / .08);
+  --liquid-shadow: 0 1px 1px rgb(0 0 0 / .3), 0 20px 50px rgb(0 0 0 / .36), 0 44px 100px rgb(0 0 0 / .3);
+  --liquid-ink: #eef7f4;
+  --liquid-muted: #bfd2cc;
+  --liquid-accent: #7fd0ba;
+  --liquid-on-accent: #0b2326;
+}
 @media (prefers-reduced-transparency: reduce) {
-  :root { --hud-glass: rgb(251 250 246 / .97); --hud-filter: none; }
-  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .97); }
+  :root { --hud-glass: rgb(251 250 246 / .97); --hud-filter: none; --liquid-tint: rgb(251 250 246 / .97); --liquid-tint-deep: rgb(246 244 238 / .97); --liquid-filter: none; }
+  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .97); --liquid-tint: rgb(20 30 32 / .97); --liquid-tint-deep: rgb(16 24 26 / .97); }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root { --hud-glass: rgb(251 250 246 / .96); }
-  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .96); }
+  :root { --hud-glass: rgb(251 250 246 / .96); --liquid-tint: rgb(251 250 246 / .95); --liquid-tint-deep: rgb(246 244 238 / .95); }
+  :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .96); --liquid-tint: rgb(20 30 32 / .95); --liquid-tint-deep: rgb(16 24 26 / .95); }
 }
 
 /* The material: one rule for every floating sheet. */

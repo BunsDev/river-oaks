@@ -1,4 +1,6 @@
-FROM node:22-bookworm-slim AS build
+# The base image is pinned by digest (the multi-arch index), so a rebuild uses
+# exactly what was reviewed. Dependabot proposes digest updates.
+FROM node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS build
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -13,7 +15,7 @@ COPY landing-page ./landing-page
 RUN pnpm run build
 RUN pnpm prune --prod
 
-FROM node:22-bookworm-slim AS runtime
+FROM node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS runtime
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8787
 WORKDIR /app
 COPY --from=build /app/package.json /app/pnpm-lock.yaml ./

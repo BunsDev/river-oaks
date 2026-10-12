@@ -1,0 +1,14 @@
+#!/bin/sh
+# Merge driver for the task register (installed by scripts/install-project-hooks.mjs).
+# Arguments: ancestor, current (rewritten in place), other, path.
+set -eu
+hook_dir=$(dirname "$0")
+installed_node=''
+# GUI Git clients may not inherit the shell's Node PATH.
+for candidate in "$(command -v node 2>/dev/null || true)" "$installed_node" /opt/homebrew/bin/node /usr/local/bin/node "$HOME"/.nvm/versions/node/*/bin/node; do
+  if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+    exec "$candidate" "$hook_dir/merge-task-register.mjs" "$@"
+  fi
+done
+echo "merge-task-register: node not found; using a line merge for ${4:-the task register}" >&2
+exec git merge-file -L current -L base -L other "$2" "$1" "$3"

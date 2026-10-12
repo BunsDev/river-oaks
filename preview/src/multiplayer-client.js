@@ -8,6 +8,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
+import { watchConnection } from './connection-deadline.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false }) {
@@ -180,7 +181,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
       url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
       const ws=new WebSocket(url);socket=ws;
-      const deadline=setTimeout(()=>{if(socket===ws&&!connected)ws.close();},12000);connectionDeadline=deadline;
+      // Open quickly, then allow time for the first snapshot; a busy page keeps its connection.
+      const deadline=watchConnection(ws,{onExpire:()=>{if(socket===ws&&!connected)ws.close();}});connectionDeadline=deadline;
+      ws.addEventListener('open',()=>deadline.opened());
       ws.addEventListener('message',event=>{
         if(stopped||socket!==ws)return;
         try{
@@ -195,7 +198,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
             if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
             if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
             selfId=data.selfId??selfId;latestSnapshot=data;
-            if(!connected){connected=true;connecting=false;attempt=0;clearTimeout(deadline);onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
+            if(!connected){connected=true;connecting=false;attempt=0;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
             const self=data.players.find(player=>player.id===selfId);
             if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
             activeGreeting=self?.interaction?.id??null;
@@ -208,7 +211,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
         }catch{notice.textContent='A town update could not be read.';}
       });
       ws.addEventListener('close',event=>{
-        clearTimeout(deadline);if(lifetime.signal.aborted||socket!==ws)return;
+        deadline.stop();if(lifetime.signal.aborted||socket!==ws)return;
         socket=null;connected=false;connecting=false;latestSnapshot=null;homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
         if(stopped)return;
         if(event.code===4000 && event.reason==='World region updated.'){reloadRegion();return;}
@@ -261,7 +264,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     },
     dispose(){
       if(lifetime.signal.aborted)return;
-      stopped=true;lifetime.abort();clearTimeout(retryTimer);clearTimeout(connectionDeadline);clearInterval(homeAccessTimer);
+      stopped=true;lifetime.abort();clearTimeout(retryTimer);connectionDeadline?.stop();clearInterval(homeAccessTimer);
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];
       current?.close();clearPending();onPlayers([],selfId);onHomeAccess(homeAccess);
       identity=null;csrfToken=null;rows.clear();latestPlayers.clear();chatRows.clear();

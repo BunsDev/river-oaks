@@ -1,0 +1,4 @@
+# Merge the task register by task id rather than by line. The driver is
+# installed by scripts/install-project-hooks.mjs (pnpm install runs it); without
+# it, Git falls back to its normal line merge.
+docs/project-management/tasks.json merge=task-register

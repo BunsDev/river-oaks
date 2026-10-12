@@ -27,3 +27,13 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  # The Dockerfile pins its base image by digest; this proposes digest and
+  # minor updates so the pin keeps receiving security fixes. Node majors stay a
+  # deliberate change.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]

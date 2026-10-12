@@ -1,8 +1,8 @@
-import { createChauffeurRoute } from './chauffeur.js';
-import { createRateLimiter } from './rate-limit.js';
+import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createAuth } from './auth.js';
+import { magicOptions } from './magic-auth.js';
 import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { createModeration } from './moderation.js';
@@ -65,7 +65,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
-    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout });
+    : createAuth({ apiKey: env.WORKOS_API_KEY, clientId: env.WORKOS_CLIENT_ID, cookiePassword: env.WORKOS_COOKIE_PASSWORD, githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH, origin, onLogout, magic: magicOptions(env, origin) });
   const sharedAuth={handle:(...args)=>auth.handle(...args),authenticate:(...args)=>auth.authenticate(...args),close:()=>{}};
   async function applyRegion(id,expectedDraftVersion,actorId) {
     if(!(mode==='local'?auth.isAdmin(actorId):isJevicaAdmin(actorId)))return {ok:false,error:'admin_only'};
@@ -107,9 +107,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     })().finally(()=>pending.delete(id));
     pending.set(id,load);return load;
   }
-  const drivingLimit=createRateLimiter(40,60000);
-  const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,
-    security:{isBanned:id=>moderation.isBanned(id),allow:(_scope,id)=>drivingLimit(id)},...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
+  const handleRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
+    security:createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)}),...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
     if(closing)return closing;

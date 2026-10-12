@@ -39,6 +39,8 @@ No audit found remote code execution reachable by players on the hosted app, and
 - **Desktop World Studio bridges** (high: page script steering the local agent; medium: the `pushState` sender check; low: running before consent) belong to `river-oaks-3b` in #243. That PR was reviewed with "request changes": the designer prompt and dialog still mismatch, and a regression disables the bridges after a blocked navigation.
 - **Git hooks with an absolute path:** #241, merged as `eafa4e6`. Row 11 closes the gap it left.
 
+**Fixed after merge (2026-10-12):** the chauffeur's daily budget never passed on Redis. `redis-security.js` refused any window over one hour, and `chauffeur.js` asks for a 24-hour window, so from #244's merge on every paid driving decision reported `budget_exhausted` and the car drove locally. The test used a stand-in store, so it missed this. The memory town had a related bug: its `allow` ignored the scope, so the "daily" check spent a shared 40-per-minute bucket, and `CHAUFFEUR_DAILY_LIMIT` was never read. Now Redis windows run up to 24 hours, both servers share `createLocalChauffeurSecurity`/`chauffeurDailyLimit`, and the budget tests run against the real Redis store and the real local helper. With the old bound, both Redis tests fail.
+
 ## Owner settings: account level, not code
 
 These are the backstops code can't provide, because a function has already been billed by the time code runs:
@@ -49,6 +51,9 @@ These are the backstops code can't provide, because a function has already been 
 5. **Vercel Git Fork Protection on.** This stops fork-PR previews from building with Preview environment variables.
 
 ## Follow-ups (not done here)
+
+**Update 2026-10-12:** #264 delivered these, apart from two that stay open on purpose. Starter invites are a product decision. The desktop cookie-encryption fuse waits for Developer ID signing. See `2026-10-12-server-hardening-followups.md`.
+
 
 - A per-owner invite index, so listing doesn't read the whole table; prune redeemed and expired invites.
 - Session (10,000) and waitlist (10,000, never pruned) caps still refuse when full. Filling them takes many real accounts. Fix with per-user and pending-only caps plus an admin purge.

@@ -69,7 +69,11 @@
     "preproject:status": "node scripts/enforce-pnpm.mjs",
     "preproject:check": "node scripts/enforce-pnpm.mjs",
     "project:prune": "node scripts/project-prune.mjs",
-    "preproject:prune": "node scripts/enforce-pnpm.mjs"
+    "plans:index": "node scripts/plans-index.mjs",
+    "preplans:index": "node scripts/enforce-pnpm.mjs",
+    "preproject:prune": "node scripts/enforce-pnpm.mjs",
+    "land": "node scripts/land-pr.mjs",
+    "preland": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",
@@ -87,5 +91,5 @@
     "vite": "8.3.3"
   },
   "main": "desktop/main.js",
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
 }

@@ -44,3 +44,7 @@ export function rateLimitKey(address) {
   const groups = address.includes('::') ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right] : left;
   return `${groups.slice(0, 4).map(group => parseInt(group, 16).toString(16)).join(':')}::/64`;
 }
+
+// The rate-limit key of the request's client, set by the server before auth
+// runs so per-address budgets use the same address as the sign-in limiter.
+export const CLIENT_ADDRESS = Symbol('river-oaks client address');

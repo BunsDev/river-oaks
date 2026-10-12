@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { createInteractions } from './interactions.js';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
 import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
-import { personElevation } from '../preview/src/person-position.js';
 import { createWalkingEnvironment, createWalkingState } from '../preview/src/walking.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
@@ -10,10 +9,10 @@ import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isBeastAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { traversalForAppearance } from '../preview/src/beast-traversal.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
-import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
+import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
-import { objectCollider, blocksPlayer } from '../preview/src/creator-object.js';
+import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
@@ -81,12 +80,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   };
   const state = createCommunity(worldData, environment.rooms, {carriage:false,sharedPopulation});
   let life = createResidentLife(worldData, state), revision = 0, elapsed = 0;
-  // Reserve the whole grounded-to-lifted column, so undoing a wish or lowering
-  // a Force hold cannot return the resident through confirmed geometry.
-  const residentBlocked=(collider,local)=>{
-    const ground=local.position[2],up=personElevation(local);
-    return collider.contains(local.position[0],(ground+up)/2+.9,-local.position[1],.35,.9+Math.abs(up-ground)/2);
-  };
+  // Shared with the builder preview, so its verdict matches the town's.
+  const residentBlocked=blocksResident;
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
   const residentIdentities = state.locals.map(({id,name,indoor,storeId})=>({id,name,indoor,storeId}));
@@ -571,12 +566,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if(placing&&(builds.size>=MAX_BUILDS || [...builds.values()].filter(item=>item.ownerId===userId).length>=MAX_BUILDS_PER_USER))return reject('build_limit');
       const ground=buildSite(message.position,kind,builds,previous?.id);
       if(ground===null)return reject('blocked_build_site','Find open, level ground away from roads and other creations.');
-      if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site');
+      if([...players.values()].some(other=>distance(other.position,message.position)<kind.radius+BUILD_PLAYER_GAP))return reject('blocked_build_site',BUILD_REASONS.player);
       const yaw=buildYaw(message.yaw);
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
-      if([...players.values()].some(other=>blocksPlayer(collider,other))
-        || collider && state.locals.some(local=>residentBlocked(collider,local)))
-        return reject('blocked_build_site');
+      if([...players.values()].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site',BUILD_REASONS.player);
+      if(state.locals.some(local=>residentBlocked(collider,local)))return reject('blocked_build_site',BUILD_REASONS.resident);
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
         : {...previous,...(definition.assembly?{assembly:copy(definition.assembly)}:{}),position:[...message.position],ground,yaw};

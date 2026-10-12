@@ -1,5 +1,6 @@
 import policy from '../src/river_oaks/chauffeur-policy.json' with { type: 'json' };
 import { isJevicaAdmin } from './admin.js';
+import { createRateLimiter } from './rate-limit.js';
 import { timingSafeEqual } from 'node:crypto';
 
 const number = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max;
@@ -44,6 +45,19 @@ export function chauffeurChoices(packet) {
 // car falls back to local driving.
 export const CHAUFFEUR_DAILY_LIMIT = 6000;
 const FAILURES_BEFORE_PAUSE = 3, PAUSE_MS = 60_000;
+// CHAUFFEUR_DAILY_LIMIT caps paid driving decisions per day across all owners.
+export const chauffeurDailyLimit = env => Math.min(10_000, Math.max(1, Number.parseInt(env.CHAUFFEUR_DAILY_LIMIT ?? '', 10) || CHAUFFEUR_DAILY_LIMIT));
+// The single-process town keeps the same budgets as Redis, in memory: one
+// counter per scope, id, limit and window, so the per-owner pace and the shared
+// daily budget never spend each other's allowance.
+export function createLocalChauffeurSecurity({ isBanned, now = Date.now }) {
+  const limiters = new Map();
+  return { isBanned, async allow(scope, id, limit, windowMs) {
+    const key = `${scope}:${limit}:${windowMs}`;
+    if (!limiters.has(key)) limiters.set(key, createRateLimiter(limit, windowMs, 4096, now));
+    return limiters.get(key)(id);
+  } };
+}
 export function createChauffeurRoute({ auth, security, waitlist, origin, apiKey, model = 'jev-1.13.0', fetcher = fetch, isAdmin = isJevicaAdmin, dailyLimit = CHAUFFEUR_DAILY_LIMIT, now = Date.now }) {
   let failures = 0, pausedUntil = 0;
   return async (req, res) => {

@@ -5,6 +5,8 @@ export const LANDMARK_LIMIT = 50;
 // The catalog has the original district and up to 16 published worlds; a local
 // fixture can configure one additional world without publishing it.
 export const ACCOUNT_LANDMARK_LIST_LIMIT = LANDMARK_LIMIT * 18;
+import { storeCategory } from './store-categories.js';
+
 const NAME_LIMIT = 40;
 
 const finitePair = value => Array.isArray(value) && value.length >= 2 && Number.isFinite(value[0]) && Number.isFinite(value[1]);
@@ -22,13 +24,16 @@ export function placesOf(world) {
   // and `ref` is the data id the server knows.
   const seen = new Set();
   const push = place => { if (!seen.has(place.ref)) { seen.add(place.ref); places.push(place); } };
+  // A spot that is a store's frontage browses under that store's category.
+  const categories = new Map((world?.stores ?? []).filter(store => textId(store.id)).map(store => [store.id, storeCategory(store)]));
+  const categorized = (place, id) => categories.has(id) ? { ...place, category: categories.get(id) } : place;
   if (finitePair(world?.walkSpawn)) push({ id: 'arrival', ref: 'arrival', name: 'Arrival', kind: 'arrival', position: [world.walkSpawn[0], world.walkSpawn[1]] });
   for (const spot of world?.communityLocations ?? []) {
-    if (textId(spot.id) && finitePair(spot.position) && cleanName(spot.name)) push({ id: `spot:${spot.id}`, ref: spot.id, name: cleanName(spot.name), kind: 'spot', position: [spot.position[0], spot.position[1]] });
+    if (textId(spot.id) && finitePair(spot.position) && cleanName(spot.name)) push(categorized({ id: `spot:${spot.id}`, ref: spot.id, name: cleanName(spot.name), kind: 'spot', position: [spot.position[0], spot.position[1]] }, spot.id));
   }
   for (const store of world?.stores ?? []) {
     const position = finitePair(store.visit) ? store.visit : store.position;
-    if (textId(store.id) && finitePair(position) && cleanName(store.name)) push({ id: `shop:${store.id}`, ref: store.id, name: cleanName(store.name), kind: 'shop', position: [position[0], position[1]] });
+    if (textId(store.id) && finitePair(position) && cleanName(store.name)) push(categorized({ id: `shop:${store.id}`, ref: store.id, name: cleanName(store.name), kind: 'shop', position: [position[0], position[1]] }, store.id));
   }
   return places;
 }

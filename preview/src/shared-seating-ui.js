@@ -2,6 +2,11 @@ import { buildKind,buildRoomAt } from './shared-build.js';
 import { resolveSeat,seatSlots,SEAT_REACH } from './shared-seating.js';
 import './shared-seating.css';
 
+// Storefront benches seat two; the plaza salon's curved bench seats three and its chairs one.
+const benchLabel=seat=>seat.title
+  ? `${seat.title}${seat.buildId==='bench:plaza-salon-bench'?` · ${['left','middle','right'][seat.slot]}`:''}`
+  : `Storefront bench · ${seat.slot===0?'left':'right'}`;
+
 // `getBenches` lists storefront bench places ({buildId, slot, x, north}) and
 // `isHeld(key)` says whether a resident sits on one, so the panel offers the
 // same seats as the Z key.
@@ -44,7 +49,7 @@ export function createSharedSeatingControls({host,getTown,getPose,getEnvironment
       const distance=Math.hypot(seat.x-position[0],seat.north-position[1]),key=`${seat.buildId}:${seat.slot}`;
       if(distance>SEAT_REACH || (buildRoomAt(environment,[seat.x,seat.north])?.storeId??null)!==roomId)return null;
       const occupied=isHeld(key)||town.snapshot.players.some(player=>player.sitting?.buildId===seat.buildId&&player.sitting.slot===seat.slot);
-      return {key,buildId:seat.buildId,slot:seat.slot,distance,occupied,label:`Storefront bench · ${seat.slot===0?'left':'right'}${occupied?' · Occupied':''}`};
+      return {key,buildId:seat.buildId,slot:seat.slot,distance,occupied,label:`${benchLabel(seat)}${occupied?' · Occupied':''}`};
     }).filter(Boolean)).sort((a,b)=>a.distance-b.distance||a.key.localeCompare(b.key)).slice(0,8);
     panel.hidden=seated||!choices.length;
     const key=JSON.stringify(choices.map(({key,label,occupied})=>[key,label,occupied]));

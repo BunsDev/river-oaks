@@ -29,7 +29,7 @@ async function fixture(t, mode, overrides = {}) {
     const server = createServer(async (req, res) => { if (!await auth.handle(req, res)) { res.writeHead(404); res.end(); } }); servers.push(server); server.listen(0, '127.0.0.1'); await once(server, 'listening');
     requests.push((path, body, state, headers = {}) => fetch(`http://127.0.0.1:${server.address().port}${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { Origin: config.origin, 'Content-Type': 'application/json', ...(state ? { Cookie: state } : {}), ...headers }, body: JSON.stringify(body), redirect: 'manual' }));
   }
-  return { request: requests[0], peer: requests.at(-1), calls: () => calls, identityCalls: () => identityCalls, attempts: () => attempts, advance: ms => time += ms, failSend: e => failSend = e, failVerify: e => failVerify = e, claims: c => claimsOverride = c, user: u => userOverride = u, hold: p => verifying = p };
+  return { auth: auths[0], request: requests[0], peer: requests.at(-1), calls: () => calls, identityCalls: () => identityCalls, attempts: () => attempts, advance: ms => time += ms, failSend: e => failSend = e, failVerify: e => failVerify = e, claims: c => claimsOverride = c, user: u => userOverride = u, hold: p => verifying = p };
 }
 for (const mode of ['memory', 'redis']) {
   const run = (name, fn) => test(`${mode} magic auth: ${name}`, { skip: mode === 'redis' && !process.env.REDIS_URL }, fn);
@@ -53,6 +53,45 @@ for (const mode of ['memory', 'redis']) {
     const profile = await f.peer('/auth/session', undefined, cookie(accepted, 'river_oaks_session'));
     const data = await profile.json(); assert.equal(data.user.name, 'Visitor #user_email'); assert.equal(f.identityCalls(), 0);
     f.user({ emailVerified: false }); assert.equal((await f.peer('/auth/desktop/exchange', { refreshToken: 'private-desktop-refresh' })).status, 403);
+  });
+  run('a global daily send budget pauses email sign-in without calling WorkOS until the next UTC day', async t => {
+    const f = await fixture(t, mode, { magic: { dailySends: 1 } });
+    f.advance(86_400_000 - (Date.now() % 86_400_000) + 1000);
+    assert.deepEqual(await (await f.request('/auth/email/start', { email: 'private@example.com' })).json(), { sent: true });
+    f.advance(61_000);
+    const paused = await f.peer('/auth/email/start', { email: 'private@example.com' });
+    assert.equal(paused.status, 503); assert.deepEqual(await paused.json(), { error: 'email_paused' });
+    assert.equal(cookie(paused), undefined, 'no verification state is created');
+    assert.equal(f.calls(), 1, 'the over-budget start never reaches WorkOS');
+    f.advance(86_400_000);
+    assert.deepEqual(await (await f.request('/auth/email/start', { email: 'private@example.com' })).json(), { sent: true }, 'a new day restores the budget');
+    assert.equal(f.calls(), 2);
+  });
+  run('an address past its daily share is told so without a WorkOS call', async t => {
+    const { createServer } = await import('node:http');
+    const { CLIENT_ADDRESS } = await import('../client-address.js');
+    const f = await fixture(t, mode, { magic: { addressSends: 1 } });
+    // The app sets the client address before auth runs; stand in for it here.
+    const auth = f.auth, server = createServer(async (req, res) => { req[CLIENT_ADDRESS] = req.headers['x-test-address']; if (!await auth.handle(req, res)) { res.writeHead(404); res.end(); } });
+    server.listen(0, '127.0.0.1'); await once(server, 'listening'); t.after(() => { server.closeAllConnections(); server.close(); });
+    const start = (email, address) => fetch(`http://127.0.0.1:${server.address().port}/auth/email/start`, { method: 'POST', headers: { Origin: config.origin, 'Content-Type': 'application/json', 'x-test-address': address }, body: JSON.stringify({ email }) });
+    assert.equal((await start('private@example.com', '203.0.113.7')).status, 200);
+    f.advance(61_000);
+    const limited = await start('private@example.com', '203.0.113.7');
+    assert.equal(limited.status, 429); assert.deepEqual(await limited.json(), { error: 'email_limited' });
+    assert.equal(f.calls(), 1);
+    assert.equal((await start('private@example.com', '198.51.100.4')).status, 200, 'another address is unaffected');
+  });
+  run('with Turnstile on, a failed check spends neither email budget nor WorkOS', async t => {
+    const f = await fixture(t, mode, { magic: { verifyHuman: async token => token === 'passed-check' } });
+    for (const body of [{ email: 'private@example.com' }, { email: 'private@example.com', turnstileToken: 'forged' }]) {
+      const refused = await f.request('/auth/email/start', body);
+      assert.equal(refused.status, 403); assert.deepEqual(await refused.json(), { error: 'challenge_failed' });
+      assert.equal(cookie(refused), undefined);
+    }
+    assert.equal(f.calls(), 0);
+    assert.deepEqual(await (await f.peer('/auth/email/start', { email: 'private@example.com', turnstileToken: 'passed-check' })).json(), { sent: true });
+    assert.equal(f.calls(), 1);
   });
   run('cooldown is shared and case normalized; expired state cannot authenticate', async t => {
     const f = await fixture(t, mode), start = await f.request('/auth/email/start', { email: 'private@example.com' });
@@ -125,6 +164,38 @@ for (const mode of ['memory', 'redis']) test(`${mode} magic store caps admission
   assert.equal(await start('d'), 'ok');
   assert.equal(await store.transaction({ op: 'attempt', id: 'a', owner: 'probe' }) ?? null, null, 'the oldest state was evicted');
   assert.notEqual(await store.transaction({ op: 'attempt', id: 'c', owner: 'probe' }) ?? null, null, 'newer states survive');
+});
+
+for (const mode of ['memory', 'redis']) test(`${mode} magic store gives each address its own share of the day's sends`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+  const { createMagicStore } = await import('../magic-auth.js');
+  const namespace = `{magic-share:${randomUUID()}}`;
+  const redis = mode === 'redis' ? new Redis(process.env.REDIS_URL) : undefined;
+  if (redis) await redis.ping();
+  let time = 1_800_057_600_000 + 1000;
+  const store = createMagicStore({ redis, namespace, now: () => time, dailySends: 100, addressSends: 2 });
+  t.after(async () => { store.close(); if (redis) { const keys = await redis.keys(`${namespace}:auth:*`); if (keys.length) await redis.del(...keys); await redis.quit(); } });
+  const start = (id, addressHash) => store.transaction({ op: 'start', id, emailHash: id, addressHash, record: { email: `${id}@example.com`, attempts: 0, expiresAt: time + 600000 } });
+  assert.deepEqual([await start('a', 'x'), await start('b', 'x'), await start('c', 'x')], ['ok', 'ok', 'address'], 'one address spends only its share');
+  assert.equal(await start('d', 'y'), 'ok', 'another address still gets codes');
+  assert.equal(await start('e', null), 'ok', 'a request without a known address uses the global budget only');
+  time += 86_400_000;
+  assert.equal(await start('f', 'x'), 'ok', 'the share comes back the next day');
+});
+
+for (const mode of ['memory', 'redis']) test(`${mode} magic store spends the daily send budget atomically`, { skip: mode === 'redis' && !process.env.REDIS_URL }, async t => {
+  const { createMagicStore } = await import('../magic-auth.js');
+  const namespace = `{magic-budget:${randomUUID()}}`;
+  const redis = mode === 'redis' ? new Redis(process.env.REDIS_URL) : undefined;
+  if (redis) await redis.ping();
+  let time = 1_800_057_600_000 + 1000;
+  const store = createMagicStore({ redis, namespace, now: () => time, dailySends: 2 });
+  t.after(async () => { store.close(); if (redis) { const keys = await redis.keys(`${namespace}:auth:*`); if (keys.length) await redis.del(...keys); await redis.quit(); } });
+  const start = id => store.transaction({ op: 'start', id, emailHash: id, record: { email: `${id}@example.com`, attempts: 0, expiresAt: time + 600000 } });
+  const results = await Promise.all(['a', 'b', 'c', 'd', 'e'].map(start));
+  assert.deepEqual(results.sort(), ['budget', 'budget', 'budget', 'ok', 'ok'], 'exactly the budget is admitted, even concurrently');
+  time += 86_400_000;
+  assert.equal(await start('f'), 'ok');
+  if (redis) assert.ok(await redis.pttl(`${namespace}:auth:magic-sends:${Math.floor(time / 86_400_000)}`) > 86_400_000, 'the day counter expires on its own');
 });
 
 for (const mode of ['memory', 'redis']) {
