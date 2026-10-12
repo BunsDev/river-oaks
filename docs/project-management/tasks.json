@@ -2473,6 +2473,31 @@
           "head": "83c03cee2bef6bf343c43675775dfd0d5dd8a774"
         }
       }
+    },
+    {
+      "id": "town-connect-deadline",
+      "title": "Keep a slow-but-open town connection instead of abandoning it at 12 s (email-access flake since #253)",
+      "status": "active",
+      "branches": [
+        "fix/town-connect-deadline"
+      ],
+      "owner": "claude:river-oaks-3b",
+      "leaseUntil": "2026-10-12T02:55:15+00:00",
+      "updatedAt": "2026-10-12T00:55:15+00:00",
+      "nextAction": "Extract the connection deadline into a tested helper (open vs first-snapshot budgets, starvation-aware), wire into multiplayer-client, verify, open PR.",
+      "ledger": "docs/superpowers/plans/2026-10-12-town-connect-deadline.md",
+      "filesOwned": [
+        "preview/src/multiplayer-client.js",
+        "preview/src/connection-deadline.js",
+        "preview/tests/connection-deadline.test.js"
+      ],
+      "requiredChecks": [
+        "node --test preview/tests/connection-deadline.test.js",
+        "pnpm test",
+        "pnpm run verify",
+        "RIVER_OAKS email-access e2e",
+        "hosted Verify"
+      ]
     }
   ]
 }
