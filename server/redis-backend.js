@@ -1,4 +1,4 @@
-import { createChauffeurRoute, CHAUFFEUR_DAILY_LIMIT } from './chauffeur.js';
+import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import { readFile } from 'node:fs/promises';
 import Redis from 'ioredis';
 import { createRedisAuth } from './redis-auth.js';
@@ -44,9 +44,8 @@ export async function createRedisBackend(env = process.env) {
       githubToken: env.GITHUB_TOKEN || null, returnPath: env.AUTH_RETURN_PATH,
       onLogout: (userId, sessionId) => gateway.disconnectUser(userId, sessionId),
     });
-    // CHAUFFEUR_DAILY_LIMIT caps paid driving decisions per UTC day across all owners.
-    const dailyLimit = Math.min(10_000, Math.max(1, Number.parseInt(env.CHAUFFEUR_DAILY_LIMIT ?? '', 10) || CHAUFFEUR_DAILY_LIMIT));
-    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit});
+    // Redis counts the daily budget in UTC-day windows across every gateway.
+    const handleRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
     gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
