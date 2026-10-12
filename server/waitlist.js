@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, writeFile, appendFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION } from './invitations.js';
+import { createHash } from 'node:crypto';
+import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION, INVITE_CAPACITY, INVITE_RETENTION } from './invitations.js';
 
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
 const recordFor = (identity, admins, now, autoApprove = false) => ({
@@ -186,15 +187,19 @@ end
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
 if cjson.decode(ARGV[2]).status == 'pending' then redis.call('ZADD', KEYS[2], tonumber(ARGV[3]), ARGV[1]) end
 return ARGV[2]`;
-export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS } = {}) {
+export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS, inviteCapacity = INVITE_CAPACITY } = {}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^[A-Za-z0-9:{}_-]{1,160}$/.test(prefix)) throw new Error('Invalid waitlist configuration');
   const adminIds = new Set(admins), users = `${prefix}:waitlist:users`, audit = `${prefix}:waitlist:audit`;
   const invites = `${prefix}:waitlist:invites`, pending = `${prefix}:waitlist:pending`;
   const transaction = async payload => {
     const time = now();
-    const raw = await redis.eval(INVITE_TRANSACTION, 3, users, audit, invites, JSON.stringify({
-      ...payload, now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
-      starter: payload.userId ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
+    // The owner whose invite index this call may read or extend.
+    const indexOwner = payload.op === 'issue' ? payload.invite.ownerId : payload.userId ?? null;
+    const ownerIndex = `${prefix}:waitlist:invites:owner:${createHash('sha256').update(indexOwner ?? '').digest('base64url')}`;
+    const raw = await redis.eval(INVITE_TRANSACTION, 4, users, audit, invites, ownerIndex, JSON.stringify({
+      ...payload, indexOwner, capacity: inviteCapacity, retention: INVITE_RETENTION,
+      now: time, at: new Date(time).toISOString(), admins: Object.fromEntries(admins.map(id => [id, true])),
+      starter: payload.userId && payload.op !== 'list-owner' ? [newInvite(payload.userId, payload.actorId ?? payload.userId, time), newInvite(payload.userId, payload.actorId ?? payload.userId, time)] : [],
     }));
     return raw ? JSON.parse(raw) : null;
   };
@@ -227,7 +232,9 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
         const raw = await redis.hget(users, userId);
         if (!raw || JSON.parse(raw).status !== 'approved') return [];
       }
-      return (await redis.hvals(invites)).map(raw => JSON.parse(raw)).filter(i => adminIds.has(userId) || i.ownerId === userId).map(i => visibleInvite(i, now()));
+      // Administrators see every invite; an owner reads only their own index.
+      const list = adminIds.has(userId) ? (await redis.hvals(invites)).map(raw => JSON.parse(raw)) : await transaction({ op: 'list-owner', userId });
+      return list.map(i => visibleInvite(i, now()));
     },
     async issueInvite({ actorId, ownerId, assignedUserId = null }) {
       if (!adminIds.has(actorId) || !validId(ownerId) || (assignedUserId !== null && !validId(assignedUserId))) throw new Error('Invalid invitation authority');
