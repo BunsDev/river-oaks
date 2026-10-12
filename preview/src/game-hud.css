@@ -55,6 +55,8 @@
 .game-hud #panel-toggle[aria-expanded=true] .map-lens::before { opacity: 1; animation: map-lens-turn 6s linear infinite; }
 @keyframes map-lens-turn { to { transform: rotate(1turn); } }
 @media (prefers-reduced-motion: reduce) { .game-hud #panel-toggle .map-lens::before { animation: none !important; } .game-hud #panel-toggle :is(.map-lens-fold, .map-lens-pin) { transition: none; } }
+/* Software rendering (see hud-glass.css): the lens stops turning. */
+:root[data-rendering=software] .game-hud #panel-toggle .map-lens::before { animation: none; }
 .game-hud :is(#panel-toggle,.hud-launcher)[aria-expanded=true] { outline: 2px solid var(--hud-action); outline-offset: -2px; }
 :root[data-theme] .game-hud :is(.walking-title, .viewport-heading) { left: 190px; top: 22px; }
 :root[data-theme] .game-hud .walking-title strong { font-size: 21px; }
