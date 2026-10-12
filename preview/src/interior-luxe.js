@@ -119,14 +119,45 @@ function noiseField(seed) {
 // Generated canvases are kept for the page's life, so rebuilding the district
 // (a world reload) reuses them; each build still owns and disposes its textures.
 const canvases = new Map();
-function canvasTexture([w, h], draw, { color = true, key = null } = {}) {
+// Floor surfaces are drawn after the district appears: a texture starts as a
+// 1 x 1 swatch of its base colour and receives the full canvas in a later idle
+// slot, one surface per slot. The material keeps its map throughout, so the swap
+// recompiles nothing. On CPU renderers this keeps the load free of the surface work.
+const pending = new Map();
+let pumping = false;
+const idle = typeof requestIdleCallback === 'function' ? callback => requestIdleCallback(callback, { timeout: 500 }) : callback => setTimeout(callback, 16);
+function pump() {
+  const [key, job] = pending.entries().next().value ?? [];
+  if (!job) { pumping = false; return; }
+  pending.delete(key);
+  const live = job.textures.filter(texture => !texture.userData.disposed);
+  if (live.length) {
+    const canvas = document.createElement('canvas'); canvas.width = job.size[0]; canvas.height = job.size[1];
+    job.draw(canvas.getContext('2d'), canvas.width, canvas.height); canvases.set(key, canvas);
+    // A larger image needs fresh GPU storage: three.js allocates immutable storage on
+    // first upload, so release that copy (not the texture itself) before the swap.
+    for (const texture of live) { texture.userData.resizing = true; texture.dispose(); texture.userData.resizing = false; texture.image = canvas; texture.needsUpdate = true; }
+  }
+  idle(pump);
+}
+function canvasTexture([w, h], draw, { color = true, key = null, defer = null } = {}) {
   let canvas = key && canvases.get(key);
-  if (!canvas) {
+  const later = !canvas && defer && key;
+  if (later) {
+    canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+    const swatch = canvas.getContext('2d'); swatch.fillStyle = defer; swatch.fillRect(0, 0, 1, 1);
+  } else if (!canvas) {
     canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
     draw(canvas.getContext('2d'), w, h);
     if (key) canvases.set(key, canvas);
   }
   const texture = new THREE.CanvasTexture(canvas);
+  if (later) {
+    texture.addEventListener('dispose', () => { if (!texture.userData.resizing) texture.userData.disposed = true; });
+    if (!pending.has(key)) pending.set(key, { size: [w, h], draw, textures: [] });
+    pending.get(key).textures.push(texture);
+    if (!pumping) { pumping = true; idle(pump); }
+  }
   if (color) texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.anisotropy = 8;
   return texture;
@@ -154,7 +185,7 @@ function marble(seed, base, vein, accent = null) {
     }
     ctx.putImageData(image, 0, 0);
     ctx.fillStyle = 'rgba(0,0,0,0.16)'; ctx.fillRect(0, 0, w, 1); ctx.fillRect(0, 0, 1, h); ctx.fillRect(w / 2, 0, 1, h);
-  }, { key: `marble:${seed}` });
+  }, { key: `marble:${seed}`, defer: `rgb(${base.join(',')})` });
 }
 // Fine Venetian terrazzo: dense small chips in a muted palette with brass
 // divider strips on a 1.2 m grid (which also hides the tile seams).
@@ -175,7 +206,7 @@ function terrazzo(seed, ground, chips, accents) {
     chip(chips, 30000, 1.4, 5); chip(accents, 1600, 3, 8);
     ctx.fillStyle = '#b9965c';
     for (const t of [0, 0.5]) { ctx.fillRect(t * w - 2, 0, 5, h); ctx.fillRect(0, t * h - 2, w, 5); }
-  }, { key: `terrazzo:${seed}` });
+  }, { key: `terrazzo:${seed}`, defer: ground });
 }
 // Large-format honed limestone: 1.2 x 0.6 m stones in a half-bond, faint
 // fossil speckle and cloud, slightly varied per stone, hairline joints.
@@ -196,7 +227,7 @@ function limestone(seed, base) {
       const y = row * 0.6 * px; ctx.fillRect(0, y, w, 1);
       for (let k = 0; k <= 2; k++) ctx.fillRect((k * 1.2 + (row % 2) * 0.6) * px - 0.5, y, 1, 0.6 * px);
     }
-  }, { key: `limestone:${seed}` });
+  }, { key: `limestone:${seed}`, defer: `rgb(${base.join(',')})` });
 }
 // Light grazing down from the crown reveal: bright under the line, falling
 // off towards the skirting. Shared by plaster walls (as an emissive map along
@@ -226,7 +257,7 @@ function chevron(seed, tones) {
       ctx.restore();
       ctx.fillStyle = 'rgba(30,18,10,0.28)'; ctx.fillRect(x0, 0, 1, h);
     }
-  }, { key: `chevron:${seed}` });
+  }, { key: `chevron:${seed}`, defer: tones[0] });
 }
 // Cinema carpet: deep plum pile with a fine champagne art-deco lattice.
 function decoCarpet(seed) {
@@ -244,7 +275,7 @@ function decoCarpet(seed) {
       ctx.beginPath(); ctx.moveTo(cx, cy - cell / 2); ctx.lineTo(cx + cell / 2, cy); ctx.lineTo(cx, cy + cell / 2); ctx.lineTo(cx - cell / 2, cy); ctx.closePath(); ctx.stroke();
       for (const r of [cell * 0.12, cell * 0.2]) { ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI * 2); ctx.stroke(); }
     }
-  }, { key: `carpet:${seed}` });
+  }, { key: `carpet:${seed}`, defer: '#3a1c30' });
 }
 // Concave flutes (60 mm, eight per 0.48 m tile): a normal map plus a soft
 // cavity tone so the grooves read under flat interior light too.
