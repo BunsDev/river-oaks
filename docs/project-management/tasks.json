@@ -2498,6 +2498,33 @@
         "RIVER_OAKS email-access e2e",
         "hosted Verify"
       ]
+    },
+    {
+      "id": "explore-destinations-ui",
+      "title": "Make the Places panel's destination explorer sleek and modern (search, destination list, saved places, destination picker)",
+      "status": "active",
+      "branches": [
+        "feat/explore-destinations-ui"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "updatedAt": "2026-10-12T01:25:00+00:00",
+      "leaseUntil": "2026-10-12T05:25:00+00:00",
+      "nextAction": "Capture the current Places panel, redesign it (layout, typography, cards, states, light and dark), keep every selector the journeys use, verify with unit tests, places-guide/destination-minimap/rail-navigation journeys and before/after screenshots, then PR.",
+      "ledger": "docs/superpowers/plans/2026-10-12-explore-destinations-ui.md",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-explore-ui-20261012",
+      "filesOwned": [
+        "preview/src/places-guide.js",
+        "preview/src/places-guide.css",
+        "preview/src/district-ui.js",
+        "preview/index.html (#explore-section)"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "places-guide, destination-minimap, rail-navigation journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "issues": []
     }
   ]
 }

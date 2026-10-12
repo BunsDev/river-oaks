@@ -18,6 +18,18 @@ async page => {
   await search.fill('Herm');
   check(await page.locator('#places-list li:visible').count() > 0, 'Search finds matching destinations');
   check(!await page.locator('#places-list button[aria-label^="Copy"]').first().isVisible(), 'Sharing is secondary');
+  await search.fill('');
+  const dining = page.locator('.places-filters button[data-category="dining"]');
+  check(await dining.count() === 1, 'Store categories become filters');
+  const expected = Number(await dining.locator('.places-filter-count').textContent());
+  await dining.click();
+  check(await dining.getAttribute('aria-pressed') === 'true', 'The chosen filter is announced as pressed');
+  const shown = await page.locator('#places-list li:visible').evaluateAll(rows => rows.map(row => row.dataset.category));
+  check(shown.length === expected && expected > 0 && shown.every(category => category === 'dining'), 'A category filter shows exactly that category');
+  await guide.screenshot({path: 'output/playwright/places-guide-filter.png'});
+  await search.fill('no such destination 9876');
+  await page.locator('#places-no-results button').click();
+  check(await search.inputValue() === '' && await page.locator('#places-list li:visible').count() === await page.locator('#places-list li').count(), 'Show all places clears the search and the filter');
   await page.locator('#places-tab-destinations').focus();
   await page.keyboard.press('ArrowRight');
   check(await page.locator('#places-tab-saved').getAttribute('aria-selected') === 'true', 'Arrow keys switch guide tabs');
