@@ -10,8 +10,9 @@ import { rectanglesOverlap } from './store-rooms.js';
 //
 // The ground covers most of the screen, so the per-fragment cost must stay
 // flat on CPU renderers: a 1 m mask texture names up to four candidate rooms
-// per cell, and only those get the exact footprint test (one fetch, at most
-// four tests, instead of a loop over every room).
+// per cell, and only those get the exact footprint test. Room frames come from
+// a small float texture via texelFetch, so the shader never indexes a uniform
+// array dynamically (which software rasterizers can turn into a scan of all rooms).
 export const MASK_CELL = 1, MASK_SLOTS = 4;
 
 // The same footprint test as the shader, for tests and tools.
@@ -48,14 +49,16 @@ export function createRoomGroundClip(rooms) {
   const count = Math.min(rooms.length, 254), mask = roomMask(rooms.slice(0, count));
   const frames = rooms.slice(0, count).map(room => [room.facade[0], room.facade[1], room.right[0], room.right[1]]);
   const spans = rooms.slice(0, count).map(room => [room.aMin, room.aMax, room.depth, room.floor]);
-  let texture = null;
-  if (mask) {
-    texture = new THREE.DataTexture(mask.data, mask.width, mask.height, THREE.RGBAFormat, THREE.UnsignedByteType);
-    texture.magFilter = texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false; texture.needsUpdate = true;
-  }
+  const nearest = texture => { texture.magFilter = texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false; texture.needsUpdate = true; return texture; };
+  // Mask texels hold room index + 1 per slot; room texels (2 per room) hold the
+  // facade frame and the span: [east, north, right east, right north], [aMin, aMax, depth, floor].
+  const texture = mask ? nearest(new THREE.DataTexture(mask.data, mask.width, mask.height, THREE.RGBAFormat, THREE.UnsignedByteType)) : null;
+  // Facades are stored relative to the mask origin, so float32 keeps sub-millimetre precision.
+  const local = frame => mask ? [frame[0] - mask.west, frame[1] - mask.south, frame[2], frame[3]] : frame;
+  const roomData = count ? nearest(new THREE.DataTexture(new Float32Array(frames.flatMap((frame, i) => [...local(frame), ...spans[i]])), count * 2, 1, THREE.RGBAFormat, THREE.FloatType)) : null;
   const uniforms = {
-    roRoomClip: { value: count ? 1 : 0 }, roRoomMask: { value: texture },
-    roRoomGrid: { value: mask ? new THREE.Vector4(mask.west, mask.south, 1 / (mask.width * mask.cell), 1 / (mask.height * mask.cell)) : new THREE.Vector4() },
+    roRoomClip: { value: count ? 1 : 0 }, roRoomMask: { value: texture }, roRoomData: { value: roomData },
+    roRoomGrid: { value: mask ? new THREE.Vector4(mask.west, mask.south, mask.cell, 0) : new THREE.Vector4() },
     roRoomFrame: { value: frames.flat() }, roRoomSpan: { value: spans.flat() },
   };
   const clipped = new Set();
@@ -75,21 +78,21 @@ export function createRoomGroundClip(rooms) {
           varying vec3 vRoRoomWorld;
           uniform float roRoomClip;
           uniform sampler2D roRoomMask;
-          uniform vec4 roRoomGrid;
-          uniform vec4 roRoomFrame[${count}];
-          uniform vec4 roRoomSpan[${count}];`)
+          uniform highp sampler2D roRoomData;
+          uniform vec4 roRoomGrid;`)
         .replace('void main() {', `void main() {
           if (roRoomClip > 0.5) {
             // Three.js z is south; rooms are planned in east/north metres.
             vec2 roEN = vec2(vRoRoomWorld.x, -vRoRoomWorld.z);
-            vec2 roUv = (roEN - roRoomGrid.xy) * roRoomGrid.zw;
-            if (roUv.x >= 0.0 && roUv.y >= 0.0 && roUv.x < 1.0 && roUv.y < 1.0) {
-              vec4 roIds = texture2D(roRoomMask, roUv) * 255.0;
+            vec2 roLocal = roEN - roRoomGrid.xy;
+            ivec2 roCell = ivec2(floor(roLocal / roRoomGrid.z)), roSize = textureSize(roRoomMask, 0);
+            if (roCell.x >= 0 && roCell.y >= 0 && roCell.x < roSize.x && roCell.y < roSize.y) {
+              vec4 roIds = texelFetch(roRoomMask, roCell, 0) * 255.0;
               for (int k = 0; k < ${MASK_SLOTS}; k++) {
                 int id = int(roIds[k] + 0.5) - 1;
                 if (id < 0) break;
-                vec4 frame = roRoomFrame[id], span = roRoomSpan[id];
-                vec2 rel = roEN - frame.xy, inward = vec2(-frame.w, frame.z);
+                vec4 frame = texelFetch(roRoomData, ivec2(id * 2, 0), 0), span = texelFetch(roRoomData, ivec2(id * 2 + 1, 0), 0);
+                vec2 rel = roLocal - frame.xy, inward = vec2(-frame.w, frame.z);
                 float a = dot(rel, frame.zw), d = dot(rel, inward);
                 if (a > span.x && a < span.y && d > 0.0 && d < span.z && vRoRoomWorld.y > span.w - 1.0) discard;
               }
@@ -108,6 +111,6 @@ export function createRoomGroundClip(rooms) {
       return clipped.size;
     },
     setEnabled(enabled) { uniforms.roRoomClip.value = enabled && count ? 1 : 0; },
-    dispose() { texture?.dispose(); },
+    dispose() { texture?.dispose(); roomData?.dispose(); },
   };
 }

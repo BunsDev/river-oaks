@@ -426,8 +426,9 @@ function populateWorld(data) {
   const streetEnvironment=createWalkingEnvironment(data);
   const streetSpace=(x,z)=>streetEnvironment.isFree(x,z)&&!streetEnvironment.roomAt(x,z);
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
-  // Rising terrain must not show through walk-in floors (render only).
-  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground,roads,sidewalks);
+  // Rising terrain must not show through walk-in floors (render only). Roads and
+  // sidewalks never rise above a room floor, so only the terrain surface pays for it.
+  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground.children[0]);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);

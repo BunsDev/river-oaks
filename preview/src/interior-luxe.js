@@ -134,7 +134,9 @@ function pump() {
   if (live.length) {
     const canvas = document.createElement('canvas'); canvas.width = job.size[0]; canvas.height = job.size[1];
     job.draw(canvas.getContext('2d'), canvas.width, canvas.height); canvases.set(key, canvas);
-    for (const texture of live) { texture.image = canvas; texture.needsUpdate = true; }
+    // A larger image needs fresh GPU storage: three.js allocates immutable storage on
+    // first upload, so release that copy (not the texture itself) before the swap.
+    for (const texture of live) { texture.userData.resizing = true; texture.dispose(); texture.userData.resizing = false; texture.image = canvas; texture.needsUpdate = true; }
   }
   idle(pump);
 }
@@ -151,7 +153,7 @@ function canvasTexture([w, h], draw, { color = true, key = null, defer = null } 
   }
   const texture = new THREE.CanvasTexture(canvas);
   if (later) {
-    texture.addEventListener('dispose', () => { texture.userData.disposed = true; });
+    texture.addEventListener('dispose', () => { if (!texture.userData.resizing) texture.userData.disposed = true; });
     if (!pending.has(key)) pending.set(key, { size: [w, h], draw, textures: [] });
     pending.get(key).textures.push(texture);
     if (!pumping) { pumping = true; idle(pump); }
