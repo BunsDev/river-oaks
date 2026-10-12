@@ -54,3 +54,43 @@ and Val approved each change below on October 11, 2026.
 ## Next step
 
 Val reviews the PR. After it merges, production follows Batch A in guide §3.
+
+## Update, 2026-10-11 evening: season starts October 11
+
+Val approved Day 1 (Oct 8 lounge, fresh voices) and asked for the season to
+start on October 11. Day 1 was rendered that evening in Charm's workspace and
+is not part of this repository.
+
+- **Calendar.** Day 1 moves to Sun Oct 11 (Status Ready). Banked Day 3,
+  *Researching the Vibe*, returns on Mon Oct 12 as Post 2. Day 2 keeps Oct 13,
+  and every later post keeps its date. The Guest List stays on Oct 31 and the
+  season still ends Nov 7. Post # now runs 1–28, with 56 planned uploads.
+- **Why not shift every post a day earlier.** That would put The Guest List on
+  Oct 30, under the Day 21 recap card that says "October 31". Guide §4 says
+  banked days come back "if a slot opens", and starting a day early opens
+  exactly one. Day 3 is a 10s text-only Light loop, the cheapest of the three.
+- **Workbook.** Calendar table A7:M35; status validation and formatting I8:I35.
+  ProductionCopy gains Day 3's 15 rows (A7:D427), and SeriesReferences moves to
+  B432:D522. PostResults gains Day 3's four rows (A7:N119). The Dates,
+  Publishing status and Planning notes 3, 5 and 11 are updated.
+- **Guide.** Updated the relaunch note, the §1 arc dates, the §2 counts, the
+  §3 launch rule (including the revert rule if Day 1 does not post on Oct 11),
+  the §4 table and the banked list. Day 01 and Day 03 have new planned-post lines.
+
+### Checks (this update)
+
+- The workbook was diffed against the previous revision with openpyxl. Outside
+  Day 1, Day 3 and Post #, every Calendar field is unchanged. Production differs
+  only by the inserted Day 3 rows and the five notes listed above. Results
+  differs only by the four inserted Day 3 rows. Each row keeps its style,
+  including the fill that alternates by Day parity. Dates run Oct 11 to Nov 7
+  with no gaps.
+- The Guide §4 table was checked against the workbook Calendar for all 28 rows
+  (Post #, Day, date, format, episode).
+- `git diff --check` and the secret guard (results in the PR).
+
+### Next step
+
+Val reviews the Day 1 cut and posts it tonight. If it does not post on Oct 11,
+revert to the Oct 12 plan (Day 1 on Oct 12, Day 3 banked again). Then Val
+reviews and merges this PR with the guard script.
