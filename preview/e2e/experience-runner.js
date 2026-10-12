@@ -1,5 +1,6 @@
 import { startBrowserFixture } from './fixture-server.js';
 import { chromium } from 'playwright';
+import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -21,6 +22,8 @@ for (const file of await readdir(join(root, 'preview/e2e'))) {
 if (names.some(name => !selectable.includes(name))) throw new Error(`Choose page harnesses from: ${selectable.join(', ')}`);
 const results = [];
 let browser, fixture;
+// Local runs take turns with other sessions' browser runs (scripts/browser-lock.mjs).
+const releaseBrowserLock = await holdBrowserLock('experience journeys');
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   browser = await chromium.launch({ headless: !software,
@@ -71,4 +74,5 @@ try {
 } finally {
   await browser?.close();
   await fixture?.close();
+  releaseBrowserLock();
 }

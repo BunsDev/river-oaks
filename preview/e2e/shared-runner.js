@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const modes = process.argv.slice(2);
@@ -79,6 +80,8 @@ async function start(mode, ports) {
     });
   });
 }
+// Local runs take turns with other sessions' browser runs (scripts/browser-lock.mjs).
+const releaseBrowserLock = await holdBrowserLock('shared town journeys', { signal: interruption.signal });
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
   await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
@@ -161,4 +164,5 @@ try {
   report.status = interruption.signal.aborted ? 'interrupted' : process.exitCode ? 'failed' : 'passed';
   for (const [signal, handler] of signals) process.removeListener(signal, handler);
   await writeFile(join(root, 'data/reports', process.env.RIVER_OAKS_SHARED_REPORT ?? 'shared-experience.json'), JSON.stringify(report, null, 2) + '\n');
+  releaseBrowserLock();
 }
