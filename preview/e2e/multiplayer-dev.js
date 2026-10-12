@@ -146,12 +146,14 @@ async page => {
   await page.waitForFunction(name => document.querySelector('#places-status')?.textContent.includes(`You're at ${name}`), spot.name, { timeout: 15000 });
   const seen = async (tab, id) => tab.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 4.5; }, [id, spot.position], { timeout: 15000 }).then(() => true, () => false);
   check(await seen(page, a.self) && await seen(second, a.self), `a shared teleport lands beside ${spot.name} in both browsers' snapshots`);
-  await page.waitForTimeout(1100);
-  const benchPosition = await page.evaluate(() => { const h = JSON.parse(document.querySelector('#walking-hud').dataset.position); return [h[0], -h[2]]; });
   await page.locator('#places-tab-saved').click();
   await page.locator('#landmark-name').fill('Town bench'); await page.locator('#landmark-add').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes('Saved Town bench'), null, {timeout:15000})
     .catch(async () => { throw new Error(`Landmark save failed: ${await page.locator('#places-status').textContent()}`); });
+  // The town saves a landmark at its own record of the player, so compare with
+  // that, not the walking HUD, which repaints only on a rendered frame.
+  const townPosition = (tab, id) => tab.evaluate(id => window.__riverMultiplayer().snapshot?.players.find(p => p.id === id)?.position.slice(0, 2) ?? null, id);
+  const benchPosition = await townPosition(page, a.self);
   await openHudSpace(second, 'explore-section');
   check(await second.locator('#landmarks-list li').count()===0,'A different account cannot see a private landmark');
   await page.evaluate(()=>localStorage.removeItem('river-oaks-landmarks'));
@@ -168,7 +170,8 @@ async page => {
   await page.locator('#landmarks-list li button[aria-label^="Go to"]').click();
   await page.waitForFunction(() => document.querySelector('#places-status')?.textContent.includes("You're at Town bench"), null, { timeout: 15000 });
   const atBench = await second.waitForFunction(([id, p]) => { const me = window.__riverMultiplayer().snapshot?.players.find(x => x.id === id); return me && Math.hypot(me.position[0] - p[0], me.position[1] - p[1]) < 1.5; }, [a.self, benchPosition], { timeout: 15000 }).then(() => true, () => false);
-  check(atBench, 'a landmark teleport is a server-checked position travel the other browser sees');
+  check(atBench, atBench ? 'a landmark teleport is a server-checked position travel the other browser sees'
+    : `Landmark teleport unseen: bench ${JSON.stringify(benchPosition)}, other browser sees ${JSON.stringify(await townPosition(second, a.self))}, this browser sees ${JSON.stringify(await townPosition(page, a.self))}`);
   await page.locator('.places-close').click();
   if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
   // Builder mode: a live preview shows where a creation will land and
