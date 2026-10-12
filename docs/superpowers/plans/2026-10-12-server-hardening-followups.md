@@ -87,4 +87,5 @@ Checks after the fixes: the affected server suites (redis-auth, magic-auth, auth
 
 - **#264 deployed as `f7d10aa`.** The CSP header is live. The landing page loads all 7 fonts and the sign-in screen plays its art clip, both with zero CSP violations and no page errors in a real browser.
 - **Turnstile on at 03:22 UTC.** Val set `TURNSTILE_SECRET_KEY` (sensitive) and gave the site key. `VITE_TURNSTILE_SITE_KEY` was set, then production was redeployed once. A start without a token gets 403 `challenge_failed`, with no email sent. Focusing the email field renders the "Verify you are human" widget with no CSP violations.
-- **Still Val's:** a Vercel Spend Management hard pause and a Redis Cloud 70% memory alert. Steps are in `docs/security-review.md` under "Production owner settings".
+- **Spend Management (2026-10-12):** Val set a $60 on-demand budget for team 0xBuns with Pause on. Alerts fire at 50%, 75% and 100%; the webhook is off.
+- **Redis memory alert (2026-10-12):** not available. The Redis Cloud console reached through Vercel shows no alert controls for this database. No owner settings are left open; `docs/security-review.md` under "Production owner settings" has the details.
