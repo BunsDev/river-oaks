@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { usesSoftwareRendering } from '../src/hardware-acceleration.js';
+import { markRenderingMode, usesSoftwareRendering } from '../src/hardware-acceleration.js';
 
 function context(renderer, { masked = 'WebKit WebGL', extension = true } = {}) {
   return {
@@ -44,4 +44,19 @@ test('missing or lost contexts never abort startup or claim acceleration is off'
   const gl = context(null);
   gl.getParameter = () => { throw new Error('context lost'); };
   assert.equal(usesSoftwareRendering(gl), false);
+});
+
+test('software rendering marks the document so the glass and endless animations stand down', () => {
+  const root = { dataset: {} };
+  assert.equal(markRenderingMode(context('llvmpipe (LLVM 15.0.7, 256 bits)'), root), true);
+  assert.equal(root.dataset.rendering, 'software');
+});
+
+test('a GPU or unknown renderer leaves the document unmarked', () => {
+  for (const name of ['ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)', 'WebKit WebGL']) {
+    const root = { dataset: {} };
+    assert.equal(markRenderingMode(context(name), root), false);
+    assert.equal(root.dataset.rendering, undefined);
+  }
+  assert.equal(markRenderingMode(null, { dataset: {} }), false);
 });

@@ -83,6 +83,10 @@
   :root { --hud-glass: rgb(251 250 246 / .96); --liquid-tint: rgb(251 250 246 / .95); --liquid-tint-deep: rgb(246 244 238 / .95); }
   :root[data-theme=dark] { --hud-glass: rgb(20 27 24 / .96); --liquid-tint: rgb(20 30 32 / .95); --liquid-tint-deep: rgb(16 24 26 / .95); }
 }
+/* Software rendering (hardware-acceleration.js): without a GPU every blurred sheet is
+   re-blurred on the CPU each frame, which starved the town join. Reduced-transparency look. */
+:root[data-rendering=software] { --hud-glass: rgb(251 250 246 / .97); --hud-filter: none; --liquid-tint: rgb(251 250 246 / .97); --liquid-tint-deep: rgb(246 244 238 / .97); --liquid-filter: none; }
+:root[data-rendering=software][data-theme=dark] { --hud-glass: rgb(20 27 24 / .97); --liquid-tint: rgb(20 30 32 / .97); --liquid-tint-deep: rgb(16 24 26 / .97); }
 
 /* The material: one rule for every floating sheet. */
 :root[data-theme] :is(#control-panel, .visit-tools[open], .visit-tools:not([open]) > .visit-tools-toggle, #walking-hud .walking-console, .panel-trigger, .commands-toggle) {

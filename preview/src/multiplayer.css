@@ -45,6 +45,10 @@
 .multiplayer-welcome button:hover { background: color-mix(in srgb, var(--liquid-well) 50%, var(--liquid-rim)); }
 :root[data-theme=dark] .multiplayer-welcome button:hover { background: rgb(255 255 255 / .16); }
 @media (prefers-reduced-motion: reduce) { .multiplayer-welcome::after, .multiplayer-welcome #multiplayer-status::after { animation: none; } }
+/* Software rendering (see hud-glass.css): a plain veil and no endless drift or bead. The rim
+   paints once, so it stays. */
+:root[data-rendering=software] .multiplayer-gate::before { background: rgb(10 36 40 / .55); -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-rendering=software] .multiplayer-welcome::after, :root[data-rendering=software] .multiplayer-welcome #multiplayer-status::after { animation: none; }
 .multiplayer-welcome button:focus-visible, .multiplayer-primary:focus-visible { outline: 3px solid var(--liquid-accent); outline-offset: 3px; }
 .multiplayer-welcome button, .multiplayer-roster button { min-height: 44px; padding: 8px 12px; }
 .multiplayer-roster { padding: 14px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 14px; }

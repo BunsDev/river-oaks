@@ -12,8 +12,17 @@ export function usesSoftwareRendering(gl) {
   catch { return false; /* A lost context must not break startup. */ }
 }
 
+// Backdrop blur and endless animations are composited on the GPU. Without one, every
+// frame re-blurs and repaints them on the CPU the game needs to join the town and walk,
+// so the stylesheets drop them under :root[data-rendering=software].
+export function markRenderingMode(gl, root = globalThis.document?.documentElement) {
+  const software = usesSoftwareRendering(gl);
+  if (software && root) root.dataset.rendering = 'software';
+  return software;
+}
+
 export function warnIfSoftwareRendering({ gl, viewport, focusTarget }) {
-  if (!usesSoftwareRendering(gl)) return;
+  if (!markRenderingMode(gl)) return;
   const notice = document.createElement('aside');
   notice.className = 'hardware-acceleration-warning';
   notice.setAttribute('aria-label', 'Graphics performance warning');
