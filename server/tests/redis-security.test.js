@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
 import { createRedisSecurity } from '../redis-security.js';
+import { TICKET_TTL_MS } from '../ticket-policy.js';
 
 test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1 });
@@ -75,20 +76,22 @@ test('Redis security primitives', { skip: !process.env.REDIS_URL }, async t => {
     assert.equal(await store.consumeTicket(ticket, user, 'river-oaks'), false);
     assert.equal(await store.consumeTicket(ticket, user, 'garden-2'), true);
   });
-  await run('tickets expire after 15 seconds and account issuance is capped', async ({ store, advance }) => {
+  await run('tickets expire after their lifetime and account issuance is capped', async ({ store, advance }) => {
     const user = { userId: 'user-a', sessionId: 'session-a' };
     const tickets = await Promise.all(Array.from({ length: 15 }, () => store.issueTicket(user)));
     assert.equal(tickets.filter(Boolean).length, 10);
-    advance(15001);
-    assert.equal(await store.consumeTicket(tickets.find(Boolean), user), false);
-    advance(45000);
+    // The newest is still live under the per-user cap, so only expiry can refuse it.
+    advance(TICKET_TTL_MS + 1);
+    assert.equal(await store.consumeTicket(tickets.filter(Boolean).at(-1), user), false, 'expired after its lifetime');
+    // The account may ask again once its one-minute issuance window has passed.
+    advance(Math.max(0, 60_001 - (TICKET_TTL_MS + 1)));
     assert.ok(await store.issueTicket(user));
   });
   await run('global ticket capacity is bounded and expiry reclaims it', async ({ store, advance }) => {
     // The table holds 4096 live tickets (each user at most 3; see hardening-tickets.test.js).
     const tickets = await Promise.all(Array.from({ length: 4100 }, (_, i) => store.issueTicket({ userId: `user-${i}`, sessionId: `session-${i}` })));
     assert.equal(tickets.filter(Boolean).length, 4096);
-    advance(15001);
+    advance(TICKET_TTL_MS + 1);
     assert.ok(await store.issueTicket({ userId: 'new-user', sessionId: 'new-session' }));
   });
   await run('durable bans reject tickets and unban writes a bounded audit', async ({ store, redis, prefix }) => {

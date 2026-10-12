@@ -1,4 +1,5 @@
 import {validAssembly} from '../preview/src/creator-object.js';
+import { TICKET_TTL_MS, TICKETS_PER_USER } from './ticket-policy.js';
 import { createServer } from 'node:http';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve, relative, sep, extname } from 'node:path';
@@ -135,8 +136,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         if (!issuing(identity.userId)) return json(res,429,{error:'Please wait before reconnecting.'});
         for(const [key,value] of tickets)if(value.until<=now())tickets.delete(key);
+        // As in the Redis path: a new ticket retires this user's oldest beyond the cap (Map order is issue order).
+        const mine=[...tickets].filter(([,value])=>value.identity.userId===identity.userId);
+        for(const [key] of mine.slice(0,Math.max(0,mine.length-(TICKETS_PER_USER-1))))tickets.delete(key);
         if(tickets.size>=512)return json(res,503,{error:'The town is busy. Try again shortly.'});
-        const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+15000});
+        const ticket=randomBytes(32).toString('base64url');tickets.set(ticket,{identity,until:now()+TICKET_TTL_MS});
         return json(res,200,{ticket,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,moderator:moderatorIds.has(identity.userId)});
       }
       if (pathname.startsWith('/api/landmarks/') && req.method==='POST') {

@@ -9,6 +9,7 @@ import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
 import { createModeration } from '../moderation.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
+import { TICKET_TTL_MS, TICKETS_PER_USER } from '../ticket-policy.js';
 
 const district = JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
 const publicOrigin = 'https://sim.jev.works';
@@ -219,7 +220,7 @@ test('tickets bind account and session, expire, and are consumed once',async t=>
   const alice=await connect(f,'alice-session',token);
   assert.equal(alice.messages[0].selfId,'alice');
   await assert.rejects(connect(f,'alice-session',token),/401/);
-  const expired=await f.issue('bob-session');f.advance(15001);
+  const expired=await f.issue('bob-session');f.advance(TICKET_TTL_MS+1);
   await assert.rejects(connect(f,'bob-session',expired),/401/);
   assert.equal(f.world.players.size,1);
 });
@@ -367,4 +368,26 @@ for(const state of ['connected','departed'])test(`server shutdown releases ${sta
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(timers.filter(timer=>!timer._destroyed).length,0,'closed server must not retain its world through a new grace timer');
   assert.equal(f.world.players.size,0,'shutdown releases departed players immediately');
+});
+
+// A slow page (busy main thread) may open its socket long after asking for a
+// ticket; the ticket must still work, but only within its lifetime.
+test('a join ticket works for its whole lifetime and expires after it',async t=>{
+  const f=await fixture(t);
+  const slow=await f.issue('alice-session');
+  f.advance(TICKET_TTL_MS-1000);
+  const alice=await connect(f,'alice-session',slow);
+  assert.equal(alice.messages[0].selfId,'alice','a ticket used 59 s after issue still joins');
+  alice.ws.close();
+  const stale=await f.issue('bob-session');
+  f.advance(TICKET_TTL_MS+1);
+  await assert.rejects(connect(f,'bob-session',stale),/401/,'an expired ticket is refused');
+});
+
+test('each user holds at most the capped number of live tickets',async t=>{
+  const f=await fixture(t),tickets=[];
+  for(let i=0;i<=TICKETS_PER_USER;i++)tickets.push(await f.issue('bob-session'));
+  await assert.rejects(connect(f,'bob-session',tickets[0]),/401/,'a new request retires the oldest ticket');
+  const bob=await connect(f,'bob-session',tickets.at(-1));
+  assert.equal(bob.messages[0].selfId,'bob');
 });
