@@ -12,8 +12,13 @@ export const DESKTOP_FUSES = {
   [FuseV1Options.OnlyLoadAppFromAsar]: true,
   // The app loads only the hosted https game, never file:// pages.
   [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
-  // Left at Electron's defaults: encrypting the cookie store would add a
-  // Keychain prompt, and the V8 snapshot and Wasm trap handlers are unrelated.
+  // Cookie encryption stays off until the app ships with Developer ID signing
+  // (a release gate in docs/security-review.md). The cookie store's key lives in
+  // the Keychain item the app creates; macOS trusts the same signed app with it
+  // across updates, but each ad-hoc build has a new signature, so every update
+  // would ask for Keychain access, and declining leaves sessions unreadable.
+  // Turn it on in the same release that adds signing. The V8 snapshot and Wasm
+  // trap handlers are left at Electron's defaults; they are unrelated.
   [FuseV1Options.EnableCookieEncryption]: false,
   [FuseV1Options.LoadBrowserProcessSpecificV8Snapshot]: false,
   [FuseV1Options.WasmTrapHandlers]: true,

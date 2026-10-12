@@ -16,7 +16,8 @@ test('package-manager guard accepts pinned pnpm and rejects npm, yarn, missing a
  writeFileSync(join(cwd,'package-lock.json'),'{}');assert.equal(run('pnpm/10.34.5').status,1);
 });
 test('repository declares one pinned package manager and guards each public script',()=>{
- assert.equal(pkg.packageManager,'pnpm@10.34.5');
+ // Corepack (Docker, Vercel) verifies the downloaded pnpm against this hash.
+ assert.match(pkg.packageManager,/^pnpm@10\.34\.5\+sha512\.[0-9a-f]{128}$/);
  for(const name of Object.keys(pkg.scripts).filter(name=>!name.startsWith('pre') && !['postinstall','install'].includes(name)))
    assert.match(pkg.scripts[`pre${name}`]??'',/enforce-pnpm/);
  assert.equal(existsSync(new URL('../../package-lock.json',import.meta.url)),false);
