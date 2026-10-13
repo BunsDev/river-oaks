@@ -4295,33 +4295,6 @@
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     },
     {
-      "id": "shared-voice-desktop",
-      "title": "Shared voice, PR 5a: desktop microphone-only permission for the game origin, usage description, desktop e2e check",
-      "status": "active",
-      "branches": [
-        "feat/voice-desktop-20261013"
-      ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T11:17:18.342Z",
-      "leaseUntil": "2026-10-13T13:17:18.342Z",
-      "nextAction": "Electron e2e passed (13 checks; fake UI flag dropped), verify core passed. PR open; land after #305.",
-      "filesOwned": [
-        "desktop/runtime.js",
-        "desktop/main.js",
-        "desktop/package.js",
-        "desktop/e2e.js",
-        "desktop/tests/permissions.test.js",
-        "docs/desktop.md"
-      ],
-      "requiredChecks": [
-        "pnpm run test:desktop",
-        "pnpm run test:desktop:e2e --dev",
-        "pnpm run verify"
-      ],
-      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
-      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
-    },
-    {
       "id": "plaza-checkers",
       "title": "Checkers on the plaza chess tables (phase 3a of plaza games): American checkers rules, a local opponent, discs mirrored on the 3D board, sharing the chess table's board sheet",
       "status": "active",
@@ -4350,6 +4323,61 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
       "issues": []
+    },
+    {
+      "id": "shared-voice-desktop",
+      "title": "Shared voice, PR 5a: desktop microphone-only permission for the game origin, usage description, desktop e2e check",
+      "status": "active",
+      "branches": [
+        "feat/voice-desktop-20261013"
+      ],
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:17:18.342Z",
+      "leaseUntil": "2026-10-13T13:17:18.342Z",
+      "nextAction": "Electron e2e passed (13 checks; fake UI flag dropped), verify core passed. PR open; land after #305.",
+      "filesOwned": [
+        "desktop/runtime.js",
+        "desktop/main.js",
+        "desktop/package.js",
+        "desktop/e2e.js",
+        "desktop/tests/permissions.test.js",
+        "docs/desktop.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run test:desktop:e2e --dev",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "ios-device-feasibility",
+      "title": "iOS #285 physical iPhone architecture probe",
+      "status": "active",
+      "branches": [
+        "feat/ios-device-probe-20261013"
+      ],
+      "owner": "codex-ios-rollout-20261013",
+      "leaseUntil": "2026-10-13T14:32:53.088430+00:00",
+      "updatedAt": "2026-10-13T12:56:12.411743+00:00",
+      "nextAction": "PR #309: Safari and clean native-only probe both fail during loading. Recover pending WebContent/GPU trace finalization (PID 15577), identify termination cause, then propose measured rendering fix; #285 open.",
+      "ledger": "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md",
+      "filesOwned": [
+        "experiments/ios-probe/",
+        "scripts/ios-probe.mjs",
+        "scripts/tests/ios-probe.test.js",
+        "docs/ios-feasibility.md",
+        "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md"
+      ],
+      "requiredChecks": [
+        "focused measurement and origin boundary tests",
+        "Release simulator and signed device build",
+        "Safari and WKWebView physical device measurements",
+        "pnpm run verify",
+        "independent technical review"
+      ],
+      "pr": 309
     },
     {
       "id": "plaza-dominoes",
