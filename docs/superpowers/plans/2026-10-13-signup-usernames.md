@@ -95,6 +95,45 @@ visitor splash (`endSplash`) is untouched.
     a waiting resident with CSRF protection. Revoking sends no username, and
     reconsidering a declined request sends the edited one.
 
+## CI regression and fix (PR #314)
+
+**What failed.** The first CI run failed `test:security:e2e`: for a signed-out
+visitor, `#access-email` never appeared.
+
+**Why.** `access-entry.js` imported `generatedUsername` from
+`resident-names.js`, which game code also imports. Vite therefore split
+`resident-names` (and `jevica-accounts`) into shared chunks. The asset gate
+(`server/game-assets.js`, used by `middleware.js` and `server/app.js`) refuses
+those chunks before approval, so the sign-in page's own module never loaded.
+`pnpm run verify` did not catch it, and the access-gate journey runs on the
+Vite dev server, which has no asset gate.
+
+**Fix.**
+- `generatedUsername` moved to `preview/src/generated-username.js`, which has no
+  imports. On the client only the access entry imports it, so it stays in the
+  entry's chunk.
+- `suggestedUsername` moved to `server/waitlist.js`, its only user.
+- The gate was not widened.
+
+**Guard.** `scripts/check-access-entry.mjs` now runs at the end of
+`pnpm run build`. It walks the built `/play` page's module graph and asks
+`protectedGameAsset` about every file.
+- On the broken build it named exactly the two refused chunks the browser
+  probe saw (`resident-names-*.js` and `jevica-accounts-*.js`).
+- On the fixed build: "Sign-in page: 5 files, all served before sign-in."
+- `pnpm run test:security:e2e` passed locally after the fix. The email-access
+  test took 8.5 s, where it had timed out at 60 s.
+- On the fixed head, after main's `d473480`:
+  - the build with the guard, `test:security:e2e` (2/2) and the access-gate
+    journey all passed;
+  - `REDIS_URL=… pnpm run test:server`: 608 pass, 0 fail, 0 skipped;
+  - `pnpm run verify`: `core: passed` (unit 2782 pass, 0 fail, 1 skipped).
+
+**Out of scope, reported to river-oaks-c2.** The same rule refuses
+`/assets/boot/first-paint.js` (from `bdc4599`) to signed-out visitors, in
+production too. That is a classic script outside the module graph and is not
+part of this change.
+
 ## Gaps
 
 - Residents approved before this change keep their GitHub or `Visitor #`

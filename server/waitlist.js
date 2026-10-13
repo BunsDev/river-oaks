@@ -2,7 +2,13 @@ import { mkdir, readFile, rename, writeFile, appendFile } from 'node:fs/promises
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION, INVITE_CAPACITY, INVITE_RETENTION } from './invitations.js';
-import { suggestedUsername, usernameKey, usernameProblem, validUsername } from '../preview/src/resident-names.js';
+import { usernameKey, usernameProblem, validUsername } from '../preview/src/resident-names.js';
+import { generatedUsername } from '../preview/src/generated-username.js';
+
+// The username offered first: the verified GitHub login when it can be one,
+// otherwise a generated name. `attempt` moves past names already taken.
+export const suggestedUsername = ({ login = null, userId, attempt = 0 }) =>
+  attempt === 0 && validUsername(login) ? login : generatedUsername(`${userId}:${attempt}`);
 
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
 const recordFor = (identity, admins, now, autoApprove = false) => ({

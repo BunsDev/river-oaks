@@ -87,18 +87,3 @@ export function usernameProblem(name) {
   return null;
 }
 export const validUsername = name => usernameProblem(name) === null;
-
-// A friendly name for someone without a GitHub login, the same for the same seed.
-const ADJECTIVES = ['rosy', 'amber', 'velvet', 'misty', 'golden', 'sunlit', 'quiet', 'silver', 'gentle', 'bright', 'dusky', 'merry', 'swift', 'calm', 'coral', 'ivory', 'plum', 'mossy', 'starry', 'breezy'];
-const NOUNS = ['heron', 'fox', 'finch', 'otter', 'lark', 'willow', 'magnolia', 'oak', 'robin', 'wren', 'hare', 'sparrow', 'iris', 'lily', 'moth', 'dove', 'birch', 'maple', 'clover', 'fern'];
-export function generatedUsername(seed) {
-  let hash = 2166136261;
-  for (const char of String(seed)) { hash ^= char.codePointAt(0); hash = Math.imul(hash, 16777619) >>> 0; }
-  const pick = (list, salt) => list[(hash >>> salt) % list.length];
-  return `${pick(ADJECTIVES, 0)}-${pick(NOUNS, 8)}-${10 + ((hash >>> 16) % 90)}`;
-}
-
-// The username offered first: the verified GitHub login when it can be one,
-// otherwise a generated name. `attempt` moves past names already taken.
-export const suggestedUsername = ({ login = null, userId, attempt = 0 }) =>
-  attempt === 0 && validUsername(login) ? login : generatedUsername(`${userId}:${attempt}`);

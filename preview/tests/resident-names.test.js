@@ -87,7 +87,8 @@ test('usernames are 2 to 39 letters or digits joined by single separators, and n
 });
 
 test('a generated username is friendly, valid and the same for the same seed', async () => {
-  const { generatedUsername, suggestedUsername, validUsername } = await import('../src/resident-names.js');
+  const { validUsername } = await import('../src/resident-names.js');
+  const { generatedUsername } = await import('../src/generated-username.js');
   assert.equal(generatedUsername('user_1'), generatedUsername('user_1'));
   assert.notEqual(generatedUsername('user_1'), generatedUsername('user_2'));
   for (let i = 0; i < 2000; i++) {
@@ -95,8 +96,4 @@ test('a generated username is friendly, valid and the same for the same seed', a
     assert.match(name, /^[a-z]+-[a-z]+-\d\d$/);
     assert.equal(validUsername(name), true, name);
   }
-  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u' }), 'octocat', 'a GitHub login is offered first');
-  assert.equal(suggestedUsername({ login: null, userId: 'u' }), generatedUsername('u:0'));
-  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u', attempt: 1 }), generatedUsername('u:1'), 'later attempts are generated');
-  assert.equal(suggestedUsername({ login: 'Jevica', userId: 'u' }), generatedUsername('u:0'), 'a reserved login is never offered');
 });

@@ -7,7 +7,8 @@ import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
-import { createFileWaitlist, createRedisWaitlist } from '../waitlist.js';
+import { createFileWaitlist, createRedisWaitlist, suggestedUsername } from '../waitlist.js';
+import { generatedUsername } from '../../preview/src/generated-username.js';
 import { createWaitlistRoutes } from '../waitlist-routes.js';
 import { validUsername } from '../../preview/src/resident-names.js';
 
@@ -16,6 +17,13 @@ import { validUsername } from '../../preview/src/resident-names.js';
 // approval; the approved username names the resident. The file and Redis stores agree.
 const github = login => ({ userId: `gh-${login}`, name: login, email: `${login}@example.test` });
 const email = id => ({ userId: id, name: `Visitor #${id}`, email: `${id}@example.test` });
+
+test('the first suggestion is the GitHub login when it can be a username, then generated names', () => {
+  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u' }), 'octocat', 'a GitHub login is offered first');
+  assert.equal(suggestedUsername({ login: null, userId: 'u' }), generatedUsername('u:0'));
+  assert.equal(suggestedUsername({ login: 'octocat', userId: 'u', attempt: 1 }), generatedUsername('u:1'), 'later attempts are generated');
+  assert.equal(suggestedUsername({ login: 'Jevica', userId: 'u' }), generatedUsername('u:0'), 'a reserved login is never offered');
+});
 
 async function contract(t, waitlist, readAudit) {
   const octo = await waitlist.request(github('octocat'));

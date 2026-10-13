@@ -1,7 +1,7 @@
 import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
-import { generatedUsername } from './resident-names.js';
+import { generatedUsername } from './generated-username.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
