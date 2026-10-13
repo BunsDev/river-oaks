@@ -111,6 +111,12 @@ export const GUIDE = [
     { title: 'Ko and passing', text: ['A move may not repeat an earlier position, so a single stone taken in a ko cannot be retaken at once: play elsewhere first.', 'Two passes in a row end the game. Stones left on the board count as alive, so capture dead groups before you pass.'], figure: { kind: 'go-ko' } },
     { title: 'At the table', text: ['The table\'s goban follows the game; switching back to mancala puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between points'], [['Enter'], 'Place a stone'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'chineseCheckers', name: 'Chinese checkers', place: 'The small grove table', pages: [
+    { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Chinese checkers at the top of the sheet: a round star board takes the table.', 'Play the plaza regular, or Pass and play with a friend. Red, nearest you, moves first.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each of you starts with ten marbles filling the point of the star nearest you. Race them all across into the point opposite.', 'The first to fill it wins. If the other player leaves marbles there, they count toward filling it, as long as one of yours is among them.'], figure: { kind: 'cc-star' } },
+    { title: 'Steps and hops', text: ['A move is a step to a neighbouring empty hole, or a hop over one neighbouring marble, yours or theirs, to the empty hole straight beyond.', 'Hops chain: keep hopping from where you land, and stop wherever you like. Nothing is captured. Choose a marble, and every hole it can reach is marked.'], figure: { kind: 'cc-hop' } },
+    { title: 'At the table', text: ['The table\'s star board follows every move; switching back to mancala or Go puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between holes'], [['Enter'], 'Choose a marble, then where it goes'], [['Esc'], 'Put the board away']] } },
+  ] },
   { id: 'cribbage', name: 'Cribbage', place: 'The grove\'s walnut table', pages: [
     { title: 'Taking a seat', text: ['At the walnut backgammon table, press Z to sit and X to open the table, then choose Cribbage at the top of the sheet.', 'You play a plaza regular, first to 121. The deal alternates every hand.'], figure: { kind: 'emblem' } },
     { title: 'The deal and the crib', text: ['Each of you gets six cards and lays two away, face down, in the dealer\'s crib. A card is cut for the starter; a jack there scores the dealer 2.'], figure: { kind: 'cribbage-crib' } },
@@ -195,6 +201,9 @@ export const DIAGRAMS = {
   goTerritory: { rows: ['..bw.', '.bbw.', 'bbww.', 'bw...', '.bw..'] },
   goCapture: { rows: ['.....', '..b..', '.bw..', '..b..', '.....'], play: [2, 3] },
   goKo: { rows: ['.....', '.bw..', 'b.bw.', '.bw..', '.....'], play: [2, 1], take: [2, 2] },
+  // Chinese checkers: in the middle of the star, red hops twice, over a blue marble and
+  // then its own ([q, r] holes; r grows toward red).
+  ccHop: { red: [[0, 2], [1, -1]], blue: [[0, 1], [-1, 1]], path: [[0, 2], [0, 0], [2, -2]] },
   mancalaCapture: { board: [0, 2, 0, 0, 0, 0, 0, 1, 1, 7, 1, 1, 1, 0], pit: 2 },
   // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
   spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
@@ -330,6 +339,7 @@ export function iconMarkup(id) {
     connectFour: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22" rx="4"/><circle class="sg-icon-fill" cx="15.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="24.5" cy="15.5" r="3.6"/><circle class="sg-icon-line" cx="15.5" cy="24.5" r="3.6"/><circle class="sg-icon-fill" cx="24.5" cy="24.5" r="3.6"/>',
     dominoes: '<rect class="sg-icon-line" x="13" y="7" width="14" height="26" rx="3"/><line class="sg-icon-line" x1="15" y1="20" x2="25" y2="20"/><circle class="sg-icon-fill" cx="20" cy="13.5" r="1.8"/><circle class="sg-icon-fill" cx="17" cy="24" r="1.8"/><circle class="sg-icon-fill" cx="23" cy="29" r="1.8"/>',
     go: '<rect class="sg-icon-line" x="8" y="8" width="24" height="24" rx="2"/><line class="sg-icon-line" x1="20" y1="8" x2="20" y2="32"/><line class="sg-icon-line" x1="8" y1="20" x2="32" y2="20"/><circle class="sg-icon-fill" cx="14" cy="14" r="4"/><circle class="sg-icon-line" cx="26" cy="26" r="4"/>',
+    chineseCheckers: '<path class="sg-icon-line" d="M20 6l4 7h8l-4 7 4 7h-8l-4 7-4-7H8l4-7-4-7h8z"/><circle class="sg-icon-fill" cx="20" cy="12" r="2.2"/><circle class="sg-icon-fill" cx="20" cy="28" r="2.2"/>',
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
     morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
@@ -502,6 +512,21 @@ export function figureMarkup(figure, game) {
         glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'
         + arrow([[150, 112], [205, 104], [236, 70]], 'o') + arrowHead('o')
         + '<text class="sg-label" x="55" y="104" text-anchor="middle" font-size="12">in</text><text class="sg-label" x="150" y="104" text-anchor="middle" font-size="12">rim, then in</text><text class="sg-label" x="252" y="124" text-anchor="middle" font-size="12">bounce, then in</text>'); }
+    case 'cc-star': case 'cc-hop': {
+      // Holes [q, r] on the star (r toward red, at the bottom); a centre patch for the hop.
+      const star = figure.kind === 'cc-star', k = star ? 11 : 26, cx = star ? 110 : 120, cy = star ? 96 : 92;
+      const at = ([q, r]) => [cx + (q + r / 2) * k, cy + r * k * 0.866];
+      const holes = [];
+      for (let r = -8; r <= 8; r++) for (let q = -8; q <= 8; q++) {
+        const s = -q - r, onStar = (q >= -4 && r >= -4 && s >= -4) || (q <= 4 && r <= 4 && s <= 4);
+        if (onStar && (star || Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= 3)) holes.push([q, r]);
+      }
+      const owner = ([q, r]) => star ? (r > 4 ? 'red' : r < -4 ? 'blue' : null) : DIAGRAMS.ccHop.red.some(([a, b]) => a === q && b === r) ? 'red' : DIAGRAMS.ccHop.blue.some(([a, b]) => a === q && b === r) ? 'blue' : null;
+      const marbles = holes.map(hole => { const [x, y] = at(hole), who = owner(hole); return `<circle class="sg-pip" opacity=".35" cx="${x}" cy="${y}" r="${star ? 1.6 : 3}"/>${who ? `<circle class="${who === 'red' ? 'sg-red' : 'sg-blue'}" cx="${x}" cy="${y}" r="${star ? 4.4 : 10}"/>` : ''}`; }).join('');
+      if (star) return svg(220, 200, 'The star board: ten red marbles in the point nearest you, ten blue in the point opposite; each player races into the other\'s point.',
+        marbles + arrow([at([-4, 6]), at([4, -6])], 'c') + arrowHead('c'));
+      const path = DIAGRAMS.ccHop.path.map(at);
+      return svg(240, 184, 'A red marble hops over a blue one, then over a red one, two hops in one move.', marbles + arrow(path, 'h') + arrowHead('h') + `<circle class="sg-win" cx="${path.at(-1)[0]}" cy="${path.at(-1)[1]}" r="12"/>`); }
     case 'yacht-keep': case 'yacht-score': {
       const die = (x, y, value, { kept = false, ghost = false } = {}) => {
         const pips = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] }[value];
