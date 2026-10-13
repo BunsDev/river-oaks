@@ -181,8 +181,11 @@
   .salon-guide-rule { margin-top: 6px; }
   .salon-guide .salon-guide-close { top: 10px; right: 10px; width: 36px; height: 36px; }
   .salon-guide-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); margin-top: 10px; }
-  .salon-guide-index { flex-direction: row; justify-content: space-between; gap: 2px; padding: 8px 10px; overflow: visible; border-right: 0; border-bottom: 1px solid var(--salon-line-faint); }
-  .salon-guide .salon-guide-index [role=tab] { display: grid; place-items: center; grid-template-columns: none; width: auto; min-height: 48px; padding: 3px; border-radius: 50%; }
+  /* One row of medallions; with more games than fit, the row scrolls (snapping to tabs) and keeps the chosen game in view (render()). */
+  .salon-guide-index { flex-direction: row; justify-content: flex-start; gap: 2px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; scrollbar-width: none; border-right: 0; border-bottom: 1px solid var(--salon-line-faint); }
+  .salon-guide-index::-webkit-scrollbar { display: none; }
+  .salon-guide .salon-guide-index [role=tab] { display: grid; place-items: center; grid-template-columns: none; flex: 0 0 auto; width: auto; min-width: 44px; min-height: 44px; padding: 2px; border-radius: 50%; scroll-snap-align: center; }
+  .salon-guide .salon-guide-index .salon-medallion { width: 40px; height: 40px; }
   .salon-guide .salon-guide-index [role=tab][aria-selected=true] { border-color: transparent; background: transparent; }
   .salon-guide-tab-text { display: none; }
   .salon-guide-page { padding: 16px 18px 18px; }
