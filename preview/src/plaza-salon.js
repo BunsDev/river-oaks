@@ -8,6 +8,7 @@ import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js
 import { seededRandom } from './seeded-random.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
+import { MILLS as MORRIS_MILLS, POINTS as MORRIS_POINTS, SIZE as MORRIS_SIZE } from './morris-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
 
@@ -471,6 +472,76 @@ export function buildPlazaSalon(world) {
       },
       visible: tableId => fours.get(tableId)?.holder.visible ?? null,
       discs: tableId => fours.get(tableId)?.discs.count ?? null,
+    };
+  }
+  // Nine men's morris (plaza-table-games.js): a walnut board laid over a chess table's
+  // squares while morris is that table's game, with its three squares and joining lines
+  // inlaid in brass and the pieces on its 24 points. White sits at the first player's chair.
+  {
+    const span = 8 * CHESS_CELL_M, step = span / MORRIS_SIZE, top = 0.774 + 0.006;
+    // A point's chess-cell coordinates (fractional), turned for the first player's chair.
+    const cellOfPoint = (point, firstChair) => {
+      let file = point % MORRIS_SIZE, rank = Math.floor(point / MORRIS_SIZE);
+      if (firstChair === 1) { file = MORRIS_SIZE - 1 - file; rank = MORRIS_SIZE - 1 - rank; }
+      return { i: 3.5 + (file - 3) * step / CHESS_CELL_M, j: 3.5 + (rank - 3) * step / CHESS_CELL_M };
+    };
+    const walnut = new THREE.MeshStandardMaterial({ color: '#5b3a26', roughness: 0.5 }), brass = new THREE.MeshStandardMaterial({ color: '#c9a45c', roughness: 0.32, metalness: 0.55 });
+    const plate = new THREE.BoxGeometry(span + 0.012, 0.006, span + 0.012), stud = new THREE.CylinderGeometry(0.009, 0.009, 0.002, 16);
+    const piece = new THREE.CylinderGeometry(0.019, 0.02, 0.008, 24).translate(0, 0.004, 0), pieceMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.35 });
+    const tint = { w: new THREE.Color('#efe6d4'), b: new THREE.Color('#2b2522') }, boards = new Map();
+    for (const table of plan.chess) {
+      const [, y] = base(table), holder = new THREE.Group();
+      holder.name = `Morris ${table.id}`; holder.visible = false; group.add(holder);
+      const [east, north] = chessCellPosition(table, { i: 3.5, j: 3.5 });
+      const board = new THREE.Mesh(plate, walnut); board.position.set(east, y + 0.774 + 0.003, -north); board.receiveShadow = true; holder.add(board);
+      // The lines: one brass strip per neighbouring pair along each mill.
+      const strips = [];
+      for (const [a, b, c] of MORRIS_MILLS) for (const [from, to] of [[a, b], [b, c]]) strips.push([from, to]);
+      const lines = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.0015, 0.0035), brass, strips.length), studs = new THREE.InstancedMesh(stud, brass, MORRIS_POINTS.length);
+      const pieces = new THREE.InstancedMesh(piece, pieceMaterial, 18);
+      Object.assign(pieces, { name: `Morris pieces ${table.id}`, castShadow: true, receiveShadow: true, count: 0 });
+      holder.add(lines, studs, pieces);
+      boards.set(table.id, { holder, lines, studs, pieces, strips, y, table, firstChair: -1 });
+    }
+    const layout = (entry, firstChair) => {
+      const { lines, studs, strips, y, table } = entry, at = point => chessCellPosition(table, cellOfPoint(point, firstChair));
+      strips.forEach(([from, to], index) => {
+        const [e1, n1] = at(from), [e2, n2] = at(to);
+        dummy.position.set((e1 + e2) / 2, y + top, -(n1 + n2) / 2); dummy.rotation.set(0, -Math.atan2(-(n2 - n1), e2 - e1), 0);
+        dummy.scale.set(Math.hypot(e2 - e1, n2 - n1), 1, 1); dummy.updateMatrix(); lines.setMatrixAt(index, dummy.matrix);
+      });
+      MORRIS_POINTS.forEach((point, index) => {
+        const [e, n] = at(point);
+        dummy.position.set(e, y + top, -n); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); studs.setMatrixAt(index, dummy.matrix);
+      });
+      lines.instanceMatrix.needsUpdate = studs.instanceMatrix.needsUpdate = true; lines.computeBoundingSphere(); studs.computeBoundingSphere();
+      entry.firstChair = firstChair;
+    };
+    group.userData.morris = {
+      // A table's morris board (49 cells from morris-rules.js) and the first player's
+      // chair, or null to put the board away.
+      show(tableId, board = null, firstChair = 0) {
+        const entry = boards.get(tableId);
+        if (!entry) return false;
+        entry.holder.visible = Boolean(board);
+        if (!board) return true;
+        const chair = firstChair === 1 ? 1 : 0;
+        if (entry.firstChair !== chair) layout(entry, chair);
+        let count = 0;
+        for (const point of MORRIS_POINTS) {
+          const side = board[point];
+          if (!tint[side] || count >= 18) continue;
+          const [e, n] = chessCellPosition(entry.table, cellOfPoint(point, chair));
+          dummy.position.set(e, entry.y + top, -n); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          entry.pieces.setColorAt(count, tint[side]); entry.pieces.setMatrixAt(count++, dummy.matrix);
+        }
+        entry.pieces.count = count; entry.pieces.instanceMatrix.needsUpdate = true;
+        if (entry.pieces.instanceColor) entry.pieces.instanceColor.needsUpdate = true;
+        entry.pieces.computeBoundingSphere();
+        return true;
+      },
+      visible: tableId => boards.get(tableId)?.holder.visible ?? null,
+      pieces: tableId => boards.get(tableId)?.pieces.count ?? null,
     };
   }
   // Dominoes at the café table: the line lies face up on an arc around the centrepiece,

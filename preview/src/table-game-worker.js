@@ -5,6 +5,7 @@ import { chooseMove as chessMove } from './chess-opponent.js';
 import { chooseMove as checkersMove } from './checkers-opponent.js';
 import { chooseMove as connectFourMove } from './connect-four-opponent.js';
 import { chooseMove as reversiMove } from './reversi-opponent.js';
+import { chooseMove as morrisMove } from './morris-opponent.js';
 
 const GAMES = {
   chess: ({ position, history, budget }) => chessMove(fromFEN(position), { history, budget }),
@@ -12,6 +13,7 @@ const GAMES = {
   connectFour: ({ position, budget }) => connectFourMove(position, { budget: budget * 2 }),
   // Reversi weighs mobility at every node, so half the budget keeps replies near a second.
   reversi: ({ position, budget }) => reversiMove(position, { budget: Math.round(budget / 2) }),
+  morris: ({ position, history, budget }) => morrisMove(position, { history, budget }),
 };
 
 self.addEventListener('message', ({ data }) => {

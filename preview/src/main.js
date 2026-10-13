@@ -243,7 +243,7 @@ function initializeRenderer() {
     getPortrait: id => portraits.portrait(id) });
   seatAndWater = createSeatAndWater({ walking, playerAvatar, getLocals: () => community.state?.locals, getMultiplayer: () => multiplayer, isBusy: () => seatingControls?.busy() ?? false });
   // Seated at a plaza chess table, X plays chess, checkers or Connect Four; the table mirrors the game.
-  plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getSeat: () => seatAtTable(walking?.getPose()),
+  plazaGames = createPlazaTableGames({ getMirror: () => plazaSalon?.userData.chess ?? null, getFourMirror: () => plazaSalon?.userData.connectFour ?? null, getMorrisMirror: () => plazaSalon?.userData.morris ?? null, getSeat: () => seatAtTable(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }) });
   // Seated at the café table, X plays dominoes, Hearts or Spades with the plaza regulars
   // (the last one played); switching clears the other game's pieces from the table when
@@ -993,7 +993,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     if (!plazaGames) return null;
     const state = plazaGames.debug();
     return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null,
-      four: state.tableId ? { visible: plazaSalon?.userData.connectFour?.visible(state.tableId) ?? null, discs: plazaSalon?.userData.connectFour?.discs(state.tableId) ?? null } : null };
+      four: state.tableId ? { visible: plazaSalon?.userData.connectFour?.visible(state.tableId) ?? null, discs: plazaSalon?.userData.connectFour?.discs(state.tableId) ?? null } : null,
+      morris: state.tableId ? { visible: plazaSalon?.userData.morris?.visible(state.tableId) ?? null, pieces: plazaSalon?.userData.morris?.pieces(state.tableId) ?? null } : null };
   };
   window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null,
     // Travel to open pavement in front of the stage, toward the salon.
