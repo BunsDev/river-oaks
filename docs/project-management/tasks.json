@@ -3999,6 +3999,39 @@
       ]
     },
     {
+      "id": "plaza-games",
+      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "status": "active",
+      "branches": [
+        "feat/plaza-chess-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T19:34:31.000Z",
+      "updatedAt": "2026-10-13T09:34:31.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-games-20261013",
+      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, café cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
+      "filesOwned": [
+        "preview/src/chess-rules.js",
+        "preview/src/chess-opponent*.js",
+        "preview/src/plaza-games*.js",
+        "preview/src/plaza-games.css",
+        "preview/src/plaza-salon.js",
+        "preview/src/plaza-salon-plan.js",
+        "preview/src/contextual-action.js",
+        "preview/src/walking-ui.js (play action)",
+        "preview/e2e/plaza-chess.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (perft, opponent, plaza, contextual action)",
+        "plaza-chess journey",
+        "seat-related journeys (shared-seating)",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-games.md",
+      "issues": []
+    },
+    {
       "id": "minimap-flicker",
       "title": "Stop the website flickering, and take the compact district minimap out of the sidebar's scrolling container",
       "status": "active",
@@ -4027,6 +4060,67 @@
         "Hosted CI"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-minimap-flicker.md",
+      "issues": []
+    },
+    {
+      "id": "plaza-checkers",
+      "title": "Checkers on the plaza chess tables (phase 3a of plaza games): American checkers rules, a local opponent, discs mirrored on the 3D board, sharing the chess table's board sheet",
+      "status": "active",
+      "branches": [
+        "feat/plaza-checkers-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T20:17:43.000Z",
+      "updatedAt": "2026-10-13T10:17:43.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-checkers-20261013",
+      "nextAction": "Stacked on feat/plaza-chess-20261013 (#298): merge main once #298 lands. Write checkers-rules.js (perft-pinned), a checkers opponent, generalise the chess board sheet into a table-games sheet with a Chess/Checkers switch, disc pieces in the 3D mirror, journey; then PR and land.",
+      "filesOwned": [
+        "preview/src/checkers-rules.js",
+        "preview/src/checkers-opponent*.js",
+        "preview/src/plaza-chess.js",
+        "preview/src/plaza-chess.css",
+        "preview/src/plaza-salon.js (pieces)",
+        "preview/e2e/plaza-chess.js",
+        "preview/e2e/plaza-checkers.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (checkers perft, opponent, mirror)",
+        "plaza-chess and plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
+      "issues": []
+    },
+    {
+      "id": "plaza-dominoes",
+      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "status": "active",
+      "branches": [
+        "feat/plaza-dominoes-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T21:00:04.000Z",
+      "updatedAt": "2026-10-13T11:00:04.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-dominoes-20261013",
+      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a café dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
+      "filesOwned": [
+        "preview/src/dominoes-rules.js",
+        "preview/src/dominoes-opponent.js",
+        "preview/src/plaza-dominoes.js",
+        "preview/src/plaza-dominoes.css",
+        "preview/src/plaza-salon.js (café table tiles)",
+        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/main.js (wiring)",
+        "preview/e2e/plaza-dominoes.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (dominoes rules, opponent, mirror)",
+        "plaza-dominoes, plaza-chess, plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-dominoes.md",
       "issues": []
     },
     {
@@ -4099,50 +4193,15 @@
       }
     },
     {
-      "id": "plaza-games",
-      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
-      "status": "active",
-      "branches": [
-        "feat/plaza-chess-20261013"
-      ],
-      "owner": "claude:river-oaks-c2",
-      "leaseUntil": "2026-10-13T19:34:31.000Z",
-      "updatedAt": "2026-10-13T09:34:31.000Z",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-games-20261013",
-      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, café cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
-      "filesOwned": [
-        "preview/src/chess-rules.js",
-        "preview/src/chess-opponent*.js",
-        "preview/src/plaza-games*.js",
-        "preview/src/plaza-games.css",
-        "preview/src/plaza-salon.js",
-        "preview/src/plaza-salon-plan.js",
-        "preview/src/contextual-action.js",
-        "preview/src/walking-ui.js (play action)",
-        "preview/e2e/plaza-chess.js"
-      ],
-      "requiredChecks": [
-        "pnpm test (perft, opponent, plaza, contextual action)",
-        "plaza-chess journey",
-        "seat-related journeys (shared-seating)",
-        "pnpm run verify",
-        "Hosted CI"
-      ],
-      "ledger": "docs/superpowers/plans/2026-10-13-plaza-games.md",
-      "issues": []
-    },
-    {
       "id": "shared-voice-reconciler",
       "title": "Shared voice, PR 2: tick reconciler, orphan sweep cron, LiveKit CSP and microphone Permissions-Policy",
-      "status": "active",
+      "status": "retired",
       "branches": [
         "feat/voice-controller-20261013"
       ],
-      "owner": "claude:river-oaks-f1 (46fc41e0)",
       "pr": 302,
-      "updatedAt": "2026-10-13T11:01:23.485Z",
-      "leaseUntil": "2026-10-13T13:01:23.485Z",
-      "nextAction": "#302 queued in pnpm run land (verify core passed; 597 server tests with Redis). Record delivery evidence when it merges, then retire the worktree.",
+      "updatedAt": "2026-10-13T11:13:35.574Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
       "filesOwned": [
         "server/voice.js",
         "server/voice-routes.js",
@@ -4165,7 +4224,36 @@
         "REDIS_URL pnpm run test:server"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
-      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "deliveryPr": 302,
+      "evidence": [
+        {
+          "pr": 302,
+          "reviewedHead": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5",
+          "merge": "e2c95e06f0cab753fc810ebd7b45c335f96b788d",
+          "tree": "9c0b8ec079a95ea1e11e6c81fc936f00cb1167df",
+          "checks": "pnpm run land: Verify passed on the updated head; local: 597 server tests with Redis, verify core passed"
+        }
+      ],
+      "retirement": {
+        "head": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5",
+        "sessionsReviewedAt": "2026-10-13T11:12:48.385Z",
+        "releasedAt": "2026-10-13T11:12:48.385Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #302 merged as e2c95e0; evidence archived; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-controller-20261013"
+      ],
+      "archive": {
+        "feat/voice-controller-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-llquXP/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-llquXP/history.bundle",
+          "sha256": "6308038f539726d9a1c762b2a139ed19530abffbda1f823d5bf0db2b518e9e1f",
+          "tag": "refs/tags/archive/worktree-prune/7fd78c16-8173-4e19-a98a-7b5cc996d69b",
+          "head": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5"
+        }
+      }
     },
     {
       "id": "shared-voice-client",
@@ -4175,9 +4263,9 @@
         "feat/voice-client-20261013"
       ],
       "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T11:05:45.848Z",
-      "leaseUntil": "2026-10-13T13:01:23.485Z",
-      "nextAction": "Verify core passed (preview 2722/2723, server 407 + 133 Redis-only skips, desktop 49); build keeps LiveKit in its own chunk. PR open; land after #302, then PR 4 (spatial audio, speaking rings, two-browser journey).",
+      "updatedAt": "2026-10-13T11:06:11.978Z",
+      "leaseUntil": "2026-10-13T13:06:11.978Z",
+      "nextAction": "#303 open and queued in pnpm run land behind #302 (verify core passed). PR 4 (spatial audio graph, speaking rings, two-browser journey) starts on feat/voice-spatial-20261013 from #303's head; its browser run waits for Val's decision on the machine's disk and swap.",
       "filesOwned": [
         "preview/src/voice-chat.js",
         "preview/src/voice-spatial.js",
@@ -4203,37 +4291,69 @@
         "pnpm run verify"
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 303
+    },
+    {
+      "id": "shared-voice-spatial",
+      "title": "Shared voice, PR 4: per-resident audio graph with distance gain and pan, speaking rings, fixture-side fake LiveKit and the two-browser journey",
+      "status": "active",
+      "branches": [
+        "feat/voice-spatial-20261013"
+      ],
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:28:17.175Z",
+      "leaseUntil": "2026-10-13T13:28:17.175Z",
+      "nextAction": "Journey passed (14 checks), verify core passed. PR open; land after #303.",
+      "filesOwned": [
+        "preview/src/voice-spatial.js",
+        "preview/src/voice-chat.js",
+        "preview/src/remote-players.js",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/voice.css",
+        "preview/e2e/voice-shared.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/fixture-server.js",
+        "server/tests/browser-fixture.js",
+        "preview/tests/voice-graph.test.js",
+        "preview/tests/remote-players.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run test:experience voice-shared",
+        "pnpm run build",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     },
     {
-      "id": "plaza-checkers",
-      "title": "Checkers on the plaza chess tables (phase 3a of plaza games): American checkers rules, a local opponent, discs mirrored on the 3D board, sharing the chess table's board sheet",
+      "id": "shared-voice-desktop",
+      "title": "Shared voice, PR 5a: desktop microphone-only permission for the game origin, usage description, desktop e2e check",
       "status": "active",
       "branches": [
-        "feat/plaza-checkers-20261013"
+        "feat/voice-desktop-20261013"
       ],
-      "owner": "claude:river-oaks-c2",
-      "leaseUntil": "2026-10-13T20:17:43.000Z",
-      "updatedAt": "2026-10-13T10:17:43.000Z",
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-checkers-20261013",
-      "nextAction": "Stacked on feat/plaza-chess-20261013 (#298): merge main once #298 lands. Write checkers-rules.js (perft-pinned), a checkers opponent, generalise the chess board sheet into a table-games sheet with a Chess/Checkers switch, disc pieces in the 3D mirror, journey; then PR and land.",
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:17:18.342Z",
+      "leaseUntil": "2026-10-13T13:17:18.342Z",
+      "nextAction": "Policy, handlers, packaging, docs and unit test written (desktop suite 51/51). The Electron e2e (pnpm run test:desktop:e2e --dev) has not run: it waits for Val's decision on the machine. Then verify, commit, PR, land.",
       "filesOwned": [
-        "preview/src/checkers-rules.js",
-        "preview/src/checkers-opponent*.js",
-        "preview/src/plaza-chess.js",
-        "preview/src/plaza-chess.css",
-        "preview/src/plaza-salon.js (pieces)",
-        "preview/e2e/plaza-chess.js",
-        "preview/e2e/plaza-checkers.js"
+        "desktop/runtime.js",
+        "desktop/main.js",
+        "desktop/package.js",
+        "desktop/e2e.js",
+        "desktop/tests/permissions.test.js",
+        "docs/desktop.md"
       ],
       "requiredChecks": [
-        "pnpm test (checkers perft, opponent, mirror)",
-        "plaza-chess and plaza-checkers journeys",
-        "pnpm run verify",
-        "Hosted CI"
+        "pnpm run test:desktop",
+        "pnpm run test:desktop:e2e --dev",
+        "pnpm run verify"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
-      "issues": []
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     }
   ]
 }

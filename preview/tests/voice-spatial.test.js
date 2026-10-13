@@ -30,6 +30,8 @@ test('altitude counts toward distance and coordinates match remote-players (x, g
   const listener = listenerFromPose({ position: [0, 3, -4], yaw: 0.3 });
   assert.equal(spatialDistance(listener, speaker), 3);
   assert.equal(spatialDistance(listenerFromPose({ position: [3, 0, -4], yaw: 0 }), speaker), 3, 'three metres up is three metres away');
+  assert.deepEqual(listenerFromPose({ position: [1, 1.68, 2], ground: 0, altitude: 0, yaw: 0 }).position, [1, 0, 2], 'the walking eye is measured at the feet');
+  assert.deepEqual(listenerFromPose({ position: [1, 7, 2], ground: 1, altitude: 4, yaw: 0 }).position, [1, 5, 2], 'flying keeps the altitude');
   assert.equal(listenerFromPose(null), null);
 });
 

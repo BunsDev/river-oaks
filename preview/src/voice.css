@@ -23,6 +23,12 @@
 .game-hud .chat-voice:empty { display: none; }
 .game-hud #control-panel .multiplayer-person .voice-roster-mute[aria-pressed=true] { background: var(--hud-action); color: var(--hud-on-action); }
 
+/* A talking resident's nameplate. No pulse under reduced motion or software rendering. */
+.remote-player-label[data-speaking=true] { box-shadow: 0 0 0 2px var(--hud-action), 0 0 12px var(--hud-action); animation: voice-pulse 1s ease-in-out infinite alternate; }
+@keyframes voice-pulse { from { box-shadow: 0 0 0 2px var(--hud-action), 0 0 6px var(--hud-action); } to { box-shadow: 0 0 0 2px var(--hud-action), 0 0 14px var(--hud-action); } }
+@media (prefers-reduced-motion: reduce) { .remote-player-label[data-speaking=true] { animation: none; } }
+:root[data-rendering=software] .remote-player-label[data-speaking=true] { animation: none; }
+
 /* Settings → Audio. */
 .game-hud .voice-settings .voice-settings-intro { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
 .game-hud .voice-settings select { width: 100%; min-height: 40px; margin: 4px 0 14px; border-radius: 9px; }

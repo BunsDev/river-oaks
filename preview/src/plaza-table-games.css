@@ -10,7 +10,7 @@
   background: var(--hud-glass); -webkit-backdrop-filter: var(--hud-filter); backdrop-filter: var(--hud-filter); box-shadow: var(--hud-shadow); color: var(--ink);
 }
 .table-game-panel[open] { display: flex; flex-direction: column; }
-.game-hud:has(#table-game-panel[open]) .visit-tools { visibility: hidden; }
+.game-hud:has(.table-game-panel[open]) .visit-tools { visibility: hidden; }
 .table-game-panel :is(button):focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 2px; }
 .table-game-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0 12px; border-bottom: 1px solid var(--hud-hairline); }
 .table-game-eyebrow { margin: 0 0 3px; font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--hud-muted); }

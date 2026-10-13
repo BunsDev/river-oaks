@@ -1,0 +1,30 @@
+/* Dominoes at the café: ivory tiles with ebony pips, played out on the table's
+   walnut. The sheet is the table-games frame; only its body is laid out differently. */
+.dominoes-panel { --domino-face: #f6f1e6; --domino-edge: #c9bca2; --domino-rule: #8f846e; --domino-pip: #221d1b; }
+.dominoes-panel .dominoes-body { display: flex; flex-direction: column; gap: 12px; }
+.domino svg { display: block; overflow: visible; }
+.domino svg rect { fill: var(--domino-face); stroke: var(--domino-edge); stroke-width: 1.2; }
+.domino svg line { stroke: var(--domino-rule); stroke-width: 1.1; stroke-linecap: round; }
+.domino svg circle { fill: var(--domino-pip); }
+.dominoes-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dominoes-scores li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.dominoes-scores li[data-turn] { background: var(--hud-action); color: var(--hud-on-action); }
+.dominoes-table { padding: 12px 14px; border-radius: var(--hud-tile-radius, 12px); background: radial-gradient(120% 100% at 50% 0%, #7a5538, #573a26); box-shadow: inset 0 1px 0 rgb(255 255 255 / .12), inset 0 0 18px rgb(0 0 0 / .25); }
+.dominoes-line { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; min-height: 46px; margin: 0; padding: 0; list-style: none; }
+.dominoes-line .domino svg { height: 22px; width: auto; }
+.dominoes-line .domino:has(svg[viewBox="0 0 20 40"]) svg { height: 44px; }
+.dominoes-ends { margin: 8px 0 0; font-size: 12px; color: #f3ead8; }
+.dominoes-others { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--hud-muted); }
+.dominoes-hand { display: flex; flex-wrap: wrap; gap: 8px; min-height: 72px; padding-top: 6px; }
+.domino-in-hand { padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; transition: transform .12s ease; }
+.domino-in-hand svg { height: 64px; width: auto; }
+.domino-in-hand[data-fits] { transform: translateY(-5px); }
+.domino-in-hand[data-fits] svg rect { stroke: var(--hud-action); stroke-width: 1.8; }
+.domino-in-hand[data-selected] svg rect { stroke-width: 2.8; }
+.domino-in-hand:disabled { opacity: .55; cursor: default; }
+.domino-in-hand:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 3px; }
+.dominoes-choice { display: flex; gap: 8px; }
+.dominoes-choice button { flex: 1; min-height: 40px; border: 1px solid var(--hud-hairline); border-radius: var(--hud-control-radius, 9px); background: var(--hud-action); color: var(--hud-on-action); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.dominoes-panel .table-game-actions [data-action=next] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.dominoes-panel .table-game-actions [hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .domino-in-hand { transition: none; } .domino-in-hand[data-fits] { transform: none; } }
