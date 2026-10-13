@@ -92,7 +92,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // but leaves material/lighting quality to full-render and WebGL smoke runs.
 // Never enable this profile in a production build.
 const softwareAcceptance = import.meta.env.DEV && import.meta.env.VITE_SHARED_SOFTWARE_RENDERING === '1';
-const renderAudit = import.meta.env.DEV && new URLSearchParams(location.search).get('render-audit') === '1' ? createRenderAudit() : null;
+const renderAudit = (import.meta.env.DEV || import.meta.env.MODE === 'ios-probe') && new URLSearchParams(location.search).get('render-audit') === '1'
+  ? createRenderAudit({ limit: import.meta.env.DEV ? 120000 : 7200 }) : null;
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer;
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
@@ -262,7 +263,7 @@ function initializeRenderer() {
   }).observe(host);
   updateAtmosphere();
   bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
-    resetTime: () => { clock.reset(); lastFrame = null; } });
+    resetTime: () => { clock.reset(); lastFrame = null; renderAudit?.discontinuity(); } });
   registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
   registerDiagnosticSource('scene', () => describeScene(scene));
   registerDiagnosticSource('game', gameDiagnostics);
@@ -669,15 +670,19 @@ function followSunShadow() {
 }
 
 function render(now) {
+  renderAudit?.beginFrame();
   noteFrame(now);
-  const auditStart = renderAudit ? performance.now() : 0;
   clock.update();
   if (lastFrame !== null) quality.sample(now - lastFrame);
   lastFrame = now;
   const delta = Math.min(clock.getDelta(), 0.08);
+  renderAudit?.phase('setup');
   community?.update(delta, now);
+  renderAudit?.phase('community');
   layers.trees?.userData.update?.(camera.position);
+  renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
+  renderAudit?.phase('residents');
   community?.updateSpeech(delta);
   if (buildingMesh?.userData.updateDoors) {
     const visitor = walking?.active ? walking.getPosition() : null;
@@ -704,12 +709,14 @@ function render(now) {
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   photoMode?.update();
   storeIntros?.update(now);
+  renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
   followSunShadow();
   treeShadows?.hide(); // Shadow proxies show only while the sun draws its map.
+  renderAudit?.phase('players');
   if (!softwareAcceptance && storefrontReflections && environmentAssets) {
     const ground = terrainHeight(world.terrain, camera.position.x, -camera.position.z);
     if (camera.position.y - ground < 18) reflectionPosition.set(camera.position.x, ground + 2.5, camera.position.z);
@@ -719,13 +726,16 @@ function render(now) {
     }
     storefrontReflections.update(now, reflectionPosition);
   }
+  renderAudit?.phase('reflections');
   debugTools?.update(now);
+  renderAudit?.phase('debug');
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
   if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
     pipeline.render(delta);
+    renderAudit?.phase('pipeline');
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
@@ -736,7 +746,7 @@ function render(now) {
     host.dataset.quality = JSON.stringify(quality.stats);
     lastRenderStats=now;
   }
-  renderAudit?.frame(now, performance.now() - auditStart);
+  renderAudit?.frame(now);
 }
 
 document.querySelectorAll('[data-layer]').forEach((input) => input.addEventListener('change', () => {
@@ -882,11 +892,12 @@ try {
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
 
-// Explicit development capacity audit camera and timing; absent from production.
-if (import.meta.env.DEV && renderAudit) {
+// Explicit diagnostic timing; normal production builds omit this API.
+// The crowd camera remains development-only.
+if (renderAudit) {
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
-    crowdView() {
+    ...(import.meta.env.DEV ? { crowdView() {
       const players = multiplayer?.snapshot?.players ?? [];
       if (!players.length) throw new Error('Join the shared world before framing its crowd.');
       const target = new THREE.Vector3();
@@ -895,7 +906,7 @@ if (import.meta.env.DEV && renderAudit) {
       const radius = Math.max(6, ...players.map(player => Math.hypot(player.position[0] - target.x, -player.position[1] - target.z) + 2));
       const distance = radius / Math.tan(camera.fov * Math.PI / 360) * Math.max(1, 1 / camera.aspect) * 1.3;
       auditCamera = { target, position: target.clone().add(new THREE.Vector3(0, distance * .55, distance)) };
-    },
+    } } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
       return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),

@@ -210,3 +210,40 @@ full material/shader or physical-device visual acceptance. Each image releases i
 bitmap, object URL and canvas; each rig releases its GPU resources. Use
 `PLAYWRIGHT_BROWSERS_PATH=.runtime/ios-probe/browsers` if browsers were installed
 in the probe's isolated cache. Both harnesses honor the shared browser lock.
+
+### Bounded source phase timing
+
+The ordinary production build omits this API. Build a separate diagnostic artifact:
+
+```sh
+pnpm exec vite build --config preview/vite.config.js --mode ios-probe --outDir ../.runtime/ios-probe/diagnostic-build
+pnpm run build
+PLAYWRIGHT_BROWSERS_PATH=.runtime/ios-probe/browsers node experiments/ios-probe/verify-render-audit.mjs
+pnpm run test:experience render-audit
+```
+
+Only the diagnostic artifact with `?render-audit=1` exposes
+`window.__riverRenderAudit.start()`, `.stop()` and read-only `.graphics()`.
+Start once the full scene is ready; stop after the intended trace window. Save
+start/end graphics, content readiness, camera/workload and concurrent native trace
+identity. No camera control is exposed in the diagnostic build. The development
+capacity harness retains its existing crowd camera.
+
+Each frame includes the existing `intervalMs`/`cpuMs` and numeric `phasesMs` for
+setup, community, trees, residents, interactions, players, reflections, debug,
+pipeline and tail. `cpuMs` is the legacy field name for synchronous elapsed time,
+including instrumentation, blocking and descheduling; it is not CPU execution or
+GPU completion. The diagnostic buffer retains at most 7,200 frames and stops
+recording with `overflow: true` when exceeded. Any overflow invalidates the sample.
+Resume clears the interval boundary and records `discontinuities`; such a sample
+cannot prove uninterrupted foreground acceptance. Timings remain dormant until
+explicitly started and after stopping.
+
+The built verification serves generated bundles only inside the existing offline
+loopback fixture, requiring the real scene's assets and residents. It checks normal
+production with the query, diagnostics without it, and enabled timing. Normal
+production uses `dist/preview/play/index.html` because the build's root index is
+the landing page. Both harnesses honor the browser queue and bound each journey to
+150 seconds. Results are local functional evidence, not physical performance.
+The artifact has not been deployed; hosting/origin/auth integration requires a
+separate concrete review and deployment authorization.

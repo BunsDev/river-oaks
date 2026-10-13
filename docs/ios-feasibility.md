@@ -275,3 +275,12 @@ not establish a CPU-versus-GPU bottleneck, and GPU groups are not verified game
 frames. Next attribution needs bounded game-phase timing and concurrent GPU
 measurement with matched content, camera and effective quality. The profiled run
 backgrounded after 8m43s; continuous unprofiled thermal acceptance remains open.
+
+The source timing follow-up extends the existing render audit. Default production
+builds omit it; an explicit `ios-probe` Vite build with `?render-audit=1` enables
+manual start/stop and read-only graphics diagnostics, capped at 7,200 frames.
+Phase durations are synchronous elapsed time, including recording overhead and
+possible blocking/descheduling, not CPU execution or GPU completion. Overflow
+stops recording; visibility resumes are marked as discontinuities. This local
+artifact has not been deployed or measured on the phone. A matched hosted source
+baseline, origin/auth integration and concurrent GPU evidence remain necessary.

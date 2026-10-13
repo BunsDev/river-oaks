@@ -296,3 +296,52 @@ concurrent GPU capture. Sustained unprofiled, interior, multiplayer,
 lock/relaunch, minimum-device, auth and visual acceptance remain open.
 No production rendering edit, deployment, merge or issue closure. Keep the
 worktree active.
+
+### Source phase timing follow-up
+
+Safari UI access recovered. Advanced preferences explicitly showed “Show features
+for web developers” unchecked (value 0) after restoration. No JavaScript profile
+was obtained; no further Safari action is required from Val.
+
+The existing render audit now partitions synchronous elapsed frame duration into
+setup, community, trees, residents, interactions, players, reflections, debug,
+pipeline submission and tail. Durations include clock/recording overhead and may
+include blocking/descheduling; `cpuMs` retains its existing API name but is not
+CPU execution time. They do not measure GPU completion. No scene, camera,
+rendering quality, authority or input behavior is changed.
+
+- Default production builds omit the audit. Vite mode `ios-probe` plus
+  `?render-audit=1` exposes explicit `start()`, `stop()` and read-only `graphics()`.
+- Diagnostic capture retains at most 7,200 frames; overflow is reported and stops
+  clocks/allocations. DEV retains the existing 120,000-frame ceiling and crowd
+  camera. The diagnostic build omits that camera control.
+- Recording is dormant until `start()`. Resume resets the interval boundary and
+  reports discontinuities; interrupted evidence must not pass sustained acceptance.
+- Independent review identified overflow instrumentation and background-gap
+  defects; both were reproduced in focused tests and corrected.
+- Final `pnpm run verify` passed: tooling 96, preview 2,756 passed / 1 skipped,
+  server 421 passed / 134 skipped, desktop 51, Python 141. Receipt:
+  `.runtime/agent/core.json`; log `.runtime/ios-probe/core-phases-final.log`.
+- `node --test preview/tests/render-audit.test.js`: 10 passed.
+- `pnpm run build` and the explicit diagnostic build passed.
+- `pnpm run test:experience render-audit`: passed in Chromium. Its report is
+  `.runtime/ios-probe/render-audit-experience.json`. The journey includes a
+  host-side 150-second deadline that closes a stalled page.
+- `PLAYWRIGHT_BROWSERS_PATH=.runtime/ios-probe/browsers node experiments/ios-probe/verify-render-audit.mjs`:
+  all three actual built-bundle cases passed in WebKit. Enabled capture contains
+  29 frames with all phase durations finite and summing to total duration;
+  stop/restart and camera exclusion passed. Receipt: `built-render-audit.json`.
+  The initial failed harness used the landing page; normal production was
+  corrected to `dist/preview/play/index.html` before the successful rerun.
+- Independent final review found no remaining material issue. Production JS
+  contains no audit API markers. These are functional tests, not phone timings.
+- Project check exits 1 for unrelated ownership/lifecycle gaps. Native code is
+  unchanged; prior native verification remains historical. Full Redis/browser,
+  exact-head hosted CI and physical acceptance remain separate gates.
+
+Build locally with:
+`pnpm exec vite build --config preview/vite.config.js --mode ios-probe --outDir ../.runtime/ios-probe/diagnostic-build`.
+The artifact currently uses this branch's historical scene baseline, not the
+newer hosted scene; do not compare it as if only timing changed on the hosted SHA.
+It is local only. No deployment or origin/auth configuration change is authorized
+by these tests. A concrete hosted integration must be reviewed separately.
