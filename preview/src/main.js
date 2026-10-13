@@ -38,6 +38,8 @@ import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js'
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
+import { createPlazaStage } from './plaza-stage.js';
+import { plazaSalonPlan } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { atmosphereFor } from './atmosphere.js';
@@ -104,7 +106,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, cafeGame = 'dominoes';
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, cafeGame = 'dominoes', plazaStage = null;
 let birdCams = null, birdCamsUI = null;
 let debugTools = null, debugLoading = null;
 const worldMapEnabled = import.meta.env.VITE_WORLD_MAP === 'true';
@@ -199,7 +201,7 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? (cafeGame === 'hearts' ? plazaHearts : plazaDominoes)?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? (cafeGame === 'hearts' ? plazaHearts : plazaDominoes)?.interaction() ?? plazaStage?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -231,6 +233,7 @@ function initializeRenderer() {
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   plazaHearts = createPlazaHearts({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaStage = createPlazaStage({ walking, getMultiplayer: () => multiplayer, getStageView: () => plazaSalon?.userData.stage ?? null });
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
@@ -468,6 +471,7 @@ function populateWorld(data) {
   worldGroup.add(furniture);
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
+  plazaStage?.setWorld(data);
   worldGroup.add(plazaSalon);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
@@ -707,7 +711,7 @@ function render(now) {
   if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -923,6 +927,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return { ...state, mirror: state.tableId ? plazaSalon?.userData.chess?.board(state.tableId) ?? null : null,
       four: state.tableId ? { visible: plazaSalon?.userData.connectFour?.visible(state.tableId) ?? null, discs: plazaSalon?.userData.connectFour?.discs(state.tableId) ?? null } : null };
   };
+  window.__riverPlazaStage = () => ({ live: plazaSalon?.userData.stage?.live ?? null, action: plazaStage?.interaction()?.label ?? null,
+    // Travel to open pavement in front of the stage, toward the salon.
+    async goNear() {
+      const stage = world && plazaSalonPlan(world)?.stage;
+      if (!stage) return { ok: false };
+      const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
+      for (const angle of [0, 0.5, -0.5, 1, -1]) {
+        const position = [stage.x + Math.sin(stage.heading + angle) * (stage.radius + 0.8), stage.north - Math.cos(stage.heading + angle) * (stage.radius + 0.8)];
+        if (!free(position)) continue;
+        const result = await goToPlace({ kind: 'landmark', name: 'Nearby', position });
+        if (result?.ok) return { ok: true, position };
+      }
+      return { ok: false };
+    } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
