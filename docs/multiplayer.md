@@ -523,6 +523,15 @@ and hearts cannot be led until one has been played. Each heart scores 1 and the 
 trick face up before each player, with the hands and won tricks face down. Rules:
 `preview/src/hearts-rules.js`.
 
+A walnut backgammon table now stands in the grove's middle square, with two
+armchairs. Seated there, **Play backgammon** or **X** opens the board. You play the
+plaza regular or pass and play, as white or black. Use both dice when you can, and
+the higher one when only one can be used. Checkers on the bar enter first, a blot
+that is hit goes to the bar, and you bear off once all fifteen are home. A gammon
+scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
+off), and Undo takes back moves within your turn. The table's checkers mirror the
+game. Rules: `preview/src/backgammon-rules.js`.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit
