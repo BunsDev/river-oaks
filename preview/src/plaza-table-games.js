@@ -4,6 +4,7 @@ import * as chess from './chess-rules.js';
 import * as checkers from './checkers-rules.js';
 import { CONNECT_FOUR } from './connect-four-adapter.js';
 import { REVERSI } from './reversi-adapter.js';
+import { MORRIS } from './morris-adapter.js';
 import { attachGuide } from './salon-guide.js';
 
 // Games at the plaza chess tables, for whoever sits down: chess, checkers or Connect Four,
@@ -70,7 +71,9 @@ const CHECKERS = {
   ending: reason => reason === 'no pieces left' ? 'Every piece taken.' : 'No moves left.',
   position: state => state,
 };
-export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR, reversi: REVERSI };
+export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR, reversi: REVERSI, morris: MORRIS };
+// A drop game places with one click; morris does while pieces remain in hand.
+const dropping = (adapter, state) => typeof adapter.drop === 'function' ? adapter.drop(state) : Boolean(adapter.drop);
 const EMPTY_CHESS_BOARD = Array(64).fill('');
 const sizeOf = adapter => adapter.size ?? { rows: 8, cols: 8 };
 const nameOf = (adapter, square) => (adapter.squareName ?? chess.squareName)(square);
@@ -89,7 +92,7 @@ export function createWorkerThinker() {
   });
 }
 
-export function createPlazaTableGames({ host = document.querySelector('#viewport'), getMirror = () => null, getFourMirror = () => null, getSeat = () => null, focusWorld = () => {},
+export function createPlazaTableGames({ host = document.querySelector('#viewport'), getMirror = () => null, getFourMirror = () => null, getMorrisMirror = () => null, getSeat = () => null, focusWorld = () => {},
   think = createWorkerThinker(), budget = 30000, replyDelay = 450 } = {}) {
   const tables = new Map();
   let tableId = null, selected = null, cursor = 'e2', pendingChoice = null, thinking = null;
@@ -100,7 +103,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="table-game-title">Chess at the plaza</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the game board">×</button></header>
     <div class="table-game-body"><div class="table-game-board" role="grid" aria-label="Game board"></div>
-    <div class="table-game-side"><div class="table-game-choice" role="group" aria-label="Game">${Object.values(TABLE_GAMES).map(game => `<button type="button" data-game="${game.id}" aria-pressed="false">${game.name}</button>`).join('')}</div>
+    <div class="table-game-side"><div class="table-game-choice" role="group" aria-label="Game">${Object.values(TABLE_GAMES).map(game => `<button type="button" data-game="${game.id}" aria-pressed="false">${game.short ?? game.name}</button>`).join('')}</div>
     <p class="table-game-status" role="status" aria-live="polite"></p>
     <div class="table-game-promotion" role="group" aria-label="Promote the pawn to" hidden></div>
     <ol class="table-game-moves" aria-label="Moves"></ol>
@@ -125,13 +128,15 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     table().games[kind] = game; return game;
   };
   const yourTurn = (game, state) => game.mode === 'pass' || rules().turn(state) === game.player;
-  // Each kind has its own table mirror; the other one is cleared while it is in play.
+  // Each kind has its own table mirror; the others are cleared while it is in play (the
+  // chess mirror also draws checkers and Reversi discs).
   const mirror = () => {
     const game = current();
     if (!game) return;
-    const board = rules().replay(game.moves).state.board;
-    if (rules().mirror === 'connectFour') { getMirror()?.show(tableId, EMPTY_CHESS_BOARD, game.firstChair); getFourMirror()?.show(tableId, board, game.firstChair); }
-    else { getFourMirror()?.show(tableId, null); getMirror()?.show(tableId, board, game.firstChair); }
+    const board = rules().replay(game.moves).state.board, kind = rules().mirror ?? 'chess';
+    getFourMirror()?.show(tableId, kind === 'connectFour' ? board : null, game.firstChair);
+    getMorrisMirror()?.show(tableId, kind === 'morris' ? board : null, game.firstChair);
+    getMirror()?.show(tableId, kind === 'chess' ? board : EMPTY_CHESS_BOARD, game.firstChair);
   };
 
   function render() {
@@ -141,7 +146,9 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     // Your own side sits at the bottom; pass-and-play keeps the first side at the bottom.
     const bottom = game.mode === 'pass' ? adapter.sides[0] : game.player, flipped = adapter.flips !== false && bottom !== adapter.sides[0];
     // A drop game marks where each column's next disc lands, only while you may drop one.
-    const last = played.at(-1), legal = adapter.drop ? (result || thinking || !yourTurn(game, state) ? [] : adapter.moves(state)) : selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
+    // A mill waiting for its piece marks the pieces it may take.
+    const taking = pendingChoice?.[0]?.take != null ? pendingChoice.map(move => ({ to: move.take, capture: true })) : null;
+    const last = played.at(-1), legal = taking ?? (dropping(adapter, state) ? (result || thinking || !yourTurn(game, state) ? [] : adapter.moves(state)) : selected === null ? [] : adapter.moves(state).filter(move => move.from === selected));
     const { rows: size, cols } = sizeOf(adapter);
     // A mated king stays marked; the status only reads the alert while the game goes on.
     const alert = adapter.alert(state);
@@ -152,6 +159,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
         const file = flipped ? cols - 1 - column : column, square = rank * cols + file, name = nameOf(adapter, square), piece = adapter.piece(state, square);
         const cell = document.createElement('button');
         cell.type = 'button'; cell.className = 'table-square'; cell.setAttribute('role', 'gridcell');
+        // Morris plays only its 24 points; the rest of the grid carries the lines.
+        if (adapter.playable && !adapter.playable(square)) { cell.dataset.void = ''; cell.disabled = true; cell.tabIndex = -1; cell.setAttribute('aria-hidden', 'true'); cells.push(cell); continue; }
         cell.dataset.square = name; cell.dataset.shade = (file + rank) % 2 ? 'light' : 'dark';
         cell.tabIndex = name === cursor ? 0 : -1;
         cell.setAttribute('aria-label', piece ? `${name}, ${piece.label}` : name);
@@ -183,7 +192,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     }, []));
     moveList.scrollTop = moveList.scrollHeight;
     $('#table-game-title').textContent = `${adapter.name} at the plaza`;
-    status.textContent = describe(game, adapter, state, result, alert);
+    status.textContent = taking ? adapter.takeLabel(state) : describe(game, adapter, state, result, alert);
     panel.dataset.state = result ? 'over' : thinking ? 'thinking' : 'playing';
     panel.dataset.game = adapter.id;
     for (const button of panel.querySelectorAll('.table-game-choice [data-game]')) button.setAttribute('aria-pressed', String(button.dataset.game === adapter.id));
@@ -236,11 +245,19 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     const { state, result } = adapter.replay(game.moves);
     if (result || !yourTurn(game, state)) return;
     const moves = adapter.moves(state);
-    if (adapter.drop) { const move = adapter.dropAt(moves, square); if (move) play(move); return; }
+    // A mill is waiting: a marked piece completes the move.
+    if (pendingChoice?.[0]?.take != null) { const move = pendingChoice.find(option => option.take === square); if (move) play(move); return; }
+    // The moves that share this placement or step: more than one means a mill, and the
+    // piece to take is chosen next, on the board.
+    const settle = options => {
+      if (options.length > 1 && options[0].take != null) { pendingChoice = options; selected = options[0].from ?? null; render(); return; }
+      play(options[0]);
+    };
+    if (dropping(adapter, state)) { const move = adapter.dropAt(moves, square); if (move) settle(moves.filter(option => option.from === move.from && option.to === move.to)); return; }
     if (selected !== null) {
       const options = moves.filter(move => move.from === selected && move.to === square);
       if (options.length && options[0].choice) { offerChoice(options); return; }
-      if (options.length) { play(options[0]); return; }
+      if (options.length) { settle(options); return; }
     }
     selected = moves.some(move => move.from === square) && selected !== square ? square : null; render();
   }
@@ -257,7 +274,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
 
   const restart = changes => {
     const entry = table(), game = current();
-    thinking = null; selected = null; promotion.hidden = true;
+    thinking = null; selected = null; pendingChoice = null; promotion.hidden = true;
     const next = newGame(changes.kind ?? entry.kind, game.chair, { mode: changes.mode ?? game.mode, ...(changes.player ? { player: changes.player } : {}) });
     entry.kind = next.kind; cursor = TABLE_GAMES[next.kind].opening[next.player]; mirror(); render(); void reply();
   };
@@ -275,15 +292,22 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     if (!steps) return;
     event.preventDefault();
     const cells = [...board.querySelectorAll('.table-square')], index = cells.indexOf(cell), { rows, cols } = sizeOf(rules());
-    const row = Math.min(rows - 1, Math.max(0, Math.floor(index / cols) + steps[1])), column = Math.min(cols - 1, Math.max(0, index % cols + steps[0]));
-    const target = cells[row * cols + column];
+    // Step past cells that are not played (morris) to the next one that is, if any.
+    let row = Math.floor(index / cols), column = index % cols, target = cell;
+    for (;;) {
+      row += steps[1]; column += steps[0];
+      if (row < 0 || row >= rows || column < 0 || column >= cols) break;
+      const next = cells[row * cols + column];
+      if (!next.disabled) { target = next; break; }
+    }
+    if (target === cell) return;
     cell.tabIndex = -1; target.tabIndex = 0; target.focus(); cursor = target.dataset.square;
   });
   $('[data-action="new"]').addEventListener('click', () => { if (current()) restart({}); });
   $('[data-action="undo"]').addEventListener('click', () => {
     const game = current(), adapter = rules();
     if (!game?.moves.length) return;
-    thinking = null; selected = null; promotion.hidden = true;
+    thinking = null; selected = null; pendingChoice = null; promotion.hidden = true;
     game.moves.pop();
     // Against the regular, take back to your own turn.
     // Reversi's regular can move twice when you pass, so step back until it is yours.
@@ -293,7 +317,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   for (const button of panel.querySelectorAll('[data-mode]')) button.addEventListener('click', () => {
     const game = current();
     if (!game || game.mode === button.dataset.mode) return;
-    game.mode = button.dataset.mode; thinking = null; selected = null; render(); void reply();
+    game.mode = button.dataset.mode; thinking = null; selected = null; pendingChoice = null; render(); void reply();
   });
   for (const button of panel.querySelectorAll('[data-side-index]')) button.addEventListener('click', () => {
     if (current() && current().player !== button.dataset.side) restart({ player: button.dataset.side });
@@ -303,7 +327,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   for (const button of panel.querySelectorAll('.table-game-choice [data-game]')) button.addEventListener('click', () => {
     const entry = table();
     if (!entry || entry.kind === button.dataset.game) return;
-    thinking = null; selected = null; promotion.hidden = true;
+    thinking = null; selected = null; pendingChoice = null; promotion.hidden = true;
     // A new kind starts against the same opponent as the game being left.
     const leaving = current();
     entry.kind = button.dataset.game;
@@ -312,7 +336,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
   });
   const close = () => {
     if (!panel.open) return;
-    panel.close(); selected = null; promotion.hidden = true; focusWorld();
+    panel.close(); selected = null; pendingChoice = null; promotion.hidden = true; focusWorld();
   };
   $('.table-game-close').addEventListener('click', close);
   // Escape, or X again (as in the world), puts the board away.

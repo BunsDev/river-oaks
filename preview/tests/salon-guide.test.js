@@ -8,6 +8,7 @@ import * as dominoes from '../src/dominoes-rules.js';
 import * as hearts from '../src/hearts-rules.js';
 import * as backgammon from '../src/backgammon-rules.js';
 import * as reversi from '../src/reversi-rules.js';
+import * as morris from '../src/morris-rules.js';
 import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 
 // The Salon Guide teaches the plaza table games. Its pictures are played on the real
@@ -16,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -155,6 +156,18 @@ test('the Reversi pictures are the real opening, a real placement and a corner',
   }
   assert.equal(reversiMove(reversi.fromDiagram(DIAGRAMS.reversiCorner.rows, 'd')).move, DIAGRAMS.reversiCorner.place, 'the regular takes the corner too');
   assert.equal(reversi.startPosition().turn, 'd'); assert.match(text('reversi'), /Black moves first/);
+});
+
+test('the morris pictures are a real mill, a real step and a real choice of piece to take', () => {
+  const at = name => morris.cellOf(name), mill = morris.fromDiagram(DIAGRAMS.morrisMill.rows, { turn: 'b' });
+  assert.ok(morris.MILLS.some(line => line.every(cell => DIAGRAMS.morrisMill.mill.map(at).includes(cell))), 'the glowing three are one of the sixteen mills');
+  assert.ok(DIAGRAMS.morrisMill.mill.every(name => mill.board[at(name)] === 'w'));
+  const { rows, from, to } = DIAGRAMS.morrisMove, moving = morris.fromDiagram(rows, { turn: 'w' });
+  assert.ok(morris.legalMoves(moving).some(move => move.from === at(from) && move.to === at(to)), `${from}-${to} is a legal step`);
+  const take = DIAGRAMS.morrisTake, placing = morris.fromDiagram(take.rows, { turn: 'w', hand: { w: 6, b: 5 } });
+  const takes = morris.legalMoves(placing).filter(move => move.to === at(take.place) && move.take !== null).map(move => morris.cellName(move.take));
+  assert.deepEqual(takes.sort(), [...take.takeable].sort());
+  assert.match(text('morris'), /White begins/); assert.equal(morris.startPosition().turn, 'w');
 });
 
 test('the Jenga and wine pong pictures follow the rules', async () => {
