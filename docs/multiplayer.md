@@ -573,6 +573,13 @@ in (or out), or bounce on the table and in. Two throws a turn, and sinking all s
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
 
+A dartboard hangs on a post against the plaza's south wall, with a throwing line
+2.37 m out in front. Standing at the line, **Play darts** or **X** opens it: 501,
+double out, against a plaza regular or pass and play. A line sweeps across the board
+(stop it to aim across) and then up and down (stop it again); the dart lands where
+they cross. Busts restore the turn's start, and on 170 or less the sheet suggests a
+checkout. The real board shows the turn's darts. Rules: `preview/src/darts-rules.js`.
+
 The café table's switch now offers **Spades** beside dominoes and Hearts. You and the
 regular across partner against the regulars on your left and right. Bid the tricks you
 expect (nil means none), then play: spades are trumps and cannot be led until one has
@@ -597,7 +604,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga, wine pong or darts), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

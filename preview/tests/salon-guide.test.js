@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'darts']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -195,4 +195,10 @@ test('the Go pictures follow the rules', async () => {
   const [pr, pc] = ko.play, [tr, tc] = ko.take, taken = go.play(state, pr * 9 + pc);
   assert.equal(taken.last.captured, 1); assert.equal(taken.board[tr * 9 + tc], '', 'the black stone leaves the board');
   assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
+});
+
+test('the darts checkout picture follows the rules', async () => {
+  const { checkout } = await import('../src/darts-rules.js');
+  const { score, plan } = DIAGRAMS.dartsCheckout, found = checkout(score);
+  assert.deepEqual(found.map(bed => `${bed.ring === 'treble' ? 'T' : bed.ring === 'double' ? 'D' : ''}${bed.number}`), plan);
 });
