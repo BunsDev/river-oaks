@@ -51,7 +51,10 @@ export function createWalkingEnvironment(world, placedObjects = []) {
     const key = `${Math.floor(x / roomBucketSize)},${Math.floor(-z / roomBucketSize)}`;
     return roomAt(roomBuckets.get(key) ?? [], x, -z, shrink);
   };
-  const groundAt = (x, z) => roomFor(x, z, 0)?.floor ?? groundSurfaceHeight(world,x,z);
+  const groundAt = (x, z) => {
+    const room = roomFor(x, z, 0);
+    return room ? (room.floorAt?.(x, -z) ?? room.floor) : groundSurfaceHeight(world,x,z);
+  };
   // Match the rendered roof outline, including mapped nonrectangular buildings.
   // The 3.1m margin clears the 2.6m roof bulkhead plus the bubble's lower arc.
   const flightRadius=1.3, roofs=(world.buildings??[]).map(building=>{

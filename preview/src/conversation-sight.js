@@ -15,6 +15,12 @@ export function roomBlocksConversation(room,from,to) {
   const start=local(from),end=local(to);
   const box=(a,d,w,l,top,bottom=0)=>intersects(start,end,[a-w/2,bottom,d-l/2],[a+w/2,top,d+l/2]);
   for(const f of room.fixtures) {
+    if (f.kind.startsWith('ipic-')) {
+      // Glass balustrades and the gap between lanes do not form opaque walls.
+      if (['ipic-glass-rail', 'ipic-centre-rail'].includes(f.kind)) continue;
+      if (box(f.a, f.d, f.w, f.l, f.y + f.h, f.y)) return true;
+      continue;
+    }
     if(f.kind==='bar') {
       const mid=(f.d0+f.d1)/2,length=f.d1-f.d0;
       if(box(f.a-f.side*0.5,mid,0.72,length,1.14)||box(f.a,mid,0.34,length,2.6))return true;
