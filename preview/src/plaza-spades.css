@@ -1,0 +1,12 @@
+/* Spades at the café: the Hearts cards, trick cross and hand (plaza-hearts.css), with
+   the partnership scores above the seats, and a row of bids while you are bidding. */
+.spades-panel { --card-face: #fbf8f1; --card-edge: #cfc6b4; --card-red: #b3262e; --card-black: #1d1b1f; }
+.spades-panel .spades-body { display: flex; flex-direction: column; gap: 12px; }
+.spades-panel .spades-teams { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.spades-panel .spades-teams li { padding: 5px 12px; border-radius: 10px; background: var(--hud-raised); color: var(--ink); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.spades-panel .spades-bids { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.spades-panel .spades-bids[hidden] { display: none; }
+.spades-panel .spades-bids button { min-height: 36px; border: 1px solid var(--hud-line, rgb(0 0 0 / .12)); border-radius: 9px; background: var(--hud-tile); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.spades-panel .spades-bids button:hover, .spades-panel .spades-bids button:focus-visible { background: var(--hud-action); color: var(--hud-on-action); }
+.spades-panel .table-game-actions [data-spades-action] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.spades-panel .table-game-actions [hidden] { display: none; }
