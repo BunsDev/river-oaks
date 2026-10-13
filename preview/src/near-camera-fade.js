@@ -6,6 +6,8 @@
 // the light, so shadows are unaffected.
 export const NEAR_CAMERA_FADE = { near: 1.4, far: 3.2 };
 export function seeThroughNearCamera(material) {
+  // Enclosed visit spaces must retain opaque walls around their camera.
+  if (material.userData.nearCameraSolid) return material;
   if (material.userData.seeThroughNearCamera) return material;
   material.userData.seeThroughNearCamera = true;
   // Chain onto any existing hook (surface tiling, tone variation) rather than replace it.

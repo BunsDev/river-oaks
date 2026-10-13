@@ -14,6 +14,9 @@ import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
+import { officeLobbyFor, officeRetailOpenings } from './office-contract.js';
+import { buildOfficeArrival } from './office-arrival-architecture.js';
+import { ARRIVAL } from './office-arrival-model.js';
 
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
@@ -97,7 +100,7 @@ export function buildDistrictBuildings(world) {
   interiors.materials.forEach(material => materials.add(material));
   // Walk-in rooms replace the shallow alcoves wherever a boutique plan covers a bay.
   const rooms = storeRoomsFor(world), roomById = new Map(rooms.map(room => [room.storeId, room])), doors = [];
-  const displays=[];
+  const displays=[],officeLobby=officeLobbyFor(world);
   const batches = new Map();
   const part = (material, position, scale, yaw = 0, buildingIndex = -1, pitch = 0, geometry = box) => {
     const key = material === glass ? material : geometry === box ? material : `${geometry.uuid}:${material.uuid}`;
@@ -227,8 +230,9 @@ export function buildDistrictBuildings(world) {
         // Recessed downlights in the fascia soffit wash the display glass at dusk.
         if(!rebuiltBay && !solidCenter) for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
         if (retailHeight) {
-          if (open) {
-            const [t0, t1] = open, width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
+          const bayStart=[a[0]+dx*k/bays,a[1]+dy*k/bays],bayEnd=[a[0]+dx*(k+1)/bays,a[1]+dy*(k+1)/bays];
+          for (const [t0,t1] of officeRetailOpenings(officeLobby,building.id,bayStart,bayEnd,open)) {
+            const width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
             const atc=(depth,height)=>{const p=at(depth,height);p[0]+=dx/length*shift;p[2]-=dy/length*shift;return p;};
             const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
             part(floor,atc(1.35,0.28),[width,0.10,2.7],yaw,index);
@@ -415,6 +419,13 @@ export function buildDistrictBuildings(world) {
     mesh.castShadow = material !== glass && material !== light && material !== spot; mesh.receiveShadow = true; mesh.userData.aoExclude = material === glass; group.add(mesh);
   }
   group.add(reference.group);
+  if(officeLobby){
+    const arrival=buildOfficeArrival({facade:false}),n=officeLobby.outward;
+    arrival.object.position.set(officeLobby.facade[0]-n[0]*ARRIVAL.facadeOffset,officeLobby.floor,-officeLobby.facade[1]+n[1]*ARRIVAL.facadeOffset);
+    arrival.object.rotation.y=Math.atan2(n[0],-n[1]);
+    arrival.update({phase:'idle',doors:0,floor:1});
+    arrival.object.name='Office lobby and elevator';group.add(arrival.object);group.userData.officeArrival=arrival;
+  }
   const reflectionMaterials = [glass, upperGlass, ...reference.reflective];
   const interiorGroup = buildStoreInteriors(rooms, { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
@@ -433,6 +444,8 @@ export function buildDistrictBuildings(world) {
   };
   group.add(buildRetailDisplays(displays));
   group.userData.dispose = () => {
+    const arrival=group.userData.officeArrival;
+    if(arrival){arrival.object.removeFromParent();arrival.dispose();}
     interiorGroup.userData.dispose();
     interiors.dispose();
     group.traverse(item => {

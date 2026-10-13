@@ -122,5 +122,15 @@ async page => {
     }
     check(errors.length === 0, `No browser errors: ${errors.join('; ')}`);
     return { checks, routes, errors };
+  } catch (error) {
+    // Capture the second client before closing its context; the runner can only
+    // inspect the primary page after this harness returns.
+    const diagnostics = await peer.evaluate(() => ({
+      connected: window.__riverMultiplayer?.().connected,
+      ready: document.querySelector('#canvas-host')?.dataset.playerReady,
+      assets: document.querySelector('#viewport')?.dataset.assetProgress,
+      status: document.querySelector('#multiplayer-status')?.textContent,
+    })).catch(failure => ({ unavailable: failure.message }));
+    throw new Error(`${error.message}; peer: ${JSON.stringify(diagnostics)}`, { cause: error });
   } finally { await peerContext.close(); }
 }

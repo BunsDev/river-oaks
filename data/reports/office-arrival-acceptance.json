@@ -1,0 +1,1413 @@
+{
+  "schemaVersion": 1,
+  "kind": "Derived acceptance summary; original receipt data preserved verbatim in the archive identified below",
+  "compiledAt": "2026-10-13T23:08:02.152774+00:00",
+  "source": {
+    "revision": "fdd59242766742545a4d0107afd8b45dbb9d9aca",
+    "dirty": true,
+    "patch": "Office arrival source/tests/docs diff recorded in this commit; the ledger identifies earlier receipt revisions"
+  },
+  "rawArchive": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/reports",
+  "rawReceipts": [
+    {
+      "file": "browser-integrated-before-fixture-retries.json",
+      "sha256": "f0dcff378f12bb399cdbbe375980c01be5531a0475a74104ef697ec3095adcc7",
+      "bytes": 1781
+    },
+    {
+      "file": "core-first.json",
+      "sha256": "60149db2531e493d88bc949ec0b7562f571260a036642cecfc5bbebfb04ffec1",
+      "bytes": 2746
+    },
+    {
+      "file": "experience-integrated-before-fixture-retries.json",
+      "sha256": "979047d338b71af466c2907c321dedb23e726cd8a89bfaee2d50a1d6b04b166a",
+      "bytes": 252721
+    },
+    {
+      "file": "full-first.json",
+      "sha256": "76f0bb4dd1f938407b7e23f16b6813f03d7880cb73274820b39bebd9752f05d3",
+      "bytes": 5063
+    },
+    {
+      "file": "full-integrated-before-browser-retry.json",
+      "sha256": "6580285340843128d2753a3faefbd02557618b77aa839ccc62fc7733eab01039",
+      "bytes": 5244
+    },
+    {
+      "file": "full-integrated-experience-before-retry.json",
+      "sha256": "add14714a7ba3ae4e53fced1c9f4a930ba6602b4daaeebc59c6a3da374f0a241",
+      "bytes": 286226
+    },
+    {
+      "file": "office-arrival-baseline-matched.json",
+      "sha256": "2b3bbd75afc7fd88caeab9820dda719af9c9709c5b1b615ecd74c7e8cf5394b1",
+      "bytes": 7211
+    },
+    {
+      "file": "office-arrival-baseline.json",
+      "sha256": "0addd14bfc4daa6486376ca8c6708e9a2096d394d2d980aac2af145c67006467",
+      "bytes": 7072
+    },
+    {
+      "file": "office-arrival-clearance-details.json",
+      "sha256": "f131418ebfb797878a0e8c0b54e346bdd3a0c376e56847f5f0a80244d411c9b7",
+      "bytes": 197921
+    },
+    {
+      "file": "office-arrival-clearance-final-details.json",
+      "sha256": "cc1b186e823bfa4e4fa6b910d796da7e68c515d3da55cefda4226e3b757b88fa",
+      "bytes": 198515
+    },
+    {
+      "file": "office-arrival-clearance-first.json",
+      "sha256": "af90d8eb3deec7dcd7bfd794eeaf10d5e30578955c58a7554110397d0c0f5f84",
+      "bytes": 246511
+    },
+    {
+      "file": "office-arrival-diagnostic.json",
+      "sha256": "0b8dbbc694d57d96c7cefe36e781900556f92a503f05d111eed25e2fad845d1b",
+      "bytes": 1560
+    },
+    {
+      "file": "office-arrival-fifth-pass.json",
+      "sha256": "96cc8b3326f8ed9675c5e19173ee2f8b478ee0f40c439535e21b0995012f9377",
+      "bytes": 42084
+    },
+    {
+      "file": "office-arrival-final-journeys.json",
+      "sha256": "1a21e721fb6c3277117fdae453231824f6ebb02e31a0ed4334037877236facdc",
+      "bytes": 260454
+    },
+    {
+      "file": "office-arrival-first-pass.json",
+      "sha256": "bde4527adc2edd27f26cf9c4a9da5042ee9390ab1a2eea61213c373dcfe46345",
+      "bytes": 966
+    },
+    {
+      "file": "office-arrival-fourth-pass.json",
+      "sha256": "678f37ff05b7d6a1d0a9d2953c2d6656b776f34b1a74a53643ff4fe7bc7b536f",
+      "bytes": 47763
+    },
+    {
+      "file": "office-arrival-guest-and-runtime-final.json",
+      "sha256": "4e231528688528ce262b17ed4b0d2111d0abc8dc280653132de94bf49ee564fc",
+      "bytes": 30434
+    },
+    {
+      "file": "office-arrival-guest-final.json",
+      "sha256": "3d3a0b58902fdd91db695f121fa7c7ad0624d45232b2e73873ce8ccc13ece4f5",
+      "bytes": 816
+    },
+    {
+      "file": "office-arrival-integrated-final.json",
+      "sha256": "ad068122f95831dcbfd1587af969b50d0012f1ab365cda7c42e15026faa01df7",
+      "bytes": 44122
+    },
+    {
+      "file": "office-arrival-merge-final.json",
+      "sha256": "cf8f1c10a21f2ec64f8a16c6ab5c83e17eda64cf26580d6047d527381feccadd",
+      "bytes": 49929
+    },
+    {
+      "file": "office-arrival-merge-first.json",
+      "sha256": "3a39aa9b142f9c763ca1b1a9edebcd78ad66c77c50567b7aebcbc3f7cecdd5bb",
+      "bytes": 8180
+    },
+    {
+      "file": "office-arrival-portal-final.json",
+      "sha256": "93292ea4fde91fedd543735434cf17b604dea422b00934bc0ab298f29226418b",
+      "bytes": 7143
+    },
+    {
+      "file": "office-arrival-rail-final.json",
+      "sha256": "c3e89f29d40b896d6ed4d7dffde0a43dfec004b07c16cac9c771afca5b455341",
+      "bytes": 4943
+    },
+    {
+      "file": "office-arrival-resident-retry.json",
+      "sha256": "869430859f56db44d27e5d34f82107690d17eaffc41f3a14a9a80762c24b4891",
+      "bytes": 2438
+    },
+    {
+      "file": "office-arrival-runtime-performance.json",
+      "sha256": "bc1c29424f60bf37dab9bb268bca18984f7fc71894cdc5e691854588ab14d452",
+      "bytes": 22302
+    },
+    {
+      "file": "office-arrival-seating-retry.json",
+      "sha256": "3e60503a0041e2b56c99336897c1b436693ecea3eb4e3a874a670fd0d535d46e",
+      "bytes": 2019
+    },
+    {
+      "file": "office-arrival-second-pass.json",
+      "sha256": "dcb39b5a7ca46c88af4c36259fd5cd50da535a6597afff78c5968b1d4d1974ad",
+      "bytes": 7155
+    },
+    {
+      "file": "office-arrival-spatial-diagnostic.json",
+      "sha256": "039bb63ea9c659e9d5a82d7847881695ebefa58156f2459239fc7291a77c784a",
+      "bytes": 580440
+    },
+    {
+      "file": "office-arrival-third-pass.json",
+      "sha256": "6fc112a8bf57cc2a289a8c326f9554bc70b60794203f36e9187613d4f694a29b",
+      "bytes": 8709
+    },
+    {
+      "file": "office-arrival-world-first.json",
+      "sha256": "efc83f142b15aa23d2fbcaf949ac31e683cdb01a9e84a48c360d78e5ea9bda49",
+      "bytes": 1584
+    },
+    {
+      "file": "office-arrival-world-second.json",
+      "sha256": "841d8cf6332b5a3e81166b36452d8ba56ed38f34e63ef4f6904dbc7c5b15eaca",
+      "bytes": 1777
+    },
+    {
+      "file": "office-arrival-world-third.json",
+      "sha256": "187f1241229a477c5f756fbd1ce27a9cff5b9144cd5072a3c8c6fc7d3da83683",
+      "bytes": 46382
+    },
+    {
+      "file": "shared-integrated-before-focused-retries.json",
+      "sha256": "822a1b0de8164abca17f596877029b5a1ef08a1ed742e9e513c12e986ebf0697",
+      "bytes": 27220
+    }
+  ],
+  "journeys": {
+    "integratedStreetToOffice": {
+      "status": "passed",
+      "seconds": 93.718,
+      "checks": [
+        "Authoritative setup lands on the approach street",
+        "street-approach completes using normal walking controls",
+        "entrance completes using normal walking controls",
+        "Server position agrees with the walked entrance",
+        "1440px starts with a visible lobby lead-in",
+        "1440px elevator uses the street scene and camera",
+        "1440px elevator reaches level 6",
+        "1440px office controls fit and retain touch target height",
+        "1440px access panel clears the header",
+        "1440px return restores street focus",
+        "768px starts with a visible lobby lead-in",
+        "768px elevator uses the street scene and camera",
+        "768px elevator reaches level 6",
+        "768px office controls fit and retain touch target height",
+        "768px access panel clears the header",
+        "768px return restores street focus",
+        "390px starts with a visible lobby lead-in",
+        "390px elevator uses the street scene and camera",
+        "390px elevator reaches level 6",
+        "390px office controls fit and retain touch target height",
+        "390px access panel clears the header",
+        "390px nearby desk action clears the movement controls",
+        "390px return restores street focus",
+        "320px starts with a visible lobby lead-in",
+        "320px elevator uses the street scene and camera",
+        "320px elevator reaches level 6",
+        "320px office controls fit and retain touch target height",
+        "320px access panel clears the header",
+        "320px nearby desk action clears the movement controls",
+        "320px return restores street focus",
+        "return-to-street completes using normal walking controls",
+        "continue-along-street completes using normal walking controls",
+        "No browser errors: "
+      ],
+      "receipt": "office-arrival-merge-final.json",
+      "mainBase": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a"
+    },
+    "accessAndRevocation": {
+      "status": "passed",
+      "seconds": 117.293,
+      "checks": [
+        "All elevator phases render before walking begins",
+        "F at the lobby boards the elevator, rides upstairs and releases walking",
+        "W moves the player into the office",
+        "The back wall and storage stop movement",
+        "Leaving returns focus to the street",
+        "Reduced motion enters without the elevator camera motion",
+        "An uninvited guest cannot board",
+        "Jevica accepts the visit request from her office and the guest enters",
+        "Revocation returns the guest to the lobby immediately",
+        "Revocation during boarding ends the authoritative visit and restores street controls",
+        "No guest browser errors: "
+      ]
+    },
+    "interruptions": {
+      "status": "passed",
+      "seconds": 39.404,
+      "checks": [
+        "Repeated input sends one authorized entry command",
+        "Ending the visit restores street avatar and focus",
+        "Late accepted entry cannot reopen a cancelled journey",
+        "Ending the visit restores street avatar and focus",
+        "Ending the visit restores street avatar and focus",
+        "Skip reaches the authorized office",
+        "Ending the visit restores street avatar and focus",
+        "A real reconnect restores the authorized visit without replaying the movie",
+        "Ending the visit restores street avatar and focus",
+        "Delayed selected-avatar assets keep the arrival at its initial pose",
+        "Boarding uses the selected loaded avatar",
+        "Ending the visit restores street avatar and focus",
+        "No browser errors: "
+      ]
+    },
+    "privateDesk": {
+      "status": "passed",
+      "seconds": 37.516,
+      "checks": [
+        "Authorized office opens an empty private desk",
+        "Notes, file links and result save to the account",
+        "Typing at the desk does not move the player",
+        "Completed task retains the written result",
+        "Saved work can be downloaded",
+        "Closing the desk restores office focus",
+        "Leaving, reloading and returning resumes saved work",
+        "A failed save keeps the draft and offers retry",
+        "Mobile desk fits without horizontal overflow",
+        "Visible mobile actions keep touch-sized targets",
+        "Long titles wrap fully on mobile",
+        "Small phones retain a contained layout",
+        "Removing work requires confirmation and can be cancelled",
+        "Escape leaves the desk before leaving the office",
+        "Retry reopens cached work after a failed read",
+        "Confirmed removal restores focus to the empty desk"
+      ]
+    }
+  },
+  "avatarClearance": {
+    "combinations": 33,
+    "captureCount": 99,
+    "results": [
+      {
+        "appearance": "jevica",
+        "movement": "upright",
+        "rearCrossings": 8,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "jevica-beast",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "jevica-beast",
+        "movement": "beast",
+        "rearCrossings": 13,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "sable-human",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "woman-casual",
+        "movement": "upright",
+        "rearCrossings": 8,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "woman-casual",
+        "movement": "beast",
+        "rearCrossings": 10,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "rowan-human",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "man-casual",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "man-casual",
+        "movement": "beast",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "woman-tailored",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "vesper-beast",
+        "movement": "upright",
+        "rearCrossings": 11,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "vesper-beast",
+        "movement": "beast",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "man-tailored",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "midnight-host-wolf",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "midnight-host-wolf",
+        "movement": "beast",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "lyra-human",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "woman-daywear",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "woman-daywear",
+        "movement": "beast",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "man-workwear",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-formal-beast",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-formal-beast",
+        "movement": "beast",
+        "rearCrossings": 13,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-explorer",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-explorer-beast",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-explorer-beast",
+        "movement": "beast",
+        "rearCrossings": 13,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-noir",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-noir-beast",
+        "movement": "upright",
+        "rearCrossings": 12,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "kai-noir-beast",
+        "movement": "beast",
+        "rearCrossings": 13,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat-beast",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat-beast",
+        "movement": "beast",
+        "rearCrossings": 6,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat-feminine",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat-feminine-beast",
+        "movement": "upright",
+        "rearCrossings": 7,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      },
+      {
+        "appearance": "forest-aristocrat-feminine-beast",
+        "movement": "beast",
+        "rearCrossings": 6,
+        "frontCrossings": 6,
+        "closedSamples": 36,
+        "failures": []
+      }
+    ],
+    "capturePattern": "output/playwright/office-clearance-final-<appearance>-<movement>-<station>.png"
+  },
+  "visual": {
+    "baselineCaptures": [
+      "output/playwright/office-arrival-baseline-matched-approach.png",
+      "output/playwright/office-arrival-baseline-matched-facade.png",
+      "output/playwright/office-arrival-baseline-matched-entrance.png",
+      "output/playwright/office-arrival-baseline-matched-lobby.png",
+      "output/playwright/office-arrival-baseline-matched-boarding.png",
+      "output/playwright/office-arrival-baseline-matched-cabin.png",
+      "output/playwright/office-arrival-baseline-matched-reveal.png",
+      "output/playwright/office-arrival-baseline-matched-office.png"
+    ],
+    "finalExteriorAndFixtureCaptures": [
+      "output/playwright/office-arrival-portal-final-approach.png",
+      "output/playwright/office-arrival-portal-final-facade.png",
+      "output/playwright/office-arrival-portal-final-entrance.png",
+      "output/playwright/office-arrival-portal-final-lobby.png",
+      "output/playwright/office-arrival-portal-final-boarding.png",
+      "output/playwright/office-arrival-portal-final-cabin.png",
+      "output/playwright/office-arrival-portal-final-reveal.png",
+      "output/playwright/office-arrival-portal-final-office.png"
+    ],
+    "integratedJourneyCaptures": [
+      "output/playwright/office-arrival-journey-merge-final-approach.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-day.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-dusk.png",
+      "output/playwright/office-arrival-journey-merge-final-entrance-night.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-office.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-access.png",
+      "output/playwright/office-arrival-journey-merge-final-1440-return.png",
+      "output/playwright/office-arrival-journey-merge-final-768-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-768-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-768-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-768-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-768-office.png",
+      "output/playwright/office-arrival-journey-merge-final-768-access.png",
+      "output/playwright/office-arrival-journey-merge-final-768-return.png",
+      "output/playwright/office-arrival-journey-merge-final-390-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-390-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-390-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-390-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-390-office.png",
+      "output/playwright/office-arrival-journey-merge-final-390-access.png",
+      "output/playwright/office-arrival-journey-merge-final-390-desk-prompt.png",
+      "output/playwright/office-arrival-journey-merge-final-390-return.png",
+      "output/playwright/office-arrival-journey-merge-final-320-lobby.png",
+      "output/playwright/office-arrival-journey-merge-final-320-boarding.png",
+      "output/playwright/office-arrival-journey-merge-final-320-cabin.png",
+      "output/playwright/office-arrival-journey-merge-final-320-reveal.png",
+      "output/playwright/office-arrival-journey-merge-final-320-office.png",
+      "output/playwright/office-arrival-journey-merge-final-320-access.png",
+      "output/playwright/office-arrival-journey-merge-final-320-desk-prompt.png",
+      "output/playwright/office-arrival-journey-merge-final-320-return.png",
+      "output/playwright/office-arrival-journey-merge-final-departure.png"
+    ],
+    "dayDuskNightCaptures": [
+      "output/playwright/office-arrival-journey-fifth-pass-entrance-day.png",
+      "output/playwright/office-arrival-journey-fifth-pass-entrance-dusk.png",
+      "output/playwright/office-arrival-journey-fifth-pass-entrance-night.png"
+    ],
+    "review": "Direct rendered review completed; final portal overlap corrected and independently reviewed. Viewport emulation is not physical-device or human accessibility acceptance.",
+    "latestMainReview": {
+      "base": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a",
+      "directlyInspected": [
+        "1440px boarding",
+        "320px office"
+      ],
+      "unchangedFrameArchive": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/review-frames",
+      "manifest": "manifest.json"
+    }
+  },
+  "matchedPerformance": {
+    "baseline": [
+      {
+        "name": "approach",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 481,
+        "triangles": 1767794,
+        "memory": {
+          "geometries": 98,
+          "textures": 36
+        },
+        "heap": {
+          "used": 72200000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2.3000000715255737,
+          "p95": 3.200000047683716
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22796831,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "facade",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 464,
+        "triangles": 1791818,
+        "memory": {
+          "geometries": 98,
+          "textures": 36
+        },
+        "heap": {
+          "used": 72200000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2.399999976158142,
+          "p95": 2.9000000953674316
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22796831,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "entrance",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 449,
+        "triangles": 1750838,
+        "memory": {
+          "geometries": 98,
+          "textures": 36
+        },
+        "heap": {
+          "used": 72200000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2.200000047683716,
+          "p95": 2.6999999284744263
+        },
+        "frameIntervalMs": {
+          "median": 16.69999999999891,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22796831,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "cabin",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 56,
+        "triangles": 253970,
+        "memory": {
+          "geometries": 33,
+          "textures": 19
+        },
+        "heap": {
+          "used": 72200000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 4.300000071525574,
+          "p95": 4.700000047683716
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.799999999999727
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 15717741,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "office",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 87,
+        "triangles": 13733,
+        "memory": {
+          "geometries": 56,
+          "textures": 25
+        },
+        "heap": {
+          "used": 72200000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 0.6000000238418579,
+          "p95": 0.8000000715255737
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.800000000000182
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 15717741,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      }
+    ],
+    "final": [
+      {
+        "name": "approach",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 516,
+        "triangles": 1768902,
+        "memory": {
+          "geometries": 105,
+          "textures": 41
+        },
+        "heap": {
+          "used": 86400000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2,
+          "p95": 2.399999976158142
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22874528,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "facade",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 499,
+        "triangles": 1792926,
+        "memory": {
+          "geometries": 105,
+          "textures": 41
+        },
+        "heap": {
+          "used": 86400000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2,
+          "p95": 2.399999976158142
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22874528,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "entrance",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 484,
+        "triangles": 1751946,
+        "memory": {
+          "geometries": 105,
+          "textures": 41
+        },
+        "heap": {
+          "used": 86400000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 1.899999976158142,
+          "p95": 4.199999928474426
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.700000000000728
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 22874528,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "cabin",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 48,
+        "triangles": 255822,
+        "memory": {
+          "geometries": 21,
+          "textures": 25
+        },
+        "heap": {
+          "used": 86400000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 2.6999999284744263,
+          "p95": 3.200000047683716
+        },
+        "frameIntervalMs": {
+          "median": 16.699999999999818,
+          "p95": 16.800000000000182
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 15855526,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      },
+      {
+        "name": "office",
+        "viewport": [
+          1440,
+          1000
+        ],
+        "pixelRatio": 1,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+        "draws": 95,
+        "triangles": 14813,
+        "memory": {
+          "geometries": 44,
+          "textures": 31
+        },
+        "heap": {
+          "used": 86400000,
+          "total": 109000000
+        },
+        "renderSubmissionMs": {
+          "median": 0.6000000238418579,
+          "p95": 0.7999999523162842
+        },
+        "frameIntervalMs": {
+          "median": 16.69999999999891,
+          "p95": 16.80000000000109
+        },
+        "sampleFrames": 60,
+        "resourceBytes": 15855526,
+        "scope": "Local Chromium fixture, CPU render submission and rAF intervals; not isolated GPU timing or physical-device acceptance"
+      }
+    ],
+    "scope": "Presentation views. Normal input, auth, departure and responsive HUD are verified by separate journeys."
+  },
+  "runtimePerformance": {
+    "samples": [
+      {
+        "ride": 1,
+        "phase": "street",
+        "frames": 237,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 33.399999999999636,
+          "maximum": 116.59999999999854
+        },
+        "cpuMs": {
+          "median": 17.399999976158142,
+          "p95": 21.600000023841858,
+          "maximum": 25.799999952316284
+        },
+        "memory": {
+          "geometries": 430,
+          "textures": 174
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "loading",
+        "frames": 0,
+        "intervalMs": {
+          "median": null,
+          "p95": null,
+          "maximum": null
+        },
+        "cpuMs": {
+          "median": null,
+          "p95": null,
+          "maximum": null
+        },
+        "memory": {
+          "geometries": 430,
+          "textures": 174
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "lobby",
+        "frames": 211,
+        "intervalMs": {
+          "median": 16.69999999999891,
+          "p95": 16.80000000000109,
+          "maximum": 33.5
+        },
+        "cpuMs": {
+          "median": 15.100000023841858,
+          "p95": 19.800000071525574,
+          "maximum": 37
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "boarding",
+        "frames": 163,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 16.80000000000291,
+          "maximum": 33.400000000001455
+        },
+        "cpuMs": {
+          "median": 15.200000047683716,
+          "p95": 19.600000023841858,
+          "maximum": 23.299999952316284
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "closing",
+        "frames": 56,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 16.799999999999272,
+          "maximum": 33.400000000001455
+        },
+        "cpuMs": {
+          "median": 14.599999904632568,
+          "p95": 16,
+          "maximum": 17.799999952316284
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "ascending",
+        "frames": 142,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.700000000000728,
+          "maximum": 16.799999999999272
+        },
+        "cpuMs": {
+          "median": 7.699999928474426,
+          "p95": 11.100000023841858,
+          "maximum": 70.39999997615814
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "opening",
+        "frames": 56,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 16.700000000000728,
+          "maximum": 16.799999999999272
+        },
+        "cpuMs": {
+          "median": 7.900000095367432,
+          "p95": 9.5,
+          "maximum": 9.700000047683716
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "arriving",
+        "frames": 119,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.799999999999272,
+          "maximum": 16.799999999999272
+        },
+        "cpuMs": {
+          "median": 7.600000023841858,
+          "p95": 9.200000047683716,
+          "maximum": 10.600000023841858
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "office",
+        "frames": 302,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 16.799999999999272,
+          "maximum": 16.80000000000291
+        },
+        "cpuMs": {
+          "median": 7.299999952316284,
+          "p95": 8.799999952316284,
+          "maximum": 12.399999976158142
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 1,
+        "phase": "return",
+        "frames": 229,
+        "intervalMs": {
+          "median": 16.700000000000728,
+          "p95": 33.400000000001455,
+          "maximum": 133.40000000000146
+        },
+        "cpuMs": {
+          "median": 17,
+          "p95": 21.40000009536743,
+          "maximum": 26.600000023841858
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "street",
+        "frames": 7,
+        "intervalMs": {
+          "median": 33.299999999995634,
+          "p95": 50,
+          "maximum": 50
+        },
+        "cpuMs": {
+          "median": 16.699999928474426,
+          "p95": 19.899999976158142,
+          "maximum": 19.899999976158142
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "loading",
+        "frames": 0,
+        "intervalMs": {
+          "median": null,
+          "p95": null,
+          "maximum": null
+        },
+        "cpuMs": {
+          "median": null,
+          "p95": null,
+          "maximum": null
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "lobby",
+        "frames": 205,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 33.299999999995634,
+          "maximum": 33.400000000001455
+        },
+        "cpuMs": {
+          "median": 15.600000023841858,
+          "p95": 19,
+          "maximum": 22.600000023841858
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "boarding",
+        "frames": 168,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.80000000000291,
+          "maximum": 33.400000000001455
+        },
+        "cpuMs": {
+          "median": 15.099999904632568,
+          "p95": 16.600000023841858,
+          "maximum": 17.5
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "closing",
+        "frames": 56,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.80000000000291,
+          "maximum": 33.30000000000291
+        },
+        "cpuMs": {
+          "median": 14.5,
+          "p95": 15.799999952316284,
+          "maximum": 15.900000095367432
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "ascending",
+        "frames": 142,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.799999999995634,
+          "maximum": 16.80000000000291
+        },
+        "cpuMs": {
+          "median": 7.200000047683716,
+          "p95": 9.299999952316284,
+          "maximum": 65.09999990463257
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "opening",
+        "frames": 56,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.80000000000291,
+          "maximum": 16.80000000000291
+        },
+        "cpuMs": {
+          "median": 7.600000023841858,
+          "p95": 8.799999952316284,
+          "maximum": 9.600000023841858
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "arriving",
+        "frames": 119,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.799999999995634,
+          "maximum": 16.80000000000291
+        },
+        "cpuMs": {
+          "median": 7.400000095367432,
+          "p95": 8.399999976158142,
+          "maximum": 13.300000071525574
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "office",
+        "frames": 300,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 16.700000000004366,
+          "maximum": 16.80000000000291
+        },
+        "cpuMs": {
+          "median": 7.300000071525574,
+          "p95": 9.799999952316284,
+          "maximum": 13.900000095367432
+        },
+        "memory": {
+          "geometries": 470,
+          "textures": 190
+        }
+      },
+      {
+        "ride": 2,
+        "phase": "return",
+        "frames": 246,
+        "intervalMs": {
+          "median": 16.69999999999709,
+          "p95": 33.400000000001455,
+          "maximum": 100
+        },
+        "cpuMs": {
+          "median": 17,
+          "p95": 20.199999928474426,
+          "maximum": 52.89999997615814
+        },
+        "memory": {
+          "geometries": 444,
+          "textures": 184
+        }
+      }
+    ],
+    "scope": "Two real shared-world visits on the local fixture authority, 1440x1000 desktop Chromium. CPU and rAF timing, not isolated GPU timing. Renderer.info describes the last render pass, not aggregate composer draw calls. Matched raw-fixture draw comparisons are in office-arrival-final-journeys.json."
+  },
+  "repositoryVerification": {
+    "state": "All required local check coverage completed across the full run and focused retries; original core/full/browser/shared aggregates retain their failed status. Final exact-head hosted checks and protected landing are the remaining delivery steps.",
+    "implementationHead": "410e1a209b85e07e0c745d16591036a9bcbbda63",
+    "fullRun": {
+      "receipt": "full-integrated-before-browser-retry.json",
+      "status": "failed",
+      "passedBeforeFailure": [
+        "dependency audit",
+        "tooling76",
+        "client2999 with one existing skip",
+        "server658 with Redis and zero skips",
+        "desktop54",
+        "build",
+        "Python lint/format and141 tests",
+        "synthetic demo and expected blocked demo verification",
+        "worktree/history secret scans",
+        "security browser2",
+        "reflection WebGL"
+      ],
+      "failure": "spatial-circulation second-client readiness timed out; shared not run"
+    },
+    "browserRetry": {
+      "receipt": "browser-integrated-before-fixture-retries.json",
+      "status": "failed",
+      "experienceReceipt": "experience-integrated-before-fixture-retries.json",
+      "passedJourneys": 8,
+      "failedJourneys": [
+        "rail-navigation map readiness",
+        "spatial-circulation second-client readiness"
+      ]
+    },
+    "sharedRun": {
+      "receipt": "shared-integrated-before-focused-retries.json",
+      "status": "failed",
+      "passedJourneys": 17,
+      "totalJourneys": 19,
+      "failedJourneys": [
+        "shared-seating placement aim changed",
+        "resident-names lost connection before snapshot read"
+      ]
+    },
+    "focusedRetries": [
+      {
+        "receipt": "office-arrival-rail-final.json",
+        "journey": "rail-navigation",
+        "status": "passed",
+        "checks": 78,
+        "seconds": 27.625
+      },
+      {
+        "receipt": "office-arrival-spatial-diagnostic.json",
+        "journey": "spatial-circulation",
+        "status": "passed",
+        "checks": 55,
+        "seconds": 78.063
+      },
+      {
+        "receipt": "office-arrival-seating-retry.json",
+        "journey": "shared-seating",
+        "status": "passed",
+        "checks": 18,
+        "seconds": 56.849
+      },
+      {
+        "receipt": "office-arrival-resident-retry.json",
+        "journey": "resident-names",
+        "status": "passed",
+        "checks": 24,
+        "seconds": 204.844
+      }
+    ],
+    "finalIntegration": {
+      "mainBase": "19f3a71a94f2fe7438c7ca167ea5cf4af447b44a",
+      "build": "passed",
+      "focusedTests": {
+        "passed": 71,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": "/Users/buns/worktree-backups/river-oaks/office-arrival-20261013/logs/river-oaks-office-arrival-merge-final.log",
+      "officeJourney": {
+        "receipt": "office-arrival-merge-final.json",
+        "status": "passed",
+        "checks": 33,
+        "captures": 36,
+        "seconds": 93.718
+      },
+      "earlierJourneyFailure": "office-arrival-merge-first.json retains the closed-dialog stale-phase harness failure; fixed by requiring an open visit without changing phase assertions"
+    },
+    "limits": [
+      "One existing client Vince negative-approach skip",
+      "No live WorkOS or LiveKit acceptance",
+      "No physical touch device or human keyboard/VoiceOver acceptance",
+      "No native Unreal or packaged-app acceptance"
+    ]
+  }
+}

@@ -10,15 +10,16 @@ import { seeThroughNearCamera } from '../src/near-camera-fade.js';
 import { buildRoads } from '../src/street-roads.js';
 import { buildDesignatedSidewalks } from '../src/sidewalks.js';
 import { createWalkingEnvironment } from '../src/walking.js';
+import { officeLobbyGroundCutout, officeLobbyFor } from '../src/office-contract.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const rooms = planStoreRooms(world);
 let seed = 7; const random = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
 
 // The fragment test, evaluated on the mask and packed uniforms exactly as the shader does.
-function shaderDiscards(clip, east, y, south) {
+function shaderDiscards(clip, east, y, south, persistentCount=0) {
   const { uniforms, mask } = clip;
-  if (uniforms.roRoomClip.value < 0.5) return false;
+  if (uniforms.roRoomClip.value < 0.5 && uniforms.roPersistentClip.value < 0.5) return false;
   const data = uniforms.roRoomData.value.image.data, north = -south, grid = uniforms.roRoomGrid.value;
   const i = Math.floor((east - grid.x) / grid.z), j = Math.floor((north - grid.y) / grid.z);
   if (!(i >= 0 && j >= 0 && i < mask.width && j < mask.height)) return false;
@@ -26,6 +27,8 @@ function shaderDiscards(clip, east, y, south) {
   for (let k = 0; k < MASK_SLOTS; k++) {
     const id = mask.data[base + k] - 1;
     if (id < 0) break;
+    if (uniforms.roPersistentClip.value < 0.5 && id < persistentCount) continue;
+    if (uniforms.roRoomClip.value < 0.5 && id >= persistentCount) continue;
     const [fx, fn, rx, rn, a0, a1, depth, floor] = data.slice(id * 8, id * 8 + 8);
     const relE = east - grid.x - fx, relN = north - grid.y - fn, a = relE * rx + relN * rn, d = relE * -rn + relN * rx;
     if (a > a0 && a < a1 && d > 0 && d < depth && y > floor - 1) return true;
@@ -42,6 +45,33 @@ test('the outdoor ground really rises through many walk-in floors (the defect th
     return false;
   });
   assert.ok(poking.length >= 10, `${poking.length} rooms have ground above the floor`);
+});
+
+test('the exterior office lobby masks rising terrain but preserves the street and neighboring shops',()=>{
+  const lobby=officeLobbyGroundCutout(world),site=officeLobbyFor(world),clip=createRoomGroundClip(rooms,{persistent:[lobby]});
+  assert.equal(clip.mask.overflow,0);
+  assert.ok(Math.abs(lobby.floor-terrainHeight(world.terrain,...site.facade)-world.walkSurfaceOffset)<1e-8);
+  let poking=0;
+  for(let a=lobby.aMin+.1;a<lobby.aMax;a+=.2)for(let d=.1;d<lobby.depth;d+=.2){
+    const [east,north]=lobby.toWorld(a,d),ground=terrainHeight(world.terrain,east,north)+STREET.plazaOffset;
+    if(ground>lobby.floor)poking++;
+    assert.ok(shaderDiscards(clip,east,Math.max(ground,lobby.floor),-north));
+  }
+  assert.ok(poking>0,'even a threshold-height floor needs the terrain mask at its rear');
+  clip.setEnabled(false);
+  for(const [a,d,expected]of [[0,2,true],[0,-.1,false],[lobby.aMax+.1,2,false],[0,lobby.depth+.1,false]]){
+    const [east,north]=lobby.toWorld(a,d);assert.equal(shaderDiscards(clip,east,lobby.floor,-north,1),expected);
+  }
+  const room=rooms.find(r=>r.name!=='Equinox'),[east,north]=room.toWorld(room.center,room.depth/2);
+  assert.equal(shaderDiscards(clip,east,room.floor,-north,1),false,'hidden boutiques do not clip while the exterior lobby still does');
+  clip.setPersistentEnabled(false);
+  const center=lobby.toWorld(0,2);
+  assert.equal(shaderDiscards(clip,center[0],lobby.floor,-center[1],1),false,'hiding Buildings restores the terrain beneath its hidden lobby floor');
+  clip.setEnabled(true);
+  assert.equal(shaderDiscards(clip,east,room.floor,-north,1),true,'visible boutiques keep their own independent terrain masks');
+  assert.equal(shaderDiscards(clip,center[0],lobby.floor,-center[1],1),false);
+  assert.equal(officeLobbyGroundCutout({buildings:[],stores:[]}),null);
+  clip.dispose();
 });
 
 test('the clip covers each room footprint and nothing outside it, including the door throat', () => {
