@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, GO, JENGA, MANCALA, STAR, starSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, STAR, starSpot, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
+import { scoreAt } from './darts-rules.js';
 import { HOLES, MARBLES, startGame as startStar } from './chinese-checkers-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
 import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
@@ -827,6 +828,79 @@ export function buildPlazaSalon(world) {
       count: () => stones.count,
       setVisible(visible) { goban.visible = visible; },
       visible: () => goban.visible,
+    };
+  }
+  // Darts: a dark post backed against the wall, a round backboard, and the board itself,
+  // painted from the rules' own geometry (darts-rules.js scoreAt), facing the throwing
+  // line; the turn's darts stand in it where they landed.
+  {
+    const board = plan.darts, [x, y, z] = base(board), yaw = board.heading + Math.PI;
+    const wood = new THREE.MeshStandardMaterial({ color: '#2a211b', roughness: 0.7 });
+    const post = new THREE.Mesh(unit.box, wood); post.position.set(x, y + 1.0, z); post.scale.set(0.12, 2.0, 0.12); post.castShadow = post.receiveShadow = true;
+    const back = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 40).rotateX(Math.PI / 2), wood);
+    const face = dataTexture(256, (px, py, w, h) => {
+      const r = DARTS.radius * 1000, mx = ((px + 0.5) / w * 2 - 1) * r, my = ((py + 0.5) / h * 2 - 1) * r, hit = scoreAt([mx, my]), dist = Math.hypot(mx, my);
+      if (dist > 170) return dist > r ? [0, 0, 0, 0] : [24, 22, 21, 255];
+      if (hit.number === 25) return hit.value === 50 ? [176, 32, 38, 255] : [32, 120, 64, 255];
+      const dark = [20, 18, 13, 10, 2, 3, 7, 8, 14, 12].includes(hit.number);
+      if (hit.multiplier === 1) return dark ? [28, 26, 24, 255] : [236, 222, 190, 255];
+      return dark ? [176, 32, 38, 255] : [32, 120, 64, 255];
+    }, { repeat: false });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(DARTS.radius, 64), new THREE.MeshStandardMaterial({ map: face, roughness: 0.85, alphaTest: 0.5 }));
+    const holder = new THREE.Group(); holder.name = 'Dartboard'; holder.position.set(x, y + DARTS.bull, z); holder.rotation.y = yaw;
+    back.position.set(0, 0, 0.015); disc.position.set(0, 0, 0.032);
+    holder.add(back, disc);
+    const darts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.0035, 0.0018, 0.12, 8).rotateX(Math.PI / 2).translate(0, 0, 0.06), new THREE.MeshStandardMaterial({ color: '#d9c27a', metalness: 0.5, roughness: 0.4 }), 3);
+    Object.assign(darts, { name: 'Darts in the board', count: 0, castShadow: true });
+    { const holderTexture = new THREE.Object3D(); holderTexture.userData.texture = face; group.add(holderTexture); }
+    group.add(post, holder, darts);
+    group.userData.darts = {
+      // The turn's darts ([x, y] in mm on the board), or none.
+      show(points = []) {
+        darts.count = 0;
+        for (const point of points.slice(0, 3)) {
+          const [east, north, height] = dartSpot(board, point), [px, , pz] = base({ x: east, north });
+          dummy.position.set(px, y + height, pz); dummy.rotation.set(0, board.heading, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); darts.setMatrixAt(darts.count++, dummy.matrix);
+        }
+        darts.instanceMatrix.needsUpdate = true; darts.computeBoundingSphere();
+      },
+      count: () => darts.count,
+    };
+  }
+  // Liar's dice at the café table: a leather cup upside down before each player still in,
+  // lifted when a call shows the dice; the dice are ivory cubes with painted pips, each
+  // turned so its value faces up.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, size = 0.016;
+    // Faces in BoxGeometry order (+x, −x, +y, −y, +z, −z): 3, 4, 1, 6, 2, 5 (opposites sum to seven).
+    const PIPS = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
+      5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
+    const faceTexture = value => dataTexture(32, (px, py, w, h) => PIPS[value].some(([u, v]) => Math.hypot((px + 0.5) / w - u, (py + 0.5) / h - v) < 0.1) ? [32, 28, 26, 255] : [240, 233, 216, 255], { repeat: false });
+    const order = [3, 4, 1, 6, 2, 5], textures = order.map(faceTexture);
+    for (const texture of textures) { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
+    const dice = new THREE.InstancedMesh(new THREE.BoxGeometry(size, size, size), textures.map(map => new THREE.MeshStandardMaterial({ map, roughness: 0.4 })), 20);
+    const cups = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.042, 0.052, 0.085, 24), new THREE.MeshStandardMaterial({ color: '#5a3a26', roughness: 0.7 }), 4);
+    Object.assign(dice, { name: 'Liar’s dice', count: 0, castShadow: true }); Object.assign(cups, { name: 'Dice cups', count: 0, castShadow: true });
+    group.add(dice, cups);
+    const up = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
+    const at = (chair, out, along = 0) => { const angle = cafeChairAngle(chair); return [tx + Math.sin(angle) * out + Math.cos(angle) * along, tz + Math.cos(angle) * out - Math.sin(angle) * along, angle]; };
+    group.userData.dice = {
+      // Cups by chair ({ chair, dice: [values], open }); null clears the table.
+      show(game = null) {
+        dice.count = 0; cups.count = 0;
+        for (const { chair, dice: values, open } of game?.cups ?? []) {
+          if (!values.length) continue;
+          const [cx, cz, angle] = at(chair, 0.3);
+          if (!open) { dummy.position.set(cx, top + 0.0425, cz); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); cups.setMatrixAt(cups.count++, dummy.matrix); continue; }
+          values.forEach((value, i) => {
+            const [x, z] = at(chair, 0.27 + (i % 2) * 0.022, (i - (values.length - 1) / 2) * 0.022);
+            const [rx, ry, rz] = up[value];
+            dummy.position.set(x, top + size / 2, z); dummy.rotation.set(rx, ry + angle, rz, 'YXZ'); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); dice.setMatrixAt(dice.count++, dummy.matrix);
+          });
+        }
+        for (const mesh of [dice, cups]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+      },
+      count: () => ({ cups: cups.count, dice: dice.count }),
     };
   }
   // Chinese checkers on the grove table: a round maple board with its star of 121 holes,
