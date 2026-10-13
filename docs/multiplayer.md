@@ -500,6 +500,16 @@ browser, so other visitors still see the chess opening. **Escape** or **X** puts
 board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
 
+At the round café table, **Play dominoes** or **X** opens a dominoes table. It is a
+match to 100 with a double-six set against the plaza regulars. With two players
+it is the draw game: seven tiles each, and you draw from the boneyard when no tile
+fits. With four it is the block game: seven each, and you pass. The holder of the
+highest double leads it. A round ends when a hand is played out, or when nobody can
+play and the lightest hand wins. The winner scores the pips left in the other
+hands. The regulars see only what a player at the table could. The round table
+mirrors the line and the hands, and only your own tiles show their pips. Rules:
+`preview/src/dominoes-rules.js`.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit
