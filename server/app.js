@@ -23,6 +23,7 @@ import { eventAction } from './events-api.js';
 import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
+import { createRideFlush } from './ride-flush.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -38,11 +39,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
   // Cycling: bank accepted bicycle metres into the account store. The world
-  // keeps them until drained, so a crash loses at most one flush interval.
-  const flushRides=()=>{
-    if(!cyclingMiles)return Promise.resolve();
-    return Promise.all(world.drainRides().map(({userId,meters,name})=>cyclingMiles.add(userId,meters,name).catch(()=>{})));
-  };
+  // keeps them until drained and the flush holds them until the store accepts
+  // them (ride-flush.js), so a crash loses at most one flush interval.
+  const rides=cyclingMiles?createRideFlush({world:()=>world,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
+  const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
   const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
@@ -424,7 +424,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
     for(const id of connections.keys())world.leave(id);
-    connections.clear();await flushRides();
+    connections.clear();
+    // The last rides, plus anything a running flush was still sending.
+    if(rides){rides.drain();await rides.settle();}
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));

@@ -17,6 +17,16 @@ const slot = plazaSalonRack(district)[1];
 const publicOrigin = 'https://sim.jev.works';
 // West along the rack line: the plaza bench sits 8 m south of the rack.
 const west = metres => [slot.x - metres, slot.north, environment.groundAt(slot.x - metres, -slot.north)];
+// Polls a value until it deep-equals the expectation; the last mismatch is the failure.
+async function until(read, expected, timeoutMs = 3000) {
+  const deadline = Date.now() + timeoutMs;
+  let actual;
+  for (;;) {
+    actual = await read();
+    try { assert.deepEqual(actual, expected); return; } catch (error) { if (Date.now() >= deadline) throw error; }
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
 async function fixture(t, options = {}) {
   let time = 100000;
@@ -41,8 +51,7 @@ async function fixture(t, options = {}) {
   });
   const joined = () => new Promise(resolve => { const poll = () => world.players.has('alice') ? resolve() : setTimeout(poll, 10); poll(); });
   const put = ([x, north]) => Object.assign(world.players.get('alice'), { position: [x, north, environment.groundAt(x, -north)], moveBudget: 1, liftBudget: 1 });
-  const settle = ms => new Promise(resolve => setTimeout(resolve, ms));
-  return { world, cyclingMiles, command, put, ws, joined, settle, advance: ms => { time += ms; } };
+  return { world, cyclingMiles, command, put, ws, joined, advance: ms => { time += ms; } };
 }
 
 test('uncycle flushes the ride, and a rider still out is flushed by the tick', async t => {
@@ -53,14 +62,12 @@ test('uncycle flushes the ride, and a rider still out is flushed by the tick', a
   f.advance(1000);
   assert.equal((await f.command({ type: 'pose', position: west(5), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
   assert.equal((await f.command({ type: 'uncycle' })).ok, true);
-  await f.settle(50);
-  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, meters: 5 });
+  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, meters: 5 }, 'uncycle banked the ride before answering');
   f.put(slot.approach);
   assert.equal((await f.command({ type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 })).ok, true);
   f.advance(1000);
   assert.equal((await f.command({ type: 'pose', position: west(4), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
-  await f.settle(350);
-  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, meters: 9 }, 'the periodic flush banked the open ride');
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 9 });
   f.ws.close();
 });
 
@@ -73,7 +80,6 @@ test('a rider who disconnects mid-ride is banked when the departure grace ends',
   assert.equal((await f.command({ type: 'pose', position: west(3), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
   assert.equal(await f.cyclingMiles.rank('alice'), null, 'nothing is banked until the ride is drained');
   f.ws.close();
-  await f.settle(150);
-  assert.equal(f.world.players.has('alice'), false);
-  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, meters: 3 }, 'leave banked the open ride');
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 3 });
+  assert.equal(f.world.players.has('alice'), false, 'the departure grace removed the rider');
 });

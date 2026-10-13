@@ -5,6 +5,7 @@ import { recoverDistrictHeightCheckpoint } from './district-checkpoint-migration
 import { isJevicaAdmin } from './admin.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
 import { placesOf } from '../preview/src/places.js';
+import { createRideFlush } from './ride-flush.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
 const MAX_QUEUE=4096, BATCH_SIZE=256, MAX_BYTES=16*1024*1024;
@@ -88,6 +89,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
+  // The tick merges each commit's drain by hand (see runTick), so no world getter.
+  const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
   // Monotonic writer generation: checkpoint v5 adds paired interactions. A newer
@@ -165,9 +168,11 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);
-    // Bank accepted bicycle metres on every tick; the store is cross-world.
-    if(cyclingMiles)for(const {userId,meters,name} of world.drainRides())
-      try{await cyclingMiles.add(userId,meters,name);}catch{console.warn(JSON.stringify({event:'cycling_flush_failed',worldId}));}
+    // Accepted bicycle metres leave the world here, so the checkpoint carries
+    // none; they reach the (cross-world) store only once this tick commits,
+    // and off the lease's critical path. A lost lease drops this tick's drain:
+    // the previous checkpoint, which the next owner loads, still holds it.
+    const drained=rides?world.drainRides():[];
     let revisionUpdate=null;
     const syncAccount=async userId=>{
       if(!avatarPreferences)return;
@@ -187,6 +192,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(!migrated.ok)return rejected(migrated.error);
         const next=createSharedWorld(candidate.worldData,{now,isAdmin,worldId});
         if(!next.restore(migrated.checkpoint).ok)return rejected('incompatible_region');
+        if(rides)drained.push(...world.drainRides());
         world=next;currentData=candidate.worldData;currentHash=candidate.world.regionSha256;
         connections.clear();revisionUpdate=candidate;
         return {ok:true,world:candidate.world,disconnectedPlayers:migrated.disconnectedPlayers,
@@ -283,6 +289,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     if(!committed){cached=null;return read();}
     if (heightMigration) console.info(JSON.stringify({ event: 'district_height_checkpoint_migrated', from: heightMigration, to: 'photographed_heights' }));
     cached={world,connections,previous:checkpoint,currentData,currentHash};lastView=view;
+    if(rides){rides.merge(drained);void rides.send();}
     return view;
   }
   function tick() {
@@ -323,6 +330,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   async function close() {
     closed=true;cached=null;
     await redis.eval(RELEASE,1,keys.lease,token);
+    if(rides)await rides.settle();
   }
   async function listPlaces() {
     const data=regionCatalog && worldId!==DEFAULT_WORLD_ID ? await regionCatalog.getRegion(worldId) : worldData;
