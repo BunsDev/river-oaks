@@ -3,6 +3,7 @@ import { chessSeat } from './plaza-salon-plan.js';
 import * as chess from './chess-rules.js';
 import * as checkers from './checkers-rules.js';
 import { CONNECT_FOUR } from './connect-four-adapter.js';
+import { REVERSI } from './reversi-adapter.js';
 import { attachGuide } from './salon-guide.js';
 
 // Games at the plaza chess tables, for whoever sits down: chess, checkers or Connect Four,
@@ -69,7 +70,7 @@ const CHECKERS = {
   ending: reason => reason === 'no pieces left' ? 'Every piece taken.' : 'No moves left.',
   position: state => state,
 };
-export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR };
+export const TABLE_GAMES = { chess: CHESS, checkers: CHECKERS, connectFour: CONNECT_FOUR, reversi: REVERSI };
 const EMPTY_CHESS_BOARD = Array(64).fill('');
 const sizeOf = adapter => adapter.size ?? { rows: 8, cols: 8 };
 const nameOf = (adapter, square) => (adapter.squareName ?? chess.squareName)(square);
@@ -220,6 +221,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     thinking = null;
     if (move && adapter.moves(state).some(option => option.key === move)) game.moves.push(move);
     mirror(); render();
+    // In Reversi a side with no move passes, so the regular may move again.
+    void reply();
   }
 
   function play(move) {
@@ -283,7 +286,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     thinking = null; selected = null; promotion.hidden = true;
     game.moves.pop();
     // Against the regular, take back to your own turn.
-    if (game.mode === 'regular' && game.moves.length && adapter.turn(adapter.replay(game.moves).state) !== game.player) game.moves.pop();
+    // Reversi's regular can move twice when you pass, so step back until it is yours.
+    while (game.mode === 'regular' && game.moves.length && adapter.turn(adapter.replay(game.moves).state) !== game.player) game.moves.pop();
     mirror(); render(); void reply();
   });
   for (const button of panel.querySelectorAll('[data-mode]')) button.addEventListener('click', () => {
