@@ -1,3 +1,5 @@
+import { isSpaceDocument } from './space-document.js';
+import { createSpaceScene, buildSpaceWorld } from './space-scene.js';
 import * as THREE from 'three';
 import { terrainHeight } from '../geometry.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from '../world-surface.js';
@@ -18,6 +20,7 @@ export function frameStudioObject(camera, object) {
 }
 
 export function buildStudioWorld(region) {
+  if(isSpaceDocument(region))return buildSpaceWorld(region);
   const [w,s,e,n] = region.bounds_m;
   const terrain = { ...region.terrain, grid_origin_m:[w,s], spacing_m:[(e-w)/(region.terrain.width-1),(n-s)/(region.terrain.height-1)] };
   return { bounds_m:[...region.bounds_m], terrain, walkSurfaceOffset:0,
@@ -25,6 +28,7 @@ export function buildStudioWorld(region) {
     stores:[], walkSpawn:[...region.spawn,terrainHeight(terrain,...region.spawn)] };
 }
 export function createStudioScene(region, theme = 'light') {
+  if(isSpaceDocument(region))return createSpaceScene(region,theme);
   assertStudioBudget(region);
   const group = new THREE.Group(),items = new Map(), world = buildStudioWorld(region);
   const material = color => new THREE.MeshStandardMaterial({ color, roughness:.88 });

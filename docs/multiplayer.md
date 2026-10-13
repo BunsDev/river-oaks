@@ -216,11 +216,11 @@ Run `pnpm run test:shared` for development onboarding and authenticated fixture 
 
 ## Resident names
 
-Every signed-in resident is shown by their GitHub username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
+Every signed-in resident is shown by their username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. A resident chooses it while on the waitlist, or keeps the default (their GitHub login, else a generated name), and an approver may change it before approving ([usernames](email-access.md#usernames)). Residents approved before usernames existed are shown by their GitHub username. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
 
-- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `github-<account ID>`.
-- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `github-<account ID>` instead.
-- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
+- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `Visitor #<account ID>`; an email sign-in without an approved username is shown the same way.
+- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `Visitor #<account ID>` instead.
+- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as that account's `Visitor #` fallback. A returning player and a waitlist request take the current name.
 - **Groups, events and places** have their own titles; those are not resident names and are not restricted.
 
 ## Shared storage and coordination
@@ -264,6 +264,10 @@ the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
 that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
 so clients hide bikes that are out.
+`GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
+reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
+plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
+per instance and user ids never leave the server.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 

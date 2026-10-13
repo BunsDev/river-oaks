@@ -33,6 +33,7 @@ export default defineConfig({
       '/api/groups': townHttp,
       '/api/events': townHttp,
       '/api/profile': townHttp,
+      '/api/cycling': townHttp,
       '/api/moderation': townHttp,
       '/api/waitlist': townHttp,
       '/api/debug-reports': townHttp,

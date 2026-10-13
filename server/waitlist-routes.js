@@ -1,4 +1,4 @@
-import { accountName } from '../preview/src/resident-names.js';
+import { accountName, validUsername } from '../preview/src/resident-names.js';
 import { guardWaitlistRequest } from './name-guard.js';
 import { timingSafeEqual } from 'node:crypto';
 import { validInviteCode, validInviteId } from './invitations.js';
@@ -17,7 +17,7 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
   const adminIds = new Set(admins);
   return async (req, res, path) => {
     if (!['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/decision', '/api/waitlist/invites',
-      '/api/waitlist/invite-issue', '/api/waitlist/invite-update', '/api/waitlist/invite-redeem'].includes(path)) return false;
+      '/api/waitlist/invite-issue', '/api/waitlist/invite-update', '/api/waitlist/invite-redeem', '/api/waitlist/username'].includes(path)) return false;
     const method = ['/api/waitlist/status', '/api/waitlist/requests', '/api/waitlist/invites'].includes(path) ? 'GET' : 'POST';
     if (req.method !== method) { res.setHeader('Allow', method); json(res, 405, { error: 'method_not_allowed' }); return true; }
     const identity = await auth.authenticate(req);
@@ -28,7 +28,9 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       const session = readCookie(req.headers.cookie, SESSION_COOKIE);
       if (record.status === 'approved' && assetGateSecret && session)
         res.appendHeader('Set-Cookie', assetGateCookie(await signAssetGate({ secret: assetGateSecret, session, now: now() }), String(origin).startsWith('https://')));
-      json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) } });
+      // The username a waiting resident will be known by, and their GitHub login when it could be one.
+      json(res, 200, { status: record.status, admin: adminIds.has(identity.userId), user: { id: identity.userId, name: accountName(identity.userId, identity.name) },
+        username: validUsername(record.username) ? record.username : null, usernameBy: record.usernameBy ?? null, github: validUsername(identity.name) ? identity.name : null });
       return true;
     }
     if (path === '/api/waitlist/invites') {
@@ -36,7 +38,8 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       if (!await allowInviteList(identity.userId)) { json(res, 429, { error: 'too_many_requests' }); return true; }
       json(res, 200, { invites: await waitlist.listInvites({ userId: identity.userId }) }); return true;
     }
-    if (path !== '/api/waitlist/invite-redeem' && !adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
+    // A waiting resident may redeem an invitation or name themselves; everything else is an approver's.
+    if (!['/api/waitlist/invite-redeem', '/api/waitlist/username'].includes(path) && !adminIds.has(identity.userId)) { json(res, 403, { error: 'approver_required' }); return true; }
     if (path === '/api/waitlist/requests') { json(res, 200, { requests: (await waitlist.list()).map(guardWaitlistRequest) }); return true; }
     if (req.headers.origin !== origin || !equal(req.headers['x-csrf-token'], identity.csrfToken)) {
       json(res, 403, { error: 'invalid_origin_or_csrf' }); return true;
@@ -56,6 +59,19 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       json(res, result.ok ? 200 : 400, result.ok ? { status: 'approved' } : { error: 'invalid_invite' }); return true;
     }
     const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 100 && !/[\u0000-\u001f\u007f]/.test(value);
+    const usernameReply = (result, ok) => result.ok ? ok() : json(res, result.reason === 'invalid' ? 400 : result.reason === 'missing' ? 404 : 409,
+      { error: `username_${result.reason}`, ...(result.message ? { message: result.message } : {}) });
+    if (path === '/api/waitlist/username') {
+      // Your own username while you wait; an approver may name anyone before approving them.
+      const target = data?.userId ?? identity.userId;
+      if (!data || typeof data.username !== 'string' || data.username.length > 64 || !validId(target)
+        || (target !== identity.userId && !adminIds.has(identity.userId)) || (target !== identity.userId && adminIds.has(target))) {
+        json(res, 400, { error: 'invalid_username' }); return true;
+      }
+      const result = await waitlist.setUsername({ userId: target, username: data.username, actorId: identity.userId });
+      usernameReply(result, () => json(res, 200, { userId: target, username: result.record.username, usernameBy: result.record.usernameBy }));
+      return true;
+    }
     if (path === '/api/waitlist/invite-issue' || path === '/api/waitlist/invite-update') {
       if (!data || (data.assignedUserId !== undefined && data.assignedUserId !== null && !validId(data.assignedUserId))
         || (path.endsWith('invite-issue') ? !validId(data.ownerId) : !validInviteId(data.id))
@@ -69,11 +85,17 @@ export function createWaitlistRoutes({ auth, waitlist, admins = [], origin, onRe
       json(res, invite ? 200 : 400, invite ? { invite } : { error: 'invalid_invite' }); return true;
     }
     if (!data || typeof data.userId !== 'string' || data.userId.length > 100 || typeof data.approved !== 'boolean'
+      || (data.username !== undefined && (typeof data.username !== 'string' || data.username.length > 64))
       || data.userId === identity.userId || adminIds.has(data.userId)) { json(res, 400, { error: 'invalid_decision' }); return true; }
+    // A username edited in the review is set first; a refused name refuses the decision.
+    if (data.username !== undefined) {
+      const named = await waitlist.setUsername({ userId: data.userId, username: data.username, actorId: identity.userId });
+      if (!named.ok) { usernameReply(named); return true; }
+    }
     const record = await waitlist.decide({ userId: data.userId, approved: data.approved, actorId: identity.userId });
     if (!record) { json(res, 404, { error: 'request_not_found' }); return true; }
     if (!data.approved) await onRevoke(data.userId);
-    json(res, 200, { userId: record.userId, status: record.status });
+    json(res, 200, { userId: record.userId, status: record.status, username: validUsername(record.username) ? record.username : null });
     return true;
   };
 }

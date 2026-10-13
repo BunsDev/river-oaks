@@ -80,6 +80,8 @@ import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
+import { createCyclingLeaderboard } from './cycling-leaderboard.js';
+import './cycling-leaderboard.css';
 import { plazaSalonRack } from './plaza-salon-plan.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 
@@ -110,7 +112,7 @@ let worldRegionSha256 = null;
 let landmarkAccountId = null;
 let playerAvatar;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null;
+let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
 // Each feature adds its own line to the list, so they never edit the same one.
 const playProviders = [];
@@ -216,7 +218,8 @@ function initializeRenderer() {
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
-  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, reducedMotion });
+  cyclingBoard = createCyclingLeaderboard();
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -253,7 +256,7 @@ function initializeRenderer() {
   playProviders.push(() => plazaStage);
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
-  visitTools.append($('.player-controls'), ...(buildControls ? [buildControls.panel] : []));
+  visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -343,6 +346,7 @@ function startMultiplayer() {
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
       walking?.syncSeating(self);
+      if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
@@ -968,6 +972,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     deal: seed => plazaBackgammon.deal(seed) } : null;
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
+  window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
   window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
     taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.

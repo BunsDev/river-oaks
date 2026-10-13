@@ -3,4 +3,6 @@ export const approvedWaitlist = {
   async isApproved() { return true; },
   async list() { return []; },
   async decide() { return null; },
+  async setUsername() { return { ok: false, reason: 'locked' }; },
+  async usernameOf() { return null; },
 };

@@ -11,7 +11,7 @@
     "prepare": "node scripts/enforce-pnpm.mjs && node scripts/install-project-hooks.mjs",
     "dev": "vite --config preview/vite.config.js",
     "dev:landing": "vite --config landing-page/vite.config.js",
-    "build": "vite build --config preview/vite.config.js && node scripts/build_landing_page.js",
+    "build": "vite build --config preview/vite.config.js && node scripts/build_landing_page.js && node scripts/check-access-entry.mjs",
     "test": "node --test preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
     "test:shared": "node preview/e2e/shared-runner.js",

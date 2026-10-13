@@ -8,6 +8,22 @@ async page => {
   const cycling = p => p.evaluate(() => { const { goNear, ...state } = window.__riverCycling(); return state; });
   // A named wait: a timeout reports the step and the cycling state instead of a bare timer.
   const waitOn = async (p, label, fn, arg, timeout) => { try { await p.waitForFunction(fn, arg, { timeout }); } catch (error) { throw new Error(`${label}: ${error.message.split('\n')[0]} · state ${JSON.stringify(await cycling(p))}`); } };
+  // Hold a heading band while pedalling: the steering relaxes slowly after a key is released,
+  // so a fixed turn overshoots; this nudges left or right every few frames until `until` holds.
+  const holdHeading = async (p, low, high, until) => {
+    let left = false, right = false;
+    const set = async (l, r) => { if (l !== left) { left = l; await p.keyboard[l ? 'down' : 'up']('ArrowLeft'); } if (r !== right) { right = r; await p.keyboard[r ? 'down' : 'up']('ArrowRight'); } };
+    const start = Date.now();
+    try {
+      while (Date.now() - start < 30000) {
+        const state = await cycling(p);
+        if (until(state)) return state;
+        if (state.yaw > high) await set(false, true); else if (state.yaw < low) await set(true, false); else await set(false, false);
+        await p.waitForTimeout(80);
+      }
+      throw new Error(`heading hold timed out · state ${JSON.stringify(await cycling(p))}`);
+    } finally { await set(false, false); }
+  };
   const ready = async p => { await p.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' }); await p.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverCycling?.() && window.__riverMultiplayer?.().connected, null, { timeout: 90000 }); };
   await page.setViewportSize({ width: 1440, height: 900 });
   await ready(page);
@@ -32,17 +48,15 @@ async page => {
     await waitOn(bob, 'bob sees a rider', () => window.__riverMultiplayer().remotes?.some(remote => remote.vehicle === 'bicycle'), null, 10000);
     check(true, 'Bob sees a rider on a bicycle');
     check(/Cycling/.test(await page.locator('.walking-title strong').textContent()), 'The console title reads Cycling');
-    // Set off south, then hold the right turn until the bike faces west (yaw 0),
-    // because the plaza's curved bench sits straight ahead of the rack.
+    // Set off south (the curved bench sits straight ahead of the rack), then steer by heading bands.
     await page.locator('#canvas-host').focus();
     await page.keyboard.down('KeyW');
     await waitOn(page, 'set off', () => window.__riverCycling().rideMeters > 1, null, 15000);
-    await page.keyboard.down('ArrowRight');
-    await waitOn(page, 'turn west', () => Math.abs(window.__riverCycling().yaw) < 0.25, null, 15000);
-    await page.keyboard.up('ArrowRight');
-    await waitOn(page, 'pedal 8 m', () => window.__riverCycling().rideMeters > 8, null, 15000);
+    // West-northwest past the backgammon table, then due west along the plaza (simulated clear from every slot).
+    await holdHeading(page, -0.45, -0.35, state => state.rideMeters > 8);
     await page.keyboard.down('ShiftLeft');
-    await waitOn(page, 'sprint to 20 m', () => window.__riverCycling().rideMeters > 20, null, 15000);
+    await holdHeading(page, -0.45, -0.35, state => state.rideMeters > 12);
+    await holdHeading(page, -0.05, 0.05, state => state.rideMeters > 20);
     await page.keyboard.up('ShiftLeft'); await page.keyboard.up('KeyW');
     const ridden = (await cycling(page)).rideMeters;
     check(ridden > 20, `Pedalled ${ridden.toFixed(1)} m across the plaza`);
