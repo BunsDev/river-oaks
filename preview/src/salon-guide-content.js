@@ -83,6 +83,13 @@ export const GUIDE = [
     { title: 'What brings it down', text: ['Never the top level, nor the one under it until the top is finished, nor a level\'s last block.', 'A level left on a single edge block cannot carry the tower: pulling its neighbour brings it down, however steady the hand.'], figure: { kind: 'jenga-edge' } },
     { title: 'At the table', text: ['The drum\'s tower follows the game, and scatters over the drum and the paving when it falls.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the tower, or put it away'], [['↑', '↓', '←', '→'], 'Move between blocks'], [['Enter'], 'Choose a block'], [['Space'], 'Pull: stop the meter'], [['Esc'], 'Put the tower away']] } },
   ] },
+  { id: 'yacht', name: 'Yacht', place: 'The curved bench\'s drum', pages: [
+    { title: 'Taking a seat', text: ['Sit on the curved bench (Z), press X, and choose Yacht at the top of the sheet: the Jenga tower is put away and five dice come out on the drum.', 'Play two plaza regulars, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'A turn', text: ['Roll all five dice, then roll again up to twice. Before each roll, choose any dice to keep: kept dice are lifted and stay as they are.', 'You can stop and score after any roll.'], figure: { kind: 'yacht-keep' } },
+    { title: 'The boxes', text: ['Every turn ends by scoring the dice in one box you have not used, even for nothing. Ones to sixes count only that face. Full house (three and two) and choice count all five; four of a kind counts the four.', 'A little straight (1 to 5) or a big straight (2 to 6) scores 30, and a yacht, five alike, 50.'], figure: { kind: 'yacht-score' } },
+    { title: 'The end', text: ['When everyone has filled all twelve boxes, the highest total wins. Spend a weak roll on a box that costs little, like ones, and keep the yacht box for a real chance.'], figure: { kind: 'yacht-card' } },
+    { title: 'At the table', text: ['The drum\'s dice follow the game: rolled ones tumble where the tower stood, kept ones line up toward the bench.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the dice, or put them away'], [['Tab'], 'Move between the dice, Roll and the boxes'], [['Enter', 'Space'], 'Keep a die, roll, or score'], [['Esc'], 'Put the dice away']] } },
+  ] },
   { id: 'winePong', name: 'Wine pong', place: 'The long table by the café', pages: [
     { title: 'Taking a seat', text: ['A long linen-topped table stands between the café and the planters. Walk up to either end and press X (Play wine pong); there is no chair, you play standing.', 'Play a plaza regular at the far end, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['Each side has six wine glasses racked three, two, one at its own end. Sink all six of the far glasses to win.', 'Each turn is two throws, then the far end throws.'], figure: { kind: 'pong-racks' } },
@@ -208,6 +215,10 @@ export const DIAGRAMS = {
   jengaMeter: { lo: 0.38, hi: 0.62, marker: 0.5 },
   // Wine pong: the apex glass of the far rack, sunk by a dead-centre throw.
   pongThrow: { glass: 5 },
+  // Yacht: three fives kept for a second roll; a full house and what it scores in a few
+  // boxes; and the twelve boxes' best scores.
+  yachtKeep: { dice: [5, 5, 2, 5, 6], keep: [true, true, false, true, false] },
+  yachtScore: { dice: [3, 3, 5, 3, 5], boxes: { fullHouse: 19, threes: 9, fives: 10, fourKind: 0 } },
   // Shuffleboard: a round's last pucks as [owner, u, v] (red 0, blue 1): red lies furthest,
   // and only its puck beyond blue's best scores, 3 in the far zone. And a hanger, worth 4.
   shuffleScore: { pucks: [[0, 2.3, 0.05], [0, 2.0, -0.12], [1, 2.1, 0.1], [0, 1.75, 0.15], [1, 1.85, -0.06]], scored: [0, 3] },
@@ -339,6 +350,7 @@ export function iconMarkup(id) {
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
     jenga: '<rect class="sg-icon-fill" x="11" y="26" width="18" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="19.5" width="18" height="5" rx="1"/><rect class="sg-icon-fill" x="11" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-fill" x="24" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="6.5" width="18" height="5" rx="1"/>',
+    yacht: '<rect class="sg-icon-line" x="7" y="13" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="19" y="8" width="14" height="14" rx="3" transform="rotate(12 26 15)"/><circle class="sg-icon-fill" cx="11.5" cy="17.5" r="1.4"/><circle class="sg-icon-fill" cx="17.5" cy="23.5" r="1.4"/>',
     shuffleboard: '<rect class="sg-icon-line" x="14" y="5" width="12" height="30" rx="2"/><path class="sg-icon-line" d="M14 11h12M14 16h12"/><circle class="sg-icon-fill" cx="20" cy="27" r="3.5"/>',
     winePong: '<path class="sg-icon-line" d="M13 8h14c0 8-3 12-7 12s-7-4-7-12zM20 20v9M14 31h12"/><path class="sg-icon-fill" d="M13.6 12h12.8c-.6 4.5-3 7-6.4 7s-5.8-2.5-6.4-7z"/>',
   }[id] ?? '';
@@ -515,6 +527,23 @@ export function figureMarkup(figure, game) {
         marbles + arrow([at([-4, 6]), at([4, -6])], 'c') + arrowHead('c'));
       const path = DIAGRAMS.ccHop.path.map(at);
       return svg(240, 184, 'A red marble hops over a blue one, then over a red one, two hops in one move.', marbles + arrow(path, 'h') + arrowHead('h') + `<circle class="sg-win" cx="${path.at(-1)[0]}" cy="${path.at(-1)[1]}" r="12"/>`); }
+    case 'yacht-keep': case 'yacht-score': {
+      const die = (x, y, value, { kept = false, ghost = false } = {}) => {
+        const pips = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] }[value];
+        return `<rect class="${ghost ? 'sg-ghost' : 'sg-tile-face'}" x="${x}" y="${y}" width="40" height="40" rx="7"/>${kept ? `<rect class="sg-win" fill="none" x="${x - 3}" y="${y - 3}" width="46" height="46" rx="9"/>` : ''}${ghost ? '' : pips.map(([px, py]) => `<circle class="sg-pip" cx="${x + 10 + px * 10}" cy="${y + 10 + py * 10}" r="3.4"/>`).join('')}`;
+      };
+      if (figure.kind === 'yacht-keep') { const { dice, keep } = DIAGRAMS.yachtKeep;
+        return svg(300, 130, `Three fives kept, lifted and ringed; the ${dice.filter((_, i) => !keep[i]).join(' and ')} roll again.`,
+          dice.map((value, i) => die(18 + i * 56, keep[i] ? 26 : 40, value, { kept: keep[i] })).join('')
+          + '<text class="sg-label" x="150" y="112" text-anchor="middle" font-size="12">keep the fives, roll the rest</text>'); }
+      const { dice, boxes } = DIAGRAMS.yachtScore, names = { fullHouse: 'Full house', threes: 'Threes', fives: 'Fives', fourKind: 'Four of a kind' };
+      return svg(300, 170, `Three threes and two fives: ${Object.entries(boxes).map(([box, points]) => `${names[box].toLowerCase()} ${points}`).join(', ')}.`,
+        dice.map((value, i) => die(18 + i * 56, 12, value)).join('')
+        + Object.entries(boxes).map(([box, points], i) => `<text class="sg-label${points ? '' : ' sg-quiet'}" x="${i % 2 ? 160 : 24}" y="${84 + Math.floor(i / 2) * 34}" font-size="13">${names[box]}</text><text class="sg-label${points ? '' : ' sg-quiet'}" x="${i % 2 ? 282 : 140}" y="${84 + Math.floor(i / 2) * 34}" text-anchor="end" font-size="13">${points}</text>`).join('')); }
+    case 'yacht-card': { const rows = [['Ones … sixes', 'that face'], ['Full house', 'all five'], ['Four of a kind', 'the four'], ['Little straight', '30'], ['Big straight', '30'], ['Choice', 'all five'], ['Yacht', '50']];
+      return svg(300, 210, 'The score card: ones to sixes count that face; full house and choice all five dice; four of a kind the four; each straight 30; a yacht 50.',
+        '<rect class="sg-tile-face" x="14" y="8" width="272" height="194" rx="8"/>'
+        + rows.map(([name, points], i) => `<text class="sg-label" x="30" y="${36 + i * 25}" font-size="13">${name}</text><text class="sg-label sg-quiet" x="270" y="${36 + i * 25}" text-anchor="end" font-size="13">${points}</text>`).join('')); }
     case 'shuffle-zones': case 'shuffle-score': {
       // The table from above, your end at the left: 105 px a metre, pucks drawn larger than life.
       const x = u => 20 + u * 105, y = v => 61 - v * 105, zones = [[1.65, 1.95, 1], [1.95, 2.2, 2], [2.2, 2.4, 3]];
