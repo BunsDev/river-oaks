@@ -347,3 +347,26 @@ test('chinese checkers: the grove table swaps in a star board, each player’s m
   for (const [q, r] of HOLES) { const [east, north] = starSpot(table, [q, r]); assert.ok(Math.hypot(east - table.x, north - table.north) < STAR.board - 0.015, 'every hole is on the board'); }
   star.show(null); star.setVisible(false); mancala.setVisible(true);
 });
+
+test('xiangqi: the grove table swaps in a xiangqi board, red’s pieces toward red’s chair, and moves follow', async () => {
+  const { XIANGQI, xiangqiSpot } = await import('../src/plaza-salon-plan.js');
+  const { play, pointOf, startGame } = await import('../src/xiangqi-rules.js');
+  const xq = group.userData.xiangqi, mancala = group.userData.mancala, board = group.children.find(child => child.name === 'Xiangqi board');
+  assert.equal(xq.visible(), false, 'idle, the table keeps the mancala board');
+  mancala.setVisible(false); xq.setVisible(true);
+  assert.equal(xq.count(), 32, 'the opening, sixteen a side');
+  const pieces = () => board.children.filter(child => child.name?.startsWith('Xiangqi ')).flatMap(mesh => Array.from({ length: mesh.count }, (_, i) => {
+    const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); const p = new THREE.Vector3().setFromMatrixPosition(matrix);
+    return { piece: mesh.name.slice(8), east: p.x, north: -p.z };
+  }));
+  const table = plan.grove, red = piece => piece === piece.toUpperCase();
+  // Chair 0 is east of the table: red's pieces lie east of the river, black's west.
+  assert.ok(pieces().every(p => (red(p.piece) ? p.east > table.x : p.east < table.x)), 'each side faces its player');
+  xq.show(null, 1);
+  assert.ok(pieces().every(p => (red(p.piece) ? p.east < table.x : p.east > table.x)), 'with red in chair 1, the board turns');
+  const state = play(startGame(), 'h2e2'), near = (piece, name) => { const [east, north] = xiangqiSpot(table, pointOf(name), 0); return pieces().some(p => p.piece === piece && Math.hypot(p.east - east, p.north - north) < 0.002); };
+  xq.show(state, 0);
+  assert.ok(near('C', 'e2') && !near('C', 'h2'), 'the cannon moved to the centre file');
+  for (let index = 0; index < 90; index++) { const [east, north] = xiangqiSpot(table, index, 0); assert.ok(Math.abs(east - table.x) < XIANGQI.depth / 2 - 0.01 && Math.abs(north - table.north) < XIANGQI.width / 2 - 0.01, 'every point is on the board'); }
+  xq.show(null); xq.setVisible(false); mancala.setVisible(true);
+});

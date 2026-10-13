@@ -26,7 +26,7 @@ async page => {
   await page.locator('#chinese-checkers-panel[open]').waitFor();
   let state = await game();
   check(!await page.locator('#mancala-panel').evaluate(panel => panel.open) && state.groveGame === 'chineseCheckers', 'The switch puts mancala away and opens Chinese checkers');
-  check(state.starShown === true && state.mancalaShown === false && state.gobanShown === false && state.table === 20, `The table sets out the star board with twenty marbles (${state.table})`);
+  check(state.starShown === true && state.mancalaShown === false && state.gobanShown === false && state.xiangqiShown === false && state.table === 20, `The table sets out the star board with twenty marbles (${state.table})`);
   check(await page.locator('#chinese-checkers-panel').evaluate(panel => !/(auto|scroll)/.test(getComputedStyle(panel).overflowY)), 'The sheet is a frame, never its own scroll container');
   await named('Waiting for X to relabel', page.waitForFunction(() => /Hide the Chinese checkers board/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 }));
 

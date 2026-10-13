@@ -82,7 +82,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (97)
+## Historical, not in the register (98)
 
 | Plan | PRs mentioned |
 | --- | --- |
@@ -92,6 +92,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | #314 |
 | [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
 | [2026-10-13-plaza-yacht](2026-10-13-plaza-yacht.md)<br>Plaza games: Yacht at the bench — 2026-10-13 | #335, #338 |
+| [2026-10-13-plaza-xiangqi](2026-10-13-plaza-xiangqi.md)<br>Plaza games: xiangqi in the grove — 2026-10-13 | #336 |
 | [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | #320 |
 | [2026-10-13-plaza-table-lessons](2026-10-13-plaza-table-lessons.md)<br>Guided first games at the plaza tables — 2026-10-13 | — |
 | [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |
@@ -119,6 +120,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-12-connect-deadline-grace](2026-10-12-connect-deadline-grace.md)<br>Let queued socket events run before the connect deadline expires — 2026-10-12 | #281, #276, #260 |
 | [2026-10-12-ci-playwright-cache](2026-10-12-ci-playwright-cache.md)<br>Cache Playwright browsers in CI | #252, #277, #276 |
 | [2026-10-12-browser-run-lock](2026-10-12-browser-run-lock.md)<br>Local browser runs take turns | #272, #277 |
+| [2026-10-11-typesafe-place-season-1](2026-10-11-typesafe-place-season-1.md)<br>TypeSafe Place Season 1 content plan | — |
 | [2026-10-09-world-studio](2026-10-09-world-studio.md)<br>World Studio implementation plan | — |
 | [2026-10-09-world-studio-designer](2026-10-09-world-studio-designer.md)<br>World Studio dual-path Designer implementation | — |
 | [2026-10-09-unique-player-names](2026-10-09-unique-player-names.md)<br>Unique player fallback names | #205, #204 |
