@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, plazaSalonPlan } from './plaza-salon-plan.js';
+import { CHESS_CELL_M, DOMINO, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan } from './plaza-salon-plan.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
@@ -337,6 +337,58 @@ export function buildPlazaSalon(world) {
         boards.set(tableId, { board: board ?? opening, whiteChair: whiteChair === 1 ? 1 : 0 }); draw(); return true;
       },
       board: tableId => boards.get(tableId)?.board.slice() ?? null,
+    };
+  }
+  // Dominoes at the café table: the line lies face up on an arc around the centrepiece,
+  // and each hand stands at the table edge before its player's chair. Only an open hand
+  // (yours) shows its pips, so the regulars' tiles stay secret from any camera angle.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, thick = 0.009;
+    const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.35 }), 28);
+    const pips = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ color: '#1f1b19', roughness: 0.5 }), 28 * 13);
+    Object.assign(tiles, { name: 'Domino tiles', castShadow: true, receiveShadow: true, count: 0 });
+    Object.assign(pips, { name: 'Domino pips', count: 0 });
+    group.add(tiles, pips);
+    // Pip spots on a half face, in steps of 6.5 mm across a 25 mm square.
+    const SPOTS = { 0: [], 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [-1, 1], [1, -1], [1, 1]],
+      5: [[-1, -1], [-1, 1], [0, 0], [1, -1], [1, 1]], 6: [[-1, -1], [0, -1], [1, -1], [-1, 1], [0, 1], [1, 1]] };
+    const up = new THREE.Vector3(0, 1, 0), matrix = new THREE.Matrix4(), width = new THREE.Vector3(), at = new THREE.Vector3(), size = new THREE.Vector3();
+    // One tile: its long axis, the outward normal of its face, and the values at each end (null: face hidden).
+    const place = (origin, long, normal, ends) => {
+      width.crossVectors(long, normal);
+      matrix.makeBasis(long, normal, width).scale(size.set(DOMINO.length, thick, DOMINO.width)).setPosition(origin);
+      tiles.setMatrixAt(tiles.count++, matrix);
+      if (!ends) return;
+      const spot = (l, w, sl, sw) => {
+        at.copy(origin).addScaledVector(normal, thick / 2 + 0.0005).addScaledVector(long, l).addScaledVector(width, w);
+        matrix.makeBasis(long, normal, width).scale(size.set(sl, 0.001, sw)).setPosition(at);
+        pips.setMatrixAt(pips.count++, matrix);
+      };
+      spot(0, 0, 0.0009, 0.0095);
+      ends.forEach((value, half) => { for (const [l, w] of SPOTS[value]) spot((half ? 1 : -1) * DOMINO.length / 4 + l * 0.0065, w * 0.0065, 0.0026, 0.0026); });
+    };
+    const show = game => {
+      tiles.count = 0; pips.count = 0;
+      if (game) {
+        for (const tile of dominoLine(table, game.line, game.leadIndex ?? 0, game.facing ?? 0)) {
+          const tangent = new THREE.Vector3(Math.cos(tile.angle), 0, -Math.sin(tile.angle)), radial = new THREE.Vector3(Math.sin(tile.angle), 0, Math.cos(tile.angle));
+          place(new THREE.Vector3(tile.position[0], top + thick / 2, -tile.position[1]), tile.double ? radial : tangent, up, [tile.left, tile.right]);
+        }
+        for (const hand of game.hands ?? []) {
+          const angle = cafeChairAngle(hand.chair), radial = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle)), tangent = new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle));
+          const count = hand.tiles?.length ?? hand.count ?? 0;
+          for (let k = 0; k < count && tiles.count < 28; k++) {
+            const origin = new THREE.Vector3(tx, top + DOMINO.length / 2, tz).addScaledVector(radial, 0.64).addScaledVector(tangent, (k - (count - 1) / 2) * 0.03);
+            place(origin, up, radial, hand.tiles ? hand.tiles[k].split('-').map(Number) : null);
+          }
+        }
+      }
+      for (const mesh of [tiles, pips]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+    };
+    group.userData.dominoes = {
+      // The café game: { line, leadIndex, facing (your chair), hands: [{ chair, tiles | count }] }, or null to clear.
+      show,
+      count: () => ({ tiles: tiles.count, pips: pips.count }),
     };
   }
   group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
