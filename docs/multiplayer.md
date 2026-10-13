@@ -525,6 +525,20 @@ frame replaces the chess pieces, Reversi's black and white discs lie on the boar
 for morris a walnut board with brass lines is laid over the chess squares. A game
 against the regular or pass and play is a practice game kept in your browser.
 
+**Lesson** plays a short guided game of whichever game is chosen, as the side that
+moves first:
+- **Chess:** a four-move mate on f7.
+- **Checkers:** a trade, then giving one man to take two.
+- **Connect Four:** an open three that can be blocked at only one end.
+- **Reversi:** trapping lines of discs, then a corner.
+- **Morris:** making a mill and blocking one.
+
+Each step rings its move in gold and allows only that move. A square off the script
+points back to the rings. The regular answers from the script, and Take back and
+Start again work as usual. The scripts are pure data in
+`preview/src/table-game-lessons.js`; its unit test replays them through the same
+adapters. A lesson is a game of its own, so the practice game waits untouched.
+
 When someone sits in the other chair, the sheet offers **Play ⟨name⟩**: it invites
 them to the game on your board, as the side you play. Their **X** action and sheet
 show the invitation to accept or decline. The town then holds the game
