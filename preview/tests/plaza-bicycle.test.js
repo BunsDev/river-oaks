@@ -37,3 +37,70 @@ test('the nearest free slot in reach is offered, taken ones are skipped', () => 
   assert.equal(nearestFreeSlot(slots, me, new Set(['plaza-salon-rack:1'])).id, 'plaza-salon-rack:0');
   assert.equal(nearestFreeSlot(slots, [me[0], me[1] - 20], new Set()), null);
 });
+
+// The controller against a fake walking model and town: taking a bike mounts
+// the rider, a server correction that drops the transport forgets the ride
+// (no ghost bike), and stepping off travels first, then hands the slot back.
+import * as THREE from 'three';
+import { createPlazaBicycle } from '../src/plaza-bicycle.js';
+
+function harness() {
+  const scene = new THREE.Group();
+  const listeners = new Map();
+  const host = { addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: () => listeners.clear() };
+  const approach = slots[1].approach;
+  const walking = {
+    environment, riding: false, notices: [], mounted: null, dismounted: null,
+    getPose() { return { position: [approach[0], 0, -approach[1]], riding: this.mounted?.pose ?? null, sitting: null, flying: false, roomId: null }; },
+    mount(controller) { this.mounted = controller; this.riding = true; return true; },
+    dismount(position) { this.dismounted = position; this.mounted?.stop(); this.mounted = null; this.riding = false; },
+    setYaw() {}, notify(text) { this.notices.push(text); }, applyServerPose(player) { this.applied = player; },
+    // What applyServerPose does on a correction: the transport is dropped first.
+    correct() { this.mounted?.stop(); this.mounted = null; this.riding = false; },
+  };
+  const sent = [];
+  const multiplayer = {
+    connected: true, snapshot: { cycling: { taken: [] } },
+    async command(message) { sent.push(message); return { ok: true, player: message.type === 'cycle' ? { position: [slots[1].x, slots[1].north, 0], vehicle: 'bicycle' } : undefined }; },
+    async travel(target) { sent.push({ type: 'travel', ...target }); walking.correct(); return { ok: true, player: { position: [target.position[0], target.position[1], 0] } }; },
+  };
+  const bicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => [] });
+  bicycle.load(district);
+  const bike = scene.children[0];
+  return { bicycle, walking, multiplayer, sent, bike, press: event => listeners.get('keydown')(event) };
+}
+
+test('taking a bike mounts the rider on the slot and a server correction forgets the ride', async () => {
+  const h = harness();
+  assert.equal(h.bicycle.prompt().kind, 'take-bike');
+  assert.equal(await h.bicycle.take(), true);
+  assert.deepEqual(h.sent, [{ type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 }]);
+  assert.equal(h.bicycle.riding, true); assert.equal(h.bicycle.slotId, 'plaza-salon-rack:1'); assert.equal(h.bike.visible, true);
+  assert.equal(h.walking.applied?.vehicle, 'bicycle', 'the server pose is applied before mounting');
+  assert.equal(h.bicycle.prompt().kind, 'step-off');
+  h.walking.correct(); h.bicycle.sync();
+  assert.equal(h.bicycle.riding, false); assert.equal(h.bicycle.slotId, null); assert.equal(h.bike.visible, false, 'no ghost bike after a correction');
+});
+
+test('stepping off travels to a ground spot, then hands the slot back', async () => {
+  const h = harness();
+  await h.bicycle.take();
+  // Two seconds of pedalling at 20 steps a second (stepCarriage caps each step at 80 ms).
+  for (let i = 0; i < 40; i++) h.walking.mounted.step({ forward: 1 }, 1 / 20);
+  assert.ok(h.bicycle.rideMeters > 2, `pedalling moves the bike (${h.bicycle.rideMeters.toFixed(2)} m)`);
+  assert.equal(await h.bicycle.stepOff(), true);
+  assert.equal(h.sent.at(-2).type, 'travel'); assert.equal(h.sent.at(-1).type, 'uncycle');
+  assert.ok(h.bicycle.lastRideMeters > 2); assert.equal(h.bicycle.riding, false); assert.equal(h.bike.visible, false); assert.equal(h.bicycle.slotId, null);
+  assert.equal(h.bicycle.prompt().kind, 'take-bike', 'back on foot beside the rack');
+});
+
+test('G ignores typing in a field and acts only when a bike is in play', async () => {
+  const h = harness();
+  const press = target => { const event = { code: 'KeyG', repeat: false, defaultPrevented: false, metaKey: false, ctrlKey: false, altKey: false, isComposing: false, target, preventDefault() { event.defaultPrevented = true; } }; h.press(event); return event; };
+  const field = press({ closest: selector => selector.includes('input') ? {} : null, ownerDocument: null });
+  assert.equal(field.defaultPrevented, false, 'typing g in a field is not a bike action');
+  const paving = press({ closest: () => null, ownerDocument: null });
+  assert.equal(paving.defaultPrevented, true, 'beside the rack, G takes a bike');
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(h.bicycle.riding, true);
+});

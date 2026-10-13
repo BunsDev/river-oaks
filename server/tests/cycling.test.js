@@ -162,3 +162,20 @@ test('travelling while cycling releases the slot and banks the metres', () => {
   f.advance(1000);
   assert.equal(f.ride('alice', [slots[2].x - 11, slots[2].north]).error, 'bike_required', 'the slot was released');
 });
+
+test('a walking pose already in flight when the bike is handed over does not release the slot', () => {
+  const f = setup();
+  f.put('alice', slots[3].approach);
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 3 }).ok, true);
+  // The client's pose loop was still reporting the approach spot, on foot.
+  f.advance(200);
+  const stale = f.act('alice', { type: 'pose', position: [slots[3].approach[0], slots[3].approach[1], environment.groundAt(slots[3].approach[0], -slots[3].approach[1])], yaw: 0, altitude: 0 });
+  assert.equal(stale.ok, true);
+  assert.deepEqual(f.world.snapshot().cycling, { taken: ['plaza-salon-rack:3'] }, 'the slot is still held');
+  assert.deepEqual(f.me('alice').position.slice(0, 2), [slots[3].x, slots[3].north], 'the rider stays on the bike');
+  assert.equal(f.me('alice').vehicle, 'bicycle');
+  // Well after the hand-over, a bikeless pose is a real dismount.
+  f.advance(2000);
+  assert.equal(f.act('alice', { type: 'pose', position: [slots[3].x, slots[3].north - 0.3, environment.groundAt(slots[3].x, -(slots[3].north - 0.3))], yaw: 0, altitude: 0 }).ok, true);
+  assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
+});

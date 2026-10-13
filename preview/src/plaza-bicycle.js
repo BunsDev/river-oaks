@@ -5,6 +5,7 @@ import { fitCarriageToGround, stepCarriage } from './carriage-motion.js';
 import { carriageFootprint, carriageContains } from './carriage-parking.js';
 import { plazaSalonRack } from './plaza-salon-plan.js';
 import { SEAT_REACH } from './shared-seating.js';
+import { isGameplayKey } from './keyboard-input.js';
 
 // The plaza bicycle. G beside the rack asks the town for a slot (`cycle`), then
 // mounts the walking controls on a bike exactly as the car does; G while riding
@@ -13,8 +14,6 @@ import { SEAT_REACH } from './shared-seating.js';
 // outside the rack and the rider: a parked bike is drawn by the plaza salon
 // while its slot is free, and this controller draws the one you ride. The town
 // counts the metres; the distance shown here is the ride in progress.
-
-const METERS_PER_MILE = 1609.344;
 
 // A slot (world [east, north], heading 0 = south) as a carriage-motion
 // placement in scene space. The mesh faces local -X and stepCarriage advances
@@ -45,8 +44,6 @@ export function nearestFreeSlot(slots, [x, north], taken) {
   return best?.slot ?? null;
 }
 
-export const milesOf = meters => Math.round(meters / METERS_PER_MILE * 100) / 100;
-
 export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLocals = () => [], reducedMotion = false }) {
   const model = createRoadVehicle('bicycle'); model.object.visible = false; scene.add(model.object);
   let slots = [], placement = null, mounted = false, busy = false, slotId = null, lastRide = 0;
@@ -70,9 +67,11 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     },
     step(input, delta) { const environment = env(); stepCarriage(placement, { groundAt: environment.groundAt, wheelTreads: model.wheelTreads, canOccupy }, drivingInput(input), delta); apply(); },
     brake() { if (placement) placement.speed = 0; },
-    takeOver() {},
-    stop() { mounted = false; if (placement) placement.speed = 0; },
+    stop() { if (placement) placement.speed = 0; },
   };
+  // Forget the ride: hide the bike and drop the slot; the town's snapshot
+  // draws the parked bike again once the slot is free.
+  const clear = () => { mounted = false; placement = null; slotId = null; model.object.visible = false; };
   const me = () => { const pose = walking.getPose(); return pose ? [pose.position[0], -pose.position[2]] : null; };
   async function take() {
     const multiplayer = getMultiplayer(), pose = walking.getPose(), environment = env();
@@ -84,9 +83,11 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     try {
       const result = await multiplayer.command({ type: 'cycle', rackId: slot.rackId, slot: slot.slot });
       if (!result.ok) { notify(result.message ?? 'The town could not hand you a bike.'); return false; }
+      // Stand where the town put us (on the slot) before mounting, so the next pose leaves from the saddle.
+      if (result.player) walking.applyServerPose(result.player);
       placement = bicyclePlacement(slot, environment); apply(); model.object.visible = true; slotId = slot.id; mounted = true;
       if (!walking.mount(ride)) {
-        mounted = false; model.object.visible = false; placement = null; slotId = null;
+        clear();
         await multiplayer.command({ type: 'uncycle' }).catch(() => {});
         return false;
       }
@@ -99,28 +100,33 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     if (busy || !mounted || !multiplayer || !environment) return false;
     busy = true; ride.brake();
     try {
-      // A ground spot beside the bike: right, left, then ahead on either side.
-      const c = Math.cos(placement.yaw), s = Math.sin(placement.yaw), seat = ride.pose.seat;
+      // A ground spot beside the bike: left, right, then ahead on either side,
+      // clear of the bike body and of anyone standing there.
+      const c = Math.cos(placement.yaw), s = Math.sin(placement.yaw), seat = ride.pose.seat, distance = placement.distance, people = getLocals() ?? [];
       let exit = null;
       for (const [along, side] of [[0, 1], [0, -1], [-1.3, 1], [-1.3, -1]]) {
         const x = placement.position[0] + along * c + side * .9 * s, z = placement.position[2] - along * s + side * .9 * c;
-        if (environment.isFree(x, z) && !environment.roomAt?.(x, z) && !carriageContains(placement, x, environment.groundAt(x, z) + .9, z, .3)) { exit = [x, environment.groundAt(x, z), z]; break; }
+        if (!environment.isFree(x, z) || environment.roomAt?.(x, z) || carriageContains(placement, x, environment.groundAt(x, z) + .9, z, .3)) continue;
+        if (people.some(p => !p.indoor && Math.hypot(p.position[0] - x, p.position[1] + z) < .9)) continue;
+        exit = [x, environment.groundAt(x, z), z]; break;
       }
       if (!exit) { notify('There is no clear place to step off here.'); return false; }
+      // The town moves the rider to the ground spot (its correction drops the
+      // walking transport, so the ride may already be over when travel resolves).
       const result = await multiplayer.travel({ position: [exit[0], -exit[2]] });
       if (!result?.ok) return false;
       // The travel already released the slot server-side; uncycle is a no-op safety net.
       await multiplayer.command({ type: 'uncycle' }).catch(() => {});
-      lastRide = placement.distance;
+      lastRide = distance;
       const destination = result.player ? [result.player.position[0], result.player.position[2], -result.player.position[1]] : exit;
-      walking.dismount(destination); walking.setYaw(Math.atan2(destination[0] - seat[0], destination[2] - seat[2]));
-      model.object.visible = false; placement = null; slotId = null; mounted = false;
+      if (walking.riding) { walking.dismount(destination); walking.setYaw(Math.atan2(destination[0] - seat[0], destination[2] - seat[2])); }
+      clear();
       return true;
     } catch (error) { notify(error.message); return false; }
     finally { busy = false; }
   }
   const onKey = event => {
-    if (event.code !== 'KeyG' || event.repeat || event.defaultPrevented) return;
+    if (event.code !== 'KeyG' || event.repeat || event.defaultPrevented || !isGameplayKey(event)) return;
     if (mounted) { event.preventDefault(); void stepOff(); return; }
     const pose = walking.getPose();
     if (pose && !pose.riding && !pose.sitting && !pose.flying && !pose.roomId && nearestFreeSlot(slots, me(), taken())) { event.preventDefault(); void take(); }
@@ -129,8 +135,8 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
   return {
     load(world) {
       slots = plazaSalonRack(world);
-      if (mounted) walking.dismount([placement.position[0], placement.position[1], placement.position[2]]);
-      mounted = false; placement = null; slotId = null; model.object.visible = false;
+      if (mounted && walking.riding) walking.dismount([placement.position[0], placement.position[1], placement.position[2]]);
+      clear();
     },
     // What G does right now, for the walking console: the rack prompt when a
     // slot is in reach, or the way off the bike while riding.
@@ -145,9 +151,10 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
       return { kind: 'take-bike', targetId: slot?.id ?? null, label: slot ? 'Take a bike' : 'All bikes are out', run: take, disabled: busy || !slot };
     },
     update(now = performance.now()) { if (placement && mounted) { apply(); model.animate(now, placement.speed, reducedMotion); } },
-    // Walking is still the server's view of a rider the moment the town
-    // corrects a pose: the walking controls drop the transport, so follow.
-    sync() { if (mounted && !walking.riding) { mounted = false; model.object.visible = false; placement = null; slotId = null; } },
+    // When the town corrects a pose the walking controls drop the transport
+    // before anyone else hears of it; follow, unless a step-off is mid-way and
+    // will clear the ride itself.
+    sync() { if (placement && !busy && !walking.riding) clear(); },
     get riding() { return mounted; }, get slotId() { return slotId; }, get placement() { return placement; },
     get rideMeters() { return placement?.distance ?? 0; }, get lastRideMeters() { return lastRide; },
     take, stepOff,

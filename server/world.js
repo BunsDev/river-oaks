@@ -19,6 +19,7 @@ import { accountName } from '../preview/src/resident-names.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
 
+const CYCLE_GRACE_MS = 1500;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
@@ -134,7 +135,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return reject('rack_blocked','Someone is standing at the bike.');
     interactions.cancel(player.id);
     focus.delete(player.id);
-    Object.assign(player,{position,yaw:seatYaw(slot.heading-Math.PI),altitude:0,vehicle:'bicycle',cycling:slot.id,rideMeters:player.rideMeters??0,
+    Object.assign(player,{position,yaw:seatYaw(slot.heading-Math.PI),altitude:0,vehicle:'bicycle',cycling:slot.id,cycledAt:time,rideMeters:player.rideMeters??0,
       poseAt:time,moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
     revision++;return {ok:true,player:publicPlayer(player)};
   }
@@ -386,6 +387,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     const activity=interactions.active(player.id);
     if(activity?.kind==='handshake'&&activity.expiresAt>time&&message.interactionId!==activity.id)return correction('greeting_aligning');
+    // A walking pose still in flight when the bike was handed over is stale,
+    // not a dismount: ignore it briefly instead of releasing the slot.
+    if (!message.vehicle && player.cycling && time-(player.cycledAt??0)<CYCLE_GRACE_MS) return {ok:true,player:publicPlayer(player)};
     if (message.vehicle==='bicycle' && !player.cycling) return correction('bike_required');
     if (message.vehicle && message.vehicle!=='bicycle' && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
