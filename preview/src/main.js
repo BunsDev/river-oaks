@@ -45,6 +45,7 @@ import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
+import { createPlazaCribbage } from './plaza-cribbage.js';
 import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
 import { createPlazaWinePong } from './plaza-wine-pong.js';
 import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
@@ -120,6 +121,7 @@ let playerAvatar, officeUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null;
+let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null;
 let plazaSpades = null;
 let plazaMancala = null;
@@ -265,11 +267,22 @@ function initializeRenderer() {
   plazaSpades = createPlazaSpades({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   plazaStage = createPlazaStage({ walking, getMultiplayer: () => multiplayer, getStageView: () => plazaSalon?.userData.stage ?? null });
-  // Seated at the backgammon table, X plays backgammon; the table's checkers mirror the game.
+  // Seated at the walnut table, X plays backgammon or cribbage (the last one played);
+  // switching puts the checkers or the pegging board away and sets out the other.
+  const walnutGames = () => ({ backgammon: plazaBackgammon, cribbage: plazaCribbage });
+  const switchWalnut = kind => {
+    const leaving = walnutGames()[walnutGame], joining = walnutGames()[kind];
+    if (!joining || joining === leaving) return;
+    walnutGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.backgammon?.setVisible(kind === 'backgammon'); plazaSalon?.userData.cribbage?.setVisible(kind === 'cribbage');
+    joining.open();
+  };
   plazaBackgammon = createPlazaBackgammon({ getMirror: () => plazaSalon?.userData.backgammon ?? null, getSeat: () => seatAtBackgammon(walking?.getPose()),
-    focusWorld: () => host.focus({ preventScroll: true }) });
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchWalnut });
+  plazaCribbage = createPlazaCribbage({ getMirror: () => plazaSalon?.userData.cribbage ?? null, getSeat: () => seatAtBackgammon(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchWalnut });
   playProviders.push(() => plazaGames);
-  playProviders.push(() => plazaBackgammon);
+  playProviders.push(() => walnutGames()[walnutGame]);
   // On the curved bench, X plays Jenga with two plaza regulars; the drum's tower mirrors it.
   plazaJenga = createPlazaJenga({ getMirror: () => plazaSalon?.userData.jenga ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
@@ -778,7 +791,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -1027,6 +1040,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     } } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
+  window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,
+    checkers: plazaSalon?.userData.backgammon?.visible() ?? null, deal: seed => plazaCribbage.deal(seed) } : null;
   window.__riverPlazaBackgammon = () => plazaBackgammon ? { ...plazaBackgammon.debug(), table: plazaSalon?.userData.backgammon?.count() ?? null,
     deal: seed => plazaBackgammon.deal(seed) } : null;
   window.__riverPlazaSpades = () => plazaSpades ? { ...plazaSpades.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null, deal: seed => plazaSpades.deal(seed) } : null;

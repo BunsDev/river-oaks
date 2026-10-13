@@ -555,6 +555,14 @@ scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to 
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
 
+The walnut table's switch also offers **Cribbage** against a plaza regular, to 121.
+Each hand deals six cards; lay two away to the dealer's crib, and the starter is cut
+(a jack scores the dealer 2). In the play, keep the count to 31: fifteen and
+thirty-one score 2, pairs and runs as they fall, go and the last card 1. Then the
+show counts each hand with the starter (fifteens, pairs, runs, flushes and nobs),
+the dealer's crib last. A pegging board replaces the checkers while you play, and
+its pegs follow the scores. Rules: `preview/src/cribbage-rules.js`.
+
 A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
 **Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
 pass and play. Pick a block below the top (never the top level, nor the one under
@@ -597,7 +605,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
