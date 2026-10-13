@@ -144,3 +144,25 @@ export function chessCellPosition(table, cell) {
   const [x, z] = chessCellOffset(cell);
   return [table.x + z, table.north + x];
 }
+
+// The café table and dominoes. Its four armchairs sit at headings π/4 + n·π/2
+// from the table (see chairsAround), so chair n of `bench:plaza-salon-round-<n>`.
+export const CAFE_LINE_RADIUS = 0.4, DOMINO = { length: 0.05, width: 0.025, gap: 0.002 };
+export const cafeChairAngle = chair => Math.PI / 4 + chair * Math.PI / 2;
+export function cafeSeat(buildId) {
+  const match = /^bench:plaza-salon-round-([0-3])$/.exec(buildId ?? '');
+  return match ? { tableId: 'round', chair: Number(match[1]) } : null;
+}
+// The line of play as an arc around the centrepiece: the lead tile faces chair
+// `facing`, tiles played on the right run anticlockwise and on the left clockwise.
+// Doubles lie across the line. Returns each tile's centre angle and [east, north].
+export function dominoLine(table, line, leadIndex, facing = 0) {
+  const span = tile => (tile.left === tile.right ? DOMINO.width : DOMINO.length) / CAFE_LINE_RADIUS;
+  const gap = DOMINO.gap / CAFE_LINE_RADIUS, angles = Array(line.length), start = cafeChairAngle(facing);
+  if (!line.length) return [];
+  angles[leadIndex] = start;
+  for (let i = leadIndex + 1; i < line.length; i++) angles[i] = angles[i - 1] + span(line[i - 1]) / 2 + gap + span(line[i]) / 2;
+  for (let i = leadIndex - 1; i >= 0; i--) angles[i] = angles[i + 1] - span(line[i + 1]) / 2 - gap - span(line[i]) / 2;
+  return line.map((tile, i) => ({ ...tile, angle: angles[i], double: tile.left === tile.right, span: span(tile),
+    position: [table.x + Math.sin(angles[i]) * CAFE_LINE_RADIUS, table.north - Math.cos(angles[i]) * CAFE_LINE_RADIUS] }));
+}

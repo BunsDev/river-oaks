@@ -4350,6 +4350,37 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
       "issues": []
+    },
+    {
+      "id": "plaza-dominoes",
+      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "status": "active",
+      "branches": [
+        "feat/plaza-dominoes-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T21:00:04.000Z",
+      "updatedAt": "2026-10-13T11:00:04.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-dominoes-20261013",
+      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a café dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
+      "filesOwned": [
+        "preview/src/dominoes-rules.js",
+        "preview/src/dominoes-opponent.js",
+        "preview/src/plaza-dominoes.js",
+        "preview/src/plaza-dominoes.css",
+        "preview/src/plaza-salon.js (café table tiles)",
+        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/main.js (wiring)",
+        "preview/e2e/plaza-dominoes.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (dominoes rules, opponent, mirror)",
+        "plaza-dominoes, plaza-chess, plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-dominoes.md",
+      "issues": []
     }
   ]
 }

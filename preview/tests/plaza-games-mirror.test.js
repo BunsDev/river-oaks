@@ -85,3 +85,24 @@ test('checkers discs: twelve a side on the dark squares, a king stacked two high
   chess.show(west.id, null);
   assert.equal(disc.count, 0);
 });
+
+test('dominoes on the café table: the line lies on its arc, only your hand shows its pips', () => {
+  const dominoes = group.userData.dominoes, tiles = group.children.find(child => child.name === 'Domino tiles'), pips = group.children.find(child => child.name === 'Domino pips');
+  const centre = (mesh, index) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(index, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); };
+  const [tx, , tz] = [plan.round.x, 0, -plan.round.north];
+  const line = [{ id: '5-6', left: 5, right: 6 }, { id: '6-6', left: 6, right: 6 }, { id: '2-6', left: 6, right: 2 }];
+  dominoes.show({ line, leadIndex: 1, facing: 2, hands: [{ chair: 2, tiles: ['0-1', '3-4'] }, { chair: 0, count: 5 }] });
+  assert.equal(tiles.count, 3 + 2 + 5);
+  // Pips: a divider per face shown, then the spots: 11 + 12 + 8 on the line, 1 + 7 in your hand.
+  assert.equal(pips.count, (3 + 2) + (11 + 12 + 8) + (1 + 7));
+  for (let i = 0; i < 3; i++) assert.ok(Math.abs(Math.hypot(centre(tiles, i).x - tx, centre(tiles, i).z - tz) - 0.4) < 1e-3, 'the line runs on its arc (instance matrices are float32 at world scale)');
+  // Hands stand 0.64 m out towards their chairs (chair n at π/4 + n·π/2), spread along the edge.
+  const outward = (index, chair) => { const angle = Math.PI / 4 + chair * Math.PI / 2, at = centre(tiles, index); return (at.x - tx) * Math.sin(angle) + (at.z - tz) * Math.cos(angle); };
+  for (let i = 3; i < 5; i++) assert.ok(Math.abs(outward(i, 2) - 0.64) < 1e-3, 'your hand stands at your edge');
+  for (let i = 5; i < 10; i++) assert.ok(Math.abs(outward(i, 0) - 0.64) < 1e-3, 'the regular\u2019s hand stands at theirs');
+  // The lead faces your chair (chair 2), and your hand stands on that side of the table.
+  const toward = angle => [Math.sin(angle), Math.cos(angle)], lead = centre(tiles, 1), yours = centre(tiles, 3), [cx, cz] = toward(Math.PI / 4 + Math.PI);
+  assert.ok((lead.x - tx) * cx + (lead.z - tz) * cz > 0.39 && (yours.x - tx) * cx + (yours.z - tz) * cz > 0.6);
+  dominoes.show(null);
+  assert.equal(tiles.count, 0); assert.equal(pips.count, 0);
+});
