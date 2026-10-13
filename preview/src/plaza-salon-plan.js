@@ -290,3 +290,13 @@ export function mancalaSpot(table, index, sideZeroChair = 0) {
   const flip = sideZeroChair === 0 ? 1 : -1, offset = 0.045 * across;
   return [table.x + flip * offset, table.north + flip * along];
 }
+
+// The goban on the grove table (when Go is the table's game): nine lines each way,
+// 4.2 cm apart, its top 3 cm above the table. Point index (row * 9 + column, rows from
+// black's side, column a on black's left) is a spot [east, north] for black in `blackChair`.
+export const GO = { spacing: 0.042, board: 0.44, thick: 0.03 };
+export function goSpot(table, index, blackChair = 0) {
+  const row = Math.floor(index / 9), column = index % 9, flip = blackChair === 0 ? 1 : -1;
+  // Black in chair 0 sits east facing west: row 1 nearest (east), column a on its left (south).
+  return [table.x + flip * (4 - row) * GO.spacing, table.north + flip * (column - 4) * GO.spacing];
+}

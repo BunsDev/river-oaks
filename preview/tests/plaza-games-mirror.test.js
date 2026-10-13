@@ -207,3 +207,23 @@ test('mancala: the grove table holds the opening, and a game’s seeds in their 
   mirror.show(null);
   assert.equal(mirror.count(), 48);
 });
+
+test('go: the grove table swaps the mancala board for a goban, and the stones sit on their points', async () => {
+  const { goSpot } = await import('../src/plaza-salon-plan.js');
+  const { play, pointOf, startGame } = await import('../src/go-rules.js');
+  const go = group.userData.go, mancala = group.userData.mancala, mesh = group.children.find(child => child.name === 'Goban').children.find(child => child.name === 'Go stones');
+  assert.equal(go.visible(), false, 'the table starts as mancala'); assert.equal(mancala.visible(), true);
+  mancala.setVisible(false); go.setVisible(true);
+  assert.equal(go.visible(), true); assert.equal(mancala.visible(), false);
+  const state = play(play(startGame(), pointOf('e5')), pointOf('c3'));
+  for (const chair of [0, 1]) {
+    go.show(state, chair);
+    assert.equal(go.count(), 2);
+    const centres = Array.from({ length: mesh.count }, (_, i) => { const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return new THREE.Vector3().setFromMatrixPosition(matrix); });
+    for (const name of ['e5', 'c3']) { const [east, north] = goSpot(plan.grove, pointOf(name), chair); assert.ok(centres.some(p => Math.hypot(p.x - east, p.z + north) < 0.001), `${name} from chair ${chair}`); }
+  }
+  // Seen from the other chair, the board turns round: c3 moves to the far side of the centre.
+  assert.notDeepEqual(goSpot(plan.grove, pointOf('c3'), 0), goSpot(plan.grove, pointOf('c3'), 1));
+  go.show(null); assert.equal(go.count(), 0);
+  go.setVisible(false); mancala.setVisible(true);
+});
