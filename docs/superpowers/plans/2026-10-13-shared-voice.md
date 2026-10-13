@@ -145,6 +145,33 @@ tests assert the mechanism under a fake clock; real numbers are a PR 5 item.
   server 421 passed, 134 Redis-only skipped; desktop 49; Python and secrets
   clean; build ok).
 
+## PR 5a: desktop microphone permission
+
+Branch `feat/voice-desktop-20261013`, from `main` (desktop files only).
+
+- `desktop/runtime.js`: `mediaPermissionAllowed({permission, origin,
+  mediaTypes, mainFrame}, gameOrigin)` is true only for `media` with exactly
+  `['audio']`, from the exact game origin, in the main frame.
+- `desktop/main.js`: the request handler (which sees `mediaTypes`, a list) and
+  the check handler (a single `mediaType`) both go through that policy and only
+  for the main window's contents; everything else stays denied as before. The
+  help dialog lists Y and M.
+- `desktop/package.js`: `NSMicrophoneUsageDescription` for the first macOS
+  prompt. The hardened-runtime audio-input entitlement belongs to the release
+  that adds Developer ID signing (`docs/desktop.md`).
+- `desktop/e2e.js`: launches with fake media and checks that
+  `getUserMedia({audio})` resolves with one audio track (then stops it) while
+  `{video}` and `{audio, video}` are refused.
+
+### Checks
+
+- `pnpm run test:desktop`: 51 tests, 51 passed (the new `permissions.test.js`
+  covers the loopback development origin, video, mixed media, empty and missing
+  media lists, other origins including a look-alike host and plain http, frames,
+  and every other permission name).
+- `pnpm run test:desktop:e2e --dev` and `pnpm run verify` have not run yet:
+  the Electron run waits for the machine. This PR is not opened until they have.
+
 ## Next
 
 - PR 3: browser controller, Y/M keys, chat-dock and roster controls, settings.
