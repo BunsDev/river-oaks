@@ -4411,6 +4411,59 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "studio-furnished-spaces",
+      "title": "Four furnished building templates and agentic space editing",
+      "status": "active",
+      "branches": [
+        "feat/studio-spaces-20261013"
+      ],
+      "owner": "codex:01a1351b-787e-7443-ab4c-0759b9fbecb8",
+      "updatedAt": "2026-10-13T14:51:40.683236+00:00",
+      "nextAction": "Fresh integrated local core/browser/native checks passed. Create signed Studio commit, push/open PR, and land after exact-head hosted checks. Produce the separate realism goal prompt after merge.",
+      "ledger": "docs/superpowers/plans/2026-10-13-studio-spaces.md",
+      "filesOwned": [
+        ".agents/skills/studio-world-design/SKILL.md",
+        "desktop/agent-e2e.js",
+        "desktop/main.js (space export title only)",
+        "desktop/package-files.js",
+        "desktop/package.js",
+        "desktop/studio-agent-guide.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-download.js",
+        "desktop/studio-scene-context.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "desktop/tests/package-files.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/studio-download.test.js",
+        "docs/starter-districts.md",
+        "docs/world-studio-agent.md",
+        "docs/world-studio.md",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/",
+        "preview/tests/studio-*.test.js",
+        "shared/studio-space-catalog.js",
+        "preview/src/studio/studio.css"
+      ],
+      "requiredChecks": [
+        "focused document, proposal, renderer and template regressions",
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop:agent",
+        "rendered review of all four spaces"
+      ],
+      "verification": {
+        "focused": "87 Studio/desktop/package tests passed; later 17 renderer/template checks passed including red-green office glazing regression.",
+        "specReview": "Independent spec review passed after cabinet sink, chair orientation, guide and packaged dependency fixes.",
+        "pending": "Hosted CI/merge pending. Ultrarealistic art/material/lighting work belongs to the separate requested follow-up prompt. Packaged release/live-provider/production/human accessibility/target GPU acceptance remains unverified.",
+        "core": "Integrated with d473480: all 11 core tasks passed, 3498 passing tests and 135 existing skips. Local node --test launcher sets concurrency=4; coverage unchanged. .runtime/studio-delivery-core.log and .runtime/agent/core.json.",
+        "qualityReview": "Independent quality review passed after local Stop cancellation fence and bounded observed-position traversal test.",
+        "browser": "Fresh world-studio journey passed in 28.663s through the repository browser queue; data/reports/studio-spaces-delivery-browser.json. All four scene captures previously inspected, including corrected office glazing.",
+        "native": "Fresh development Electron fixture passed all 13 checks with clean exit 0 after main integration; .runtime/studio-delivery-native.log and .runtime/agent/studio-agent-native.json. Synthetic providers only."
+      },
+      "leaseUntil": "2026-10-13T16:42:00.588982+00:00"
     }
   ]
 }
