@@ -23,6 +23,9 @@ export function summarizeProbe(records) {
     if (typeof record.navigationID === 'string') navigations.add(record.navigationID);
     for (const ms of page.intervalsMs) frames.push(ms);
   }
+  const blockedAssetGroups = start.blockedAssetGroups ?? [];
+  if (!Array.isArray(blockedAssetGroups) || blockedAssetGroups.some(group => !['characters', 'landscape', 'materials', 'standard-rigs', 'special-rigs'].includes(group))) throw new Error('Invalid isolation metadata');
+  if (blockedAssetGroups.length) { valid = false; gaps.add('asset-isolation trial; reduced content is not representative'); }
   const stop = records.at(-1);
   const recordingFinalized = stop.event === 'stop' && stop.finalDrainComplete === true;
   if (!recordingFinalized) gaps.add('recording not cleanly finalized');
@@ -35,7 +38,7 @@ export function summarizeProbe(records) {
   if (navigations.size > 1) gaps.add('multiple navigations; inspect each workload separately');
   return { schema: 'typesafe.ios-probe-summary.v1', sourceSHA: start.sourceSHA, configuration: start.configuration,
     scope: 'Browser animation-frame scheduling for ready scene windows; not rendered-frame or release acceptance.',
-    records: records.length, readySamples, webContentTerminations, navigations: navigations.size, foregroundSampledSeconds: seconds,
+    records: records.length, readySamples, webContentTerminations, blockedAssetGroups, navigations: navigations.size, foregroundSampledSeconds: seconds,
     frameIntervals: frames.length ? distribution(frames) : null, thermalStates: [...thermalStates].sort(),
     recordingFinalized, valid, architectureAccepted: false, gaps: [...gaps] };
 }

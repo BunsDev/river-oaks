@@ -167,8 +167,26 @@ supports investigating the shared scene/WebKit path, not a host-only explanation
 A clean-source native-only run from `9f2096a9c22890e5f3a5adc43e91f89441ec14e0`
 reproduced WebContent termination at 12:48:23 UTC, five seconds after launch
 (recording `probe-C456B60A-9140-4A11-89D5-E158D76A16FA.jsonl`).
-Missing minimum-device, GPU and combined-memory evidence
-remain explicit.
+The all-process trace subsequently finalized and exported. Launch-correlated
+WebContent PID 65040 rose from 27.94 MiB to 1,843.17 MiB in 4.16 seconds; GPU
+PID 65041 reached 355.27 MiB, while the native host peaked at 13.03 MiB. Five
+renderer samples precede the recorded termination. These are sampled per-process
+physical footprints, not allocation peaks or a deduplicated combined figure.
+No OS jetsam reason was recovered. The evidence makes initial allocation growth
+the leading investigation, without proving the exact termination mechanism.
+
+Raw export and selected rows: `.runtime/ios-probe/webcontent-process-live.xml`
+and `webcontent-memory-selected.json`. The process inventory before/during launch
+and clean-source recording establish the correlation. Minimum-device, sustained
+thermal/frame behavior and GPU allocation details remain open.
+
+Local-source review identifies concurrent avatar-template decoding (206 MiB of
+base RGBA8 image pixels across six standard templates), planter decoding (96 MiB
+across boxwood and fountain grass), render targets/shadows, and generated canvases
+as candidates. Those are decoded-size estimates for local assets, not measured
+hosted allocations; cloned avatar textures are generally shared. The HDR alone
+is 2048×1024 and does not explain the observed growth. Asset-isolation probe runs
+are explicitly reduced-content diagnostics and cannot satisfy acceptance.
 
 ## #292 inventory that can begin before the device decision
 
@@ -197,3 +215,22 @@ roles, authorize distribution or verify a reproducible credentialed CI pipeline.
 
 See `experiments/ios-probe/README.md` for commands and evidence limitations, and
 `docs/superpowers/plans/2026-10-13-ios-device-feasibility.md` for current results.
+
+Character-directory exclusion is an allocation diagnostic, not a viable reduced-fidelity
+host decision. The same dirty Release binary survived over60seconds with that
+exclusion and terminated within4seconds with full content. The45second excluded
+run still reached1664.83MiB WebContent and470.47MiB GPU sampled footprint; native
+host peaked12.91MiB. This implicates character-dependent work while leaving the
+remaining scene's allocation budget unresolved. Independent review requires a
+scene snapshot to establish district rendering and narrower GLB groups before
+attributing the failure to texture decoding. No production fidelity or security
+setting has changed, and #285 remains open.
+
+The narrower corrected-rule comparison isolates the standard-rig path: excluding
+six standard GLBs produced playerReadytrue and district telemetry (199trees,
+2beds,0/88residents) after21seconds; excluding only Jevica/Prince Jev still
+terminated WebContent after4seconds. The surviving run automatically selected
+scale0.6/AOoff and has different camera/resident workload. This narrows the next
+investigation to standard template loading and resident instantiation without
+proving a particular allocation cause or accepting reduced fidelity. Exact run
+IDs and verification are in the task ledger.

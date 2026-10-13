@@ -19,7 +19,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegate, ASWebAuthenticationPresentationContextProviding {
     private var web: WKWebView!
     private let measurementsEnabled = !ProcessInfo.processInfo.arguments.contains("--probe-native-only")
+    private let sceneSnapshotEnabled = ProcessInfo.processInfo.arguments.contains("--probe-scene-snapshot")
+    private var snapshotScript = ""
+    private var documentTerminated = false
     private var policy: ProbePolicy!
+    private var isolation: ProbeIsolation!
     private let status = UILabel()
     private var timer: Timer?
     private var deadline: Timer?
@@ -46,8 +50,11 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             let entry = Bundle.main.object(forInfoDictionaryKey: "ProbeEntry") as? String ?? ""
             guard let url = URL(string: entry) else { throw URLError(.badURL) }
             policy = try ProbePolicy(entry: url)
+            isolation = try ProbeIsolation(arguments: ProcessInfo.processInfo.arguments)
             guard let scriptURL = Bundle.main.url(forResource: "probe", withExtension: "js") else { throw CocoaError(.fileNoSuchFile) }
-            let script = try String(contentsOf: scriptURL, encoding: .utf8) + "\nIOSProbe.install();"
+            let source = try String(contentsOf: scriptURL, encoding: .utf8)
+            snapshotScript = source + "\nIOSProbe.sceneSnapshot();"
+            let script = source + "\nIOSProbe.install();"
             let configuration = WKWebViewConfiguration()
             configuration.websiteDataStore = .default()
             if measurementsEnabled {
@@ -74,13 +81,28 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 web.leadingAnchor.constraint(equalTo: view.leadingAnchor), web.trailingAnchor.constraint(equalTo: view.trailingAnchor)
             ])
             try beginRecording()
-            web.load(URLRequest(url: policy.entry))
+            loadWithIsolation()
             for name in [UIApplication.didEnterBackgroundNotification, UIApplication.willEnterForegroundNotification, ProcessInfo.thermalStateDidChangeNotification] {
                 NotificationCenter.default.addObserver(self, selector: #selector(lifecycle(_:)), name: name, object: nil)
             }
         } catch {
             status.text = "Probe configuration failed"
             status.frame = view.bounds; view.addSubview(status)
+        }
+    }
+    private func loadWithIsolation() {
+        guard let rules = isolation.rulesJSON else { web.load(URLRequest(url: policy.entry)); return }
+        status.text = "DIAGNOSTIC · excludes " + isolation.groups.joined(separator: ", ")
+        WKContentRuleListStore.default().compileContentRuleList(forIdentifier: "TypeSafeProbeIsolation-" + isolation.groups.joined(separator: "-"), encodedContentRuleList: rules) { [weak self] list, _ in
+            guard let self, !self.stopping, self.output != nil else { return }
+            guard let list else {
+                self.append(["event": "asset-isolation-failed"])
+                self.status.text = "Isolation setup failed · no page loaded"
+                self.finish(reason: "isolation-failed"); return
+            }
+            self.web.configuration.userContentController.add(list)
+            self.append(["event": "asset-isolation-applied", "blockedAssetGroups": self.isolation.groups])
+            self.web.load(URLRequest(url: self.policy.entry))
         }
     }
     private func button(_ title: String, _ action: Selector) -> UIButton {
@@ -96,6 +118,8 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 "os": UIDevice.current.systemVersion, "deviceClass": UIDevice.current.model,
                 "host": policy.entry.host ?? "unknown", "configuration": Bundle.main.object(forInfoDictionaryKey: "ProbeConfiguration") ?? "unknown",
                 "measurementMode": measurementsEnabled ? "raf-and-native" : "native-only",
+                "blockedAssetGroups": isolation.groups,
+                "sceneSnapshotEnabled": sceneSnapshotEnabled,
                 "memoryScope": "WebContent/GPU memory unavailable here; collect with Instruments separately"])
         guard output != nil else { return }
         UIApplication.shared.isIdleTimerDisabled = true
@@ -135,7 +159,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                     self.append(["event": "sample", "page": data]); self.recordCount += 1
                     guard self.output != nil else { return }
                     let ready = data["ready"] as? Bool ?? false
-                    if !self.stopping { self.status.text = "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)" }
+                    if !self.stopping { self.status.text = (self.isolation.groups.isEmpty ? "" : "DIAGNOSTIC · ") + "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)" }
                 }
             case .failure: self.append(["event": "sample-unavailable"])
             }
@@ -239,9 +263,23 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         if !allowed { append(["event": "response-origin-blocked"]) }
         decisionHandler(allowed ? .allow : .cancel)
     }
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { navigationID = UUID().uuidString; append(["event": "navigation-start"]) }
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { append(["event": "navigation-finish"]); sample() }
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { documentTerminated = false; navigationID = UUID().uuidString; append(["event": "navigation-start"]) }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        append(["event": "navigation-finish"]); sample()
+        guard sceneSnapshotEnabled else { return }
+        let sampledNavigation = navigationID
+        DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
+            guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation,
+                  let url = self.web.url, self.policy.allows(url) else { return }
+            self.web.evaluateJavaScript(self.snapshotScript, in: nil, in: self.world) { [weak self] result in
+                guard let self, !self.stopping, !self.documentTerminated, self.output != nil, self.navigationID == sampledNavigation else { return }
+                if case .success(let value) = result, let data = value as? [String: Any] {
+                    self.append(["event": "scene-snapshot", "page": data])
+                } else { self.append(["event": "scene-snapshot-unavailable"]) }
+            }
+        }
+    }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { append(["event": "navigation-failed", "code": (error as NSError).code]); status.text = "Load failed · retry with Reload" }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { append(["event": "web-content-terminated"]); status.text = "Web content terminated · manual Reload required" }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { documentTerminated = true; append(["event": "web-content-terminated"]); status.text = "Web content terminated · manual Reload required" }
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) { decisionHandler(.deny) }
 }

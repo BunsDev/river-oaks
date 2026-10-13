@@ -72,3 +72,21 @@ test('summary reports WebContent terminations even when frame data and final dra
  assert.equal(report.frameIntervals.count,3);assert.equal(report.recordingFinalized,true);
  assert.ok(report.gaps.includes('WebContent terminated; stability gate failed'));
 });
+test('asset-isolation trials preserve measurements but cannot be representative runs', () => {
+ const report=summarizeProbe([{...start,blockedAssetGroups:['characters']},sample([20,30]),{event:'stop',finalDrainComplete:true}]);
+ assert.equal(report.valid,false);assert.deepEqual(report.blockedAssetGroups,['characters']);
+ assert.equal(report.frameIntervals.count,2);
+ for (const group of ['standard-rigs','special-rigs']) assert.equal(summarizeProbe([{...start,blockedAssetGroups:[group]}]).valid,false);
+ assert.ok(report.gaps.includes('asset-isolation trial; reduced content is not representative'));
+});
+test('one-shot scene snapshot whitelists bounded numeric diagnostics without installing a collector', () => {
+ const dataset={playerReady:'false',matureTrees:'54',plantedBeds:'12',storePeopleReady:'0',storePeopleTotal:'80',renderStats:'{"calls":42,"textures":64,"token":"secret"}',pipeline:'{"samples":4,"ao":true,"bloom":true,"renderScale":1,"secret":"secret"}',token:'secret'};
+ const sandbox=vm.createContext({document:{querySelector:()=>({dataset})}});
+ vm.runInContext(source,sandbox);
+ const snapshot=plain(sandbox.IOSProbe.sceneSnapshot());
+ assert.deepEqual(snapshot,{ready:false,renderCounts:{calls:42,textures:64},pipeline:{samples:4,renderScale:1,ao:true,bloom:true},matureTrees:54,plantedBeds:12,storePeopleReady:0,storePeopleTotal:80});
+ assert.equal(sandbox.__iosProbe,undefined);
+ dataset.renderStats='invalid';dataset.matureTrees='Infinity';dataset.plantedBeds='';
+ const invalid=plain(sandbox.IOSProbe.sceneSnapshot());
+ assert.deepEqual(invalid.renderCounts,{});assert.equal('matureTrees' in invalid,false);assert.equal('plantedBeds' in invalid,false);
+});

@@ -4359,9 +4359,9 @@
         "feat/ios-device-probe-20261013"
       ],
       "owner": "codex-ios-rollout-20261013",
-      "leaseUntil": "2026-10-13T14:32:53.088430+00:00",
-      "updatedAt": "2026-10-13T12:56:12.411743+00:00",
-      "nextAction": "PR #309: Safari and clean native-only probe both fail during loading. Recover pending WebContent/GPU trace finalization (PID 15577), identify termination cause, then propose measured rendering fix; #285 open.",
+      "leaseUntil": "2026-10-13T15:23:19.698214+00:00",
+      "updatedAt": "2026-10-13T13:32:05.998621+00:00",
+      "nextAction": "PR #309: standard-rig exclusion yields player-ready district (0/88 residents); special-rig exclusion still terminates4s. Trace shows full-content WebContent1843MiB, character-excluded1665MiB. Next instrument or serialize standard avatar loading locally with full fidelity; preserve review/device gates. #285 remains open.",
       "ledger": "docs/superpowers/plans/2026-10-13-ios-device-feasibility.md",
       "filesOwned": [
         "experiments/ios-probe/",

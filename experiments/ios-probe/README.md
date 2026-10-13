@@ -75,6 +75,17 @@ names `measurementMode: native-only`; this run produces no scene timing. Compare
 it with the same build's default mode before attributing a failure to the scene.
 The native origin policy and login behavior remain identical.
 
+For allocation diagnosis, append `--probe-block-characters`,
+`--probe-block-landscape` or `--probe-block-materials`. These explicitly omit only
+the selected same-origin asset directory using WebKit content rules. Multiple
+groups can be combined; unknown block flags fail configuration. The toolbar and
+start record identify the diagnostic run, and an `asset-isolation-applied` event
+confirms the rule compiled before loading. Failure to compile prevents page load.
+These runs omit required visual content and cannot count toward gameplay,
+fidelity or architecture acceptance. Use them to locate an allocation class,
+then verify any actual fix with every asset enabled. Auth routes and challenges
+are outside the block patterns.
+
 ## Local WebKit check
 
 ```sh
@@ -137,3 +148,18 @@ raw traces; recording only the small native host process is insufficient. Keep
 profiling overhead visible and compare an unprofiled run. Minimum-device,
 multiplayer workload, human accessibility and production-distribution evidence
 remain open until actually exercised.
+
+For asset-isolation diagnostics, add `--probe-scene-snapshot` to explicitly opt
+into one sanitized DOM telemetry read 20 seconds after each completed navigation.
+This can accompany `--probe-native-only`; it does not install the RAF collector.
+The start record identifies the option, and `scene-snapshot` contains only
+whitelisted numeric render/pipeline/landscape/resident counters and readiness
+booleans. Missing telemetry stays absent. A missing snapshot does not prove an
+empty scene, and these reduced-content trials cannot satisfy acceptance.
+
+Narrower alternatives are `--probe-block-standard-rigs` (the six exact
+`woman-{casual,tailored,daywear}.glb` / `man-{casual,tailored,workwear}.glb` files)
+and `--probe-block-special-rigs` (`jevica.glb` / `prince-jev.glb`). These leave
+portraits, reference images and other models untouched. They are asset groups,
+not an NPC/player split: player appearances can use either group. Camera and
+automatic render scale may diverge after a failed player load; record that limit.

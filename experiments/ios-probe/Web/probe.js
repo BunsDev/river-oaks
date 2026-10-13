@@ -24,6 +24,17 @@
       drain() { const result = snapshot(); intervals = []; return result; },
     };
   }
+  function sceneSnapshot() {
+    const data = document.querySelector('#canvas-host')?.dataset ?? {};
+    const numeric = (raw, keys) => { try { const value = JSON.parse(raw); return Object.fromEntries(keys.filter(k => Number.isFinite(value?.[k])).map(k => [k, value[k]])); } catch { return {}; } };
+    const pipeline = numeric(data.pipeline, ['samples','renderScale','aoScale','transmissionScale']);
+    try { const value = JSON.parse(data.pipeline); for (const key of ['ao','bloom']) if (typeof value?.[key] === 'boolean') pipeline[key] = value[key]; } catch { /* Unavailable telemetry. */ }
+    const result = { ready: data.playerReady === 'true', renderCounts: numeric(data.renderStats, ['calls','triangles','geometries','textures']), pipeline };
+    for (const key of ['matureTrees','plantedBeds','storePeopleReady','storePeopleTotal']) {
+      if (typeof data[key] === 'string' && data[key].trim() && Number.isFinite(Number(data[key]))) result[key] = Number(data[key]);
+    }
+    return result;
+  }
   function install() {
     if (root.__iosProbe) return root.__iosProbe;
     const collector = createCollector(), started = performance.now();
@@ -74,5 +85,5 @@
     root.__iosProbe = { read, stop() { active = false; cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', visibility); document.removeEventListener('webglcontextlost', contextLost, true); document.removeEventListener('webglcontextrestored', contextRestored, true); performance.removeEventListener('resourcetimingbufferfull', resourceFull); return read(); } };
     return root.__iosProbe;
   }
-  root.IOSProbe = { createCollector, install };
+  root.IOSProbe = { createCollector, sceneSnapshot, install };
 })(globalThis);
