@@ -1,3 +1,4 @@
+import { isSpaceDocument } from './space-document.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -20,12 +21,12 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   const events=new AbortController(),signal=events.signal;
   function configureTransform() {
     const object=content?.items.get(selected);transform.detach();box.visible=Boolean(object)&&!walking;
-    if(!object||walking)return;
+    if(!object||walking||selected==='@environment'){box.visible=false;return;}
     box.setFromObject(object);const kind=object.userData.kind;
-    const permitted=mode==='translate'||kind==='building'||kind==='tree'&&mode==='scale';
+    const permitted=mode==='translate'||kind==='building'||kind==='furnishing'||kind==='tree'&&mode==='scale';
     if(!permitted)return;
     transform.attach(object);transform.setMode(mode);transform.setSpace(mode==='scale'?'local':'world');
-    transform.showX=mode!=='rotate';transform.showY=mode!=='translate';transform.showZ=mode!=='rotate'&&!(kind==='tree'&&mode==='scale');
+    transform.showX=mode!=='rotate';transform.showY=mode!=='translate'||kind==='furnishing';transform.showZ=mode!=='rotate'&&!(kind==='tree'&&mode==='scale');
   }
   transform.addEventListener('dragging-changed',event=>{orbit.enabled=!event.value&&!walking;});
   transform.addEventListener('objectChange',()=>{if(transform.object)box.setFromObject(transform.object);});
@@ -33,7 +34,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
     const object=transform.object;if(!object)return;
     const round=value=>Math.round(value*1000)/1000;
     let patch;
-    if(mode==='translate')patch={east:round(object.position.x),north:round(-object.position.z)};
+    if(mode==='translate')patch={east:round(object.position.x),north:round(-object.position.z),...(object.userData.kind==='furnishing'?{elevation:round(object.position.y)}:{})};
     else if(mode==='rotate')patch={yaw:round(((object.rotation.y*180/Math.PI+180)%360+360)%360-180)};
     else if(object.userData.kind==='tree')patch={radius:round(object.scale.x),height:round(object.scale.y)};
     else patch={width:round(object.scale.x),height:round(object.scale.y),depth:round(object.scale.z)};
@@ -83,10 +84,11 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
   const api={
     render(region,id=selected){
       transform.detach();if(content)disposeStudioScene(content.group);content=createStudioScene(region,document.documentElement.dataset.theme);
-      for(const [key,object] of content.items)object.userData.kind=key==='@arrival'?'arrival':region.buildings.some(v=>v.id===key)?'building':region.trees.some(v=>v.id===key)?'tree':'place';
+      for(const [key,object] of content.items)object.userData.kind=key==='@arrival'?'arrival':isSpaceDocument(region)?(key==='@environment'?'environment':'furnishing'):region.buildings.some(v=>v.id===key)?'building':region.trees.some(v=>v.id===key)?'tree':'place';
       scene.add(content.group);selected=id;configureTransform();
       const bounds=new THREE.Box3().setFromObject(content.group),center=bounds.getCenter(new THREE.Vector3());
-      const span=Math.max(100,bounds.getSize(new THREE.Vector3()).length());
+      const space=isSpaceDocument(region),span=Math.max(space?25:100,bounds.getSize(new THREE.Vector3()).length());
+      sun.intensity=space?(region.lighting==='evening'?.55:region.lighting==='warm'?2:2.5):3;sun.color.set(space&&region.lighting!=='daylight'?'#ffd6a3':'#fff5df');
       sun.target.position.copy(center);sun.position.copy(center).add(new THREE.Vector3(.5,1,.4).multiplyScalar(span));
       Object.assign(sun.shadow.camera,{left:-span/2,right:span/2,top:span/2,bottom:-span/2,far:span*3});sun.shadow.camera.updateProjectionMatrix();
     },
@@ -95,7 +97,7 @@ export function createStudioViewport(host,{onSelect,onTransform,onPosition,onExi
     frameSelection(){const object=content.items.get(selected);if(object)frameObject(object);},
     frameRegion(){frameObject(content.group);},
     walk(enabled){
-      keys.clear();look=null;
+      keys.clear();look=null;content?.setWalk?.(enabled);
       if(enabled){environment=createWalkingEnvironment(content.world);walking=createWalkingState(environment);savedCamera={position:camera.position.clone(),target:orbit.target.clone()};orbit.enabled=false;configureTransform();}
       else {walking=null;orbit.enabled=true;if(savedCamera){camera.position.copy(savedCamera.position);orbit.target.copy(savedCamera.target);orbit.update();}configureTransform();}
       host.focus();last=0;
