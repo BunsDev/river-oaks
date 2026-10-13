@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { buildDebugReport, canCaptureScreenshot, captureScreenshot, reportMarkdown } from './debug-report.js';
 import './debug-report.css';
 
@@ -59,6 +60,7 @@ function createDialog() {
     else if (response.status === 401) say('Sign in to send a report, or copy or download it instead.', 'error');
     else say('The report could not be sent. Copy or download it instead, then share it with the team.', 'error');
   }));
+  dismissOnOutsideClick(node, () => node.close());
   close.addEventListener('click', () => node.close());
   node.addEventListener('close', () => { if (state.opener?.isConnected) state.opener.focus(); });
   return { node, state, description, screenshot, send, details, say };
@@ -85,6 +87,7 @@ export async function openReportInbox() {
     const node = element('dialog', { className: 'report-dialog report-inbox', id: 'report-inbox' },
       element('div', { className: 'report-head' }, element('h2', { id: 'report-inbox-title' }, 'Problem reports'), close), status, list);
     node.setAttribute('aria-labelledby', 'report-inbox-title');
+    dismissOnOutsideClick(node, () => node.close());
     close.addEventListener('click', () => node.close());
     document.body.append(node);
     inbox = { node, list, status };

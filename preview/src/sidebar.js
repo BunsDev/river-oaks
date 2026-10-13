@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { createJevSettings } from './jev-settings.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
@@ -145,6 +146,7 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     dialog.close();
     (returnFocus?.isConnected && returnFocus.checkVisibility() && !returnFocus.closest('[inert]') ? returnFocus : settingsTrigger).focus({ preventScroll: true });
   };
+  dismissOnOutsideClick(dialog, closeSettings);
   settingsTrigger.addEventListener('click', () => openSettings());
   dialog.querySelector('.settings-header button').addEventListener('click', closeSettings);
   dialog.addEventListener('cancel', event => { event.preventDefault(); closeSettings(); });

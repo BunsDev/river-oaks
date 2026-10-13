@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
@@ -246,6 +247,7 @@ $('#access-invite-issue').addEventListener('submit', async event => {
   finally { button.disabled = false; }
 });
 $('#access-invites-open').addEventListener('click', loadInvites);
+dismissOnOutsideClick(invitesDialog, () => invitesDialog.close());
 $('#access-invites-close').addEventListener('click', () => invitesDialog.close());
 invitesDialog.addEventListener('close', () => { inviteGeneration++; });
 
@@ -320,6 +322,7 @@ function closeReview() {
   restoreReviewSettings = false;
   adminButton.focus();
 }
+dismissOnOutsideClick(review, closeReview, review.querySelector('.access-review-card'));
 $('#access-review-close').addEventListener('click', closeReview);
 review.addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeReview(); }

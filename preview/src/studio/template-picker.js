@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from '../modal-dismiss.js';
 import { districtTemplates, createDistrict } from './templates.js';
 
 // Use the actual region geometry for thumbnails, so plans cannot drift from files.
@@ -24,6 +25,7 @@ export function mountTemplatePicker(host, { choose }) {
     card.append(title,description,count,tip,button);dialog.querySelector('.studio-template-grid').append(card);
   }
   dialog.querySelector('[data-template-close]').addEventListener('click',()=>dialog.close());
+  dismissOnOutsideClick(dialog, () => dialog.close());
   host.append(dialog);
   return {open(){dialog.showModal();},dispose(){dialog.remove();}};
 }

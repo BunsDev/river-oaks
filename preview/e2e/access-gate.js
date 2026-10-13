@@ -3,6 +3,7 @@ async page => {
   const origin = 'http://127.0.0.1:5180';
   const checks = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
+  await page.context().clearCookies(); // This journey starts at the anonymous access gate.
   await page.goto(origin, { waitUntil: 'commit' });
   await page.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
   check(await page.locator('#access-email').isVisible(), 'Anonymous players can sign in with email');
@@ -75,6 +76,18 @@ async page => {
     check(await admin.locator('#access-review-title').evaluate(node => node === document.activeElement), 'Waitlist review opens with keyboard focus in its dialog');
     await admin.locator('.access-request').first().waitFor({ state: 'visible' });
     check(await admin.locator('.access-request').count() === 3, 'Approvers can review pending and decided accounts');
+    await admin.locator('#access-review-title').click();
+    check(await admin.locator('#access-review').isVisible(), 'Clicking inside approvals keeps it open');
+    const heading = await admin.locator('#access-review-title').boundingBox();
+    await admin.mouse.move(heading.x + 10, heading.y + 10);
+    await admin.mouse.down(); await admin.mouse.move(5, 5); await admin.mouse.up();
+    check(await admin.locator('#access-review').isVisible(), 'Dragging from approvals onto the backdrop keeps it open');
+    await admin.mouse.click(5, 5);
+    check(!await admin.locator('#access-review').isVisible(), 'Clicking outside approvals closes it');
+    check(await admin.locator('#settings-dialog').evaluate(node => node.open), 'Outside dismissal restores Account settings');
+    check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert), 'Outside dismissal restores focus and releases the game');
+    await admin.getByRole('button', { name: 'Waitlist requests' }).click();
+    await admin.locator('.access-request').first().waitFor({ state: 'visible' });
     check(!await admin.locator('#access-review-list').getByText('new-user').count(), 'User IDs are hidden from the waitlist by default');
     const firstRequest = admin.locator('.access-request').first();
     await firstRequest.getByRole('button', { name: 'Reveal user ID for New Resident' }).click();
@@ -99,12 +112,22 @@ async page => {
     await reapproved;
     check(decision?.body.userId === 'declined-user' && decision.body.approved === true && decision.csrf === 'admin-csrf', 'Approvers can reconsider a declined request');
     await refreshHeldPromise;
-    await admin.keyboard.press('Escape');
+    await admin.mouse.click(5, 5);
     releaseRefresh();
     await finalRefresh;
     await admin.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     check(await admin.locator('#settings-dialog').evaluate(node => node.open), 'Closing waitlist review restores Account settings');
-    check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert && document.querySelector('#access-review').hidden), 'Escape keeps review closed and returns focus to the game controls');
+    check(await admin.locator('#access-admin').evaluate(node => node === document.activeElement && !node.closest('.app-shell').inert && document.querySelector('#access-review').hidden), 'Outside dismissal stays closed after a late response and returns focus to the game controls');
+    holdRefresh = false;
+    await admin.getByRole('button', { name: 'Waitlist requests' }).click();
+    await admin.locator('.access-request').first().waitFor({ state: 'visible' });
+    await admin.keyboard.press('Escape');
+    check(!await admin.locator('#access-review').isVisible(), 'Escape still dismisses approvals');
+    await admin.locator('#settings-title').click();
+    check(await admin.locator('#settings-dialog').evaluate(node => node.open), 'Clicking inside Settings keeps it open');
+    await admin.mouse.click(5, 5);
+    check(!await admin.locator('#settings-dialog').evaluate(node => node.open), 'Clicking outside Settings closes its native dialog');
+    check(await admin.locator('#settings-toggle').evaluate(node => node === document.activeElement), 'Closing Settings from its backdrop restores launcher focus');
   } finally { await adminContext.close(); }
   return { passed: true, checks };
 }
