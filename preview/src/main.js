@@ -1,3 +1,4 @@
+import { createOfficeUI } from './office-ui.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -110,7 +111,7 @@ let pendingSharedPlace = null, sharedPlaceInFlight = false;
 let worldPortal = null;
 let worldRegionSha256 = null;
 let landmarkAccountId = null;
-let playerAvatar;
+let playerAvatar, officeUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null;
@@ -262,6 +263,7 @@ function initializeRenderer() {
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
+  officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -335,7 +337,7 @@ function startMultiplayer() {
     creationToolsEnabled,
     getWalking: () => walking,
     onVoiceChange: state => remotePlayers?.setSpeaking(state.speaking),
-    getPose: () => walking?.getPose(),
+    getPose: () => officeUI?.pose ?? walking?.getPose(),
     getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
     getOwnerHomes: () => world?.stores.filter(store => store.category === 'home' && store.access === 'owner') ?? [],
@@ -345,7 +347,8 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      remotePlayers.sync(players, selfId);
+      remotePlayers.sync(players.filter(p=>!p.office), selfId);
+      officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
@@ -736,7 +739,7 @@ function render(now) {
     worldId: worldIdFromSearch(location.search),
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude),
   });
-  if (storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
+  if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
   plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaStage?.update();
@@ -765,10 +768,10 @@ function render(now) {
   debugTools?.update(now);
   // llvmpipe draws both browser clients on CPU. Keep simulation and transport
   // updating every frame while capping only acceptance-profile draw work.
-  if (!softwareAcceptance || now - lastSoftwareDraw >= 1000) {
+  if (officeUI?.active || !softwareAcceptance || now - lastSoftwareDraw >= 1000) {
     lastSoftwareDraw = now;
     renderer.info.reset();
-    pipeline.render(delta);
+    if(!officeUI?.update(now,delta))pipeline.render(delta);
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
