@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { chessCell, chessCellPosition, plazaSalonPlan } from '../src/plaza-salon-plan.js';
 import { replay } from '../src/chess-rules.js';
+import { fromDiagram, startPosition } from '../src/checkers-rules.js';
 
 // The planters' shared planting loads its model asynchronously and reports to the page.
 globalThis.document ??= { querySelector: () => null, dispatchEvent: () => true };
@@ -60,4 +61,27 @@ test('pieces face the other player, whichever chair white takes', () => {
     assert.ok(Math.abs(black.yaw + knight.yaw) < 1e-6, 'black faces the other way');
   }
   chess.show(west.id, null);
+});
+
+test('checkers discs: twelve a side on the dark squares, a king stacked two high', () => {
+  const [west] = plan.chess, disc = group.children.find(child => child.name === 'Checkers disc');
+  const discs = () => Array.from({ length: disc.count }, (_, index) => {
+    const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), colour = new THREE.Color();
+    disc.getMatrixAt(index, matrix); position.setFromMatrixPosition(matrix); disc.getColorAt(index, colour);
+    return { position, dark: colour.r < 0.5 };
+  });
+  assert.equal(disc.count, 0, 'idle tables show chess, not discs');
+  chess.show(west.id, startPosition().board, 0);
+  assert.equal(disc.count, 24);
+  assert.equal(discs().filter(item => item.dark).length, 12);
+  // Dark, which moves first, sits at chair 0 like white in chess: its discs are on ranks 1-3.
+  const [east, north] = chessCellPosition(west, chessCell(0, 0));
+  assert.ok(discs().some(item => item.dark && Math.hypot(item.position.x - east, item.position.z + north) < 0.01), 'a dark disc on a1');
+  const king = fromDiagram(['........', '........', '........', '....D...', '........', '........', '........', '........']);
+  chess.show(west.id, king.board, 0);
+  assert.equal(disc.count, 2, 'a king is two discs');
+  const [low, high] = discs().map(item => item.position.y).sort((a, b) => a - b);
+  assert.ok(high - low > 0.008 && high - low < 0.011);
+  chess.show(west.id, null);
+  assert.equal(disc.count, 0);
 });
