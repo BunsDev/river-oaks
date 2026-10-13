@@ -4061,6 +4061,36 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-minimap-flicker.md",
       "issues": []
+    },
+    {
+      "id": "plaza-checkers",
+      "title": "Checkers on the plaza chess tables (phase 3a of plaza games): American checkers rules, a local opponent, discs mirrored on the 3D board, sharing the chess table's board sheet",
+      "status": "active",
+      "branches": [
+        "feat/plaza-checkers-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T20:17:43.000Z",
+      "updatedAt": "2026-10-13T10:17:43.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-checkers-20261013",
+      "nextAction": "Stacked on feat/plaza-chess-20261013 (#298): merge main once #298 lands. Write checkers-rules.js (perft-pinned), a checkers opponent, generalise the chess board sheet into a table-games sheet with a Chess/Checkers switch, disc pieces in the 3D mirror, journey; then PR and land.",
+      "filesOwned": [
+        "preview/src/checkers-rules.js",
+        "preview/src/checkers-opponent*.js",
+        "preview/src/plaza-chess.js",
+        "preview/src/plaza-chess.css",
+        "preview/src/plaza-salon.js (pieces)",
+        "preview/e2e/plaza-chess.js",
+        "preview/e2e/plaza-checkers.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (checkers perft, opponent, mirror)",
+        "plaza-chess and plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
+      "issues": []
     }
   ]
 }

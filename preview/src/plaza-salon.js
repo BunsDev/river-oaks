@@ -278,10 +278,12 @@ export function buildPlazaSalon(world) {
     mesh.castShadow = !glowing && materials !== material.mulch && materials !== material.chess; mesh.receiveShadow = !glowing;
     mesh.computeBoundingSphere(); group.add(mesh);
   }
-  // The chess mirror: one InstancedMesh per piece shape, both colours and both tables
-  // (ivory and ebony are instance colours), so a full set costs six draw calls.
+  // The game mirror: one InstancedMesh per chess piece shape plus one for checkers
+  // discs, for both colours and both tables (ivory and ebony are instance colours),
+  // so a full chess set costs six draw calls and checkers one more.
   {
     const shapes = chessPieceGeometries(), meshes = {}, tint = { w: new THREE.Color('#efe6d4'), b: new THREE.Color('#2b2522') };
+    tint.l = tint.w; tint.d = tint.b;
     const piece = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.33 });
     for (const [type, geometry] of Object.entries(shapes)) {
       // Per table: sixteen pawns, or up to ten of a promoted piece per side.
@@ -289,6 +291,10 @@ export function buildPlazaSalon(world) {
       mesh.name = `Chess ${type}`; mesh.castShadow = mesh.receiveShadow = true; mesh.count = 0;
       meshes[type] = mesh; group.add(mesh);
     }
+    // A checkers disc with a turned rim; a king is two stacked. Twelve a side per table.
+    const disc = new THREE.CylinderGeometry(0.026, 0.0275, 0.009, 28).translate(0, 0.0045, 0);
+    meshes.disc = new THREE.InstancedMesh(disc, piece, 48 * plan.chess.length);
+    Object.assign(meshes.disc, { name: 'Checkers disc', castShadow: true, receiveShadow: true, count: 0 }); group.add(meshes.disc);
     const opening = fromFEN(START_FEN).board, boards = new Map(plan.chess.map(table => [table.id, { board: opening, whiteChair: 0 }]));
     const draw = () => {
       const placed = Object.fromEntries(Object.keys(meshes).map(key => [key, 0]));
@@ -296,6 +302,15 @@ export function buildPlazaSalon(world) {
         const { board, whiteChair } = boards.get(table.id), [, y] = base(table);
         board.forEach((letter, square) => {
           if (!letter) return;
+          // Checkers: dark ('d', 'D' crowned) moves first and sits where chess has white.
+          if ('dDlL'.includes(letter)) {
+            const [east, north] = chessCellPosition(table, chessCell(square, whiteChair)), side = letter.toLowerCase();
+            for (let layer = 0; layer < (letter === side ? 1 : 2) && placed.disc < meshes.disc.instanceMatrix.count; layer++) {
+              dummy.position.set(east, y + 0.774 + layer * 0.0095, -north); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+              meshes.disc.setColorAt(placed.disc, tint[side]); meshes.disc.setMatrixAt(placed.disc++, dummy.matrix);
+            }
+            return;
+          }
           const colour = letter === letter.toUpperCase() ? 'w' : 'b', key = letter.toLowerCase(), mesh = meshes[key];
           if (placed[key] >= mesh.instanceMatrix.count) return;
           const [east, north] = chessCellPosition(table, chessCell(square, whiteChair)), toward = (colour === 'w') === (whiteChair === 0) ? -1 : 1;
@@ -315,7 +330,8 @@ export function buildPlazaSalon(world) {
     group.userData.chess = {
       cell: CHESS_CELL_M,
       tables: plan.chess.map(table => table.id),
-      // A table's position (a 64-square board from chess-rules.js), or the opening when board is null.
+      // A table's position, or the chess opening when board is null: a 64-square board from
+      // chess-rules.js or checkers-rules.js, and the chair of the side that moves first.
       show(tableId, board = null, whiteChair = 0) {
         if (!boards.has(tableId)) return false;
         boards.set(tableId, { board: board ?? opening, whiteChair: whiteChair === 1 ? 1 : 0 }); draw(); return true;
