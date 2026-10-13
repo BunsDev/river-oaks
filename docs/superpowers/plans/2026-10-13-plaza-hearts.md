@@ -49,6 +49,9 @@ Hearts with three plaza regulars at the round café table.
   - Both sheets can close without returning focus to the world.
   - A `__riverPlazaHearts` debug hook (dev and `?motion-debug=1` only).
 - **Journey:** `preview/e2e/plaza-hearts.js`, registered after `plaza-dominoes`.
+  `plaza-dominoes` scopes its action buttons to its own sheet.
+- **Wording:** the trick label reads "You take it" / "Left takes it", built in the
+  script rather than as a fixed CSS suffix.
 - **Docs:** `docs/multiplayer.md`.
 
 ## Checks
@@ -59,7 +62,8 @@ Hearts with three plaza regulars at the round café table.
 | `hearts-opponent.test.js` | 5/5. The first run caught a passing gap: the bot kept the A♠ and K♠ while passing the queen away. |
 | `plaza-games-mirror.test.js` | Adds the cards: the trick before chair 2, the stacks, and clearing. |
 | All `preview/tests` | 2733 pass, 0 fail |
-| Journeys | `plaza-hearts`, `plaza-dominoes` (see below) |
+| `pnpm run verify` (core), after merging main with the voice client | Passed. Preview: 2760 pass, 1 skip. Server: 421 pass, 134 Redis-only skips. |
+| Journeys | `plaza-hearts`, `plaza-dominoes` and `plaza-chess` pass on the merged code. The first run failed on a selector collision: `[data-action=pass]` exists in both café sheets, so each journey now scopes its actions to its own sheet. A journey check meant for your second card was keyed to the loop counter and could be skipped; it now counts your plays. |
 
 ## Gaps
 
