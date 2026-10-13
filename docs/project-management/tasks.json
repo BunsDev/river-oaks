@@ -4070,6 +4070,39 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "plaza-games",
+      "title": "Playable games at the Dior–Toulouse plaza tables: solo chess first (X to play at a chess chair, local AI and pass-and-play, mirrored on the 3D board); later checkers, café cards/dominoes, more game tables, Jenga and wine pong",
+      "status": "active",
+      "branches": [
+        "feat/plaza-chess-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T19:34:31.000Z",
+      "updatedAt": "2026-10-13T09:34:31.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-games-20261013",
+      "nextAction": "Phase 1: in-repo chess rules (perft-tested), budgeted local opponent in a worker, plaza chess UI and 3D piece mirror, X 'Play chess' seated action, plaza-chess journey; then PR. Later phases per Val 2026-10-13: checkers, café cards/dominoes, more tables, Jenga, wine pong, shared two-player tables.",
+      "filesOwned": [
+        "preview/src/chess-rules.js",
+        "preview/src/chess-opponent*.js",
+        "preview/src/plaza-games*.js",
+        "preview/src/plaza-games.css",
+        "preview/src/plaza-salon.js",
+        "preview/src/plaza-salon-plan.js",
+        "preview/src/contextual-action.js",
+        "preview/src/walking-ui.js (play action)",
+        "preview/e2e/plaza-chess.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (perft, opponent, plaza, contextual action)",
+        "plaza-chess journey",
+        "seat-related journeys (shared-seating)",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-games.md",
+      "issues": []
     }
   ]
 }

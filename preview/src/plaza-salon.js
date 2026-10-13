@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { plazaSalonPlan } from './plaza-salon-plan.js';
+import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, plazaSalonPlan } from './plaza-salon-plan.js';
+import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
 
@@ -44,7 +45,8 @@ const chessTexture = () => dataTexture(128, (x, y) => {
   const inner = x >= 6 && x < 122 && y >= 6 && y < 122, line = !inner && (x >= 4 && x < 124 && y >= 4 && y < 124);
   if (line) return [168, 132, 74, 255];
   if (!inner) return [226, 214, 192, 255];
-  const dark = ((Math.floor((x - 6) / 14.5) + Math.floor((y - 6) / 14.5)) & 1) === 1, n = hash(x, y) * 0.08;
+  // Texel rows run from the slab's +z edge, so cell (i, j) is the plan's (see chessCellPosition).
+  const dark = chessCellIsDark(Math.floor((x - 6) / 14.5), Math.floor((y - 6) / 14.5)), n = hash(x, y) * 0.08;
   return [...(dark ? mix([52, 51, 55], [70, 68, 72], n) : mix([236, 226, 205], [222, 210, 188], n)), 255];
 }, { repeat: false });
 // A walnut sunburst veneer: sixteen wedges in two tones around the centre.
@@ -57,6 +59,27 @@ const sunburstTexture = () => dataTexture(128, (x, y) => {
 // An annular sector in the XZ plane between two radii and heights, built from
 // a 2D shape so caps and walls have correct normals. Angles are headings
 // (Three.js cylinder theta), measured from +Z towards +X.
+// Staunton-style pieces from a few primitives, standing on y = 0 and facing +z
+// (the knight's head). Sized to the 6.8 cm cells: kings stand about 6.4 cm.
+function chessPieceGeometries() {
+  const cylinder = (top, bottom, height, y) => new THREE.CylinderGeometry(top, bottom, height, 16).translate(0, y + height / 2, 0);
+  const ball = (radius, y, squash = 1) => new THREE.SphereGeometry(radius, 14, 10).scale(1, squash, 1).translate(0, y, 0);
+  const box = (w, h, d, [x, y, z], tilt = 0) => new THREE.BoxGeometry(w, h, d).rotateX(tilt).translate(x, y, z);
+  const base = radius => [cylinder(radius, radius * 1.06, 0.004, 0), cylinder(radius * 0.86, radius, 0.004, 0.004)];
+  const parts = {
+    p: [...base(0.016), cylinder(0.006, 0.011, 0.014, 0.008), cylinder(0.009, 0.009, 0.002, 0.022), ball(0.0085, 0.031)],
+    r: [...base(0.018), cylinder(0.011, 0.013, 0.026, 0.008), cylinder(0.014, 0.012, 0.008, 0.034),
+      ...[0, 1, 2, 3].map(k => box(0.007, 0.006, 0.005, [Math.sin(k * Math.PI / 2) * 0.01, 0.045, Math.cos(k * Math.PI / 2) * 0.01]).rotateY(Math.PI / 4))],
+    n: [...base(0.018), cylinder(0.009, 0.013, 0.016, 0.008), box(0.012, 0.03, 0.017, [0, 0.036, -0.002], -0.22), box(0.011, 0.011, 0.021, [0, 0.045, 0.008], 0.35),
+      box(0.004, 0.008, 0.004, [0.004, 0.054, -0.004]), box(0.004, 0.008, 0.004, [-0.004, 0.054, -0.004])],
+    b: [...base(0.018), cylinder(0.006, 0.012, 0.028, 0.008), cylinder(0.01, 0.01, 0.002, 0.036), ball(0.0095, 0.047, 1.35), ball(0.0035, 0.0605)],
+    q: [...base(0.02), cylinder(0.007, 0.014, 0.034, 0.008), cylinder(0.011, 0.011, 0.002, 0.041), cylinder(0.013, 0.008, 0.01, 0.043), ball(0.005, 0.058)],
+    k: [...base(0.02), cylinder(0.008, 0.014, 0.036, 0.008), cylinder(0.011, 0.011, 0.002, 0.044), cylinder(0.012, 0.009, 0.009, 0.046),
+      box(0.004, 0.014, 0.004, [0, 0.062, 0]), box(0.012, 0.004, 0.004, [0, 0.063, 0])],
+  };
+  return Object.fromEntries(Object.entries(parts).map(([type, list]) => [type, mergeGeometries(list)]));
+}
+
 function sector(innerRadius, outerRadius, bottom, top, start, length, segments = 48) {
   const shape = new THREE.Shape(), a0 = start - Math.PI / 2, a1 = a0 + length;
   shape.absarc(0, 0, outerRadius, a0, a1, false);
@@ -154,19 +177,13 @@ export function buildPlazaSalon(world) {
     for (const [a, r] of [[0, 0.06], [2.1, 0.08], [4.2, 0.05], [1, 0.1], [3.3, 0.09]])
       add(unit.ball, material.bloom, [origin[0] + Math.sin(a) * r, origin[1] + 0.95, origin[2] + Math.cos(a) * r], [0.07, 0.06, 0.07]);
   }
-  // Travertine chess tables with a game in progress.
-  for (const [index, table] of plan.chess.entries()) {
+  // Travertine chess tables, their pieces set from a position (see the chess mirror below).
+  for (const table of plan.chess) {
     const origin = base(table), yaw = Math.PI / 2, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
     part(unit.box, material.travertine, [0, 0.72, 0], [0.8, 0.1, 0.8]);
     part(unit.box, material.chess, [0, 0.772, 0], [0.6, 0.004, 0.6]);
     part(unit.box, material.travertine, [0, 0.36, 0], [0.24, 0.62, 0.24]);
     part(unit.box, material.travertine, [0, 0.03, 0], [0.52, 0.06, 0.52]);
-    for (let piece = 0; piece < 14; piece++) {
-      const file = Math.floor(hash(piece, index + 3) * 8), rank = piece < 7 ? Math.floor(hash(piece, 9) * 3) : 7 - Math.floor(hash(piece, 11) * 3);
-      const local = [(file - 3.5) * 0.072, 0.795, (rank - 3.5) * 0.072], m = piece < 7 ? material.ivory : material.ebony, tall = piece % 5 === 0;
-      part(unit.post, m, local, [0.034, tall ? 0.06 : 0.035, 0.034]);
-      part(unit.ball, m, [local[0], local[1] + (tall ? 0.04 : 0.025), local[2]], [0.03, 0.03, 0.03]);
-    }
   }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
@@ -260,6 +277,51 @@ export function buildPlazaSalon(world) {
     const glowing = [materials].flat().some(m => m === material.bulb || m === material.glass);
     mesh.castShadow = !glowing && materials !== material.mulch && materials !== material.chess; mesh.receiveShadow = !glowing;
     mesh.computeBoundingSphere(); group.add(mesh);
+  }
+  // The chess mirror: one InstancedMesh per piece shape, both colours and both tables
+  // (ivory and ebony are instance colours), so a full set costs six draw calls.
+  {
+    const shapes = chessPieceGeometries(), meshes = {}, tint = { w: new THREE.Color('#efe6d4'), b: new THREE.Color('#2b2522') };
+    const piece = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.33 });
+    for (const [type, geometry] of Object.entries(shapes)) {
+      // Per table: sixteen pawns, or up to ten of a promoted piece per side.
+      const mesh = new THREE.InstancedMesh(geometry, piece, 20 * plan.chess.length);
+      mesh.name = `Chess ${type}`; mesh.castShadow = mesh.receiveShadow = true; mesh.count = 0;
+      meshes[type] = mesh; group.add(mesh);
+    }
+    const opening = fromFEN(START_FEN).board, boards = new Map(plan.chess.map(table => [table.id, { board: opening, whiteChair: 0 }]));
+    const draw = () => {
+      const placed = Object.fromEntries(Object.keys(meshes).map(key => [key, 0]));
+      for (const table of plan.chess) {
+        const { board, whiteChair } = boards.get(table.id), [, y] = base(table);
+        board.forEach((letter, square) => {
+          if (!letter) return;
+          const colour = letter === letter.toUpperCase() ? 'w' : 'b', key = letter.toLowerCase(), mesh = meshes[key];
+          if (placed[key] >= mesh.instanceMatrix.count) return;
+          const [east, north] = chessCellPosition(table, chessCell(square, whiteChair)), toward = (colour === 'w') === (whiteChair === 0) ? -1 : 1;
+          // Pieces face the other player: white's forward is away from white's chair.
+          dummy.position.set(east, y + 0.774, -north); dummy.scale.set(1, 1, 1);
+          dummy.rotation.set(0, toward < 0 ? -Math.PI / 2 : Math.PI / 2, 0); dummy.updateMatrix();
+          mesh.setColorAt(placed[key], tint[colour]); mesh.setMatrixAt(placed[key]++, dummy.matrix);
+        });
+      }
+      for (const [key, mesh] of Object.entries(meshes)) {
+        mesh.count = placed[key]; mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        mesh.computeBoundingSphere();
+      }
+    };
+    draw();
+    group.userData.chess = {
+      cell: CHESS_CELL_M,
+      tables: plan.chess.map(table => table.id),
+      // A table's position (a 64-square board from chess-rules.js), or the opening when board is null.
+      show(tableId, board = null, whiteChair = 0) {
+        if (!boards.has(tableId)) return false;
+        boards.set(tableId, { board: board ?? opening, whiteChair: whiteChair === 1 ? 1 : 0 }); draw(); return true;
+      },
+      board: tableId => boards.get(tableId)?.board.slice() ?? null,
+    };
   }
   group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
   return group;
