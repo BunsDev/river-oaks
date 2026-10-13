@@ -1,0 +1,42 @@
+{
+  "browser": "134.0.6998.35",
+  "errors": [],
+  "views": [
+    {
+      "name": "reception",
+      "calls": 59,
+      "triangles": 133418,
+      "error": 0,
+      "textures": 12
+    },
+    {
+      "name": "mural",
+      "calls": 33,
+      "triangles": 69742,
+      "error": 0,
+      "textures": 12
+    },
+    {
+      "name": "lounge",
+      "calls": 24,
+      "triangles": 95384,
+      "error": 0,
+      "textures": 12
+    },
+    {
+      "name": "bar",
+      "calls": 37,
+      "triangles": 112740,
+      "error": 0,
+      "textures": 12
+    },
+    {
+      "name": "auditorium",
+      "calls": 12,
+      "triangles": 56060,
+      "error": 0,
+      "textures": 12
+    }
+  ],
+  "glbBytes": 12394500
+}
