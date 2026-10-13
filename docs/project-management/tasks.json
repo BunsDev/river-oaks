@@ -4630,8 +4630,8 @@
       ],
       "owner": "codex:8304a3c9d0ca-ipic",
       "leaseUntil": "2026-10-13T23:33:52.433092+00:00",
-      "updatedAt": "2026-10-13T21:33:52.433092+00:00",
-      "nextAction": "Publish draft PR with user-approved unsigned-commit exception; preserve feature worktree for review. No merge/deployment authorized.",
+      "updatedAt": "2026-10-13T21:38:02.806236+00:00",
+      "nextAction": "Review draft PR #343 and photo-guided layout limits. Branch is mergeable but behind main; satisfy up-to-date hosted checks before separately authorized landing. Preserve worktree.",
       "ledger": "docs/superpowers/plans/2026-10-13-ipic-photo-interior.md",
       "worktree": "/workspace/scratch/8304a3c9d0ca/river-oaks-ipic",
       "filesOwned": [
@@ -4657,7 +4657,8 @@
         "GLB export validation"
       ],
       "verification": "Core passed; focused 10/10; production IPIC visit 4/4; five material views; GLB and Blender validated. See task ledger for skips and scope.",
-      "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session."
+      "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session.",
+      "pr": 343
     }
   ]
 }

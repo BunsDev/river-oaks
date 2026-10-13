@@ -24,7 +24,7 @@
 1. [x] Shared plan and movement: add photo-specific plan, room specialization, floor sampler, focused traversal tests; run existing store/walking tests.
 2. [x] Geometry/assets: build reusable reception, escalators, mural, lounge/bar, corridor, auditorium; add production hook, export path and provenance; inspect rendered views.
 3. [x] Shared seats and e2e: wire stable cinema seat IDs into existing authority; prove enter/walk/sit/stand/checkpoint/return, client and real local transport.
-4. [ ] Verification and authorized draft-PR publication: focused suites, core gate, browser review, GLB validation, independent review; record limitations and prepare branch/PR.
+4. [x] Verification and authorized draft-PR publication: focused suites, core gate, browser review, GLB validation, independent review; record limitations and prepare branch/PR.
 
 ## Session ledger
 - Base 05667c60230af877d7f9687bd2d25331e408c7d1, isolated sibling worktree. Primary clean before our task claim. Other live task entries preserved.
@@ -48,7 +48,7 @@
 - Delivery: preparing signed feature-branch commit and draft PR. Normal git push has no local credentials; GitHub connector used for repository delivery. Other task claims and the primary checkout remain preserved.
 - Lifecycle check: `project:check --tasks ../river-oaks/docs/project-management/tasks.json` found 22 existing task records whose branches live outside this fresh clone; no IPIC ownership gap. Those records were preserved. Started with one primary worktree and added one owned feature worktree; both remain. Remote main advanced during implementation; this branch requires the ordinary up-to-date CI/merge gate before landing.
 
-## Delivery blocker and concrete handoff
+## Initial publication blocker (resolved by user authorization)
 - The 80-file staged patch was verified and uploaded as Git blobs. GitHub tree `357971eeaec64596cd328586031a5e4d6bf60c9a` exactly matched `git write-tree` locally. A final worktree Gitleaks scan found no leaks.
 - GitHub connector created commit object `80b0ccd723eb010a309271f95ebdd2eeb0fdaea0`, but its verification response was `verified: false, reason: unsigned`. The connector exposes no signing parameter and this checkout has no signing configuration or git-push credentials. No feature branch ref or PR was published from that object.
 - `docs/agent-workflow.md` requires signed commits. Publication therefore needs signing-capable access or an explicit user exception to that repository instruction; no branch protection or authentication rule was changed.
@@ -58,3 +58,9 @@
 ## Publication authorized, 2026-10-13
 - User explicitly approved publishing an unsigned draft PR as an exception to the repository's signed-commit instruction. This exception applies to this IPIC delivery; no repository policy file or protection setting is changed.
 - Resume publication using the existing verified asset blobs. Rechecking the staged tree before the GitHub branch/PR handoff; retain this feature worktree for review.
+
+## Published draft PR
+- Draft PR: https://github.com/BunsDev/river-oaks/pull/343 on `feat/ipic-photo-interior-20261013`; initial implementation head `a9ea1b48b0767ce3374197ddb522350af2beda02`.
+- User-approved unsigned publication is complete. GitHub's published tree exactly matched the local staged tree. A fresh full core run passed at 2026-10-13T21:36:42.583Z with the same counts/skips reported above. This follow-up changes handoff metadata only.
+- GitHub reported the PR mergeable, with its branch behind main; up-to-date hosted checks remain a later merge gate. No merge or deployment was performed. Task remains active for review rather than delivered/retired.
+- Local feature branch tracks the published branch; both primary and feature worktrees are retained. Next action: review PR #343 and its visual/layout limits, then satisfy hosted acceptance and separately authorize landing.
