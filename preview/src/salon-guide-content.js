@@ -97,6 +97,13 @@ export const GUIDE = [
     { title: 'Ko and passing', text: ['A move may not repeat an earlier position, so a single stone taken in a ko cannot be retaken at once: play elsewhere first.', 'Two passes in a row end the game. Stones left on the board count as alive, so capture dead groups before you pass.'], figure: { kind: 'go-ko' } },
     { title: 'At the table', text: ['The table\'s goban follows the game; switching back to mancala puts it away.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['↑', '↓', '←', '→'], 'Move between points'], [['Enter'], 'Place a stone'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'cribbage', name: 'Cribbage', place: 'The grove\'s walnut table', pages: [
+    { title: 'Taking a seat', text: ['At the walnut backgammon table, press Z to sit and X to open the table, then choose Cribbage at the top of the sheet.', 'You play a plaza regular, first to 121. The deal alternates every hand.'], figure: { kind: 'emblem' } },
+    { title: 'The deal and the crib', text: ['Each of you gets six cards and lays two away, face down, in the dealer\'s crib. A card is cut for the starter; a jack there scores the dealer 2.'], figure: { kind: 'cribbage-crib' } },
+    { title: 'The play', text: ['Lay cards in turn, keeping a running count no higher than 31. Fifteen or thirty-one scores 2, a pair 2, three alike 6, and a run of three or more its length.', 'If you cannot play, it is a go: the other plays on, and the last card under 31 scores 1.'], figure: { kind: 'cribbage-play' } },
+    { title: 'The show', text: ['Each hand then counts with the starter: 2 for every combination making 15, 2 for every pair, each run its length, a flush 4 (5 with the starter), and the jack of the starter\'s suit 1. The dealer counts the crib last.'], figure: { kind: 'cribbage-show' } },
+    { title: 'At the table', text: ['A pegging board replaces the checkers while you play, and its pegs follow the scores.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
+] },
   { id: 'dice', name: 'Liar’s dice', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Liar’s dice at the top of the sheet.', 'You and three plaza regulars each hold five dice under a cup.'], figure: { kind: 'emblem' } },
     { title: 'Bidding', text: ['Everyone rolls in secret. In turn, bid how many dice of one face lie on the whole table, counting everyone’s: “four fives”. Ones are wild and count as any face.', 'Each bid must raise the last: more dice, or the same number of a higher face.'], figure: { kind: 'dice-bid' } },
@@ -107,7 +114,7 @@ export const GUIDE = [
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
+export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -152,6 +159,10 @@ export const DIAGRAMS = {
   dominoesLine: { line: [[2, 6], [6, 6], [6, 4]], hand: [4, 1] },
   heartsTrick: { cards: ['9D', 'QD', 'KD', '4S'], winner: 'KD' },
   heartsPoints: ['5H', '9H', 'AH', 'QS'],
+  // Cribbage: two cards laid away, a play to fifteen, and a hand's show with its starter.
+  cribbageCrib: { hand: ['5H', '6C', '7D', '9S', 'KH', 'QC'], laid: ['KH', 'QC'], starter: 'JS' },
+  cribbagePlay: { pile: ['7H', '8C'] },
+  cribbageShow: { hand: ['5H', '5D', 'TS', 'JC'], starter: '5C' },
   // Liar's dice: your cup and a bid, then all four cups lifted for "four fives".
   diceBid: { cup: [1, 5, 5, 2, 6], bid: [4, 5] },
   diceCall: { cups: [[1, 5, 5, 2, 6], [3, 3, 4, 6, 2], [5, 1, 2, 4, 4], [6, 6, 3, 2, 3]], bid: [4, 5], actual: 5 },
@@ -291,6 +302,7 @@ export function iconMarkup(id) {
     mancala: '<rect class="sg-icon-line" x="6" y="13" width="28" height="14" rx="7"/><circle class="sg-icon-fill" cx="14" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.4"/><circle class="sg-icon-fill" cx="26" cy="20" r="2.4"/>',
     reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
     morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
+    cribbage: '<rect class="sg-icon-line" x="8" y="10" width="24" height="20" rx="4"/><circle class="sg-icon-fill" cx="14" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="20" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="26" cy="16" r="1.6"/><circle class="sg-icon-line" cx="14" cy="24" r="1.6"/><circle class="sg-icon-line" cx="20" cy="24" r="1.6"/><circle class="sg-icon-line" cx="26" cy="24" r="1.6"/>',
     dice: '<rect class="sg-icon-line" x="7" y="11" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="18" y="14" width="15" height="15" rx="3"/><circle class="sg-icon-fill" cx="11" cy="15" r="1.4"/><circle class="sg-icon-fill" cx="18" cy="22" r="1.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
@@ -344,6 +356,16 @@ export function figureMarkup(figure, game) {
       `<text class="sg-label" x="75" y="22" text-anchor="middle" font-size="12">2 players · draw</text><text class="sg-label" x="225" y="22" text-anchor="middle" font-size="12">4 players · block</text><line class="sg-divider" x1="150" y1="14" x2="150" y2="150"/>`
       + [0, 1, 2, 3].map(i => `<rect class="sg-tile-back" x="${28 + (i % 2) * 48}" y="${40 + Math.floor(i / 2) * 32}" width="42" height="24" rx="4"/>`).join('') + `<text class="sg-label sg-quiet" x="75" y="132" text-anchor="middle" font-size="11">the boneyard</text>`
       + [0, 1, 2, 3, 4, 5, 6].map(i => `<rect class="sg-tile-back" x="${172 + i * 15}" y="${52 + Math.abs(i - 3) * 3}" width="12" height="40" rx="3"/>`).join('') + `<text class="sg-label sg-quiet" x="225" y="132" text-anchor="middle" font-size="11">seven each, then pass</text>`);
+    case 'cribbage-crib': { const { hand, laid, starter } = DIAGRAMS.cribbageCrib;
+      return svg(300, 150, 'Six cards: the king and queen are laid away to the crib, four are kept, and the jack cut as the starter scores the dealer two.',
+        hand.filter(code => !laid.includes(code)).map((code, i) => card(14 + i * 34, 52, code)).join('') + laid.map((code, i) => card(170 + i * 16, 52, code, { cls: 'sg-faded', rotate: 6 })).join('')
+        + card(236, 40, starter, { cls: 'sg-card-win' }) + '<text class="sg-label sg-quiet" x="76" y="142" text-anchor="middle" font-size="11">kept</text><text class="sg-label sg-quiet" x="196" y="142" text-anchor="middle" font-size="11">to the crib</text><text class="sg-label sg-quiet" x="262" y="28" text-anchor="middle" font-size="11">starter</text>'); }
+    case 'cribbage-play': { const { pile } = DIAGRAMS.cribbagePlay;
+      return svg(300, 130, 'A seven and an eight in the play: the count reaches fifteen, and the eight scores two.',
+        pile.map((code, i) => card(70 + i * 40, 26, code, { cls: i === pile.length - 1 ? 'sg-card-win' : '' })).join('') + '<text class="sg-label" x="226" y="70" font-size="15">15 · 2</text>'); }
+    case 'cribbage-show': { const { hand, starter } = DIAGRAMS.cribbageShow;
+      return svg(300, 140, 'A hand of 5, 5, 10 and the jack of clubs with the 5 of clubs cut: fifteens 14, a pair royal 6, and nobs 1, for 21.',
+        hand.map((code, i) => card(10 + i * 46, 30, code)).join('') + card(222, 22, starter, { cls: 'sg-card-win' }) + '<text class="sg-label" x="150" y="128" text-anchor="middle" font-size="13">fifteens 14 · pairs 6 · nobs 1 = 21</text>'); }
     case 'dice-bid': case 'dice-call': {
       const pips = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]], 5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
       const die = (x, y, value, size, lit) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size / 6}" class="sg-tile-face"${lit ? ' style="stroke:#e2b23a;stroke-width:2.5"' : ''}/>` + pips[value].map(([u, v]) => `<circle cx="${x + u * size}" cy="${y + v * size}" r="${size / 11}" class="sg-rim"/>`).join('');
