@@ -128,7 +128,7 @@ export function createRoadVehicle(kind='rolls') {
   ring([0,0,0],.17,.018,darkLeather,steering);
   for(const a of [0,2.1,4.2])tube([[0,0,0],[Math.sin(a)*.15,Math.cos(a)*.15,0]],.012,chrome,steering);
   box([0,0,0],[.065,.065,.03],black,.015,steering);
- } else {
+ } else if(kind==='motorcycle') {
   // Twin-cylinder cruiser with exposed mechanical assemblies and fitted pillion.
   for(const side of [-1,1]) {
    tube([[-.76,1.05,side*.12],[-.61,.43,side*.21],[.55,.38,side*.22],[.66,.75,side*.18],[-.76,1.05,side*.12]],.032,black);
@@ -180,6 +180,33 @@ export function createRoadVehicle(kind='rolls') {
   tube([[-.70,1.43,-.16],[-.70,1.45,0],[-.70,1.43,.16]],.007,chrome);
   box([1.09,.66,0],[.048,.052,.16],red,.019);
   box([1.10,.51,0],[.025,.14,.17],black,.01);
+ }
+ else if(kind==='bicycle') {
+  // A step-through city bike in rose and bronze: tubes for the frame, a
+  // leather saddle at the spec seat, bronze fork and bars that steer.
+  const frame=pink,bronze=alloy;
+  tube([[-.42,.62,0],[.05,.30,0]],.022,frame);           // down tube: head to bottom bracket
+  tube([[.05,.30,0],[.14,.88,0]],.022,frame);            // seat tube
+  tube([[.14,.88,0],[.52,.34,0]],.016,frame);            // seat stays
+  tube([[.05,.30,0],[.52,.34,0]],.016,frame);            // chain stays
+  tube([[-.42,.62,0],[-.46,.98,0]],.024,bronze);         // head tube
+  add(new THREE.CylinderGeometry(.09,.09,.02,24),black,[.05,.30,.045]);   // chainring
+  for(const z of [-.09,.09])add(new THREE.BoxGeometry(.11,.02,.04),black,[.05+(z<0?.08:-.08),.30,z]); // pedals
+  box([.12,.92,0],[.27,.06,.15],darkLeather,.03);        // saddle
+  tube([[.14,.88,0],[.12,.90,0]],.014,bronze);           // seat post
+  for(const [x,r] of spec.wheels) {
+   const shape=new THREE.Shape();
+   for(let i=0;i<=40;i++){const a=.35+i/40*(Math.PI-.7),px=x+Math.cos(a)*(r+.045),y=r+Math.sin(a)*(r+.045);if(!i)shape.moveTo(px,y);else shape.lineTo(px,y);}
+   for(let i=40;i>=0;i--){const a=.35+i/40*(Math.PI-.7);shape.lineTo(x+Math.cos(a)*(r+.02),r+Math.sin(a)*(r+.02));}
+   add(new THREE.ExtrudeGeometry(shape,{depth:.06,bevelEnabled:false}),pink,[0,0,-.03]);  // mudguard
+  }
+  steering=new THREE.Group();object.add(steering);groups.push(steering);
+  tube([[-.46,.98,0],[-.52,.62,0],[-.525,.34,0]],.014,bronze,steering);     // fork
+  tube([[-.42,1.02,-.22],[-.46,1.0,0],[-.42,1.02,.22]],.012,bronze,steering); // bars
+  for(const side of [-1,1]){const grip=add(new THREE.CylinderGeometry(.016,.016,.09,12),rubber,[-.42,1.02,side*.22],[1,1,1],steering);grip.rotation.x=Math.PI/2;}
+  const pivot=new THREE.Vector3(-.46,.98,0);for(const child of steering.children)child.position.sub(pivot);steering.position.copy(pivot);
+  tube([[-.49,.92,0],[-.52,.86,0]],.010,light);          // headlamp stalk
+  ball([-.52,.86,0],[.03,.03,.02],light);
  }
  batchCostumeAttachments(groups.map(group=>({group})),owned);
  if(kind==='rolls') {

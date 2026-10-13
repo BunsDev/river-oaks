@@ -105,3 +105,17 @@ test('vehicleKind accepts the bicycle and drivingInput carries sprint only as a 
  assert.deepEqual(drivingInput({forward:1,fast:true}),{forward:1,turn:0,strafe:0,sprint:true});
  assert.deepEqual(drivingInput({forward:1,sprint:'yes'}),{forward:1,turn:0,strafe:0});
 });
+test('the plaza bicycle is a two-wheel frame under two metres with a saddle at the spec height',()=>{
+ const spec=VEHICLES.bicycle,model=createRoadVehicle('bicycle');
+ try {
+  assert.equal(model.wheels.length,2);
+  assert.equal(model.wheelTreads.length,2);
+  const size=new THREE.Box3().setFromObject(model.object).getSize(new THREE.Vector3());
+  assert.ok(size.x<2 && size.x>1.5,`length ${size.x}`);
+  assert.ok(size.z<.75,`width ${size.z}`);
+  assert.ok(size.y>spec.driverSeat[1] && size.y<1.3,`height ${size.y}`);
+  assert.ok(model.steering,'the fork steers');
+  model.updateSteering(.3);
+  assert.ok(Math.abs(model.steering.rotation.y-.3*.6)<1e-9,'the fork turns like the motorcycle');
+ } finally {model.dispose();}
+});
