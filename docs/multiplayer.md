@@ -264,6 +264,10 @@ the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
 that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
 so clients hide bikes that are out.
+`GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
+reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
+plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
+per instance and user ids never leave the server.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 

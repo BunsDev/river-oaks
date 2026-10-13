@@ -1511,3 +1511,18 @@ Decisions recorded during execution:
 - Client occupancy samples the frame between the axles (`FRAME_SHARE` 0.5), not the mudguard-to-mudguard length.
 
 Gaps: no Redis-backed regression drives a ride through `createRedisRoom`'s tick (the room harness has no rack); the helper's unit tests and the unchanged room suite cover that path. Hosted acceptance and the leaderboard sheet are PR 2.
+
+## PR 2: cycling-leaderboard (2026-10-13, branch feat/cycling-leaderboard-20261013, task `cycling-leaderboard`)
+
+Implemented inline after PR 1 (the account's session limit made subagents unreliable that morning).
+
+| Piece | Files | Evidence |
+| --- | --- | --- |
+| route | `server/cycling-api.js` (`createCyclingLeaderboard`: top 20 cached 10 s per instance, live `me`, miles to one decimal, no ids), mounted as `GET /api/cycling/leaderboard` in `app.js` (session) and `distributed-app.js` (session + 60/min limiter) | `cycling-api.test.js` 3/3; `cycling-flush.test.js` route test over HTTP (200 with the rider ranked, 401 without a session) |
+| sheet | `preview/src/cycling-leaderboard.js` + `.css`: a `<details>` tile in the Play dock ("Cycling" activity), keyed rows, your row highlighted, footer when you are outside the top, fetch on open and every 30 s while open, "Leaderboard unavailable" keeps the last list | `cycling-leaderboard.test.js` (formatting); journey below |
+| rack prompt | `plaza-bicycle.js` prompt label "Take a bike · N mi so far" from the board's `mine()` | journey below |
+| dev server | `vite.config.js` proxies `/api/cycling` to the town | journey below |
+| journey | `preview/e2e/cycling-leaderboard.js`: Bob sees the empty state, the rider rides and steps off, Bob's board ranks the rider (polling through the 10 s cache), the rider's own row is highlighted and the rack prompt carries lifetime miles | passed at 7256bd6 and again on the merged head f99c3e5, together with `cycling-rack` |
+| gate | `pnpm run verify` core on f99c3e5 (clean tree): passed, python 141 passed; `pnpm test` 2764 pass / 1 pre-existing skip and `pnpm run test:server` 443 pass / 0 fail / 136 Redis-gated skips at 27ebc7d | receipt `.runtime/agent/core.json` |
+
+Steering note: after the backgammon table landed on main, a fixed right turn from the rack ended at the table's latitude (north -1297.4) and a westward ride stopped at 9 m. Both journeys now hold heading bands (west-northwest, yaw -0.45…-0.35, until 12 m, then due west), a line a node simulation of `stepCarriage` + `bicycleCanOccupy` found clear from every slot.

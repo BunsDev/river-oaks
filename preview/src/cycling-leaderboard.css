@@ -1,0 +1,18 @@
+/* The cycling leaderboard inside the Play dock: a tile that opens into a ranked
+   list. It never scrolls itself (the dock's content does), rows reuse the HUD
+   tile tokens, and your own row carries the action colour. */
+.cycling-board { margin: 0; border-radius: var(--hud-tile-radius, 12px); background: var(--hud-tile); }
+.cycling-board > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; font-weight: 600; }
+.cycling-board > summary::-webkit-details-marker { display: none; }
+.cycling-board > summary:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 2px; border-radius: var(--hud-tile-radius, 12px); }
+.cycling-board-mine { font-family: var(--font-mono); font-size: 12px; color: var(--hud-muted); }
+.cycling-board-sheet { padding: 0 12px 12px; }
+.cycling-board-eyebrow { margin: 0 0 8px; font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--hud-muted); }
+.cycling-board-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.cycling-board-row { display: grid; grid-template-columns: 3ch minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: var(--hud-control-radius, 9px); background: var(--hud-raised); font-size: 14px; }
+.cycling-board-row > span:first-child { font-family: var(--font-mono); color: var(--hud-muted); }
+.cycling-board-row > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.cycling-board-row > span:last-child { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.cycling-board-row-mine { box-shadow: inset 0 0 0 2px var(--hud-action); }
+.cycling-board-empty, .cycling-board-status, .cycling-board-footer { margin: 8px 0 0; font-size: 13px; color: var(--hud-muted); }
+.cycling-board-footer { font-weight: 600; color: inherit; }
