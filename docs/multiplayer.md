@@ -601,6 +601,15 @@ in (or out), or bounce on the table and in. Two throws a turn, and sinking all s
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
 
+The wine pong table's switch also offers **Shuffleboard**, which puts the glasses away
+and sets out eight weighted pucks. Standing at either end, you play a plaza regular or
+pass and play, both throwing from your end. Stop the sweeping line once for the aim and
+once for the power, and the puck slides on the sheet and the real table, knocking
+others it meets. Four pucks each a round; one short of the foul line is taken off. Only
+the player furthest along scores: each of their pucks beyond the other's best counts
+1, 2 or 3 by zone, and one hanging over the end 4. First to 15 wins. Rules:
+`preview/src/shuffleboard-rules.js`.
+
 A dartboard hangs on a post against the plaza's south wall, with a throwing line
 2.37 m out in front. Standing at the line, **Play darts** or **X** opens it: 501,
 double out, against a plaza regular or pass and play. A line sweeps across the board
@@ -638,7 +647,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, Yacht, wine pong, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, Yacht, wine pong, shuffleboard, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
