@@ -1,0 +1,28 @@
+{
+  "createdAt": "2026-10-13T11:27:45.270Z",
+  "results": [
+    {
+      "name": "voice-shared",
+      "status": "passed",
+      "seconds": 79.146,
+      "result": {
+        "checks": [
+          "Join is offered once the town reports voice; the microphone control waits for a join",
+          "Joining connects with the lease token and asks for no microphone",
+          "The token names the server-derived outdoor room, never one the page chose",
+          "The status region announces the join",
+          "Unmute requests audio exactly once and the control reads pressed",
+          "The snapshot carries the server-stamped participant identity for a joined resident",
+          "A subscribed track gets one audio graph",
+          "A talking resident gets a nameplate ring and counts in the dock pill",
+          "Walking away lowers the gain (0.89 at 6.0 m)",
+          "A muted resident is unsubscribed at the transport",
+          "Deafen unsubscribes every resident",
+          "Leaving stops the microphone track and disposes every audio graph",
+          "The server drops the lease once the resident leaves",
+          "At 390 px the dock row keeps 44 px targets inside the viewport"
+        ]
+      }
+    }
+  ]
+}
