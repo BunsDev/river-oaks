@@ -198,7 +198,7 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? (cafeGame === 'hearts' ? plazaHearts : plazaDominoes)?.interaction() ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? null, getPlay: () => plazaGames?.interaction() ?? (cafeGame === 'hearts' ? plazaHearts : plazaDominoes)?.interaction() ?? null, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -304,6 +304,7 @@ function startMultiplayer() {
   buildControls?.hide();
   multiplayer = createMultiplayer({
     creationToolsEnabled,
+    getWalking: () => walking,
     getPose: () => walking?.getPose(),
     getEnvironment: () => walking?.environment,
     getMeetingPlaces: () => world ? placesOf(world) : [],
@@ -941,7 +942,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
-  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(),creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
+  window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
+  window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
     rig.model.updateWorldMatrix(true,true);

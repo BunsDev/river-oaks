@@ -1,4 +1,6 @@
 import { createJevSettings } from './jev-settings.js';
+import { createVoiceSettings } from './voice-ui.js';
+import { sharedVoicePreferences } from './voice-preferences.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
 export function setupSidebar() {
@@ -108,7 +110,7 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   dialog.querySelector('.settings-layout').append(settings); panel.append(dialog);
   const groups = [
     ['Appearance', [appearance]], ['Graphics', graphics ? [graphics] : []],
-    ['Audio', [...voiceNodes, createJevSettings('elevenlabs')]],
+    ['Audio', [...voiceNodes, createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
     ['World', [...light, ...layers]],
     ['Account', [account, createJevSettings(), connection]],
     ['About', evidence],
