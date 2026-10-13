@@ -3,7 +3,7 @@
 // guides a player has read. Pure, so node tests check it against the rules modules;
 // salon-guide.js puts it on screen.
 const SALON_SEAT = 'Two chess tables stand in the plaza salon, one by Dior and one by Toulouse. Walk to a chair and press Z to sit, then X (Play a table game) to open the board beside you.';
-const SALON_SHEET = 'Play the plaza regular and choose your side, or Pass and play to share the board with a friend. Take back returns you to your own turn; New game starts afresh. Each table keeps one game of each kind, so you can switch and come back.';
+const SALON_SHEET = 'Play the plaza regular, choosing your side, or Pass and play with a friend. With someone in the other chair, Play them instead: the town keeps that game, and the whole plaza sees it. Each table keeps one practice game of each kind.';
 const BOARD_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '↑', '→', '↓'], 'Move across the board'], [['Enter'], 'Choose the square'], [['Esc'], 'Put the board away; your game waits']];
 const CAFE_KEYS = [[['Z'], 'Sit down or stand up'], [['X'], 'Open the table, or put it away'], [['←', '→'], 'Move along your hand'], [['Enter'], 'Choose the tile or card'], [['Esc'], 'Put the table away']];
 
@@ -104,6 +104,13 @@ export const GUIDE = [
     { title: 'The show', text: ['Each hand then counts with the starter: 2 for every combination making 15, 2 for every pair, each run its length, a flush 4 (5 with the starter), and the jack of the starter\'s suit 1. The dealer counts the crib last.'], figure: { kind: 'cribbage-show' } },
     { title: 'At the table', text: ['A pegging board replaces the checkers while you play, and its pegs follow the scores.'], figure: { kind: 'keys', keys: CAFE_KEYS } },
 ] },
+  { id: 'darts', name: 'Darts', place: 'The board on the south wall', pages: [
+    { title: 'Taking a seat', text: ['A dartboard hangs on a post against the plaza\'s south wall. There is no chair: walk up to the throwing line in front of it and press X (Play darts).', 'Play a plaza regular, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'The board', text: ['Each sector scores its number. The thin outer ring doubles it and the inner ring trebles it; the outer bull scores 25 and the bull 50.', 'The treble 20 is worth 60, the most on the board.'], figure: { kind: 'darts-board' } },
+    { title: 'A throw', text: ['A line sweeps across the board: stop it to set where you aim across. A second line sweeps up and down: stop it, and the dart lands where they cross.'], figure: { kind: 'darts-throw' } },
+    { title: '501, double out', text: ['Both start on 501 and take each turn\'s three darts off. The last dart must land in a double (or the bull) and bring you to exactly 0.', 'A dart that leaves you on 1, below 0, or on 0 without a double is a bust: the turn\'s darts don\'t count. On 170 or less the sheet suggests a checkout.'], figure: { kind: 'darts-checkout' } },
+    { title: 'At the table', text: ['The real board shows the turn\'s darts where they landed.'], figure: { kind: 'keys', keys: [[['X'], 'Open the board, or put it away'], [['Space', 'Enter'], 'Stop the line: across, then up'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the board away']] } },
+] },
   { id: 'dice', name: 'Liar’s dice', place: 'The round café table', pages: [
     { title: 'Taking a seat', text: ['At the round café table, press Z to sit and X to open the table, then choose Liar’s dice at the top of the sheet.', 'You and three plaza regulars each hold five dice under a cup.'], figure: { kind: 'emblem' } },
     { title: 'Bidding', text: ['Everyone rolls in secret. In turn, bid how many dice of one face lie on the whole table, counting everyone’s: “four fives”. Ones are wild and count as any face.', 'Each bid must raise the last: more dice, or the same number of a higher face.'], figure: { kind: 'dice-bid' } },
@@ -114,7 +121,7 @@ export const GUIDE = [
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
+export const WIDE_FIGURES = new Set(['dice-bid', 'dice-call', 'darts-checkout', 'cribbage-crib', 'cribbage-play', 'cribbage-show', 'mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -163,6 +170,8 @@ export const DIAGRAMS = {
   cribbageCrib: { hand: ['5H', '6C', '7D', '9S', 'KH', 'QC'], laid: ['KH', 'QC'], starter: 'JS' },
   cribbagePlay: { pile: ['7H', '8C'] },
   cribbageShow: { hand: ['5H', '5D', 'TS', 'JC'], starter: '5C' },
+  // Darts: the checkout the sheet suggests from 81.
+  dartsCheckout: { score: 81, plan: ['T19', 'D12'] },
   // Liar's dice: your cup and a bid, then all four cups lifted for "four fives".
   diceBid: { cup: [1, 5, 5, 2, 6], bid: [4, 5] },
   diceCall: { cups: [[1, 5, 5, 2, 6], [3, 3, 4, 6, 2], [5, 1, 2, 4, 4], [6, 6, 3, 2, 3]], bid: [4, 5], actual: 5 },
@@ -303,6 +312,7 @@ export function iconMarkup(id) {
     reversi: '<circle class="sg-icon-line" cx="20" cy="20" r="11"/><path class="sg-icon-fill" d="M20 9a11 11 0 0 0 0 22z"/>',
     morris: '<rect class="sg-icon-line" x="9" y="9" width="22" height="22"/><rect class="sg-icon-line" x="15" y="15" width="10" height="10"/><path class="sg-icon-line" d="M20 9v6M20 25v6M9 20h6M25 20h6"/><circle class="sg-icon-fill" cx="9" cy="9" r="2.6"/><circle class="sg-icon-fill" cx="31" cy="31" r="2.6"/>',
     cribbage: '<rect class="sg-icon-line" x="8" y="10" width="24" height="20" rx="4"/><circle class="sg-icon-fill" cx="14" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="20" cy="16" r="1.6"/><circle class="sg-icon-fill" cx="26" cy="16" r="1.6"/><circle class="sg-icon-line" cx="14" cy="24" r="1.6"/><circle class="sg-icon-line" cx="20" cy="24" r="1.6"/><circle class="sg-icon-line" cx="26" cy="24" r="1.6"/>',
+    darts: '<circle class="sg-icon-line" cx="20" cy="20" r="12"/><circle class="sg-icon-line" cx="20" cy="20" r="6.5"/><circle class="sg-icon-fill" cx="20" cy="20" r="2.2"/><path class="sg-icon-line" d="M27 13l7-7M30 6h4v4"/>',
     dice: '<rect class="sg-icon-line" x="7" y="11" width="15" height="15" rx="3"/><rect class="sg-icon-fill" x="18" y="14" width="15" height="15" rx="3"/><circle class="sg-icon-fill" cx="11" cy="15" r="1.4"/><circle class="sg-icon-fill" cx="18" cy="22" r="1.4"/>',
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
@@ -366,6 +376,22 @@ export function figureMarkup(figure, game) {
     case 'cribbage-show': { const { hand, starter } = DIAGRAMS.cribbageShow;
       return svg(300, 140, 'A hand of 5, 5, 10 and the jack of clubs with the 5 of clubs cut: fifteens 14, a pair royal 6, and nobs 1, for 21.',
         hand.map((code, i) => card(10 + i * 46, 30, code)).join('') + card(222, 22, starter, { cls: 'sg-card-win' }) + '<text class="sg-label" x="150" y="128" text-anchor="middle" font-size="13">fifteens 14 · pairs 6 · nobs 1 = 21</text>'); }
+    case 'darts-board': case 'darts-throw': {
+      const c = 110, k = 0.55, ring = (r, cls) => `<circle cx="${c}" cy="${c}" r="${r * k}" class="${cls}"/>`;
+      let body = ring(205, 'sg-rim') + ring(170, 'sg-tile-face') + `<circle cx="${c}" cy="${c}" r="${166 * k}" style="fill:none;stroke:#b0262c;stroke-width:${8 * k}"/>`
+        + `<circle cx="${c}" cy="${c}" r="${103 * k}" style="fill:none;stroke:#237a45;stroke-width:${8 * k}"/>` + ring(15.9, 'sg-red') + ring(6.35, 'sg-rim');
+      for (let i = 0; i < 20; i++) { const a = (i * 18 - 9) * Math.PI / 180; body += `<line x1="${c + Math.sin(a) * 15.9 * k}" y1="${c - Math.cos(a) * 15.9 * k}" x2="${c + Math.sin(a) * 170 * k}" y2="${c - Math.cos(a) * 170 * k}" style="stroke:#3a2c1a;stroke-width:.8"/>`; }
+      body += `<text class="sg-label" x="${c}" y="${c - 186 * k}" text-anchor="middle" font-size="12" style="fill:#f3ead8">20</text>`;
+      if (figure.kind === 'darts-board') {
+        body += `<circle class="sg-glow" cx="${c}" cy="${c - 103 * k}" r="8"/><text class="sg-label" x="${c + 40}" y="${c - 103 * k + 4}" font-size="11">T20 · 60</text><text class="sg-label" x="${c + 26}" y="${c + 4}" font-size="11">Bull · 50</text>`;
+        return svg(220, 220, 'A dartboard: twenty sectors, the double ring at the edge, the treble ring halfway in, the outer bull and the bull at the centre; the treble 20 at the top is worth 60.', body);
+      }
+      body += `<line x1="${c - 20}" y1="10" x2="${c - 20}" y2="210" style="stroke:#fff;stroke-width:2;stroke-dasharray:5 4"/><line x1="10" y1="${c - 40}" x2="210" y2="${c - 40}" style="stroke:#fff;stroke-width:2"/><circle cx="${c - 20}" cy="${c - 40}" r="7" style="fill:none;stroke:#fff;stroke-width:2"/>`;
+      return svg(220, 220, 'The aiming lines: the dashed one, set across the board; the solid one, sweeping up and down; the dart lands where they cross.', body); }
+    case 'darts-checkout': { const { score, plan } = DIAGRAMS.dartsCheckout;
+      return svg(300, 110, `A checkout from ${score}: ${plan.join(', then ')}, finishing exactly on a double.`,
+        `<text class="sg-label" x="30" y="62" font-size="26">${score}</text>` + plan.map((bed, i) => `<rect class="sg-tile-face" x="${110 + i * 90}" y="34" width="70" height="40" rx="8"/><text class="sg-label" x="${145 + i * 90}" y="60" text-anchor="middle" font-size="16">${bed}</text>`).join('')
+        + arrow([[80, 54], [104, 54]], 'd') + arrowHead('d') + '<text class="sg-label sg-quiet" x="235" y="96" text-anchor="middle" font-size="11">the double ends it</text>'); }
     case 'dice-bid': case 'dice-call': {
       const pips = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]], 5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
       const die = (x, y, value, size, lit) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size / 6}" class="sg-tile-face"${lit ? ' style="stroke:#e2b23a;stroke-width:2.5"' : ''}/>` + pips[value].map(([u, v]) => `<circle cx="${x + u * size}" cy="${y + v * size}" r="${size / 11}" class="sg-rim"/>`).join('');

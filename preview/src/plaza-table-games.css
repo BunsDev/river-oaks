@@ -44,6 +44,20 @@
 .table-game-panel .table-game-actions [data-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
 .table-game-panel button:disabled { opacity: .45; cursor: default; }
 .table-game-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--hud-muted); }
+/* Playing the resident across the table: its own row under the practice modes, and an
+   invitation bar that asks or waits. */
+.table-game-actions > .table-game-mode { flex-wrap: wrap; }
+.table-game-mode button[data-mode=shared] { flex: 1 1 100%; }
+.table-game-mode button[data-mode=shared][hidden] { display: none; }
+.table-game-panel .table-game-mode button[data-mode=shared][aria-pressed=false] { color: var(--hud-action); font-weight: 650; }
+.table-game-invite { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--hud-action); border-radius: 12px; background: var(--hud-tile); }
+.table-game-invite[hidden] { display: none; }
+.table-game-invite p { margin: 0; font-size: 13px; line-height: 1.4; }
+.table-game-invite div { display: flex; gap: 8px; }
+.table-game-invite button { flex: 1; min-height: 36px; border: 1px solid var(--hud-hairline); border-radius: var(--hud-control-radius, 9px); background: var(--hud-raised); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.table-game-invite button[data-invite=accept] { border-color: transparent; background: var(--hud-action); color: var(--hud-on-action); }
+.table-game-invite button[hidden] { display: none; }
+.table-game-panel .table-game-actions :is([data-action=resign], [data-action=undo], [data-action=new])[hidden] { display: none; }
 @media (max-width: 760px) {
   .table-game-panel { --board-size: max(240px, min(calc(100vw - 66px), calc(100dvh - 300px))); inset: 64px 12px auto 12px; width: auto; max-height: calc(100dvh - 76px); }
   .table-game-body { grid-template-columns: minmax(0, 1fr); }

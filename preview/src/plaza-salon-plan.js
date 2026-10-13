@@ -63,6 +63,9 @@ export function plazaSalonPlan(world) {
   // A small round grove table in the middle of the grove for mancala, with two chairs
   // east and west (chair 0 east).
   const grove = { id: 'grove', x: -2792.4, north: -1299.2 };
+  // A dartboard on a post backed against the south (Etro) wall, facing north up a clear
+  // lane to the throwing line 2.37 m away.
+  const darts = { id: 'darts', x: -2791.0, north: -1303.5, heading: 0 };
   // The bench backs onto the Etro block and opens north, to the grove and Dior.
   const bench = { id: 'bench', x: -2781.4, north: -1302.0, seatRadius: 1.42, backRadius: 2.02, opening: Math.PI, span: Math.PI * 1.18 };
   const chairs = [
@@ -88,7 +91,7 @@ export function plazaSalonPlan(world) {
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
     .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
   const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
-  return { round, chess, backgammon, winePong, grove, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
+  return { round, chess, backgammon, winePong, grove, darts, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
 }
 
 // Footprints the walking model blocks: [east, north, radius, height]. Chairs and
@@ -102,6 +105,7 @@ export function plazaSalonFootprints(world) {
     ...plan.chess.map(table => [table.x, table.north, 0.42, 0.76]),
     [plan.backgammon.x, plan.backgammon.north, 0.46, 0.76],
     [plan.grove.x, plan.grove.north, 0.4, 0.74],
+    [plan.darts.x, plan.darts.north, 0.22, 2.05],
     // The wine pong table is long: a row of overlapping discs (0.6 m apart, 0.36 m round).
     ...[-0.9, -0.3, 0.3, 0.9].map(u => [...winePongPoint(plan.winePong, [u, 0]), 0.36, 0.76]),
     [plan.bench.x, plan.bench.north, 0.44, 0.42],
@@ -299,4 +303,19 @@ export function goSpot(table, index, blackChair = 0) {
   const row = Math.floor(index / 9), column = index % 9, flip = blackChair === 0 ? 1 : -1;
   // Black in chair 0 sits east facing west: row 1 nearest (east), column a on its left (south).
   return [table.x + flip * (4 - row) * GO.spacing, table.north + flip * (column - 4) * GO.spacing];
+}
+// Darts: the board's centre 1.73 m up on the post, facing along the board's heading
+// (north), and the throwing line 2.37 m out in front. Standing within 0.8 m of the line
+// plays. A dart's landing [x, y] in millimetres on the board maps to [east, north, height].
+export const DARTS = { bull: 1.73, line: 2.37, reach: 0.8, radius: 0.2255 };
+export const dartsStand = board => [board.x + Math.sin(board.heading) * DARTS.line, board.north + Math.cos(board.heading) * DARTS.line];
+export function atDartsLine(board, [east, north]) {
+  const [x, n] = dartsStand(board);
+  return Math.hypot(east - x, north - n) <= DARTS.reach;
+}
+export function dartSpot(board, [x, y]) {
+  // The thrower stands in front of the board looking at it: for a board facing north they
+  // face south, so their right (+x on the board) is west.
+  const right = [-Math.cos(board.heading), Math.sin(board.heading)], face = 0.035;
+  return [board.x + right[0] * x / 1000 + Math.sin(board.heading) * face, board.north + right[1] * x / 1000 + Math.cos(board.heading) * face, DARTS.bull + y / 1000];
 }

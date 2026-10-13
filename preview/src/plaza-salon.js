@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, GO, JENGA, MANCALA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DARTS, DOMINO, GO, JENGA, MANCALA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, dartSpot, goSpot, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
+import { scoreAt } from './darts-rules.js';
 import { startGame as mancalaStart } from './mancala-rules.js';
 import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
 import { seededRandom } from './seeded-random.js';
@@ -826,6 +827,43 @@ export function buildPlazaSalon(world) {
       count: () => stones.count,
       setVisible(visible) { goban.visible = visible; },
       visible: () => goban.visible,
+    };
+  }
+  // Darts: a dark post backed against the wall, a round backboard, and the board itself,
+  // painted from the rules' own geometry (darts-rules.js scoreAt), facing the throwing
+  // line; the turn's darts stand in it where they landed.
+  {
+    const board = plan.darts, [x, y, z] = base(board), yaw = board.heading + Math.PI;
+    const wood = new THREE.MeshStandardMaterial({ color: '#2a211b', roughness: 0.7 });
+    const post = new THREE.Mesh(unit.box, wood); post.position.set(x, y + 1.0, z); post.scale.set(0.12, 2.0, 0.12); post.castShadow = post.receiveShadow = true;
+    const back = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 40).rotateX(Math.PI / 2), wood);
+    const face = dataTexture(256, (px, py, w, h) => {
+      const r = DARTS.radius * 1000, mx = ((px + 0.5) / w * 2 - 1) * r, my = ((py + 0.5) / h * 2 - 1) * r, hit = scoreAt([mx, my]), dist = Math.hypot(mx, my);
+      if (dist > 170) return dist > r ? [0, 0, 0, 0] : [24, 22, 21, 255];
+      if (hit.number === 25) return hit.value === 50 ? [176, 32, 38, 255] : [32, 120, 64, 255];
+      const dark = [20, 18, 13, 10, 2, 3, 7, 8, 14, 12].includes(hit.number);
+      if (hit.multiplier === 1) return dark ? [28, 26, 24, 255] : [236, 222, 190, 255];
+      return dark ? [176, 32, 38, 255] : [32, 120, 64, 255];
+    }, { repeat: false });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(DARTS.radius, 64), new THREE.MeshStandardMaterial({ map: face, roughness: 0.85, alphaTest: 0.5 }));
+    const holder = new THREE.Group(); holder.name = 'Dartboard'; holder.position.set(x, y + DARTS.bull, z); holder.rotation.y = yaw;
+    back.position.set(0, 0, 0.015); disc.position.set(0, 0, 0.032);
+    holder.add(back, disc);
+    const darts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.0035, 0.0018, 0.12, 8).rotateX(Math.PI / 2).translate(0, 0, 0.06), new THREE.MeshStandardMaterial({ color: '#d9c27a', metalness: 0.5, roughness: 0.4 }), 3);
+    Object.assign(darts, { name: 'Darts in the board', count: 0, castShadow: true });
+    { const holderTexture = new THREE.Object3D(); holderTexture.userData.texture = face; group.add(holderTexture); }
+    group.add(post, holder, darts);
+    group.userData.darts = {
+      // The turn's darts ([x, y] in mm on the board), or none.
+      show(points = []) {
+        darts.count = 0;
+        for (const point of points.slice(0, 3)) {
+          const [east, north, height] = dartSpot(board, point), [px, , pz] = base({ x: east, north });
+          dummy.position.set(px, y + height, pz); dummy.rotation.set(0, board.heading, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); darts.setMatrixAt(darts.count++, dummy.matrix);
+        }
+        darts.instanceMatrix.needsUpdate = true; darts.computeBoundingSphere();
+      },
+      count: () => darts.count,
     };
   }
   // Liar's dice at the café table: a leather cup upside down before each player still in,

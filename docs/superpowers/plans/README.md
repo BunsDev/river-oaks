@@ -91,7 +91,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-wine-pong](2026-10-13-plaza-wine-pong.md)<br>Plaza games: wine pong at the café — 2026-10-13 | #320 |
 | [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |
 | [2026-10-13-plaza-spades](2026-10-13-plaza-spades.md)<br>Plaza games: Spades at the café — 2026-10-13 | #323, #321 |
-| [2026-10-13-plaza-shared-table-games](2026-10-13-plaza-shared-table-games.md)<br>Shared games at the plaza chess tables — 2026-10-13 | — |
+| [2026-10-13-plaza-shared-table-games](2026-10-13-plaza-shared-table-games.md)<br>Shared games at the plaza chess tables — 2026-10-13 | #334 |
 | [2026-10-13-plaza-reversi](2026-10-13-plaza-reversi.md)<br>Reversi at the plaza chess tables — 2026-10-13 | — |
 | [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | #331 |
 | [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | #324 |
@@ -99,6 +99,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | #312 |
 | [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | #328 |
 | [2026-10-13-plaza-games-guide](2026-10-13-plaza-games-guide.md)<br>The Salon Guide: a tutorial for every plaza table game — 2026-10-13 | — |
+| [2026-10-13-plaza-darts](2026-10-13-plaza-darts.md)<br>Plaza games: darts on the south wall — 2026-10-13 | — |
 | [2026-10-13-plaza-cribbage](2026-10-13-plaza-cribbage.md)<br>Plaza games: cribbage at the walnut table — 2026-10-13 | — |
 | [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
 | [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
