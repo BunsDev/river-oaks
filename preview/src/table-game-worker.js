@@ -3,10 +3,12 @@
 import { fromFEN } from './chess-rules.js';
 import { chooseMove as chessMove } from './chess-opponent.js';
 import { chooseMove as checkersMove } from './checkers-opponent.js';
+import { chooseMove as connectFourMove } from './connect-four-opponent.js';
 
 const GAMES = {
   chess: ({ position, history, budget }) => chessMove(fromFEN(position), { history, budget }),
   checkers: ({ position, history, budget }) => checkersMove(position, { history, budget }),
+  connectFour: ({ position, budget }) => connectFourMove(position, { budget: budget * 2 }),
 };
 
 self.addEventListener('message', ({ data }) => {

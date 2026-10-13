@@ -17,8 +17,8 @@ async page => {
   await page.keyboard.press('KeyZ');
   await page.waitForFunction(id => window.__riverSeatAndWater().seated === id, chair, { timeout: 15000 });
   await page.waitForFunction(() => !document.querySelector('#walking-play').hidden, null, { timeout: 5000 });
-  check(await page.locator('#walking-play').evaluate(button => button.parentElement.classList.contains('walking-primary') && /Play chess/.test(button.textContent) && button.getAttribute('aria-keyshortcuts') === 'X'),
-    'Seated at a chess table, Play chess (X) is the primary action');
+  check(await page.locator('#walking-play').evaluate(button => button.parentElement.classList.contains('walking-primary') && /Play a table game/.test(button.textContent) && button.getAttribute('aria-keyshortcuts') === 'X'),
+    'Seated at a chess table, Play a table game (X) is the primary action');
 
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyX');

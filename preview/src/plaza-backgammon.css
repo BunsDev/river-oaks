@@ -1,0 +1,31 @@
+/* Backgammon at the plaza: a walnut-framed board on green felt, ivory and ebony
+   checkers, oxblood and cream points, as on the plaza table. */
+.backgammon-panel .backgammon-body { display: flex; flex-direction: column; gap: 12px; }
+.backgammon-board { display: block; width: 100%; height: auto; max-height: calc(100dvh - 330px); border-radius: 12px; user-select: none; }
+.backgammon-board .bg-frame { fill: #5b3a26; }
+.backgammon-board .bg-felt { fill: #2f5240; }
+.backgammon-board .bg-bar { fill: #4a2f1e; }
+.backgammon-board .bg-tray { fill: #4a2f1e; opacity: .85; }
+.backgammon-board .bg-triangle-0 { fill: #e7dbbf; }
+.backgammon-board .bg-triangle-1 { fill: #96362f; }
+.backgammon-board .bg-checker { stroke-width: 2; }
+.backgammon-board .bg-white { fill: #f4ede0; stroke: #b9ab8f; }
+.backgammon-board .bg-black { fill: #2a2421; stroke: #0f0c0b; }
+.backgammon-board .bg-off-checker { stroke: none; }
+.backgammon-board .bg-count { fill: #f5cf7a; font: 700 16px system-ui, sans-serif; }
+.backgammon-board [data-source] { cursor: pointer; }
+.backgammon-board [data-source] .bg-checker:last-of-type { stroke: #f5cf7a; stroke-width: 3; }
+.backgammon-board [data-selected] .bg-triangle-0, .backgammon-board [data-selected] .bg-triangle-1 { fill: #e1b85a; }
+.backgammon-board [data-target] { cursor: pointer; }
+.backgammon-board [data-target] .bg-triangle-0, .backgammon-board [data-target] .bg-triangle-1 { fill: #6fb79d; }
+.backgammon-board .bg-off[data-target] rect, .backgammon-board .bg-off[data-target] { outline: none; }
+.backgammon-board .bg-off[data-target] { filter: drop-shadow(0 0 6px #6fb79d); }
+.backgammon-board .bg-point:focus-visible { outline: 3px solid var(--hud-focus); outline-offset: 2px; }
+.backgammon-board .bg-die { fill: #fbf8f1; stroke: #cbbfa6; stroke-width: 1.5; }
+.backgammon-board .bg-die-used { opacity: .35; }
+.backgammon-board .bg-die-face { fill: #1d1b1f; font: 700 20px system-ui, sans-serif; }
+.backgammon-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.backgammon-scores li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.backgammon-panel .table-game-actions [data-backgammon-action=next] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.backgammon-panel .table-game-actions [hidden] { display: none; }
+.backgammon-panel .backgammon-side { display: flex; flex: 1 1 100%; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
