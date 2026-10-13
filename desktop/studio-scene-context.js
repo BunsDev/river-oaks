@@ -1,3 +1,4 @@
+import { SPACE_KINDS, SPACE_FINISHES, SPACE_LIGHTING } from '../shared/studio-space-catalog.js';
 // Rebuilds renderer-supplied scene context from an allowlist before it reaches a
 // local agent prompt. Unknown keys are dropped, strings are bounded and cleaned,
 // and numbers must be finite. Free text that remains (place and road names,
@@ -10,7 +11,7 @@ const HIDDEN = /[\p{Cc}\p{Cf}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{180B}-\u{180F}\u{FE00}-\
 // Every other space character (no-break, em, ideographic …) becomes a plain space.
 const SPACES = /\p{Zs}/gu;
 // Region IDs are lowercase slugs (preview/src/region-draft.js); Studio adds @arrival.
-const ID = /^(?:@arrival|[a-z0-9]+(?:-[a-z0-9]+)*)$/;
+const ID = /^(?:@arrival|@environment|[a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 // Cut by code point so a limit never splits a surrogate pair.
@@ -31,8 +32,8 @@ function pick(source, fields) {
 const num = value => finite(value) ? value : undefined;
 const bounds = value => Array.isArray(value) && value.length === 4 && value.every(finite) ? [...value] : undefined;
 
-const OBJECT = { id, type: value => ['arrival', 'building', 'tree', 'place'].includes(value) ? value : undefined,
-  label: text, east: num, north: num, width: num, depth: num, height: num, radius: num, yaw: num };
+const OBJECT = { id, type: value => ['arrival', 'building', 'tree', 'place', 'furnishing', 'environment'].includes(value) ? value : undefined,
+  label: text, east: num, north: num, width: num, depth: num, height: num, radius: num, yaw: num, elevation:num, kind:v=>SPACE_KINDS.includes(v)?v:undefined, finish:v=>SPACE_FINISHES.includes(v)?v:undefined, lighting:v=>SPACE_LIGHTING.includes(v)?v:undefined };
 const ROAD = { id, name: text, kind, width_m: num, points: value => list(value, LIMITS.points, point) };
 const object = value => { const out = pick(value, OBJECT); return out?.id && out.type ? out : null; };
 const road = value => { const out = pick(value, ROAD); return out?.id ? out : null; };
@@ -42,6 +43,7 @@ const keyed = fields => value => { const out = pick(value, fields); return out?.
 // heights are not needed to propose object edits and stay out of the prompt.
 function region(value) {
   if (!value || typeof value !== 'object') return undefined;
+  if(value.document_type==='studio-space')return {document_type:'studio-space',schema_version:1,name:text(value.name),lighting:SPACE_LIGHTING.includes(value.lighting)?value.lighting:undefined,bounds_m:bounds(value.bounds_m),spawn:point(value.spawn),objects:list(value.objects,160,v=>object({...v,type:'furnishing'}))};
   return {
     schema_version: num(value.schema_version), bounds_m: bounds(value.bounds_m), spawn: point(value.spawn),
     roads: list(value.roads, LIMITS.roads, road),
@@ -55,6 +57,7 @@ function region(value) {
 export function sanitizeSceneContext(context) {
   if (!context || typeof context !== 'object' || Array.isArray(context)) return null;
   const out = { units: 'metres' };
+  if(context.documentType==='studio-space')out.documentType='studio-space';
   if (finite(context.revision)) out.revision = context.revision;
   const box = bounds(context.bounds_m) ?? bounds(context.bounds);
   if (box) out.bounds_m = box;
@@ -79,7 +82,8 @@ export function normalizeText(value) {
 // Every free-text string in a sanitized context, so it can be shown before sending.
 export function sceneText(context) {
   const names = new Set();
-  for (const item of context?.objects ?? []) if (item.label && item.label !== item.id) names.add(item.label);
+  if(context?.region?.name)names.add(context.region.name);
+  for (const item of [...(context?.objects ?? []),...(context?.region?.objects ?? [])]) if (item.label && item.label !== item.id) names.add(item.label);
   for (const item of [...(context?.roads ?? []), ...(context?.region?.roads ?? []), ...(context?.region?.places ?? [])]) if (item.name) names.add(item.name);
   return [...names];
 }

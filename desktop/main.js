@@ -167,8 +167,8 @@ else {
       };
       const studio = studioDownloadAllowed(download, gameOrigin);
       if (contents !== window?.webContents || (!studio && !photoDownloadAllowed(download, gameOrigin))) { event.preventDefault(); return; }
-      item.setSaveDialogOptions({ title: studio ? 'Export World Studio region' : 'Save your River Oaks photo', defaultPath: item.getFilename(),
-        filters: studio ? [{ name: 'Region JSON', extensions: ['json'] }] : [{ name: 'PNG image', extensions: ['png'] }] });
+      item.setSaveDialogOptions({ title: studio ? (download.filename==='world-studio-space.json'?'Export World Studio space':'Export World Studio region') : 'Save your River Oaks photo', defaultPath: item.getFilename(),
+        filters: studio ? [{ name: download.filename==='world-studio-space.json'?'Space JSON':'Region JSON', extensions: ['json'] }] : [{ name: 'PNG image', extensions: ['png'] }] });
     });
     try {
       const state = JSON.parse(await readFile(stateFile, 'utf8'));

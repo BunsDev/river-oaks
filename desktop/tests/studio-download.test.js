@@ -26,3 +26,8 @@ test('rejects network, foreign-frame, malformed and non-studio downloads', () =>
   ]) assert.equal(studioDownloadAllowed({ ...region, ...change }, origin), false, JSON.stringify(change));
   assert.equal(studioDownloadAllowed(region, 'https://typesafe.place:8443'), false);
 });
+
+test('furnished spaces use their exact JSON filename under the same download boundary',()=>{
+  assert.equal(studioDownloadAllowed({...region,filename:'world-studio-space.json'},origin),true);
+  for(const filename of ['../world-studio-space.json','world-studio-space.json.exe','space.json'])assert.equal(studioDownloadAllowed({...region,filename},origin),false);
+});

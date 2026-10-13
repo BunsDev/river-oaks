@@ -51,7 +51,7 @@ async function fixture(t, options = {}) {
   });
   const joined = () => new Promise(resolve => { const poll = () => world.players.has('alice') ? resolve() : setTimeout(poll, 10); poll(); });
   const put = ([x, north]) => Object.assign(world.players.get('alice'), { position: [x, north, environment.groundAt(x, -north)], moveBudget: 1, liftBudget: 1 });
-  return { world, cyclingMiles, command, put, ws, joined, advance: ms => { time += ms; } };
+  return { world, cyclingMiles, command, put, ws, joined, origin, advance: ms => { time += ms; } };
 }
 
 test('uncycle flushes the ride, and a rider still out is flushed by the tick', async t => {
@@ -82,4 +82,20 @@ test('a rider who disconnects mid-ride is banked when the departure grace ends',
   f.ws.close();
   await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 3 });
   assert.equal(f.world.players.has('alice'), false, 'the departure grace removed the rider');
+});
+
+test('the leaderboard route ranks the rider after a flushed ride', async t => {
+  const f = await fixture(t);
+  await f.joined();
+  f.put(slot.approach);
+  assert.equal((await f.command({ type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 })).ok, true);
+  f.advance(1000);
+  assert.equal((await f.command({ type: 'pose', position: west(6), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
+  assert.equal((await f.command({ type: 'uncycle' })).ok, true);
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 6 }, 3000);
+  const response = await fetch(f.origin + '/api/cycling/leaderboard', { headers: { Cookie: 'test_session=alice' } });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { top: [{ rank: 1, name: 'Alice', miles: 0 }], me: { rank: 1, miles: 0 }, limit: 20 });
+  assert.equal((await fetch(f.origin + '/api/cycling/leaderboard')).status, 401, 'a session is required');
+  f.ws.close();
 });
