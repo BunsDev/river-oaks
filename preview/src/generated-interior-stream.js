@@ -17,7 +17,7 @@ function previewShell(room) {
   };
   const front = room.frontInset, length = room.depth - front, mid = (room.depth + front) / 2;
   box(floor, room.center, mid, 0, room.width, 0.05, length);
-  box(floor, 0, front / 2, 0, 1.7, 0.05, front);
+  if ((room.generatedPlan?.index ?? 0) === 0) box(floor, 0, front / 2, 0, 1.7, 0.05, front);
   box(wall, room.center, room.depth - 0.07, room.height / 2, room.width, room.height, 0.14);
   for (const a of [room.aMin + 0.07, room.aMax - 0.07]) box(wall, a, mid, room.height / 2, 0.14, room.height, length);
   group.userData.dispose = () => {

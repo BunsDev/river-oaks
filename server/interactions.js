@@ -6,13 +6,15 @@ const fields=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)
 const text=value=>typeof value==='string'&&value.length>0&&value.length<=200;
 
 // Bounded by the town's player count: one invitation or activity per participant.
-export function createInteractions({players,environment,now,movementOf,changed,residents=()=>[]}){
+export function createInteractions({players,environment,environmentFor=()=>environment,now,movementOf,changed,residents=()=>[]}){
   let entries=[];
   const onFoot=p=>interactionOnFoot(p&&{...p,movement:movementOf(p)});
-  const reachable=(a,b)=>a&&b&&a!==b&&onFoot(a)&&onFoot(b)&&interactionDistance(a,b)<=INTERACTION_REACH
+  const reachable=(a,b)=>a&&b&&a!==b&&(a.levelId??null)===(b.levelId??null)
+    && onFoot(a)&&onFoot(b)&&interactionDistance(a,b)<=INTERACTION_REACH
     && Math.abs(a.position[2]-b.position[2])<.35
-    && (environment.roomAt(a.position[0],-a.position[1])?.storeId??null)===(environment.roomAt(b.position[0],-b.position[1])?.storeId??null)
-    && environment.hasSightLine([a.position[0],a.position[1],a.position[2]+1.3],[b.position[0],b.position[1],b.position[2]+1.3]);
+    && (environmentFor(a).roomAt(a.position[0],-a.position[1])?.storeId??null)
+      ===(environmentFor(b).roomAt(b.position[0],-b.position[1])?.storeId??null)
+    && environmentFor(a).hasSightLine([a.position[0],a.position[1],a.position[2]+1.3],[b.position[0],b.position[1],b.position[2]+1.3]);
   const find=id=>entries.find(item=>item.fromId===id||item.toId===id);
   const cancel=id=>{const before=entries.length;entries=entries.filter(item=>item.fromId!==id&&item.toId!==id);if(entries.length!==before)changed();};
   const prune=()=>{
@@ -27,15 +29,16 @@ export function createInteractions({players,environment,now,movementOf,changed,r
     const direction=[(b.position[0]-a.position[0])/distance,(b.position[1]-a.position[1])/distance];
     const positions=[-1,1].map(sign=>[mid[0]+direction[0]*.46*sign,mid[1]+direction[1]*.46*sign]);
     for(const [i,p] of [a,b].entries()){
+      const walking=environmentFor(p);
       const target=positions[i],steps=Math.max(1,Math.ceil(Math.hypot(target[0]-p.position[0],target[1]-p.position[1])/.1));
       for(let step=1;step<=steps;step++){
         const x=p.position[0]+(target[0]-p.position[0])*step/steps,n=p.position[1]+(target[1]-p.position[1])*step/steps;
-        if(!environment.isFree(x,-n)||Math.abs(environment.groundAt(x,-n)-p.position[2])>.2
-          ||(environment.roomAt(x,-n)?.storeId??null)!==(environment.roomAt(p.position[0],-p.position[1])?.storeId??null)
+        if(!walking.isFree(x,-n)||Math.abs(walking.groundAt(x,-n)-p.position[2])>.2
+          ||(walking.roomAt(x,-n)?.storeId??null)!==(walking.roomAt(p.position[0],-p.position[1])?.storeId??null)
           ||[...players.values(),...residents()].some(other=>other!==a&&other!==b&&Math.abs((other.position[2]??0)-p.position[2])<1&&Math.hypot(x-other.position[0],n-other.position[1])<.7))return false;
       }
     }
-    [a,b].forEach((p,i)=>{p.position=[...positions[i],environment.groundAt(positions[i][0],-positions[i][1])];p.poseAt=now();p.moveBudget=.1;});
+    [a,b].forEach((p,i)=>{p.position=[...positions[i],environmentFor(p).groundAt(positions[i][0],-positions[i][1])];p.poseAt=now();p.moveBudget=.1;});
     return true;
   }
   return {

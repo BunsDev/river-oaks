@@ -10,7 +10,7 @@ import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.
 import { hedgeClusters } from './street-furniture.js';
 import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
-import { storeRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
@@ -416,7 +416,11 @@ export function buildDistrictBuildings(world) {
   }
   group.add(reference.group);
   const reflectionMaterials = [glass, upperGlass, ...reference.reflective];
-  const generatedRooms = rooms.filter(room => room.generatedPlan);
+  const generatedRooms = [
+    ...rooms.filter(room => room.generatedPlan),
+    ...(world.buildingInteriors ?? []).flatMap(plan => plan.levels.filter(level => level.index > 0)
+      .flatMap(level => interiorLevelRoomsFor(world, level.id))),
+  ];
   const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan), { atlas: interiors, reflectionMaterials });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];

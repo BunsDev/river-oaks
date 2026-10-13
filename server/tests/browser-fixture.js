@@ -1,10 +1,10 @@
 // Loopback-only browser acceptance fixture. Production uses server/start.js and WorkOS.
-import { readFile } from 'node:fs/promises';
 // The fixture supplies its own town and identities, and tests the sign-in gate.
 process.env.RIVER_OAKS_DEV_TOWN='off';
 import { createServer as createViteServer } from 'vite';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
+import { loadDistrictData } from '../district-data.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createMemoryLandmarks } from '../landmarks.js';
 import { createMemorySocial } from '../social.js';
@@ -16,8 +16,7 @@ import { createVoiceService, createMemoryVoiceLeases } from '../voice.js';
 import { createFakeLiveKit } from './livekit-fixture.js';
 const webPort=Number(process.env.RIVER_OAKS_TEST_WEB_PORT??5180),townPort=Number(process.env.RIVER_OAKS_DEV_TOWN_PORT??8788);
 const origin=`http://127.0.0.1:${webPort}`;
-const data=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url)));
-data.vegetation=JSON.parse(await readFile(new URL('../../preview/public/data/district-vegetation.json',import.meta.url)));
+const data=await loadDistrictData();
 let app;
 const identity=req=>{
   // Residents carry their GitHub username; the owner is a Jevica account. The

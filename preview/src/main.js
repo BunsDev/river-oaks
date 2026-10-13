@@ -230,7 +230,12 @@ function initializeRenderer() {
     void worldPortal.load();
   }
   sidebarSections = setupSidebarSections({ graphics: quality.element, sidebar });
-  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
+  walking = createWalkingControls({ camera, host, reducedMotion, onMeetNearby: () => community.meetNearby(), onTalk: id => community.selectLocal(id), getLocals: () => community.state?.locals, onEnter: enterStore, onLeave: leaveStore,
+    onLevelChange: async portal => {
+      const result = await multiplayer.command({ type: 'interiorLevel', portalId: portal.id });
+      if (result.ok && result.player) walking.applyServerPose(result.player);
+      return result;
+    }, canEnterStore, getInteraction: () => seatAndWater?.interaction() ?? plazaBicycle?.prompt() ?? null, getPlay: playAction, getVoice: () => multiplayer?.voice ?? null });
   storeIntros = createStoreIntros({ camera, host,
     claim: storeId => multiplayer.claimStoreIntro(storeId),
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
@@ -415,7 +420,7 @@ function startMultiplayer() {
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       const self = players.find(player => player.id === selfId);
-      walking?.syncSeating(self);
+      walking?.syncAuthoritativePose(self);
       if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
@@ -714,7 +719,7 @@ async function loadWorld() {
     else if(manifest.template==='river-oaks') {
       const [district,vegetation,approved]=await Promise.all([
         jsonResponse('/data/district.json'),jsonResponse('/data/district-vegetation.json'),
-        jsonResponse('/data/building-interiors/river-oaks-gallery-v1.json'),
+        jsonResponse('/data/building-interiors/river-oaks-gallery-v2.json'),
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
@@ -805,7 +810,8 @@ function render(now) {
   // Riding a bird pauses walking; the bird drives the camera below.
   const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);
   const introRoom = self && multiplayer?.connected && world
-    ? storeRoomsFor(world).find(room => room.category !== 'home' && room.contains(self.position[0], self.position[1], .2)) : null;
+    ? storeRoomsFor(world).find(room => room.category !== 'home' && (!self.levelId || room.planId === self.levelId)
+      && room.contains(self.position[0], self.position[1], .2)) : null;
   storeIntros?.observe({ room: introRoom, accountId: multiplayer?.identity?.id,
     worldId: worldIdFromSearch(location.search),
     canPlay: Boolean(walking?.active && !loading && !multiplayer?.traveling && !photoMode?.active && !birdCams?.riding && !self?.altitude

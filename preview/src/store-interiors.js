@@ -408,11 +408,26 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
         add(box, walls[room.theme], a, mid, H / 2, [0.15, H, length]);
       }
       // Only the approved entrance portal bridges the setback to the facade.
-      add(box, floorMaterial, 0, front / 2, 0.012, [1.7, 0.025, front]);
+      if (room.generatedPlan.index === 0) add(box, floorMaterial, 0, front / 2, 0.012, [1.7, 0.025, front]);
       for (const fixture of room.obstacles) {
         const a = (fixture.a0 + fixture.a1) / 2, d = (fixture.d0 + fixture.d1) / 2;
         add(box, stone, a, d, 0.62, [fixture.a1 - fixture.a0, 1.24, fixture.d1 - fixture.d0]);
         add(box, brass, a, d, 1.26, [fixture.a1 - fixture.a0 + 0.04, 0.04, fixture.d1 - fixture.d0 + 0.04]);
+      }
+      const stairOpening = room.generatedPlan.layers.shell[0]?.stairOpening;
+      if (stairOpening?.length === 4) {
+        const corners = stairOpening.map(point => room.toLocal(...point));
+        const a0 = Math.min(...corners.map(point => point[0]));
+        const a1 = Math.max(...corners.map(point => point[0]));
+        const d0 = Math.min(...corners.map(point => point[1]));
+        const d1 = Math.max(...corners.map(point => point[1]));
+        const middle = (a0 + a1) / 2, depth = (d0 + d1) / 2;
+        for (const d of [d0, d1]) add(box, brass, middle, d, 0.03, [a1 - a0, 0.012, 0.035]);
+        for (const a of [a0, a1]) add(box, brass, a, depth, 0.03, [0.035, 0.012, d1 - d0]);
+        for (let index = 1; index <= 5; index++) {
+          add(box, glow, middle, d0 + (d1 - d0) * index / 6, 0.034, [(a1 - a0) * 0.58, 0.008, 0.025]);
+        }
+        add(disc, lamp, middle, depth, H - 0.012, [0.12, 0.02, 0.12]);
       }
       for (let d = front + 1.3; d < D - 0.3; d += 2.2) {
         add(disc, lamp, c, d, H - 0.012, [0.065, 0.02, 0.065]);

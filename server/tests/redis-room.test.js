@@ -181,7 +181,7 @@ testRedis('default district recovers its historical heights through the fenced R
   }finally{await restored.close();}
 });
 
-testRedis('default district commits the approved interior revision without losing town state',async t=>{
+testRedis('default district commits the approved two-level revision without losing town state',async t=>{
   const current=await loadDistrictData(),previous=structuredClone(current);
   delete previous.buildingInteriors;
   const f=await setup(t,{world:previous}),first=f.create();
@@ -195,7 +195,8 @@ testRedis('default district commits the approved interior revision without losin
   const logs=[];t.mock.method(console,'info',message=>logs.push(JSON.parse(message)));
   const restored=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
   try{
-    assert.equal((await f.join(restored,'alice','replacement')).ok,true);
+    const replacement=await f.join(restored,'alice','replacement');
+    assert.equal(replacement.ok,true,JSON.stringify(replacement));
     const after=(await restored.read()).snapshot;
     for(const field of ['chat','players','wishes'])assert.deepEqual(after[field],before[field],field);
     const normalize=locals=>locals.map(local=>{
@@ -209,7 +210,7 @@ testRedis('default district commits the approved interior revision without losin
     assert.deepEqual(normalize(after.locals),normalize(before.locals),'only gallery standing positions may move');
     const committed=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
     assert.equal(committed.checkpoint.worldFingerprint,createHash('sha256').update(JSON.stringify(current)).digest('hex'));
-    assert.deepEqual(logs,[{event:'district_interior_checkpoint_migrated',from:'previous_district',to:'gallery_plan_v1'}]);
+    assert.deepEqual(logs,[{event:'district_levels_checkpoint_migrated',from:'previous_district',to:'gallery_plan_v2'}]);
     await restored.close();
     const next=createRedisRoom({redis:f.redis,prefix:f.prefix,worldData:current,authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
     try{assert.equal((await f.join(next,'alice','third')).ok,true);assert.equal(logs.length,1);}
@@ -412,7 +413,7 @@ testRedis('paired invitations and consent survive coordinator replacement with s
   assert.ok(players.every(p=>p.gesture==='dance'));
   assert.equal(players[0].interaction.elapsed,players[1].interaction.elapsed);
   const state=JSON.parse(inflateSync(await f.redis.getBuffer(`${f.prefix}:state`)).toString());
-  assert.equal(state.checkpoint.version,6);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
+  assert.equal(state.checkpoint.version,7);assert.equal(state.checkpoint.payload.interactions[0].status,'active');
   await replacement.close();const last=f.create();
   assert.equal((await f.command(last,'alice',{type:'interaction',action:'cancel',id:invitation.interaction.id})).ok,true);
   assert.ok((await last.read()).snapshot.players.every(p=>p.gesture===null));

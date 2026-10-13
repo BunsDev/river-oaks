@@ -12,6 +12,7 @@ import { createSharedWorld } from '../world.js';
 
 const district = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
 const approved = JSON.parse(readFileSync(new URL('../../preview/public/data/building-interiors/river-oaks-gallery-v1.json', import.meta.url)));
+const approvedLevels = JSON.parse(readFileSync(new URL('../../preview/public/data/building-interiors/river-oaks-gallery-v2.json', import.meta.url)));
 
 test('the district gallery has one reproducible server-approved plan without claiming other storefronts', () => {
   const store = district.stores.find(item => item.name === 'Laura Rathe Fine Art');
@@ -39,11 +40,11 @@ test('the district gallery has one reproducible server-approved plan without cla
   }
 });
 
-test('both runtimes attach the same approved plan and preserve a validated town checkpoint', async () => {
+test('the previous gallery revision preserves a validated town checkpoint for chained migration', async () => {
   const oldData = structuredClone(district);
   oldData.vegetation = JSON.parse(readFileSync(new URL('../../preview/public/data/district-vegetation.json', import.meta.url)));
   const newData = attachDistrictGalleryPlan(oldData, approved);
-  assert.deepEqual(await loadDistrictData(), newData);
+  assert.deepEqual(await loadDistrictData(), attachDistrictGalleryPlan(oldData, approvedLevels));
   const options = { now: () => 100000 };
   const oldWorld = createSharedWorld(oldData, options);
   assert.equal(oldWorld.join({ userId: 'gallery-visitor', name: 'Visitor' }).ok, true);

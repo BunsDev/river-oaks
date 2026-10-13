@@ -21,12 +21,15 @@ const clearOfPolygon = (point, polygon, margin = 0) => {
   return margin > 0 ? contained && distance > margin : contained || distance < -margin;
 };
 
-/** Adapt an approved level-0 plan to the existing shared walking/room contract. */
-export function approvedGroundRoom(plan, legacy) {
-  const level = plan?.levels?.[0], primary = level?.rooms?.[0], entrance = level?.portals?.find(portal => portal.kind === 'entrance');
-  if (!legacy || level?.index !== 0 || !primary?.footprint || !entrance
-    || entrance.id !== `${level.id}/portal/${legacy.storeId}` || plan.buildingId !== legacy.buildingId) {
-    throw new Error('Invalid approved ground room');
+/** Adapt an approved level to the existing walking/room contract. */
+export function approvedLevelRoom(plan, level, legacy) {
+  const primary = level?.rooms?.[0], ground = level?.index === 0;
+  const entrance = level?.portals?.find(portal => portal.kind === 'entrance');
+  const stairs = level?.portals?.find(portal => portal.kind === 'stairs' && portal.toLevelId === plan?.levels?.[level.index - 1]?.id);
+  if (!legacy || !Number.isInteger(level?.index) || plan?.levels?.[level.index]?.id !== level.id
+    || !primary?.footprint || plan.buildingId !== legacy.buildingId
+    || (ground ? entrance?.id !== `${level.id}/portal/${legacy.storeId}` : !stairs)) {
+    throw new Error('Invalid approved level room');
   }
   const polygon = primary.footprint, local = polygon.map(point => legacy.toLocal(...point));
   const aMin = Math.min(...local.map(point => point[0])), aMax = Math.max(...local.map(point => point[0]));
@@ -39,7 +42,7 @@ export function approvedGroundRoom(plan, legacy) {
   });
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const people = [];
-  for (const person of legacy.people) {
+  for (const person of ground ? legacy.people : []) {
     const desired = [clamp(person.a, aMin + 0.75, aMax - 0.75),
       clamp(person.d, frontInset + 0.75, depth - 0.75)];
     let placed = null;
@@ -55,13 +58,13 @@ export function approvedGroundRoom(plan, legacy) {
     if (!placed) throw new Error('Approved room has no standing clearance');
     people.push(placed);
   }
-  const bounds = [...polygon, legacy.toWorld(-DOOR_HALF_WIDTH, -1.4), legacy.toWorld(DOOR_HALF_WIDTH, -1.4)];
+  const bounds = ground ? [...polygon, legacy.toWorld(-DOOR_HALF_WIDTH, -1.4), legacy.toWorld(DOOR_HALF_WIDTH, -1.4)] : polygon;
   const room = {
     ...legacy, id: primary.id, planId: level.id, generatedPlan: level,
     aMin, aMax, center: (aMin + aMax) / 2, width: aMax - aMin, depth,
     frontInset, height: level.clearHeight, floor: level.floorElevation,
     footprint: polygon, obstacles, fixtures: [], people, lights: legacy.lights,
-    summary: { label: legacy.summary.label, highlights: [
+    summary: { label: ground ? legacy.summary.label : `${legacy.summary.label} · Level ${level.index + 1}`, highlights: [
       ...new Set(obstacles.map(item => item.kind === 'display' ? 'wall display' : item.kind)),
       `${level.layers.finishes[0]?.material ?? 'stone'} floor`,
     ] },
@@ -71,6 +74,7 @@ export function approvedGroundRoom(plan, legacy) {
   room.contains = (east, north, margin = 0) => clearOfPolygon([east, north], polygon, margin);
   room.containsAccess = (east, north, margin = 0) => {
     if (room.contains(east, north, margin)) return true;
+    if (!ground) return false;
     const [a, d] = room.toLocal(east, north);
     return d > -1.4 + Math.max(0, margin) && d < frontInset + Math.max(0, margin)
       && Math.abs(a) < DOOR_HALF_WIDTH - Math.max(0, margin);
@@ -78,4 +82,8 @@ export function approvedGroundRoom(plan, legacy) {
   room.blocks = (east, north, radius = 0) => obstacles.some(item =>
     clearOfPolygon([east, north], item.footprint, -radius));
   return room;
+}
+
+export function approvedGroundRoom(plan, legacy) {
+  return approvedLevelRoom(plan, plan?.levels?.[0], legacy);
 }

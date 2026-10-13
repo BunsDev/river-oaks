@@ -1,6 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { clearStandingStations } from './store-clearance.js';
-import { approvedGroundRoom } from './approved-interior-room.js';
+import { approvedGroundRoom, approvedLevelRoom } from './approved-interior-room.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
@@ -31,6 +31,7 @@ export function rectanglesOverlap(a, b, margin = 0) {
 }
 
 const cache = new WeakMap();
+const levelCache = new WeakMap();
 export function storeRoomsFor(world) {
   if (!world || typeof world !== 'object') return [];
   if (!cache.has(world)) {
@@ -46,6 +47,25 @@ export function storeRoomsFor(world) {
     cache.set(world, rooms);
   }
   return cache.get(world);
+}
+
+/** Resolve an assigned upper level without mixing its overlapping ground footprint into street queries. */
+export function interiorLevelRoomsFor(world, levelId) {
+  if (!world || typeof world !== 'object' || typeof levelId !== 'string') return [];
+  if (!levelCache.has(world)) levelCache.set(world, new Map());
+  const levels = levelCache.get(world);
+  if (!levels.has(levelId)) {
+    const rooms = [];
+    for (const plan of world.buildingInteriors ?? []) {
+      const level = plan.levels?.find(item => item.id === levelId && item.index > 0);
+      if (!level) continue;
+      const storeId = plan.levels[0].portals.find(portal => portal.kind === 'entrance')?.id?.split('/portal/')[1];
+      const legacy = planStoreRooms(world).find(room => room.storeId === storeId && room.buildingId === plan.buildingId);
+      rooms.push(approvedLevelRoom(plan, level, legacy));
+    }
+    levels.set(levelId, rooms);
+  }
+  return levels.get(levelId);
 }
 
 export function planStoreRooms(world) {
