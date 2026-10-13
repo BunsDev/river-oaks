@@ -15,6 +15,18 @@ The arrival sequence shows the player’s current avatar boarding an elevator, r
 
 The office uses the existing 9 × 7 m furnished room, with collision against walls, desks, chairs, storage and the review table. Walking reserves the measured 0.888 m turning radius of the longest playable body. The cinematic crosses the doorway along its centerline; free walking stays inside the office.
 
+## Work at your desk
+
+While upstairs, choose **Open desk · E**, press **E**, or approach a desk and choose **Use this desk**. The desk pauses walking and opens your private work surface. Guests keep their own tasks; office ownership does not grant access to someone else's notes.
+
+Create a task, add notes and links to your files or documents, and write the result. Changes save automatically after a short pause; **Save** or **Cmd/Ctrl S** saves immediately. **Mark complete** keeps the result, and **Reopen task** resumes it. Returning to the desk after leaving or reloading opens the last saved task. **Download** exports a plain-text copy. File references are web links, not uploaded copies.
+
+A failed save keeps your draft in the current page and offers Retry. Conflicts with another tab require downloading the local draft or explicitly reloading saved work. Closing a failed or unnamed draft asks before hiding it; it remains in that page until you return. Unsaved changes prompt before browser reload/navigation. They are not recoverable after closing the page without saving. Escape closes the desk first; a second Escape leaves the office.
+
+Each account can keep up to 24 tasks within a 128 KiB desk document. Task limits are 120 characters for the title, 4,000 for notes, 8,000 for the result and five file links. Removing a task requires confirmation. Redis stores the account's desk outside world checkpoints until tasks are removed; the standalone in-memory development server retains it only for that process lifetime. Deletion removes task content while retaining a small version record to prevent stale writes from resurrecting deleted work.
+
+The desk routes require the existing authenticated, approved session, origin/CSRF checks, rate limits and an active office visit in that same session. Desk text is never included in public snapshots. Saves use version checks so simultaneous tabs cannot silently overwrite each other. The desk performs no external writes, file fetches or model calls.
+
 ## Authority and persistence
 
 `server/offices.js` handles the `office` world command. It derives ownership from the existing Jevica admin predicate; no command accepts an owner field. The same authenticated ticket/WebSocket gates enforce waitlist approval, session expiry and bans for both the local and Redis servers. Movement uses office-local coordinates, a speed budget and swept collision. Office visitors cannot perform street interactions or travel until they leave. Voice receives a distinct office space.
