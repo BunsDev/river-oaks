@@ -22,7 +22,7 @@ const nameOf = (adapter, square) => (adapter.squareName ?? chess.squareName)(squ
 const squareOf = (adapter, name) => (adapter.squareOf ?? chess.squareOf)(name);
 
 // The regular thinks in a worker; each request carries an id, so a late answer is dropped.
-function createWorkerThinker() {
+export function createWorkerThinker() {
   let worker = null, next = 0;
   return ({ game, position, history, budget }) => new Promise(resolve => {
     try { worker ??= new Worker(new URL('./table-game-worker.js', import.meta.url), { type: 'module' }); }

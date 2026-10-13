@@ -96,6 +96,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-plaza-morris](2026-10-13-plaza-morris.md)<br>Nine men's morris at the plaza chess tables — 2026-10-13 | #331 |
 | [2026-10-13-plaza-mancala](2026-10-13-plaza-mancala.md)<br>Plaza games: mancala at the grove table — 2026-10-13 | #324 |
 | [2026-10-13-plaza-jenga](2026-10-13-plaza-jenga.md)<br>Plaza games: Jenga on the curved bench — 2026-10-13 | #312 |
+| [2026-10-13-plaza-go](2026-10-13-plaza-go.md)<br>Plaza games: Go at the grove table — 2026-10-13 | #328 |
 | [2026-10-13-plaza-games-guide](2026-10-13-plaza-games-guide.md)<br>The Salon Guide: a tutorial for every plaza table game — 2026-10-13 | — |
 | [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
 | [2026-10-13-modal-outside-dismiss](2026-10-13-modal-outside-dismiss.md)<br>Outside-click modal dismissal | #316, #314, #321 |
