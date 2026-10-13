@@ -366,6 +366,9 @@ export function buildPlazaSalon(world) {
     const width = 7 * FOUR + 0.03, height = 6 * FOUR + 0.03, lift = 0.03;
     const fourSlot = new THREE.CylinderGeometry(0.022, 0.022, 0.014, 20).rotateX(Math.PI / 2);
     const fourDisc = new THREE.CylinderGeometry(0.024, 0.024, 0.022, 24).rotateX(Math.PI / 2);
+    // Both tables share the frame, slot and disc geometries and materials.
+    const frameGeometry = new THREE.BoxGeometry(width, height, 0.012), feetGeometry = new THREE.BoxGeometry(width + 0.04, 0.012, 0.09);
+    const slotMaterial = new THREE.MeshStandardMaterial({ color: '#16294a', roughness: 0.6 }), discMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.38 });
     const fours = new Map(), tintOf = { r: new THREE.Color('#d2352d'), y: new THREE.Color('#f2c230') };
     const cellAt = index => [((index % 7) - 3) * FOUR, lift + (Math.floor(index / 7) + 0.5) * FOUR + 0.015, 0];
     for (const table of plan.chess) {
@@ -373,13 +376,13 @@ export function buildPlazaSalon(world) {
       const holder = new THREE.Group(); holder.name = `Connect Four ${table.id}`; holder.visible = false;
       holder.position.set(centre[0], y + 0.774, -centre[1]);
       holder.rotation.y = Math.atan2(-(-across[1] + centre[1]), across[0] - centre[0]);
-      const frame = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.012), frameMaterial);
+      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
       frame.position.y = lift + height / 2; frame.castShadow = frame.receiveShadow = true;
-      const feet = new THREE.Mesh(new THREE.BoxGeometry(width + 0.04, 0.012, 0.09), frameMaterial);
+      const feet = new THREE.Mesh(feetGeometry, frameMaterial);
       feet.position.y = 0.006;
-      const slots = new THREE.InstancedMesh(fourSlot, new THREE.MeshStandardMaterial({ color: '#16294a', roughness: 0.6 }), 42);
+      const slots = new THREE.InstancedMesh(fourSlot, slotMaterial, 42);
       for (let index = 0; index < 42; index++) { dummy.position.set(...cellAt(index)); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); slots.setMatrixAt(index, dummy.matrix); }
-      const discs = new THREE.InstancedMesh(fourDisc, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.38 }), 42);
+      const discs = new THREE.InstancedMesh(fourDisc, discMaterial, 42);
       discs.count = 0; discs.castShadow = true;
       holder.add(frame, feet, slots, discs); group.add(holder);
       fours.set(table.id, { holder, discs });

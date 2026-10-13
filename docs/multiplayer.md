@@ -492,12 +492,14 @@ free one. **Stand up** (or **Z** again) works with keyboard and touch controls. 
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
-Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess
-or checkers** or **X** opens a board beside the table. **Chess** and **Checkers**
-(American rules: captures are compulsory, and a crowned man stops) switch in the
-sheet, and each table keeps one game of each. You can play the plaza regular (a
-small engine that thinks in a worker) or pass and play, taking either side. The
-table's 3D pieces or discs mirror the game. It is a practice game kept in your
+Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play a
+table game** or **X** opens a board beside the table. **Chess**, **Checkers**
+(American rules: captures are compulsory, and a crowned man stops) and **Connect
+Four** (seven columns of six, red first; a click anywhere in a column drops a disc)
+switch in the sheet, and each table keeps one game of each. You can play the plaza
+regular (a small engine that thinks in a worker) or pass and play, taking either
+side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
+frame replaces the chess pieces. It is a practice game kept in your
 browser, so other visitors still see the chess opening. **Escape** or **X** puts the
 board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.

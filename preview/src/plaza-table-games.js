@@ -137,8 +137,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     const { state, played, result } = adapter.replay(game.moves);
     // Your own side sits at the bottom; pass-and-play keeps the first side at the bottom.
     const bottom = game.mode === 'pass' ? adapter.sides[0] : game.player, flipped = adapter.flips !== false && bottom !== adapter.sides[0];
-    // A drop game marks where each column's next disc lands.
-    const last = played.at(-1), legal = adapter.drop ? (result ? [] : adapter.moves(state)) : selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
+    // A drop game marks where each column's next disc lands, only while you may drop one.
+    const last = played.at(-1), legal = adapter.drop ? (result || thinking || !yourTurn(game, state) ? [] : adapter.moves(state)) : selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
     const { rows: size, cols } = sizeOf(adapter);
     // A mated king stays marked; the status only reads the alert while the game goes on.
     const alert = adapter.alert(state);
@@ -183,7 +183,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     status.textContent = describe(game, adapter, state, result, alert);
     panel.dataset.state = result ? 'over' : thinking ? 'thinking' : 'playing';
     panel.dataset.game = adapter.id;
-    for (const button of panel.querySelectorAll('[data-game]')) button.setAttribute('aria-pressed', String(button.dataset.game === adapter.id));
+    for (const button of panel.querySelectorAll('.table-game-choice [data-game]')) button.setAttribute('aria-pressed', String(button.dataset.game === adapter.id));
     for (const button of panel.querySelectorAll('[data-mode]')) button.setAttribute('aria-pressed', String(button.dataset.mode === game.mode));
     for (const button of panel.querySelectorAll('[data-side-index]')) {
       const side = adapter.sides[Number(button.dataset.sideIndex)];
@@ -293,7 +293,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     if (current() && current().player !== button.dataset.side) restart({ player: button.dataset.side });
   });
   // Switching kinds keeps the other game: each kind resumes where it was left.
-  for (const button of panel.querySelectorAll('[data-game]')) button.addEventListener('click', () => {
+  // The board also carries data-game (its CSS keys on it); only the choice buttons switch games.
+  for (const button of panel.querySelectorAll('.table-game-choice [data-game]')) button.addEventListener('click', () => {
     const entry = table();
     if (!entry || entry.kind === button.dataset.game) return;
     thinking = null; selected = null; promotion.hidden = true;
@@ -330,7 +331,7 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     // What X does now, for the walking controls: only while seated at a game table.
     interaction() {
       if (!getSeat()) return null;
-      return { kind: 'play', label: panel.open ? 'Hide the game board' : 'Play chess, checkers or Connect Four', run: () => (panel.open ? close() : open()), disabled: false };
+      return { kind: 'play', label: panel.open ? 'Hide the game board' : 'Play a table game', run: () => (panel.open ? close() : open()), disabled: false };
     },
     // Standing up or leaving the table puts the board away (its games are kept).
     update() {

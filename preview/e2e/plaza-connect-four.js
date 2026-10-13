@@ -15,30 +15,56 @@ async page => {
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyZ');
   await page.waitForFunction(id => window.__riverSeatAndWater().seated === id, chair, { timeout: 15000 });
-  await page.waitForFunction(() => /Play chess, checkers or Connect Four/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 });
+  await page.waitForFunction(() => /Play a table game/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 });
+  // On a phone the seat action still reads on one line of the primary button.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(300);
+  const label = await page.locator('#walking-play').evaluate(button => {
+    // The label is the first text node; the key badge (X) follows it.
+    const label = button.firstChild, range = document.createRange(), tops = new Set();
+    range.selectNodeContents(label);
+    for (const rect of range.getClientRects()) if (rect.width > 1) tops.add(Math.round(rect.top));
+    return { lines: tops.size, width: Math.round(button.getBoundingClientRect().width), text: label.textContent };
+  });
+  check(label.lines === 1, `The seat action fits one line at 390 px (${JSON.stringify(label)})`);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator('#canvas-host').focus();
   await page.keyboard.press('KeyX');
   await page.locator('#table-game-panel[open]').waitFor();
+  const choose = game => page.locator(`.table-game-choice [data-game=${game}]`).click();
 
-  await page.locator('[data-game=connectFour]').click();
+  await choose('connectFour');
   let state = await games();
   check(state.game === 'connectFour' && state.player === 'r' && state.moves.length === 0 && state.status === 'Your move, red.', `A new Connect Four game, you as red (${JSON.stringify(state).slice(0, 160)})`);
   check(await page.locator('#table-game-title').textContent() === 'Connect Four at the plaza', 'The sheet names the game');
   check(await page.locator('.table-square').count() === 42 && await page.locator('[data-target=move]').count() === 7, 'Seven columns of six, each with its landing slot marked');
   check(state.four.visible === true && state.four.discs === 0 && state.mirror.every(letter => !letter), 'The table shows the empty frame and puts the chess pieces away');
 
+  check(!await page.locator('#table-game-panel .table-game-board').evaluate(board => board.hasAttribute('aria-pressed')), 'Only the game choices are pressed buttons, never the board');
+  // While the regular thinks, no column offers a landing slot.
+  await page.evaluate(() => {
+    const panel = document.querySelector('#table-game-panel'), seen = window.__fourThinking = { thinking: 0, marked: 0 };
+    new MutationObserver(() => {
+      if (panel.dataset.state !== 'thinking') return;
+      seen.thinking++;
+      if (panel.querySelector('[data-target=move]')) seen.marked++;
+    }).observe(panel, { subtree: true, attributes: true, childList: true });
+  });
   // A click high in a column drops to its foot; the regular answers.
   await page.locator('[data-square=d6]').click();
   await page.waitForFunction(() => window.__riverPlazaGames().moves.length === 2, null, { timeout: 20000 });
   state = await games();
   check(state.moves[0] === 'd' && state.board[cell('d1')] === 'r' && /^[a-g]$/.test(state.moves[1]), `The disc lands on d1 and the regular answers (${state.moves.join(' ')})`);
   check(state.four.discs === 2 && state.status === 'Your move, red.', 'The frame shows both discs and it is your move again');
+  const thinking = await page.evaluate(() => window.__fourThinking);
+  check(thinking.thinking > 0 && thinking.marked === 0, `No landing slots while the regular thinks (${JSON.stringify(thinking)})`);
+  check(await page.locator('[data-target=move]').count() === 7, 'Your turn marks the landing slots again');
 
   // Chess resumes its own game with its pieces; Connect Four returns where it was.
-  await page.locator('[data-game=chess]').click();
+  await choose('chess');
   state = await games();
   check(state.game === 'chess' && state.four.visible === false && state.mirror.filter(Boolean).length === 32, 'Chess brings back its pieces and puts the frame away');
-  await page.locator('[data-game=connectFour]').click();
+  await choose('connectFour');
   state = await games();
   check(state.game === 'connectFour' && state.moves.length === 2 && state.four.visible === true && state.four.discs === 2, 'Connect Four resumes, on the table too');
   await page.screenshot({ path: 'output/playwright/plaza-connect-four.png' });
