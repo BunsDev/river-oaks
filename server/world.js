@@ -105,6 +105,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const rackSlots=new Map(plazaSalonRack(worldData).map(slot=>[slot.id,slot]));
   const slotHolder=slotId=>[...players.values()].find(p=>p.cycling===slotId)??null;
   const takenSlots=()=>[...players.values()].filter(p=>p.cycling).map(p=>p.cycling).sort();
+  // Banked metres are process-local and not checkpointed: the transports drain
+  // after every world.step and before checkpoint(), so a checkpoint never
+  // carries metres that a later drain would pay twice.
   const rides=new Map();
   const bankRide=player=>{
     if(!(player.rideMeters>0))return;
@@ -151,6 +154,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     Object.assign(player,{poseAt:time,moveBudget:.1,liftBudget:.1});
     return {ok:true,player:publicPlayer(player)};
   }
+  // Banked metres are process-local and not checkpointed: the transports drain
+  // after every world.step and before checkpoint(), so a checkpoint never
+  // carries metres that a later drain would pay twice.
   function drainRides() {
     for(const player of players.values())bankRide(player);
     const drained=[...rides.values()];rides.clear();return drained;
@@ -188,6 +194,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       || [...players.values()].some(other=>other.id!==player.id && distance(other.position,seat.position)<.6))
       return reject('seat_blocked','Someone is standing at the seat.');
     interactions.cancel(player.id);
+    // A mounted rider is already refused above; this only clears a vehicle-less slot.
     releaseBike(player);
     focus.delete(player.id);
     Object.assign(player,{position:seat.position,yaw:seatYaw(seat.yaw-Math.PI),altitude:0,vehicle:null,
@@ -598,6 +605,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         const store=worldData.stores.find(item=>item.id===message.storeId);
         const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
         peer.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
+        releaseBike(peer);
         peer.altitude=0;peer.vehicle=null;peer.sitting=null;peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
         peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
       }
@@ -872,7 +880,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && (player.sitting==null || saved.version>=3 && record(player.sitting) && fields(player.sitting,['buildId','slot'])
           && textId(player.sitting.buildId) && Number.isInteger(player.sitting.slot))
         && point(player.position,3) && Number.isFinite(player.yaw)
-        && (player.rideMeters===undefined || nonnegative(player.rideMeters))
+        && (player.rideMeters===undefined || nonnegative(player.rideMeters) && player.rideMeters<=1e6)
         && (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle')
         && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1))
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
@@ -910,7 +918,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>recoveredEnvironment.isFree(x,z) && !recoveredEnvironment.roomAt(x,z)});
           if(!recoveredEnvironment.isFree(outside[0],-outside[1]) || recoveredEnvironment.roomAt(outside[0],-outside[1]))throw new Error('Invalid private home exit');
           player.position=[outside[0],outside[1],recoveredEnvironment.groundAt(outside[0],-outside[1])];
-          player.altitude=0;player.vehicle=null;player.sitting=null;
+          player.altitude=0;player.vehicle=null;player.sitting=null;player.cycling=null;
         }
       }
       if(nextAppearances.size>MAX_APPEARANCES) throw new Error('Invalid appearances');

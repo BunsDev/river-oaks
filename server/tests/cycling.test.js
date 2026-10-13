@@ -106,14 +106,20 @@ test('leaving the town releases the slot and keeps the metres for the flush; a c
   assert.deepEqual(restored.restore(checkpoint), { ok: true });
   assert.deepEqual(restored.snapshot().cycling, { taken: ['plaza-salon-rack:2'] });
   assert.equal(restored.snapshot().players[0].vehicle, 'bicycle');
-  // A slot is only ever held with the bicycle, and a bicycle never flies.
+  // A slot is only ever held with the bicycle, a bicycle never flies, and a
+  // slot is held once; each refusal reports one of the fixed diagnostic reasons.
   const before = restored.snapshot();
+  let reason = null;
+  const refuse = tampered => { reason = null; const result = restored.restore(resign(tampered), { onFailure: r => { reason = r; } }); assert.equal(result.error, 'invalid_checkpoint'); return reason; };
   const motorcycle = structuredClone(checkpoint);
   Object.assign(motorcycle.payload.players.find(player => player.id === OWNER), { vehicle: 'motorcycle', cycling: 'plaza-salon-rack:0' });
-  assert.equal(restored.restore(resign(motorcycle)).error, 'invalid_checkpoint', 'a slot needs the bicycle');
+  assert.equal(refuse(motorcycle), 'invalid_entry', 'a slot needs the bicycle');
   const airborne = structuredClone(checkpoint);
   airborne.payload.players.find(player => player.id === 'alice').altitude = 2;
-  assert.equal(restored.restore(resign(airborne)).error, 'invalid_checkpoint', 'a bicycle stays on the ground');
+  assert.equal(refuse(airborne), 'invalid_entry', 'a bicycle stays on the ground');
+  const duplicate = structuredClone(checkpoint);
+  Object.assign(duplicate.payload.players.find(player => player.id === OWNER), { vehicle: 'bicycle', cycling: 'plaza-salon-rack:2' });
+  assert.equal(refuse(duplicate), 'invalid_cycling_slot', 'a slot is held by one rider');
   assert.deepEqual(restored.snapshot(), before, 'a refused restore changes nothing');
   assert.equal(f.world.leave('alice'), true);
   assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
@@ -127,4 +133,32 @@ test('the car and motorcycle stay exclusive to the owner while anyone may cycle'
   assert.equal(f.act('bob', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).ok, true);
   f.put(OWNER, slots[1].approach);
   assert.equal(f.act(OWNER, { type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 }).ok, true);
+});
+
+test('stepping off with the approach blocked leaves the rider at the slot, so the next taker must wait', () => {
+  const f = setup();
+  f.put('alice', slots[0].approach);
+  f.put('bob', slots[1].approach);
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).ok, true);
+  f.put('bob', slots[0].approach);
+  assert.equal(f.act('alice', { type: 'uncycle' }).ok, true, 'an uncycle is never refused');
+  assert.deepEqual(f.me('alice').position.slice(0, 2), [slots[0].x, slots[0].north]);
+  assert.equal(f.me('alice').vehicle, null);
+  assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
+  assert.equal(f.act('bob', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).error, 'rack_blocked');
+});
+
+test('travelling while cycling releases the slot and banks the metres', () => {
+  const f = setup();
+  f.put('alice', slots[2].approach);
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 2 }).ok, true);
+  f.advance(1000);
+  assert.equal(f.ride('alice', [slots[2].x, slots[2].north - 3]).ok, true);
+  f.advance(1000);
+  assert.equal(f.act('alice', { type: 'travel', position: [slots[2].x - 10, slots[2].north] }).ok, true);
+  assert.equal(f.me('alice').vehicle, null);
+  assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
+  assert.deepEqual(f.world.drainRides(), [{ userId: 'alice', name: 'alice', meters: 3 }]);
+  f.advance(1000);
+  assert.equal(f.ride('alice', [slots[2].x - 11, slots[2].north]).error, 'bike_required', 'the slot was released');
 });
