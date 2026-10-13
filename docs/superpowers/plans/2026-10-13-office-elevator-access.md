@@ -85,3 +85,12 @@ Reverify the implementation, integrate current main and land through the protect
 - Landing uses the standard shared queue and a local REST adaptation of the installed merge guard. It preserves check, merge-state and verified-signature requirements, and pins the merge to the reviewed head SHA. No protection override.
 
 - Fresh integrated core passed: `REDIS_URL=redis://127.0.0.1:16391 pnpm run verify`, **3686 passed, one existing geometry skip, zero failures** (agent 76, preview 2807, server 611, desktop 51, Python 141). Redis tests ran with no skips. Build, lint, format, synthetic pipeline and secret scan passed. Receipt `data/reports/office-delivery-core.json`; log `/tmp/river-oaks-office-delivery-core-20261013.log`.
+
+## Cycling merge integration
+
+- PR #317 opened with signed commit `29fc2aa`. While queued, cycling PR #315 landed at `2642eda`; merged it locally and preserved both office departure and borrowed-bike release in player cleanup. Independent read-only review found no blockers and exercised bike → lobby → office, blocked cycling upstairs, checkpoint coexistence and disconnect cleanup.
+- Integrated core passed again: `REDIS_URL=redis://127.0.0.1:16391 pnpm run verify`, **3719 passed, one existing geometry skip, zero failures** (agent 76, preview 2820, server 631, desktop 51, Python 141). Receipt `data/reports/office-cycling-integration-core.json`.
+- First integrated browser retry timed out at reduced-motion reentry after exit; five earlier checks passed, with no page exception and two HTTP 503 console entries. Retained `data/reports/office-cycling-integration-experience.json`. A diagnostic rerun passed all nine checks with the elevator enabled at reentry (`data/reports/office-reentry-diagnostic.json`); the original timeout was not proven to be a product regression.
+- Replaced synthetic elevator-button clicks with Playwright clicks that wait for visible, enabled controls. This removes the test's opportunity to silently click a still-disabled control while leave acknowledgement/render state settles. Product code and permissions are unchanged by this test adjustment.
+
+- Final readiness-aware browser run passed all nine checks: `RIVER_OAKS_E2E_REPORT=office-cycling-integration-retry.json pnpm run test:experience office-visit`. Receipt `data/reports/office-cycling-integration-retry.json`. Integrated source and focused browser changes verified before signing the merge commit. Hosted CI and protected merge remain pending.

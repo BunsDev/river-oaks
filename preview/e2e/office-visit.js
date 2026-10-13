@@ -28,7 +28,7 @@ async page => {
   await page.locator('#office-exit').click();await page.waitForFunction(()=>!document.querySelector('#office-visit').open);
   check(await page.locator('#canvas-host').evaluate(h=>document.activeElement===h),'Leaving returns focus to the street');
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.locator('#office-enter').evaluate(b=>b.click());
+  await page.locator('#office-enter').click();
   await page.waitForFunction(()=>document.querySelector('#office-visit')?.open&&document.querySelector('#office-visit').dataset.phase==='office',null,{timeout:60000});
   check(true,'Reduced motion enters without the elevator camera motion');
   await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#office-visit').open);
@@ -45,13 +45,13 @@ async page => {
     await guest.locator('#canvas-host').focus();await guest.keyboard.press('KeyF');
     await guest.locator('#office-request-dialog[open]').waitFor();
     await guest.locator('#office-request-send').click();
-    await page.locator('#office-enter').evaluate(b=>b.click());
+    await page.locator('#office-enter').click();
     await page.waitForFunction(()=>document.querySelector('#office-visit')?.open&&document.querySelector('#office-visit').dataset.phase==='office',null,{timeout:60000});
     await page.locator('#office-access').click();
     await page.locator('#office-management button').filter({hasText:'Accept'}).waitFor({timeout:15000});
     await page.locator('#office-management button').filter({hasText:'Accept'}).click();
     await guest.waitForFunction(()=>document.querySelector('#office-enter')?.disabled===false,null,{timeout:15000});
-    await guest.locator('#office-enter').evaluate(b=>b.click());
+    await guest.locator('#office-enter').click();
     await guest.waitForFunction(()=>document.querySelector('#office-visit')?.open&&document.querySelector('#office-visit').dataset.phase==='office',null,{timeout:60000});
     check(true,'Jevica accepts the visit request from her office and the guest enters');
     await guest.screenshot({path:'output/playwright/office-guest.png'});

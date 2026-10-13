@@ -4474,8 +4474,8 @@
       "branches": [
         "feat/office-elevator-access-20261013"
       ],
-      "updatedAt": "2026-10-13T14:58:55.082845+00:00",
-      "nextAction": "Fresh integrated core/browser/review passed. Commit and push, open PR, then land through protected queue with current-head CI.",
+      "updatedAt": "2026-10-13T15:13:17.380559+00:00",
+      "nextAction": "Cycling main2642eda integrated and verified: core3719 pass/1 skip, office9checks pass. Push signed merge and land PR317 through protected queue; record final head/merge/check proof.",
       "ledger": "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
       "filesOwned": [
         "server/offices.js",
@@ -4511,13 +4511,14 @@
       "latestEvidence": {
         "focused": "Memory/Redis ticket+WebSocket permission and movement tests passed with zero skips; office geometry/lifecycle/spatial voice tests passed.",
         "baseline": "60/60 existing world and workplace geometry tests passed.",
-        "core": "Integrated core passed on main846a0aa plus office patch: 3686 passed, 1 existing geometry skip; all 611 server tests with isolated Redis. data/reports/office-delivery-core.json",
-        "browser": "Fresh office journey passed all 9 checks with inspected screenshots. data/reports/office-delivery-experience.json; previous shared17/19 and both successful retries retained.",
-        "delivery": "Commit, push and merge authorized; verification and delivery in progress.",
+        "core": "Latest core: 3719 passed, 1 existing geometry skip, zero failures; all631 server tests with isolated Redis. data/reports/office-cycling-integration-core.json",
+        "browser": "Final integrated office journey9/9 passed with readiness-aware clicks; initial reentry timeout and passing diagnostic retained separately. data/reports/office-cycling-integration-retry.json",
+        "delivery": "PR317 open; current-main integration verified, signed merge/push and protected landing pending.",
         "review": "Independent integrated office/stage review approved; 37 focused tests passed, zero skips."
       },
       "owner": "codex:office-elevator-access-20261013",
-      "leaseUntil": "2026-10-13T16:49:29.390145+00:00"
+      "leaseUntil": "2026-10-13T16:49:29.390145+00:00",
+      "pr": 317
     }
   ]
 }
