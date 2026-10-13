@@ -511,12 +511,14 @@ remain restricted to Jevica's verified owner accounts.
 
 Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play a
 table game** or **X** opens a board beside the table. **Chess**, **Checkers**
-(American rules: captures are compulsory, and a crowned man stops) and **Connect
+(American rules: captures are compulsory, and a crowned man stops), **Connect
 Four** (seven columns of six, red first; a click anywhere in a column drops a disc)
-switch in the sheet, and each table keeps one game of each. You can play the plaza
+and **Reversi** (black first from the four centre discs; a click places a disc where
+it outflanks a line, a side with no move passes, and the most discs wins) switch in
+the sheet, and each table keeps one game of each. You can play the plaza
 regular (a small engine that thinks in a worker) or pass and play, taking either
 side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
-frame replaces the chess pieces. It is a practice game kept in your
+frame replaces the chess pieces, and Reversi's black and white discs lie on the board. It is a practice game kept in your
 browser, so other visitors still see the chess opening. **Escape** or **X** puts the
 board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
@@ -591,7 +593,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, dominoes, Hearts, Spades, backgammon, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

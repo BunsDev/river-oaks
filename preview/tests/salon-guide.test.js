@@ -7,6 +7,8 @@ import * as four from '../src/connect-four-rules.js';
 import * as dominoes from '../src/dominoes-rules.js';
 import * as hearts from '../src/hearts-rules.js';
 import * as backgammon from '../src/backgammon-rules.js';
+import * as reversi from '../src/reversi-rules.js';
+import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 
 // The Salon Guide teaches the plaza table games. Its pictures are played on the real
 // rules and its numbers come from the rules modules, so the book cannot drift from
@@ -14,7 +16,7 @@ import * as backgammon from '../src/backgammon-rules.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -142,6 +144,17 @@ test('the mancala pictures follow the rules', async () => {
   assert.deepEqual(sown.last.path, [3, 4, 5, 6]); assert.equal(sown.last.again, true);
   const capture = sow({ ...startGame(), board: DIAGRAMS.mancalaCapture.board.slice() }, DIAGRAMS.mancalaCapture.pit);
   assert.equal(capture.last.captured, 8);
+});
+
+test('the Reversi pictures are the real opening, a real placement and a corner', () => {
+  assert.deepEqual(reversi.legalMoves(reversi.startPosition()).map(move => move.notation).sort(), DIAGRAMS.reversiStart.marks);
+  for (const { rows, place, flips } of [DIAGRAMS.reversiFlip, DIAGRAMS.reversiCorner]) {
+    const move = reversi.findMove(reversi.fromDiagram(rows, 'd'), place);
+    assert.ok(move, `${place} is a legal placement`);
+    assert.deepEqual(move.flips.map(reversi.squareName).sort(), [...flips].sort(), `${place} turns exactly ${flips.join(', ')}`);
+  }
+  assert.equal(reversiMove(reversi.fromDiagram(DIAGRAMS.reversiCorner.rows, 'd')).move, DIAGRAMS.reversiCorner.place, 'the regular takes the corner too');
+  assert.equal(reversi.startPosition().turn, 'd'); assert.match(text('reversi'), /Black moves first/);
 });
 
 test('the Jenga and wine pong pictures follow the rules', async () => {
