@@ -27,9 +27,9 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
       <ul class="backgammon-scores" aria-label="Points won"></ul>
       <svg class="backgammon-board" viewBox="0 0 700 480" role="group" aria-label="Backgammon board"></svg>
       <div class="table-game-actions">
-        <button type="button" data-action="undo">Undo move</button><button type="button" data-action="next">Next game</button>
-        <div class="table-game-mode" role="group" aria-label="Opponent"><button type="button" data-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-mode="pass" aria-pressed="false">Pass and play</button></div>
-        <div class="backgammon-side" role="group" aria-label="You play"><button type="button" data-side="0" aria-pressed="true">White</button><button type="button" data-side="1" aria-pressed="false">Black</button></div>
+        <button type="button" data-backgammon-action="undo">Undo move</button><button type="button" data-backgammon-action="next">Next game</button>
+        <div class="table-game-mode" role="group" aria-label="Opponent"><button type="button" data-backgammon-mode="regular" aria-pressed="true">Plaza regular</button><button type="button" data-backgammon-mode="pass" aria-pressed="false">Pass and play</button></div>
+        <div class="backgammon-side" role="group" aria-label="You play"><button type="button" data-backgammon-side="0" aria-pressed="true">White</button><button type="button" data-backgammon-side="1" aria-pressed="false">Black</button></div>
       </div>
       <p class="table-game-note">Use both dice when you can; checkers on the bar enter first. A gammon scores two, a backgammon three.</p>
     </div>`;
@@ -58,6 +58,8 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
 
   function render() {
     if (!game) return;
+    // Redrawing replaces the board's points: keep keyboard focus on the same one, and inside the sheet.
+    const active = document.activeElement, hadFocus = panel.contains(active), focusedPoint = board.contains(active) ? active.closest('[data-point]')?.dataset.point : null;
     const { state } = round(), legal = !thinking && yours(state) && !state.over ? legalMoves(state) : [];
     if (state.over && !game.scored) { game.scored = true; game.scores[state.over.winner] += state.over.points; }
     const sources = new Set(legal.map(step => step.from)), targets = new Set(source === null ? [] : legal.filter(step => step.from === source).map(step => step.to));
@@ -107,10 +109,14 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
     $('.backgammon-scores').replaceChildren(...[game.player, 1 - game.player].map((player, index) => {
       const item = document.createElement('li'); item.textContent = `${game.mode === 'pass' ? COLOUR[player] : index === 0 ? 'You' : 'Regular'} ${game.scores[player]} · ${pips(state, player)} pips`; return item;
     }));
-    $('[data-action="undo"]').disabled = !(yours(state) && !state.over && game.moves.length > game.turnStart && !thinking);
-    $('[data-action="next"]').hidden = !state.over;
-    for (const button of panel.querySelectorAll('[data-mode]')) button.setAttribute('aria-pressed', String(button.dataset.mode === game.mode));
-    for (const button of panel.querySelectorAll('[data-side]')) { button.setAttribute('aria-pressed', String(Number(button.dataset.side) === game.player)); button.disabled = game.mode === 'pass'; }
+    $('[data-backgammon-action="undo"]').disabled = !(yours(state) && !state.over && game.moves.length > game.turnStart && !thinking);
+    $('[data-backgammon-action="next"]').hidden = !state.over;
+    for (const button of panel.querySelectorAll('[data-backgammon-mode]')) button.setAttribute('aria-pressed', String(button.dataset.backgammonMode === game.mode));
+    for (const button of panel.querySelectorAll('[data-backgammon-side]')) { button.setAttribute('aria-pressed', String(Number(button.dataset.backgammonSide) === game.player)); button.disabled = game.mode === 'pass'; }
+    if (hadFocus && !panel.contains(document.activeElement)) {
+      const stop = (focusedPoint && board.querySelector(`[data-point="${focusedPoint}"]`)) ?? board.querySelector('[data-source]') ?? $('.table-game-close');
+      stop.focus({ preventScroll: true });
+    }
   }
 
   function describe(state, legal) {
@@ -131,6 +137,7 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
   // Each run takes a ticket from an ever-rising count, so a newer game or mode cancels it.
   async function regular() {
     const ticket = ++generation;
+    let played = false;
     thinking = true;
     try {
       for (;;) {
@@ -142,10 +149,11 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
         for (const step of steps) {
           await new Promise(resolve => setTimeout(resolve, replyDelay));
           if (ticket !== generation) return;
-          game.moves.push(notation(step)); mirror(); render();
+          game.moves.push(notation(step)); played = true; mirror(); render();
         }
       }
-    } finally { if (ticket === generation) { thinking = false; game.turnStart = game.moves.length; render(); } }
+    // Your turn starts where the regular stopped; when it had nothing to play, it stays put.
+    } finally { if (ticket === generation) { thinking = false; if (played) game.turnStart = game.moves.length; render(); } }
   }
 
   function choose(place) {
@@ -174,14 +182,14 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
     event.preventDefault(); choose(point.dataset.point);
     board.querySelector(`[data-point="${point.dataset.point}"]`)?.focus();
   });
-  $('[data-action="undo"]').addEventListener('click', () => { if (game.moves.length > game.turnStart) { game.moves.length = game.turnStart; source = null; mirror(); render(); } });
-  $('[data-action="next"]').addEventListener('click', () => { generation++; thinking = false; newGame({ scores: game.scores }); mirror(); render(); void regular(); });
-  for (const button of panel.querySelectorAll('[data-mode]')) button.addEventListener('click', () => {
-    if (game.mode === button.dataset.mode) return;
-    game.mode = button.dataset.mode; generation++; thinking = false; source = null; render(); void regular();
+  $('[data-backgammon-action="undo"]').addEventListener('click', () => { if (game.moves.length > game.turnStart) { game.moves.length = game.turnStart; source = null; mirror(); render(); } });
+  $('[data-backgammon-action="next"]').addEventListener('click', () => { generation++; thinking = false; newGame({ scores: game.scores }); mirror(); render(); void regular(); });
+  for (const button of panel.querySelectorAll('[data-backgammon-mode]')) button.addEventListener('click', () => {
+    if (game.mode === button.dataset.backgammonMode) return;
+    game.mode = button.dataset.backgammonMode; generation++; thinking = false; source = null; render(); void regular();
   });
-  for (const button of panel.querySelectorAll('[data-side]')) button.addEventListener('click', () => {
-    const player = Number(button.dataset.side);
+  for (const button of panel.querySelectorAll('[data-backgammon-side]')) button.addEventListener('click', () => {
+    const player = Number(button.dataset.backgammonSide);
     if (player === game.player) return;
     generation++; thinking = false; newGame({ player, scores: [0, 0] }); mirror(); render(); void regular();
   });
@@ -196,7 +204,7 @@ export function createPlazaBackgammon({ host = document.querySelector('#viewport
     if (!seat) return;
     if (!game || game.chair !== seat.chair) { game = null; newGame({ chair: seat.chair, player: WHITE, scores: [0, 0] }); }
     panel.show(); mirror(); render(); void regular();
-    (board.querySelector('[data-source]') ?? status).focus?.({ preventScroll: true });
+    (board.querySelector('[data-source]') ?? $('.table-game-close')).focus({ preventScroll: true });
   }
 
   return {

@@ -23,7 +23,8 @@ async page => {
   await page.locator('#backgammon-panel[open]').waitFor();
   check(await page.locator('#backgammon-panel').evaluate(panel => !/(auto|scroll)/.test(getComputedStyle(panel).overflowY)), 'The backgammon sheet is a frame, never its own scroll container');
 
-  await bounded('Dealing a seeded game', page.evaluate(() => window.__riverPlazaBackgammon().deal(8)), 20000);
+  // Seed 6: white opens with 6-1, so the first move is always half a turn and can be taken back.
+  await bounded('Dealing a seeded game', page.evaluate(() => window.__riverPlazaBackgammon().deal(6)), 20000);
   await page.waitForFunction(() => { const s = window.__riverPlazaBackgammon(); return !s.thinking && s.turn === s.player && s.legal.length > 0; }, null, { timeout: 30000 });
   let state = await game();
   check(state.table === 30 && state.player === 0, `The table shows all thirty checkers, and you play white (${state.table})`);
@@ -36,12 +37,10 @@ async page => {
   check(await page.locator('#backgammon-panel [data-target]').count() >= 1, 'A chosen checker shows where it can go');
   await page.locator(`#backgammon-panel [data-point="${to}"]`).click();
   state = await game();
-  check(state.moves.length >= 1 && state.points.join() !== before, 'The checker moves');
-  if (state.turn === 0 && !state.thinking && state.moves.length) {
-    await page.locator('#backgammon-panel [data-action=undo]').click();
-    state = await game();
-    check(state.points.join() === before, 'Undo takes the move back');
-  }
+  check(state.moves.length === 1 && state.points.join() !== before && state.turn === 0 && state.dice.length === 1, 'The checker moves, and the other die is still to play');
+  await page.locator('#backgammon-panel [data-backgammon-action=undo]').click();
+  state = await game();
+  check(state.moves.length === 0 && state.points.join() === before, 'Undo takes the move back');
 
   // Play the rest of the turn through the board, until the regular has the dice.
   for (let step = 0; step < 6; step++) {
