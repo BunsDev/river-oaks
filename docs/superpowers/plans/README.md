@@ -4,10 +4,11 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (4)
+## Active and blocked (5)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
+| [2026-10-13-minimap-flicker](2026-10-13-minimap-flicker.md)<br>Stop the flicker, and take the minimap out of its scrolling sheet — 2026-10-13 | `minimap-flicker` | active | — | 2026-10-13 |
 | [2026-10-12-town-connect-deadline](2026-10-12-town-connect-deadline.md)<br>Town connection deadline on a busy page — 2026-10-12 | `town-ticket-ttl` | active | — | 2026-10-12 |
 | [2026-10-12-liquid-glass-hud](2026-10-12-liquid-glass-hud.md)<br>Liquid-glass town gate, district map and Map button — 2026-10-12 | `liquid-glass-hud` | active | #274 | 2026-10-12 |
 | [2026-10-12-docs-refresh](2026-10-12-docs-refresh.md)<br>Docs and plans refresh (2026-10-12) | `docs-refresh-20261012` | active | — | 2026-10-12 |
@@ -66,13 +67,15 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (69)
+## Historical, not in the register (71)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
 | [2026-10-12-town-first-snapshot-stall](2026-10-12-town-first-snapshot-stall.md)<br>Town first-snapshot stall under software rendering | #276, #274, #281 |
 | [2026-10-12-route-waypoint-clearance](2026-10-12-route-waypoint-clearance.md)<br>Route waypoint clearance | #276 |
+| [2026-10-12-connect-deadline-grace](2026-10-12-connect-deadline-grace.md)<br>Let queued socket events run before the connect deadline expires — 2026-10-12 | #281, #276, #260 |
 | [2026-10-12-ci-playwright-cache](2026-10-12-ci-playwright-cache.md)<br>Cache Playwright browsers in CI | #252, #277, #276 |
 | [2026-10-12-browser-run-lock](2026-10-12-browser-run-lock.md)<br>Local browser runs take turns | #272, #277 |
 | [2026-10-09-world-studio](2026-10-09-world-studio.md)<br>World Studio implementation plan | — |
