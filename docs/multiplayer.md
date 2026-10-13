@@ -567,9 +567,17 @@ in (or out), or bounce on the table and in. Two throws a turn, and sinking all s
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
 
+The café table's switch now offers **Spades** beside dominoes and Hearts. You and the
+regular across partner against the regulars on your left and right. Bid the tricks you
+expect (nil means none), then play: spades are trumps and cannot be led until one has
+been played. A partnership making its bid scores 10 a trick bid and 1 a bag (an
+overtrick); every tenth bag costs 100; short of the bid it loses 10 a trick bid. A nil
+scores ±100. First to 500 wins; falling to −200 loses. The round table shows the trick
+and hands as in Hearts. Rules: `preview/src/spades-rules.js`.
+
 The chess-table, café and backgammon sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-dominoes, Hearts or backgammon), and **Play & rides → Game guide** opens it too. The guide is an
+dominoes, Hearts, Spades or backgammon), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
