@@ -545,6 +545,16 @@ scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to 
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
 
+Every game sheet has **How to play** in its header. It opens the Salon Guide on
+that game, and **Play & rides → Game guide** opens it too. The guide is an
+illustrated book with a few pages per game: taking a seat, the aim, a turn, and
+the keys. Its pictures are positions played on the real rules
+(`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
+mark on its button, remembered on this device. The guide is a modal dialog
+outside the sheets, so its keys never move you or close a board; Escape returns
+to the sheet. Content: `preview/src/salon-guide-content.js`; a new game adds its
+pages to `GUIDE` and one `attachGuide(panel, id)` line in its sheet.
+
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
 searches nearby clear ground in the same room, including the path to the exit
