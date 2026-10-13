@@ -1,4 +1,5 @@
 import './plaza-table-games.css';
+import { attachGuide } from './salon-guide.js';
 import './plaza-jenga.css';
 import { jengaSeat } from './plaza-salon-plan.js';
 import { SLOTS, legalPulls, notation, outcome, parse, replay, zone } from './jenga-rules.js';
@@ -39,6 +40,7 @@ export function createPlazaJenga({ host = document.querySelector('#viewport'), g
       <p class="table-game-note">Never the top level, nor the one under it until the top is finished. A level left on one edge block brings the tower down.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'jenga');
   const $ = selector => panel.querySelector(selector);
   const tower = $('.jenga-tower'), status = $('.table-game-status'), meterBox = $('.jenga-meter');
 

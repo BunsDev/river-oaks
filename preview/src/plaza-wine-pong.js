@@ -1,4 +1,5 @@
 import './plaza-table-games.css';
+import { attachGuide } from './salon-guide.js';
 import './plaza-wine-pong.css';
 import { winePongSide } from './plaza-salon-plan.js';
 import { RIM, TABLE, THROWS_PER_TURN, glassAt, landing, notation, replay, trajectory } from './wine-pong-rules.js';
@@ -42,6 +43,7 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
       <p class="table-game-note">Two throws a turn. Stop the reticle to aim, then again for the power. Sink all six of the far glasses to win.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'winePong');
   const $ = selector => panel.querySelector(selector);
   const board = $('.wine-pong-table'), zoom = $('.wine-pong-zoom'), status = $('.table-game-status'), throwButton = $('[data-pong-action="throw"]');
 

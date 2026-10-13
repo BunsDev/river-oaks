@@ -74,9 +74,11 @@ async page => {
   await page.keyboard.press('ArrowRight'); await page.waitForTimeout(350);
   await page.screenshot({ path: 'output/playwright/salon-guide-four-aim.png' });
   await page.keyboard.press('ArrowLeft');
+  // The game after Connect Four in the index, whichever chapter that is.
+  const following = await page.locator('[data-guide-dialog] [role=tab][data-guide-game=connectFour] + [role=tab]').getAttribute('data-guide-game');
   await page.keyboard.press('ArrowDown');
   state = await book();
-  check(state.game === 'dominoes' && state.page === 0 && state.focus === 'dominoes', 'Down the index moves to the next game');
+  check(state.game === following && state.page === 0 && state.focus === following, `Down the index moves to the next game (${following})`);
   await page.locator('[data-guide-dialog] [data-guide-game=backgammon]').click();
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.waitForTimeout(350);
   await page.screenshot({ path: 'output/playwright/salon-guide-backgammon-turn.png' });
@@ -90,14 +92,15 @@ async page => {
         dialog.querySelector('.salon-guide-next').click();
       }
     }
-    dialog.querySelector('[data-guide-game=backgammon]').click();
+    // The book ends with the last game in its index, whichever that is.
+    [...dialog.querySelectorAll('.salon-guide-index [data-guide-game]')].at(-1).click();
     return tight;
   });
   check(!unscrolled.length, `Every page reads without scrolling at 1440 × 900 (${unscrolled.join(', ') || 'all fit'})`);
-  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
   await page.keyboard.press('End');
   state = await book();
-  check(state.game === 'backgammon' && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game offers Back to the table (${state.next})`);
+  const lastGame = await page.evaluate(() => [...document.querySelectorAll('[data-guide-dialog] .salon-guide-index [data-guide-game]')].at(-1).dataset.guideGame);
+  check(state.game === lastGame && state.title === 'At the table' && state.next === 'Back to the table', `The last page of the last game (${lastGame}) offers Back to the table (${state.next})`);
   await page.locator('[data-guide-dialog] .salon-guide-next').click();
   check(!(await book()).open, 'Back to the table closes the book');
   // A click outside the book closes it too.
@@ -142,11 +145,22 @@ async page => {
   const fit = await page.evaluate(() => {
     const dialog = document.querySelector('[data-guide-dialog]'), rect = dialog.getBoundingClientRect(), footer = dialog.querySelector('.salon-guide-footer').getBoundingClientRect();
     const tabs = [...dialog.querySelectorAll('[role=tab]')].map(tab => tab.getBoundingClientRect());
+    // The index row may scroll sideways when there are many games; everything else must fit.
+    const row = dialog.querySelector('.salon-guide-index').getBoundingClientRect(), shown = tab => tab.left >= row.left - 1 && tab.right <= row.right + 1;
+    const chosen = dialog.querySelector('[role=tab][aria-selected=true]').getBoundingClientRect();
     return { left: Math.round(rect.left), right: Math.round(rect.right), footerBottom: Math.round(footer.bottom), height: innerHeight, width: innerWidth,
-      tabsInRow: new Set(tabs.map(tab => Math.round(tab.top))).size === 1, tabsInside: tabs.every(tab => tab.left >= rect.left && tab.right <= rect.right),
-      overflow: [...dialog.querySelectorAll('*')].filter(node => node.scrollWidth > node.clientWidth + 1 && getComputedStyle(node).overflowX !== 'visible' && !node.closest('svg') && !node.matches('.salon-guide-status')).map(node => node.className).slice(0, 3) };
+      tabsInRow: new Set(tabs.map(tab => Math.round(tab.top))).size === 1, chosenShown: shown(chosen), targets: tabs.every(tab => tab.width >= 44 - 0.5 && tab.height >= 44 - 0.5),
+      overflow: [...dialog.querySelectorAll('*')].filter(node => node.scrollWidth > node.clientWidth + 1 && getComputedStyle(node).overflowX !== 'visible' && !node.closest('svg') && !node.matches('.salon-guide-status, .salon-guide-index')).map(node => node.className).slice(0, 3) };
   });
-  check(fit.left >= 0 && fit.right <= fit.width && fit.footerBottom <= fit.height && fit.tabsInRow && fit.tabsInside && !fit.overflow.length, `The book fits a 390 px phone (${JSON.stringify(fit)})`);
+  check(fit.left >= 0 && fit.right <= fit.width && fit.footerBottom <= fit.height && fit.tabsInRow && fit.chosenShown && fit.targets && !fit.overflow.length, `The book fits a 390 px phone (${JSON.stringify(fit)})`);
+  // The last game, likely off the end of the row, scrolls into view when chosen.
+  const lastShown = await page.evaluate(async () => {
+    const dialog = document.querySelector('[data-guide-dialog]'), last = [...dialog.querySelectorAll('.salon-guide-index [role=tab]')].at(-1);
+    last.click(); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const row = dialog.querySelector('.salon-guide-index').getBoundingClientRect(), box = last.getBoundingClientRect();
+    return last.getAttribute('aria-selected') === 'true' && box.left >= row.left - 1 && box.right <= row.right + 1;
+  });
+  check(lastShown, 'On a phone, choosing the last game scrolls its tab into view');
   await page.screenshot({ path: 'output/playwright/salon-guide-phone.png' });
   await page.keyboard.press('Escape');
   return { checks };

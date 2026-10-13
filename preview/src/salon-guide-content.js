@@ -76,11 +76,25 @@ export const GUIDE = [
     { title: 'Capturing', text: ['If the last seed lands in an empty pit on your side and the pit opposite holds seeds, you capture both into your store.'], figure: { kind: 'mancala-capture' } },
     { title: 'At the table', text: ['The table\'s glass beads follow the game.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the board, or put it away'], [['←', '→'], 'Move between your pits'], [['Enter'], 'Sow the pit'], [['Esc'], 'Put the board away']] } },
   ] },
+  { id: 'jenga', name: 'Jenga', place: 'The curved bench\'s drum', pages: [
+    { title: 'Taking a seat', text: ['The curved bench faces a travertine drum with a Jenga tower on it. Sit on any of its three places (Z), then press X (Play Jenga).', 'Play two plaza regulars, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Pull a block from below the top and it goes on top by itself, finishing the top level before a new one starts.', 'Whoever topples the tower takes the tally mark; New tower stands it up again.'], figure: { kind: 'jenga-tower' } },
+    { title: 'A steady hand', text: ['Choose a block and a marker sweeps along the meter. Stop it inside the green (Pull, Space or Enter) and the block slides out.', 'The green narrows as the tower grows taller and weaker and as the level carries more. A middle block of a full level is loosest.'], figure: { kind: 'jenga-meter' } },
+    { title: 'What brings it down', text: ['Never the top level, nor the one under it until the top is finished, nor a level\'s last block.', 'A level left on a single edge block cannot carry the tower: pulling its neighbour brings it down, however steady the hand.'], figure: { kind: 'jenga-edge' } },
+    { title: 'At the table', text: ['The drum\'s tower follows the game, and scatters over the drum and the paving when it falls.'], figure: { kind: 'keys', keys: [[['Z'], 'Sit down or stand up'], [['X'], 'Open the tower, or put it away'], [['↑', '↓', '←', '→'], 'Move between blocks'], [['Enter'], 'Choose a block'], [['Space'], 'Pull: stop the meter'], [['Esc'], 'Put the tower away']] } },
+  ] },
+  { id: 'winePong', name: 'Wine pong', place: 'The long table by the café', pages: [
+    { title: 'Taking a seat', text: ['A long linen-topped table stands between the café and the planters. Walk up to either end and press X (Play wine pong); there is no chair, you play standing.', 'Play a plaza regular at the far end, or Pass and play with a friend.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each side has six wine glasses racked three, two, one at its own end. Sink all six of the far glasses to win.', 'Each turn is two throws, then the far end throws.'], figure: { kind: 'pong-racks' } },
+    { title: 'A throw', text: ['A reticle sweeps across the far rack: stop it for the aim. It then sweeps along that line: stop it again for the power, and the ball flies.', 'The close-up beside the table shows the far glasses large, so you can time the reticle over one.'], figure: { kind: 'pong-throw' } },
+    { title: 'In, rim and bounce', text: ['A ball can drop straight in, catch a rim and rattle in or spin out, or land on the table and bounce into a glass. Anything else is a miss.', 'A sunk glass leaves the table.'], figure: { kind: 'pong-outcomes' } },
+    { title: 'At the table', text: ['The real table\'s glasses follow the game, and the ball flies over it.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the reticle: aim, then throw'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
+  ] },
 ];
 
 export const guideGame = id => GUIDE.find(game => game.id === id) ?? null;
 // Pictures much wider than tall span the page above the text instead of beside it.
-export const WIDE_FIGURES = new Set(['mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit']);
+export const WIDE_FIGURES = new Set(['mancala-board', 'mancala-sow', 'mancala-capture', 'spades-bids', 'spades-trump', 'spades-score', 'dominoes-line', 'dominoes-modes', 'hearts-points', 'hearts-pass', 'hearts-trick', 'backgammon-opening', 'backgammon-hit', 'jenga-meter', 'jenga-edge', 'pong-racks', 'pong-outcomes']);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 export const chapterOf = index => ROMAN[index] ?? String(index + 1);
 
@@ -131,6 +145,13 @@ export const DIAGRAMS = {
   // Spades: bids round the table (you, left, across, right), a heart trumped, and a hand's score.
   spadesBids: { bids: [3, 2, 4, 0], taken: [4, 2, 4, 0] },
   spadesTrump: { cards: ['KH', 'AH', '2S', '5H'], winner: '2S' },
+  // Jenga: the top levels of a tower (bottom first), a pulled block's gap, and a level
+  // whose last two blocks are its edges, so pulling one leaves the other alone.
+  jengaTower: { levels: [[1, 1, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [1, 1, 1], [1, 1, 1], [0, 1, 0]], pulled: [3, 0] },
+  jengaEdge: { level: [1, 0, 1], pull: 0 },
+  jengaMeter: { lo: 0.38, hi: 0.62, marker: 0.5 },
+  // Wine pong: the apex glass of the far rack, sunk by a dead-centre throw.
+  pongThrow: { glass: 5 },
   backgammonOpening: { layout: { 24: 2, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -5 }, dice: [3, 1], moves: [[8, 5], [6, 5]] },
   backgammonHit: { layout: { 24: 2, 13: 5, 8: 2, 6: 4, 5: -1, 4: -2, 12: -4 }, dice: [3, 2], move: [8, 5], closed: 4 },
 };
@@ -252,6 +273,8 @@ export function iconMarkup(id) {
     hearts: '<path class="sg-icon-fill" d="M20 31C11 24 8 19.5 8 15.5A5.5 5.5 0 0 1 20 13a5.5 5.5 0 0 1 12 2.5C32 19.5 29 24 20 31z"/>',
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
+    jenga: '<rect class="sg-icon-fill" x="11" y="26" width="18" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="19.5" width="18" height="5" rx="1"/><rect class="sg-icon-fill" x="11" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-fill" x="24" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="6.5" width="18" height="5" rx="1"/>',
+    winePong: '<path class="sg-icon-line" d="M13 8h14c0 8-3 12-7 12s-7-4-7-12zM20 20v9M14 31h12"/><path class="sg-icon-fill" d="M13.6 12h12.8c-.6 4.5-3 7-6.4 7s-5.8-2.5-6.4-7z"/>',
   }[id] ?? '';
   return `<svg class="salon-icon" viewBox="0 0 40 40" aria-hidden="true">${icon}</svg>`;
 }
@@ -332,6 +355,38 @@ export function figureMarkup(figure, game) {
         + board.map((seeds, index) => { const [x, y] = spot(index), store = index === 6 || index === 13, glow = path.includes(index) || (kind === 'mancala-capture' && index === 9);
           return `${glow ? `<circle class="sg-glow" cx="${x}" cy="${y}" r="${store ? 24 : 17}"/>` : ''}${store ? `<rect class="sg-rim" x="${x - 14}" y="${y - 40}" width="28" height="80" rx="14"/>` : `<circle class="sg-rim" cx="${x}" cy="${y}" r="14"/>`}<text class="sg-label" x="${x}" y="${y + 5}" text-anchor="middle" font-size="13" style="fill:#f3e6cf">${seeds}</text>`; }).join('')
         + (kind === 'mancala-sow' ? arrow([[134, 122], [206, 122], [262, 102]], 'm') + arrowHead('m') : '')); }
+    case 'jenga-tower': { const { levels, pulled } = DIAGRAMS.jengaTower, h = 22, top = 16;
+      return svg(220, 200, 'A Jenga tower seen from the front: blocks are pulled from below the top and laid on top; the top level, still being finished, and the one under it are kept.',
+        levels.map((row, level) => row.map((present, slot) => {
+          const y = top + (levels.length - 1 - level) * h, x = 40 + slot * 48, isPulled = level === pulled[0] && slot === pulled[1];
+          return present ? `<rect class="sg-tile-face" x="${x}" y="${y}" width="44" height="${h - 4}" rx="3"/>` : isPulled ? `<rect class="sg-ghost" x="${x}" y="${y}" width="44" height="${h - 4}" rx="3"/>` : '';
+        }).join('')).join('')
+        + arrow([[110 + 48, top + (levels.length - 1 - pulled[0]) * h + 9], [196, top + (levels.length - 1 - pulled[0]) * h + 9], [196, top - 6], [140, top - 6]], 'j') + arrowHead('j')
+        + `<text class="sg-label sg-quiet" x="110" y="${top + levels.length * h + 14}" text-anchor="middle" font-size="11">pull from below, lay on top</text>`); }
+    case 'jenga-meter': { const { lo, hi, marker } = DIAGRAMS.jengaMeter, x0 = 30, w = 240;
+      return svg(300, 110, 'The steady-hand meter: a marker sweeps along the track; stopped inside the green zone, the block slides out.',
+        `<rect class="sg-bar" x="${x0}" y="40" width="${w}" height="26" rx="13"/><rect class="sg-glow" x="${x0 + lo * w}" y="40" width="${(hi - lo) * w}" height="26"/>`
+        + `<rect class="sg-mark" x="${x0 + marker * w - 3}" y="34" width="6" height="38" rx="3"/>`
+        + `<text class="sg-label sg-quiet" x="${x0 + (lo + hi) / 2 * w}" y="92" text-anchor="middle" font-size="11">stop here: it slides out</text><text class="sg-label sg-quiet" x="${x0 + 30}" y="26" font-size="11">wobbles</text><text class="sg-label sg-quiet" x="${x0 + w - 30}" y="26" text-anchor="end" font-size="11">wobbles</text>`); }
+    case 'jenga-edge': { const { level, pull } = DIAGRAMS.jengaEdge;
+      return svg(260, 140, 'A level down to its two edge blocks: pull either and the other is left alone at the edge, and the tower above it falls.',
+        `<rect class="sg-tile-back" x="40" y="24" width="180" height="22" rx="3"/>`
+        + level.map((present, slot) => present ? `<rect class="${slot === pull ? 'sg-ghost' : 'sg-tile-face'}" x="${40 + slot * 62}" y="52" width="56" height="22" rx="3"/>` : '').join('')
+        + `<rect class="sg-tile-back" x="40" y="80" width="180" height="22" rx="3"/><text class="sg-label" x="130" y="126" text-anchor="middle" font-size="12">one edge block left: it falls</text>`); }
+    case 'pong-racks': { const rack = (x, flip) => [[0, -1], [0, 0], [0, 1], [1, -0.5], [1, 0.5], [2, 0]].map(([row, across]) => `<circle class="sg-tile-face" cx="${x + (flip ? -1 : 1) * row * 14}" cy="${65 + across * 16}" r="7"/><circle class="sg-red" cx="${x + (flip ? -1 : 1) * row * 14}" cy="${65 + across * 16}" r="4"/>`).join('');
+      return svg(300, 130, 'The long table from above: six wine glasses racked three, two, one at each end; you throw at the far rack.',
+        '<rect class="sg-tile-face" x="20" y="34" width="260" height="62" rx="6"/><line class="sg-path" x1="150" y1="38" x2="150" y2="92"/>' + rack(36, false) + rack(264, true)
+        + '<text class="sg-label sg-quiet" x="40" y="118" font-size="11">your glasses</text><text class="sg-label sg-quiet" x="260" y="118" text-anchor="end" font-size="11">the far rack: sink all six</text>'); }
+    case 'pong-throw': return svg(170, 260, 'From your end: the dotted aim line crosses the far rack, and the power target rides along it onto a glass.',
+      '<rect class="sg-tile-face" x="55" y="20" width="60" height="200" rx="5"/>'
+      + [[0, -1], [0, 0], [0, 1], [1, -0.5], [1, 0.5], [2, 0]].map(([row, across]) => `<circle class="sg-tile-face" cx="${85 + across * 13}" cy="${32 + row * 11}" r="5.5"/><circle class="sg-red" cx="${85 + across * 13}" cy="${32 + row * 11}" r="3.2"/>`).join('')
+      + arrow([[85, 246], [85, 60]], 't') + arrowHead('t') + '<circle class="sg-win" cx="85" cy="54" r="8"/><circle class="sg-mark" cx="85" cy="246" r="5"/>'
+      + '<text class="sg-label sg-quiet" x="85" y="14" text-anchor="middle" font-size="11">aim, then power</text>');
+    case 'pong-outcomes': { const glass = (x, sunk) => `<circle class="sg-tile-face" cx="${x}" cy="62" r="16"/>${sunk ? '' : `<circle class="sg-red" cx="${x}" cy="62" r="10"/>`}`;
+      return svg(300, 140, 'Three ways in: straight in, off the rim and in, or a bounce on the table and in.',
+        glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'
+        + arrow([[150, 112], [205, 104], [236, 70]], 'o') + arrowHead('o')
+        + '<text class="sg-label" x="55" y="104" text-anchor="middle" font-size="12">in</text><text class="sg-label" x="150" y="104" text-anchor="middle" font-size="12">rim, then in</text><text class="sg-label" x="252" y="124" text-anchor="middle" font-size="12">bounce, then in</text>'); }
     case 'backgammon-opening': { const { layout, dice, moves } = DIAGRAMS.backgammonOpening, near = nearPoints(layout), top = point => 10 + near[point][0] * 21 - 21 + 1;
       const strip = backgammonStrip(near, { dice, moves: moves.map(([from, to]) => [from, to, top(from)]) });
       return svg(strip.width, 222, 'The opening three-one: one checker from the eight-point and one from the six-point land together on the five-point.', strip.body); }
