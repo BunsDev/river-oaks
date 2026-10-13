@@ -1,5 +1,6 @@
 import { terrainHeight } from './geometry.js';
 import { clearStandingStations } from './store-clearance.js';
+import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
 
 // Walk-in boutique floor plans behind each mapped storefront. Rooms stay inside
 // the OSM footprint ring, never overlap, and open through the mapped entrance.
@@ -73,7 +74,7 @@ export function planStoreRooms(world) {
         const width = span.aMax - span.aMin;
         // Keep the whole rendered doorway inside the room, not only its center.
         if (width < 3 || span.aMin > -DOOR_HALF_WIDTH || span.aMax < DOOR_HALF_WIDTH) continue;
-        for (let depth = 9; depth >= 4.5; depth -= 0.5) {
+        for (let depth = isIpicStore(store) ? 34 : 9; depth >= 4.5; depth -= 0.5) {
           if (width * depth <= (best?.area ?? 0)) break;
           if (fits(span.aMin, span.aMax, depth)) { best = { ...span, width, depth, area: width * depth }; break; }
         }
@@ -104,7 +105,8 @@ export function planStoreRooms(world) {
       Math.min(...bounds.map(point => point[0])), Math.min(...bounds.map(point => point[1])),
       Math.max(...bounds.map(point => point[0])), Math.max(...bounds.map(point => point[1])),
     ];
-    layoutRoom(room);
+    if (isIpicStore(store) && room.depth === 34 && room.width >= 12) configureIpicRoom(room);
+    else layoutRoom(room);
     rooms.push(room);
   });
   return rooms;
