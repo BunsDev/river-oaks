@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CHESS_CELL_M, DOMINO, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
+import { startGame as backgammonStart } from './backgammon-rules.js';
+import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
@@ -49,6 +51,18 @@ const chessTexture = () => dataTexture(128, (x, y) => {
   const dark = chessCellIsDark(Math.floor((x - 6) / 14.5), Math.floor((y - 6) / 14.5)), n = hash(x, y) * 0.08;
   return [...(dark ? mix([52, 51, 55], [70, 68, 72], n) : mix([236, 226, 205], [222, 210, 188], n)), 255];
 }, { repeat: false });
+// A backgammon board seen from above: a walnut frame and bar, green felt, and
+// twenty-four points alternating oxblood and cream (see backgammonSpot for the layout).
+const backgammonTexture = () => dataTexture([264, 208], (px, py) => {
+  const { width, depth, column, bar } = BACKGAMMON, x = (px / 264 - 0.5) * (width + 0.04), z = (0.5 - py / 208) * (depth + 0.04);
+  if (Math.abs(x) > width / 2 || Math.abs(z) > depth / 2 || Math.abs(x) < bar / 2) return [86, 56, 36, 255];
+  const right = x > 0, inHalf = Math.floor((Math.abs(x) - bar / 2) / column), col = right ? 6 + inHalf : 5 - inHalf, near = z > 0;
+  const centre = (col - 5.5) * column + (col >= 6 ? bar / 2 : -bar / 2), reach = depth / 2 - 0.02 - Math.abs(z);
+  const inside = reach >= 0 && reach <= 0.2 && Math.abs(x - centre) < (column / 2) * (1 - reach / 0.2);
+  if (!inside) return [...mix([52, 82, 60], [44, 70, 52], hash(px, py) * 0.6), 255];
+  return ((col + (near ? 0 : 1)) & 1) ? [150, 54, 48, 255] : [232, 220, 192, 255];
+}, { repeat: false });
+
 // A walnut sunburst veneer: sixteen wedges in two tones around the centre.
 const sunburstTexture = () => dataTexture(128, (x, y) => {
   const dx = x - 63.5, dy = y - 63.5, angle = Math.atan2(dy, dx), wedge = Math.floor((angle + Math.PI) / (Math.PI / 8)) & 1;
@@ -122,7 +136,7 @@ export function buildPlazaSalon(world) {
   const group = new THREE.Group(); group.name = 'Plaza salon';
   const plan = plazaSalonPlan(world);
   if (!plan) return group;
-  const textures = { slat: slatTexture(), travertine: travertineTexture(), chess: chessTexture(), sunburst: sunburstTexture() };
+  const textures = { slat: slatTexture(), travertine: travertineTexture(), chess: chessTexture(), sunburst: sunburstTexture(), backgammon: backgammonTexture() };
   // The world reload releases a texture through userData.texture (main.js populateWorld).
   for (const texture of Object.values(textures)) { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
   const material = {
@@ -133,6 +147,7 @@ export function buildPlazaSalon(world) {
     travertine: new THREE.MeshStandardMaterial({ map: textures.travertine, roughness: 0.88 }),
     chess: new THREE.MeshStandardMaterial({ map: textures.chess, roughness: 0.42 }),
     sunburst: new THREE.MeshStandardMaterial({ map: textures.sunburst, roughness: 0.5 }),
+    backgammon: new THREE.MeshStandardMaterial({ map: textures.backgammon, roughness: 0.62 }),
     bronze: new THREE.MeshStandardMaterial({ color: '#5f4a33', metalness: 0.82, roughness: 0.36 }),
     // Warm lantern glass reads as lit by day; bulbs exceed the bloom threshold at dusk.
     glass: new THREE.MeshStandardMaterial({ color: '#ffd9a0', emissive: '#ffb45e', emissiveIntensity: 1.35, roughness: 0.2, transparent: true, opacity: 0.86 }),
@@ -205,6 +220,14 @@ export function buildPlazaSalon(world) {
     part(unit.box, material.chess, [0, 0.772, 0], [0.6, 0.004, 0.6]);
     part(unit.box, material.travertine, [0, 0.36, 0], [0.24, 0.62, 0.24]);
     part(unit.box, material.travertine, [0, 0.03, 0], [0.52, 0.06, 0.52]);
+  }
+  // The backgammon table: a walnut top on a pedestal, the board laid across it.
+  {
+    const table = plan.backgammon, origin = base(table), yaw = Math.PI / 2, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    part(unit.box, material.walnut, [0, 0.72, 0], [0.8, 0.05, 0.64]);
+    part(unit.box, [material.walnut, material.walnut, material.backgammon, material.walnut, material.walnut, material.walnut], [0, 0.752, 0], [BACKGAMMON.width + 0.04, 0.014, BACKGAMMON.depth + 0.04]);
+    part(unit.box, material.walnut, [0, 0.36, 0], [0.16, 0.62, 0.16]);
+    part(unit.box, material.bronze, [0, 0.03, 0], [0.5, 0.06, 0.42]);
   }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
@@ -475,6 +498,35 @@ export function buildPlazaSalon(world) {
       count: () => ({ tiles: tiles.count, pips: pips.count }),
     };
   }
+  // Backgammon checkers: one InstancedMesh for both colours (instance colours), set
+  // from a game's points, bar and borne-off trays; idle, the table shows the opening.
+  {
+    const table = plan.backgammon, [, y] = base(table), top = y + 0.759, tint = [new THREE.Color('#efe6d4'), new THREE.Color('#2b2522')];
+    const checkers = new THREE.InstancedMesh(new THREE.CylinderGeometry(BACKGAMMON.radius, BACKGAMMON.radius, 0.007, 24), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.35 }), 30);
+    Object.assign(checkers, { name: 'Backgammon checkers', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(checkers);
+    const show = (game = null, whiteChair = 0) => {
+      const position = game ?? backgammonStart(1);
+      checkers.count = 0;
+      const put = (place, slot, colour) => {
+        const spot = backgammonSpot(table, place, slot, whiteChair);
+        dummy.position.set(spot.position[0], top + 0.0035 + spot.layer * 0.0075, -spot.position[1]); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+        checkers.setColorAt(checkers.count, tint[colour]); checkers.setMatrixAt(checkers.count++, dummy.matrix);
+      };
+      for (let point = 1; point <= 24; point++) for (let slot = 0; slot < Math.abs(position.points[point]); slot++) put(point, slot, position.points[point] > 0 ? 0 : 1);
+      for (const colour of [0, 1]) {
+        for (let slot = 0; slot < position.bar[colour]; slot++) put(colour ? 'bar-black' : 'bar-white', slot, colour);
+        for (let slot = 0; slot < position.off[colour]; slot++) put(colour ? 'off-black' : 'off-white', slot, colour);
+      }
+      checkers.instanceMatrix.needsUpdate = true; if (checkers.instanceColor) checkers.instanceColor.needsUpdate = true; checkers.computeBoundingSphere();
+    };
+    show();
+    group.userData.backgammon = {
+      // A position ({ points, bar, off } from backgammon-rules.js) or null for the opening, and white's chair.
+      show,
+      count: () => checkers.count,
+    };
+  }
   // Hearts at the café table: the trick lies face up, each card in front of the player
   // who played it; hands and won tricks wait face down at each seat. Faces come from a
   // canvas atlas where there is a document (a plain face elsewhere); backs are one mesh.
@@ -524,6 +576,38 @@ export function buildPlazaSalon(world) {
       count: () => ({ faces: faces.filter(mesh => mesh.visible).length, backs: backs.count, drawn: Boolean(atlas) }),
     };
   }
-  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
+  // The bike rack: a bronze bar on two posts along the north footway, with a parked
+  // bicycle on each slot while nobody has it out (plazaSalonRack). The bar joins the
+  // instanced batches above; each bike is the road vehicle's own small group.
+  const slots = plazaSalonRack(world), models = [];
+  {
+    const { rack } = plan, origin = base(rack), yaw = rack.heading, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    part(unit.box, material.bronze, [0, 0.8, 0], [rack.length, 0.05, 0.05]);
+    for (const lx of [-1, 1].map(side => side * (rack.length / 2 - 0.3))) {
+      part(unit.post, material.bronze, [lx, 0.4, 0], [0.07, 0.8, 0.07]);
+      part(unit.disc, material.bronze, [lx, 0.015, 0], [0.22, 0.03, 0.22]);
+    }
+    const bikes = new THREE.Group(); bikes.name = 'Parked bikes'; group.add(bikes);
+    for (const slot of slots) {
+      const model = createRoadVehicle('bicycle'), [x, y, z] = base(slot);
+      // The vehicle mesh faces local -X; a heading (0 = south = scene +Z) is the yaw of a
+      // model facing +Z, so the bike turns a further quarter (see parked-carriage pose).
+      model.object.position.set(x, y, z); model.object.rotation.y = slot.heading + Math.PI / 2;
+      bikes.add(model.object); models.push(model);
+    }
+  }
+  const parked = slots.map(() => true);
+  group.userData.rack = {
+    slots: slots.length,
+    parked: () => parked.slice(),
+    // Hide the bikes whose slots are taken (slot ids from the cycling snapshot); true when anything changed.
+    setTaken(taken) {
+      const held = new Set(taken ?? []); let changed = false;
+      slots.forEach((slot, i) => { const show = !held.has(slot.id); if (parked[i] !== show) { parked[i] = show; models[i].object.visible = show; changed = true; } });
+      return changed;
+    },
+    dispose: () => models.forEach(model => model.dispose()),
+  };
+  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length, rackSlots: slots.length };
   return group;
 }
