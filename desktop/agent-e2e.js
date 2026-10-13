@@ -68,7 +68,68 @@ try {
  await page.getByRole('button',{name:'New chat'}).click();assert.equal(await page.locator('.studio-agent-msg').count(),0);
  await page.locator('.studio-agent').press('Escape');assert.equal(await page.locator('.studio-agent').getAttribute('data-open'),'false');
  check('new chat clears the log and Escape collapses to the pill');
+ // Furnished template edits use the same real IPC/CLI path and scope fence.
+ await page.locator('#studio-save').click();
+ await page.locator('#studio-templates').click();
+ await page.getByRole('button',{name:'Use Courtyard House',exact:true}).click();
+ await page.locator('[data-item="living-sofa"]').click();
+ await page.getByRole('button',{name:'Open agent chat'}).click();
+ await page.locator('[data-agent-edit-mode]').selectOption('ask');
+ await page.getByRole('button',{name:'Scene context'}).click();
+ await page.locator('input[name="studio-agent-scope"][value="selection"]').check();
+ await page.getByLabel('Message the World Studio agent').fill('Warm the living room');await page.getByLabel('Message the World Studio agent').press('Enter');
+ await page.locator('.studio-agent-edit-status').filter({hasText:'scope'}).waitFor();
+ assert.equal(await page.getByRole('combobox',{name:'Finish',exact:true}).inputValue(),'fabric');
+ check('selected furnishing scope rejects a CLI proposal changing unshared lighting');
+ await page.locator('input[name="studio-agent-scope"][value="region"]').check();
+ await page.getByLabel('Message the World Studio agent').fill('Warm the entire living room');await page.getByLabel('Message the World Studio agent').press('Enter');
+ await page.getByRole('button',{name:'Apply as one edit'}).click();
+ assert.equal(await page.getByRole('combobox',{name:'Finish',exact:true}).inputValue(),'sage');
+ await page.locator('[data-item="@environment"]').click();assert.equal(await page.getByRole('combobox',{name:'Lighting',exact:true}).inputValue(),'evening');
+ await page.locator('#studio-undo').click();assert.equal(await page.getByRole('combobox',{name:'Lighting',exact:true}).inputValue(),'warm');
+ await page.locator('[data-item="living-sofa"]').click();assert.equal(await page.getByRole('combobox',{name:'Finish',exact:true}).inputValue(),'fabric');
+ check('furnished agent batch changes finish and lighting and undoes both in one edit');
+ const spaceExport=join(profile,'space.json');
+ await app.evaluate(({session},destination)=>{session.defaultSession.once('will-download',(event,item)=>{
+   globalThis.spaceExport={blocked:event.defaultPrevented};if(event.defaultPrevented)return;
+   globalThis.spaceExport.options=item.getSaveDialogOptions();item.setSavePath(destination);
+   item.once('done',(_event,state)=>{globalThis.spaceExport.state=state;});
+ });},spaceExport);
+ await page.locator('#studio-export').click();
+ const deadline=Date.now()+10000;let receipt;
+ do{receipt=await app.evaluate(()=>globalThis.spaceExport);if(receipt?.blocked||receipt?.state)break;await new Promise(resolve=>setTimeout(resolve,100));}while(Date.now()<deadline);
+ assert.equal(receipt?.blocked,false);assert.equal(receipt?.state,'completed');assert.equal(receipt.options.filters[0].name,'Space JSON');
+ const exported=JSON.parse(await readFile(spaceExport,'utf8'));assert.equal(exported.document_type,'studio-space');assert.equal(exported.lighting,'warm');
+ check('native space export passes the real download policy and preserves the local document');
+
+ // Deterministic renderer race: host cancellation arrives after a queued success.
+ await page.evaluate(async()=>{
+   const {mountAgentChat}=await import('/src/studio/agent-chat.js');
+   const {createStudioDocument}=await import('/src/studio/document.js');
+   const {createSpace}=await import('/src/studio/space-templates.js');
+   const host=document.createElement('div');host.id='agent-race-fixture';host.style.cssText='position:fixed;inset:40px;z-index:100;background:white';document.body.append(host);
+   const doc=createStudioDocument(createSpace('house'));window.agentRace={doc};
+   const bridge={catalog:async()=>({providers:[{id:'fixture',name:'Fixture',available:true,models:[{id:'local',label:'Fixture'}]}]}),send:()=>new Promise(resolve=>{window.agentRace.resolve=resolve;}),cancel:async()=>{},reset:async()=>{}};
+   window.agentRace.chat=mountAgentChat(host,{doc,selected:()=>null,apply:()=>{},bridge,storage:{getItem:()=>null,setItem(){}}});window.agentRace.chat.open();
+ });
+ const race=page.locator('#agent-race-fixture');await race.locator('[data-agent-model]').selectOption('fixture:local');
+ await race.locator('[data-agent-edit-mode]').selectOption('allow');
+ await race.getByLabel('Message the World Studio agent').fill('Change the sofa');await race.getByLabel('Message the World Studio agent').press('Enter');
+ await race.getByRole('button',{name:'Stop the reply'}).click();
+ await page.evaluate(()=>{window.agentRace.resolve({text:'```studio-edit\n{"operations":[{"op":"update","id":"living-sofa","patch":{"finish":"sage"}}]}\n```'});});
+ await race.getByRole('button',{name:'Send',exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>window.agentRace.doc.value.objects.find(o=>o.id==='living-sofa').finish),'fabric');
+ await page.evaluate(()=>{window.agentRace.chat.dispose();document.querySelector('#agent-race-fixture').remove();delete window.agentRace;});
+ check('Stop locally fences a queued successful reply even in Allow mode');
+ await page.locator('#studio-save').click();
  assert.equal(typeof await page.evaluate(()=>window.require),'undefined');assert.deepEqual(errors,[]);
  report.status='passed';
 } catch(error){report.status='failed';report.error=error.stack;report.pageErrors=errors;if(page&&!page.isClosed()){await mkdir(join(root,'output/playwright'),{recursive:true});await page.screenshot({path:join(root,'output/playwright/world-studio-agent-failure.png')}).catch(()=>{});}process.exitCode=1;console.error(error.stack);}
-finally{if(app)await app.evaluate(({app})=>app.exit()).catch(()=>{});await app?.close().catch(()=>{});await vite?.close();await rm(profile,{recursive:true,force:true});await mkdir(join(root,'.runtime/agent'),{recursive:true});await writeFile(join(root,'.runtime/agent/studio-agent-native.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));}
+finally{
+ console.log('Closing Studio acceptance fixture');
+ if(report.status==='failed')await app?.evaluate(({app})=>app.exit(1)).catch(()=>{});
+ await app?.close().catch(()=>{});console.log('Studio Electron closed');
+ await vite?.close();console.log('Studio fixture server closed');
+ await rm(profile,{recursive:true,force:true});await mkdir(join(root,'.runtime/agent'),{recursive:true});
+ await writeFile(join(root,'.runtime/agent/studio-agent-native.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+}

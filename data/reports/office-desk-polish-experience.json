@@ -1,0 +1,28 @@
+{
+  "createdAt": "2026-10-13T17:19:49.955Z",
+  "results": [
+    {
+      "name": "office-desk",
+      "status": "passed",
+      "seconds": 21.678,
+      "result": {
+        "checks": [
+          "Authorized office opens an empty private desk",
+          "Notes, file links and result save to the account",
+          "Typing at the desk does not move the player",
+          "Completed task retains the written result",
+          "Saved work can be downloaded",
+          "Closing the desk restores office focus",
+          "Leaving, reloading and returning resumes saved work",
+          "A failed save keeps the draft and offers retry",
+          "Mobile desk fits without horizontal overflow",
+          "Visible mobile actions keep touch-sized targets",
+          "Long titles wrap fully on mobile",
+          "Small phones retain a contained layout",
+          "Removing work requires confirmation and can be cancelled",
+          "Escape leaves the desk before leaving the office"
+        ]
+      }
+    }
+  ]
+}

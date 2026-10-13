@@ -17,7 +17,15 @@ import { createSharedWorld } from '../../server/world.js';
 // Actual browser, built access UI, SDK session verification, HTTP gate, and
 // persisted invitations. Only the remote identity provider is a local fixture;
 // no email is sent and no production accounts or services are touched.
-test('email access: browser verification, invitation, member controls and revocation', { timeout: 120_000 }, async t => {
+// CI runs this on Mesa (RIVER_OAKS_SECURITY_SOFTWARE). A fresh runner has no shader
+// cache, so the page's first render compiles every shader on its main thread: single
+// frames of 20-32 s, and town joins of 25-58 s against 5-18 s once Mesa's cache is warm
+// on the same machine (diag/email-join-20261013, 2026-10-13). The cache does not carry
+// between runners. That one-off compile gets its own allowance; a GPU run keeps 60 s.
+const softwareRendering = process.env.RIVER_OAKS_SECURITY_SOFTWARE === '1';
+const joinTimeout = softwareRendering ? 150_000 : 60_000;
+
+test('email access: browser verification, invitation, member controls and revocation', { timeout: softwareRendering ? 240_000 : 120_000 }, async t => {
   const directory = await mkdtemp(join(tmpdir(), 'river-access-e2e-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   let app;
@@ -34,7 +42,7 @@ test('email access: browser verification, invitation, member controls and revoca
   app = createGameServer({ auth: createAuth({ ...config, workos: sdk }), world, waitlist,
     origin, staticRoot: fileURLToPath(new URL('../../dist/preview', import.meta.url)), waitlistAdmins: ['admin'] });
   t.after(() => app.close());
-  const software = process.env.RIVER_OAKS_SECURITY_SOFTWARE === '1';
+  const software = softwareRendering;
   if (software && process.platform !== 'linux') throw new Error('Software security acceptance requires Linux with Xvfb and Mesa.');
   const browser = await chromium.launch({ headless: !software,
     args: software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
@@ -53,6 +61,15 @@ test('email access: browser verification, invitation, member controls and revoca
   const page = await context.newPage();
   page.setDefaultTimeout(60_000);
   page.on('pageerror', error => console.error('Access browser error:', error.message));
+  // Town sockets this page opens. A slow first join must be kept, not abandoned
+  // and retried (#260), and a failure report shows what the page tried.
+  const townSockets = [];
+  page.on('websocket', socket => {
+    if (new URL(socket.url()).pathname !== '/multiplayer') return;
+    const entry = { openedAt: Date.now(), closed: false };
+    townSockets.push(entry);
+    socket.on('close', () => { entry.closed = true; });
+  });
   try {
     for (const [width, height] of [[1440, 900], [1280, 720], [390, 844], [320, 568]]) {
       await page.setViewportSize({ width, height });
@@ -151,6 +168,7 @@ test('email access: browser verification, invitation, member controls and revoca
     });
     await page.locator('#access-invite-redeem').click();
     await page.locator('#access-gate').waitFor({ state: 'hidden' });
+    const admitted = Date.now();
     assert.equal(await page.evaluate(() => window.__styledWhenGateLifted), true, 'the game is styled before the sign-in gate lifts, never shown as raw HTML');
     assert.equal((await post('/api/multiplayer/ticket', {})).status(), 200);
     assert.equal((await request.get(`${origin}/data/district.json`)).status(), 200);
@@ -159,7 +177,10 @@ test('email access: browser verification, invitation, member controls and revoca
     assert.equal(invitations.invites.length, 2);
     // Admission and town connection are separate gates. Wait for the real
     // connected roster before interacting with the previously inert app.
-    await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached' });
+    await page.locator('.multiplayer-roster[data-connected="true"]').waitFor({ state: 'attached', timeout: joinTimeout });
+    // Logged on every run, so a slower join shows in CI before it fails.
+    console.log(`Town join: roster connected ${Date.now() - admitted} ms after admission (allowance ${joinTimeout} ms)`);
+    assert.equal(townSockets.length, 1, `one town socket joins; a slow join is not abandoned and retried (${JSON.stringify(townSockets)})`);
     await page.locator('.multiplayer-gate').waitFor({ state: 'hidden' });
     await page.locator('.app-shell:not([inert])').waitFor({ state: 'visible' });
     // Account actions live in the settings modal once the HUD initializes.
@@ -183,7 +204,8 @@ test('email access: browser verification, invitation, member controls and revoca
       connectionHidden: document.querySelector('.multiplayer-gate')?.hidden,
       appInert: document.querySelector('.app-shell')?.inert,
       playerReady: document.querySelector('#canvas-host')?.dataset.playerReady,
-    })).catch(() => ({ unavailable: true })));
+      multiplayer: document.querySelector('#canvas-host')?.dataset.multiplayer,
+    })).catch(() => ({ unavailable: true })), 'Town sockets:', JSON.stringify({ opened: townSockets.length, closed: townSockets.filter(entry => entry.closed).length }));
     await mkdir('output/playwright', { recursive: true });
     await page.screenshot({ path: 'output/playwright/security-access-failure.png', timeout: 5000 }).catch(() => {});
     throw error;

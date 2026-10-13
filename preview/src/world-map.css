@@ -5,13 +5,13 @@
 :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#e8dcc5;--map-grid:#cdbd9c;--map-building:#fffcf5;--map-building-edge:#d6c4a2;--map-building-side:#b9a17a;
   --map-road:#ffffff;--map-road-casing:#c4b08b;--map-road-centre:#d9a654;--map-path:#947d56;--map-label:#5f523f;--map-label-halo:#fbf7ee;
   --map-ring:#fffaf0;--map-self:#1f6f63;--map-self-glow:rgb(44 116 102 / .32);--map-target:#c0577f;--map-landmark:#8a64c0;--map-peer:#2c7466;
-  --map-chip:rgb(255 252 245 / .72);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
+  --map-chip:rgb(255 252 245 / .9);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
   position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:0;border-radius:22px;background:var(--map-ground);cursor:crosshair;touch-action:manipulation;
   box-shadow:0 0 0 1px var(--map-rim),0 0 0 5px var(--map-bezel),0 0 0 6px rgb(0 0 0 / .06),0 14px 34px var(--map-shade)}
 :root[data-theme=dark] :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#0f2327;--map-grid:#1d3b40;--map-building:#27474e;--map-building-edge:#36606a;--map-building-side:#081619;
   --map-road:#6f9692;--map-road-casing:#09181b;--map-road-centre:rgb(236 200 132 / .55);--map-path:#5c837f;--map-label:#d3e3de;--map-label-halo:#0f2327;
   --map-ring:#0f2327;--map-self:#b5eee6;--map-self-glow:rgb(181 238 230 / .3);--map-target:#ffd88f;--map-landmark:#d6b6f2;--map-peer:#b5eee6;
-  --map-chip:rgb(13 29 32 / .7);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
+  --map-chip:rgb(13 29 32 / .88);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
 /* Glass lip: a bright inner edge and a soft vignette over the drawing. */
 :is(#control-panel,.places-guide) .world-map-surface::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
   box-shadow:inset 0 1px 0 var(--map-rim),inset 0 0 0 1px rgb(255 255 255 / .12),inset 0 0 42px rgb(0 0 0 / .14);
@@ -21,11 +21,11 @@
 :is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:var(--map-chip-ink);font:700 10px/1.2 system-ui,sans-serif;pointer-events:none}
 /* A compass chip: a two-tone needle over N. */
 :is(#control-panel,.places-guide) .world-map-north{top:12px;right:12px;display:grid;justify-items:center;gap:2px;min-width:30px;padding:6px 7px 5px;border:1px solid var(--map-rim);border-radius:999px;
-  background:var(--map-chip);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);letter-spacing:.08em;box-shadow:0 4px 12px var(--map-shade)}
+  background:var(--map-chip);letter-spacing:.08em;box-shadow:0 4px 12px var(--map-shade)}
 :is(#control-panel,.places-guide) .world-map-north::before{content:"";width:8px;height:14px;background:linear-gradient(90deg,var(--map-target) 50%,color-mix(in srgb,var(--map-target) 55%,#000) 50%);
   clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%)}
 /* A surveyor's scale bar: alternating segments over the distance. */
-:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;width:var(--world-map-scale-width);padding-top:6px;text-align:center;text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo)}
+:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;white-space:nowrap;width:var(--world-map-scale-width);padding-top:6px;text-align:center;text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo)}
 :is(#control-panel,.places-guide) .world-map-scale::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;border:1px solid var(--map-chip-ink);border-radius:2px;
   background:repeating-linear-gradient(90deg,var(--map-chip-ink) 0 25%,var(--map-ring) 25% 50%)}
 :is(#control-panel,.places-guide) .world-map-ground{fill:var(--map-ground)}
@@ -48,18 +48,35 @@
 :is(#control-panel,.places-guide) .world-map-place:hover{transform:scale(1.3)}
 :is(#control-panel,.places-guide) .world-map-landmark{fill:var(--map-landmark);stroke:var(--map-ring);stroke-width:3.5;stroke-linejoin:round;paint-order:stroke}
 :is(#control-panel,.places-guide) .world-map-peer{fill:var(--map-ring);stroke:var(--map-peer);stroke-width:4}
-/* You: a breathing halo, a cone of view, and an arrow that turns with you. */
-:is(#control-panel,.places-guide) .world-map-self{transition:transform .5s linear}
-:is(#control-panel,.places-guide) .world-map-self-halo{fill:var(--map-self-glow);transform-box:fill-box;transform-origin:center;animation:world-map-breathe 2.6s ease-in-out infinite}
+/* Live layers. The drawing (ground, roads, shadowed buildings) is one SVG that
+   repaints only when the world changes. Places and players sit on a second,
+   filter-free SVG above it. You and the chosen point are HTML placed in container
+   units and moved with composited transforms, so walking, turning and selecting
+   never repaint the map. */
+:is(#control-panel,.places-guide) .world-map-surface{container-type:size}
+:is(#control-panel,.places-guide) .world-map-live{position:absolute;inset:0;pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-live :is(.world-map-place,.world-map-landmark,.world-map-peer,.world-map-parcel){pointer-events:visiblePainted}
+:is(#control-panel,.places-guide) :is(.world-map-self,.world-map-target){position:absolute;left:0;top:0;z-index:1;pointer-events:none;
+  transform:translate(calc(var(--x,0) * 1cqw - 50%),calc(var(--y,0) * 1cqh - 50%))}
+:is(#control-panel,.places-guide) :is(.world-map-self,.world-map-target)[hidden]{display:none}
+/* You: a breathing halo, a cone of view, and an arrow that turns with you. The
+   self box is 140 map units across, the drawing's 1000-unit scale. */
+:is(#control-panel,.places-guide) .world-map-self{width:14cqw;height:14cqw;transition:transform .5s linear}
+:is(#control-panel,.places-guide) .world-map-self svg{position:relative;transform:rotate(var(--heading,0deg));transition:transform .5s linear;overflow:visible}
+:is(#control-panel,.places-guide) .world-map-jump,:is(#control-panel,.places-guide) .world-map-jump svg{transition:none}
+:is(#control-panel,.places-guide) .world-map-self-halo{position:absolute;inset:32.85%;border-radius:50%;background:var(--map-self-glow);animation:world-map-breathe 2.6s ease-in-out infinite}
 :is(#control-panel,.places-guide) .world-map-cone-near{stop-color:var(--map-self);stop-opacity:.42}
 :is(#control-panel,.places-guide) .world-map-cone-far{stop-color:var(--map-self);stop-opacity:0}
 :is(#control-panel,.places-guide) .world-map-self-arrow{fill:var(--map-self);stroke:var(--map-ring);stroke-width:3.5;stroke-linejoin:round;paint-order:stroke}
 @keyframes world-map-breathe{50%{transform:scale(1.35);opacity:.45}}
-/* The chosen point: a turning dashed ring. */
-:is(#control-panel,.places-guide) .world-map-target{fill:none;stroke:var(--map-target);stroke-width:4.5;stroke-dasharray:9 7;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:world-map-turn 7s linear infinite}
+/* The chosen point: a turning dashed ring (30 map units across). */
+:is(#control-panel,.places-guide) .world-map-target{width:3.45cqw;height:3.45cqw}
+:is(#control-panel,.places-guide) .world-map-target::before{content:"";position:absolute;inset:0;box-sizing:border-box;border:max(2px,.45cqw) dashed var(--map-target);border-radius:50%;animation:world-map-turn 7s linear infinite}
 @keyframes world-map-turn{to{transform:rotate(1turn)}}
-@media (prefers-reduced-motion:reduce){:is(#control-panel,.places-guide) :is(.world-map-self-halo,.world-map-target){animation:none} :is(#control-panel,.places-guide) :is(.world-map-self,.world-map-place){transition:none}}
-:is(#control-panel,.places-guide) .world-map-overlay [hidden]{display:none}
+@media (prefers-reduced-motion:reduce){:is(#control-panel,.places-guide) .world-map-self-halo,:is(#control-panel,.places-guide) .world-map-target::before{animation:none} :is(#control-panel,.places-guide) :is(.world-map-self,.world-map-self svg,.world-map-place){transition:none}}
+/* Software rendering (#281): no animation, no transitions, no building shadows. */
+/* The map rules above carry #control-panel through :is(), so these need the same prefix to win. */
+:root[data-rendering=software] :is(#control-panel,.places-guide) .world-map-self-halo,:root[data-rendering=software] :is(#control-panel,.places-guide) .world-map-target::before{animation:none}:root[data-rendering=software] :is(#control-panel,.places-guide) :is(.world-map-self,.world-map-self svg,.world-map-place){transition:none}:root[data-rendering=software] :is(#control-panel,.places-guide) .world-map-buildings{filter:none}
 :is(#control-panel,.places-guide) .world-map-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0;padding:0;list-style:none;font-size:11px;line-height:1.4;color:var(--muted)}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list){margin:5px 0;color:var(--ink);font-size:12px}
 :is(#control-panel,.places-guide) :is(.world-map-player-list,.world-map-parcel-list)>summary{cursor:pointer;font-weight:650}
@@ -78,7 +95,7 @@
 :is(#control-panel,.places-guide) .world-map-path{stroke:var(--map-path);stroke-dasharray:0 9;stroke-linecap:round}
 :is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:italic 600 10px/1.2 var(--font-sans,system-ui);letter-spacing:.06em;color:var(--map-label);text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo),0 0 1px var(--map-label-halo);pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 12px;border:1px solid var(--map-rim);border-radius:999px;background:var(--map-chip);-webkit-backdrop-filter:blur(12px) saturate(1.7);backdrop-filter:blur(12px) saturate(1.7);box-shadow:inset 0 1px 0 var(--map-rim),0 6px 16px var(--map-shade);color:var(--map-chip-ink);font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 12px;border:1px solid var(--map-rim);border-radius:999px;background:var(--map-chip);box-shadow:inset 0 1px 0 var(--map-rim),0 6px 16px var(--map-shade);color:var(--map-chip-ink);font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-selection-label.above{margin-top:-20px;transform:translate(-50%,-100%)}
 :is(#control-panel,.places-guide) .world-map-legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
 :is(#control-panel,.places-guide) .world-map-key{display:inline-grid;place-items:center;width:15px;height:15px;flex:none}

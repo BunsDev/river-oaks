@@ -1,0 +1,25 @@
+/* Wine pong: the table from your end, linen with a centre seam, each rack's glasses
+   as rims with a pour of red (your own rack muted), the reticle's aim line and power
+   target, the last landing, and the ball in flight. */
+.wine-pong-panel .wine-pong-body { display: flex; flex-direction: column; gap: 12px; }
+.wine-pong-panel .wine-pong-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.wine-pong-panel .wine-pong-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
+.wine-pong-panel .wine-pong-views { display: flex; gap: 18px; align-items: flex-start; justify-content: center; }
+.wine-pong-panel .wine-pong-table { display: block; flex: 0 0 auto; width: auto; height: min(50vh, 440px); }
+.wine-pong-panel .wine-pong-zoom { display: block; flex: 0 1 auto; width: min(100%, 300px); height: auto; }
+@media (max-width: 520px) { .wine-pong-panel .wine-pong-table { height: min(40vh, 300px); } }
+.wine-pong-panel .pong-cloth { fill: #f3eee4; stroke: #c9bfae; stroke-width: 1.5; }
+.wine-pong-panel .pong-centre { stroke: #d8cfbf; stroke-width: 1; stroke-dasharray: 4 4; }
+.wine-pong-panel .pong-glass { fill: rgb(230 240 244 / .55); stroke: #9aa9ae; stroke-width: 1.2; }
+.wine-pong-panel .pong-glass-own { opacity: .55; }
+.wine-pong-panel .pong-glass-down { fill: none; stroke: #c9bfae; stroke-dasharray: 2 3; opacity: .7; }
+.wine-pong-panel .pong-wine { fill: #6d1424; pointer-events: none; }
+.wine-pong-panel .pong-hand { fill: var(--hud-action); opacity: .8; }
+.wine-pong-panel .pong-aim { stroke: var(--hud-action); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
+.wine-pong-panel .pong-span { stroke: var(--hud-action); stroke-width: 4; opacity: .25; stroke-linecap: round; }
+.wine-pong-panel .pong-target { fill: none; stroke: var(--hud-action); stroke-width: 2.5; }
+.wine-pong-panel .pong-mark { fill: #8a6a42; opacity: .55; }
+.wine-pong-panel .pong-ball { fill: #fff; stroke: #8f8a80; stroke-width: 1; }
+.wine-pong-panel .table-game-actions [data-pong-action=throw], .wine-pong-panel .table-game-actions [data-pong-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.wine-pong-panel .table-game-actions [data-pong-action=throw] { min-width: 120px; }
+.wine-pong-panel [data-pong-action=throw][aria-disabled=true] { opacity: .45; cursor: default; }

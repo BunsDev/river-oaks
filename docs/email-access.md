@@ -11,6 +11,35 @@ waitlist admin approves it or it redeems a valid invitation. Rejected accounts
 must be reconsidered by an admin; another invitation cannot override rejection.
 Existing HTTP, asset, and WebSocket approval checks still apply.
 
+## Usernames
+
+Every request has a username from its first status check (`server/waitlist.js`,
+rules in `preview/src/resident-names.js`).
+
+- **Default.** The resident's verified GitHub login, when it can be a username
+  and nobody holds a name that reads the same; otherwise a generated name such
+  as `rosy-heron-42`.
+- **Rules.** 2 to 39 letters and digits, joined by single `-`, `_` or `.`.
+  Two names are the same when they read the same (case, accents and lookalike
+  characters folded by `nameSkeleton`). No name may read as Jevica or Resident,
+  or start like a `Visitor #` fallback.
+- **Held logins.** A GitHub login is held for its owner from their first
+  request, so nobody else can choose it.
+- **While waiting.** The gate shows the username, with *Use my GitHub name* and
+  *Suggest another*. The resident may change it until a decision
+  (`POST /api/waitlist/username` with `{ username }`).
+- **The approver.** The review lists each request's username. An approver may
+  change it while the request is pending or refused, with *Save name*
+  (`{ username, userId }`) or by approving with an edited name
+  (`POST /api/waitlist/decision` with `{ userId, approved, username }`). A
+  refused name refuses the decision. Approvers' changes are audited.
+- **After approval** the username is fixed and names the resident everywhere in
+  town (`usernameOf` in `server/auth.js` and `server/redis-auth.js`). Jevica's
+  accounts are always Jevica. Residents approved before usernames existed keep
+  their GitHub or `Visitor #` names.
+- **Checks.** Both writes keep the Origin, CSRF, JSON and 1 KB checks. Only an
+  approver may name someone else, and nobody may rename an approver.
+
 The waitlist holds up to 10,000 accounts. When it is full, the oldest *pending*
 request gives way to a new one. Approved and rejected accounts are never
 removed. Someone whose request gave way simply asks again the next time they
@@ -120,7 +149,10 @@ approval and audit keys. Since 2026-10-12 it also keeps these keys:
 - `:waitlist:invites:pruned`: an hourly marker for forgetting invites more than
   90 days past expiry when the 50,000 table is full;
 - `:waitlist:pending` and `:waitlist:pending-indexed`: the pending-request order
-  for eviction.
+  for eviction;
+- `:waitlist:usernames` (2026-10-13): how each held username or GitHub login
+  reads (`usernameKey`), mapped to its account. Claims are checked and written
+  atomically in Lua. An evicted request's names are released.
 
 Revocation and rejection still read the whole invite table, so invites written by
 an older server version are never missed. A rollback to pre-index code can leave

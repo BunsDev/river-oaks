@@ -1,3 +1,4 @@
+import { isSpaceDocument, validateSpace, spaceItems, mutateSpace } from './space-document.js';
 import { blankRegion, editableRegion, nextRegionId } from '../region-draft.js';
 import { assertStudioBudget } from './limits.js';
 
@@ -9,14 +10,15 @@ const validate = region => {
   // JSON round-tripping rejects sparse/nonfinite input the same way a file does.
   const text = encode(region);
   if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_REGION_BYTES
-    || !editableRegion(JSON.parse(text))) throw new Error('Use a valid creator region JSON, within 128 KiB and the region bounds.');
-  const parsed=JSON.parse(text);assertStudioBudget(parsed);return parsed;
+    || (!isSpaceDocument(region) && !editableRegion(JSON.parse(text)))) throw new Error('Use a valid Studio JSON, within 128 KiB and the document bounds.');
+  const parsed=JSON.parse(text);if(isSpaceDocument(parsed))return validateSpace(parsed);assertStudioBudget(parsed);return parsed;
 };
 export function parseRegion(text) {
-  if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_REGION_BYTES) throw new Error('Region files must be at most 128 KiB.');
+  if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_REGION_BYTES) throw new Error('Studio files must be at most 128 KiB.');
   return validate(JSON.parse(text));
 }
 export function studioItems(region) {
+  if(isSpaceDocument(region))return spaceItems(region);
   return [
     { id: '@arrival', type: 'arrival', label: 'Arrival', east: region.spawn[0], north: region.spawn[1] },
     ...region.buildings.map(b => ({ id: b.id, type: 'building', label: b.id, east: b.center[0], north: b.center[1], width: b.size[0], depth: b.size[1], height: b.size[2], yaw: b.yaw_deg })),
@@ -42,6 +44,14 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
     serialize() { return JSON.stringify(region, null, 2); },
     replace(next) { const changed = transact(next); if (!changed) revision++; return changed; },
     add(type) {
+      if(isSpaceDocument(region)){
+        const [w,s,e,n]=region.bounds_m;
+        for(let y=s+2;y<n-2;y+=2)for(let x=w+2;x<e-2;x+=2){
+          if(region.objects.some(item=>Math.hypot(item.east-x,item.north-y)<2))continue;
+          try{const next=mutateSpace(region,'add',type,{east:x,north:y});transact(next.value);return next.id;}catch{ /* Try the next bounded position. */ }
+        }
+        throw Error('No clear insertion point remains.');
+      }
       const next = clone(region), id = nextRegionId(next, type);
       // Search a bounded grid for a legal insertion; never overwrite a user's item.
       const [west, south, east, north] = next.bounds_m;
@@ -59,6 +69,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       throw new Error('No clear insertion point remains, or the region object limit was reached.');
     },
     insert(type, patch) {
+      if(isSpaceDocument(region)){const next=mutateSpace(region,'add',type,patch);transact(next.value);return next.id;}
       const allowed = { building: ['east','north','width','depth','height','yaw'], tree: ['east','north','height','radius'], place: ['east','north','label'] }[type];
       if (!allowed || !patch || typeof patch !== 'object' || Array.isArray(patch) || Object.keys(patch).some(key => !allowed.includes(key))) throw Error('Invalid object properties.');
       const value = { east: 0, north: 0, width: 12, depth: 10, height: type === 'building' ? 7 : 6, yaw: 0, radius: 2.5, label: 'New place', ...patch };
@@ -69,6 +80,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       transact(next); return id;
     },
     update(id, patch) {
+      if(isSpaceDocument(region))return transact(mutateSpace(region,'update',id,patch).value);
       const item = api.items.find(value => value.id === id);
       if (!item) throw new Error('Select an existing object.');
       const allowed = { arrival: ['east','north'], building: ['east','north','width','depth','height','yaw'], tree: ['east','north','height','radius'], place: ['east','north','label'] }[item.type];
@@ -81,6 +93,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       return transact(next);
     },
     remove(id) {
+      if(isSpaceDocument(region))return transact(mutateSpace(region,'remove',id).value);
       const item = api.items.find(value => value.id === id);
       if (!item || item.type === 'arrival') throw new Error('The arrival point must stay in the region.');
       const next = clone(region), key = { building:'buildings', tree:'trees', place:'places' }[item.type];
@@ -93,7 +106,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       savedRecord = raw;
       if (raw === null) return false;
       const entry = JSON.parse(raw);
-      if (typeof entry?.revision !== 'string') throw new Error('Saved draft is invalid. Import a region file to recover.');
+      if (typeof entry?.revision !== 'string') throw new Error('Saved draft is invalid. Import a Studio file to recover.');
       const candidate = validate(entry.region);
       region = candidate; revision++; saved = encode(region); past = []; future = [];return true;
     },

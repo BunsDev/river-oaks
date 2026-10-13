@@ -32,21 +32,22 @@ function watch(ws, c) {
 test('a socket that never opens is abandoned after the open budget', () => {
   const c = clock(), w = watch(socket(), c);
   c.advance(11_999); assert.equal(w.expiredAt, null);
-  c.advance(12_000); assert.equal(w.expiredAt, 12_000);
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs - 1); assert.equal(w.expiredAt, null, 'queued socket events get one grace timer first');
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs); assert.equal(w.expiredAt, 12_000 + CONNECT_BUDGETS.graceMs);
 });
 
 test('an open socket gets the longer first-snapshot budget', () => {
   const c = clock(), ws = socket(), w = watch(ws, c);
   c.advance(3_000); ws.readyState = 1; w.watch.opened();
   c.advance(40_000); assert.equal(w.expiredAt, null, 'the old 12 s deadline would have closed this connection');
-  c.advance(48_000); assert.equal(w.expiredAt, 3_000 + CONNECT_BUDGETS.snapshotMs);
+  c.advance(48_000 + CONNECT_BUDGETS.graceMs); assert.equal(w.expiredAt, 3_000 + CONNECT_BUDGETS.snapshotMs + CONNECT_BUDGETS.graceMs);
 });
 
 test('a socket that opened before its open handler could run is not closed', () => {
   const c = clock(), ws = socket(), w = watch(ws, c);
   c.advance(5_000); ws.readyState = 1; // opened, but the busy page has not dispatched the open event yet
   c.advance(12_000); assert.equal(w.expiredAt, null);
-  c.advance(12_000 + CONNECT_BUDGETS.snapshotMs); assert.equal(w.expiredAt, 12_000 + CONNECT_BUDGETS.snapshotMs);
+  c.advance(12_000 + CONNECT_BUDGETS.snapshotMs + CONNECT_BUDGETS.graceMs); assert.equal(w.expiredAt, 12_000 + CONNECT_BUDGETS.snapshotMs + CONNECT_BUDGETS.graceMs);
 });
 
 test('late timers restart the budget a bounded number of times', () => {
@@ -55,8 +56,10 @@ test('late timers restart the budget a bounded number of times', () => {
   const late = 5_000, step = CONNECT_BUDGETS.openMs + late;
   c.advance(step * CONNECT_BUDGETS.maxRestarts, late);
   assert.equal(w.expiredAt, null);
-  c.advance(step * (CONNECT_BUDGETS.maxRestarts + 1), late);
-  assert.equal(w.expiredAt, step * (CONNECT_BUDGETS.maxRestarts + 1), 'a page that never recovers still retries eventually');
+  // Out of restarts: one (late) grace timer, then it gives up.
+  const final = step * (CONNECT_BUDGETS.maxRestarts + 1) + CONNECT_BUDGETS.graceMs + late;
+  c.advance(final, late);
+  assert.equal(w.expiredAt, final, 'a page that never recovers still retries eventually');
 });
 
 test('stopping (snapshot received, socket closed or client stopped) cancels expiry', () => {
@@ -65,4 +68,37 @@ test('stopping (snapshot received, socket closed or client stopped) cancels expi
   assert.equal(w.expiredAt, null);
   w.watch.opened(); c.advance(1_200_000);
   assert.equal(w.expiredAt, null, 'opened() after stop() does not re-arm');
+});
+
+// A timer and a network event that became due in the same long frame can run in
+// either order; an on-time timer must not close a connection that already succeeded.
+test('an open queued behind the open timer is kept, not closed', () => {
+  const c = clock(), ws = socket(), w = watch(ws, c);
+  c.advance(12_000); assert.equal(w.expiredAt, null, 'the deadline waits one grace timer');
+  ws.readyState = 1; w.watch.opened(); // the queued open task runs
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs + 10_000); assert.equal(w.expiredAt, null, 'the connection is kept and gets the snapshot budget');
+  c.advance(12_000 + CONNECT_BUDGETS.snapshotMs + CONNECT_BUDGETS.graceMs); assert.equal(w.expiredAt, 12_000 + CONNECT_BUDGETS.snapshotMs + CONNECT_BUDGETS.graceMs);
+});
+
+test('a socket that reports OPEN by the grace timer moves on to the snapshot budget', () => {
+  const c = clock(), ws = socket(), w = watch(ws, c);
+  c.advance(12_000); ws.readyState = 1; // opened, open handler still queued
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs + 30_000); assert.equal(w.expiredAt, null);
+});
+
+test('a first snapshot queued behind the snapshot timer is kept', () => {
+  const c = clock(), ws = socket(), w = watch(ws, c);
+  c.advance(3_000); ws.readyState = 1; w.watch.opened();
+  c.advance(3_000 + CONNECT_BUDGETS.snapshotMs); assert.equal(w.expiredAt, null, 'the deadline waits one grace timer');
+  w.watch.stop(); // the queued snapshot is applied
+  c.advance(600_000); assert.equal(w.expiredAt, null);
+});
+
+test('a late grace timer counts as a starved page and restarts the budget', () => {
+  const c = clock(), w = watch(socket(), c);
+  c.advance(12_000); // the open timer fires on time: grace armed
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs + 5_000, 5_000); // the grace timer fires 5 s late
+  assert.equal(w.expiredAt, null, 'a starved grace restarts the open budget instead of closing');
+  c.advance(12_000 + CONNECT_BUDGETS.graceMs + 5_000 + CONNECT_BUDGETS.openMs + CONNECT_BUDGETS.graceMs);
+  assert.equal(w.expiredAt, 12_000 + CONNECT_BUDGETS.graceMs + 5_000 + CONNECT_BUDGETS.openMs + CONNECT_BUDGETS.graceMs, 'and expires normally once the page keeps time');
 });

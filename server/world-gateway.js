@@ -1,3 +1,4 @@
+import { createRedisOfficeDesk } from './office-desk.js';
 import { createClientAddress, rateLimitKey } from './client-address.js';
 import { createRateLimiter } from './rate-limit.js';
 import { createRedisRoom } from './redis-room.js';
@@ -17,10 +18,11 @@ import { createRedisDebugReports } from './debug-reports.js';
 import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-preferences.js';
 import { createRedisDesignLibrary } from './design-library.js';
 import { createRedisPresence } from './presence.js';
+import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null}={}) {
+  moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
@@ -30,7 +32,10 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     // A long-lived gateway sweeps for tasks orphaned by another instance; on Vercel the
     // per-minute cron drain (/api/workplace-sweep) and owner reads advance them.
     sweepMs:workplaceSweep?5000:0}):null;
+  const officeDesk=createRedisOfficeDesk({redis,prefix});
   const designLibrary=createRedisDesignLibrary({redis,prefix:accountPrefixFor(namespace)});
+  // Lifetime cycling metres are one account total across every world.
+  const cyclingMiles=createRedisCyclingMiles({redis,prefix:accountPrefixFor(namespace)});
   const storedAppearance=createRedisAvatarPreferences({redis,prefix});
   const avatarPreferences={...storedAppearance,async initialize(userId,local) {
     const existing=await storedAppearance.get(userId);
@@ -65,12 +70,12 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         :id===DEFAULT_WORLD_ID?worldData:{...worldData,title:meta?.title??worldData.title};
       const room=createRedisRoom({redis,prefix:roomPrefixFor(namespace,id),worldId:id,
         worldData:data,regionCatalog:meta?.template==='region-v1'?catalog:null,regionSha256:meta?.regionSha256,
-        avatarPreferences,
+        avatarPreferences,voice,cyclingMiles,
         ...(isAdmin?{isAdmin}:{}),
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,workplaceCronSecret,presence,designLibrary,worldDirectory,origin,moderators,trustedProxyIPs,
+      const game=createDistributedServer({assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

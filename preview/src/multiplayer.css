@@ -44,7 +44,13 @@
   box-shadow: inset 0 1px 0 var(--liquid-rim-soft), 0 2px 8px rgb(0 0 0 / .06); font: 600 13px/1.3 var(--entry-font, "Avenir Next", Avenir, sans-serif); margin-right: 8px; cursor: pointer; }
 .multiplayer-welcome button:hover { background: color-mix(in srgb, var(--liquid-well) 50%, var(--liquid-rim)); }
 :root[data-theme=dark] .multiplayer-welcome button:hover { background: rgb(255 255 255 / .16); }
-@media (prefers-reduced-motion: reduce) { .multiplayer-welcome::after, .multiplayer-welcome #multiplayer-status::after { animation: none; } }
+/* Reduced motion: still caustics, and no bead at all. The bead rule's :not(:has()) adds
+   specificity, so this repeats its selector to win (a plain #multiplayer-status::after lost). */
+@media (prefers-reduced-motion: reduce) { .multiplayer-welcome::after { animation: none; } .multiplayer-welcome:not(:has(> :is(a, button):not([hidden]))) #multiplayer-status::after { content: none; } }
+/* Software rendering (see hud-glass.css): a plain veil and no endless drift or bead. The rim
+   paints once, so it stays. */
+:root[data-rendering=software] .multiplayer-gate::before { background: rgb(10 36 40 / .55); -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-rendering=software] .multiplayer-welcome::after, :root[data-rendering=software] .multiplayer-welcome #multiplayer-status::after { animation: none; }
 .multiplayer-welcome button:focus-visible, .multiplayer-primary:focus-visible { outline: 3px solid var(--liquid-accent); outline-offset: 3px; }
 .multiplayer-welcome button, .multiplayer-roster button { min-height: 44px; padding: 8px 12px; }
 .multiplayer-roster { padding: 14px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 14px; }

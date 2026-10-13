@@ -109,27 +109,41 @@ async (page) => {
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/playwright/world-studio-narrow.png'});
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
   if(overflow)throw Error('Editor overflows compact viewport');
-  // Starter chooser: no mutation on cancel, explicit replacement, all five render.
+  // Starter chooser: no mutation on cancel, explicit replacement, all four furnished spaces render.
   await page.setViewportSize({width:1280,height:900});
   const savedBeforeTemplates=await page.evaluate(()=>localStorage.getItem('river-oaks-world-studio-v1'));
   await page.locator('#studio-templates').click();
-  await page.getByRole('dialog',{name:'Choose a district'}).waitFor();
-  if(await page.locator('.studio-template-grid article').count()!==5)throw Error('Missing district templates');
+  await page.getByRole('dialog',{name:'Choose a space'}).waitFor();
+  if(await page.locator('.studio-template-grid article').count()!==4)throw Error('Missing space templates');
   await page.screenshot({path:'output/playwright/world-studio-templates.png'});
   await page.keyboard.press('Escape');
   if(!await page.locator('#studio-templates').evaluate(el=>el===document.activeElement))throw Error('Chooser did not restore focus');
-  const names=['Market Street','Garden Neighborhood','Arts Courtyard','Civic Square','Innovation Campus'];
+  const names=['Courtyard House','Garden Office','Atelier Boutique','Corner Café'];
   for(let i=0;i<names.length;i++){
     await page.locator('#studio-templates').click();
     if(i>0)page.once('dialog',dialog=>dialog.accept());
     await page.getByRole('button',{name:`Use ${names[i]}`,exact:true}).click();
     await page.getByRole('status').filter({hasText:`${names[i]} opened`}).waitFor();
+    await page.locator('[data-item="@environment"]').click();
+    await page.getByRole('combobox',{name:'Lighting',exact:true}).selectOption('evening');
+    await page.locator('#studio-undo').click();
+    await page.getByRole('button',{name:'Add furnishing',exact:true}).click();
+    await page.getByRole('combobox',{name:'Finish',exact:true}).selectOption('walnut');
+    await page.locator('#studio-undo').click();await page.locator('#studio-undo').click();
     await page.screenshot({path:`output/playwright/world-studio-template-${i+1}.png`});
+    await page.getByRole('button',{name:'Walk through',exact:true}).click();
+    // Observe this template's spawn before testing movement; the last scene's readout lasts until the first frame.
+    await page.waitForFunction(()=>document.querySelector('#studio-position').textContent.includes('/ -8.5 N'));
+    await page.locator('#studio-viewport').focus();await page.keyboard.down('w');
+    try{await page.waitForFunction(()=>Number(document.querySelector('#studio-position').textContent.match(/\/ ([\d.-]+) N/)[1])>-5.5,null,{timeout:10000});}finally{await page.keyboard.up('w');}
+    const north=Number((await page.locator('#studio-position').textContent()).match(/\/ ([\d.-]+) N/)[1]);if(north<=-5.8)throw Error(`${names[i]} entrance was not traversed`);
+    await page.screenshot({path:`output/playwright/world-studio-space-walk-${i+1}.png`});
+    await page.keyboard.press('Escape');await page.waitForSelector('body[data-mode="edit"]');
   }
   await page.locator('#studio-templates').click();
   page.once('dialog',dialog=>dialog.dismiss());
-  await page.getByRole('button',{name:'Use Market Street',exact:true}).click();
-  if(!await page.getByRole('dialog',{name:'Choose a district'}).isVisible())throw Error('Discard cancellation closed chooser');
+  await page.getByRole('button',{name:'Use Courtyard House',exact:true}).click();
+  if(!await page.getByRole('dialog',{name:'Choose a space'}).isVisible())throw Error('Discard cancellation closed chooser');
   await page.setViewportSize({width:390,height:844});
   if(await page.locator('.studio-templates').evaluate(el=>el.scrollWidth>el.clientWidth))throw Error('Template chooser overflows narrow view');
   await page.screenshot({path:'output/playwright/world-studio-templates-narrow.png'});

@@ -9,7 +9,8 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob:; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://*.livekit.cloud wss://*.livekit.cloud; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+        { "key": "Permissions-Policy", "value": "microphone=(self), camera=(), geolocation=(), display-capture=()" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "same-origin" },
         { "key": "X-Frame-Options", "value": "DENY" }
@@ -53,7 +54,8 @@
     "iad1"
   ],
   "crons": [
-    { "path": "/api/workplace-sweep", "schedule": "* * * * *" }
+    { "path": "/api/workplace-sweep", "schedule": "* * * * *" },
+    { "path": "/api/voice-sweep", "schedule": "* * * * *" }
   ],
   "redirects": [
     {
@@ -108,6 +110,10 @@
     {
       "source": "/api/waitlist/invite-redeem",
       "destination": "/api/server?_river_path=/api/waitlist/invite-redeem"
+    },
+    {
+      "source": "/api/waitlist/username",
+      "destination": "/api/server?_river_path=/api/waitlist/username"
     },
     {
       "source": "/auth/callback",
@@ -196,6 +202,9 @@
     { "source": "/api/events/create", "destination": "/api/server?_river_path=/api/events/create" },
     { "source": "/api/events/rsvp", "destination": "/api/server?_river_path=/api/events/rsvp" },
     { "source": "/api/events/cancel", "destination": "/api/server?_river_path=/api/events/cancel" },
+    { "source": "/api/office-desk/read", "destination": "/api/server?_river_path=/api/office-desk/read" },
+    { "source": "/api/office-desk/save", "destination": "/api/server?_river_path=/api/office-desk/save" },
+    { "source": "/api/office-desk/remove", "destination": "/api/server?_river_path=/api/office-desk/remove" },
     { "source": "/api/workplace/state", "destination": "/api/server?_river_path=/api/workplace/state" },
     { "source": "/api/workplace/companion", "destination": "/api/server?_river_path=/api/workplace/companion" },
     { "source": "/api/workplace/grant", "destination": "/api/server?_river_path=/api/workplace/grant" },
@@ -216,6 +225,10 @@
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
     { "source": "/api/profile/claim-intro", "destination": "/api/server?_river_path=/api/profile/claim-intro" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },
+    { "source": "/api/voice/join", "destination": "/api/server?_river_path=/api/voice/join" },
+    { "source": "/api/voice/renew", "destination": "/api/server?_river_path=/api/voice/renew" },
+    { "source": "/api/voice/leave", "destination": "/api/server?_river_path=/api/voice/leave" },
+    { "source": "/api/voice-sweep", "destination": "/api/server?_river_path=/api/voice-sweep" },
     {
       "source": "/multiplayer",
       "destination": "/api/server?_river_path=/multiplayer"

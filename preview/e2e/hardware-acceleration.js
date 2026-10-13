@@ -36,6 +36,19 @@ async page => {
   check(await page.evaluate(() => !document.querySelector('.hardware-acceleration-warning').contains(document.activeElement)), 'arrival does not steal focus');
   await page.locator('#loading').waitFor({ state: 'hidden' });
   check(await notice.isVisible(), 'software rendering warns without blocking world startup');
+  // Without a GPU every blurred sheet and endless animation is redone on the CPU each frame,
+  // which starved the town join, so the glass stands down (hardware-acceleration.js).
+  const glass = () => page.evaluate(() => {
+    const style = (selector, pseudo) => { const node = document.querySelector(selector); return node ? getComputedStyle(node, pseudo) : null; };
+    return { rendering: document.documentElement.dataset.rendering ?? null, sheet: style('.commands-toggle')?.backdropFilter ?? null,
+      card: style('.multiplayer-welcome')?.backdropFilter ?? null, veil: style('.multiplayer-gate', '::before')?.backdropFilter ?? null,
+      drift: style('.multiplayer-welcome', '::after')?.animationName ?? null,
+      // The district map: shadowed buildings and the breathing halo (world-map.css).
+      buildings: style('.world-map-buildings')?.filter ?? null, halo: style('.world-map-self-halo')?.animationName ?? null };
+  });
+  const software = await glass();
+  check(software.rendering === 'software' && [software.sheet, software.card, software.veil, software.drift, software.buildings, software.halo].every(value => value === 'none'),
+    `software rendering drops the glass blur and endless animations: ${JSON.stringify(software)}`);
   await page.screenshot({ path: 'output/playwright/hardware-acceleration-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   const bounds = await notice.boundingBox();
@@ -58,6 +71,9 @@ async page => {
     await visit(mode);
     await page.locator('#loading').waitFor({ state: 'hidden' });
     check(await notice.count() === 0, `${mode} metadata does not produce a false warning`);
+    const kept = await glass();
+    check(kept.rendering === null && ![kept.sheet, kept.card, kept.drift, kept.buildings, kept.halo].includes('none') && kept.buildings && kept.halo,
+      `${mode} metadata keeps the glass and the map's shadows and halo: ${JSON.stringify(kept)}`);
   }
   await visit('unavailable');
   await page.waitForFunction(() => document.querySelector('#loading').classList.contains('error'));

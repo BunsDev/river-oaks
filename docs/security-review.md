@@ -54,7 +54,7 @@ See [the diagram index](diagrams.md) for the convention.
 | Waitlist | 10,000 | oldest *pending* request gives way; approved and refused residents are never removed |
 | Invites | 50,000 | invites more than 90 days past expiry are forgotten (at most one scan an hour); otherwise refused |
 | Invite listing per account | 20 per minute | 429 |
-| Join tickets (Redis) | 15 s, single use, 3 live per user (a new one retires the oldest), 10 per minute, 4,096 total | refused |
+| Join tickets | 60 s, single use, 3 live per user on both servers (a new one retires the oldest), 10 per minute; 4,096 total with Redis, 512 in a single process | refused (503 when the single-process table is full) |
 | Worlds per account | one at a time (owner accounts exempt) | old socket closes with 4009 |
 | Paid chauffeur decisions (`CHAUFFEUR_DAILY_LIMIT`) | 40 per minute per owner; 6,000 per UTC day across owners (max 10,000); three provider failures pause calls for 60 s | `budget_exhausted` / `provider_paused`, local driving continues |
 
@@ -141,8 +141,8 @@ These are account-level controls that code can't provide, because a function has
 | Preview deployment protection | **On** (Vercel sign-in for all but custom domains) |
 | Cloudflare Turnstile keys (`TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`) | **On** in Production. Set both or neither: a secret without the site key refuses every email start (the server logs a warning). The site key is built in, so changing it needs a redeploy. To switch the check off without a code change, remove the secret and redeploy. |
 | Redis eviction policy | **`noeviction`** (Redis Cloud via the Vercel Marketplace integration) |
-| Vercel Spend Management hard pause | **Owner to set**: team settings → Billing → Spend Management, with "pause production deployments". The API can pause a project but can't configure this. |
-| Redis memory alert at 70% | **Owner to set**: `vercel integration open redis` → database → Alerts |
+| Vercel Spend Management hard pause | **On** (set by Val, 2026-10-12): a $60 on-demand budget for team 0xBuns with Pause on, so production deployments pause when it is reached. Alerts fire at 50%, 75% and 100%; the webhook is off. The budget resets each billing period. |
+| Redis memory alert at 70% | **Not available** (checked by Val, 2026-10-12). The Redis Cloud console that `vercel integration open redis` opens shows no alert controls for `river-oaks-town`, on the database or on the subscription. Production used 4.3 MB of its 250 MB on 2026-10-12. Under `noeviction` a full database refuses writes, so sign-ins and joins would fail; nothing is dropped. Check usage in that console now and then. |
 | WorkOS | GitHub OAuth and Magic Auth on the Production environment |
 
 Preserve the two-invite/30-day policy, existing player movement budgets, and
