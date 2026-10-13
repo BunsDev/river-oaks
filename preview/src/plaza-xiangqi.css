@@ -1,0 +1,26 @@
+/* Xiangqi: a pale board with dark lines, the river's characters and the palace crosses;
+   pieces are ivory discs ringed and lettered in red or black; the chosen piece is ringed,
+   the points it can reach dotted (captures ringed), the last move outlined, and a general
+   in check glows. */
+.xiangqi-panel .xiangqi-body { display: flex; flex-direction: column; gap: 12px; }
+.xiangqi-panel .xq-board { display: block; align-self: center; width: min(100%, 400px); height: auto; max-height: min(60vh, 500px); }
+.xiangqi-panel .xq-wood { fill: #ecd29a; stroke: #b48b4c; stroke-width: 2; }
+.xiangqi-panel .xq-line { stroke: #5b2a17; stroke-width: 1.3; }
+.xiangqi-panel .xq-river { fill: #7a4a26; font: 600 17px "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", serif; letter-spacing: .2em; opacity: .8; pointer-events: none; }
+.xiangqi-panel .xq-hit { fill: transparent; }
+.xiangqi-panel .xq-piece { fill: #f6ead0; stroke-width: 2.2; filter: drop-shadow(0 1px 1px rgb(0 0 0 / .25)); }
+.xiangqi-panel .xq-r { stroke: #b3262e; }
+.xiangqi-panel .xq-b { stroke: #1d1b1f; }
+.xiangqi-panel .xq-checked { fill: #ffd9cf; stroke-width: 3.4; }
+.xiangqi-panel .xq-glyph { font: 700 20px "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", serif; pointer-events: none; }
+.xiangqi-panel .xq-glyph-r { fill: #b3262e; }
+.xiangqi-panel .xq-glyph-b { fill: #1d1b1f; }
+.xiangqi-panel .xq-last { fill: none; stroke: var(--hud-action); stroke-width: 1.6; stroke-dasharray: 3 3; opacity: .7; }
+.xiangqi-panel .xq-dot { fill: var(--hud-action); opacity: .75; pointer-events: none; }
+.xiangqi-panel .xq-take { fill: none; stroke: var(--hud-action); stroke-width: 2.6; pointer-events: none; }
+.xiangqi-panel .xq-point[data-movable], .xiangqi-panel .xq-point[data-open] { cursor: pointer; }
+.xiangqi-panel .xq-point[data-selected] .xq-piece { stroke: var(--hud-action); stroke-width: 3.4; }
+.xiangqi-panel .xq-point:focus { outline: none; }
+.xiangqi-panel .xq-point:focus-visible .xq-hit { stroke: var(--ink); stroke-width: 2; }
+.xiangqi-panel[data-state=over] .xq-board { opacity: .85; }
+.xiangqi-panel .table-game-actions [data-xq-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }

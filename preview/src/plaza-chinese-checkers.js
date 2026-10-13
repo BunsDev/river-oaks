@@ -25,7 +25,7 @@ export function createPlazaChineseCheckers({ host = document.querySelector('#vie
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="chinese-checkers-title">Chinese checkers in the grove</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the Chinese checkers board">×</button></header>
     <div class="table-game-body chinese-checkers-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="true">Chinese checkers</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-grove-game="mancala" aria-pressed="false">Mancala</button><button type="button" data-grove-game="go" aria-pressed="false">Go</button><button type="button" data-grove-game="chineseCheckers" aria-pressed="true">Chinese checkers</button><button type="button" data-grove-game="xiangqi" aria-pressed="false">Xiangqi</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="cc-scores" aria-label="Marbles home"></ul>
       <svg class="cc-board" viewBox="0 0 ${VIEW.width.toFixed(1)} ${VIEW.height.toFixed(1)}" role="grid" aria-label="The star board, your point at the bottom"></svg>
