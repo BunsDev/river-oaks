@@ -5,13 +5,13 @@
 :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#e8dcc5;--map-grid:#cdbd9c;--map-building:#fffcf5;--map-building-edge:#d6c4a2;--map-building-side:#b9a17a;
   --map-road:#ffffff;--map-road-casing:#c4b08b;--map-road-centre:#d9a654;--map-path:#947d56;--map-label:#5f523f;--map-label-halo:#fbf7ee;
   --map-ring:#fffaf0;--map-self:#1f6f63;--map-self-glow:rgb(44 116 102 / .32);--map-target:#c0577f;--map-landmark:#8a64c0;--map-peer:#2c7466;
-  --map-chip:rgb(255 252 245 / .72);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
+  --map-chip:rgb(255 252 245 / .9);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
   position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:0;border-radius:22px;background:var(--map-ground);cursor:crosshair;touch-action:manipulation;
   box-shadow:0 0 0 1px var(--map-rim),0 0 0 5px var(--map-bezel),0 0 0 6px rgb(0 0 0 / .06),0 14px 34px var(--map-shade)}
 :root[data-theme=dark] :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#0f2327;--map-grid:#1d3b40;--map-building:#27474e;--map-building-edge:#36606a;--map-building-side:#081619;
   --map-road:#6f9692;--map-road-casing:#09181b;--map-road-centre:rgb(236 200 132 / .55);--map-path:#5c837f;--map-label:#d3e3de;--map-label-halo:#0f2327;
   --map-ring:#0f2327;--map-self:#b5eee6;--map-self-glow:rgb(181 238 230 / .3);--map-target:#ffd88f;--map-landmark:#d6b6f2;--map-peer:#b5eee6;
-  --map-chip:rgb(13 29 32 / .7);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
+  --map-chip:rgb(13 29 32 / .88);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
 /* Glass lip: a bright inner edge and a soft vignette over the drawing. */
 :is(#control-panel,.places-guide) .world-map-surface::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
   box-shadow:inset 0 1px 0 var(--map-rim),inset 0 0 0 1px rgb(255 255 255 / .12),inset 0 0 42px rgb(0 0 0 / .14);
@@ -21,11 +21,11 @@
 :is(#control-panel,.places-guide) .world-map-north,:is(#control-panel,.places-guide) .world-map-scale{position:absolute;z-index:1;color:var(--map-chip-ink);font:700 10px/1.2 system-ui,sans-serif;pointer-events:none}
 /* A compass chip: a two-tone needle over N. */
 :is(#control-panel,.places-guide) .world-map-north{top:12px;right:12px;display:grid;justify-items:center;gap:2px;min-width:30px;padding:6px 7px 5px;border:1px solid var(--map-rim);border-radius:999px;
-  background:var(--map-chip);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);letter-spacing:.08em;box-shadow:0 4px 12px var(--map-shade)}
+  background:var(--map-chip);letter-spacing:.08em;box-shadow:0 4px 12px var(--map-shade)}
 :is(#control-panel,.places-guide) .world-map-north::before{content:"";width:8px;height:14px;background:linear-gradient(90deg,var(--map-target) 50%,color-mix(in srgb,var(--map-target) 55%,#000) 50%);
   clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%)}
 /* A surveyor's scale bar: alternating segments over the distance. */
-:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;width:var(--world-map-scale-width);padding-top:6px;text-align:center;text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo)}
+:is(#control-panel,.places-guide) .world-map-scale{left:14px;bottom:14px;display:block;white-space:nowrap;width:var(--world-map-scale-width);padding-top:6px;text-align:center;text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo)}
 :is(#control-panel,.places-guide) .world-map-scale::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;border:1px solid var(--map-chip-ink);border-radius:2px;
   background:repeating-linear-gradient(90deg,var(--map-chip-ink) 0 25%,var(--map-ring) 25% 50%)}
 :is(#control-panel,.places-guide) .world-map-ground{fill:var(--map-ground)}
@@ -95,7 +95,7 @@
 :is(#control-panel,.places-guide) .world-map-path{stroke:var(--map-path);stroke-dasharray:0 9;stroke-linecap:round}
 :is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:italic 600 10px/1.2 var(--font-sans,system-ui);letter-spacing:.06em;color:var(--map-label);text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo),0 0 1px var(--map-label-halo);pointer-events:none}
-:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 12px;border:1px solid var(--map-rim);border-radius:999px;background:var(--map-chip);-webkit-backdrop-filter:blur(12px) saturate(1.7);backdrop-filter:blur(12px) saturate(1.7);box-shadow:inset 0 1px 0 var(--map-rim),0 6px 16px var(--map-shade);color:var(--map-chip-ink);font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-selection-label{position:absolute;z-index:2;max-width:180px;box-sizing:border-box;margin-top:20px;padding:7px 12px;border:1px solid var(--map-rim);border-radius:999px;background:var(--map-chip);box-shadow:inset 0 1px 0 var(--map-rim),0 6px 16px var(--map-shade);color:var(--map-chip-ink);font:600 12px/1.35 var(--font-sans,system-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-selection-label.above{margin-top:-20px;transform:translate(-50%,-100%)}
 :is(#control-panel,.places-guide) .world-map-legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
 :is(#control-panel,.places-guide) .world-map-key{display:inline-grid;place-items:center;width:15px;height:15px;flex:none}

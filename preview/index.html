@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#e9ece5" />
     <title>TypeSafe Place — Your place in the town</title>
+    <script src="/assets/boot/first-paint.js"></script>
     <style>
+      /* First paint, before any stylesheet loads: the sign-in gate's colour, or, for a browser
+         that entered last time (first-paint.js), a quiet splash in its own theme. */
+      html { background: #151517; }
+      :root[data-returning] { --returning-bg: #e9ece5; --returning-ink: #6a7871; background: var(--returning-bg); }
+      :root[data-returning][data-theme=dark] { --returning-bg: #24352d; --returning-ink: #adbbae; }
+      :root[data-returning] .access-gate { background: var(--returning-bg); }
+      :root[data-returning] .access-layout { visibility: hidden; }
+      :root[data-returning] .access-card #access-message { visibility: visible; position: fixed; inset: 50% 0 auto; margin: 0; text-align: center; color: var(--returning-ink); }
       body:not(.access-granted) .app-shell { display: none !important; }
       .access-gate [hidden], .access-gate[hidden], .access-review[hidden], .access-tools[hidden], .access-tools [hidden] { display: none !important; }
       /* Rotating art: only the active slide shows, from the first paint (the gate stylesheet loads later). */

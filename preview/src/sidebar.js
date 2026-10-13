@@ -84,13 +84,18 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     const header = document.createElement('header'); header.className = 'hud-space-header';
     const heading = document.createElement('h2'); heading.textContent = index === 0 ? 'People nearby' : 'District map';
     const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', `Close ${index === 0 ? 'People' : 'Map'}`);
-    close.addEventListener('click', () => setOpen(index, false)); header.append(heading, close); section.prepend(header);
+    close.addEventListener('click', () => setOpen(index, false)); header.append(heading, close);
+    // The glass sheet never scrolls itself: Chrome drops the scrollbar of a scrolling
+    // backdrop-filter root for single frames while content under it moves (flicker).
+    // Its content lives in a body that scrolls, or that fits without scrolling (the map).
+    const body = document.createElement('div'); body.className = 'hud-space-body';
+    body.append(...section.childNodes); section.append(header, body);
     if (index === 1) {
-      const directory = section.querySelector('#district-directory');
+      const directory = body.querySelector('#district-directory');
       directory.previousElementSibling.remove();
       const access = document.createElement('details'); access.className = 'storefront-access';
       const summary = document.createElement('summary'); summary.textContent = 'Storefront access';
-      access.append(summary, directory); section.append(access);
+      access.append(summary, directory); body.append(access);
     }
     panel.append(section); setOpen(index, initialOpen[index]);
   });
