@@ -6,6 +6,13 @@ import { ENCOUNTER_FAR } from './encounter.js';
 // VOICE_FAR are unsubscribed, and resubscribed once inside VOICE_RESUBSCRIBE,
 // so someone standing at the edge does not flap.
 export const VOICE_NEAR = ENCOUNTER_FAR, VOICE_FAR = 25, VOICE_RESUBSCRIBE = 22;
+// A performer on the plaza stage (server/world.js) carries across the plaza: full
+// volume over the audience (most of the plaza lies within 14 m of the stage), fading to
+// silence just past its far edge, about 28 m out.
+export const STAGE_NEAR = 14, STAGE_FAR = 40, STAGE_RESUBSCRIBE = 36;
+export const voiceReach = player => player?.performing
+  ? { near: STAGE_NEAR, far: STAGE_FAR, resubscribe: STAGE_RESUBSCRIBE }
+  : { near: VOICE_NEAR, far: VOICE_FAR, resubscribe: VOICE_RESUBSCRIBE };
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 
 export function spatialGain(distance, { near = VOICE_NEAR, far = VOICE_FAR } = {}) {
@@ -16,6 +23,7 @@ export function spatialGain(distance, { near = VOICE_NEAR, far = VOICE_FAR } = {
 
 // Snapshot positions are [east, north, ground] with altitude; the scene is (x, y, z) = (east, ground + altitude, -north).
 export function speakerFromPlayer(player) {
+  if(player.office)return [player.office.position[0],0,-player.office.position[1]];
   const [east, north, ground] = player.position;
   return [east, ground + (player.altitude ?? 0), -north];
 }
@@ -37,9 +45,9 @@ export function spatialPan(listener, speaker) {
   const bearing = Math.atan2(dx, -dz);
   return clamp(Math.sin(bearing - listener.yaw), -1, 1) * 0.8;
 }
-export function subscriptionDecision(distance, subscribed) {
+export function subscriptionDecision(distance, subscribed, { far = VOICE_FAR, resubscribe = VOICE_RESUBSCRIBE } = {}) {
   if (!Number.isFinite(distance)) return subscribed;
-  return subscribed ? distance < VOICE_FAR : distance < VOICE_RESUBSCRIBE;
+  return subscribed ? distance < far : distance < resubscribe;
 }
 
 // One resident's voice as a small Web Audio graph: source → gain → pan →

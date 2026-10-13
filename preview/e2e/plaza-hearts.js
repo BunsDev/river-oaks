@@ -21,7 +21,9 @@ async page => {
   await page.locator('#dominoes-panel [data-cafe-game=hearts]').click();
   await page.locator('#hearts-panel[open]').waitFor();
   check(!await page.locator('#dominoes-panel').evaluate(panel => panel.open), 'Switching to Hearts puts the dominoes away');
-  check((await hearts()).cafeGame === 'hearts' && await page.locator('#walking-play').textContent().then(text => /Hide the cards/.test(text)), 'X now toggles the card table');
+  // The walking controls relabel X on their next frame: wait for it rather than read it at once.
+  const relabelled = await page.waitForFunction(() => /Hide the cards/.test(document.querySelector('#walking-play')?.textContent ?? ''), null, { timeout: 5000 }).then(() => true, () => false);
+  check((await hearts()).cafeGame === 'hearts' && relabelled, 'X now toggles the card table');
 
   // Hand 0 passes left: choose three cards, pass, and the 2♣ holder leads.
   await page.evaluate(() => window.__riverPlazaHearts().deal(17, 0));

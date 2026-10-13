@@ -1,0 +1,26 @@
+/* Chinese checkers: the star board from your point (at the bottom), maple with each
+   player's point tinted, dark holes, glass marbles in red and blue, the chosen marble
+   ringed, the holes it can reach marked, and the last move's path. */
+.chinese-checkers-panel .chinese-checkers-body { display: flex; flex-direction: column; gap: 12px; }
+.chinese-checkers-panel .cc-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chinese-checkers-panel .cc-scores li { padding: 4px 10px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; }
+.chinese-checkers-panel .cc-scores li[data-turn] { outline: 2px solid var(--hud-action); outline-offset: -2px; }
+.chinese-checkers-panel .cc-scores li::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: #c0342b; }
+.chinese-checkers-panel .cc-scores li[data-player="1"]::before { background: #2f62b3; }
+.chinese-checkers-panel .cc-board { display: block; align-self: center; width: min(100%, 420px); height: auto; max-height: min(58vh, 480px); }
+.chinese-checkers-panel .cc-star { fill: #e6cfa5; stroke: #e6cfa5; stroke-width: 26; stroke-linejoin: round; }
+.chinese-checkers-panel .cc-hit { fill: transparent; }
+.chinese-checkers-panel .cc-pit { fill: #6b4f2e; opacity: .55; }
+.chinese-checkers-panel [data-point="0"] .cc-pit { fill: #c0342b; opacity: .4; }
+.chinese-checkers-panel [data-point="1"] .cc-pit { fill: #2f62b3; opacity: .4; }
+.chinese-checkers-panel .cc-marble { stroke: rgb(255 255 255 / .55); stroke-width: 1.4; }
+.chinese-checkers-panel .cc-marble-0 { fill: #c0342b; }
+.chinese-checkers-panel .cc-marble-1 { fill: #2f62b3; }
+.chinese-checkers-panel .cc-hole[data-movable], .chinese-checkers-panel .cc-hole[data-open] { cursor: pointer; }
+.chinese-checkers-panel .cc-hole[data-selected] .cc-marble { stroke: var(--ink); stroke-width: 3; }
+.chinese-checkers-panel .cc-reach { fill: none; stroke: var(--hud-action); stroke-width: 2.5; stroke-dasharray: 3 2.5; }
+.chinese-checkers-panel .cc-path { fill: none; stroke: var(--hud-action); stroke-width: 2; stroke-linejoin: round; opacity: .6; pointer-events: none; }
+.chinese-checkers-panel .cc-hole:focus { outline: none; }
+.chinese-checkers-panel .cc-hole:focus-visible .cc-hit { stroke: var(--ink); stroke-width: 2; }
+.chinese-checkers-panel[data-state=over] .cc-board { opacity: .8; }
+.chinese-checkers-panel .table-game-actions [data-cc-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }

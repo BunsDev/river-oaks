@@ -3,6 +3,7 @@ import './plaza-dominoes.css';
 import { cafeSeat } from './plaza-salon-plan.js';
 import { MATCH_POINTS, ends, handPips, legalMoves, notation, replay, values } from './dominoes-rules.js';
 import { chooseMove } from './dominoes-opponent.js';
+import { attachGuide } from './salon-guide.js';
 
 // Dominoes at the plaza café table, for whoever sits down: a match to 100 against
 // the plaza regulars, two players (the draw game) or four (the block game). It is
@@ -32,7 +33,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="dominoes-title">Dominoes at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the dominoes table">×</button></header>
     <div class="table-game-body dominoes-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="true">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="true">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="false">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="false">Spades</button><button type="button" data-cafe-game="dice" aria-pressed="false">Liar’s dice</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="dominoes-scores" aria-label="Scores, first to ${MATCH_POINTS}"></ul>
       <section class="dominoes-table" aria-label="Played tiles"><ol class="dominoes-line"></ol><p class="dominoes-ends"></p></section>
@@ -47,6 +48,7 @@ export function createPlazaDominoes({ host = document.querySelector('#viewport')
       <p class="table-game-note">Two play the draw game, four the block game. The regulars only see what a player at the table could.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'dominoes');
   const $ = selector => panel.querySelector(selector);
   const status = $('.table-game-status'), hand = $('.dominoes-hand'), choice = $('.dominoes-choice');
 

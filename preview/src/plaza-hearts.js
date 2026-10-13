@@ -3,6 +3,7 @@ import './plaza-hearts.css';
 import { cafeSeat } from './plaza-salon-plan.js';
 import { GAME_POINTS, canPass, legalCards, points, replay, suitOf } from './hearts-rules.js';
 import { choosePass, choosePlay } from './hearts-opponent.js';
+import { attachGuide } from './salon-guide.js';
 
 // Hearts at the plaza café table: you and three plaza regulars, a game to 100. It
 // is a practice game kept in this browser; the round table shows the trick face up
@@ -12,7 +13,7 @@ const SUIT = { C: { glyph: '♣', name: 'clubs' }, D: { glyph: '♦', name: 'dia
 const RANK = { T: '10', J: 'J', Q: 'Q', K: 'K', A: 'A' };
 const RANK_NAME = { J: 'jack', Q: 'queen', K: 'king', A: 'ace', T: '10' };
 export const cardName = card => `${RANK_NAME[card[0]] ?? card[0]} of ${SUIT[suitOf(card)].name}`;
-function cardArt(card) {
+export function cardArt(card) {
   const rank = RANK[card[0]] ?? card[0], { glyph } = SUIT[suitOf(card)];
   return `<svg viewBox="0 0 50 70" aria-hidden="true"><rect x=".75" y=".75" width="48.5" height="68.5" rx="5"/>`
     + `<text class="card-rank" x="5" y="17">${rank}</text><text class="card-pip" x="25" y="47" text-anchor="middle">${glyph}︎</text></svg>`;
@@ -28,7 +29,7 @@ export function createPlazaHearts({ host = document.querySelector('#viewport'), 
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="hearts-title">Hearts at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the card table">×</button></header>
     <div class="table-game-body hearts-body">
-      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="true">Hearts</button></div>' : ''}
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-cafe-game="dominoes" aria-pressed="false">Dominoes</button><button type="button" data-cafe-game="hearts" aria-pressed="true">Hearts</button><button type="button" data-cafe-game="spades" aria-pressed="false">Spades</button><button type="button" data-cafe-game="dice" aria-pressed="false">Liar’s dice</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="hearts-scores" aria-label="Scores, the game ends at ${GAME_POINTS}"></ul>
       <section class="hearts-trick" aria-label="The trick"></section>
@@ -39,6 +40,7 @@ export function createPlazaHearts({ host = document.querySelector('#viewport'), 
       <p class="table-game-note">Hearts score one each and the queen of spades thirteen; take all of them to shoot the moon. The regulars only see what a player at the table could.</p>
     </div>`;
   host.append(panel);
+  attachGuide(panel, 'hearts');
   const $ = selector => panel.querySelector(selector);
   const status = $('.table-game-status'), handBar = $('.hearts-hand');
 

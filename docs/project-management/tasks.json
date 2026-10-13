@@ -4439,6 +4439,88 @@
       "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
     },
     {
+      "id": "plaza-backgammon",
+      "title": "A backgammon table for the plaza (Val's 'more game tables'): new table and chairs in the plan, backgammon rules and a plaza regular, board and checkers mirrored in 3D",
+      "status": "active",
+      "branches": [
+        "feat/plaza-backgammon-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T23:48:35.000Z",
+      "updatedAt": "2026-10-13T11:48:46.000Z",
+      "nextAction": "Stacked on feat/plaza-hearts-20261013: merge main once Hearts lands. Rules first (pure), then the table in the plan, board mirror, sheet, journey; land when green (Val authorized).",
+      "filesOwned": [
+        "preview/src/backgammon-rules.js",
+        "preview/src/backgammon-opponent.js",
+        "preview/src/plaza-backgammon.js",
+        "preview/src/plaza-salon-plan.js (new table)",
+        "preview/src/plaza-salon.js (board)",
+        "preview/e2e/plaza-backgammon.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (rules, opponent, plaza placement/clearance, mirror)",
+        "plaza-backgammon and plaza-salon journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-backgammon.md",
+      "issues": [],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-backgammon-20261013"
+    },
+    {
+      "id": "office-elevator-access",
+      "title": "Connect private offices to the district with an elevator cinematic and authorized traversal",
+      "status": "active",
+      "branches": [
+        "feat/office-elevator-access-20261013"
+      ],
+      "updatedAt": "2026-10-13T15:43:20.245205+00:00",
+      "nextAction": "PR #317: current-main menu integration verified and reviewed. Sign and push merge commit, rejoin protected landing queue, wait for current-head hosted Verify, then record delivery proof.",
+      "ledger": "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
+      "filesOwned": [
+        "server/offices.js",
+        "server/world.js (office integration)",
+        "server/avatar-preferences.js (v6 reader)",
+        "server/creator-rollout-audit.js (version expectation)",
+        "server/tests/offices*.test.js",
+        "server/tests/* (legacy checkpoint fixtures only)",
+        "preview/src/office-*.js",
+        "preview/src/office.css",
+        "preview/src/main.js (office integration only)",
+        "preview/src/multiplayer-client.js (office pose suppression)",
+        "preview/src/remote-players.js (visibility predicate)",
+        "preview/src/voice-spatial.js (office coordinates)",
+        "preview/tests/office-*.test.js",
+        "preview/tests/voice-spatial.test.js",
+        "preview/e2e/office-visit.js",
+        "docs/offices.md",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
+        "server/redis-room.js (v6 writer fence)",
+        "preview/e2e/fixtures/office-elevator.html",
+        "data/reports/office-*.json"
+      ],
+      "requiredChecks": [
+        "Office permission and traversal behavioral regressions (memory and Redis)",
+        "pnpm run verify",
+        "pnpm run test:experience office-visit",
+        "pnpm run test:shared",
+        "Rendered cinematic and office navigation review"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-elevator-20261013",
+      "latestEvidence": {
+        "focused": "Memory/Redis ticket+WebSocket permission and movement tests passed with zero skips; office geometry/lifecycle/spatial voice tests passed.",
+        "baseline": "60/60 existing world and workplace geometry tests passed.",
+        "core": "Latest core: 3747 passed, 1 existing geometry skip, zero failures; all 635 server tests with isolated Redis. data/reports/office-menu-integration-core.json. Earlier Redis-native-crash receipt retained separately.",
+        "browser": "Latest office journey 9/9 passed after Studio and cycling Play menu integration: data/reports/office-menu-integration-experience.json.",
+        "delivery": "PR https://github.com/BunsDev/river-oaks/pull/317 open at26d9857df1e5e51491a59c102fa7929b9c0ec9fd; signed and pushed, CI running, queued behind316/318/314.",
+        "review": "Independent office/stage review: 37 focused tests passed. Cycling integration probe and combined Studio/cycling/office Play menu review approved without blockers."
+      },
+      "owner": "codex:office-elevator-access-20261013",
+      "leaseUntil": "2026-10-13T16:49:29.390145+00:00",
+      "pr": 317
+    },
+    {
       "id": "studio-furnished-spaces",
       "title": "Four furnished building templates and agentic space editing",
       "status": "active",
@@ -4493,33 +4575,51 @@
       "pr": 316
     },
     {
-      "id": "plaza-backgammon",
-      "title": "A backgammon table for the plaza (Val's 'more game tables'): new table and chairs in the plan, backgammon rules and a plaza regular, board and checkers mirrored in 3D",
+      "id": "office-desk-workflow",
+      "title": "Private office desk tasks, notes, saved results and cross-session resume",
       "status": "active",
       "branches": [
-        "feat/plaza-backgammon-20261013"
+        "feat/office-desk-workflow-20261013"
       ],
-      "owner": "claude:river-oaks-c2",
-      "leaseUntil": "2026-10-13T23:48:35.000Z",
-      "updatedAt": "2026-10-13T11:48:46.000Z",
-      "nextAction": "Stacked on feat/plaza-hearts-20261013: merge main once Hearts lands. Rules first (pure), then the table in the plan, board mirror, sheet, journey; land when green (Val authorized).",
+      "owner": "codex:office-desk-workflow-20261013",
+      "leaseUntil": "2026-10-13T20:16:35.747965+00:00",
+      "updatedAt": "2026-10-13T18:16:35.747965+00:00",
+      "nextAction": "Local implementation and verification complete. Create signed commit and PR; require hosted preview on current main and land through the protected queue. Preserve evidence and worktree for later retirement.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-desk-20261013",
+      "ledger": "docs/superpowers/plans/2026-10-13-office-desk-workflow.md",
       "filesOwned": [
-        "preview/src/backgammon-rules.js",
-        "preview/src/backgammon-opponent.js",
-        "preview/src/plaza-backgammon.js",
-        "preview/src/plaza-salon-plan.js (new table)",
-        "preview/src/plaza-salon.js (board)",
-        "preview/e2e/plaza-backgammon.js"
+        "server/office-desk*.js",
+        "server/app.js (desk route)",
+        "server/distributed-app.js (desk route)",
+        "server/town.js (desk store)",
+        "server/world-gateway.js (desk store)",
+        "server/vercel-routing.js (desk endpoints)",
+        "vercel.json (desk rewrites)",
+        "preview/src/office-desk*",
+        "preview/src/office-ui.js (desk integration)",
+        "preview/src/office.css (scoped header selectors)",
+        "preview/tests/office-desk*",
+        "server/tests/office-desk*",
+        "preview/e2e/office-desk.js",
+        "docs/offices.md",
+        "server/redis-security.js (desk rate scope)",
+        "preview/vite.config.js (desk proxy)",
+        ".github/workflows/verify.yml (desk browser journey)",
+        "preview/e2e/shared-seating.js (readiness budget and diagnostics only)"
       ],
       "requiredChecks": [
-        "pnpm test (rules, opponent, plaza placement/clearance, mirror)",
-        "plaza-backgammon and plaza-salon journeys",
-        "pnpm run verify",
-        "Hosted CI"
+        "Private memory and Redis persistence/conflict regressions",
+        "HTTP authorization and limits",
+        "pnpm run verify with isolated Redis",
+        "Office desk browser desktop/touch and reload/resume",
+        "pnpm run test:shared",
+        "Independent review"
       ],
-      "ledger": "docs/superpowers/plans/2026-10-13-plaza-backgammon.md",
-      "issues": [],
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-backgammon-20261013"
+      "latestEvidence": {
+        "review": "Independent final desk and seating-harness reviews: no remaining blockers.",
+        "verification": "Integrated main 5725d38: dependency audit, agent76, client2895 passed/1 existing skip, Redis/server651, desktop54, Python141, build/lint/format/secrets/security/reflections and all10 experience journeys passed. Full aggregate failed only shared-seating readiness (18/19 shared passed); after explicit90s readiness budget and diagnostics, focused seating passed18 assertions. Failed aggregate retained, not claimed green.",
+        "browser": "Integrated office replay passed16 desk +9 elevator/access checks. Desktop1440x1000,390x844,320x700 layouts screenshot-inspected. Guest seating readiness28694ms on corrected focused run; all seating predicates/assertions preserved."
+      }
     }
   ]
 }

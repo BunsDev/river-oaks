@@ -1,0 +1,20 @@
+/* Mancala in the grove: a carved walnut board, dark cups, glass beads in five colours,
+   your open pits lifted and outlined, the last sowing's places warmed. */
+.mancala-panel .mancala-body { display: flex; flex-direction: column; gap: 12px; }
+.mancala-panel .mancala-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mancala-panel .mancala-scores li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.mancala-panel .mancala-board { display: block; width: 100%; height: auto; }
+.mancala-panel .mancala-wood { fill: #7a5236; stroke: #4c311f; stroke-width: 3; }
+.mancala-panel .mancala-cup { fill: #3b2618; stroke: #2a1a10; stroke-width: 2; }
+.mancala-panel .mancala-place[data-last] .mancala-cup { fill: #5a3a22; }
+.mancala-panel .mancala-place[data-open] { cursor: pointer; }
+.mancala-panel .mancala-place[data-open] .mancala-cup { stroke: #f0c46a; stroke-width: 3; }
+.mancala-panel .mancala-place[data-open]:hover .mancala-cup, .mancala-panel .mancala-place[data-open]:focus-visible .mancala-cup { fill: #4d3220; }
+.mancala-panel .mancala-place:focus-visible { outline: none; }
+.mancala-panel .mancala-place[data-open]:focus-visible .mancala-cup { stroke: #fff4cf; stroke-width: 4; }
+.mancala-panel .mancala-seed { stroke: rgb(0 0 0 / .25); stroke-width: .6; }
+.mancala-panel .mancala-seed-0 { fill: #3aa18a; } .mancala-panel .mancala-seed-1 { fill: #d0594b; } .mancala-panel .mancala-seed-2 { fill: #e7b84f; }
+.mancala-panel .mancala-seed-3 { fill: #5277c9; } .mancala-panel .mancala-seed-4 { fill: #f1ebdc; }
+.mancala-panel .mancala-count { fill: #f3e6cf; font: 700 15px var(--font-ui, system-ui); }
+.mancala-panel .table-game-actions [data-mancala-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.mancala-panel .table-game-actions [hidden] { display: none; }

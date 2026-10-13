@@ -44,6 +44,28 @@
 .table-game-panel .table-game-actions [data-action=new] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
 .table-game-panel button:disabled { opacity: .45; cursor: default; }
 .table-game-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--hud-muted); }
+/* Playing the resident across the table: its own row under the practice modes, and an
+   invitation bar that asks or waits. */
+.table-game-actions > .table-game-mode { flex-wrap: wrap; }
+.table-game-mode button[data-mode=shared] { flex: 1 1 100%; }
+.table-game-mode button[data-mode=shared][hidden] { display: none; }
+.table-game-panel .table-game-mode button[data-mode=shared][aria-pressed=false] { color: var(--hud-action); font-weight: 650; }
+.table-game-invite { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--hud-action); border-radius: 12px; background: var(--hud-tile); }
+.table-game-invite[hidden] { display: none; }
+.table-game-invite p { margin: 0; font-size: 13px; line-height: 1.4; }
+.table-game-invite div { display: flex; gap: 8px; }
+.table-game-invite button { flex: 1; min-height: 36px; border: 1px solid var(--hud-hairline); border-radius: var(--hud-control-radius, 9px); background: var(--hud-raised); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.table-game-invite button[data-invite=accept] { border-color: transparent; background: var(--hud-action); color: var(--hud-on-action); }
+.table-game-invite button[hidden] { display: none; }
+.table-game-panel .table-game-actions :is([data-action=resign], [data-action=undo], [data-action=new])[hidden] { display: none; }
+/* Lessons: the Lesson mode has its own row under the practice modes. A step's move is
+   ringed in gold: the piece to move and, glowing, where it goes. The piece a mill takes is
+   ringed in red. The marks are static, so a software-rendered page never animates them. */
+.table-game-panel { --lesson-mark: rgb(222 176 78); --lesson-glow: rgb(222 176 78 / .7); --lesson-take: rgb(214 82 72); }
+.table-game-mode button[data-mode=lesson] { flex: 1 1 100%; }
+.table-game-board .table-square[data-lesson-hint]:not([data-selected]) { box-shadow: inset 0 0 0 3px var(--lesson-mark); }
+.table-game-board .table-square[data-lesson-hint=to] { box-shadow: inset 0 0 0 3px var(--lesson-mark), inset 0 0 22px 4px var(--lesson-glow); }
+.table-game-board .table-square[data-lesson-hint=take] { box-shadow: inset 0 0 0 3px var(--lesson-take), inset 0 0 18px 2px rgb(214 82 72 / .45); }
 @media (max-width: 760px) {
   .table-game-panel { --board-size: max(240px, min(calc(100vw - 66px), calc(100dvh - 300px))); inset: 64px 12px auto 12px; width: auto; max-height: calc(100dvh - 76px); }
   .table-game-body { grid-template-columns: minmax(0, 1fr); }
@@ -56,8 +78,10 @@
 .checkers-piece[data-king]::after { content: '\265B\FE0E'; font: 400 clamp(13px, 2.4vmin, 22px)/1 "Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", serif; }
 .checkers-piece[data-side=d][data-king]::after { color: #e8c877; }
 .checkers-piece[data-side=l][data-king]::after { color: #9a7432; }
-.table-game-choice { display: flex; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
-.table-game-choice button { flex: 1; min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+/* As many games a row as fit, so a fourth (and fifth) game wraps instead of spilling
+   out of the narrow side column. */
+.table-game-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 2px; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
+.table-game-choice button { min-width: 0; min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
 .table-game-choice button[aria-pressed=true] { background: var(--hud-raised); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
 /* Connect Four: a blue frame of round slots, seven across and six high, holding red and
    yellow discs. Each column's landing slot is marked; the winning four glow. */
@@ -72,3 +96,26 @@
 .table-game-board[data-game=connectFour] .table-square[data-last] { background-image: none; }
 .table-game-board[data-game=connectFour] .table-square[data-last] .connectFour-piece { outline: 3px solid rgb(255 255 255 / .55); outline-offset: -1px; }
 .table-game-board[data-game=connectFour] .table-square[data-win] .connectFour-piece { outline: 3px solid #fff; box-shadow: 0 0 14px 3px rgb(255 255 255 / .75); }
+
+/* Reversi: a green baize board with fine lines, flat black and white discs, and a gold
+   mark on each square where your disc would outflank a line. */
+.table-game-board[data-game=reversi] { background: #1d4a37; gap: 0; }
+.table-game-board[data-game=reversi] .table-square { background: #2c6a4e; box-shadow: inset 0 0 0 .5px rgb(8 24 17 / .55); }
+.table-game-board[data-game=reversi] .table-square[data-target=move]::after { width: 22%; height: 22%; background: rgb(240 205 120 / .8); }
+.table-game-board[data-game=reversi] .table-square[data-last] { background-image: linear-gradient(rgb(240 205 120 / .22), rgb(240 205 120 / .22)); }
+.reversi-piece { width: 78%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; }
+.reversi-piece[data-side=d] { background: radial-gradient(circle at 42% 36%, #4a4644, #141213 62%); box-shadow: 0 2px 3px rgb(0 0 0 / .5); }
+.reversi-piece[data-side=l] { background: radial-gradient(circle at 42% 36%, #ffffff, #d9d4c8 64%); box-shadow: 0 2px 3px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(0 0 0 / .08); }
+
+/* Nine men's morris: a light wood board with its lines drawn through the centres of the
+   7×7 grid; only the 24 points take clicks, each a small inlaid dot. */
+.table-game-board[data-game=morris] { grid-template-rows: repeat(7, 1fr); padding: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M0.5 0.5L6.5 0.5M6.5 0.5L6.5 6.5M6.5 6.5L0.5 6.5M0.5 6.5L0.5 0.5M1.5 1.5L5.5 1.5M5.5 1.5L5.5 5.5M5.5 5.5L1.5 5.5M1.5 5.5L1.5 1.5M2.5 2.5L4.5 2.5M4.5 2.5L4.5 4.5M4.5 4.5L2.5 4.5M2.5 4.5L2.5 2.5M3.5 0.5L3.5 2.5M3.5 4.5L3.5 6.5M0.5 3.5L2.5 3.5M4.5 3.5L6.5 3.5' fill='none' stroke='%235a3a22' stroke-width='.06' stroke-linecap='square'/%3E%3C/svg%3E") center / 100% 100% no-repeat, linear-gradient(160deg, #e8cfa2, #d6b67f); }
+.table-game-board[data-game=morris] .table-row { grid-template-columns: repeat(7, 1fr); }
+.table-game-board[data-game=morris] .table-square { background: transparent; }
+.table-game-board[data-game=morris] .table-square[data-void] { cursor: default; }
+.table-game-board[data-game=morris] .table-square:not([data-void])::before { content: ''; position: absolute; width: 16%; aspect-ratio: 1; border-radius: 50%; background: #5a3a22; }
+.table-game-board[data-game=morris] .table-square[data-target=move]::after { width: 30%; height: 30%; background: rgb(44 116 102 / .55); }
+.table-game-board[data-game=morris] .table-square[data-last] { background-image: radial-gradient(circle, rgb(214 168 72 / .45) 0 46%, transparent 48%); }
+.morris-piece { position: relative; width: 66%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; }
+.morris-piece[data-side=w] { background: radial-gradient(circle at 42% 36%, #fffaf0, #d8ccb4 64%); box-shadow: 0 2px 3px rgb(0 0 0 / .35), inset 0 0 0 2px rgb(0 0 0 / .06); }
+.morris-piece[data-side=b] { background: radial-gradient(circle at 42% 36%, #4a403b, #1e1a18 62%); box-shadow: 0 2px 3px rgb(0 0 0 / .45); }

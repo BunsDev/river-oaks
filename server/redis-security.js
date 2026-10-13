@@ -89,7 +89,7 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   };
   return {
     async allow(scope, id, limit, windowMs) {
-      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily'].includes(scope)) return false;
+      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'office_desk', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {

@@ -511,14 +511,45 @@ remain restricted to Jevica's verified owner accounts.
 
 Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play a
 table game** or **X** opens a board beside the table. **Chess**, **Checkers**
-(American rules: captures are compulsory, and a crowned man stops) and **Connect
+(American rules: captures are compulsory, and a crowned man stops), **Connect
 Four** (seven columns of six, red first; a click anywhere in a column drops a disc)
-switch in the sheet, and each table keeps one game of each. You can play the plaza
+**Reversi** (black first from the four centre discs; a click places a disc where it
+outflanks a line, a side with no move passes, and the most discs wins) and **Nine
+men's morris** (white first; nine pieces each are placed with a click, then moved
+along the lines; a mill of three takes a piece, chosen on the board, never from a
+mill unless every piece stands in one; three pieces may fly; two pieces, or no move,
+loses) switch in the sheet, and each table keeps one game of each. You can play the plaza
 regular (a small engine that thinks in a worker) or pass and play, taking either
 side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
-frame replaces the chess pieces. It is a practice game kept in your
-browser, so other visitors still see the chess opening. **Escape** or **X** puts the
-board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
+frame replaces the chess pieces, Reversi's black and white discs lie on the board, and
+for morris a walnut board with brass lines is laid over the chess squares. A game
+against the regular or pass and play is a practice game kept in your browser.
+
+**Lesson** plays a short guided game of whichever game is chosen, as the side that
+moves first:
+- **Chess:** a four-move mate on f7.
+- **Checkers:** a trade, then giving one man to take two.
+- **Connect Four:** an open three that can be blocked at only one end.
+- **Reversi:** trapping lines of discs, then a corner.
+- **Morris:** making a mill and blocking one.
+
+Each step rings its move in gold and allows only that move. A square off the script
+points back to the rings. The regular answers from the script, and Take back and
+Start again work as usual. The scripts are pure data in
+`preview/src/table-game-lessons.js`; its unit test replays them through the same
+adapters. A lesson is a game of its own, so the practice game waits untouched.
+
+When someone sits in the other chair, the sheet offers **Play ⟨name⟩**: it invites
+them to the game on your board, as the side you play. Their **X** action and sheet
+show the invitation to accept or decline. The town then holds the game
+(`server/table-games.js`). It checks every move by replaying the game with the
+sheet's own adapters (`preview/src/table-game-adapters.js`), so a client offers
+moves and never sets a position. The snapshot carries every table's game, and the
+table's pieces show it to everyone in the plaza. You may **Resign**; standing up,
+travelling or leaving town ends the game for both, as "left the table". After a game,
+**Rematch** asks again. Your practice games stay as they were, and choosing a
+practice mode or another game shows them while the shared game carries on.
+**Escape** or **X** puts the board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
 and `checkers-rules.js`, each checked against published perft counts.
 
 At the round café table, **Play dominoes** or **X** opens a dominoes table. It is a
@@ -548,6 +579,106 @@ that is hit goes to the bar, and you bear off once all fifteen are home. A gammo
 scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
 off), and Undo takes back moves within your turn. The table's checkers mirror the
 game. Rules: `preview/src/backgammon-rules.js`.
+
+The walnut table's switch also offers **Cribbage** against a plaza regular, to 121.
+Each hand deals six cards; lay two away to the dealer's crib, and the starter is cut
+(a jack scores the dealer 2). In the play, keep the count to 31: fifteen and
+thirty-one score 2, pairs and runs as they fall, go and the last card 1. Then the
+show counts each hand with the starter (fifteens, pairs, runs, flushes and nobs),
+the dealer's crib last. A pegging board replaces the checkers while you play, and
+its pegs follow the scores. Rules: `preview/src/cribbage-rules.js`.
+
+A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
+**Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
+pass and play. Pick a block below the top (never the top level, nor the one under
+an unfinished top), then stop the steady-hand meter inside its green zone to slide
+the block out; it goes on top by itself. The zone narrows as the tower grows taller
+and weaker and as the level carries more. A level left on a single edge block
+brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
+scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
+
+The bench's switch also offers **Yacht**, which puts the tower away and sets five
+dice on the drum. You play two plaza regulars, or two players pass and play. Roll
+the five dice, keep any of them (choose a die to keep it) and roll again, up to three
+rolls a turn, then score the dice in one of twelve boxes, even for nothing: ones to
+sixes count that face; full house and choice all five; four of a kind the four; a
+little or big straight 30; a yacht (five alike) 50. When every box is filled, the
+highest total wins. The drum's dice follow the game, kept ones lined up toward the
+bench. Rules: `preview/src/yacht-rules.js`.
+
+A long linen-topped wine pong table stands between the café and the north planters.
+Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
+at the far end, or two players pass and play. Each side has six wine glasses racked
+at its own end. Stop the sweeping reticle once for the aim and once for the power;
+the ball flies over the real table. A ball can drop straight in, rattle off a rim and
+in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
+the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
+`preview/src/wine-pong-rules.js`.
+
+The wine pong table's switch also offers **Shuffleboard**, which puts the glasses away
+and sets out eight weighted pucks. Standing at either end, you play a plaza regular or
+pass and play, both throwing from your end. Stop the sweeping line once for the aim and
+once for the power, and the puck slides on the sheet and the real table, knocking
+others it meets. Four pucks each a round; one short of the foul line is taken off. Only
+the player furthest along scores: each of their pucks beyond the other's best counts
+1, 2 or 3 by zone, and one hanging over the end 4. First to 15 wins. Rules:
+`preview/src/shuffleboard-rules.js`.
+
+A dartboard hangs on a post against the plaza's south wall, with a throwing line
+2.37 m out in front. Standing at the line, **Play darts** or **X** opens it: 501,
+double out, against a plaza regular or pass and play. A line sweeps across the board
+(stop it to aim across) and then up and down (stop it again); the dart lands where
+they cross. Busts restore the turn's start, and on 170 or less the sheet suggests a
+checkout. The real board shows the turn's darts. Rules: `preview/src/darts-rules.js`.
+
+The café table's switch now offers **Spades** beside dominoes and Hearts. You and the
+regular across partner against the regulars on your left and right. Bid the tricks you
+expect (nil means none), then play: spades are trumps and cannot be led until one has
+been played. A partnership making its bid scores 10 a trick bid and 1 a bag (an
+overtrick); every tenth bag costs 100; short of the bid it loses 10 a trick bid. A nil
+scores ±100. First to 500 wins; falling to −200 loses. The round table shows the trick
+and hands as in Hearts. Rules: `preview/src/spades-rules.js`.
+
+The café switch also offers **Liar's dice**: you and three plaza regulars, five dice
+each under a cup. Bid how many of a face lie on the whole table (ones are wild), each
+bid raising the last, or call liar: the cups lift, and whoever was wrong loses a die.
+The last player with dice wins. The round table shows the cups, lifted to the dice on
+a call. Rules: `preview/src/liars-dice-rules.js`.
+
+A small round table stands in the middle of the grove with a carved mancala board and
+two chairs. Seated there, **Play mancala** or **X** opens it. You play the plaza regular
+(moving first or second) or pass and play. Kalah rules: six pits of four seeds a side;
+sow counter-clockwise, skipping the other store; end in your store to move again; end
+in your own empty pit to capture the seeds opposite. When a side runs out, each player
+banks their own side and the fuller store wins. The table's glass beads follow the
+game. Rules: `preview/src/mancala-rules.js`.
+
+The grove table's switch also offers **Go** on a 9×9 goban, which replaces the
+mancala board on the table while it is in play. Play the plaza regular (Monte Carlo
+play-outs, thought out in a worker) as black or white, or pass and play. Captures,
+no suicide, positional superko; two passes end the game, scored by area with 7.5
+komi. Rules: `preview/src/go-rules.js`.
+
+The grove table's switch also offers **Chinese checkers** on a round star board of 121
+holes, which replaces the mancala board or goban. You play the plaza regular or pass
+and play, red (nearest you) first. Each side starts with ten marbles in the point
+nearest it and races them into the point opposite. A move is a step to a neighbouring
+empty hole, or a chain of hops over any marble to the empty hole beyond; nothing is
+captured. Choose a marble and the holes it can reach are marked; a hop chain plays leg
+by leg on the sheet and the table. The first to fill the far point wins (the other
+side's stragglers there count, if one of yours is among them). Rules:
+`preview/src/chinese-checkers-rules.js`.
+
+The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
+header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Chinese checkers, Jenga, Yacht, wine pong, shuffleboard, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
+illustrated book with a few pages per game: taking a seat, the aim, a turn, and
+the keys. Its pictures are positions played on the real rules
+(`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
+mark on its button, remembered on this device. The guide is a modal dialog
+outside the sheets, so its keys never move you or close a board; Escape returns
+to the sheet. Content: `preview/src/salon-guide-content.js`; a new game adds its
+pages to `GUIDE` and one `attachGuide(panel, id)` line in its sheet.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
@@ -647,7 +778,8 @@ lease and deletes empty rooms. With a live lease holder a revoked participant is
 removed within about 2 s; the worst case with no instance alive for the world is
 the lease TTL plus one cron period plus the sweep budget, about 127 s. Measured
 numbers belong in `data/reports/voice-revocation.json` before production
-enablement. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
+enablement; [the LiveKit setup page](voice-livekit-setup.md) is the checklist for
+creating the project, setting the environment and recording that acceptance. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
 grants the microphone to this origin only.
 
 

@@ -1,0 +1,21 @@
+/* Go in the grove: a kaya board with ink lines and star points, slate and shell
+   stones, the last move ringed, and the open points lit under the pointer. */
+.go-panel .go-body { display: flex; flex-direction: column; gap: 12px; }
+.go-panel .go-scores { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.go-panel .go-scores li { padding: 4px 11px; border-radius: 999px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.go-panel .go-board { display: block; align-self: center; width: min(100%, 440px); height: auto; }
+.go-panel .go-wood { fill: #dcb46e; }
+.go-panel .go-line { stroke: #3a2c1a; stroke-width: 1.2; }
+.go-panel .go-star { fill: #3a2c1a; }
+.go-panel .go-hit { fill: transparent; }
+.go-panel .go-point[data-open] { cursor: pointer; }
+.go-panel .go-point[data-open]:hover .go-hit, .go-panel .go-point[data-open]:focus-visible .go-hit { fill: rgb(255 255 255 / .28); }
+.go-panel .go-point:focus, .go-panel .go-point:focus-visible { outline: none; }
+.go-panel .go-point:focus-visible .go-hit { stroke: var(--hud-action); stroke-width: 2.5; }
+.go-panel .go-stone { stroke: rgb(0 0 0 / .45); stroke-width: 1; }
+.go-panel .go-b { fill: #1b1b1d; }
+.go-panel .go-w { fill: #f4f1e8; }
+.go-panel .go-last { fill: none; stroke: #d0463a; stroke-width: 2.5; pointer-events: none; }
+.go-panel .table-game-actions [data-go-action=new], .go-panel .table-game-actions [data-go-action=pass] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.go-panel .table-game-actions [data-go-action=pass][aria-disabled=true] { opacity: .45; cursor: default; }
+.go-panel .table-game-actions [hidden] { display: none; }

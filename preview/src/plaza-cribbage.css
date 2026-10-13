@@ -1,0 +1,20 @@
+/* Cribbage at the walnut table: the Hearts cards (plaza-hearts.css), score chips with a
+   track toward 121, the starter and the crib beside the pile and its count, and the
+   show's breakdown once the hands are counted. */
+.cribbage-panel { --card-face: #fbf8f1; --card-edge: #cfc6b4; --card-red: #b3262e; --card-black: #1d1b1f; }
+.cribbage-panel .cribbage-body { display: flex; flex-direction: column; gap: 12px; }
+.cribbage-panel .cribbage-scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.cribbage-panel .cribbage-scores li { display: grid; gap: 5px; padding: 6px 11px; border-radius: 10px; background: var(--hud-tile); color: var(--ink); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.cribbage-panel .cribbage-scores li[data-turn] { box-shadow: inset 0 0 0 2px var(--hud-action); }
+.cribbage-panel .cribbage-track { display: block; height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--hud-action) calc(var(--score, 0) * 100%), rgb(0 0 0 / .12) 0); }
+.cribbage-panel .cribbage-table { display: flex; gap: 18px; align-items: center; min-height: 92px; padding: 12px 16px; border-radius: 14px; background: radial-gradient(120% 100% at 50% 0%, #7a5538, #573a26); }
+.cribbage-panel .cribbage-cut { display: flex; gap: 8px; }
+.cribbage-panel .cribbage-pile { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cribbage-panel .cribbage-table .playing-card svg { height: 62px; width: auto; }
+.cribbage-panel .cribbage-back { display: block; width: 44px; height: 62px; border-radius: 5px; background: repeating-linear-gradient(45deg, #7b2f45 0 4px, #8f3a53 4px 8px); box-shadow: inset 0 0 0 2px #efe6d4; }
+.cribbage-panel .cribbage-count { min-width: 74px; color: #f3ead8; font-size: 13px; font-weight: 700; }
+.cribbage-panel .cribbage-show { display: grid; gap: 4px; margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--hud-tile); color: var(--ink); font-size: 13px; list-style: none; }
+.cribbage-panel .cribbage-show[hidden] { display: none; }
+.cribbage-panel .table-game-actions [data-cribbage-action] { background: var(--hud-action); border-color: transparent; color: var(--hud-on-action); }
+.cribbage-panel .table-game-actions [hidden] { display: none; }
+.cribbage-panel .playing-card.in-hand[aria-pressed=true] svg rect { stroke: var(--hud-action); stroke-width: 3; }

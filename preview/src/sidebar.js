@@ -1,3 +1,4 @@
+import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { createJevSettings } from './jev-settings.js';
 import { createVoiceSettings } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
@@ -160,6 +161,7 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     dialog.close();
     (returnFocus?.isConnected && returnFocus.checkVisibility() && !returnFocus.closest('[inert]') ? returnFocus : settingsTrigger).focus({ preventScroll: true });
   };
+  dismissOnOutsideClick(dialog, closeSettings);
   settingsTrigger.addEventListener('click', () => openSettings());
   dialog.querySelector('.settings-header button').addEventListener('click', closeSettings);
   dialog.addEventListener('cancel', event => { event.preventDefault(); closeSettings(); });
