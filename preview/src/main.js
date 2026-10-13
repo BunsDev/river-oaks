@@ -49,6 +49,7 @@ import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
 import { createPlazaCribbage } from './plaza-cribbage.js';
 import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
 import { createPlazaWinePong } from './plaza-wine-pong.js';
+import { createPlazaShuffleboard } from './plaza-shuffleboard.js';
 import { createPlazaDarts } from './plaza-darts.js';
 import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
 import { createPlazaGo } from './plaza-go.js';
@@ -125,7 +126,7 @@ let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seat
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null;
 let plazaCribbage = null, walnutGame = 'backgammon';
-let plazaWinePong = null;
+let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
 let plazaDarts = null;
 let plazaSpades = null;
 let plazaLiarsDice = null;
@@ -296,10 +297,23 @@ function initializeRenderer() {
   plazaJenga = createPlazaJenga({ getMirror: () => plazaSalon?.userData.jenga ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
   playProviders.push(() => plazaJenga);
-  // Standing at an end of the long café table, X plays wine pong; the table's glasses and ball mirror it.
-  plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: () => (world && plazaSalonPlan(world)?.winePong) ?? null,
-    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
-  playProviders.push(() => plazaWinePong);
+  // Standing at an end of the long café table, X plays wine pong or shuffleboard (the last
+  // one played); the table's glasses and ball, or its pucks, mirror it, and switching puts
+  // the other game's pieces away.
+  const longTableGames = () => ({ winePong: plazaWinePong, shuffleboard: plazaShuffleboard });
+  const switchLongTable = kind => {
+    const leaving = longTableGames()[longTableGame], joining = longTableGames()[kind];
+    if (!joining || joining === leaving) return;
+    longTableGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.winePong?.setVisible(kind === 'winePong'); plazaSalon?.userData.shuffleboard?.setVisible(kind === 'shuffleboard');
+    joining.open();
+  };
+  const longTable = () => (world && plazaSalonPlan(world)?.winePong) ?? null;
+  plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: longTable,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+  plazaShuffleboard = createPlazaShuffleboard({ getMirror: () => plazaSalon?.userData.shuffleboard ?? null, getTable: longTable,
+    getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchLongTable });
+  playProviders.push(() => longTableGames()[longTableGame]);
   // Standing at the darts line, X plays 501; the board on the wall shows the turn's darts.
   plazaDarts = createPlazaDarts({ getMirror: () => plazaSalon?.userData.darts ?? null, getBoard: () => (world && plazaSalonPlan(world)?.darts) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
@@ -806,7 +820,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -1067,6 +1081,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       if (result?.ok) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9);
       return { ok: Boolean(result?.ok) };
     } } : null;
+  window.__riverPlazaShuffleboard = () => plazaShuffleboard ? { ...plazaShuffleboard.debug(), longTableGame, table: plazaSalon?.userData.shuffleboard?.count() ?? null,
+    pucksShown: plazaSalon?.userData.shuffleboard?.visible() ?? null, glassesShown: plazaSalon?.userData.winePong?.visible() ?? null,
+    hold: value => plazaShuffleboard.hold(value), reset: () => plazaShuffleboard.reset() } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,
