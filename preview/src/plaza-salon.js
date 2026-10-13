@@ -747,6 +747,31 @@ export function buildPlazaSalon(world) {
       glasses: () => glasses.count,
       ballVisible: () => ball.visible,
       stand: side => winePongPoint(table, [side === 0 ? -WINE_PONG_STAND : WINE_PONG_STAND, 0]),
+      // Puts the glasses away while the table plays shuffleboard.
+      setVisible(visible) { glasses.visible = wine.visible = visible; },
+      visible: () => glasses.visible,
+    };
+    // Shuffleboard on the same table: eight weighted pucks (red and blue), placed from the
+    // throwing end in the rules' frame (u from that end, v across); shown while it is in play.
+    const pucks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.029, 0.029, 0.016, 24), new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 0.45, roughness: 0.35 }), 8);
+    Object.assign(pucks, { name: 'Shuffleboard pucks', count: 0, castShadow: true, visible: false });
+    group.add(pucks);
+    const puckTint = [new THREE.Color('#b7342c'), new THREE.Color('#2f5fae')];
+    group.userData.shuffleboard = {
+      // Pucks ({ owner, u, v, out }) thrown from end `side` (0 west, 1 east); out ones are not shown.
+      show(list = [], side = 0) {
+        pucks.count = 0;
+        for (const puck of list) {
+          if (puck.out || pucks.count >= 8) continue;
+          const forward = side === 0 ? 1 : -1, [x, , z] = scenePoint([-forward * PONG_TABLE.length / 2 + forward * puck.u, puck.v * forward], 0);
+          dummy.position.set(x, top + 0.008, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          pucks.setColorAt(pucks.count, puckTint[puck.owner]); pucks.setMatrixAt(pucks.count++, dummy.matrix);
+        }
+        pucks.instanceMatrix.needsUpdate = true; if (pucks.instanceColor) pucks.instanceColor.needsUpdate = true; pucks.computeBoundingSphere();
+      },
+      count: () => pucks.count,
+      setVisible(visible) { pucks.visible = visible; },
+      visible: () => pucks.visible,
     };
   }
   // Mancala seeds: glass beads in a few colours, one InstancedMesh, heaped in their pits

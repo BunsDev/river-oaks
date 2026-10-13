@@ -90,6 +90,13 @@ export const GUIDE = [
     { title: 'In, rim and bounce', text: ['A ball can drop straight in, catch a rim and rattle in or spin out, or land on the table and bounce into a glass. Anything else is a miss.', 'A sunk glass leaves the table.'], figure: { kind: 'pong-outcomes' } },
     { title: 'At the table', text: ['The real table\'s glasses follow the game, and the ball flies over it.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the reticle: aim, then throw'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
   ] },
+  { id: 'shuffleboard', name: 'Shuffleboard', place: 'The long table by the café', pages: [
+    { title: 'Taking a seat', text: ['Shuffleboard is played on the long table by the café, where wine pong is. Stand at either end, press X, and choose Shuffleboard at the top of the sheet; you play standing.', 'Play a plaza regular, or Pass and play with a friend. Both of you throw from your end.'], figure: { kind: 'emblem' } },
+    { title: 'The aim', text: ['Each round, the two of you slide four weighted pucks each, in turn, toward the far end. A puck that stops short of the dashed foul line is taken off, and one that goes over a side or off the end is gone.', 'The far end is marked in zones worth 1, 2 and 3, and a puck left hanging over the end scores 4. First to 15 wins.'], figure: { kind: 'shuffle-zones' } },
+    { title: 'A throw', text: ['A line sweeps across the table: stop it for the aim. A target then rides along that line: stop it for the power, and the puck slides.', 'Pucks knock each other: the one you strike carries on, and yours slows.'], figure: { kind: 'shuffle-throw' } },
+    { title: 'Scoring a round', text: ['When all eight are down, only the player whose puck lies furthest scores: each of their pucks beyond the other\'s best counts its zone. So knocking a rival\'s leader off the end can be worth more than a careful slide.', 'The two of you take turns to throw first, round by round.'], figure: { kind: 'shuffle-score' } },
+    { title: 'At the table', text: ['The real table\'s pucks follow every slide, and the wine glasses are put away while you play.'], figure: { kind: 'keys', keys: [[['X'], 'Open the table, or put it away'], [['Space', 'Enter'], 'Stop the line: aim, then slide'], [['Tab'], 'Move between the buttons'], [['Esc'], 'Put the table away']] } },
+  ] },
   { id: 'go', name: 'Go', place: 'The small grove table', pages: [
     { title: 'Taking a seat', text: ['At the small grove table, press Z to sit and X to open the board, then choose Go at the top of the sheet.', 'Play the plaza regular as black or white, or Pass and play with a friend. Black moves first.'], figure: { kind: 'emblem' } },
     { title: 'The aim', text: ['Take turns placing a stone on an empty point. Surround more of the board than your opponent: at the end, your stones and the empty points only you surround both count.', 'White gets 7.5 points of komi for moving second, so there are no ties.'], figure: { kind: 'go-territory' } },
@@ -174,6 +181,10 @@ export const DIAGRAMS = {
   jengaMeter: { lo: 0.38, hi: 0.62, marker: 0.5 },
   // Wine pong: the apex glass of the far rack, sunk by a dead-centre throw.
   pongThrow: { glass: 5 },
+  // Shuffleboard: a round's last pucks as [owner, u, v] (red 0, blue 1): red lies furthest,
+  // and only its puck beyond blue's best scores, 3 in the far zone. And a hanger, worth 4.
+  shuffleScore: { pucks: [[0, 2.3, 0.05], [0, 2.0, -0.12], [1, 2.1, 0.1], [0, 1.75, 0.15], [1, 1.85, -0.06]], scored: [0, 3] },
+  shuffleHanger: { u: 2.41 },
   backgammonOpening: { layout: { 24: 2, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -5 }, dice: [3, 1], moves: [[8, 5], [6, 5]] },
   backgammonHit: { layout: { 24: 2, 13: 5, 8: 2, 6: 4, 5: -1, 4: -2, 12: -4 }, dice: [3, 2], move: [8, 5], closed: 4 },
 };
@@ -298,6 +309,7 @@ export function iconMarkup(id) {
     spades: '<path class="sg-icon-fill" d="M20 8C12 16 8 19.5 8 23.5a5.5 5.5 0 0 0 10 3.2L16.5 32h7L22 26.7a5.5 5.5 0 0 0 10-3.2C32 19.5 28 16 20 8z"/>',
     backgammon: '<path class="sg-icon-line" d="M9 31L13 12L17 31M17 31L21 12L25 31"/><circle class="sg-icon-fill" cx="29" cy="25" r="4.5"/>',
     jenga: '<rect class="sg-icon-fill" x="11" y="26" width="18" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="19.5" width="18" height="5" rx="1"/><rect class="sg-icon-fill" x="11" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-fill" x="24" y="13" width="5" height="5" rx="1"/><rect class="sg-icon-line" x="11" y="6.5" width="18" height="5" rx="1"/>',
+    shuffleboard: '<rect class="sg-icon-line" x="14" y="5" width="12" height="30" rx="2"/><path class="sg-icon-line" d="M14 11h12M14 16h12"/><circle class="sg-icon-fill" cx="20" cy="27" r="3.5"/>',
     winePong: '<path class="sg-icon-line" d="M13 8h14c0 8-3 12-7 12s-7-4-7-12zM20 20v9M14 31h12"/><path class="sg-icon-fill" d="M13.6 12h12.8c-.6 4.5-3 7-6.4 7s-5.8-2.5-6.4-7z"/>',
   }[id] ?? '';
   return `<svg class="salon-icon" viewBox="0 0 40 40" aria-hidden="true">${icon}</svg>`;
@@ -433,6 +445,27 @@ export function figureMarkup(figure, game) {
         glass(55, true) + '<circle class="sg-mark" cx="55" cy="62" r="5"/>' + glass(150, true) + '<circle class="sg-mark" cx="164" cy="50" r="5"/>' + glass(245, true) + '<circle class="sg-mark" cx="245" cy="62" r="5"/>'
         + arrow([[150, 112], [205, 104], [236, 70]], 'o') + arrowHead('o')
         + '<text class="sg-label" x="55" y="104" text-anchor="middle" font-size="12">in</text><text class="sg-label" x="150" y="104" text-anchor="middle" font-size="12">rim, then in</text><text class="sg-label" x="252" y="124" text-anchor="middle" font-size="12">bounce, then in</text>'); }
+    case 'shuffle-zones': case 'shuffle-score': {
+      // The table from above, your end at the left: 105 px a metre, pucks drawn larger than life.
+      const x = u => 20 + u * 105, y = v => 61 - v * 105, zones = [[1.65, 1.95, 1], [1.95, 2.2, 2], [2.2, 2.4, 3]];
+      const table = '<rect class="sg-tile-face" x="20" y="30" width="252" height="63" rx="4"/>'
+        + zones.map(([from, to, points]) => `<rect class="sg-tile-back" opacity="${0.12 + points * 0.1}" x="${x(from)}" y="30" width="${x(to) - x(from)}" height="63"/><text class="sg-label" x="${(x(from) + x(to)) / 2}" y="24" text-anchor="middle" font-size="12">${points}</text>`).join('')
+        + `<line class="sg-path" stroke-dasharray="4 3" x1="${x(1.65)}" y1="30" x2="${x(1.65)}" y2="93"/>`;
+      const puck = ([owner, u, v], ring = false) => `${ring ? `<circle class="sg-win" cx="${x(u)}" cy="${y(v)}" r="9"/>` : ''}<circle class="${owner ? 'sg-blue' : 'sg-red'}" cx="${x(u)}" cy="${y(v)}" r="6"/>`;
+      if (figure.kind === 'shuffle-zones') return svg(300, 124, 'The table from above: you throw from the left; a dashed foul line, then zones worth 1, 2 and 3 toward the far end, and a puck hanging over the end worth 4.',
+        table + puck([0, DIAGRAMS.shuffleHanger.u, 0.02]) + `<text class="sg-label" x="${x(DIAGRAMS.shuffleHanger.u)}" y="24" text-anchor="middle" font-size="12">4</text>`
+        + '<circle class="sg-mark" cx="33" cy="61" r="5"/><text class="sg-label sg-quiet" x="22" y="112" font-size="11">you throw from here</text>'
+        + `<text class="sg-label sg-quiet" x="${x(1.65)}" y="112" text-anchor="middle" font-size="11">foul line</text>`);
+      const { pucks, scored } = DIAGRAMS.shuffleScore, rival = Math.max(...pucks.filter(([owner]) => owner !== scored[0]).map(([, u]) => u));
+      return svg(300, 124, `A round's end: red's furthest puck lies beyond every blue one, so red scores, but only its puck past blue's best: ${scored[1]} in the far zone.`,
+        table + pucks.map(item => puck(item, item[0] === scored[0] && item[1] > rival)).join('')
+        + `<text class="sg-label" x="150" y="112" text-anchor="middle" font-size="12">red scores ${scored[1]}</text>`); }
+    case 'shuffle-throw': return svg(170, 260, 'From your end: the dotted aim line runs up the table, and the power target rides along it into the far zone.',
+      '<rect class="sg-tile-face" x="55" y="20" width="60" height="220" rx="5"/>'
+      + [[20, 46, 3], [46, 73, 2], [73, 105, 1]].map(([top, bottom, points]) => `<rect class="sg-tile-back" opacity="${0.12 + points * 0.1}" x="55" y="${top}" width="60" height="${bottom - top}"/>`).join('')
+      + '<line class="sg-path" stroke-dasharray="4 3" x1="55" y1="105" x2="115" y2="105"/>'
+      + arrow([[85, 246], [92, 40]], 't') + arrowHead('t') + '<circle class="sg-win" cx="92" cy="34" r="8"/><circle class="sg-red" cx="85" cy="246" r="6"/>'
+      + '<text class="sg-label sg-quiet" x="85" y="14" text-anchor="middle" font-size="11">aim, then power</text>');
     case 'backgammon-opening': { const { layout, dice, moves } = DIAGRAMS.backgammonOpening, near = nearPoints(layout), top = point => 10 + near[point][0] * 21 - 21 + 1;
       const strip = backgammonStrip(near, { dice, moves: moves.map(([from, to]) => [from, to, top(from)]) });
       return svg(strip.width, 222, 'The opening three-one: one checker from the eight-point and one from the six-point land together on the five-point.', strip.body); }
