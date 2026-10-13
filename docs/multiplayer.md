@@ -581,6 +581,12 @@ overtrick); every tenth bag costs 100; short of the bid it loses 10 a trick bid.
 scores ±100. First to 500 wins; falling to −200 loses. The round table shows the trick
 and hands as in Hearts. Rules: `preview/src/spades-rules.js`.
 
+The café switch also offers **Liar's dice**: you and three plaza regulars, five dice
+each under a cup. Bid how many of a face lie on the whole table (ones are wild), each
+bid raising the last, or call liar: the cups lift, and whoever was wrong loses a die.
+The last player with dice wins. The round table shows the cups, lifted to the dice on
+a call. Rules: `preview/src/liars-dice-rules.js`.
+
 A small round table stands in the middle of the grove with a carved mancala board and
 two chairs. Seated there, **Play mancala** or **X** opens it. You play the plaza regular
 (moving first or second) or pass and play. Kalah rules: six pits of four seeds a side;

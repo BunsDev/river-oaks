@@ -44,6 +44,7 @@ import { plazaSalonPlan } from './plaza-salon-plan.js';
 import { createPlazaDominoes, seatAtCafe } from './plaza-dominoes.js';
 import { createPlazaHearts } from './plaza-hearts.js';
 import { createPlazaSpades } from './plaza-spades.js';
+import { createPlazaLiarsDice } from './plaza-liars-dice.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
 import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
 import { createPlazaWinePong } from './plaza-wine-pong.js';
@@ -122,6 +123,7 @@ let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = nu
 let plazaJenga = null;
 let plazaWinePong = null;
 let plazaSpades = null;
+let plazaLiarsDice = null;
 let plazaMancala = null;
 let plazaGo = null, groveGame = 'mancala';
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
@@ -248,8 +250,8 @@ function initializeRenderer() {
   // Seated at the café table, X plays dominoes, Hearts or Spades with the plaza regulars
   // (the last one played); switching clears the other game's pieces from the table when
   // the two use different pieces (tiles or cards).
-  const cafeGames = () => ({ dominoes: plazaDominoes, hearts: plazaHearts, spades: plazaSpades });
-  const cafePieces = kind => kind === 'dominoes' ? 'dominoes' : 'cards';
+  const cafeGames = () => ({ dominoes: plazaDominoes, hearts: plazaHearts, spades: plazaSpades, dice: plazaLiarsDice });
+  const cafePieces = kind => kind === 'dominoes' ? 'dominoes' : kind === 'dice' ? 'dice' : 'cards';
   const switchCafe = kind => {
     const leaving = cafeGames()[cafeGame], joining = cafeGames()[kind];
     if (!joining || joining === leaving) return;
@@ -263,6 +265,8 @@ function initializeRenderer() {
   plazaHearts = createPlazaHearts({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   plazaSpades = createPlazaSpades({ getMirror: () => plazaSalon?.userData.cards ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
+  plazaLiarsDice = createPlazaLiarsDice({ getMirror: () => plazaSalon?.userData.dice ?? null, getSeat: () => seatAtCafe(walking?.getPose()),
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchCafe });
   plazaStage = createPlazaStage({ walking, getMultiplayer: () => multiplayer, getStageView: () => plazaSalon?.userData.stage ?? null });
   // Seated at the backgammon table, X plays backgammon; the table's checkers mirror the game.
@@ -778,7 +782,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -1029,6 +1033,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaBackgammon = () => plazaBackgammon ? { ...plazaBackgammon.debug(), table: plazaSalon?.userData.backgammon?.count() ?? null,
     deal: seed => plazaBackgammon.deal(seed) } : null;
+  window.__riverPlazaDice = () => plazaLiarsDice ? { ...plazaLiarsDice.debug(), cafeGame, table: plazaSalon?.userData.dice?.count() ?? null, cards: plazaSalon?.userData.cards?.count()?.backs ?? null, deal: seed => plazaLiarsDice.deal(seed) } : null;
   window.__riverPlazaSpades = () => plazaSpades ? { ...plazaSpades.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null, deal: seed => plazaSpades.deal(seed) } : null;
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;

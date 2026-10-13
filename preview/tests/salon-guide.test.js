@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'dice']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -195,4 +195,11 @@ test('the Go pictures follow the rules', async () => {
   const [pr, pc] = ko.play, [tr, tc] = ko.take, taken = go.play(state, pr * 9 + pc);
   assert.equal(taken.last.captured, 1); assert.equal(taken.board[tr * 9 + tc], '', 'the black stone leaves the board');
   assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
+});
+
+test('the liar’s dice pictures follow the rules', async () => {
+  const { countOf } = await import('../src/liars-dice-rules.js');
+  const { cups, bid, actual } = DIAGRAMS.diceCall;
+  assert.equal(countOf(cups, bid[1]), actual, 'the counted fives, ones wild');
+  assert.equal(countOf([DIAGRAMS.diceBid.cup], DIAGRAMS.diceBid.bid[1]), 3, 'three fives in your own cup');
 });

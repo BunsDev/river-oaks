@@ -781,6 +781,42 @@ export function buildPlazaSalon(world) {
       visible: () => goban.visible,
     };
   }
+  // Liar's dice at the café table: a leather cup upside down before each player still in,
+  // lifted when a call shows the dice; the dice are ivory cubes with painted pips, each
+  // turned so its value faces up.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, size = 0.016;
+    // Faces in BoxGeometry order (+x, −x, +y, −y, +z, −z): 3, 4, 1, 6, 2, 5 (opposites sum to seven).
+    const PIPS = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
+      5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
+    const faceTexture = value => dataTexture(32, (px, py, w, h) => PIPS[value].some(([u, v]) => Math.hypot((px + 0.5) / w - u, (py + 0.5) / h - v) < 0.1) ? [32, 28, 26, 255] : [240, 233, 216, 255], { repeat: false });
+    const order = [3, 4, 1, 6, 2, 5], textures = order.map(faceTexture);
+    for (const texture of textures) { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
+    const dice = new THREE.InstancedMesh(new THREE.BoxGeometry(size, size, size), textures.map(map => new THREE.MeshStandardMaterial({ map, roughness: 0.4 })), 20);
+    const cups = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.042, 0.052, 0.085, 24), new THREE.MeshStandardMaterial({ color: '#5a3a26', roughness: 0.7 }), 4);
+    Object.assign(dice, { name: 'Liar’s dice', count: 0, castShadow: true }); Object.assign(cups, { name: 'Dice cups', count: 0, castShadow: true });
+    group.add(dice, cups);
+    const up = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
+    const at = (chair, out, along = 0) => { const angle = cafeChairAngle(chair); return [tx + Math.sin(angle) * out + Math.cos(angle) * along, tz + Math.cos(angle) * out - Math.sin(angle) * along, angle]; };
+    group.userData.dice = {
+      // Cups by chair ({ chair, dice: [values], open }); null clears the table.
+      show(game = null) {
+        dice.count = 0; cups.count = 0;
+        for (const { chair, dice: values, open } of game?.cups ?? []) {
+          if (!values.length) continue;
+          const [cx, cz, angle] = at(chair, 0.3);
+          if (!open) { dummy.position.set(cx, top + 0.0425, cz); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); cups.setMatrixAt(cups.count++, dummy.matrix); continue; }
+          values.forEach((value, i) => {
+            const [x, z] = at(chair, 0.27 + (i % 2) * 0.022, (i - (values.length - 1) / 2) * 0.022);
+            const [rx, ry, rz] = up[value];
+            dummy.position.set(x, top + size / 2, z); dummy.rotation.set(rx, ry + angle, rz, 'YXZ'); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); dice.setMatrixAt(dice.count++, dummy.matrix);
+          });
+        }
+        for (const mesh of [dice, cups]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+      },
+      count: () => ({ cups: cups.count, dice: dice.count }),
+    };
+  }
   // Hearts at the café table: the trick lies face up, each card in front of the player
   // who played it; hands and won tricks wait face down at each seat. Faces come from a
   // canvas atlas where there is a document (a plain face elsewhere); backs are one mesh.

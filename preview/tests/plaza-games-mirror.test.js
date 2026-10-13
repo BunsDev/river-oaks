@@ -227,3 +227,19 @@ test('go: the grove table swaps the mancala board for a goban, and the stones si
   go.show(null); assert.equal(go.count(), 0);
   go.setVisible(false); mancala.setVisible(true);
 });
+
+test('liar’s dice: cups before each player still in, lifted on a call to show dice with their value up', () => {
+  const mirror = group.userData.dice, mesh = group.children.find(child => child.name === 'Liar’s dice');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5], open: false }, { chair: 1, dice: [6, 6], open: false }, { chair: 2, dice: [], open: false }, { chair: 3, dice: [3], open: false }] });
+  assert.deepEqual(mirror.count(), { cups: 3, dice: 0 }, 'a player out of dice has no cup');
+  mirror.show({ cups: [{ chair: 0, dice: [1, 2, 3, 4, 5, 6].slice(0, 5), open: true }, { chair: 1, dice: [6], open: true }] });
+  assert.deepEqual(mirror.count(), { cups: 0, dice: 6 });
+  // Each die's top face (+y after its rotation) shows its value: check via the face's local normal.
+  const values = [1, 2, 3, 4, 5, 6], faceOf = { 1: [0, 1, 0], 6: [0, -1, 0], 2: [0, 0, 1], 5: [0, 0, -1], 3: [1, 0, 0], 4: [-1, 0, 0] };
+  for (let i = 0; i < mesh.count; i++) {
+    const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(); mesh.getMatrixAt(i, matrix); matrix.decompose(new THREE.Vector3(), rotation, new THREE.Vector3());
+    const value = values[i === 5 ? 5 : i], normal = new THREE.Vector3(...faceOf[value]).applyQuaternion(rotation);
+    assert.ok(normal.y > 0.99, `die ${i} shows ${value} on top`);
+  }
+  mirror.show(null); assert.deepEqual(mirror.count(), { cups: 0, dice: 0 });
+});
