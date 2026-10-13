@@ -20,7 +20,7 @@ ZOOM.width = TABLE.width * ZOOM.scale + ZOOM.pad * 2; ZOOM.height = (ZOOM.far - 
 const RESULT = { in: 'In! A glass goes down.', 'rim-in': 'Off the rim… and in!', 'rim-out': 'Off the rim, and out.', 'bounce-in': 'A bounce, and in!', miss: 'Missed.' };
 
 export function createPlazaWinePong({ host = document.querySelector('#viewport'), getMirror = () => null, getTable = () => null, getPose = () => null, focusWorld = () => {},
-  random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false } = {}) {
+  random = Math.random, now = () => performance.now(), replyDelay = 650, flight = 900, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, onSwitch = null } = {}) {
   let game = null, phase = 'aim', meter = null, aim = 0.5, generation = 0, thinking = false, flying = false, said = '', frame = 0;
 
   const panel = document.createElement('dialog');
@@ -29,6 +29,7 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   panel.innerHTML = `<header class="table-game-header"><div><p class="table-game-eyebrow">Plaza games · practice game</p><h2 id="wine-pong-title">Wine pong at the café</h2></div>
     <button type="button" class="table-game-close" aria-label="Close the wine pong table">×</button></header>
     <div class="table-game-body wine-pong-body">
+      ${onSwitch ? '<div class="table-game-choice" role="group" aria-label="Game"><button type="button" data-long-game="winePong" aria-pressed="true">Wine pong</button><button type="button" data-long-game="shuffleboard" aria-pressed="false">Shuffleboard</button></div>' : ''}
       <p class="table-game-status" role="status" aria-live="polite"></p>
       <ul class="wine-pong-scores" aria-label="Glasses left"></ul>
       <div class="wine-pong-views">
@@ -211,8 +212,9 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
     if (game.mode === button.dataset.pongMode) return;
     generation++; thinking = false; flying = false; newGame({ mode: button.dataset.pongMode, wins: [0, 0] }); mirror(); render(); void regular();
   });
-  const close = () => { if (!panel.open) return; generation++; thinking = false; flying = false; getMirror()?.ball(null); panel.close(); cancelAnimationFrame(frame); focusWorld(); };
-  $('.table-game-close').addEventListener('click', close);
+  for (const button of panel.querySelectorAll('[data-long-game]')) button.addEventListener('click', () => { if (button.dataset.longGame !== 'winePong') onSwitch?.(button.dataset.longGame); });
+  const close = ({ toWorld = true } = {}) => { if (!panel.open) return; generation++; thinking = false; flying = false; getMirror()?.ball(null); panel.close(); cancelAnimationFrame(frame); if (toWorld) focusWorld(); };
+  $('.table-game-close').addEventListener('click', () => close());
 
   // The end of the table a standing visitor is at, if any.
   function standingSide() {
@@ -232,7 +234,7 @@ export function createPlazaWinePong({ host = document.querySelector('#viewport')
   return {
     panel,
     interaction() {
-      if (panel.open) return { kind: 'play', label: 'Leave the wine pong table', run: close, disabled: false };
+      if (panel.open) return { kind: 'play', label: 'Leave the wine pong table', run: () => close(), disabled: false };
       if (standingSide() === null) return null;
       return { kind: 'play', label: 'Play wine pong', run: open, disabled: false };
     },

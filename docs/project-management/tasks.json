@@ -4629,8 +4629,8 @@
         "docs/procedural-multilevel-interiors-20261013"
       ],
       "owner": "codex-root-20261013-procedural-interiors",
-      "updatedAt": "2026-10-13T22:02:44.000Z",
-      "nextAction": "Implement level 1 and authoritative transition/reconnect, then inspect pilot visual finish and target-hardware performance. Phase B local core, isolated Redis, one-client and focused two-client checks passed.",
+      "updatedAt": "2026-10-13T23:17:53.995Z",
+      "nextAction": "Phase C functional slice committed at ae1bc5c with local core, isolated Redis and two-client browser evidence. Finish vertical-route/gallery visual quality and target-hardware profiling, then add World Studio levels/layers/overrides after reconciling the active Studio owner.",
       "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
       "requiredChecks": [
         "Focused behavioral and cross-runtime tests for each phase",
@@ -4650,7 +4650,46 @@
         "preview/src/district.js, preview/src/walking.js, server/world.js (later phases)",
         "preview/src/studio/* (later phases)"
       ],
-      "leaseUntil": "2026-10-14T00:02:44.000Z"
+      "leaseUntil": "2026-10-14T01:17:53.995Z"
+    },
+    {
+      "id": "ipic-photo-interior",
+      "title": "Photo-referenced connected IPIC interior, reusable assets and playable auditorium",
+      "status": "active",
+      "branches": [
+        "feat/ipic-photo-interior-20261013"
+      ],
+      "owner": "codex:8304a3c9d0ca-ipic",
+      "leaseUntil": "2026-10-13T23:33:52.433092+00:00",
+      "updatedAt": "2026-10-13T21:38:02.806236+00:00",
+      "nextAction": "Review draft PR #343 and photo-guided layout limits. Branch is mergeable but behind main; satisfy up-to-date hosted checks before separately authorized landing. Preserve worktree.",
+      "ledger": "docs/superpowers/plans/2026-10-13-ipic-photo-interior.md",
+      "worktree": "/workspace/scratch/8304a3c9d0ca/river-oaks-ipic",
+      "filesOwned": [
+        "preview/src/ipic-*.js",
+        "preview/src/store-rooms.js (IPIC only)",
+        "preview/src/store-interiors.js (IPIC hook only)",
+        "preview/src/walking.js (room floor support)",
+        "preview/src/world-interactions.js (IPIC seats)",
+        "preview/src/conversation-sight.js (IPIC partitions)",
+        "preview/tests/ipic-*.test.js",
+        "server/tests/ipic-*.test.js",
+        "preview/e2e/ipic-*.js",
+        "preview/e2e/fixtures/ipic.*",
+        "assets/ipic/",
+        "preview/public/assets/ipic/",
+        "scripts/export-ipic*",
+        "docs/ipic-interior.md"
+      ],
+      "requiredChecks": [
+        "focused client/server route and seating regressions",
+        "pnpm run verify",
+        "IPIC rendered browser journey",
+        "GLB export validation"
+      ],
+      "verification": "Core passed; focused 10/10; production IPIC visit 4/4; five material views; GLB and Blender validated. See task ledger for skips and scope.",
+      "publicationAuthorization": "User approved unsigned draft PR on 2026-10-13 in the IPIC implementation session.",
+      "pr": 343
     }
   ]
 }

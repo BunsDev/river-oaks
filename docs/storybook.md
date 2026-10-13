@@ -2,6 +2,7 @@
 
 Status: **World canon, companion layer.** Story writing only; nothing here changes runtime behavior.
 Author: Charm, with Val. Date: 2026-10-09. Val placed this in the repo as canon on 2026-10-09.
+Placement decisions recorded 2026-10-11 (see [Decisions](#decisions)).
 Sits beside the main plot in the TypeSafe Place pillars and the chapter scripts
 (`docs/superpowers/plans/2026-10-08-typesafe-place-pillars.md`, `…story-chapter-2-home.md`,
 `…story-chapter-3-work.md`), which are drafted but not yet on `main` as of this commit; link them once they land.
@@ -17,9 +18,10 @@ companion has a god's temperament. The two people the whole town revolves around
 all, which is why the aliases fit the romance instead of fighting it: Cupid hid who he was from Psyche, and
 she loved him before she knew.
 
-Where the two layers meet is **not decided yet**: whether the four other gods are residents, companions that
-arrive with a player, or voices that only the familiars use. The cast entries below describe temperament, not
-placement. Prince Jev and Jevica already appear in the game; the additional mythological cast and the god identities described here are not implemented.
+Where the two layers meet was decided on 2026-10-11 (see [Decisions](#decisions)). The four other gods are
+**residents of the town**. *The Guest List* is a **town incident between Home and Work**. The god names **appear
+on screen**. The cast entries below describe temperament. Prince Jev and Jevica already appear in the game; the
+additional mythological cast and the god identities described here are not implemented.
 
 ## The neighborhood
 
@@ -96,9 +98,22 @@ These match the pillars' "the town remembers, kindly" and the player-influence r
 authored story decides). Where they overlap with runtime rules, the runtime rules in
 [multiplayer](multiplayer.md) are the authority.
 
-## Open questions for Val
+## Decisions
 
-1. Placement: residents, companions that travel with a player, or familiar voices only?
-2. Does *The Guest List* happen inside the chapter arc (it reads like a town incident between Home and Work)
-   or outside it, as the companions' own backstory?
-3. Do the god names ever appear on screen, or do players only ever meet them as personalities?
+Val decided these on 2026-10-11, after hearing the options argued in a NotebookLM discovery episode. Each
+choice has a cost. The costs are written down so later chapters don't quietly undo the choice.
+
+| # | Question | Decision | What it gives up |
+| --- | --- | --- | --- |
+| 1 | Where do Athena, Ares, Artemis and Dionysus live? | **Residents of the town.** Players meet them in shared places, at named meeting points, like any neighbor. | Constant one-on-one guidance. A player who wants Athena's advice goes and finds her. |
+| 2 | When does *The Guest List* happen? | **A town incident between Home and Work.** It plays live in the town; it is not told as backstory. | Tight pacing between chapters. The incident is a detour before the player settles into Work. |
+| 3 | Do the god names appear on screen? | **Yes, by name.** The character designs already read as the gods; hiding the names would only confuse. | Strict modern realism. Myth walks the mapped streets of Houston's River Oaks District. |
+
+Why residents: as residents, the gods live under the town's rules like everyone else. Jevica's existing powers
+(cancel any gathering, revoke any invitation to a private home) reach them without touching a player's own
+companion. A god attached to a player would make every moderation call land on that player too.
+
+*The Guest List* keeps the version told above. Capacity works as designed, which is why Dionysus's friend can't
+get in. What failed was Athena's preview, not the town's rules.
+
+Being named on screen grants no authority. Personality is not permission. None of this is implemented yet.

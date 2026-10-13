@@ -2,10 +2,12 @@ import * as THREE from 'three';
 import { RETRO } from './retro-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
+import { buildIpicInterior } from './ipic-interior.js';
+import { IPIC_INTERIOR } from './ipic-plan.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
-// room plan. Everything is original procedural geometry and generated surface
-// art; there are no product replicas, brand marks or photographed interiors.
+// room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
+// photo-guided geometry and artwork textures documented in docs/ipic-interior.md.
 
 // ---- procedural surfaces ---------------------------------------------------
 function noiseField(seed) {
@@ -388,8 +390,14 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
 
   // ---- rooms ----------------------------------------------------------------
   const Y = new THREE.Vector3(0, 1, 0);
-  const lightPositions = [];
+  const lightPositions = [], specialtyInteriors = [];
   for (room of rooms) {
+    if (room.interior === IPIC_INTERIOR) {
+      const interior = buildIpicInterior(room);
+      specialtyInteriors.push(interior); group.add(interior);
+      lightPositions.push(...interior.userData.lightPositions);
+      continue;
+    }
     const [fx, fn] = room.facade, [ox, oy] = room.outward, W = room.width, D = room.depth, H = room.height, c = room.center;
     roomMatrix = new THREE.Matrix4().compose(new THREE.Vector3(fx, room.floor, -fn), new THREE.Quaternion().setFromAxisAngle(Y, Math.atan2(ox, -oy)), new THREE.Vector3(1, 1, 1));
     if (room.generatedPlan) {
@@ -475,6 +483,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   }
   group.userData.lightPositions = lightPositions;
   group.userData.dispose = () => {
+    specialtyInteriors.forEach(interior => interior.userData.dispose());
     group.traverse(item => { if (item.isInstancedMesh) item.dispose(); if (item.material) materials.add(item.material); });
     for (const material of materials) material.dispose();
     for (const texture of textures) texture.dispose();

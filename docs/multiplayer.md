@@ -525,6 +525,20 @@ frame replaces the chess pieces, Reversi's black and white discs lie on the boar
 for morris a walnut board with brass lines is laid over the chess squares. A game
 against the regular or pass and play is a practice game kept in your browser.
 
+**Lesson** plays a short guided game of whichever game is chosen, as the side that
+moves first:
+- **Chess:** a four-move mate on f7.
+- **Checkers:** a trade, then giving one man to take two.
+- **Connect Four:** an open three that can be blocked at only one end.
+- **Reversi:** trapping lines of discs, then a corner.
+- **Morris:** making a mill and blocking one.
+
+Each step rings its move in gold and allows only that move. A square off the script
+points back to the rings. The regular answers from the script, and Take back and
+Start again work as usual. The scripts are pure data in
+`preview/src/table-game-lessons.js`; its unit test replays them through the same
+adapters. A lesson is a game of its own, so the practice game waits untouched.
+
 When someone sits in the other chair, the sheet offers **Play ⟨name⟩**: it invites
 them to the game on your board, as the side you play. Their **X** action and sheet
 show the invitation to accept or decline. The town then holds the game
@@ -583,6 +597,15 @@ and weaker and as the level carries more. A level left on a single edge block
 brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
 scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
 
+The bench's switch also offers **Yacht**, which puts the tower away and sets five
+dice on the drum. You play two plaza regulars, or two players pass and play. Roll
+the five dice, keep any of them (choose a die to keep it) and roll again, up to three
+rolls a turn, then score the dice in one of twelve boxes, even for nothing: ones to
+sixes count that face; full house and choice all five; four of a kind the four; a
+little or big straight 30; a yacht (five alike) 50. When every box is filled, the
+highest total wins. The drum's dice follow the game, kept ones lined up toward the
+bench. Rules: `preview/src/yacht-rules.js`.
+
 A long linen-topped wine pong table stands between the café and the north planters.
 Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
 at the far end, or two players pass and play. Each side has six wine glasses racked
@@ -591,6 +614,15 @@ the ball flies over the real table. A ball can drop straight in, rattle off a ri
 in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
 the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
 `preview/src/wine-pong-rules.js`.
+
+The wine pong table's switch also offers **Shuffleboard**, which puts the glasses away
+and sets out eight weighted pucks. Standing at either end, you play a plaza regular or
+pass and play, both throwing from your end. Stop the sweeping line once for the aim and
+once for the power, and the puck slides on the sheet and the real table, knocking
+others it meets. Four pucks each a round; one short of the foul line is taken off. Only
+the player furthest along scores: each of their pucks beyond the other's best counts
+1, 2 or 3 by zone, and one hanging over the end 4. First to 15 wins. Rules:
+`preview/src/shuffleboard-rules.js`.
 
 A dartboard hangs on a post against the plaza's south wall, with a throwing line
 2.37 m out in front. Standing at the line, **Play darts** or **X** opens it: 501,
@@ -627,9 +659,19 @@ play-outs, thought out in a worker) as black or white, or pass and play. Capture
 no suicide, positional superko; two passes end the game, scored by area with 7.5
 komi. Rules: `preview/src/go-rules.js`.
 
+The grove table's switch also offers **Chinese checkers** on a round star board of 121
+holes, which replaces the mancala board or goban. You play the plaza regular or pass
+and play, red (nearest you) first. Each side starts with ten marbles in the point
+nearest it and races them into the point opposite. A move is a step to a neighbouring
+empty hole, or a chain of hops over any marble to the empty hole beyond; nothing is
+captured. Choose a marble and the holes it can reach are marked; a hop chain plays leg
+by leg on the sheet and the table. The first to fill the far point wins (the other
+side's stragglers there count, if one of yours is among them). Rules:
+`preview/src/chinese-checkers-rules.js`.
+
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, wine pong, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Chinese checkers, Jenga, Yacht, wine pong, shuffleboard, darts or liar's dice), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
