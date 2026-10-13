@@ -40,13 +40,13 @@ async page => {
       micLive: () => fake.tracks.some(track => track.readyState === 'live'),
     };
   };
-  const ready = async tab => { await tab.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true'); await tab.waitForFunction(() => window.__riverVoice()?.status === 'idle'); };
-  const voice = tab => tab.evaluate(() => window.__riverVoice());
+  const ready = async tab => { await tab.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true'); await tab.waitForFunction(() => window.__riverVoice?.()?.status === 'idle'); };
+  const voice = tab => tab.evaluate(() => window.__riverVoice?.() ?? null);
   const waitVoice = (tab, predicate, message) => tab.waitForFunction(predicate, null, { timeout: 15000 }).catch(() => { throw new Error(message); });
   await page.context().grantPermissions(['microphone'], { origin });
   await page.context().addInitScript(fakeTransport);
   await page.context().addCookies([{ name: 'fixture_session', value: 'alice', url: origin }]);
-  await page.goto(origin);
+  await page.goto(origin + '/?motion-debug=1');
   await ready(page);
   check(await page.locator('#walking-voice-join').isVisible() && !(await page.locator('#walking-voice-mic').isVisible()), 'Join is offered once the town reports voice; the microphone control waits for a join');
   const otherContext = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
@@ -55,25 +55,29 @@ async page => {
     await otherContext.addInitScript(fakeTransport);
     await otherContext.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
     const other = await otherContext.newPage();
-    await other.goto(origin);
+    await other.goto(origin + '/?motion-debug=1');
     await ready(other);
     // Alice joins with Y; her microphone is not asked for.
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyY');
-    await waitVoice(page, () => window.__riverVoice().status === 'joined', 'Alice joins voice with Y');
+    await waitVoice(page, () => window.__riverVoice?.()?.status === 'joined', 'Alice joins voice with Y');
     const alice = await voice(page);
     check(alice.mic === 'off' && (await page.evaluate(() => window.__riverVoiceFake.mics.length)) === 0, 'Joining connects with the lease token and asks for no microphone');
     check((await page.evaluate(() => window.__riverVoiceFake.room().connected.token)).startsWith('fake.river-oaks.fixture.v1.river-oaks.outdoor.'), 'The token names the server-derived outdoor room, never one the page chose');
     check(await page.locator('#voice-status').textContent() === 'Voice on · microphone off', 'The status region announces the join');
     // M asks for the microphone once; the fake UI grants it.
     await page.keyboard.press('KeyM');
-    await waitVoice(page, () => window.__riverVoice().mic === 'on', 'Unmute turns the microphone on');
+    await waitVoice(page, () => window.__riverVoice?.()?.mic === 'on', 'Unmute turns the microphone on');
     check((await page.evaluate(() => window.__riverVoiceFake.mics.length)) === 1 && (await page.locator('#walking-voice-mic').getAttribute('aria-pressed')) === 'true', 'Unmute requests audio exactly once and the control reads pressed');
     // Bob joins; the town stamps his identity on his player within a reconcile.
     await other.locator('#walking-voice-join').click();
-    await waitVoice(other, () => window.__riverVoice().status === 'joined', 'Bob joins voice from the console button');
+    await waitVoice(other, () => window.__riverVoice?.()?.status === 'joined', 'Bob joins voice from the console button');
     const bobIdentity = (await voice(other)).participantIdentity;
-    await page.waitForFunction(id => window.__riverMultiplayer().snapshot?.players.some(player => player.id === 'bob' && player.voice?.id === id), bobIdentity, { timeout: 15000 });
+    await page.waitForFunction(id => window.__riverMultiplayer().snapshot?.players.some(player => player.id === 'bob' && player.voice?.id === id), bobIdentity, { timeout: 15000 }).catch(async error => {
+      const seen = await page.evaluate(() => (window.__riverMultiplayer().snapshot?.players ?? []).map(player => [player.id, player.voice]));
+      const bob = await voice(other);
+      throw new Error(`${error.message}\nAlice sees ${JSON.stringify(seen)}\nBob: ${JSON.stringify({ status: bob.status, identity: bob.participantIdentity, space: bob.space, message: bob.message })}`);
+    });
     check(true, 'The snapshot carries the server-stamped participant identity for a joined resident');
     // Bob's track arrives through the production audio graph; he stands beside Alice, so full gain.
     await page.evaluate(id => window.__riverVoiceFake.addPeer(id), bobIdentity);
@@ -102,7 +106,7 @@ async page => {
     // Leave with Y: capture stops and the graph goes with it.
     await page.locator('#canvas-host').focus();
     await page.keyboard.press('KeyY');
-    await waitVoice(page, () => window.__riverVoice().status === 'idle', 'Y leaves voice');
+    await waitVoice(page, () => window.__riverVoice?.()?.status === 'idle', 'Y leaves voice');
     check(!(await page.evaluate(() => window.__riverVoiceFake.micLive())) && (await voice(page)).graphs.length === 0, 'Leaving stops the microphone track and disposes every audio graph');
     await page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.find(player => player.id === 'alice')?.voice?.id === null, null, { timeout: 15000 });
     check(true, 'The server drops the lease once the resident leaves');
@@ -113,7 +117,7 @@ async page => {
       await compact.addInitScript(fakeTransport);
       await compact.addCookies([{ name: 'fixture_session', value: 'guest', url: origin }]);
       const small = await compact.newPage();
-      await small.goto(origin);
+      await small.goto(origin + '/?motion-debug=1');
       await ready(small);
       await small.locator('.town-chat-toggle').click();
       const box = await small.locator('.multiplayer-voice .voice-join').boundingBox();

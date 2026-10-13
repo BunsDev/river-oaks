@@ -96,8 +96,54 @@ leases per namespace, 5000 joins per UTC day (env overrides in `.env.example`).
   the PR 2 reconciler, so it stays `null` after a join until then. Joins still
   work; the client uses the join response for its own identity.
 
-Remaining for PR 1: `pnpm run test:server` with Redis (in progress), `pnpm run
-verify`, PR, land.
+PR 1 is #300: `pnpm run test:server` with Redis 582 passed, `pnpm run verify`
+core passed, queued in `pnpm run land`.
+
+## PR 2: reconciler, sweep and headers (flag still off)
+
+Branch `feat/voice-controller-20261013`, from #300's head.
+
+- `server/voice.js`: `reconcileWorld({worldId, present, removed})` answers
+  each present player's participant identity or null. A connection or world
+  mismatch, or a space of `null`, revokes at once; another space revokes after
+  three consecutive reconciles (600 ms on the hosted tick), so a doorway does
+  not flap; removed players are revoked. Provider removals run behind the tick
+  with at most eight in flight. `sweep({budgetMs})` removes every participant of
+  this namespace's rooms without a live lease, deletes rooms nobody holds, and
+  leaves other namespaces' rooms alone; `sweepEvery(ms)` for long-lived hosts.
+- `server/redis-room.js`: the lease holder reconciles after this tick's kicks
+  and before the snapshot, so a kicked player's voice ends in the same tick.
+  `server/app.js`: a 1 s loop does the same on the standalone town, and the
+  departure grace revokes a tab that never came back.
+- `server/voice-routes.js`: `GET /api/voice-sweep` behind the `CRON_SECRET`
+  bearer; `vercel.json` cron, rewrite and allowlist; `api/server.js` answers it
+  404 while voice is off so the per-minute cron costs nothing.
+- `server/security-headers.js` and `vercel.json`: `connect-src` gains
+  `https://*.livekit.cloud wss://*.livekit.cloud` (clients are redirected to
+  regional hosts) and a new `Permissions-Policy: microphone=(self), camera=(),
+  geolocation=(), display-capture=()`. The pinned header test was changed
+  deliberately for both.
+- `docs/multiplayer.md`: env rows and a "Shared voice" section with the
+  revocation layers and bounds.
+
+Revocation bound: about 2 s with a live lease holder (one 200 ms tick plus the
+provider call); worst case with no instance alive for the world, lease TTL 45 s
+plus one cron period 60 s plus the 20 s sweep budget, about 127 s. The unit
+tests assert the mechanism under a fake clock; real numbers are a PR 5 item.
+
+### Checks
+
+- The PR 2 tests were written before the code in the same pass; no separate
+  red run was recorded for them.
+- `voice-reconcile`, `voice-sweep`, `hardening2-security-headers`,
+  `cron-workplace`, `vercel-routing`, `voice-routes`, `voice-service`,
+  `voice-leases` with Redis: 58 tests, 58 passed (the hosted room tick stamps,
+  replaces, revokes after three ticks and revokes on a same-tick kick; the
+  standalone town stamps identities and revokes a departed tab).
+- `pnpm run test:server` with Redis: 597 tests, 597 passed, 0 skipped.
+- `pnpm run verify` core: passed (tooling 76; preview 2695 passed, 1 skipped;
+  server 421 passed, 134 Redis-only skipped; desktop 49; Python and secrets
+  clean; build ok).
 
 PR 1 landed as #300 (`7b14325`). PR 2 is #302 (reconciler, sweep, headers;
 its own ledger section lands with it).

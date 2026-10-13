@@ -3,6 +3,13 @@
 // rate allowance). The only facts a client may supply are the action and the
 // participant identity it received from join; the world, the connection and
 // the voice space come from the transport's authority through `present`.
+import { timingSafeEqual } from 'node:crypto';
+
+// Constant-time comparison of an `Authorization: Bearer <secret>` header.
+function bearerMatches(header, secret) {
+  const given = Buffer.from(String(header ?? '')), expected = Buffer.from(`Bearer ${secret}`);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
 const json = (res, status, value) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(value));
@@ -24,9 +31,18 @@ async function readBody(req) {
 }
 
 /** `present(identity)` answers `{connectionId, space}` for a live game connection in this world, else null. */
-export function createVoiceRoutes({ voice, worldId, authorized, matchesWorld, present, allow }) {
+export function createVoiceRoutes({ voice, worldId, authorized, matchesWorld, present, allow, cronSecret = null }) {
   if (!voice || typeof authorized !== 'function' || typeof matchesWorld !== 'function' || typeof present !== 'function' || typeof allow !== 'function') throw new Error('Invalid voice routes');
   return async (req, res, path, url) => {
+    // Vercel Cron: serverless instances keep no timers, so a scheduled call
+    // sweeps orphaned participants. It exists only with a configured secret.
+    if (path === '/api/voice-sweep') {
+      if (!cronSecret) return false;
+      if (req.method !== 'GET') { json(res, 405, { error: 'Use GET.' }); return true; }
+      if (!bearerMatches(req.headers.authorization, cronSecret)) { json(res, 401, { error: 'Unauthorized.' }); return true; }
+      json(res, 200, await voice.sweep({ budgetMs: 20_000 }));
+      return true;
+    }
     if (!path.startsWith('/api/voice/')) return false;
     const action = path.slice('/api/voice/'.length);
     if (!ACTIONS.has(action)) return false;

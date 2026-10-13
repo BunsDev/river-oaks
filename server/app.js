@@ -27,7 +27,7 @@ import { createVoiceRoutes } from './voice-routes.js';
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 10000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -357,7 +357,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
           if(stopped){world.leave(identity.userId);return;}
-          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
+          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
         })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
@@ -393,6 +393,15 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     }
   },5000):null;
   avatarSync?.unref();
+  // Shared voice: stamp each player's participant identity from its lease, and
+  // end leases whose connection or space no longer matches (see voice.js).
+  const voiceLoop=voice?setInterval(()=>{
+    if(stopped||!connections.size)return;
+    voice.reconcileWorld({worldId,removed:[],present:[...connections.values()].map(connection=>({userId:connection.identity.userId,connectionId:connection.token,space:world.voiceSpaceOf(connection.identity.userId)}))})
+      .then(stamped=>{for(const [userId,participantIdentity] of stamped)world.setVoice(userId,participantIdentity);})
+      .catch(()=>{});
+  },voiceReconcileMs):null;
+  voiceLoop?.unref();
   return {server,disconnectUser,get playerCount(){return connections.size;},replaceWorld(next,hash){
     if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
     for(const timer of departures.values())clearTimeout(timer);
@@ -401,7 +410,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
     connections.clear();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
+    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);
     for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));

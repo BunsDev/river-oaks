@@ -379,7 +379,9 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |
 | `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none. Ignored on Vercel, which uses `x-vercel-forwarded-for` |
 | `WORLD_ID` | Optional alternate configured world; defaults to `river-oaks` |
-| `CRON_SECRET` | Vercel only: bearer secret for the workplace sweep cron |
+| `CRON_SECRET` | Vercel only: bearer secret for the workplace and voice sweep crons |
+| `RIVER_OAKS_VOICE`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Shared voice: `on` mounts `/api/voice/*` and needs all three LiveKit settings, which stay server-side; see [shared voice](#shared-voice) |
+| `RIVER_OAKS_VOICE_NAMESPACE`, `VOICE_DAILY_JOINS`, `VOICE_MAX_LEASES` | Optional voice room namespace (defaults to `REDIS_NAMESPACE`, or `river-oaks:local:v1` on the standalone town) and caps (5,000 joins per UTC day, 256 concurrent leases) |
 | `EMAIL_SIGNIN_DAILY_LIMIT`, `EMAIL_SIGNIN_DAILY_PER_ADDRESS` | Optional email-code budgets (defaults 2,000 per day and 10 per address per day); see [email access](email-access.md) |
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
@@ -490,13 +492,15 @@ free one. **Stand up** (or **Z** again) works with keyboard and touch controls. 
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
-Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess**
-or **X** opens a board beside the table. You can play the plaza regular (a small
-engine that thinks in a worker) or pass and play. The table's 3D pieces mirror
-the game. It is a practice game kept in your browser, so other visitors still see
-the opening position. **Escape** or **X** puts the board away, and standing up
-closes it. The rules are in `preview/src/chess-rules.js`, checked against
-published perft counts.
+Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess
+or checkers** or **X** opens a board beside the table. **Chess** and **Checkers**
+(American rules: captures are compulsory, and a crowned man stops) switch in the
+sheet, and each table keeps one game of each. You can play the plaza regular (a
+small engine that thinks in a worker) or pass and play, taking either side. The
+table's 3D pieces or discs mirror the game. It is a practice game kept in your
+browser, so other visitors still see the chess opening. **Escape** or **X** puts the
+board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
+and `checkers-rules.js`, each checked against published perft counts.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
@@ -571,7 +575,33 @@ Guests receive confirmed geometry without those permissions. Creator requests
 with valid assemblies may use an 8 KiB WebSocket frame; other commands retain
 the 2 KiB limit, existing queue limits, and rate limits. Old clients are rejected
 by the protocol gate. Imported assets and creator scripts remain future work;
-shared voice remains deferred in its plan.
+shared voice is being built behind `RIVER_OAKS_VOICE` (see [shared voice](#shared-voice)).
+
+## Shared voice
+
+Audio never crosses the game WebSocket. With `RIVER_OAKS_VOICE=on` and the
+LiveKit settings configured, a resident's browser asks `POST /api/voice/join`
+for a room and receives a one-room, microphone-only LiveKit token for a random
+participant identity. The server derives the world and the space (`outdoor` or
+a store id; a private home only for those allowed inside) from the player's live
+game connection, never from the request. Rooms are named
+`<namespace>.<world>.<space>`, with the namespace's colons as dots, so previews,
+production and developer machines never share a room in one LiveKit project.
+
+A lease ties the identity to the game connection for 45 s; the browser renews
+every 15 s and sends the participant identity with renew and leave, which is
+what stops a replaced tab from renewing or releasing its successor's lease.
+Revocation has three layers: every kick (ban, approval ended, logout, another
+world) revokes at once; the room's lease holder reconciles leases on its 200 ms
+tick (a connection or world mismatch revokes immediately, an interior change
+after three stable ticks); and a per-minute sweep (`/api/voice-sweep` on Vercel
+Cron, a 30 s timer on long-lived servers) removes any participant without a live
+lease and deletes empty rooms. With a live lease holder a revoked participant is
+removed within about 2 s; the worst case with no instance alive for the world is
+the lease TTL plus one cron period plus the sweep budget, about 127 s. Measured
+numbers belong in `data/reports/voice-revocation.json` before production
+enablement. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
+grants the microphone to this origin only.
 
 
 ### Jev smart rides
