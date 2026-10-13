@@ -197,6 +197,12 @@ test('the Go pictures follow the rules', async () => {
   assert.equal(go.isLegal(taken, tr * 9 + tc), false, 'black may not retake at once');
 });
 
+test('every chess-table chapter says you can play the resident across the table', () => {
+  for (const id of ['chess', 'checkers', 'connectFour', 'reversi', 'morris']) {
+    assert.match(guideGame(id).pages[0].text.join(' '), /With someone in the other chair, Play them instead/, id);
+  }
+});
+
 test('the cribbage pictures follow the rules', async () => {
   const { scoreShow, scorePlay } = await import('../src/cribbage-rules.js');
   assert.deepEqual(scorePlay(DIAGRAMS.cribbagePlay.pile).map(part => part.kind), ['fifteen']);
