@@ -9,15 +9,22 @@
 // Dynamic imports load after approval and are not followed. Classic scripts are not
 // module code and are not checked here.
 import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { protectedGameAsset } from '../server/game-assets.js';
 
-const dist = new URL('../dist/preview/', import.meta.url);
+// The built site (dist/preview by default; a directory argument for tests).
+const dist = process.argv[2] ? pathToFileURL(`${process.argv[2].replace(/\/$/, '')}/`) : new URL('../dist/preview/', import.meta.url);
 const html = await readFile(new URL('play/index.html', dist), 'utf8');
-const attribute = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1] ?? null;
+// HTML tag and attribute names ignore case, and values may use either quote or none.
+const attribute = (tag, name) => {
+  const match = tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i'));
+  return match ? match[1] ?? match[2] ?? match[3] : null;
+};
 const roots = [];
-for (const [tag] of html.matchAll(/<(?:script|link)\b[^>]*>/g)) {
-  if (tag.startsWith('<script') && attribute(tag, 'type') === 'module' && attribute(tag, 'src')) roots.push(attribute(tag, 'src'));
-  if (tag.startsWith('<link') && ['modulepreload', 'stylesheet'].includes(attribute(tag, 'rel')) && attribute(tag, 'href')) roots.push(attribute(tag, 'href'));
+for (const [tag, element] of html.matchAll(/<(script|link)\b[^>]*>/gi)) {
+  const kind = element.toLowerCase(), type = attribute(tag, 'type')?.toLowerCase(), rel = attribute(tag, 'rel')?.toLowerCase();
+  if (kind === 'script' && type === 'module' && attribute(tag, 'src')) roots.push(attribute(tag, 'src'));
+  if (kind === 'link' && ['modulepreload', 'stylesheet'].includes(rel) && attribute(tag, 'href')) roots.push(attribute(tag, 'href'));
 }
 if (!roots.some(path => path.endsWith('.js'))) throw new Error('check-access-entry: no module script found in dist/preview/play/index.html');
 
