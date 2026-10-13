@@ -14,7 +14,7 @@ import * as backgammon from '../src/backgammon-rules.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -134,4 +134,12 @@ test('the Spades pictures are a real trump and a real score', async () => {
   const { bids, taken } = DIAGRAMS.spadesBids, [ours, theirs] = scoreHand(bids, taken);
   assert.deepEqual([ours.points, ours.bags], [71, 1], 'bid 7, took 8: 70 and a bag');
   assert.deepEqual(theirs.nils, [{ player: 3, made: true }]);
+});
+
+test('the mancala pictures follow the rules', async () => {
+  const { sow, startGame } = await import('../src/mancala-rules.js');
+  const sown = sow(startGame(), DIAGRAMS.mancalaSow.pit);
+  assert.deepEqual(sown.last.path, [3, 4, 5, 6]); assert.equal(sown.last.again, true);
+  const capture = sow({ ...startGame(), board: DIAGRAMS.mancalaCapture.board.slice() }, DIAGRAMS.mancalaCapture.pit);
+  assert.equal(capture.last.captured, 8);
 });
