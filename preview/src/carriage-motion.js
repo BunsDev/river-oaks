@@ -55,7 +55,8 @@ export function stepCarriage(state,environment,input,delta) {
   if(controls.brake){state.speed=0;fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);return state;}
   const forward=controls.forward,turn=Math.max(-1,Math.min(1,controls.turn-controls.strafe));
   for(let i=0;i<steps;i++) {
-    const target=forward*(forward<0?1.4:(spec?.maxSpeed??4));
+    const top=controls.sprint||!spec?.cruiseSpeed?(spec?.maxSpeed??4):spec.cruiseSpeed;
+    const target=forward*(forward<0?1.4:top);
     state.speed+=(target-state.speed)*(1-Math.exp(-(forward?2:5)*dt));
     if(Math.abs(state.speed)<.0001)state.speed=0;
     state.steering=(state.steering??0)+(turn*(spec?.steeringLimit??.25)-(state.steering??0))*(1-Math.exp(-8*dt));
