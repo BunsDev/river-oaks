@@ -575,9 +575,17 @@ overtrick); every tenth bag costs 100; short of the bid it loses 10 a trick bid.
 scores ±100. First to 500 wins; falling to −200 loses. The round table shows the trick
 and hands as in Hearts. Rules: `preview/src/spades-rules.js`.
 
-The chess-table, café, backgammon, Jenga and wine pong sheets have **How to play** in their
+A small round table stands in the middle of the grove with a carved mancala board and
+two chairs. Seated there, **Play mancala** or **X** opens it. You play the plaza regular
+(moving first or second) or pass and play. Kalah rules: six pits of four seeds a side;
+sow counter-clockwise, skipping the other store; end in your store to move again; end
+in your own empty pit to capture the seeds opposite. When a side runs out, each player
+banks their own side and the fuller store wins. The table's glass beads follow the
+game. Rules: `preview/src/mancala-rules.js`.
+
+The chess-table, café, backgammon, mancala, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-dominoes, Hearts, Spades, backgammon, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+dominoes, Hearts, Spades, backgammon, mancala, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
@@ -684,7 +692,8 @@ lease and deletes empty rooms. With a live lease holder a revoked participant is
 removed within about 2 s; the worst case with no instance alive for the world is
 the lease TTL plus one cron period plus the sweep budget, about 127 s. Measured
 numbers belong in `data/reports/voice-revocation.json` before production
-enablement. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
+enablement; [the LiveKit setup page](voice-livekit-setup.md) is the checklist for
+creating the project, setting the environment and recording that acceptance. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
 grants the microphone to this origin only.
 
 

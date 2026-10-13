@@ -60,12 +60,16 @@ export function plazaSalonPlan(world) {
   // A long linen-topped table for wine pong, east–west between the café and the north
   // planters, played standing at either end.
   const winePong = { id: 'wine-pong', x: -2797.2, north: -1296.0, heading: 0 };
+  // A small round grove table in the middle of the grove for mancala, with two chairs
+  // east and west (chair 0 east).
+  const grove = { id: 'grove', x: -2792.4, north: -1299.2 };
   // The bench backs onto the Etro block and opens north, to the grove and Dior.
   const bench = { id: 'bench', x: -2781.4, north: -1302.0, seatRadius: 1.42, backRadius: 2.02, opening: Math.PI, span: Math.PI * 1.18 };
   const chairs = [
     ...chairsAround('round', [round.x, round.north], 1.22, [Math.PI / 4, Math.PI * 3 / 4, Math.PI * 5 / 4, Math.PI * 7 / 4]),
     ...chess.flatMap(table => chairsAround(table.id, [table.x, table.north], 0.86, [Math.PI / 2, -Math.PI / 2])),
     ...chairsAround(backgammon.id, [backgammon.x, backgammon.north], 0.86, [Math.PI / 2, -Math.PI / 2]),
+    ...chairsAround(grove.id, [grove.x, grove.north], 0.82, [Math.PI / 2, -Math.PI / 2]),
   ];
   // Long planters edge the footway between the grove's northern trunks; the
   // Dior entrance (east ≈ -2784.7) stays open.
@@ -84,7 +88,7 @@ export function plazaSalonPlan(world) {
   const trees = treeSupports(world).filter(({ position: [x, north] }) => x > PLAZA.west && x < PLAZA.east && north > PLAZA.south && north < PLAZA.north)
     .map(({ position: [x, north] }) => ({ x, north, height: LIGHT_HEIGHT })).sort((a, b) => a.x - b.x || a.north - b.north);
   const strands = lightWeb([...trees, ...lanterns.map(({ x, north, height }) => ({ x, north, height }))]);
-  return { round, chess, backgammon, winePong, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
+  return { round, chess, backgammon, winePong, grove, bench, chairs, planters, lanterns, stage, rack, trees, strands, postHeight: POST_HEIGHT };
 }
 
 // Footprints the walking model blocks: [east, north, radius, height]. Chairs and
@@ -97,6 +101,7 @@ export function plazaSalonFootprints(world) {
     [plan.round.x, plan.round.north, plan.round.radius, 0.76],
     ...plan.chess.map(table => [table.x, table.north, 0.42, 0.76]),
     [plan.backgammon.x, plan.backgammon.north, 0.46, 0.76],
+    [plan.grove.x, plan.grove.north, 0.4, 0.74],
     // The wine pong table is long: a row of overlapping discs (0.6 m apart, 0.36 m round).
     ...[-0.9, -0.3, 0.3, 0.9].map(u => [...winePongPoint(plan.winePong, [u, 0]), 0.36, 0.76]),
     [plan.bench.x, plan.bench.north, 0.44, 0.42],
@@ -136,7 +141,7 @@ export function plazaSalonSeats(world) {
       approach: along([x, north], facing, 0.62) });
   });
   for (const chair of plan.chairs) seats.push({ buildId: `bench:plaza-salon-${chair.id}`, slot: 0, kind: 'bench',
-    title: chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
+    title: chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : chair.id.startsWith('grove') ? 'Grove table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
     // Chairs face their table, so people step in from behind.
     approach: along([chair.x, chair.north], chair.heading, -0.82) });
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
@@ -262,4 +267,26 @@ export const winePongStand = (table, side) => winePongPoint(table, [side === 0 ?
 export function winePongSide(table, [east, north]) {
   for (const side of [0, 1]) { const [x, n] = winePongStand(table, side); if (Math.hypot(east - x, north - n) <= WINE_PONG_REACH) return side; }
   return null;
+}
+
+// The grove table's two chairs: chair 0 east of the table, chair 1 west.
+export function groveSeat(buildId) {
+  const match = /^bench:plaza-salon-grove-([01])$/.exec(buildId ?? '');
+  return match ? { tableId: 'grove', chair: Number(match[1]) } : null;
+}
+// The mancala board on the grove table: 0.56 m long and 0.2 m deep, running north–south
+// across the table between the chairs. Pit p (0–13, as in mancala-rules.js) is a spot
+// [east, north] for the player in chair `chair` (side 0 sits in chair 0 unless swapped).
+export const MANCALA = { length: 0.56, depth: 0.2, pit: 0.072, top: 0.758 };
+export function mancalaSpot(table, index, sideZeroChair = 0) {
+  const { pit } = MANCALA;
+  // Along the board: side 0's pits run from its left to its right, then its store at the right end.
+  let along, across;
+  if (index === 6) { along = 3.5 * pit; across = 0; }
+  else if (index === 13) { along = -3.5 * pit; across = 0; }
+  else if (index < 6) { along = (index - 2.5) * pit; across = 1; }
+  else { along = (2.5 - (index - 7)) * pit; across = -1; }
+  // Side 0 sits east (chair 0) facing west: its left is south, so along runs north; its row is the near (east) one.
+  const flip = sideZeroChair === 0 ? 1 : -1, offset = 0.045 * across;
+  return [table.x + flip * offset, table.north + flip * along];
 }

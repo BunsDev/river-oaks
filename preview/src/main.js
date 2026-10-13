@@ -47,6 +47,7 @@ import { createPlazaSpades } from './plaza-spades.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
 import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
 import { createPlazaWinePong } from './plaza-wine-pong.js';
+import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl } from './render-quality.js';
@@ -120,6 +121,7 @@ let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = nu
 let plazaJenga = null;
 let plazaWinePong = null;
 let plazaSpades = null;
+let plazaMancala = null;
 // What X does while seated: the first provider (a game table, the stage…) offering a play.
 // Each feature adds its own line to the list, so they never edit the same one.
 const playProviders = [];
@@ -274,6 +276,10 @@ function initializeRenderer() {
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: () => (world && plazaSalonPlan(world)?.winePong) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
   playProviders.push(() => plazaWinePong);
+  // Seated at the grove table, X plays mancala; the table's beads mirror the game.
+  plazaMancala = createPlazaMancala({ getMirror: () => plazaSalon?.userData.mancala ?? null, getSeat: () => seatAtGrove(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }) });
+  playProviders.push(() => plazaMancala);
   playProviders.push(() => cafeGames()[cafeGame]);
   playProviders.push(() => plazaStage);
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
@@ -759,7 +765,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -992,6 +998,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     } });
   window.__riverPlazaDominoes = () => plazaDominoes ? { ...plazaDominoes.debug(), table: plazaSalon?.userData.dominoes?.count() ?? null,
     deal: (seed, players) => plazaDominoes.deal(seed, players) } : null;
+  window.__riverPlazaMancala = () => plazaMancala ? { ...plazaMancala.debug(), table: plazaSalon?.userData.mancala?.count() ?? null, reset: () => plazaMancala.reset() } : null;
   window.__riverPlazaWinePong = () => plazaWinePong ? { ...plazaWinePong.debug(), table: plazaSalon?.userData.winePong?.glasses() ?? null, ball: plazaSalon?.userData.winePong?.ballVisible() ?? null,
     hold: value => plazaWinePong.hold(value), deal: seed => plazaWinePong.deal(seed),
     // Walk to one end of the table (0 west, 1 east) and face down it.

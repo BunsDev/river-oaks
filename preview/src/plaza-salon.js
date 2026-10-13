@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, MANCALA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, mancalaSpot, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
 import { startGame as backgammonStart } from './backgammon-rules.js';
 import { startTower } from './jenga-rules.js';
+import { startGame as mancalaStart } from './mancala-rules.js';
 import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
 import { seededRandom } from './seeded-random.js';
 import { createRoadVehicle } from './road-vehicles.js';
@@ -240,6 +241,19 @@ export function buildPlazaSalon(world) {
     part(unit.box, material.linen, [0, height - 0.015, 0], [length + 0.04, 0.03, width + 0.04]);
     part(unit.box, material.walnut, [0, height - 0.06, 0], [length - 0.1, 0.06, width - 0.08]);
     for (const [u, v] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) part(unit.box, material.walnut, [u * (length / 2 - 0.08), (height - 0.09) / 2, v * (width / 2 - 0.07)], [0.05, height - 0.09, 0.05]);
+  }
+  // The grove table: a small round walnut top on a pedestal, with the mancala board laid
+  // across it north–south: a carved walnut board, six cups a side and a long store at each end.
+  {
+    const table = plan.grove, origin = base(table), part = (geometry, m, local, scale) => add(geometry, m, at(origin, 0, local), scale, 0);
+    part(unit.disc, material.walnut, [0, 0.725, 0], [0.8, 0.04, 0.8]);
+    part(unit.box, material.walnut, [0, 0.36, 0], [0.14, 0.62, 0.14]);
+    part(unit.disc, material.bronze, [0, 0.025, 0], [0.46, 0.05, 0.46]);
+    part(unit.box, material.teak, [0, MANCALA.top - 0.012, 0], [MANCALA.depth, 0.024, MANCALA.length]);
+    for (let index = 0; index < 14; index++) {
+      const [east, north] = mancalaSpot(table, index, 0), [x, , z] = base({ x: east, north }), store = index === 6 || index === 13;
+      add(unit.disc, material.ebony, [x, origin[1] + MANCALA.top + 0.0005, z], store ? [0.075, 0.002, 0.11] : [0.058, 0.002, 0.058]);
+    }
   }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
@@ -619,6 +633,36 @@ export function buildPlazaSalon(world) {
       glasses: () => glasses.count,
       ballVisible: () => ball.visible,
       stand: side => winePongPoint(table, [side === 0 ? -WINE_PONG_STAND : WINE_PONG_STAND, 0]),
+    };
+  }
+  // Mancala seeds: glass beads in a few colours, one InstancedMesh, heaped in their pits
+  // on a little spiral so a pit's count reads at a glance. Idle, the opening stands.
+  {
+    const table = plan.grove, [, y] = base(table), top = y + MANCALA.top + 0.008;
+    const beads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.0075, 10, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.18, metalness: 0.05 }), 48);
+    Object.assign(beads, { name: 'Mancala seeds', castShadow: true, count: 0 });
+    group.add(beads);
+    const tints = ['#2f7d6a', '#b8463a', '#d9a441', '#3f5fa8', '#e9e2d0'].map(colour => new THREE.Color(colour));
+    const show = (game = null, sideZeroChair = 0) => {
+      const board = (game ?? mancalaStart()).board;
+      beads.count = 0;
+      board.forEach((seeds, index) => {
+        const [east, north] = mancalaSpot(table, index, sideZeroChair), store = index === 6 || index === 13;
+        for (let k = 0; k < seeds && beads.count < 48; k++) {
+          // A spiral heap: rings of six, rising a little each ring; stores spread along their length.
+          const ring = Math.floor(k / 6), angle = k * 2.4, radius = k === 0 ? 0 : 0.008 + ring * 0.006;
+          const [x, , z] = base({ x: east + Math.cos(angle) * radius, north: north + Math.sin(angle) * radius * (store ? 2.2 : 1) });
+          dummy.position.set(x, top + ring * 0.006, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          beads.setColorAt(beads.count, tints[(index * 7 + k) % tints.length]); beads.setMatrixAt(beads.count++, dummy.matrix);
+        }
+      });
+      beads.instanceMatrix.needsUpdate = true; if (beads.instanceColor) beads.instanceColor.needsUpdate = true; beads.computeBoundingSphere();
+    };
+    show();
+    group.userData.mancala = {
+      // A game ({ board } from mancala-rules.js) or null for the opening, and the chair side 0 sits in.
+      show,
+      count: () => beads.count,
     };
   }
   // Hearts at the café table: the trick lies face up, each card in front of the player
