@@ -1,0 +1,30 @@
+.office-panel { padding: 12px 0; border-top: 1px solid #ffffff26; }
+.office-panel h3,.office-panel h4 { margin: 8px 0; }
+.office-panel p { font-size: 12px; line-height: 1.5; }
+.office-panel button,.office-panel select { margin: 4px 4px 4px 0; padding: 9px 12px; border-radius: 10px; }
+.office-person { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.office-person span { flex: 1; overflow-wrap: anywhere; }
+#office-nearby { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); z-index: 12; padding: 12px 20px; border: 1px solid #dcc5a1; background: #20202cee; color: #fff1d9; border-radius: 24px; }
+.office-visit { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #f5ecdf; overflow: hidden; touch-action: none; font-family: system-ui,sans-serif; }
+.office-visit::backdrop { background: transparent; }
+.office-visit header { position: absolute; top: max(20px,env(safe-area-inset-top)); left: 20px; right: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 20px; background: #10151ce8; border: 1px solid #c9a16c66; border-radius: 18px; }
+.office-visit h2 { margin: 0; font-size: 18px; font-weight: 500; }
+.office-visit header p { flex: 1; min-width: 100px; margin: 0; font-size: 13px; }
+.office-visit button { min-height: 44px; background: #292c34; color: #fff1dc; border: 1px solid #d2af7666; border-radius: 12px; padding: 10px 16px; font: inherit; font-size: 13px; cursor: pointer; }
+.office-visit button:focus-visible { outline: 3px solid #e8c995; outline-offset: 3px; }
+.office-help { position: absolute; bottom: max(20px,env(safe-area-inset-bottom)); left: 20px; background: #10151cdd; padding: 10px 16px; border-radius: 12px; font-size: 12px; }
+.office-pad { position: absolute; bottom: max(76px,env(safe-area-inset-bottom)); right: 20px; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.office-pad[hidden] { display: none; }
+.visiting-office .remote-player-labels:not(.office-visit .remote-player-labels),.visiting-office .walking-hud,.visiting-office .play-dock { visibility: hidden; }
+.office-visit .remote-player-labels { pointer-events: none; }
+@media (max-width: 600px) { .office-visit header { top: 10px; left: 10px; right: 10px; padding: 12px; gap: 8px; } .office-visit h2 { width: 100%; } .office-help { max-width: calc(100vw - 40px); left: 10px; font-size: 11px; } .office-pad { right: 10px; } }
+
+.visiting-office #canvas-host { position: fixed; inset: 0; width: 100vw; height: 100dvh; z-index: 100; border-radius: 0; }
+
+.office-visit .office-management { position: absolute; right: 20px; top: 140px; width: min(360px,calc(100vw - 40px)); max-height: calc(100dvh - 320px); overflow: auto; padding: 16px; background: #10151cf5; border: 1px solid #c9a16c66; border-radius: 16px; }
+.office-visit .office-management[hidden] { display: none; }
+.office-visit .office-management select { max-width: 100%; margin: 8px 0; padding: 10px; }
+
+.office-request-dialog { color: #f5ecdf; background: #171c25; border: 1px solid #c9a16c99; border-radius: 20px; padding: 24px; width: min(400px,calc(100vw - 64px)); font: 15px/1.5 system-ui,sans-serif; }
+.office-request-dialog::backdrop { background: #0008; }
+.office-request-dialog button { min-height: 44px; padding: 10px 16px; border-radius: 10px; margin-right: 8px; }

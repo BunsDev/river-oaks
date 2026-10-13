@@ -1,6 +1,6 @@
 # Workplace: flags, kill switch, rollback and retention
 
-This covers operating the first workplace slice (#214): one fixture companion, one `event_plan` grant and a draft-only plan. The code lives in `server/workplace.js`, `server/workplace-api.js` and `preview/src/workplace-*.js`. `workplace-office.js` and `workplace-room.js` are a coworking-studio fixture used only by tests and e2e: its desks are logical leases on two stations, and nothing is placed in the district. Statements cite the test that shows them where one exists. Statements marked *(code)* come from reading the code and have no dedicated test.
+This covers operating the first workplace slice (#214): one fixture companion, one `event_plan` grant and a draft-only plan. The code lives in `server/workplace.js`, `server/workplace-api.js` and `preview/src/workplace-*.js`. `workplace-office.js` and `workplace-room.js` also supply the furnished room for [private office visits](offices.md), accessed through the district’s office lobby. The companion drafting service described here still uses logical leases on two stations; its flags and grants are separate from permission to visit an office. Statements cite the test that shows them where one exists. Statements marked *(code)* come from reading the code and have no dedicated test.
 
 ## Flags
 
