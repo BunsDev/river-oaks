@@ -32,6 +32,13 @@ class Element {
   append() {}
   remove() {}
 }
+test('a cinematic actor starts facing its authored travel direction before the first frame',()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+ try{const actors=createRemotePlayers(new THREE.Scene(),new Element(),{snapInitialHeading:true});
+  actors.sync([{id:'peer',name:'Peer',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human'}],null);
+  assert.equal(actors.stats()[0].heading,Math.PI);actors.dispose();
+ }finally{globalThis.document=previousDocument;}
+});
 
 async function flight(hz, horizontal, vertical) {
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();

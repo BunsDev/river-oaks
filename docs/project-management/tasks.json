@@ -4620,6 +4620,61 @@
         "verification": "Integrated main 5725d38: dependency audit, agent76, client2895 passed/1 existing skip, Redis/server651, desktop54, Python141, build/lint/format/secrets/security/reflections and all10 experience journeys passed. Full aggregate failed only shared-seating readiness (18/19 shared passed); after explicit90s readiness budget and diagnostics, focused seating passed18 assertions. Failed aggregate retained, not claimed green.",
         "browser": "Integrated office replay passed16 desk +9 elevator/access checks. Desktop1440x1000,390x844,320x700 layouts screenshot-inspected. Guest seating readiness28694ms on corrected focused run; all seating predicates/assertions preserved."
       }
+    },
+    {
+      "id": "office-arrival-refinement",
+      "title": "Polish the office building exterior, lobby and elevator arrival as one coherent journey",
+      "status": "active",
+      "branches": [
+        "feat/office-arrival-refinement-20261013"
+      ],
+      "owner": "codex:office-arrival-refinement-20261013",
+      "leaseUntil": "2026-10-14T00:08:11.483858Z",
+      "updatedAt": "2026-10-13T22:08:11.483858Z",
+      "nextAction": "Integrated main fdd59242 and Vite8.3.4; arrival review complete. Verify approval-reload fixture correction and final office integration, rerun full gate, then signed PR/protected delivery.",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-arrival-20261013",
+      "ledger": "docs/superpowers/plans/2026-10-13-office-arrival-refinement.md",
+      "filesOwned": [
+        "preview/src/office-*.js (arrival only, preserve desk)",
+        "preview/src/office.css",
+        "preview/src/reference-blocks.js (office building/lobby only)",
+        "preview/src/reference-facades.js (only if entrance needs shared dimensions)",
+        "preview/tests/office-*.test.js",
+        "preview/tests/reference-blocks.test.js",
+        "preview/e2e/office-visit.js",
+        "preview/e2e/fixtures/office-elevator.html",
+        "docs/offices.md",
+        "docs/superpowers/plans/2026-10-13-office-arrival-refinement.md",
+        "preview/src/district.js (office lobby alcove exclusion only)",
+        "preview/src/remote-players.js (cinematic initial heading only)",
+        "preview/e2e/office-arrival-visual.js",
+        "preview/tests/remote-players.test.js",
+        "preview/e2e/office-arrival-clearance.js",
+        "preview/e2e/office-arrival-journey.js",
+        "preview/tests/office-arrival-architecture.test.js",
+        "preview/src/main.js (office arrival integration only)",
+        "preview/tests/room-ground-clip.test.js",
+        "preview/src/room-ground-clip.js (office exterior mask only)",
+        "preview/src/player-avatar.js (temporary office presentation pose only)",
+        "preview/src/office-world-scene.js",
+        "preview/src/office-world-presentation.js",
+        "preview/tests/office-world-presentation.test.js",
+        "preview/src/near-camera-fade.js (keep enclosed arrival materials opaque only)",
+        "preview/e2e/office-arrival-interruptions.js",
+        "preview/e2e/office-arrival-performance.js",
+        "server/tests/hardening-transport-resilience.test.js (baseline timing fixture only)",
+        "docs/superpowers/plans/README.md",
+        "preview/e2e/email-access.test.js (revocation reload synchronization only)"
+      ],
+      "requiredChecks": [
+        "Matched before/after exterior, lobby, elevator and return captures",
+        "All supported avatar route/door clearances",
+        "Authorization, failure/revocation, skip/reduced-motion and desk regressions",
+        "Desktop/tablet/phone visual review at 1440,768,390,320px",
+        "Comparable frame-time/draw-call/memory/asset measurements",
+        "pnpm run verify and pnpm run verify full with isolated Redis",
+        "Independent review and exact-head hosted gate before protected merge"
+      ]
     }
   ]
 }

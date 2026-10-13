@@ -1,4 +1,6 @@
 import { createOfficeUI } from './office-ui.js';
+import { officeLobbyGroundCutout } from './office-contract.js';
+import { captureOfficeStreet } from './office-world-presentation.js';
 import { createStoreIntros } from './store-intro-ui.js';
 import {treeFlightEnvironment} from './tree-flight.js';
 import { buildRoads } from './street-roads.js';
@@ -352,7 +354,8 @@ function initializeRenderer() {
   playDock = createPlayDock({creationToolsEnabled}); const visitTools = playDock.content;
   if (creationToolsEnabled) buildControls=createSharedBuildControls({getPose:()=>walking?.getPose(),isBuildableRoom:id=>world?.stores.some(store=>store.id===id && store.category==='home'),onBuilderChange:builder=>{builderAim='';if(!builder.active)buildLayer?.setGhost(null);},request:message=>multiplayer?.command(message)??Promise.resolve({ok:false,message:'Join the town before building.'})});
   visitTools.append($('.player-controls'), cyclingBoard.panel, ...(buildControls ? [buildControls.panel] : []));
-  officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking});
+  officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
+    captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,lights:storeLights,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // Bird cams: Jev flies a few birds over the district; ride along or take over.
   birdCams = createBirdCams({ scene, camera, host, getEnvironment: () => world && walking?.active ? birdFlightEnvironment() : null, getInterests: birdInterests, getPathHints: () => world?.birdPathHints ?? {} });
   birdCamsUI = createBirdCamsUI(birdCams);
@@ -533,6 +536,7 @@ function buildGround(data) {
 
 
 function populateWorld(data) {
+  officeUI?.reset();
   storeIntros?.reset();
   walking?.exit();
   storefrontReflections?.dispose(); storefrontReflections = null;
@@ -574,7 +578,8 @@ function populateWorld(data) {
   const sidewalks=buildDesignatedSidewalks(data,streetSpace);
   // Rising terrain must not show through walk-in floors (render only). Roads and
   // sidewalks never rise above a room floor, so only the terrain surface pays for it.
-  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[]);roomGroundClip.apply(ground.children[0]);
+  const lobbyCutout=officeLobbyGroundCutout(data);
+  roomGroundClip?.dispose();roomGroundClip=createRoomGroundClip(buildingMesh.userData.rooms??[],{persistent:lobbyCutout?[lobbyCutout]:[]});roomGroundClip.apply(ground.children[0]);
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
@@ -779,6 +784,7 @@ async function loadWorld() {
 
 function updateStoreLights() {
   roomGroundClip?.setEnabled(Boolean(interiorsLayer?.visible));
+  roomGroundClip?.setPersistentEnabled(Boolean(buildingMesh?.visible));
   const positions = interiorsLayer?.visible ? buildingMesh?.userData.interiors?.userData.lightPositions ?? [] : [];
   const picked = [];
   for (const item of positions) { const d2 = item.position.distanceToSquared(camera.position); if (d2 < 32 * 32) picked.push([d2, item]); }
@@ -835,6 +841,7 @@ function render(now) {
   plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaLiarsDice?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaShuffleboard?.update(); plazaDarts?.update(); plazaMancala?.update(); plazaGo?.update(); plazaChineseCheckers?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
+  officeUI?.prepare(now);
   seatingControls?.update(now);
   if (auditCamera) { camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target); camera.updateMatrixWorld(); }
   photoMode?.update();
@@ -1043,6 +1050,7 @@ if (import.meta.env.DEV && renderAudit) {
 
 // Read-only diagnostics for browser acceptance runs; absent from production.
 if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debug') === '1') {
+  window.__riverOffice = () => officeUI?.inspect() ?? null;
   window.__riverPlazaGames = () => {
     if (!plazaGames) return null;
     const state = plazaGames.debug();

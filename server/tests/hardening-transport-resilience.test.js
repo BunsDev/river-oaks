@@ -43,21 +43,25 @@ test('a couple of failed ticks keep players connected; sustained failure closes 
   assert.equal(code, 1013, 'a sustained failure still tells clients to reconnect');
 });
 
-test('one connection\'s failing heartbeat closes only that connection', {timeout: 5000}, async t => {
-  const active = [];
+test('one connection\'s failing heartbeat closes only that connection', {timeout: 15000}, async t => {
+  const active = [];let failures=0,afterCloseHeartbeat;
   const room = {
     async request(command) {
       if (command.type === 'join') active.push({userId: command.identity.userId, connectionId: command.connectionId});
-      if (command.type === 'heartbeat' && command.userId === 'flaky') throw new Error('heartbeat failed');
+      if (command.type === 'heartbeat' && command.userId === 'flaky') {failures++;throw new Error('heartbeat failed');}
+      if (command.type === 'heartbeat' && command.userId === 'steady') afterCloseHeartbeat?.();
       return {ok: true};
     },
     async read() { return {snapshot: {type: 'snapshot', players: []}, connections: active}; },
     async tick() { return null; },
   };
-  const {connect} = await serve(t, room, [identity('steady'), identity('flaky')], {heartbeatMs: 100});
+  // Leave time for real ping/pong transport under concurrent suite load. This
+  // test targets repeated storage failure, not missed network heartbeats.
+  const {connect} = await serve(t, room, [identity('steady'), identity('flaky')], {heartbeatMs: 1000});
   const steady = await connect(), flaky = await connect();
   const [code] = await once(flaky, 'close');
   assert.equal(code, 1013);
-  await delay(300);
+  assert.equal(failures,3,'the failing connection exhausts its own retry budget');
+  await new Promise(resolve=>{afterCloseHeartbeat=resolve;});
   assert.equal(steady.readyState, WebSocket.OPEN, 'the steady player stays connected');
 });

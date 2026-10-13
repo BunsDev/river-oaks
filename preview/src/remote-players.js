@@ -7,7 +7,7 @@ import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 import { traversalForAppearance } from './beast-traversal.js';
 
-export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true}={}){
+export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
@@ -48,6 +48,18 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);entry.label.textContent=player.name+' · avatar unavailable';}});
   };
   return {
+    // Explicit inspection only: skinning every vertex is too expensive for the
+    // normal render loop. Hidden source bodies and flight rigs are excluded.
+    bounds(){return [...entries].filter(([,entry])=>entry.avatar&&entry.holder.visible).map(([id,entry])=>{
+      entry.holder.updateWorldMatrix(true,true);const bounds=new THREE.Box3();
+      entry.holder.traverseVisible(mesh=>{
+        if(!mesh.isMesh)return;
+        if(mesh.isSkinnedMesh){mesh.skeleton.update();mesh.computeBoundingBox();}else if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
+        const box=mesh.isSkinnedMesh?mesh.boundingBox:mesh.geometry.boundingBox;
+        if(box)bounds.union(box.clone().applyMatrix4(mesh.matrixWorld));
+      });
+      return {id,min:bounds.min.toArray(),max:bounds.max.toArray()};
+    });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
       return {id,ready:Boolean(entry.avatar),appearance:entry.loadedAppearance,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,beastMotion:entry.avatar?.beastMotion??0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray()};
@@ -61,6 +73,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         if(!entry){
           const holder=new THREE.Group(),label=document.createElement('span');label.className='remote-player-label';label.setAttribute('data-peer-id',player.id);label.textContent=player.name;labels.append(label);scene.add(holder);
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
+          if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
           entry={holder,label,target:player,removed:false,distance:0,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
