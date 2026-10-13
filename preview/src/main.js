@@ -47,6 +47,7 @@ import { createPlazaSpades } from './plaza-spades.js';
 import { createPlazaBackgammon, seatAtBackgammon } from './plaza-backgammon.js';
 import { createPlazaCribbage } from './plaza-cribbage.js';
 import { createPlazaJenga, seatAtJenga } from './plaza-jenga.js';
+import { createPlazaYacht } from './plaza-yacht.js';
 import { createPlazaWinePong } from './plaza-wine-pong.js';
 import { createPlazaMancala, seatAtGrove } from './plaza-mancala.js';
 import { createPlazaGo } from './plaza-go.js';
@@ -120,7 +121,7 @@ let landmarkAccountId = null;
 let playerAvatar, officeUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
 let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
-let plazaJenga = null;
+let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null;
 let plazaSpades = null;
@@ -285,10 +286,21 @@ function initializeRenderer() {
     focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchWalnut });
   playProviders.push(() => plazaGames);
   playProviders.push(() => walnutGames()[walnutGame]);
-  // On the curved bench, X plays Jenga with two plaza regulars; the drum's tower mirrors it.
+  // On the curved bench, X plays Jenga or Yacht with two plaza regulars (the last one
+  // played); the drum's tower or its five dice mirror it, and switching puts the other away.
+  const benchGames = () => ({ jenga: plazaJenga, yacht: plazaYacht });
+  const switchBench = kind => {
+    const leaving = benchGames()[benchGame], joining = benchGames()[kind];
+    if (!joining || joining === leaving) return;
+    benchGame = kind; leaving?.close({ toWorld: false });
+    plazaSalon?.userData.jenga?.setVisible(kind === 'jenga'); plazaSalon?.userData.yacht?.setVisible(kind === 'yacht');
+    joining.open();
+  };
   plazaJenga = createPlazaJenga({ getMirror: () => plazaSalon?.userData.jenga ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
-    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
-  playProviders.push(() => plazaJenga);
+    focusWorld: () => host.focus({ preventScroll: true }), reducedMotion, onSwitch: switchBench });
+  plazaYacht = createPlazaYacht({ getMirror: () => plazaSalon?.userData.yacht ?? null, getSeat: () => seatAtJenga(walking?.getPose()),
+    focusWorld: () => host.focus({ preventScroll: true }), onSwitch: switchBench });
+  playProviders.push(() => benchGames()[benchGame]);
   // Standing at an end of the long café table, X plays wine pong; the table's glasses and ball mirror it.
   plazaWinePong = createPlazaWinePong({ getMirror: () => plazaSalon?.userData.winePong ?? null, getTable: () => (world && plazaSalonPlan(world)?.winePong) ?? null,
     getPose: () => walking?.getPose(), focusWorld: () => host.focus({ preventScroll: true }), reducedMotion });
@@ -793,7 +805,7 @@ function render(now) {
   if (officeUI?.active || officeUI?.entering || storeIntros?.active || photoMode?.active || birdCams?.riding) walking?.halt();
   else if (multiplayer?.connected && !multiplayer.traveling) walking?.update(delta, now);
   else walking?.halt();
-  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
+  plazaGames?.update(); plazaDominoes?.update(); plazaHearts?.update(); plazaSpades?.update(); plazaBackgammon?.update(); plazaCribbage?.update(); plazaJenga?.update(); plazaYacht?.update(); plazaWinePong?.update(); plazaMancala?.update(); plazaGo?.update(); plazaStage?.update();
   if (multiplayer?.connected) birdCams?.update(delta);
   multiplayer?.update(now);
   seatingControls?.update(now);
@@ -1040,6 +1052,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       if (result?.ok) walking?.lookAt([table.x, table.north, groundSurfaceHeight(world, table.x, -table.north) + 0.8], 0.9);
       return { ok: Boolean(result?.ok) };
     } } : null;
+  window.__riverPlazaYacht = () => plazaYacht ? { ...plazaYacht.debug(), benchGame, table: plazaSalon?.userData.yacht?.dice() ?? null,
+    diceShown: plazaSalon?.userData.yacht?.visible() ?? null, towerShown: plazaSalon?.userData.jenga?.visible() ?? null, deal: seed => plazaYacht.deal(seed) } : null;
   window.__riverPlazaJenga = () => plazaJenga ? { ...plazaJenga.debug(), table: plazaSalon?.userData.jenga?.count() ?? null, towerFallen: plazaSalon?.userData.jenga?.fallen() ?? null,
     aim: at => plazaJenga.aim(at), deal: seed => plazaJenga.deal(seed) } : null;
   window.__riverPlazaCribbage = () => plazaCribbage ? { ...plazaCribbage.debug(), walnutGame, pegs: plazaSalon?.userData.cribbage?.pegs() ?? null, board: plazaSalon?.userData.cribbage?.visible() ?? null,

@@ -36,6 +36,19 @@ const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // One teak slat across the texture width, with a dark joint at each edge.
+// Ivory dice with painted pips. BoxGeometry's faces (+x, −x, +y, −y, +z, −z) show 3, 4,
+// 1, 6, 2, 5, so opposites sum to seven; DIE_UP is the turn that brings a value face up.
+const DIE_PIPS = { 1: [[0.5, 0.5]], 2: [[0.28, 0.28], [0.72, 0.72]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]], 4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
+  5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]], 6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]] };
+const DIE_UP = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
+const dieFaceTexture = value => dataTexture(32, (px, py, w, h) => DIE_PIPS[value].some(([u, v]) => Math.hypot((px + 0.5) / w - u, (py + 0.5) / h - v) < 0.1) ? [32, 28, 26, 255] : [240, 233, 216, 255], { repeat: false });
+function ivoryDice(group, { size, count, name }) {
+  const textures = [3, 4, 1, 6, 2, 5].map(dieFaceTexture);
+  // The world reload releases a texture through userData.texture (main.js populateWorld).
+  for (const texture of textures) { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
+  const dice = new THREE.InstancedMesh(new THREE.BoxGeometry(size, size, size), textures.map(map => new THREE.MeshStandardMaterial({ map, roughness: 0.4 })), count);
+  return Object.assign(dice, { name, count: 0, castShadow: true });
+}
 const slatTexture = () => dataTexture([32, 4], x => {
   const edge = Math.min(x, 31 - x), grain = hash(x, 3) * 0.18 + Math.sin(x * 0.9) * 0.06;
   if (edge < 2) return [62, 38, 22, 255];
@@ -711,6 +724,37 @@ export function buildPlazaSalon(world) {
       show,
       count: () => blocks.count,
       fallen: () => fallen,
+      // Puts the tower away while the drum plays Yacht.
+      setVisible(visible) { blocks.visible = visible; },
+      visible: () => blocks.visible,
+    };
+  }
+  // Yacht on the same drum: five dice where the tower stands, the rolled ones tumbled a
+  // little (a seeded turn from their values), the kept ones lined up toward the bench.
+  // Shown while Yacht is in play.
+  {
+    const { bench } = plan, [, y] = base(bench), size = 0.018, top = y + JENGA.drumTop + size / 2;
+    const [ox, , oz] = base({ x: bench.x + JENGA.offset[0], north: bench.north + JENGA.offset[1] });
+    const dice = ivoryDice(group, { size, count: 5, name: 'Yacht dice' });
+    dice.visible = false;
+    group.add(dice);
+    const show = (values = null, held = []) => {
+      dice.count = 0;
+      (values ?? [1, 2, 3, 4, 5]).forEach((value, i) => {
+        const kept = !values || held[i], random = seededRandom((Math.imul(i + 1, 0x9e3779b1) ^ Math.imul(value * 7 + (values ? 1 : 0), 0x85ebca6b)) >>> 0);
+        const x = ox + (i - 2) * size * 2.4 + (kept ? 0 : (random() - 0.5) * 0.03), z = oz - (kept ? 0.07 : 0) + (kept ? 0 : (random() - 0.5) * 0.05), [rx, , rz] = DIE_UP[value];
+        dummy.position.set(x, top, z); dummy.rotation.set(rx, kept ? 0 : random() * Math.PI, rz, 'YXZ'); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); dice.setMatrixAt(dice.count++, dummy.matrix);
+        dummy.rotation.order = 'XYZ';
+      });
+      dice.instanceMatrix.needsUpdate = true; dice.computeBoundingSphere();
+    };
+    show();
+    group.userData.yacht = {
+      // The dice (values, or null before the first roll) and which are kept.
+      show,
+      dice: () => dice.count,
+      setVisible(visible) { dice.visible = visible; },
+      visible: () => dice.visible,
     };
   }
   // Wine pong: twelve wine glasses (clear bowls on stems, a pour of red in each) racked

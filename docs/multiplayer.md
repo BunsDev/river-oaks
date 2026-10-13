@@ -583,6 +583,15 @@ and weaker and as the level carries more. A level left on a single edge block
 brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
 scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
 
+The bench's switch also offers **Yacht**, which puts the tower away and sets five
+dice on the drum. You play two plaza regulars, or two players pass and play. Roll
+the five dice, keep any of them (choose a die to keep it) and roll again, up to three
+rolls a turn, then score the dice in one of twelve boxes, even for nothing: ones to
+sixes count that face; full house and choice all five; four of a kind the four; a
+little or big straight 30; a yacht (five alike) 50. When every box is filled, the
+highest total wins. The drum's dice follow the game, kept ones lined up toward the
+bench. Rules: `preview/src/yacht-rules.js`.
+
 A long linen-topped wine pong table stands between the café and the north planters.
 Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
 at the far end, or two players pass and play. Each side has six wine glasses racked
@@ -616,7 +625,7 @@ komi. Rules: `preview/src/go-rules.js`.
 
 The chess-table, café, backgammon, mancala, Go, Jenga and wine pong sheets have **How to play** in their
 header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
-Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga or wine pong), and **Play & rides → Game guide** opens it too. The guide is an
+Reversi, nine men's morris, dominoes, Hearts, Spades, backgammon, cribbage, mancala, Go, Jenga, wine pong or Yacht), and **Play & rides → Game guide** opens it too. The guide is an
 illustrated book with a few pages per game: taking a seat, the aim, a turn, and
 the keys. Its pictures are positions played on the real rules
 (`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold

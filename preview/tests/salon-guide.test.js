@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'cribbage']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'yacht', 'winePong', 'go', 'cribbage']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -205,4 +205,18 @@ test('the cribbage pictures follow the rules', async () => {
   const by = kind => shown.parts.filter(part => part.kind === kind).reduce((sum, part) => sum + part.points, 0);
   assert.deepEqual([by('fifteen'), by('pair'), by('nobs')], [14, 6, 1]);
   assert.equal(DIAGRAMS.cribbageCrib.starter[0], 'J', 'the starter pictured is a jack: his heels');
+});
+
+test('the Yacht pictures follow the rules', async () => {
+  const yacht = await import('../src/yacht-rules.js');
+  const { dice, boxes } = DIAGRAMS.yachtScore;
+  for (const [box, points] of Object.entries(boxes)) assert.equal(yacht.scoreFor(box, dice), points, box);
+  const keep = DIAGRAMS.yachtKeep, kept = keep.dice.filter((_, i) => keep.keep[i]);
+  assert.ok(kept.length === 3 && new Set(kept).size === 1, 'three alike kept');
+  // A reroll keeps exactly the marked dice.
+  let state = yacht.play(yacht.startGame(5), 'roll');
+  state = { ...state, dice: keep.dice };
+  const next = yacht.play(state, `roll:${keep.keep.map(k => (k ? 1 : 0)).join('')}`);
+  assert.deepEqual(next.dice.filter((_, i) => keep.keep[i]), kept);
+  assert.equal(yacht.BOXES.length, 12, 'twelve boxes on the card');
 });
