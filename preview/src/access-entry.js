@@ -34,6 +34,14 @@ async function api(path, options = {}) {
   return body;
 }
 
+// A browser that entered last time opens on a quiet splash (public/assets/boot/first-paint.js).
+// It ends when the district opens, or as soon as the gate itself is needed; a visit that
+// ends (signed out, waitlisted) is forgotten so the next load shows the gate straight away.
+const endSplash = ({ forget = false } = {}) => {
+  delete document.documentElement.dataset.returning;
+  if (forget) try { localStorage.removeItem('river-oaks-entered'); } catch { /* Storage may be disabled. */ }
+};
+
 async function checkAccess() {
   if (checking) return;
   checking = true;
@@ -42,6 +50,7 @@ async function checkAccess() {
     session = await api('/auth/session');
     if (!session.authenticated) {
       if (entered) location.reload();
+      endSplash({ forget: true });
       tools.hidden = true; gateSignout.hidden = true; providers.hidden = false;
       inviteForm.hidden = false; redeemButton.disabled = true;
       message.textContent = 'Sign in with email or GitHub.\nEntry is by invitation or waitlist approval.';
@@ -60,6 +69,7 @@ async function checkAccess() {
     $('#access-reports').hidden = !access.admin;
     if (access.status !== 'approved') {
       if (entered) location.reload();
+      endSplash({ forget: true });
       providers.hidden = true;
       inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false;
       message.textContent = access.status === 'rejected'
@@ -75,13 +85,15 @@ async function checkAccess() {
       // The game's stylesheets arrive with main.js. The page is laid out underneath, but the
       // gate stays over it until main.js starts, so the district never shows as unstyled HTML.
       message.textContent = 'Opening the district…';
-      document.addEventListener('river-oaks:styled', () => { gate.hidden = true; }, { once: true });
+      try { localStorage.setItem('river-oaks-entered', '1'); } catch { /* Storage may be disabled. */ }
+      document.addEventListener('river-oaks:styled', () => { gate.hidden = true; endSplash(); }, { once: true });
       document.body.classList.add('access-granted');
       await import('./main.js');
-      gate.hidden = true;
+      gate.hidden = true; endSplash();
     }
   } catch {
     if (entered) location.reload();
+    endSplash();
     providers.hidden = true; retry.hidden = false;
     redeemButton.disabled = true;
     message.textContent = 'Access could not be checked. Try again shortly.';
@@ -315,6 +327,7 @@ review.addEventListener('keydown', event => {
 async function signout() {
   try {
     const { url } = await api('/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': session.csrfToken } });
+    endSplash({ forget: true });
     location.assign(url ?? '/');
   } catch { message.textContent = 'Sign-out failed. Try again.'; gate.hidden = false; }
 }

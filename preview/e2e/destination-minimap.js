@@ -9,6 +9,22 @@ async page => {
   check(await page.locator('#places .world-map-surface').isVisible(), 'A compact minimap is available without enabling shared-world publishing');
   check(await page.locator('.world-events').count() === 0 && requests.length === 0, 'Events is absent and does not fetch its unused service');
   check(!await page.locator('#district-directory').isVisible(), 'The compact map replaces the separate destination browser');
+  // A glass sheet that scrolls itself dropped its scrollbar for single frames in Chrome while
+  // the map moved under it. The sheets are frames now, and the map card fits instead of scrolling.
+  check(await page.locator('.hud-space').evaluateAll(sheets => sheets.length === 2 && sheets.every(sheet => !/(auto|scroll)/.test(getComputedStyle(sheet).overflowY))), 'HUD sheets are frames, never scroll containers');
+  for (const [width, height] of [[1440, 1000], [1440, 900], [1440, 700], [1024, 600], [390, 844]]) {
+    await page.setViewportSize({ width, height });
+    const fit = await page.locator('#places .world-map-surface').evaluate(map => {
+      const sheet = map.closest('.hud-space'), scrollers = [];
+      for (let node = map.parentElement; node && node !== document.body; node = node.parentElement)
+        if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) scrollers.push(node.id || node.className);
+      const bottom = Math.max(...[...sheet.querySelectorAll('.hud-space-body *')].filter(node => node.checkVisibility()).map(node => node.getBoundingClientRect().bottom));
+      return { scrollers, fits: bottom <= sheet.getBoundingClientRect().bottom + 0.5, size: map.clientWidth, square: map.clientWidth === map.clientHeight };
+    });
+    check(fit.scrollers.length === 0, `The compact map does not scroll at ${width}x${height} (${fit.scrollers.join(', ')})`);
+    check(fit.fits && fit.size >= 150 && fit.square, `The map card shows the whole map and its controls at ${width}x${height}`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator('#places-open').click();
   check(await page.locator('#places-dialog .world-map-surface').isVisible(), 'The same map expands into the destination dialog');
   check(await page.locator('.world-map').count() === 1, 'Expansion reuses one live map');
