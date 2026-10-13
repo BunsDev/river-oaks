@@ -8,6 +8,24 @@ async page => {
   check(await page.locator('#access-email').isVisible(), 'Anonymous players can sign in with email');
   check(!await page.getByRole('link', { name: 'Continue with Google' }).count(), 'Anonymous players see only supported sign-in methods');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Anonymous players cannot start either play mode');
+  check(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor) === 'rgb(21, 21, 23)', 'The first paint is the sign-in gate colour, not a white page');
+  // A browser that entered last time opens on a quiet splash in its own theme instead of
+  // flashing the dark sign-in art; if the gate is needed after all, it appears and the visit is forgotten.
+  const returningContext = await page.context().browser().newContext({ colorScheme: 'light' });
+  try {
+    const returning = await returningContext.newPage();
+    await returning.addInitScript(() => localStorage.setItem('river-oaks-entered', '1'));
+    let releaseSession; const sessionHeld = new Promise(resolve => { releaseSession = resolve; });
+    await returning.route('**/auth/session', async route => { await sessionHeld; return route.fulfill({ json: { authenticated: false } }); });
+    await returning.goto(origin, { waitUntil: 'commit' });
+    await returning.locator('#access-message').waitFor({ state: 'visible' });
+    const splash = await returning.evaluate(() => ({ returning: 'returning' in document.documentElement.dataset, theme: document.documentElement.dataset.theme, background: getComputedStyle(document.documentElement).backgroundColor }));
+    check(splash.returning && splash.theme === 'light' && splash.background === 'rgb(233, 236, 229)', `A returning visitor opens on a splash in their own theme (${JSON.stringify(splash)})`);
+    check(!await returning.locator('.access-scene').isVisible() && !await returning.locator('#access-title').isVisible(), 'The splash hides the sign-in art and card but keeps the access status readable');
+    releaseSession();
+    await returning.getByRole('link', { name: 'Continue with GitHub' }).waitFor({ state: 'visible' });
+    check(await returning.evaluate(() => !('returning' in document.documentElement.dataset) && localStorage.getItem('river-oaks-entered') === null), 'When sign-in is needed the gate appears and the visit is forgotten');
+  } finally { await returningContext.close(); }
   await page.route('**/auth/session', route => route.fulfill({ json: {
     authenticated: true, user: { id: 'pending', name: 'Pending' }, csrfToken: 'fixture-csrf',
   } }));
@@ -51,6 +69,7 @@ async page => {
       await admin.addStyleTag({ url: `${origin}/src/${sheet}.css` });
     }
     await openHudSpace(admin, 'settings-section', 'Account');
+    check(await admin.evaluate(() => localStorage.getItem('river-oaks-entered') === '1' && !('returning' in document.documentElement.dataset)), 'Entering the district remembers the visit for a quiet next load');
     await admin.getByRole('button', { name: 'Waitlist requests' }).click();
     check(!await admin.locator('#settings-dialog').evaluate(node => node.open), 'Waitlist review closes Settings before taking focus');
     check(await admin.locator('#access-review-title').evaluate(node => node === document.activeElement), 'Waitlist review opens with keyboard focus in its dialog');
