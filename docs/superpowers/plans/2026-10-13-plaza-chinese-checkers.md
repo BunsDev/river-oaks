@@ -53,6 +53,15 @@ the earlier queued games landed.
 | All `preview/tests` | 2935 pass, 0 fail |
 | Journeys | `plaza-chinese-checkers` passed. It sits at the grove table and X opens mancala. The switch sets out the star (mancala board and goban away, 20 marbles). Then it covers: Enter choosing a marble and marking the hop, the arrow keys, clicking the hop's hole (on the sheet and the table), the layout fit, the regular's reply, focus kept in the board, Escape, X reopening Chinese checkers where it was, the switch back, and standing up. `plaza-go` and `plaza-mancala` passed with the three-way switch. |
 
+## Found on the way
+
+Darts (#336) put its throwing line within reach of the spots the server picks
+when a player stands up from the grove chairs (and some chess chairs). There,
+**Play darts** is rightly offered, so the grove journeys' "standing up leaves the
+grove table" check failed with the play button showing darts. Hosted CI doesn't
+run the plaza journeys, so #336 went green. The mancala, Go and Chinese checkers
+journeys now check that the grove table no longer offers its own games.
+
 ## Gaps
 
 - Practice only, like the other plaza games.

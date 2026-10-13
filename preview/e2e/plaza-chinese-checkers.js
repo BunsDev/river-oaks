@@ -75,6 +75,9 @@ async page => {
   await page.keyboard.press('KeyZ');
   await named('Waiting to stand', page.waitForFunction(() => !window.__riverSeatAndWater().seated, null, { timeout: 15000 }));
   await page.waitForTimeout(400);
-  check(await page.locator('#walking-play').isHidden(), 'Standing up leaves the grove table');
+  // Standing up can land at the darts line, which rightly offers darts: what matters is
+  // that the grove table itself no longer offers its games.
+  const offer = await page.locator('#walking-play').isVisible() ? (await page.locator('#walking-play').textContent()).trim() : '';
+  check(!/mancala|\bGo\b|Chinese checkers|xiangqi/i.test(offer), `Standing up leaves the grove table (${offer || 'nothing offered'})`);
   return { checks };
 }
