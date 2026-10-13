@@ -35,6 +35,12 @@ function createBook() {
   function render({ announce = true } = {}) {
     const game = GUIDE[state.game], page = game.pages[state.page], last = state.page === game.pages.length - 1;
     tabs.forEach((tab, index) => { const selected = index === state.game; tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1; });
+    // On a phone the index is one scrolling row: bring the chosen game to its middle (scrolling only the row).
+    const index = $('.salon-guide-index');
+    if (index.scrollWidth > index.clientWidth + 1) {
+      const row = index.getBoundingClientRect(), chosen = tabs[state.game].getBoundingClientRect();
+      index.scrollLeft += (chosen.left + chosen.width / 2) - (row.left + row.width / 2);
+    }
     const sheet = $('.salon-guide-page');
     sheet.setAttribute('aria-labelledby', `salon-guide-tab-${game.id}`);
     sheet.dataset.guideGame = game.id; sheet.dataset.guidePage = String(state.page);
