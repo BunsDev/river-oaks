@@ -124,7 +124,8 @@ export function createPlazaTableGames({ host = document.querySelector('#viewport
     // Your own side sits at the bottom; pass-and-play keeps the first side at the bottom.
     const bottom = game.mode === 'pass' ? adapter.sides[0] : game.player, flipped = bottom !== adapter.sides[0];
     const last = played.at(-1), legal = selected === null ? [] : adapter.moves(state).filter(move => move.from === selected);
-    const alert = result ? null : adapter.alert(state);
+    // A mated king stays marked; the status only reads the alert while the game goes on.
+    const alert = adapter.alert(state);
     const rows = [];
     for (let row = 0; row < 8; row++) {
       const rank = flipped ? row : 7 - row, cells = [];

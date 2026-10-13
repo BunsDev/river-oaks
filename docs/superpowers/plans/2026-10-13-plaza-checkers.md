@@ -54,7 +54,8 @@ start checkers". Checkers is the first of the games Val listed for the plaza
 | `checkers-opponent.test.js` | 4/4. It prefers the capture that takes more, does not step into a capture, is legal, budgeted and deterministic, and plays a forced capture at once. |
 | `plaza-games-mirror.test.js` | Renamed. Adds discs: 24 at the opening, dark on a1 from chair 0, a king two discs high. |
 | All `preview/tests` | 2706 pass, 0 fail |
-| Journeys | See below |
+| `pnpm run verify` (core) | Passed. Preview: 2706 pass, 1 skip. Server: 379 pass, 125 Redis-only skips. |
+| Journeys | `plaza-checkers`, `plaza-salon`, `contextual-first-visit` and `hardware-acceleration` passed. `plaza-chess` caught a refactor regression: the alert was skipped once the game ended, so a mated king lost its check mark. The alert is now computed after the game ends too, and `plaza-chess` and `plaza-checkers` then passed on a rerun. |
 
 ## Gaps
 
