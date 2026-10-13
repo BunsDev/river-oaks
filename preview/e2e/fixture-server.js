@@ -11,13 +11,13 @@ async function freePort() {
   await new Promise(resolve => socket.close(resolve));
   return port;
 }
-export async function startBrowserFixture() {
+export async function startBrowserFixture({ env: extra = {} } = {}) {
   const web = await freePort();
   let town = await freePort();
   while (town === web) town = await freePort();
   const child = spawn(process.execPath, ['server/tests/browser-fixture.js'], {
     cwd: root, stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, RIVER_OAKS_TEST_CREATOR: '1', RIVER_OAKS_DEV_TOWN: 'off', RIVER_OAKS_TEST_WEB_PORT: String(web), RIVER_OAKS_DEV_TOWN_PORT: String(town) },
+    env: { ...process.env, RIVER_OAKS_TEST_CREATOR: '1', RIVER_OAKS_DEV_TOWN: 'off', RIVER_OAKS_TEST_WEB_PORT: String(web), RIVER_OAKS_DEV_TOWN_PORT: String(town), ...extra },
   });
   const close = async () => {
     if (child.exitCode !== null || child.signalCode !== null) return;
