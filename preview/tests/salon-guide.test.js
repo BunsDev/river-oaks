@@ -17,7 +17,7 @@ import { chooseMove as reversiMove } from '../src/reversi-opponent.js';
 const text = id => guideGame(id).pages.flatMap(page => [page.title, ...page.text]).join(' ');
 
 test('every plaza table game has a guide of illustrated pages', () => {
-  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'cribbage']);
+  assert.deepEqual(GUIDE.map(game => game.id), ['chess', 'checkers', 'connectFour', 'reversi', 'morris', 'dominoes', 'hearts', 'spades', 'backgammon', 'mancala', 'jenga', 'winePong', 'go', 'chineseCheckers', 'cribbage']);
   for (const game of GUIDE) {
     assert.ok(game.pages.length >= 4, game.id);
     assert.equal(game.pages[0].title, 'Taking a seat', `${game.id} starts at the table`);
@@ -211,4 +211,14 @@ test('the cribbage pictures follow the rules', async () => {
   const by = kind => shown.parts.filter(part => part.kind === kind).reduce((sum, part) => sum + part.points, 0);
   assert.deepEqual([by('fifteen'), by('pair'), by('nobs')], [14, 6, 1]);
   assert.equal(DIAGRAMS.cribbageCrib.starter[0], 'J', 'the starter pictured is a jack: his heels');
+});
+
+test('the Chinese checkers picture is a real chain of hops', async () => {
+  const cc = await import('../src/chinese-checkers-rules.js');
+  const { red, blue, path } = DIAGRAMS.ccHop, board = Array(cc.HOLES.length).fill(null), hole = ([q, r]) => cc.holeAt(q, r);
+  red.forEach(spot => { board[hole(spot)] = 0; }); blue.forEach(spot => { board[hole(spot)] = 1; });
+  const move = cc.movesFrom(board, hole(path[0])).find(option => option.to === hole(path.at(-1)));
+  assert.deepEqual(move?.path, path.map(hole), 'the pictured hops are the shortest chain there');
+  assert.equal(board[hole(path[1].map((v, i) => (v + path[0][i]) / 2))], 1, 'the first hop is over blue');
+  assert.equal(board[hole(path[2].map((v, i) => (v + path[1][i]) / 2))], 0, 'the second over red');
 });

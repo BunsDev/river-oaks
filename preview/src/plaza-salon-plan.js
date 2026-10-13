@@ -300,3 +300,13 @@ export function goSpot(table, index, blackChair = 0) {
   // Black in chair 0 sits east facing west: row 1 nearest (east), column a on its left (south).
   return [table.x + flip * (4 - row) * GO.spacing, table.north + flip * (column - 4) * GO.spacing];
 }
+// The Chinese checkers star on the grove table (when it is the table's game): holes
+// 3 cm apart on a round board 47 cm across, 2 cm thick. A hole [q, r] (axial, r growing
+// toward the first player) is a spot [east, north] for the first player in `firstChair`:
+// sitting east and facing west in chair 0, so r runs toward the east and q's rows run
+// from their left (south) to their right.
+export const STAR = { spacing: 0.03, board: 0.235, thick: 0.02 };
+export function starSpot(table, [q, r], firstChair = 0) {
+  const flip = firstChair === 0 ? 1 : -1, across = q + r / 2, toward = r * Math.sqrt(3) / 2;
+  return [table.x + flip * toward * STAR.spacing, table.north + flip * across * STAR.spacing];
+}
