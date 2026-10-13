@@ -64,7 +64,7 @@ test('summary rejects malformed records and invalid frame values', () => {
 test('summary retains frames collected before readiness changes at drain time', () => {
  const report=summarizeProbe([start,sample([20,30],{ready:false}),{event:'stop',finalDrainComplete:true}]);
  assert.equal(report.frameIntervals?.count,2);assert.equal(report.foregroundSampledSeconds,.05);
- assert.equal(report.readySamples,0);assert.equal(report.gaps.includes('no playable-scene timing'),false);
+ assert.equal(report.readySamples,0);assert.equal(report.gaps.includes('no RAF playable-scene timing'),false);
 });
 test('summary reports WebContent terminations even when frame data and final drain are valid', () => {
  const report=summarizeProbe([start,sample([20,30]),{event:'web-content-terminated'},{event:'manual-reload'},sample([40]),{event:'web-content-terminated'},{event:'stop',finalDrainComplete:true}]);
@@ -158,4 +158,80 @@ test('scene snapshot exports only bounded root-relative production entry filenam
  assert.equal(snapshot.entryAssets[0],'index-build123.js');
  assert.ok(snapshot.entryAssets.every(value=>/^index-(?:build123|good\d+)\.js$/.test(value)));
  assert.ok(!JSON.stringify(snapshot).includes('secret'));
+});
+
+const phaseSource = readFileSync(new URL('../../experiments/ios-probe/Web/phase-capture.js', import.meta.url), 'utf8');
+function phaseFixture() {
+  const host = { dataset: { playerReady: 'true', storePeopleReady: '88', storePeopleTotal: '88' } };
+  const viewport = { dataset: { assetProgress: '{"done":true,"failed":0}' } };
+  const document = { visibilityState: 'visible', querySelector: selector => selector === '#canvas-host' ? host : viewport };
+  const phasesMs = Object.fromEntries(['setup','community','trees','residents','interactions','players','reflections','debug','pipeline','tail'].map(name => [name, 1]));
+  const frames = [{ intervalMs: 16, cpuMs: 10, phasesMs }];
+  let starts = 0, stops = 0, time = 100;
+  const api = { start() { starts++; }, stop() { stops++; return { frames, overflow: false }; } };
+  const sandbox = vm.createContext({ document, performance: { now: () => time }, __riverRenderAudit: api });
+  vm.runInContext(phaseSource, sandbox);
+  return { capture: sandbox.IOSProbePhases.createCapture(), host, viewport, document, api, frames, sandbox, setTime: value => { time = value; }, counts: () => ({ starts, stops }) };
+}
+test('phase capture requires visible full readiness and a supported diagnostic page', () => {
+  const f = phaseFixture();
+  f.document.visibilityState = 'hidden'; assert.equal(f.capture.start('one').status, 'not-ready');
+  f.document.visibilityState = 'visible'; f.host.dataset.storePeopleReady = '0'; assert.equal(f.capture.start('one').status, 'not-ready');
+  f.host.dataset.storePeopleReady = '88'; f.viewport.dataset.assetProgress = '{"done":true,"failed":1}'; assert.equal(f.capture.start('one').status, 'not-ready');
+  f.viewport.dataset.assetProgress = '{"done":true,"failed":0}'; f.sandbox.__riverRenderAudit = undefined;
+  assert.equal(f.capture.start('one').status, 'unsupported'); assert.equal(f.counts().starts, 0);
+});
+test('phase capture is owner fenced, emits only finite numeric timing, and excludes page data', () => {
+  const f = phaseFixture();
+  assert.deepEqual(plain(f.capture.start('one')), { status: 'started', startedAtMs: 100 });
+  assert.equal(f.capture.start('two').status, 'busy'); assert.equal(f.capture.stop('two').status, 'stale');
+  f.frames[0].account = 'secret'; f.frames[0].phasesMs.token = 'secret'; f.setTime(30100);
+  const result = plain(f.capture.stop('one'));
+  assert.equal(result.status, 'captured'); assert.equal(result.elapsedMs, 30000);
+  assert.equal(result.frames.length, 1); assert.equal(JSON.stringify(result).includes('secret'), false);
+  assert.deepEqual(f.counts(), { starts: 1, stops: 1 }); assert.equal(f.capture.stop('one').status, 'stale');
+});
+test('phase capture rejects overflow, gaps, invalid durations and missing phases instead of accepting partial evidence', () => {
+  for (const change of [
+    f => { f.api.stop = () => ({ frames: f.frames, overflow: true }); },
+    f => { f.api.stop = () => ({ frames: f.frames, overflow: false, discontinuities: 1 }); },
+    f => { f.frames[0].phasesMs.pipeline = NaN; },
+    f => { delete f.frames[0].phasesMs.pipeline; },
+    f => { f.frames[0].cpuMs = 90; },
+    f => { f.frames[0].intervalMs = 0; },
+    f => { f.frames.push(...Array(7200).fill(f.frames[0])); },
+    f => { f.document.visibilityState = 'hidden'; },
+  ]) {
+    const f = phaseFixture(); f.capture.start('one'); change(f);
+    assert.equal(f.capture.stop('one').status, 'invalid');
+  }
+});
+test('phase cancellation retires the owner and prevents later captures from being drained by an old timer', () => {
+  const f = phaseFixture(); f.capture.start('one');
+  assert.equal(f.capture.cancel('two').status, 'stale');
+  assert.equal(f.capture.cancel('one').status, 'cancelled');
+  f.capture.start('two'); assert.equal(f.capture.stop('one').status, 'stale');
+  assert.equal(f.capture.stop('two').status, 'captured');
+});
+
+test('summary distinguishes synchronous render phases from RAF and GPU evidence', () => {
+  const f = phaseFixture(); f.capture.start('one'); f.setTime(30100);
+  const page = plain(f.capture.stop('one'));
+  const report = summarizeProbe([{ ...start, renderPhasesEnabled: true }, { event: 'phase-capture', page }, { event: 'stop', finalDrainComplete: true }]);
+  assert.equal(report.phaseCaptures.length, 1);
+  assert.equal(report.phaseCaptures[0].phases.pipeline.p50Ms, 1);
+  assert.equal(report.phaseCaptures[0].elapsedMs, 30000);
+  assert.equal(report.phaseCaptures[0].synchronousElapsed.p50Ms, 10);
+  assert.equal(report.phaseCaptures[0].coveredIntervalMs, 16);
+  assert.equal(report.valid, false); assert.equal(report.architectureAccepted, false);
+  assert.ok(report.gaps.includes('render-phase instrumentation; not unprofiled acceptance'));
+  assert.ok(report.gaps.includes('GPU completion timing unavailable'));
+  assert.equal(report.gaps.includes('game-render-loop/GPU timing unavailable'), false);
+});
+test('phase summaries reject malformed numeric evidence and retain failed capture counts', () => {
+  const f = phaseFixture(); f.capture.start('one'); const page = plain(f.capture.stop('one'));
+  page.frames[0].phasesMs.pipeline = 'private';
+  assert.throws(() => summarizeProbe([start, { event: 'phase-capture', page }]), /phase/);
+  const report = summarizeProbe([start, { event: 'phase-capture', page: { status: 'invalid' } }, { event: 'phase-capture-cancelled' }]);
+  assert.equal(report.phaseCaptures.length, 0); assert.equal(report.phaseCaptureFailures, 2);
 });

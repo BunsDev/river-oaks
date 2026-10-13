@@ -21,6 +21,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 440, height: 812 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
     await context.addCookies([{ name: 'fixture_session', value: 'bob', url: fixture.origin }]);
     await context.addInitScript({ content: await readFile('experiments/ios-probe/Web/decode-queue.js', 'utf8') + '\nIOSProbeDecodes.useHTMLImages();' });
+    await context.addInitScript({ content: await readFile('experiments/ios-probe/Web/phase-capture.js', 'utf8') + '\nIOSProbePhases.install();' });
     const page = await context.newPage(); page.setDefaultTimeout(120000);
     let entryRequests = 0, chunkRequests = 0, externalRequests = 0;
     await page.route('**/*', async route => {
@@ -35,7 +36,18 @@ try {
     const source = (await readFile('preview/e2e/render-audit.js', 'utf8')).replaceAll('http://127.0.0.1:5181', fixture.origin);
     try {
       const result = await Promise.race([
-        new Function('return (' + source + ');')()(page, { renderAuditMode: mode, auditQuery }),
+        (async () => {
+          const result = await new Function('return (' + source + ');')()(page, { renderAuditMode: mode, auditQuery });
+          const phaseAdapter = await page.evaluate(async () => {
+            const capture = globalThis.__iosProbePhaseCapture, started = capture.start('built-native-test');
+            if (started.status !== 'started') return started;
+            await new Promise(resolve => { let count = 0; const tick = () => ++count >= 30 ? resolve() : requestAnimationFrame(tick); requestAnimationFrame(tick); });
+            return capture.stop('built-native-test');
+          });
+          assert.equal(phaseAdapter.status, mode === 'diagnostic' && auditQuery ? 'captured' : 'unsupported');
+          if (phaseAdapter.status === 'captured') assert.ok(phaseAdapter.frames.length > 10);
+          return { ...result, phaseAdapter };
+        })(),
         new Promise((_, reject) => { deadline = setTimeout(() => reject(new Error('Built audit exceeded 150 seconds')), 150000); }),
       ]);
       assert.equal(externalRequests, 0, 'Built fixture must stay on loopback');

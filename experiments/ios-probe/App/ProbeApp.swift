@@ -22,6 +22,13 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
     private let htmlImages = ProcessInfo.processInfo.arguments.contains("--probe-html-images")
     private let serializedDecodes = ProcessInfo.processInfo.arguments.contains("--probe-serialize-decodes")
     private let sceneSnapshotEnabled = ProcessInfo.processInfo.arguments.contains("--probe-scene-snapshot")
+    private let renderPhasesEnabled = ProcessInfo.processInfo.arguments.contains("--probe-render-phases")
+    private var phaseID: String?
+    private var phaseTimer: Timer?
+    private var phaseReplyDeadline: Timer?
+    private var phaseReplyStarted: TimeInterval = 0
+    private var phaseButton: UIButton?
+    private var entry: URL { renderPhasesEnabled ? policy.diagnosticEntry : policy.entry }
     private var snapshotScript = ""
     private var documentTerminated = false
     private var policy: ProbePolicy!
@@ -66,6 +73,11 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 let decodeScript = try String(contentsOf: decodeURL, encoding: .utf8) + "\nIOSProbeDecodes.\(action)();"
                 configuration.userContentController.addUserScript(WKUserScript(source: decodeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
             }
+            if renderPhasesEnabled {
+                guard let phaseURL = Bundle.main.url(forResource: "phase-capture", withExtension: "js") else { throw CocoaError(.fileNoSuchFile) }
+                let phaseScript = try String(contentsOf: phaseURL, encoding: .utf8) + "\nIOSProbePhases.install();"
+                configuration.userContentController.addUserScript(WKUserScript(source: phaseScript, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
+            }
             if measurementsEnabled {
                 configuration.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: world))
             }
@@ -76,7 +88,11 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             let reload = button("Reload", #selector(reloadPage))
             let browser = button("Browser", #selector(openBrowser))
             let stop = button("Stop", #selector(stopRecording))
-            let toolbar = UIStackView(arrangedSubviews: [status, reload, browser, stop])
+            var controls: [UIView] = [status, reload, browser, stop]
+            if renderPhasesEnabled {
+                let phases = button("Phases", #selector(capturePhases)); phaseButton = phases; controls.append(phases)
+            }
+            let toolbar = UIStackView(arrangedSubviews: controls)
             toolbar.axis = .horizontal; toolbar.spacing = 8; toolbar.alignment = .center
             toolbar.translatesAutoresizingMaskIntoConstraints = false
             web.translatesAutoresizingMaskIntoConstraints = false
@@ -100,7 +116,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         }
     }
     private func loadWithIsolation() {
-        guard let rules = isolation.rulesJSON else { web.load(URLRequest(url: policy.entry)); return }
+        guard let rules = isolation.rulesJSON else { web.load(URLRequest(url: entry)); return }
         status.text = "DIAGNOSTIC · excludes " + isolation.groups.joined(separator: ", ")
         WKContentRuleListStore.default().compileContentRuleList(forIdentifier: "TypeSafeProbeIsolation-" + isolation.groups.joined(separator: "-"), encodedContentRuleList: rules) { [weak self] list, _ in
             guard let self, !self.stopping, self.output != nil else { return }
@@ -111,7 +127,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             }
             self.web.configuration.userContentController.add(list)
             self.append(["event": "asset-isolation-applied", "blockedAssetGroups": self.isolation.groups])
-            self.web.load(URLRequest(url: self.policy.entry))
+            self.web.load(URLRequest(url: self.entry))
         }
     }
     private func button(_ title: String, _ action: Selector) -> UIButton {
@@ -129,6 +145,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 "measurementMode": measurementsEnabled ? "raf-and-native" : "native-only",
                 "blockedAssetGroups": isolation.groups,
                 "sceneSnapshotEnabled": sceneSnapshotEnabled,
+                "renderPhasesEnabled": renderPhasesEnabled,
                 "serializedDecodes": serializedDecodes,
                 "htmlImages": htmlImages,
                 "memoryScope": "WebContent/GPU memory unavailable here; collect with Instruments separately"])
@@ -152,6 +169,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         } catch {
             timer?.invalidate(); deadline?.invalidate(); finalization?.invalidate()
             try? output.close(); self.output = nil
+            cancelPhases(reason: "write-failed")
             UIApplication.shared.isIdleTimerDisabled = false
             status.text = "Evidence write failed; run is incomplete"
         }
@@ -171,10 +189,62 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                     self.append(["event": "sample", "page": data]); self.recordCount += 1
                     guard self.output != nil else { return }
                     let ready = data["ready"] as? Bool ?? false
-                    if !self.stopping { self.status.text = (self.isolation.groups.isEmpty ? "" : "DIAGNOSTIC · ") + "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)" }
+                    if !self.stopping && self.phaseID == nil { self.status.text = (self.isolation.groups.isEmpty ? "" : "DIAGNOSTIC · ") + "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)" }
                 }
             case .failure: self.append(["event": "sample-unavailable"])
             }
+        }
+    }
+    @objc private func capturePhases() {
+        guard renderPhasesEnabled, phaseID == nil, !stopping, !documentTerminated, output != nil,
+              UIApplication.shared.applicationState == .active, let url = web.url, policy.allows(url) else { return }
+        let id = UUID().uuidString, navigation = navigationID
+        phaseID = id; phaseButton?.isEnabled = false
+        status.text = "Checking full-scene phase capture"
+        phaseReplyStarted = ProcessInfo.processInfo.systemUptime
+        phaseReplyDeadline = Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { [weak self] _ in
+            guard let self, self.phaseID == id else { return }; self.cancelPhases(reason: "start-timeout")
+        }
+        web.evaluateJavaScript("globalThis.__iosProbePhaseCapture?.start('\(id)') ?? {status:'unsupported'}", in: nil, in: .page) { [weak self] result in
+            guard let self, self.phaseID == id, self.navigationID == navigation, !self.stopping, !self.documentTerminated, self.output != nil else { return }
+            guard ProbePhaseEvidence.replyIsTimely(startedAt: self.phaseReplyStarted, now: ProcessInfo.processInfo.systemUptime) else { self.cancelPhases(reason: "start-timeout"); return }
+            self.phaseReplyDeadline?.invalidate()
+            guard case .success(let value) = result, let evidence = ProbePhaseEvidence.sanitize(value) else { self.cancelPhases(reason: "start-unavailable"); return }
+            self.append(["event": "phase-capture-start", "captureID": id, "page": evidence])
+            guard self.output != nil else { return }
+            guard evidence["status"] as? String == "started" else {
+                self.retirePhases(); self.status.text = "Phase capture: " + (evidence["status"] as? String ?? "unavailable"); return
+            }
+            self.status.text = "Recording 30 seconds of render phases"
+            self.phaseTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in self?.finishPhases(id: id, navigation: navigation) }
+        }
+    }
+    private func finishPhases(id: String, navigation: String) {
+        guard phaseID == id, navigationID == navigation, !stopping, !documentTerminated, output != nil else { return }
+        phaseReplyStarted = ProcessInfo.processInfo.systemUptime
+        phaseReplyDeadline = Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { [weak self] _ in
+            guard let self, self.phaseID == id else { return }; self.cancelPhases(reason: "stop-timeout")
+        }
+        web.evaluateJavaScript("globalThis.__iosProbePhaseCapture?.stop('\(id)') ?? {status:'unsupported'}", in: nil, in: .page) { [weak self] result in
+            guard let self, self.phaseID == id, self.navigationID == navigation, !self.stopping, !self.documentTerminated, self.output != nil else { return }
+            guard ProbePhaseEvidence.replyIsTimely(startedAt: self.phaseReplyStarted, now: ProcessInfo.processInfo.systemUptime) else { self.cancelPhases(reason: "stop-timeout"); return }
+            self.retirePhases()
+            guard case .success(let value) = result, let evidence = ProbePhaseEvidence.sanitize(value) else {
+                self.append(["event": "phase-capture-unavailable", "captureID": id]); if self.output != nil { self.status.text = "Phase capture unavailable" }; return
+            }
+            self.append(["event": "phase-capture", "captureID": id, "page": evidence])
+            if self.output != nil { self.status.text = "Phase capture: " + (evidence["status"] as? String ?? "unavailable") }
+        }
+    }
+    private func retirePhases() {
+        phaseID = nil; phaseTimer?.invalidate(); phaseReplyDeadline?.invalidate(); phaseButton?.isEnabled = true
+    }
+    private func cancelPhases(reason: String) {
+        guard let id = phaseID else { return }
+        retirePhases()
+        append(["event": "phase-capture-cancelled", "captureID": id, "reason": reason])
+        if !documentTerminated, let url = web?.url, policy?.allows(url) == true {
+            web.evaluateJavaScript("globalThis.__iosProbePhaseCapture?.cancel('\(id)')", in: nil, in: .page) { _ in }
         }
     }
     @objc private func reloadPage() { append(["event": "manual-reload"]); web.reload() }
@@ -185,6 +255,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
     private func finish(reason: String) {
         guard output != nil, !stopping else { return }
         stopping = true; timer?.invalidate(); deadline?.invalidate()
+        cancelPhases(reason: "recording-stopped")
         UIApplication.shared.isIdleTimerDisabled = false
         if !measurementsEnabled { closeRecording(reason: reason, drained: true); return }
         let finalNavigation = navigationID
@@ -207,6 +278,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         status.text = drained ? "Stopped · evidence in app Documents" : "Stopped · final sample incomplete"
     }
     @objc private func lifecycle(_ notification: Notification) {
+        if notification.name == UIApplication.didEnterBackgroundNotification { cancelPhases(reason: "background") }
         append(["event": notification.name.rawValue])
         if ProcessInfo.processInfo.systemUptime - start >= 1800 { finish(reason: "deadline") }
     }
@@ -243,7 +315,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 self.authGeneration = UUID(); self.authentication?.cancel(); self.authentication = nil
                 await self.web.configuration.websiteDataStore.httpCookieStore.setCookie(cookie)
                 self.append(["event": "github-auth-exchanged"])
-                self.web.load(URLRequest(url: self.policy.entry))
+                self.web.load(URLRequest(url: self.entry))
             } catch {
                 self.authGeneration = UUID(); self.authentication?.cancel(); self.authentication = nil
                 let category = error is CancellationError ? "cancelled" : error is DeviceAuthError ? "provider-or-exchange" : "network"
@@ -275,7 +347,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         if !allowed { append(["event": "response-origin-blocked"]) }
         decisionHandler(allowed ? .allow : .cancel)
     }
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { documentTerminated = false; navigationID = UUID().uuidString; append(["event": "navigation-start"]) }
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { cancelPhases(reason: "navigation"); documentTerminated = false; navigationID = UUID().uuidString; append(["event": "navigation-start"]) }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         append(["event": "navigation-finish"]); sample()
         guard sceneSnapshotEnabled else { return }
@@ -294,6 +366,6 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         }
     }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { append(["event": "navigation-failed", "code": (error as NSError).code]); status.text = "Load failed · retry with Reload" }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { documentTerminated = true; append(["event": "web-content-terminated"]); status.text = "Web content terminated · manual Reload required" }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { documentTerminated = true; cancelPhases(reason: "renderer-terminated"); append(["event": "web-content-terminated"]); status.text = "Web content terminated · manual Reload required" }
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) { decisionHandler(.deny) }
 }

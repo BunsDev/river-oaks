@@ -247,3 +247,26 @@ the landing page. Both harnesses honor the browser queue and bound each journey 
 150 seconds. Results are local functional evidence, not physical performance.
 The artifact has not been deployed; hosting/origin/auth integration requires a
 separate concrete review and deployment authorization.
+
+Launch with `--probe-render-phases` to add the native **Phases** button and the
+fixed `render-audit=1` query on the existing HTTPS play origin. This does not enable
+timing in an ordinary hosted production build: the button reports `unsupported`
+until an explicitly built diagnostic client is hosted. Default launches omit the
+adapter and button. The Browser button continues to open the ordinary play entry.
+
+After the entire scene is ready, tap **Phases** once to record approximately
+30 seconds. Start/stop replies each have a two-second timer plus a monotonic
+elapsed-time fence; late callbacks cannot become evidence if timer delivery was
+delayed. Navigation, background, Stop, renderer termination and write failure
+cancel the capture. A per-capture owner token prevents an old callback from
+stopping or draining a newer capture. JavaScript and Swift independently retain
+only fixed statuses and bounded finite numeric phase records, never arbitrary
+main-page objects. There is no page-to-native message handler.
+
+Use the ordinary RAF collector and `--probe-scene-snapshot` alongside phase capture
+to retain quality/content and entry-file correlation, plus an external run record
+of camera/workload, exact hosted artifact and concurrent Metal trace. Phase timing
+adds overhead and cannot pass unprofiled thermal/performance acceptance. The JSONL
+contains `phase-capture-start`, `phase-capture`, cancellation or unavailable events.
+The summary reports per-capture phase distributions, elapsed duration and covered
+frame intervals separately from RAF statistics, without claiming GPU completion.

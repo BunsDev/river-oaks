@@ -345,3 +345,53 @@ The artifact currently uses this branch's historical scene baseline, not the
 newer hosted scene; do not compare it as if only timing changed on the hosted SHA.
 It is local only. No deployment or origin/auth configuration change is authorized
 by these tests. A concrete hosted integration must be reviewed separately.
+
+### Native phase capture integration
+
+An explicit `--probe-render-phases` launch adds the fixed audit query at the same
+allowed HTTPS origin and a **Phases** button. The unchanged production build
+returns `unsupported`. On a diagnostic build, capture starts only with foreground
+visibility, player/resident readiness and all assets complete without failures.
+The native controller stops after approximately 30 seconds, with two-second
+response deadlines checked both by timer and monotonic elapsed time. UUID and
+navigation fences reject stale callbacks. Background, navigation, Stop, renderer
+termination and evidence-write failure retire the capture.
+
+A main-page adapter controls only the existing diagnostic API. Its output is
+bounded to 7,200 numeric frame records and independently sanitized by Swift before
+writing. It rejects overflow, missing phases, nonfinite/negative durations,
+inconsistent phase totals and discontinuities. No credential, arbitrary page
+object, script message handler or origin exception is introduced. The CLI reports
+phase distributions separately from RAF scheduling and marks instrumented runs
+ineligible for unprofiled acceptance.
+
+Independent review found timer-delivery-only acceptance and a write-failure status
+overwrite; both are corrected, with a monotonic-deadline regression. Focused Node
+checks pass 26 tests; Swift checks pass 21. Built WebKit runs passed all three
+cases, including actual adapter capture on the diagnostic bundle and explicit
+unsupported results on normal production / missing query. Final Release simulator and development-signed device builds passed, with strict
+codesign validation and byte equality for all three bundled diagnostic scripts.
+`pnpm run verify` passed (tooling 96, preview 2,756 passed / 1 skipped, server 421
+passed / 134 skipped, desktop 51, Python 141). Final independent review found no
+remaining material blocker. The summary's no-RAF wording was clarified afterward
+and all 26 focused Node tests reran successfully. Evidence: `phase-native-tests.log`,
+`phase-simulator.log`, `phase-device.log`, `core-phase-capture.log`,
+`built-render-audit.json` under `.runtime/ios-probe/`. The device build is explicitly
+marked dirty; no installation or clean-source physical result is claimed.
+
+Hosted source refresh at 15:47:27 UTC observed `index-Ch6g9oIx.js` SHA256
+`7cd7ef5cdb2965d745697a09a45912fab0ee578bafb41222c9c16a2e93cc1b92`
+and `debug-report-CU0K_xC9.js` SHA256
+`10c28b3f6e06637319b9f93641708a2a573a4c51a8ba0e5c8500aeee0030a3ca`,
+embedding source `dc65b40044b839796a717f16a71cd0396c553adb`. Both returned HTTP 200
+with JavaScript content type. Earlier names changed and a subsequent request to
+`debug-report-CflR3oM2.js` returned 404. This is public HTTP evidence, not a phone
+byte hash or a reproduction of the earlier freeze. Preserve the fresh receipt
+`phase-hosted-build-refresh.json`; the earlier `phase-hosted-build.json` could not
+establish a source revision and must not be used as a matched-build claim.
+
+No diagnostic hosting, account/origin change, native installation, physical phase
+capture, merge or release occurred in this integration step. A matched source
+baseline and concrete deployment proposal remain necessary before the next phone
+measurement. The paired iPhone remains connected, but sustained foreground
+availability is not inferred from connection state.

@@ -5,6 +5,11 @@ public struct ProbePolicy {
         guard Self.isHTTPS(entry), entry.query == nil, entry.fragment == nil else { throw URLError(.badURL) }
         self.entry = entry
     }
+    public var diagnosticEntry: URL {
+        var components = URLComponents(url: entry, resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "render-audit", value: "1")]
+        return components.url!
+    }
     private static func isHTTPS(_ url: URL) -> Bool {
         url.scheme?.lowercased() == "https" && url.host?.isEmpty == false && url.user == nil && url.password == nil
     }
