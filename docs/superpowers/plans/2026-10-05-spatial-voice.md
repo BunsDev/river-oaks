@@ -3,9 +3,11 @@
 Spatial voice would let residents talk within their current world and interior,
 with volume and direction following confirmed player positions.
 
-**Status: deferred at Val's request on 5 October 2026.** Keep this as a plan.
-Resume implementation only when Val asks to resume voice. Provider selection,
-service provisioning, and production enablement remain pending.
+**Status: resumed on 13 October 2026 at Val's request, with LiveKit Cloud as the
+provider.** It was deferred on 5 October 2026. Implementation progress and
+verification live in [the shared-voice ledger](2026-10-13-shared-voice.md).
+Service provisioning and production enablement remain pending until that
+ledger's acceptance gates are met.
 
 ## Preserve the current town
 

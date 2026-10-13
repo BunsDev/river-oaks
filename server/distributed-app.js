@@ -19,6 +19,7 @@ import { eventAction } from './events-api.js';
 import { workplaceAction } from './workplace-api.js';
 import { accountDesignCommand } from './design-commands.js';
 import { securityHeaders } from './security-headers.js';
+import { createVoiceRoutes } from './voice-routes.js';
 
 // Constant-time comparison of an `Authorization: Bearer <secret>` header.
 function bearerMatches(header, secret) {
@@ -36,7 +37,7 @@ const json = (res, status, value) => {
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
-  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null } = {}) {
+  connectionLifetime = 270_000, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -77,8 +78,21 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
   }
   async function disconnectUser(userId, sessionId) {
     // Auth revocation / ban is persisted by the caller before this durable kick.
-    return room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
+    const result = await room.request({ type: 'kick', userId, ...(sessionId ? { sessionId } : {}) });
+    // Every kick (ban, approval ended, logout, another world) ends the account's voice too.
+    if (voice) await voice.revokeUser(userId).catch(() => false);
+    return result;
   }
+  // Snapshots carry whether voice can be joined right now; the per-player space
+  // and identity come from the world itself.
+  const withVoice = snapshot => voice ? { ...snapshot, voice: { available: voice.status().available } } : snapshot;
+  const handleVoice = voice ? createVoiceRoutes({ voice, worldId, authorized, matchesWorld, allow: id => security.allow('voice', id, 30, 60_000),
+    present: async identity => {
+      const view = await room.read();
+      const connection = view?.connections.find(item => item.userId === identity.userId && item.sessionId === identity.sessionId);
+      const player = connection && view.snapshot.players.find(item => item.id === identity.userId);
+      return player ? { connectionId: connection.connectionId, space: player.voice?.space ?? null } : null;
+    } }) : null;
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, assetGateSecret, allowInviteList: id => security.allow('invites', id, 20, 60_000), isBanned: id => security.isBanned(id),
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
@@ -108,7 +122,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, frame ??= JSON.stringify(view.snapshot), { snapshot: true });
+      send(ws, frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -121,6 +135,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
+      if (handleVoice && await handleVoice(req, res, path, url)) return;
       if (path === '/api/world-data' && req.method === 'GET' && worldCatalog) {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
@@ -341,7 +356,7 @@ export function createDistributedServer({ auth, room, worldTitle, security, wait
             if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
           }
           if (ws.readyState !== WebSocket.OPEN) return false;
-          send(ws, { ...view.snapshot, selfId: identity.userId });
+          send(ws, { ...withVoice(view.snapshot), selfId: identity.userId });
           return true;
         })().catch(error => {
           // Fixed classifications only: storage/provider errors can contain

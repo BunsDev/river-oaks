@@ -216,6 +216,9 @@
     { "source": "/api/profile/view", "destination": "/api/server?_river_path=/api/profile/view" },
     { "source": "/api/profile/claim-intro", "destination": "/api/server?_river_path=/api/profile/claim-intro" },
     { "source": "/api/profile/save", "destination": "/api/server?_river_path=/api/profile/save" },
+    { "source": "/api/voice/join", "destination": "/api/server?_river_path=/api/voice/join" },
+    { "source": "/api/voice/renew", "destination": "/api/server?_river_path=/api/voice/renew" },
+    { "source": "/api/voice/leave", "destination": "/api/server?_river_path=/api/voice/leave" },
     {
       "source": "/multiplayer",
       "destination": "/api/server?_river_path=/multiplayer"
