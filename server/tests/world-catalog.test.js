@@ -11,6 +11,22 @@ const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-r
 const venueSample={...sample,buildings:sample.buildings.map((building,index)=>index?building:{...building,
   interior:{name:'Moon Gallery',category:'art',entrance:'south'}})};
 
+test('a published generated interior keeps its approved world identity through an unrelated revision',async()=>{
+  const catalog=createMemoryWorldCatalog({now:()=>1234});
+  const region={...venueSample,buildings:venueSample.buildings.map((building,index)=>index?building:{...building,
+    interior:{...building.interior,generation:{version:1,seed:'moon-gallery-01',levels:2}}})};
+  const published=await catalog.publish({id:'moon-garden',title:'Moon Garden',region},'owner');
+  assert.equal(published.ok,true);
+  const first=(await catalog.getRegion('moon-garden')).buildingInteriors[0];
+  assert.equal(first.worldId,'moon-garden');
+  assert.equal(first.levels.length,2);
+  const editable=await catalog.editable('moon-garden');
+  const revised={...editable.publishedRegion,places:editable.publishedRegion.places.map((place,index)=>index?place:{...place,name:'New Arch'})};
+  assert.equal((await catalog.saveDraft({id:'moon-garden',baseRegionSha256:published.world.regionSha256,expectedDraftVersion:0,region:revised},'owner')).ok,true);
+  assert.equal((await catalog.applyRevision(await catalog.revisionCandidate('moon-garden',1))).ok,true);
+  assert.deepEqual((await catalog.getRegion('moon-garden')).buildingInteriors[0],first);
+});
+
 integration('a published world is durable, unique, bounded, and visible across Redis clients',async t=>{
   const redis=new Redis(process.env.REDIS_URL),peer=redis.duplicate();
   redis.on('error',()=>{});peer.on('error',()=>{});

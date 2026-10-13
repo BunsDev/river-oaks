@@ -4620,6 +4620,37 @@
         "verification": "Integrated main 5725d38: dependency audit, agent76, client2895 passed/1 existing skip, Redis/server651, desktop54, Python141, build/lint/format/secrets/security/reflections and all10 experience journeys passed. Full aggregate failed only shared-seating readiness (18/19 shared passed); after explicit90s readiness budget and diagnostics, focused seating passed18 assertions. Failed aggregate retained, not claimed green.",
         "browser": "Integrated office replay passed16 desk +9 elevator/access checks. Desktop1440x1000,390x844,320x700 layouts screenshot-inspected. Guest seating readiness28694ms on corrected focused run; all seating predicates/assertions preserved."
       }
+    },
+    {
+      "id": "procedural-multilevel-interiors-plan",
+      "title": "Build building-anchored procedural multi-level interiors and World Studio editing",
+      "status": "active",
+      "branches": [
+        "docs/procedural-multilevel-interiors-20261013"
+      ],
+      "owner": "codex-root-20261013-procedural-interiors",
+      "updatedAt": "2026-10-13T20:46:14.801376+00:00",
+      "nextAction": "Phase A pure generator and opt-in server plan verified locally; implement Laura Rathe ground-floor pilot, entry and walking collision.",
+      "ledger": "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
+      "requiredChecks": [
+        "Focused behavioral and cross-runtime tests for each phase",
+        "pnpm run verify core before commit",
+        "pnpm run verify full with isolated Redis and browser prerequisites",
+        "Two-client and Studio browser acceptance",
+        "Hosted preview on up-to-date PR head before merge"
+      ],
+      "filesOwned": [
+        "docs/superpowers/plans/2026-10-13-procedural-multilevel-interiors.md",
+        "docs/superpowers/plans/2026-10-13-procedural-interiors-implementation.md",
+        "preview/src/building-interiors-plan.js",
+        "preview/tests/building-interiors-plan.test.js",
+        "server/region-package.js (bounded contract)",
+        "server/tests/region-package.test.js",
+        "preview/src/store-rooms.js (migration adapter)",
+        "preview/src/district.js, preview/src/walking.js, server/world.js (later phases)",
+        "preview/src/studio/* (later phases)"
+      ],
+      "leaseUntil": "2026-10-13T22:46:14.801376+00:00"
     }
   ]
 }

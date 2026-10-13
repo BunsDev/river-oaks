@@ -8,8 +8,37 @@ import { createStoreEncounters } from '../../preview/src/store-encounters.js';
 import { buildKind, buildRoads, checkBuildSite } from '../../preview/src/shared-build.js';
 import { evaluatePlacement } from '../../preview/src/builder-mode.js';
 import { editableRegion } from '../../preview/src/region-draft.js';
+import { createHash } from 'node:crypto';
 
 const sample=JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json',import.meta.url)));
+
+test('opt-in generated levels are server-approved, stable, bounded and editor-roundtrippable',()=>{
+  const interior={name:'Moon Pavilion Gallery',category:'art',entrance:'south',generation:{version:1,seed:'moon-gallery-01',levels:2}};
+  const region={...sample,buildings:sample.buildings.map((building,index)=>index?building:{...building,interior})};
+  assert.equal(editableRegion(region),true);
+  const compiled=compileRegionPackage(region,'Moon Garden',{worldId:'moon-garden'});
+  assert.equal(compiled.buildingInteriors.length,1);
+  const approved=compiled.buildingInteriors[0];
+  assert.equal(approved.buildingId,'moon-pavilion');
+  assert.equal(approved.worldId,'moon-garden');
+  assert.equal(approved.levels.length,2);
+  assert.match(approved.approvedSha256,/^[a-f0-9]{64}$/);
+  const {approvedSha256,...plan}=approved;
+  assert.equal(approvedSha256,createHash('sha256').update(JSON.stringify(plan)).digest('hex'));
+  assert.deepEqual(editableRegionFromWorld(compiled).buildings[0].interior,interior);
+  const derived={...region,buildings:region.buildings.map((building,index)=>index?building:{...building,interior:{...interior,generation:{version:1,levels:2}}})};
+  assert.equal(editableRegion(derived),true);
+  assert.equal(compileRegionPackage(derived,'Moon Garden',{worldId:'moon-garden'}).buildingInteriors[0].seed,'moon-pavilion');
+  const reordered={...region,buildings:[region.buildings[2],region.buildings[0],region.buildings[3],region.buildings[1]]};
+  assert.deepEqual(compileRegionPackage(reordered,'Moon Garden',{worldId:'moon-garden'}).buildingInteriors[0],approved);
+  const legacy=compileRegionPackage({...region,buildings:region.buildings.map((building,index)=>index?building:{...building,interior:{name:interior.name,category:'art',entrance:'south'}})},'Moon Garden');
+  assert.equal(Object.hasOwn(legacy,'buildingInteriors'),false);
+  for(const generation of [{version:2,seed:'moon-gallery-01',levels:2},{version:1,seed:'',levels:2},{version:1,seed:'<script>',levels:2},{version:1,seed:'moon-gallery-01',levels:9},{version:1,seed:'moon-gallery-01',levels:2,script:'x'}]) {
+    const invalid={...region,buildings:region.buildings.map((building,index)=>index?building:{...building,interior:{...interior,generation}})};
+    assert.equal(editableRegion(invalid),false);
+    assert.throws(()=>compileRegionPackage(invalid,'Moon Garden',{worldId:'moon-garden'}));
+  }
+});
 
 test('creator parcels retain named bounds and account ownership through publication and revisions',()=>{
   const parcel={id:'moon-lot',name:'Moon Lot',bounds_m:[-50,-48,-20,-20],owner_id:'guest'};
