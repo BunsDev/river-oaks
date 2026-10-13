@@ -59,3 +59,16 @@
 .table-game-choice { display: flex; padding: 3px; border-radius: 10px; background: var(--hud-tile); }
 .table-game-choice button { flex: 1; min-height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
 .table-game-choice button[aria-pressed=true] { background: var(--hud-raised); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+/* Connect Four: a blue frame of round slots, seven across and six high, holding red and
+   yellow discs. Each column's landing slot is marked; the winning four glow. */
+.table-game-board[data-game=connectFour] { grid-template-rows: repeat(6, 1fr); height: calc(var(--board-size) * 6 / 7); padding: 6px; box-sizing: border-box; background: #2f5fae; }
+.table-game-board[data-game=connectFour] .table-row { grid-template-columns: repeat(7, 1fr); }
+.table-game-board[data-game=connectFour] .table-square { background: transparent; }
+.table-game-board[data-game=connectFour] .table-square::before { content: ''; position: absolute; inset: 9%; border-radius: 50%; background: #16294a; box-shadow: inset 0 2px 4px rgb(0 0 0 / .45); }
+.table-game-board[data-game=connectFour] .table-square[data-target=move]::after { width: 30%; height: 30%; background: rgb(255 255 255 / .38); }
+.connectFour-piece { position: absolute; inset: 9%; border-radius: 50%; pointer-events: none; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), inset 0 2px 0 rgb(255 255 255 / .28); }
+.connectFour-piece[data-side=r] { background: #d2352d; }
+.connectFour-piece[data-side=y] { background: #f2c230; }
+.table-game-board[data-game=connectFour] .table-square[data-last] { background-image: none; }
+.table-game-board[data-game=connectFour] .table-square[data-last] .connectFour-piece { outline: 3px solid rgb(255 255 255 / .55); outline-offset: -1px; }
+.table-game-board[data-game=connectFour] .table-square[data-win] .connectFour-piece { outline: 3px solid #fff; box-shadow: 0 0 14px 3px rgb(255 255 255 / .75); }

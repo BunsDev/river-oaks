@@ -85,6 +85,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-signup-usernames](2026-10-13-signup-usernames.md)<br>Usernames at sign-up — 2026-10-13 | — |
 | [2026-10-13-settings-tabs-ux](2026-10-13-settings-tabs-ux.md)<br>Settings tabs and a minimal walking console — 2026-10-13 | #303 |
 | [2026-10-13-plaza-stage-performance](2026-10-13-plaza-stage-performance.md)<br>The plaza stage as a shared performance — 2026-10-13 | — |
+| [2026-10-13-plaza-connect-four](2026-10-13-plaza-connect-four.md)<br>Connect Four at the plaza chess tables — 2026-10-13 | — |
 | [2026-10-13-email-access-join-recurrence](2026-10-13-email-access-join-recurrence.md)<br>Email access: give CI's cold first render its own join allowance — 2026-10-13 | #281, #297 |
 | [2026-10-12-world-map-paint-cost](2026-10-12-world-map-paint-cost.md)<br>Stop the district map repainting while it is open — 2026-10-12 | #274, #281 |
 | [2026-10-12-town-ticket-ttl](2026-10-12-town-ticket-ttl.md)<br>Town join tickets that outlast a slow page — 2026-10-12 | #260, #253, #273 |
