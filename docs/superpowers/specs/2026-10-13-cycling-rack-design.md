@@ -19,7 +19,7 @@ sheet plus a hint at the rack.
 ## Non-goals
 
 Weekly or per-world boards, bikes for residents, abandoned bikes in the world,
-new bike physics, bike customisation.
+new bike physics beyond the speed model, bike customisation.
 
 ## 1. World: rack, slots and the bicycle vehicle
 
@@ -41,11 +41,22 @@ slot is held.
 
 **Vehicle.** `preview/src/vehicle-config.js` adds `bicycle` to `VehicleKind` and
 `VEHICLES`: label "Plaza bicycle", length 1.8, width 0.6, height 1.1,
-wheelbase 1.05, maxSpeed 5, steeringLimit 0.6, one steered wheel, driverSeat
+wheelbase 1.05, maxSpeed 8.05 (18 mph, the hard cap), cruiseSpeed 5 (the
+pedalling speed without sprint), steeringLimit 0.6, one steered wheel, driverSeat
 and grips from the motorcycle scaled to the frame, no passenger seat
 (`passengerSeat: null`; the carriage code that reads it must tolerate null).
 `vehicleKind()` accepts it. `road-vehicles.js` adds a bicycle mesh;
 `riding-clothes.js` and `driving-hands.js` reuse the motorcycle pose.
+
+**Variable speed.** Pedalling speed follows the drive input: the target speed
+is `forward × cruiseSpeed`, or `forward × maxSpeed` while the sprint key
+(Shift, the brisk-walk key) or the sprint button is held, so a rider can coast
+slowly, cruise at 5 m/s, or sprint up to 18 mph. `carriage-motion.js` reads
+`cruiseSpeed` when the spec has one and the input carries `sprint: true`
+(`drivingInput` learns the optional boolean); the car and motorcycle have no
+`cruiseSpeed` and keep their single target speed. The server budget uses
+`maxSpeed` (8.05 m/s) for every bicycle pose, so sprint changes nothing in the
+validator; the cap is the same whichever key is held.
 
 **Taking and returning.** Within `SEAT_REACH` of a free slot the walking
 console shows "Take a bike (G)" (or the rack tap target). The client sends
@@ -80,7 +91,7 @@ Disconnect runs the same release path as `uncycle`.
 **Counting.** In `pose()`, after the speed budget and collision sampling have
 accepted a `bicycle` pose, add the accepted ground distance to
 `player.rideMeters`. Rejected poses, seated, airborne and walking poses add
-nothing. The 5 m/s budget bounds earning.
+nothing. The 8.05 m/s (18 mph) budget bounds earning.
 
 **Store.** `server/cycling-miles.js` exports `MemoryCyclingMiles` and
 `RedisCyclingMiles` with one contract:
@@ -148,7 +159,8 @@ gateway wires the Redis twin. Loopback fixture identities ride and rank at
 
 **Client** (`preview/tests/`): rack slots and footprints are deterministic
 and inside the plaza bounds; miles formatting; leaderboard list rendering and
-row reuse; `vehicleKind('bicycle')`.
+row reuse; `vehicleKind('bicycle')`; `carriage-motion` targets cruise speed
+without sprint and the 18 mph cap with it.
 
 **Journeys** (`preview/e2e/`): `cycling-rack` — take a bike, ride, parked
 count drops and recovers, remote player sees the rider; `cycling-leaderboard`
