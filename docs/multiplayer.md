@@ -216,11 +216,11 @@ Run `pnpm run test:shared` for development onboarding and authenticated fixture 
 
 ## Resident names
 
-Every signed-in resident is shown by their GitHub username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
+Every signed-in resident is shown by their username, everywhere another player can see them: the roster, nameplates, chat, contacts, groups, events, profiles, the map and the waitlist. A resident chooses it while on the waitlist, or keeps the default (their GitHub login, else a generated name), and an approver may change it before approving ([usernames](email-access.md#usernames)). Residents approved before usernames existed are shown by their GitHub username. The free-text name on a GitHub profile is never used. Only Jevica's accounts (`preview/src/jevica-accounts.js`) have a custom name, and that name is **Jevica**.
 
-- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `github-<account ID>`.
-- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `github-<account ID>` instead.
-- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as `resident`. A returning player and a waitlist request take the current name.
+- **Lookup.** WorkOS records the GitHub account ID behind each sign-in. At sign-in the server asks GitHub's API for that account's current username, using the resident's own GitHub token when WorkOS returns one (**Return GitHub OAuth tokens** in the WorkOS dashboard), then `GITHUB_TOKEN`, then an anonymous request. Each answer is kept per account in Redis, so a GitHub outage never changes a known name; a failed lookup is retried after ten minutes. Until a first lookup succeeds the resident is shown as `Visitor #<account ID>`; an email sign-in without an approved username is shown the same way.
+- **Reserved name.** Nobody else is ever shown as Jevica, under any spelling: case, accents, lookalike letters and digits, other scripts, spacing, punctuation, invisible characters, or Jevica inside a longer name (`preview/src/resident-names.js`). A GitHub username that reads as Jevica is shown as `Visitor #<account ID>` instead.
+- **Stored copies.** Contacts, messages, groups, events, world chat, builds and waitlist requests keep the name a resident had when they were written. Each is checked against its account on the way out, so an older record that says Jevica is shown as that account's `Visitor #` fallback. A returning player and a waitlist request take the current name.
 - **Groups, events and places** have their own titles; those are not resident names and are not restricted.
 
 ## Shared storage and coordination
@@ -251,6 +251,23 @@ Disconnects have a ten-second reconnect grace. A new tab replaces the account's 
 Vehicle exits use the server-checked travel command before completing the local
 dismount. This keeps the seat-to-ground transition from being rejected as an
 ordinary walking-speed violation. A refused exit keeps the rider seated.
+
+The plaza bike rack is arbitrated like seating: `cycle {rackId, slot}` claims a
+free slot within seat reach and mounts the rider on a `bicycle`; `uncycle` hands
+it back, as do a travel, leaving, and a pose without the bike once the 1.5 s
+hand-over grace has passed (a walking pose already in flight when the slot was
+granted is ignored). A `bicycle` pose
+is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
+owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
+adds its ground distance to the rider's metres, which the transport drains into
+the cross-world `cycling-miles` account store (dev town: every 30 s and on
+`uncycle`; hosted room: on every tick, after the commit, through a pending map
+that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
+so clients hide bikes that are out.
+`GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
+reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
+plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
+per instance and user ids never leave the server.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 
@@ -379,7 +396,9 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |
 | `TRUSTED_PROXY_IPS` | Comma-separated exact IP addresses of your reverse proxies; empty trusts none. Ignored on Vercel, which uses `x-vercel-forwarded-for` |
 | `WORLD_ID` | Optional alternate configured world; defaults to `river-oaks` |
-| `CRON_SECRET` | Vercel only: bearer secret for the workplace sweep cron |
+| `CRON_SECRET` | Vercel only: bearer secret for the workplace and voice sweep crons |
+| `RIVER_OAKS_VOICE`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Shared voice: `on` mounts `/api/voice/*` and needs all three LiveKit settings, which stay server-side; see [shared voice](#shared-voice) |
+| `RIVER_OAKS_VOICE_NAMESPACE`, `VOICE_DAILY_JOINS`, `VOICE_MAX_LEASES` | Optional voice room namespace (defaults to `REDIS_NAMESPACE`, or `river-oaks:local:v1` on the standalone town) and caps (5,000 joins per UTC day, 256 concurrent leases) |
 | `EMAIL_SIGNIN_DAILY_LIMIT`, `EMAIL_SIGNIN_DAILY_PER_ADDRESS` | Optional email-code budgets (defaults 2,000 per day and 10 per address per day); see [email access](email-access.md) |
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.13.0`), and daily decision budget (default 6,000, max 10,000) |
@@ -490,13 +509,74 @@ free one. **Stand up** (or **Z** again) works with keyboard and touch controls. 
 Furniture is usable by approved guests; building, saved designs and wish granting
 remain restricted to Jevica's verified owner accounts.
 
-Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play chess**
-or **X** opens a board beside the table. You can play the plaza regular (a small
-engine that thinks in a worker) or pass and play. The table's 3D pieces mirror
-the game. It is a practice game kept in your browser, so other visitors still see
-the opening position. **Escape** or **X** puts the board away, and standing up
-closes it. The rules are in `preview/src/chess-rules.js`, checked against
-published perft counts.
+Seated at one of the plaza's two chess tables (by Dior and Toulouse), **Play a
+table game** or **X** opens a board beside the table. **Chess**, **Checkers**
+(American rules: captures are compulsory, and a crowned man stops) and **Connect
+Four** (seven columns of six, red first; a click anywhere in a column drops a disc)
+switch in the sheet, and each table keeps one game of each. You can play the plaza
+regular (a small engine that thinks in a worker) or pass and play, taking either
+side. The table's 3D pieces or discs mirror the game; for Connect Four a standing
+frame replaces the chess pieces. It is a practice game kept in your
+browser, so other visitors still see the chess opening. **Escape** or **X** puts the
+board away, and standing up closes it. The rules are in `preview/src/chess-rules.js`
+and `checkers-rules.js`, each checked against published perft counts.
+
+At the round café table, **Play dominoes** or **X** opens a dominoes table. It is a
+match to 100 with a double-six set against the plaza regulars. With two players
+it is the draw game: seven tiles each, and you draw from the boneyard when no tile
+fits. With four it is the block game: seven each, and you pass. The holder of the
+highest double leads it. A round ends when a hand is played out, or when nobody can
+play and the lightest hand wins. The winner scores the pips left in the other
+hands. The regulars see only what a player at the table could. The round table
+mirrors the line and the hands, and only your own tiles show their pips. Rules:
+`preview/src/dominoes-rules.js`.
+
+The café sheet switches between **Dominoes** and **Hearts**, and X reopens whichever
+was played last. Hearts is you and three regulars, to 100. Before a hand you pass
+three cards left, then right, then across, and every fourth hand you hold them. The
+2♣ leads. You follow suit when you can, no points may be played on the first trick,
+and hearts cannot be led until one has been played. Each heart scores 1 and the Q♠
+13, and taking all 26 shoots the moon. The lowest score wins. The table shows the
+trick face up before each player, with the hands and won tricks face down. Rules:
+`preview/src/hearts-rules.js`.
+
+A walnut backgammon table now stands in the grove's middle square, with two
+armchairs. Seated there, **Play backgammon** or **X** opens the board. You play the
+plaza regular or pass and play, as white or black. Use both dice when you can, and
+the higher one when only one can be used. Checkers on the bar enter first, a blot
+that is hit goes to the bar, and you bear off once all fifteen are home. A gammon
+scores 2 and a backgammon 3. You pick a checker, then its point (or the tray to bear
+off), and Undo takes back moves within your turn. The table's checkers mirror the
+game. Rules: `preview/src/backgammon-rules.js`.
+
+A Jenga tower stands on the curved bench's travertine drum. Seated on the bench,
+**Play Jenga** or **X** opens it. You play with two plaza regulars, or two players
+pass and play. Pick a block below the top (never the top level, nor the one under
+an unfinished top), then stop the steady-hand meter inside its green zone to slide
+the block out; it goes on top by itself. The zone narrows as the tower grows taller
+and weaker and as the level carries more. A level left on a single edge block
+brings the tower down. Whoever topples it gets the tally mark, and the drum's tower
+scatters across the drum and the paving. Rules: `preview/src/jenga-rules.js`.
+
+A long linen-topped wine pong table stands between the café and the north planters.
+Standing at either end, **Play wine pong** or **X** opens it. You play a plaza regular
+at the far end, or two players pass and play. Each side has six wine glasses racked
+at its own end. Stop the sweeping reticle once for the aim and once for the power;
+the ball flies over the real table. A ball can drop straight in, rattle off a rim and
+in (or out), or bounce on the table and in. Two throws a turn, and sinking all six of
+the far glasses wins. A close-up of the far rack sits beside the table view. Rules:
+`preview/src/wine-pong-rules.js`.
+
+The chess-table, café and backgammon sheets have **How to play** in their
+header. It opens the Salon Guide on that game (chess, checkers, Connect Four,
+dominoes, Hearts or backgammon), and **Play & rides → Game guide** opens it too. The guide is an
+illustrated book with a few pages per game: taking a seat, the aim, a turn, and
+the keys. Its pictures are positions played on the real rules
+(`preview/tests/salon-guide.test.js`). A game you have not read yet shows a gold
+mark on its button, remembered on this device. The guide is a modal dialog
+outside the sheets, so its keys never move you or close a board; Escape returns
+to the sheet. Content: `preview/src/salon-guide-content.js`; a new game adds its
+pages to `GUIDE` and one `attachGuide(panel, id)` line in its sheet.
 
 The town assigns the position, facing and cushion height. Occupied slots reject
 other visitors, and occupied furniture cannot be moved, turned or removed. Stand
@@ -571,7 +651,33 @@ Guests receive confirmed geometry without those permissions. Creator requests
 with valid assemblies may use an 8 KiB WebSocket frame; other commands retain
 the 2 KiB limit, existing queue limits, and rate limits. Old clients are rejected
 by the protocol gate. Imported assets and creator scripts remain future work;
-shared voice remains deferred in its plan.
+shared voice is being built behind `RIVER_OAKS_VOICE` (see [shared voice](#shared-voice)).
+
+## Shared voice
+
+Audio never crosses the game WebSocket. With `RIVER_OAKS_VOICE=on` and the
+LiveKit settings configured, a resident's browser asks `POST /api/voice/join`
+for a room and receives a one-room, microphone-only LiveKit token for a random
+participant identity. The server derives the world and the space (`outdoor` or
+a store id; a private home only for those allowed inside) from the player's live
+game connection, never from the request. Rooms are named
+`<namespace>.<world>.<space>`, with the namespace's colons as dots, so previews,
+production and developer machines never share a room in one LiveKit project.
+
+A lease ties the identity to the game connection for 45 s; the browser renews
+every 15 s and sends the participant identity with renew and leave, which is
+what stops a replaced tab from renewing or releasing its successor's lease.
+Revocation has three layers: every kick (ban, approval ended, logout, another
+world) revokes at once; the room's lease holder reconciles leases on its 200 ms
+tick (a connection or world mismatch revokes immediately, an interior change
+after three stable ticks); and a per-minute sweep (`/api/voice-sweep` on Vercel
+Cron, a 30 s timer on long-lived servers) removes any participant without a live
+lease and deletes empty rooms. With a live lease holder a revoked participant is
+removed within about 2 s; the worst case with no instance alive for the world is
+the lease TTL plus one cron period plus the sweep budget, about 127 s. Measured
+numbers belong in `data/reports/voice-revocation.json` before production
+enablement. The CSP allows `*.livekit.cloud` signalling, and `Permissions-Policy`
+grants the microphone to this origin only.
 
 
 ### Jev smart rides

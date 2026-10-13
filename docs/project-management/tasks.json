@@ -4061,6 +4061,518 @@
       ],
       "ledger": "docs/superpowers/plans/2026-10-13-minimap-flicker.md",
       "issues": []
+    },
+    {
+      "id": "plaza-checkers",
+      "title": "Checkers on the plaza chess tables (phase 3a of plaza games): American checkers rules, a local opponent, discs mirrored on the 3D board, sharing the chess table's board sheet",
+      "status": "active",
+      "branches": [
+        "feat/plaza-checkers-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T20:17:43.000Z",
+      "updatedAt": "2026-10-13T10:17:43.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-checkers-20261013",
+      "nextAction": "Stacked on feat/plaza-chess-20261013 (#298): merge main once #298 lands. Write checkers-rules.js (perft-pinned), a checkers opponent, generalise the chess board sheet into a table-games sheet with a Chess/Checkers switch, disc pieces in the 3D mirror, journey; then PR and land.",
+      "filesOwned": [
+        "preview/src/checkers-rules.js",
+        "preview/src/checkers-opponent*.js",
+        "preview/src/plaza-chess.js",
+        "preview/src/plaza-chess.css",
+        "preview/src/plaza-salon.js (pieces)",
+        "preview/e2e/plaza-chess.js",
+        "preview/e2e/plaza-checkers.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (checkers perft, opponent, mirror)",
+        "plaza-chess and plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-checkers.md",
+      "issues": []
+    },
+    {
+      "id": "plaza-dominoes",
+      "title": "Dominoes at the plaza café table: double-six draw (2 players) and block (4 players) games against the plaza regulars, scored to 100, tiles mirrored on the round table",
+      "status": "active",
+      "branches": [
+        "feat/plaza-dominoes-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T21:00:04.000Z",
+      "updatedAt": "2026-10-13T11:00:04.000Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-dominoes-20261013",
+      "nextAction": "Stacked on feat/plaza-checkers-20261013 (#299, landing): merge main once it lands. Write dominoes-rules.js (seeded deal, draw and block games, scoring), a dominoes opponent, a café dominoes sheet sharing the table-game frame, tiles on the round table, journey; then PR (land only when Val says).",
+      "filesOwned": [
+        "preview/src/dominoes-rules.js",
+        "preview/src/dominoes-opponent.js",
+        "preview/src/plaza-dominoes.js",
+        "preview/src/plaza-dominoes.css",
+        "preview/src/plaza-salon.js (café table tiles)",
+        "preview/src/plaza-salon-plan.js (café seats)",
+        "preview/src/main.js (wiring)",
+        "preview/e2e/plaza-dominoes.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (dominoes rules, opponent, mirror)",
+        "plaza-dominoes, plaza-chess, plaza-checkers journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-dominoes.md",
+      "issues": []
+    },
+    {
+      "id": "plaza-hearts",
+      "title": "Hearts at the plaza café table: four players (you and three plaza regulars), passing, tricks, shooting the moon, game to 100; cards mirrored on the round table",
+      "status": "retired",
+      "branches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "owner": null,
+      "updatedAt": "2026-10-13T13:31:53.390Z",
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-hearts-20261013",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/hearts-rules.js",
+        "preview/src/hearts-opponent.js",
+        "preview/src/plaza-hearts.js",
+        "preview/src/plaza-hearts.css",
+        "preview/src/plaza-dominoes.js (café game switch)",
+        "preview/src/plaza-salon.js (café cards)",
+        "preview/e2e/plaza-hearts.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (hearts rules, opponent, mirror)",
+        "plaza-hearts and plaza-dominoes journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-hearts.md",
+      "issues": [],
+      "pr": 310,
+      "evidence": [
+        {
+          "pr": 310,
+          "reviewedHead": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+          "merge": "2ecbf566aecc237b1e5bd7be3bb8af732660c91d",
+          "tree": "3e3889aeae28157896c19a76efb781b51c309693",
+          "checks": "All 16 hosted check runs succeeded on d69c8d0 (guard: mergeState CLEAN, 17 checks); landed by pnpm run land through gh-merge-when-green.sh (Val authorized). Local: verify core passed (preview 2760 pass/1 skip; server 421 pass/134 skips); unit 2764 pass/0 fail after the #307 and #306/#308 merges; plaza-hearts journey passed after the #307 merge, plaza-dominoes passed on the #304 merge. Earlier journey failures were environment only (Playwright browser deleted by disk cleanup; ENOSPC on the lock)."
+        }
+      ],
+      "retirement": {
+        "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751",
+        "releasedAt": "2026-10-13T13:31:12+00:00",
+        "sessionsReviewedAt": "2026-10-13T13:31:12+00:00"
+      },
+      "retiredBranches": [
+        "feat/plaza-hearts-20261013"
+      ],
+      "archive": {
+        "feat/plaza-hearts-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-SQIunt/history.bundle",
+          "sha256": "df2b8527f77a95c1481c2c62d4c09685f6f485f2c54cd653834b5cc4f9114d62",
+          "tag": "refs/tags/archive/worktree-prune/007eb995-690f-4470-835f-6ef2ac7d0dc3",
+          "head": "d69c8d0474a62e7e80dddf83eecf928be3a74751"
+        }
+      }
+    },
+    {
+      "id": "shared-voice-livekit",
+      "title": "Shared voice, PR 1: server leases, routes and world authority behind RIVER_OAKS_VOICE (LiveKit Cloud)",
+      "status": "retired",
+      "branches": [
+        "feat/voice-server-20261013"
+      ],
+      "updatedAt": "2026-10-13T11:02:28.505Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/livekit-client.js",
+        "server/tests/livekit-fixture.js",
+        "server/tests/voice-leases.test.js",
+        "server/tests/voice-service.test.js",
+        "server/tests/voice-routes.test.js",
+        "server/world.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/town.js",
+        "server/redis-security.js",
+        "server/vercel-routing.js",
+        "vercel.json",
+        "preview/vite.config.js",
+        ".env.example",
+        "package.json"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "REDIS_URL pnpm run test:server (voice leases and routes, Redis cases)",
+        "pnpm run build"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 300,
+      "deliveryPr": 300,
+      "evidence": [
+        {
+          "pr": 300,
+          "reviewedHead": "550d88c",
+          "merge": "7b1432573fd767d2603f9cafd7011a8fa373e0f8",
+          "tree": "36a13a356ce78453760224b6640cccd6f238ad5d",
+          "checks": "Verify run 38385502525 passed on the updated head (preview checks rerun once after a flake); local: 582 server tests with Redis, verify core passed",
+          "note": "PR 1 of shared voice: leases, routes, world authority, flag off"
+        }
+      ],
+      "retirement": {
+        "head": "550d88c93f4315dd0349db738c54a5c0b5ec67de",
+        "sessionsReviewedAt": "2026-10-13T11:01:23.485Z",
+        "releasedAt": "2026-10-13T11:01:23.485Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #300 merged as 7b14325; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-server-20261013"
+      ],
+      "archive": {
+        "feat/voice-server-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-wfqXzq/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-wfqXzq/history.bundle",
+          "sha256": "681b96ae1a231b960ad3976b213be81befef7504844e27e73767ce3c6df152fd",
+          "tag": "refs/tags/archive/worktree-prune/e646ff1d-d336-46e9-a7e2-094e7a3cedbd",
+          "head": "550d88c93f4315dd0349db738c54a5c0b5ec67de"
+        }
+      }
+    },
+    {
+      "id": "shared-voice-reconciler",
+      "title": "Shared voice, PR 2: tick reconciler, orphan sweep cron, LiveKit CSP and microphone Permissions-Policy",
+      "status": "retired",
+      "branches": [
+        "feat/voice-controller-20261013"
+      ],
+      "pr": 302,
+      "updatedAt": "2026-10-13T11:13:35.574Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "server/voice.js",
+        "server/voice-routes.js",
+        "server/redis-room.js",
+        "server/app.js",
+        "server/distributed-app.js",
+        "server/world-gateway.js",
+        "server/redis-backend.js",
+        "server/town.js",
+        "server/security-headers.js",
+        "server/vercel-routing.js",
+        "api/server.js",
+        "vercel.json",
+        "docs/multiplayer.md",
+        "server/tests/voice-reconcile.test.js",
+        "server/tests/voice-sweep.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm run verify",
+        "REDIS_URL pnpm run test:server"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "deliveryPr": 302,
+      "evidence": [
+        {
+          "pr": 302,
+          "reviewedHead": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5",
+          "merge": "e2c95e06f0cab753fc810ebd7b45c335f96b788d",
+          "tree": "9c0b8ec079a95ea1e11e6c81fc936f00cb1167df",
+          "checks": "pnpm run land: Verify passed on the updated head; local: 597 server tests with Redis, verify core passed"
+        }
+      ],
+      "retirement": {
+        "head": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5",
+        "sessionsReviewedAt": "2026-10-13T11:12:48.385Z",
+        "releasedAt": "2026-10-13T11:12:48.385Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #302 merged as e2c95e0; evidence archived; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-controller-20261013"
+      ],
+      "archive": {
+        "feat/voice-controller-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-llquXP/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-llquXP/history.bundle",
+          "sha256": "6308038f539726d9a1c762b2a139ed19530abffbda1f823d5bf0db2b518e9e1f",
+          "tag": "refs/tags/archive/worktree-prune/7fd78c16-8173-4e19-a98a-7b5cc996d69b",
+          "head": "e40daeac8a27108b25fb9b994d0fbe039ed64ff5"
+        }
+      }
+    },
+    {
+      "id": "shared-voice-client",
+      "title": "Shared voice, PR 3: browser controller, Y/M keys, chat-dock and roster controls, voice settings",
+      "status": "retired",
+      "branches": [
+        "feat/voice-client-20261013"
+      ],
+      "updatedAt": "2026-10-13T11:36:53.546Z",
+      "nextAction": "Preserve restoration archives; reconcile any remaining branches.",
+      "filesOwned": [
+        "preview/src/voice-chat.js",
+        "preview/src/voice-spatial.js",
+        "preview/src/voice-preferences.js",
+        "preview/src/voice-ui.js",
+        "preview/src/voice.css",
+        "preview/src/multiplayer-client.js",
+        "preview/src/walking-ui.js",
+        "preview/src/town-chat.js",
+        "preview/src/sidebar.js",
+        "preview/src/rail-navigation.js",
+        "preview/src/main.js",
+        "preview/vite.config.js",
+        "package.json",
+        "preview/tests/voice-chat.test.js",
+        "preview/tests/voice-spatial.test.js",
+        "preview/tests/voice-preferences.test.js",
+        "preview/tests/voice-ui.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run build (livekit chunk, no static reference from index)",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md",
+      "pr": 303,
+      "deliveryPr": 303,
+      "evidence": [
+        {
+          "pr": 303,
+          "reviewedHead": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f",
+          "merge": "c62b960665ca6b0f56a9c8ce3915d948a7274ab2",
+          "tree": "73ce3be6ecb93d52c92fd152e2eae5b77c895ab4",
+          "checks": "pnpm run land: Verify passed on the updated head; local: 27 voice unit tests, preview 2722/2723, build chunk check, verify core passed"
+        }
+      ],
+      "retirement": {
+        "head": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f",
+        "sessionsReviewedAt": "2026-10-13T11:36:01.651Z",
+        "releasedAt": "2026-10-13T11:36:01.651Z",
+        "releasedBy": "claude:river-oaks-f1 (46fc41e0)",
+        "note": "Only this session worked the branch; #303 merged as c62b960; evidence archived; worktree clean."
+      },
+      "retiredBranches": [
+        "feat/voice-client-20261013"
+      ],
+      "archive": {
+        "feat/voice-client-20261013": {
+          "manifest": "/Users/buns/worktree-backups/river-oaks/retirement-7TvyiM/manifest.json",
+          "bundle": "/Users/buns/worktree-backups/river-oaks/retirement-7TvyiM/history.bundle",
+          "sha256": "7f7ef2060c9e0f56b67760b5603a0af20657be6dcbd1270429b32ad0f3369e14",
+          "tag": "refs/tags/archive/worktree-prune/f6bdde2a-56ac-43ce-a4ee-0b34b58ab106",
+          "head": "20ccd75771ae75c197bb2cbfe13709bc4ae0037f"
+        }
+      }
+    },
+    {
+      "id": "shared-voice-spatial",
+      "title": "Shared voice, PR 4: per-resident audio graph with distance gain and pan, speaking rings, fixture-side fake LiveKit and the two-browser journey",
+      "status": "active",
+      "branches": [
+        "feat/voice-spatial-20261013"
+      ],
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:28:17.175Z",
+      "leaseUntil": "2026-10-13T13:28:17.175Z",
+      "nextAction": "voice-shared journey passed (14 checks) after merging main (#302's reconciler). pnpm run verify running; then push, PR, land after #303.",
+      "filesOwned": [
+        "preview/src/voice-spatial.js",
+        "preview/src/voice-chat.js",
+        "preview/src/remote-players.js",
+        "preview/src/multiplayer-client.js",
+        "preview/src/main.js",
+        "preview/src/voice.css",
+        "preview/e2e/voice-shared.js",
+        "preview/e2e/experience-runner.js",
+        "preview/e2e/fixture-server.js",
+        "server/tests/browser-fixture.js",
+        "preview/tests/voice-graph.test.js",
+        "preview/tests/remote-players.test.js"
+      ],
+      "requiredChecks": [
+        "pnpm test",
+        "pnpm run test:experience voice-shared",
+        "pnpm run build",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "shared-voice-desktop",
+      "title": "Shared voice, PR 5a: desktop microphone-only permission for the game origin, usage description, desktop e2e check",
+      "status": "active",
+      "branches": [
+        "feat/voice-desktop-20261013"
+      ],
+      "owner": "claude:river-oaks-f1 (46fc41e0)",
+      "updatedAt": "2026-10-13T11:17:18.342Z",
+      "leaseUntil": "2026-10-13T13:17:18.342Z",
+      "nextAction": "Electron e2e passed (13 checks; fake UI flag dropped), verify core passed. PR open; land after #305.",
+      "filesOwned": [
+        "desktop/runtime.js",
+        "desktop/main.js",
+        "desktop/package.js",
+        "desktop/e2e.js",
+        "desktop/tests/permissions.test.js",
+        "docs/desktop.md"
+      ],
+      "requiredChecks": [
+        "pnpm run test:desktop",
+        "pnpm run test:desktop:e2e --dev",
+        "pnpm run verify"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-shared-voice.md",
+      "plan": "docs/superpowers/plans/2026-10-05-spatial-voice.md"
+    },
+    {
+      "id": "plaza-backgammon",
+      "title": "A backgammon table for the plaza (Val's 'more game tables'): new table and chairs in the plan, backgammon rules and a plaza regular, board and checkers mirrored in 3D",
+      "status": "active",
+      "branches": [
+        "feat/plaza-backgammon-20261013"
+      ],
+      "owner": "claude:river-oaks-c2",
+      "leaseUntil": "2026-10-13T23:48:35.000Z",
+      "updatedAt": "2026-10-13T11:48:46.000Z",
+      "nextAction": "Stacked on feat/plaza-hearts-20261013: merge main once Hearts lands. Rules first (pure), then the table in the plan, board mirror, sheet, journey; land when green (Val authorized).",
+      "filesOwned": [
+        "preview/src/backgammon-rules.js",
+        "preview/src/backgammon-opponent.js",
+        "preview/src/plaza-backgammon.js",
+        "preview/src/plaza-salon-plan.js (new table)",
+        "preview/src/plaza-salon.js (board)",
+        "preview/e2e/plaza-backgammon.js"
+      ],
+      "requiredChecks": [
+        "pnpm test (rules, opponent, plaza placement/clearance, mirror)",
+        "plaza-backgammon and plaza-salon journeys",
+        "pnpm run verify",
+        "Hosted CI"
+      ],
+      "ledger": "docs/superpowers/plans/2026-10-13-plaza-backgammon.md",
+      "issues": [],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-plaza-backgammon-20261013"
+    },
+    {
+      "id": "office-elevator-access",
+      "title": "Connect private offices to the district with an elevator cinematic and authorized traversal",
+      "status": "active",
+      "branches": [
+        "feat/office-elevator-access-20261013"
+      ],
+      "updatedAt": "2026-10-13T15:43:20.245205+00:00",
+      "nextAction": "PR #317: current-main menu integration verified and reviewed. Sign and push merge commit, rejoin protected landing queue, wait for current-head hosted Verify, then record delivery proof.",
+      "ledger": "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
+      "filesOwned": [
+        "server/offices.js",
+        "server/world.js (office integration)",
+        "server/avatar-preferences.js (v6 reader)",
+        "server/creator-rollout-audit.js (version expectation)",
+        "server/tests/offices*.test.js",
+        "server/tests/* (legacy checkpoint fixtures only)",
+        "preview/src/office-*.js",
+        "preview/src/office.css",
+        "preview/src/main.js (office integration only)",
+        "preview/src/multiplayer-client.js (office pose suppression)",
+        "preview/src/remote-players.js (visibility predicate)",
+        "preview/src/voice-spatial.js (office coordinates)",
+        "preview/tests/office-*.test.js",
+        "preview/tests/voice-spatial.test.js",
+        "preview/e2e/office-visit.js",
+        "docs/offices.md",
+        "docs/workplace-operations.md",
+        "docs/superpowers/plans/2026-10-13-office-elevator-access.md",
+        "server/redis-room.js (v6 writer fence)",
+        "preview/e2e/fixtures/office-elevator.html",
+        "data/reports/office-*.json"
+      ],
+      "requiredChecks": [
+        "Office permission and traversal behavioral regressions (memory and Redis)",
+        "pnpm run verify",
+        "pnpm run test:experience office-visit",
+        "pnpm run test:shared",
+        "Rendered cinematic and office navigation review"
+      ],
+      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-office-elevator-20261013",
+      "latestEvidence": {
+        "focused": "Memory/Redis ticket+WebSocket permission and movement tests passed with zero skips; office geometry/lifecycle/spatial voice tests passed.",
+        "baseline": "60/60 existing world and workplace geometry tests passed.",
+        "core": "Latest core: 3747 passed, 1 existing geometry skip, zero failures; all 635 server tests with isolated Redis. data/reports/office-menu-integration-core.json. Earlier Redis-native-crash receipt retained separately.",
+        "browser": "Latest office journey 9/9 passed after Studio and cycling Play menu integration: data/reports/office-menu-integration-experience.json.",
+        "delivery": "PR https://github.com/BunsDev/river-oaks/pull/317 open at26d9857df1e5e51491a59c102fa7929b9c0ec9fd; signed and pushed, CI running, queued behind316/318/314.",
+        "review": "Independent office/stage review: 37 focused tests passed. Cycling integration probe and combined Studio/cycling/office Play menu review approved without blockers."
+      },
+      "owner": "codex:office-elevator-access-20261013",
+      "leaseUntil": "2026-10-13T16:49:29.390145+00:00",
+      "pr": 317
+    },
+    {
+      "id": "studio-furnished-spaces",
+      "title": "Four furnished building templates and agentic space editing",
+      "status": "active",
+      "branches": [
+        "feat/studio-spaces-20261013"
+      ],
+      "owner": "codex:01a1351b-787e-7443-ab4c-0759b9fbecb8",
+      "updatedAt": "2026-10-13T15:03:53.897330+00:00",
+      "nextAction": "PR #316: current main 2642eda integrated without source conflicts; combined core passed 3543 tests, 137 existing skips. Push signed integration, wait for exact-head CI and queued Studio browser/native reruns, then land and deliver realism goal prompt.",
+      "ledger": "docs/superpowers/plans/2026-10-13-studio-spaces.md",
+      "filesOwned": [
+        ".agents/skills/studio-world-design/SKILL.md",
+        "desktop/agent-e2e.js",
+        "desktop/main.js (space export title only)",
+        "desktop/package-files.js",
+        "desktop/package.js",
+        "desktop/studio-agent-guide.js",
+        "desktop/studio-designer-host.js",
+        "desktop/studio-download.js",
+        "desktop/studio-scene-context.js",
+        "desktop/tests/fixtures/studio-agent-cli.mjs",
+        "desktop/tests/package-files.test.js",
+        "desktop/tests/studio-agent-host.test.js",
+        "desktop/tests/studio-designer-host.test.js",
+        "desktop/tests/studio-download.test.js",
+        "docs/starter-districts.md",
+        "docs/world-studio-agent.md",
+        "docs/world-studio.md",
+        "preview/e2e/world-studio.js",
+        "preview/src/studio/",
+        "preview/tests/studio-*.test.js",
+        "shared/studio-space-catalog.js",
+        "preview/src/studio/studio.css"
+      ],
+      "requiredChecks": [
+        "focused document, proposal, renderer and template regressions",
+        "pnpm run verify",
+        "pnpm run test:experience world-studio",
+        "pnpm run test:desktop:agent",
+        "rendered review of all four spaces"
+      ],
+      "verification": {
+        "focused": "87 Studio/desktop/package tests passed; later 17 renderer/template checks passed including red-green office glazing regression.",
+        "specReview": "Independent spec review passed after cabinet sink, chair orientation, guide and packaged dependency fixes.",
+        "pending": "PR #316 hosted CI and guarded landing pending. The separate requested realism prompt follows the merge; packaged release/live-provider/production/human accessibility/target GPU remain unverified.",
+        "core": "After integrating main 2642eda: all 11 core tasks passed; 3543 passing tests and 137 existing skips, zero failures. Local node --test concurrency=4; .runtime/studio-pr316-integrated-core.log and .runtime/agent/core.json.",
+        "qualityReview": "Independent quality review passed after local Stop cancellation fence and bounded observed-position traversal test.",
+        "browser": "Fresh world-studio journey passed in 28.663s through the repository browser queue; data/reports/studio-spaces-delivery-browser.json. All four scene captures previously inspected, including corrected office glazing.",
+        "native": "Fresh development Electron fixture passed all 13 checks with clean exit 0 after main integration; .runtime/studio-delivery-native.log and .runtime/agent/studio-agent-native.json. Synthetic providers only."
+      },
+      "leaseUntil": "2026-10-13T16:42:00.588982+00:00",
+      "pr": 316
     }
   ]
 }

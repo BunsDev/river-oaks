@@ -31,10 +31,26 @@ async page => {
     authenticated: true, user: { id: 'pending', name: 'Pending' }, csrfToken: 'fixture-csrf',
   } }));
   await page.route('**/api/waitlist/status', route => route.fulfill({ json: {
-    status: 'pending', admin: false, user: { id: 'pending', name: 'Pending' },
+    status: 'pending', admin: false, user: { id: 'pending', name: 'Pending' }, username: 'rosy-heron-42', usernameBy: 'default', github: null,
   } }));
+  let named = null;
+  await page.route('**/api/waitlist/username', route => {
+    named = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
+    return named.body.username === 'taken-name' ? route.fulfill({ status: 409, json: { error: 'username_taken' } })
+      : route.fulfill({ json: { userId: 'pending', username: named.body.username, usernameBy: 'self' } });
+  });
   await page.reload({ waitUntil: 'commit' });
   await page.getByText('You’re on the waitlist. An admin can approve you, or you can redeem an invite below.').waitFor({ state: 'visible' });
+  // A waiting player sees the name they will be known by, and may change it.
+  check(await page.locator('#access-username').inputValue() === 'rosy-heron-42' && await page.locator('#access-username-github').isHidden(), 'Waiting players see their username; email sign-ins get a generated one');
+  await page.locator('#access-username').fill('taken-name'); await page.locator('#access-username-save').click();
+  await page.locator('#access-username-status').getByText('Someone already has that name. Try another.').waitFor();
+  check(true, 'A name someone already holds is refused with a clear reason');
+  await page.locator('#access-username').fill('night-owl'); await page.locator('#access-username-save').click();
+  await page.locator('#access-username-status').getByText('Saved. You’ll be known as night-owl.').waitFor();
+  check(named?.body.username === 'night-owl' && named.body.userId === undefined && named.csrf === 'fixture-csrf', 'Waiting players save their own username with CSRF protection');
+  await page.locator('#access-username-suggest').click();
+  check(/^[a-z]+-[a-z]+-\d\d$/.test(await page.locator('#access-username').inputValue()), 'Suggest another offers a generated name');
   check(await page.locator('#access-invite-redeem').isEnabled(), 'Pending players can redeem an invitation');
   check(!await page.locator('.app-shell').isVisible() && !await page.locator('#canvas-host canvas').count(), 'Signed-in pending players cannot start either play mode');
   check(await page.locator('#access-gate-signout').isVisible(), 'Pending players can sign out');
@@ -54,10 +70,15 @@ async page => {
     await admin.route('**/api/waitlist/requests', async route => {
       if (holdRefresh) { refreshHeld(); await new Promise(resolve => { releaseRefresh = resolve; }); }
       return route.fulfill({ json: { requests: [
-      { userId: 'new-user', name: 'New Resident', status: 'pending' },
-      { userId: 'existing-user', name: 'Approved Resident', status: 'approved' },
-      { userId: 'declined-user', name: 'Declined Resident', status: 'rejected' },
+      { userId: 'new-user', name: 'New Resident', status: 'pending', username: 'new-resident-11' },
+      { userId: 'existing-user', name: 'Approved Resident', status: 'approved', username: 'approved-one' },
+      { userId: 'declined-user', name: 'Declined Resident', status: 'rejected', username: 'declined-one' },
     ] } });
+    });
+    let renamed = null;
+    await admin.route('**/api/waitlist/username', route => {
+      renamed = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
+      return route.fulfill({ json: { userId: renamed.body.userId, username: renamed.body.username, usernameBy: 'admin' } });
     });
     await admin.route('**/api/waitlist/decision', route => {
       decision = { body: route.request().postDataJSON(), csrf: route.request().headers()['x-csrf-token'] };
@@ -104,13 +125,23 @@ async page => {
     await saved;
     await revokeRefresh;
     check(decision?.body.userId === 'existing-user' && decision.body.approved === false && decision.csrf === 'admin-csrf', 'Approvers can revoke a prior approval with CSRF protection');
+    // The approver sees each username, may change it before approving, and an approved name is fixed.
+    const pendingRow = admin.locator('.access-request').filter({ hasText: 'New Resident' });
+    check(await pendingRow.getByRole('textbox', { name: 'Username for New Resident' }).inputValue() === 'new-resident-11'
+      && await admin.locator('.access-request').filter({ hasText: 'Approved Resident' }).locator('.access-request-username').evaluate(input => input.readOnly), 'Approvers see each username; an approved one is fixed');
+    await pendingRow.getByRole('textbox', { name: 'Username for New Resident' }).fill('fresh-name');
+    await pendingRow.getByRole('button', { name: 'Save username for New Resident' }).click();
+    await admin.locator('#access-review-status').getByText('New Resident will be known as fresh-name.').waitFor();
+    check(renamed?.body.userId === 'new-user' && renamed.body.username === 'fresh-name' && renamed.csrf === 'admin-csrf', 'Approvers rename a waiting resident with CSRF protection');
+    check(decision?.body.username === undefined, 'Revoking an approval sends no username');
+    await admin.locator('.access-request').filter({ hasText: 'Declined Resident' }).getByRole('textbox').fill('second-try');
     const reconsider = admin.locator('.access-request').filter({ hasText: 'Declined Resident' }).getByRole('button', { name: 'Approve' });
     const reapproved = admin.waitForResponse('**/api/waitlist/decision');
     const finalRefresh = admin.waitForResponse('**/api/waitlist/requests');
     holdRefresh = true;
     await reconsider.click();
     await reapproved;
-    check(decision?.body.userId === 'declined-user' && decision.body.approved === true && decision.csrf === 'admin-csrf', 'Approvers can reconsider a declined request');
+    check(decision?.body.userId === 'declined-user' && decision.body.approved === true && decision.body.username === 'second-try' && decision.csrf === 'admin-csrf', 'Approvers can reconsider a declined request with an edited username');
     await refreshHeldPromise;
     await admin.mouse.click(5, 5);
     releaseRefresh();

@@ -76,3 +76,12 @@ test('a smaller coach keeps its scaled tyres on the ground at every wheel angle'
     }
   }
 });
+
+test('a bicycle cruises at 5 m/s, sprints to the 18 mph cap, and the car ignores sprint',()=>{
+  const env={groundAt:()=>0,canOccupy:()=>true};
+  const ride=(vehicle,input)=>{const state={vehicle,position:[0,0,0],yaw:0,speed:0,distance:0};for(let i=0;i<600;i++)motion.stepCarriage(state,env,input,1/60);return state.speed;};
+  assert.ok(Math.abs(ride('bicycle',{forward:1})-5)<.05,'cruise');
+  assert.ok(Math.abs(ride('bicycle',{forward:1,sprint:true})-8.05)<.05,'sprint reaches the cap');
+  assert.ok(Math.abs(ride('bicycle',{forward:.5})-2.5)<.05,'half input pedals at half cruise');
+  assert.ok(Math.abs(ride('rolls',{forward:1,sprint:true})-7)<.05,'the car has one target speed');
+});

@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CHESS_CELL_M, chessCell, chessCellIsDark, chessCellPosition, plazaSalonPlan } from './plaza-salon-plan.js';
+import { BACKGAMMON, CHESS_CELL_M, DOMINO, JENGA, WINE_PONG_STAND, backgammonSpot, cafeChairAngle, chessCell, chessCellIsDark, chessCellPosition, dominoLine, jengaBlock, plazaSalonPlan, winePongPoint, plazaSalonRack } from './plaza-salon-plan.js';
+import { startGame as backgammonStart } from './backgammon-rules.js';
+import { startTower } from './jenga-rules.js';
+import { GLASS_HEIGHT, TABLE as PONG_TABLE, glassAt } from './wine-pong-rules.js';
+import { seededRandom } from './seeded-random.js';
+import { createRoadVehicle } from './road-vehicles.js';
 import { START_FEN, fromFEN } from './chess-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
@@ -49,6 +54,18 @@ const chessTexture = () => dataTexture(128, (x, y) => {
   const dark = chessCellIsDark(Math.floor((x - 6) / 14.5), Math.floor((y - 6) / 14.5)), n = hash(x, y) * 0.08;
   return [...(dark ? mix([52, 51, 55], [70, 68, 72], n) : mix([236, 226, 205], [222, 210, 188], n)), 255];
 }, { repeat: false });
+// A backgammon board seen from above: a walnut frame and bar, green felt, and
+// twenty-four points alternating oxblood and cream (see backgammonSpot for the layout).
+const backgammonTexture = () => dataTexture([264, 208], (px, py) => {
+  const { width, depth, column, bar } = BACKGAMMON, x = (px / 264 - 0.5) * (width + 0.04), z = (0.5 - py / 208) * (depth + 0.04);
+  if (Math.abs(x) > width / 2 || Math.abs(z) > depth / 2 || Math.abs(x) < bar / 2) return [86, 56, 36, 255];
+  const right = x > 0, inHalf = Math.floor((Math.abs(x) - bar / 2) / column), col = right ? 6 + inHalf : 5 - inHalf, near = z > 0;
+  const centre = (col - 5.5) * column + (col >= 6 ? bar / 2 : -bar / 2), reach = depth / 2 - 0.02 - Math.abs(z);
+  const inside = reach >= 0 && reach <= 0.2 && Math.abs(x - centre) < (column / 2) * (1 - reach / 0.2);
+  if (!inside) return [...mix([52, 82, 60], [44, 70, 52], hash(px, py) * 0.6), 255];
+  return ((col + (near ? 0 : 1)) & 1) ? [150, 54, 48, 255] : [232, 220, 192, 255];
+}, { repeat: false });
+
 // A walnut sunburst veneer: sixteen wedges in two tones around the centre.
 const sunburstTexture = () => dataTexture(128, (x, y) => {
   const dx = x - 63.5, dy = y - 63.5, angle = Math.atan2(dy, dx), wedge = Math.floor((angle + Math.PI) / (Math.PI / 8)) & 1;
@@ -80,6 +97,27 @@ function chessPieceGeometries() {
   return Object.fromEntries(Object.entries(parts).map(([type, list]) => [type, mergeGeometries(list)]));
 }
 
+// Card faces for the café table: a 13 × 4 atlas (ranks across, suits C D S H down),
+// drawn on a canvas. Without a document (tests, workers) there is no atlas.
+function cardAtlas() {
+  const canvas = globalThis.document?.createElement?.('canvas'), context = canvas?.getContext?.('2d');
+  if (!context) return null;
+  const width = 64, height = 90;
+  canvas.width = width * 13; canvas.height = height * 4;
+  [...'CDSH'].forEach((suit, row) => [...'23456789TJQKA'].forEach((rank, column) => {
+    const x = column * width, y = row * height, red = suit === 'H' || suit === 'D', glyph = { C: '\u2663', D: '\u2666', S: '\u2660', H: '\u2665' }[suit];
+    context.fillStyle = '#fbf8f1'; context.fillRect(x + 1, y + 1, width - 2, height - 2);
+    context.fillStyle = red ? '#b3262e' : '#1d1b1f';
+    context.font = '700 20px Georgia, serif'; context.textAlign = 'left'; context.textBaseline = 'top';
+    context.fillText(rank === 'T' ? '10' : rank, x + 6, y + 5);
+    context.font = '40px Georgia, "Apple Symbols", serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.fillText(glyph, x + width / 2, y + height / 2 + 6);
+  }));
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+  return texture;
+}
+
 function sector(innerRadius, outerRadius, bottom, top, start, length, segments = 48) {
   const shape = new THREE.Shape(), a0 = start - Math.PI / 2, a1 = a0 + length;
   shape.absarc(0, 0, outerRadius, a0, a1, false);
@@ -101,7 +139,7 @@ export function buildPlazaSalon(world) {
   const group = new THREE.Group(); group.name = 'Plaza salon';
   const plan = plazaSalonPlan(world);
   if (!plan) return group;
-  const textures = { slat: slatTexture(), travertine: travertineTexture(), chess: chessTexture(), sunburst: sunburstTexture() };
+  const textures = { slat: slatTexture(), travertine: travertineTexture(), chess: chessTexture(), sunburst: sunburstTexture(), backgammon: backgammonTexture() };
   // The world reload releases a texture through userData.texture (main.js populateWorld).
   for (const texture of Object.values(textures)) { const holder = new THREE.Object3D(); holder.userData.texture = texture; group.add(holder); }
   const material = {
@@ -112,6 +150,7 @@ export function buildPlazaSalon(world) {
     travertine: new THREE.MeshStandardMaterial({ map: textures.travertine, roughness: 0.88 }),
     chess: new THREE.MeshStandardMaterial({ map: textures.chess, roughness: 0.42 }),
     sunburst: new THREE.MeshStandardMaterial({ map: textures.sunburst, roughness: 0.5 }),
+    backgammon: new THREE.MeshStandardMaterial({ map: textures.backgammon, roughness: 0.62 }),
     bronze: new THREE.MeshStandardMaterial({ color: '#5f4a33', metalness: 0.82, roughness: 0.36 }),
     // Warm lantern glass reads as lit by day; bulbs exceed the bloom threshold at dusk.
     glass: new THREE.MeshStandardMaterial({ color: '#ffd9a0', emissive: '#ffb45e', emissiveIntensity: 1.35, roughness: 0.2, transparent: true, opacity: 0.86 }),
@@ -122,6 +161,7 @@ export function buildPlazaSalon(world) {
     bloom: new THREE.MeshStandardMaterial({ color: '#e48a9a', roughness: 0.9 }),
     leaf: new THREE.MeshStandardMaterial({ color: '#4f6b3a', roughness: 0.9 }),
     mulch: new THREE.MeshStandardMaterial({ color: '#2e241b', roughness: 1 }),
+    linen: new THREE.MeshStandardMaterial({ color: '#f1ece2', roughness: 0.92 }),
   };
   const unit = {
     box: new THREE.BoxGeometry(1, 1, 1),
@@ -185,6 +225,22 @@ export function buildPlazaSalon(world) {
     part(unit.box, material.travertine, [0, 0.36, 0], [0.24, 0.62, 0.24]);
     part(unit.box, material.travertine, [0, 0.03, 0], [0.52, 0.06, 0.52]);
   }
+  // The backgammon table: a walnut top on a pedestal, the board laid across it.
+  {
+    const table = plan.backgammon, origin = base(table), yaw = Math.PI / 2, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    part(unit.box, material.walnut, [0, 0.72, 0], [0.8, 0.05, 0.64]);
+    part(unit.box, [material.walnut, material.walnut, material.backgammon, material.walnut, material.walnut, material.walnut], [0, 0.752, 0], [BACKGAMMON.width + 0.04, 0.014, BACKGAMMON.depth + 0.04]);
+    part(unit.box, material.walnut, [0, 0.36, 0], [0.16, 0.62, 0.16]);
+    part(unit.box, material.bronze, [0, 0.03, 0], [0.5, 0.06, 0.42]);
+  }
+  // The wine pong table: a long linen-topped table on four walnut legs, east–west.
+  {
+    const table = plan.winePong, origin = base(table), yaw = table.heading, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    const { length, width, height } = PONG_TABLE;
+    part(unit.box, material.linen, [0, height - 0.015, 0], [length + 0.04, 0.03, width + 0.04]);
+    part(unit.box, material.walnut, [0, height - 0.06, 0], [length - 0.1, 0.06, width - 0.08]);
+    for (const [u, v] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) part(unit.box, material.walnut, [u * (length / 2 - 0.08), (height - 0.09) / 2, v * (width / 2 - 0.07)], [0.05, height - 0.09, 0.05]);
+  }
   // The curved bench: a slatted teak body, dusty-pink seat and back cushions,
   // flat teak ledges at each end, around a travertine drum with candle lanterns.
   {
@@ -247,6 +303,18 @@ export function buildPlazaSalon(world) {
     part(unit.disc, material.bronze, [0, 0.235, 0.35], [0.24, 0.02, 0.24]);
     part(unit.post, material.bronze, [0, 0.98, 0.35], [0.022, 1.5, 0.022]);
     part(unit.ball, material.ebony, [0, 1.75, 0.35], [0.06, 0.09, 0.06]);
+    // Lights for a performer (plaza-stage.js): a soft shaft fading upward and a warm
+    // pool on the boards. Shown only while someone in town holds the stage.
+    const top = origin[1] + 0.22, live = new THREE.Group(), glow = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide };
+    const shaft = new THREE.CylinderGeometry(0.16, stage.radius * 0.8, 4.4, 40, 1, true), shaftAt = shaft.attributes.position, fade = [];
+    for (let i = 0; i < shaftAt.count; i++) fade.push(1, 0.86, 0.62, (1 - (shaftAt.getY(i) + 2.2) / 4.4) * 0.2);
+    shaft.setAttribute('color', new THREE.Float32BufferAttribute(fade, 4));
+    const beam = new THREE.Mesh(shaft, new THREE.MeshBasicMaterial({ ...glow, vertexColors: true }));
+    beam.position.set(origin[0], top + 2.2, origin[2]);
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(stage.radius * 0.82, 48), new THREE.MeshBasicMaterial({ ...glow, color: '#ffdca8', opacity: 0.28 }));
+    pool.rotation.x = -Math.PI / 2; pool.position.set(origin[0], top + 0.006, origin[2]);
+    live.name = 'Stage lights'; live.visible = false; live.add(beam, pool); group.add(live);
+    group.userData.stage = { setLive(on) { live.visible = Boolean(on); }, get live() { return live.visible; } };
   }
   // String lights sag between the trees and the lantern posts, with a ring of
   // bulbs around each trunk under the crown.
@@ -278,10 +346,12 @@ export function buildPlazaSalon(world) {
     mesh.castShadow = !glowing && materials !== material.mulch && materials !== material.chess; mesh.receiveShadow = !glowing;
     mesh.computeBoundingSphere(); group.add(mesh);
   }
-  // The chess mirror: one InstancedMesh per piece shape, both colours and both tables
-  // (ivory and ebony are instance colours), so a full set costs six draw calls.
+  // The game mirror: one InstancedMesh per chess piece shape plus one for checkers
+  // discs, for both colours and both tables (ivory and ebony are instance colours),
+  // so a full chess set costs six draw calls and checkers one more.
   {
     const shapes = chessPieceGeometries(), meshes = {}, tint = { w: new THREE.Color('#efe6d4'), b: new THREE.Color('#2b2522') };
+    tint.l = tint.w; tint.d = tint.b;
     const piece = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.33 });
     for (const [type, geometry] of Object.entries(shapes)) {
       // Per table: sixteen pawns, or up to ten of a promoted piece per side.
@@ -289,6 +359,10 @@ export function buildPlazaSalon(world) {
       mesh.name = `Chess ${type}`; mesh.castShadow = mesh.receiveShadow = true; mesh.count = 0;
       meshes[type] = mesh; group.add(mesh);
     }
+    // A checkers disc with a turned rim; a king is two stacked. Twelve a side per table.
+    const disc = new THREE.CylinderGeometry(0.026, 0.0275, 0.009, 28).translate(0, 0.0045, 0);
+    meshes.disc = new THREE.InstancedMesh(disc, piece, 48 * plan.chess.length);
+    Object.assign(meshes.disc, { name: 'Checkers disc', castShadow: true, receiveShadow: true, count: 0 }); group.add(meshes.disc);
     const opening = fromFEN(START_FEN).board, boards = new Map(plan.chess.map(table => [table.id, { board: opening, whiteChair: 0 }]));
     const draw = () => {
       const placed = Object.fromEntries(Object.keys(meshes).map(key => [key, 0]));
@@ -296,6 +370,15 @@ export function buildPlazaSalon(world) {
         const { board, whiteChair } = boards.get(table.id), [, y] = base(table);
         board.forEach((letter, square) => {
           if (!letter) return;
+          // Checkers: dark ('d', 'D' crowned) moves first and sits where chess has white.
+          if ('dDlL'.includes(letter)) {
+            const [east, north] = chessCellPosition(table, chessCell(square, whiteChair)), side = letter.toLowerCase();
+            for (let layer = 0; layer < (letter === side ? 1 : 2) && placed.disc < meshes.disc.instanceMatrix.count; layer++) {
+              dummy.position.set(east, y + 0.774 + layer * 0.0095, -north); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+              meshes.disc.setColorAt(placed.disc, tint[side]); meshes.disc.setMatrixAt(placed.disc++, dummy.matrix);
+            }
+            return;
+          }
           const colour = letter === letter.toUpperCase() ? 'w' : 'b', key = letter.toLowerCase(), mesh = meshes[key];
           if (placed[key] >= mesh.instanceMatrix.count) return;
           const [east, north] = chessCellPosition(table, chessCell(square, whiteChair)), toward = (colour === 'w') === (whiteChair === 0) ? -1 : 1;
@@ -315,14 +398,310 @@ export function buildPlazaSalon(world) {
     group.userData.chess = {
       cell: CHESS_CELL_M,
       tables: plan.chess.map(table => table.id),
-      // A table's position (a 64-square board from chess-rules.js), or the opening when board is null.
+      // A table's position, or the chess opening when board is null: a 64-square board from
+      // chess-rules.js or checkers-rules.js, and the chair of the side that moves first.
       show(tableId, board = null, whiteChair = 0) {
         if (!boards.has(tableId)) return false;
         boards.set(tableId, { board: board ?? opening, whiteChair: whiteChair === 1 ? 1 : 0 }); draw(); return true;
       },
       board: tableId => boards.get(tableId)?.board.slice() ?? null,
     };
+    // Connect Four (plaza-table-games.js): a standing frame across the middle of a chess
+    // table, shown only while Connect Four is that table's game. Columns run from the
+    // first player's left; dark slots show where discs can go.
+    const FOUR = 0.058, frameMaterial = new THREE.MeshStandardMaterial({ color: '#2f5fae', roughness: 0.42 });
+    const width = 7 * FOUR + 0.03, height = 6 * FOUR + 0.03, lift = 0.03;
+    const fourSlot = new THREE.CylinderGeometry(0.022, 0.022, 0.014, 20).rotateX(Math.PI / 2);
+    const fourDisc = new THREE.CylinderGeometry(0.024, 0.024, 0.022, 24).rotateX(Math.PI / 2);
+    // Both tables share the frame, slot and disc geometries and materials.
+    const frameGeometry = new THREE.BoxGeometry(width, height, 0.012), feetGeometry = new THREE.BoxGeometry(width + 0.04, 0.012, 0.09);
+    const slotMaterial = new THREE.MeshStandardMaterial({ color: '#16294a', roughness: 0.6 }), discMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.38 });
+    const fours = new Map(), tintOf = { r: new THREE.Color('#d2352d'), y: new THREE.Color('#f2c230') };
+    const cellAt = index => [((index % 7) - 3) * FOUR, lift + (Math.floor(index / 7) + 0.5) * FOUR + 0.015, 0];
+    for (const table of plan.chess) {
+      const [, y] = base(table), centre = chessCellPosition(table, { i: 3.5, j: 3.5 }), across = chessCellPosition(table, { i: 4.5, j: 3.5 });
+      const holder = new THREE.Group(); holder.name = `Connect Four ${table.id}`; holder.visible = false;
+      holder.position.set(centre[0], y + 0.774, -centre[1]);
+      holder.rotation.y = Math.atan2(-(-across[1] + centre[1]), across[0] - centre[0]);
+      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+      frame.position.y = lift + height / 2; frame.castShadow = frame.receiveShadow = true;
+      const feet = new THREE.Mesh(feetGeometry, frameMaterial);
+      feet.position.y = 0.006;
+      const slots = new THREE.InstancedMesh(fourSlot, slotMaterial, 42);
+      for (let index = 0; index < 42; index++) { dummy.position.set(...cellAt(index)); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); slots.setMatrixAt(index, dummy.matrix); }
+      const discs = new THREE.InstancedMesh(fourDisc, discMaterial, 42);
+      discs.count = 0; discs.castShadow = true;
+      holder.add(frame, feet, slots, discs); group.add(holder);
+      fours.set(table.id, { holder, discs });
+    }
+    group.userData.connectFour = {
+      // A table's Connect Four grid (42 cells from connect-four-rules.js) and the chair of
+      // the side that moves first, or null to put the frame away.
+      show(tableId, board = null, firstChair = 0) {
+        const four = fours.get(tableId);
+        if (!four) return false;
+        four.holder.visible = Boolean(board);
+        if (!board) return true;
+        four.holder.scale.x = firstChair === 1 ? -1 : 1;
+        let count = 0;
+        board.forEach((side, index) => {
+          if (!tintOf[side]) return;
+          dummy.position.set(...cellAt(index)); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+          four.discs.setColorAt(count, tintOf[side]); four.discs.setMatrixAt(count++, dummy.matrix);
+        });
+        four.discs.count = count; four.discs.instanceMatrix.needsUpdate = true;
+        if (four.discs.instanceColor) four.discs.instanceColor.needsUpdate = true;
+        four.discs.computeBoundingSphere();
+        return true;
+      },
+      visible: tableId => fours.get(tableId)?.holder.visible ?? null,
+      discs: tableId => fours.get(tableId)?.discs.count ?? null,
+    };
   }
-  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length };
+  // Dominoes at the café table: the line lies face up on an arc around the centrepiece,
+  // and each hand stands at the table edge before its player's chair. Only an open hand
+  // (yours) shows its pips, so the regulars' tiles stay secret from any camera angle.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, thick = 0.009;
+    const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: '#f4efe4', roughness: 0.35 }), 28);
+    const pips = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 12), new THREE.MeshStandardMaterial({ color: '#1f1b19', roughness: 0.5 }), 28 * 13);
+    Object.assign(tiles, { name: 'Domino tiles', castShadow: true, receiveShadow: true, count: 0 });
+    Object.assign(pips, { name: 'Domino pips', count: 0 });
+    group.add(tiles, pips);
+    // Pip spots on a half face, in steps of 6.5 mm across a 25 mm square.
+    const SPOTS = { 0: [], 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [-1, 1], [1, -1], [1, 1]],
+      5: [[-1, -1], [-1, 1], [0, 0], [1, -1], [1, 1]], 6: [[-1, -1], [0, -1], [1, -1], [-1, 1], [0, 1], [1, 1]] };
+    const up = new THREE.Vector3(0, 1, 0), matrix = new THREE.Matrix4(), width = new THREE.Vector3(), at = new THREE.Vector3(), size = new THREE.Vector3();
+    // One tile: its long axis, the outward normal of its face, and the values at each end (null: face hidden).
+    const place = (origin, long, normal, ends) => {
+      width.crossVectors(long, normal);
+      matrix.makeBasis(long, normal, width).scale(size.set(DOMINO.length, thick, DOMINO.width)).setPosition(origin);
+      tiles.setMatrixAt(tiles.count++, matrix);
+      if (!ends) return;
+      const spot = (l, w, sl, sw) => {
+        at.copy(origin).addScaledVector(normal, thick / 2 + 0.0005).addScaledVector(long, l).addScaledVector(width, w);
+        matrix.makeBasis(long, normal, width).scale(size.set(sl, 0.001, sw)).setPosition(at);
+        pips.setMatrixAt(pips.count++, matrix);
+      };
+      spot(0, 0, 0.0009, 0.0095);
+      ends.forEach((value, half) => { for (const [l, w] of SPOTS[value]) spot((half ? 1 : -1) * DOMINO.length / 4 + l * 0.0065, w * 0.0065, 0.0026, 0.0026); });
+    };
+    const show = game => {
+      tiles.count = 0; pips.count = 0;
+      if (game) {
+        for (const tile of dominoLine(table, game.line, game.leadIndex ?? 0, game.facing ?? 0)) {
+          const tangent = new THREE.Vector3(Math.cos(tile.angle), 0, -Math.sin(tile.angle)), radial = new THREE.Vector3(Math.sin(tile.angle), 0, Math.cos(tile.angle));
+          place(new THREE.Vector3(tile.position[0], top + thick / 2, -tile.position[1]), tile.double ? radial : tangent, up, [tile.left, tile.right]);
+        }
+        for (const hand of game.hands ?? []) {
+          const angle = cafeChairAngle(hand.chair), radial = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle)), tangent = new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle));
+          const count = hand.tiles?.length ?? hand.count ?? 0;
+          for (let k = 0; k < count && tiles.count < 28; k++) {
+            const origin = new THREE.Vector3(tx, top + DOMINO.length / 2, tz).addScaledVector(radial, 0.64).addScaledVector(tangent, (k - (count - 1) / 2) * 0.03);
+            place(origin, up, radial, hand.tiles ? hand.tiles[k].split('-').map(Number) : null);
+          }
+        }
+      }
+      for (const mesh of [tiles, pips]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+    };
+    group.userData.dominoes = {
+      // The café game: { line, leadIndex, facing (your chair), hands: [{ chair, tiles | count }] }, or null to clear.
+      show,
+      count: () => ({ tiles: tiles.count, pips: pips.count }),
+    };
+  }
+  // Backgammon checkers: one InstancedMesh for both colours (instance colours), set
+  // from a game's points, bar and borne-off trays; idle, the table shows the opening.
+  {
+    const table = plan.backgammon, [, y] = base(table), top = y + 0.759, tint = [new THREE.Color('#efe6d4'), new THREE.Color('#2b2522')];
+    const checkers = new THREE.InstancedMesh(new THREE.CylinderGeometry(BACKGAMMON.radius, BACKGAMMON.radius, 0.007, 24), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.35 }), 30);
+    Object.assign(checkers, { name: 'Backgammon checkers', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(checkers);
+    const show = (game = null, whiteChair = 0) => {
+      const position = game ?? backgammonStart(1);
+      checkers.count = 0;
+      const put = (place, slot, colour) => {
+        const spot = backgammonSpot(table, place, slot, whiteChair);
+        dummy.position.set(spot.position[0], top + 0.0035 + spot.layer * 0.0075, -spot.position[1]); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+        checkers.setColorAt(checkers.count, tint[colour]); checkers.setMatrixAt(checkers.count++, dummy.matrix);
+      };
+      for (let point = 1; point <= 24; point++) for (let slot = 0; slot < Math.abs(position.points[point]); slot++) put(point, slot, position.points[point] > 0 ? 0 : 1);
+      for (const colour of [0, 1]) {
+        for (let slot = 0; slot < position.bar[colour]; slot++) put(colour ? 'bar-black' : 'bar-white', slot, colour);
+        for (let slot = 0; slot < position.off[colour]; slot++) put(colour ? 'off-black' : 'off-white', slot, colour);
+      }
+      checkers.instanceMatrix.needsUpdate = true; if (checkers.instanceColor) checkers.instanceColor.needsUpdate = true; checkers.computeBoundingSphere();
+    };
+    show();
+    group.userData.backgammon = {
+      // A position ({ points, bar, off } from backgammon-rules.js) or null for the opening, and white's chair.
+      show,
+      count: () => checkers.count,
+    };
+  }
+  // Jenga on the bench's drum: one InstancedMesh of maple blocks (a little colour
+  // variation each), standing as the game's tower, or scattered over the drum and the
+  // paving once it falls. Idle, the full tower stands.
+  {
+    const { bench } = plan, [, y] = base(bench), [ox, , oz] = base({ x: bench.x + JENGA.offset[0], north: bench.north + JENGA.offset[1] });
+    const blocks = new THREE.InstancedMesh(new THREE.BoxGeometry(JENGA.length, JENGA.height, JENGA.width), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.72 }), 80);
+    Object.assign(blocks, { name: 'Jenga blocks', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(blocks);
+    const grain = Array.from({ length: 80 }, (_, i) => new THREE.Color('#d9b98b').offsetHSL(0, 0, (seededRandom(Math.imul(i + 1, 0x9e3779b1) >>> 0)() - 0.5) * 0.08));
+    const put = (x, height, z, yaw, roll = 0) => {
+      dummy.position.set(x, y + height, z); dummy.rotation.set(0, yaw, roll); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+      blocks.setColorAt(blocks.count, grain[blocks.count]); blocks.setMatrixAt(blocks.count++, dummy.matrix);
+    };
+    let fallen = false;
+    const show = (tower = null) => {
+      const state = tower ?? startTower();
+      blocks.count = 0; fallen = Boolean(state.fallen);
+      if (!state.fallen) {
+        state.levels.forEach((row, level) => row.forEach((present, slot) => {
+          if (!present) return;
+          const spot = jengaBlock(bench, level, slot), [x, , z] = base({ x: spot.position[0], north: spot.position[1] });
+          put(x, spot.height, z, spot.yaw);
+        }));
+      } else {
+        // Fallen: each block lands where its own seeded throw sends it, mostly away from the
+        // bench; those that stay within the drum lie on it, the rest on the paving.
+        // A toppling pull leaves its block in the tower, so the tower's count is every block.
+        const total = state.levels.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
+        const salt = Math.imul(state.pulls + 1, 0x85ebca6b) ^ Math.imul(state.fallen.level * 3 + state.fallen.slot + 1, 0xc2b2ae35);
+        for (let i = 0; i < total; i++) {
+          const random = seededRandom((salt ^ Math.imul(i + 1, 0x9e3779b1)) >>> 0), angle = Math.PI * (random() * 1.5 - 0.75), reach = 0.05 + random() * 0.75;
+          const x = ox + Math.sin(angle) * reach, z = oz - Math.cos(angle) * reach, onDrum = Math.hypot(x - ox + JENGA.offset[0], z - oz - JENGA.offset[1]) < JENGA.drumRadius - 0.05;
+          const lying = (onDrum ? JENGA.drumTop : 0) + JENGA.height / 2 + (onDrum && reach < 0.12 ? JENGA.height * Math.floor(random() * 3) : 0);
+          put(x, lying, z, random() * Math.PI, random() < 0.3 ? Math.PI / 2 : 0);
+        }
+      }
+      blocks.instanceMatrix.needsUpdate = true; if (blocks.instanceColor) blocks.instanceColor.needsUpdate = true; blocks.computeBoundingSphere();
+    };
+    show();
+    group.userData.jenga = {
+      // A tower ({ levels, fallen } from jenga-rules.js), or null for the full tower.
+      show,
+      count: () => blocks.count,
+      fallen: () => fallen,
+    };
+  }
+  // Wine pong: twelve wine glasses (clear bowls on stems, a pour of red in each) racked
+  // at the table's two ends, standing glasses only, and the ball, shown in flight.
+  {
+    const table = plan.winePong, [, y] = base(table), top = y + PONG_TABLE.height;
+    const profile = [[0, 0], [0.034, 0], [0.034, 0.004], [0.005, 0.008], [0.004, 0.085], [0.016, 0.092], [0.036, 0.11], [0.042, 0.135], [0.039, GLASS_HEIGHT], [0.0375, GLASS_HEIGHT]].map(([r, h]) => new THREE.Vector2(r, h));
+    const bowl = new THREE.MeshStandardMaterial({ color: '#eef4f6', roughness: 0.06, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+    const glasses = new THREE.InstancedMesh(new THREE.LatheGeometry(profile, 20), bowl, 12);
+    const wine = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.033, 0.02, 0.028, 18), new THREE.MeshStandardMaterial({ color: '#5a0f1c', roughness: 0.25 }), 12);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.02, 14, 10), new THREE.MeshStandardMaterial({ color: '#fbfaf6', roughness: 0.4 }));
+    Object.assign(glasses, { name: 'Wine pong glasses', count: 0, renderOrder: 2 });
+    Object.assign(wine, { name: 'Wine pong wine', count: 0, castShadow: true });
+    Object.assign(ball, { name: 'Wine pong ball', visible: false, castShadow: true });
+    group.add(glasses, wine, ball);
+    const scenePoint = ([u, v], height) => { const [east, north] = winePongPoint(table, [u, v]); const [x, , z] = base({ x: east, north }); return [x, y + height, z]; };
+    const show = (game = null) => {
+      const racks = game?.glasses ?? [Array(6).fill(true), Array(6).fill(true)];
+      glasses.count = 0; wine.count = 0;
+      racks.forEach((rack, side) => rack.forEach((standing, k) => {
+        if (!standing) return;
+        const [x, , z] = scenePoint(glassAt(side, k), 0);
+        dummy.position.set(x, top, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); glasses.setMatrixAt(glasses.count++, dummy.matrix);
+        dummy.position.set(x, top + 0.104, z); dummy.updateMatrix(); wine.setMatrixAt(wine.count++, dummy.matrix);
+      }));
+      for (const mesh of [glasses, wine]) { mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); }
+    };
+    show();
+    group.userData.winePong = {
+      // A game ({ glasses } from wine-pong-rules.js) or null for two full racks.
+      show,
+      // The ball at a point of its flight ([u, v, height above the paving] in the table's frame), or null to put it away.
+      ball(point = null) { ball.visible = Boolean(point); if (point) ball.position.set(...scenePoint([point[0], point[1]], point[2])); },
+      glasses: () => glasses.count,
+      ballVisible: () => ball.visible,
+      stand: side => winePongPoint(table, [side === 0 ? -WINE_PONG_STAND : WINE_PONG_STAND, 0]),
+    };
+  }
+  // Hearts at the café table: the trick lies face up, each card in front of the player
+  // who played it; hands and won tricks wait face down at each seat. Faces come from a
+  // canvas atlas where there is a document (a plain face elsewhere); backs are one mesh.
+  {
+    const table = plan.round, [tx, ty, tz] = base(table), top = ty + 0.77, CARD = { width: 0.063, length: 0.088, thick: 0.0006 };
+    const backs = new THREE.InstancedMesh(new THREE.BoxGeometry(CARD.width, CARD.thick, CARD.length), new THREE.MeshStandardMaterial({ color: '#7b2f45', roughness: 0.55 }), 4 * 13 + 4 * 13);
+    Object.assign(backs, { name: 'Card backs', castShadow: true, receiveShadow: true, count: 0 });
+    group.add(backs);
+    const atlas = cardAtlas();
+    if (atlas) { const holder = new THREE.Object3D(); holder.userData.texture = atlas; group.add(holder); }
+    const edge = new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 0.6 });
+    const faces = [0, 1, 2, 3].map(index => {
+      const map = atlas?.clone() ?? null;
+      if (map) map.repeat.set(1 / 13, 1 / 4);
+      const face = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45, map });
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD.width, CARD.thick, CARD.length), [edge, edge, face, edge, edge, edge]);
+      mesh.name = `Card in the trick ${index}`; mesh.visible = false; mesh.castShadow = mesh.receiveShadow = true;
+      group.add(mesh); return mesh;
+    });
+    const at = (chair, out, along = 0) => {
+      const angle = cafeChairAngle(chair);
+      return [tx + Math.sin(angle) * out + Math.cos(angle) * along, tz + Math.cos(angle) * out - Math.sin(angle) * along, angle];
+    };
+    const show = game => {
+      backs.count = 0; faces.forEach(mesh => { mesh.visible = false; });
+      if (game) {
+        (game.trick ?? []).forEach(({ chair, card }, order) => {
+          const mesh = faces[order], [x, z, angle] = at(chair, 0.2);
+          mesh.position.set(x, top + CARD.thick / 2 + order * 0.0008, z); mesh.rotation.set(0, angle + (order - 1.5) * 0.08, 0); mesh.visible = true;
+          if (mesh.material[2].map) { const column = '23456789TJQKA'.indexOf(card[0]), row = 'CDSH'.indexOf(card[1]); mesh.material[2].map.offset.set(column / 13, 1 - (row + 1) / 4); }
+        });
+        const stack = (chair, count, along, spread) => {
+          for (let k = 0; k < count && backs.count < backs.instanceMatrix.count; k++) {
+            const [x, z, angle] = at(chair, 0.6, along + (k - (count - 1) / 2) * spread);
+            dummy.position.set(x, top + CARD.thick / 2 + k * 0.0007, z); dummy.rotation.set(0, angle + (k - (count - 1) / 2) * 0.05, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+            backs.setMatrixAt(backs.count++, dummy.matrix);
+          }
+        };
+        for (const hand of game.hands ?? []) stack(hand.chair, hand.count, 0, 0.012);
+        for (const pile of game.won ?? []) stack(pile.chair, pile.tricks, 0.16, 0);
+      }
+      backs.instanceMatrix.needsUpdate = true; backs.computeBoundingSphere();
+    };
+    group.userData.cards = {
+      // The café Hearts hand: { trick: [{ chair, card }], hands: [{ chair, count }], won: [{ chair, tricks }] }, or null to clear.
+      show,
+      count: () => ({ faces: faces.filter(mesh => mesh.visible).length, backs: backs.count, drawn: Boolean(atlas) }),
+    };
+  }
+  // The bike rack: a bronze bar on two posts along the north footway, with a parked
+  // bicycle on each slot while nobody has it out (plazaSalonRack). The bar joins the
+  // instanced batches above; each bike is the road vehicle's own small group.
+  const slots = plazaSalonRack(world), models = [];
+  {
+    const { rack } = plan, origin = base(rack), yaw = rack.heading, part = (geometry, m, local, scale) => add(geometry, m, at(origin, yaw, local), scale, yaw);
+    part(unit.box, material.bronze, [0, 0.8, 0], [rack.length, 0.05, 0.05]);
+    for (const lx of [-1, 1].map(side => side * (rack.length / 2 - 0.3))) {
+      part(unit.post, material.bronze, [lx, 0.4, 0], [0.07, 0.8, 0.07]);
+      part(unit.disc, material.bronze, [lx, 0.015, 0], [0.22, 0.03, 0.22]);
+    }
+    const bikes = new THREE.Group(); bikes.name = 'Parked bikes'; group.add(bikes);
+    for (const slot of slots) {
+      const model = createRoadVehicle('bicycle'), [x, y, z] = base(slot);
+      // The vehicle mesh faces local -X; a heading (0 = south = scene +Z) is the yaw of a
+      // model facing +Z, so the bike turns a further quarter (see parked-carriage pose).
+      model.object.position.set(x, y, z); model.object.rotation.y = slot.heading + Math.PI / 2;
+      bikes.add(model.object); models.push(model);
+    }
+  }
+  const parked = slots.map(() => true);
+  group.userData.rack = {
+    slots: slots.length,
+    parked: () => parked.slice(),
+    // Hide the bikes whose slots are taken (slot ids from the cycling snapshot); true when anything changed.
+    setTaken(taken) {
+      const held = new Set(taken ?? []); let changed = false;
+      slots.forEach((slot, i) => { const show = !held.has(slot.id); if (parked[i] !== show) { parked[i] = show; models[i].object.visible = show; changed = true; } });
+      return changed;
+    },
+    dispose: () => models.forEach(model => model.dispose()),
+  };
+  group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length, rackSlots: slots.length };
   return group;
 }

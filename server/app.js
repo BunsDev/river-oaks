@@ -22,22 +22,31 @@ import { profileAction } from './profile-api.js';
 import { eventAction } from './events-api.js';
 import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
+import { createVoiceRoutes } from './voice-routes.js';
+import { createRideFlush } from './ride-flush.js';
+import { createCyclingLeaderboard } from './cycling-api.js';
 
 const types = { '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, events = null, workplace = null, avatarPreferences = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 10000, cyclingMiles = null, cyclingFlushMs = 30000 }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
   const clientAddress = createClientAddress(trustedProxyIPs);
   const connections = new Map(), tickets = new Map(), departures = new Map();
-  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000), inviteLists = createRateLimiter(20,60000);
+  const frames = createRateLimiter(40,1000), issuing = createRateLimiter(10,60000), reports = createRateLimiter(3,60000), socialWrites = createRateLimiter(12,60000), groupWrites = createRateLimiter(24,60000), eventWrites = createRateLimiter(12,60000), workplaceWrites = createRateLimiter(30,60000), workplaceReads = createRateLimiter(120,60000), inviteLists = createRateLimiter(20,60000), voiceCalls = createRateLimiter(30,60000);
   const access = createRateLimiter(1000,60000,4096), signIns = createRateLimiter(SIGN_INS_PER_ADDRESS,SIGN_IN_WINDOW), moderatorIds = new Set(moderators);
   let stopped = false;
   const isBanned = id => moderation?.isBanned(id) ?? false;
+  // Cycling: bank accepted bicycle metres into the account store. The world
+  // keeps them until drained and the flush holds them until the store accepts
+  // them (ride-flush.js), so a crash loses at most one flush interval.
+  const leaderboard=createCyclingLeaderboard({store:cyclingMiles,now});
+  const rides=cyclingMiles?createRideFlush({world:()=>world,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
+  const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
-  const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{})});
+  const snapshot=()=>({...world.snapshot(),...(regionSha256?{regionSha256}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
     if (!identity) {json(res,401,{error:'Sign in to join the town.'});return null;}
@@ -55,8 +64,16 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     clearTimeout(departures.get(id)); departures.delete(id);
     const connection=connections.get(id);connections.delete(id);
     if(connection && presence)void presence.leave(id,connection.token).catch(()=>{});
-    connection?.ws.close(code,reason);world.leave(id);
+    // Every kick (ban, approval ended, logout, another world) ends the account's voice too.
+    if(voice)void voice.revokeUser(id).catch(()=>{});
+    connection?.ws.close(code,reason);world.leave(id);void flushRides();
   };
+  const handleVoice=voice?createVoiceRoutes({voice,worldId,authorized,matchesWorld,allow:id=>voiceCalls(id),
+    present:async identity=>{
+      const connection=connections.get(identity.userId);
+      if(connection?.identity.sessionId!==identity.sessionId)return null;
+      return {connectionId:connection.token,space:world.voiceSpaceOf(identity.userId)};
+    }}):null;
   const handleWaitlist = createWaitlistRoutes({ auth, waitlist, admins: waitlistAdmins, origin, isBanned, allowInviteList: id => inviteLists(id),
     onRevoke: async userId => {
       disconnectUser(userId, 4003, 'Waitlist approval ended');
@@ -81,6 +98,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (await handleDebugReports(req, res, pathname)) return;
+      if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
       if (pathname==='/api/world-data' && req.method==='GET' && worldCatalog) {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
@@ -197,6 +215,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await workplaceAction({action:pathname.slice('/api/workplace/'.length),identity,workplace,worldId,readBody:()=>body(req),
           listPlaces:async()=>world.listPlaces?.()??[],allowWrite:id=>workplaceWrites(id),allowRead:id=>workplaceReads(id),now});
+        return json(res,result.status,result.value);
+      }
+      if (pathname==='/api/cycling/leaderboard' && req.method==='GET') {
+        const identity=await approvedIdentity(req,res);if(!identity)return;
+        const result=await leaderboard.read(identity);
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {
@@ -335,6 +358,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             const result=world.command(identity.userId,command);
             if(result.ok && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
+            if(result.ok && command.type==='uncycle')await flushRides();
             const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
             if(earlyAck)send(ws,{type:'result',requestId,...result});
             if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,snapshot());
@@ -346,8 +370,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           if(connections.get(identity.userId)!==connection)return;
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
-          if(stopped){world.leave(identity.userId);return;}
-          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);},10000);timer.unref();departures.set(identity.userId,timer);
+          if(stopped){world.leave(identity.userId);void flushRides();return;}
+          const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...snapshot(),selfId:identity.userId});
         })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
@@ -383,20 +407,33 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     }
   },5000):null;
   avatarSync?.unref();
+  const rideFlush=cyclingMiles?setInterval(()=>{void flushRides();},cyclingFlushMs):null;
+  rideFlush?.unref();
+  // Shared voice: stamp each player's participant identity from its lease, and
+  // end leases whose connection or space no longer matches (see voice.js).
+  const voiceLoop=voice?setInterval(()=>{
+    if(stopped||!connections.size)return;
+    voice.reconcileWorld({worldId,removed:[],present:[...connections.values()].map(connection=>({userId:connection.identity.userId,connectionId:connection.token,space:world.voiceSpaceOf(connection.identity.userId)}))})
+      .then(stamped=>{for(const [userId,participantIdentity] of stamped)world.setVoice(userId,participantIdentity);})
+      .catch(()=>{});
+  },voiceReconcileMs):null;
+  voiceLoop?.unref();
   return {server,disconnectUser,get playerCount(){return connections.size;},replaceWorld(next,hash){
     if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
     for(const timer of departures.values())clearTimeout(timer);
     departures.clear();tickets.clear();
     if(presence)for(const connection of connections.values())void presence.leave(connection.identity.userId,connection.token).catch(()=>{});
     for(const {ws} of connections.values())ws.close(4000,'World region updated.');
-    connections.clear();world=next;regionSha256=hash;
+    connections.clear();void flushRides();world=next;regionSha256=hash;
   },async close(){
-    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);
+    stopped=true;clearInterval(loop);clearInterval(heartbeat);clearInterval(avatarSync);clearInterval(voiceLoop);clearInterval(rideFlush);
     for(const [id,timer] of departures){clearTimeout(timer);world.leave(id);}
     departures.clear();tickets.clear();
     if(presence)await Promise.allSettled([...connections.values()].map(connection=>presence.leave(connection.identity.userId,connection.token)));
     for(const id of connections.keys())world.leave(id);
     connections.clear();
+    // The last rides, plus anything a running flush was still sending.
+    if(rides){rides.drain();await rides.settle();}
     for(const ws of wss.clients)ws.terminate();
     auth.close?.();wss.close();
     await new Promise(resolve=>server.close(resolve));

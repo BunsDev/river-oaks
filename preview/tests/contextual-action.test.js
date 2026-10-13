@@ -45,3 +45,9 @@ test('seated at a game table, playing is the primary action and standing stays a
   assert.equal(contextualAction({ seated: true, interact: true }), 'interact');
   assert.equal(primaryAction({ play: { shown: true, disabled: false }, interact: { shown: true, disabled: false } }, { seated: true }), 'play');
 });
+
+test('standing at the plaza stage, taking or leaving it is the primary action', () => {
+  assert.equal(contextualAction({ play: true, talk: true, meet: true }), 'play');
+  assert.equal(primaryAction({ play: { shown: true, disabled: false }, talk: { shown: true, disabled: false } }), 'play');
+  assert.equal(primaryAction({ play: { shown: true, disabled: true }, talk: { shown: true, disabled: false } }), 'talk', 'a held stage never leads');
+});

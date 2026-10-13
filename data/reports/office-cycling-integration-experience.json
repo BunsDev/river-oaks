@@ -1,0 +1,43 @@
+{
+  "createdAt": "2026-10-13T15:06:07.688Z",
+  "results": [
+    {
+      "name": "office-visit",
+      "status": "failed",
+      "seconds": 80.394,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at eval (preview/e2e/office-visit.js:32:14)\n    at async file:///Users/buns/Documents/GitHub/BunsDev/river-oaks-office-elevator-20261013/preview/e2e/experience-runner.js:50:22",
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ],
+      "diagnostics": [
+        {
+          "url": "http://127.0.0.1:51645/?motion-debug=1",
+          "ready": "true",
+          "assets": "{\"loaded\":100,\"total\":100,\"failed\":0,\"done\":true}",
+          "renderStats": "{\"calls\":2049,\"triangles\":6254955,\"geometries\":413,\"textures\":163}",
+          "quality": "{\"mode\":\"auto\",\"scale\":1,\"occlusion\":true,\"fps\":54}",
+          "pipeline": "{\"samples\":4,\"ao\":true,\"bloom\":true,\"renderScale\":1,\"aoScale\":1,\"transmissionScale\":1}",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)",
+          "window": [
+            1440,
+            1000,
+            1
+          ],
+          "screen": [
+            1440,
+            1000,
+            24
+          ],
+          "canvas": [
+            1440,
+            1000,
+            1440,
+            1000
+          ]
+        }
+      ]
+    }
+  ]
+}

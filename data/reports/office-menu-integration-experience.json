@@ -1,0 +1,23 @@
+{
+  "createdAt": "2026-10-13T15:32:37.340Z",
+  "results": [
+    {
+      "name": "office-visit",
+      "status": "passed",
+      "seconds": 67.989,
+      "result": {
+        "checks": [
+          "All elevator phases render before walking begins",
+          "F at the lobby boards the elevator, rides upstairs and releases walking",
+          "W moves the player into the office",
+          "The back wall and storage stop movement",
+          "Leaving returns focus to the street",
+          "Reduced motion enters without the elevator camera motion",
+          "An uninvited guest cannot board",
+          "Jevica accepts the visit request from her office and the guest enters",
+          "Revocation returns the guest to the lobby immediately"
+        ]
+      }
+    }
+  ]
+}

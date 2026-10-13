@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-chess', 'ui-improvements', 'nearby-encounters'];
+const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'beast-movement', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-stage', 'plaza-chess', 'plaza-checkers', 'plaza-connect-four', 'plaza-dominoes', 'cycling-rack', 'cycling-leaderboard', 'plaza-hearts', 'salon-guide', 'plaza-backgammon', 'plaza-jenga', 'plaza-wine-pong', 'ui-improvements', 'nearby-encounters'];
 const names = process.argv.slice(2);
 // Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
 // Chromium's headless SwiftShader path stalls on the district scene.
@@ -26,10 +26,13 @@ let browser, fixture;
 const releaseBrowserLock = await holdBrowserLock('experience journeys');
 try {
   await mkdir(join(root, 'output/playwright'), { recursive: true });
+  // Fake media lets the voice journey grant a microphone without a device or a prompt; other journeys never ask.
+  const media = ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'];
   browser = await chromium.launch({ headless: !software,
-    args: software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
+    args: [...media, ...(software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [])] });
   for (const name of names.length ? names : suite) {
-    fixture = await startBrowserFixture();
+    // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
+    fixture = await startBrowserFixture(name === 'voice-shared' ? { env: { RIVER_OAKS_VOICE_FIXTURE: '1' } } : {});
     const { origin } = fixture;
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);

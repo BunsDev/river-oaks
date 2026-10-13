@@ -2,6 +2,7 @@ import { dismissOnOutsideClick } from './modal-dismiss.js';
 import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
+import { generatedUsername } from './generated-username.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
@@ -14,6 +15,13 @@ const gateSignout = $('#access-gate-signout');
 const review = $('#access-review'), reviewList = $('#access-review-list'), reviewStatus = $('#access-review-status');
 let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
 const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem');
+// A waiting resident's username: the field is never overwritten while they edit it.
+const usernameForm = $('#access-username-form'), usernameInput = $('#access-username'), usernameStatus = $('#access-username-status');
+const usernameGitHub = $('#access-username-github');
+let usernameEdited = false, githubName = null;
+const USERNAME_ERRORS = { username_taken: 'Someone already has that name. Try another.', username_locked: 'Your name is already settled.',
+  username_missing: 'Your request could not be found. Reload and try again.' };
+const usernameError = error => USERNAME_ERRORS[error.message] ?? error.detail?.message ?? 'That name could not be saved. Try again.';
 let reviewGeneration = 0, restoreReviewSettings = false;
 
 // The art rotates only while the gate is showing; it re-checks when the gate opens or closes.
@@ -31,7 +39,7 @@ $('#access-reports').addEventListener('click', () => { void import('./debug-repo
 async function api(path, options = {}) {
   const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...options });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? 'Access is unavailable');
+  if (!response.ok) throw Object.assign(new Error(body.error ?? 'Access is unavailable'), { detail: body });
   return body;
 }
 
@@ -52,7 +60,7 @@ async function checkAccess() {
     if (!session.authenticated) {
       if (entered) location.reload();
       endSplash({ forget: true });
-      tools.hidden = true; gateSignout.hidden = true; providers.hidden = false;
+      tools.hidden = true; gateSignout.hidden = true; providers.hidden = false; usernameForm.hidden = true;
       inviteForm.hidden = false; redeemButton.disabled = true;
       message.textContent = 'Sign in with email or GitHub.\nEntry is by invitation or waitlist approval.';
       if (gateState !== 'signed-out') $('#access-title').focus({ preventScroll: true });
@@ -73,6 +81,10 @@ async function checkAccess() {
       endSplash({ forget: true });
       providers.hidden = true;
       inviteForm.hidden = access.status === 'rejected'; redeemButton.disabled = false;
+      usernameForm.hidden = access.status !== 'pending';
+      githubName = access.github ?? null;
+      if (!usernameEdited && document.activeElement !== usernameInput) usernameInput.value = access.username ?? '';
+      usernameGitHub.hidden = !githubName || usernameInput.value === githubName;
       message.textContent = access.status === 'rejected'
         ? 'Your request has not been approved. Contact the district team if you think this is a mistake.'
         : 'You’re on the waitlist. An admin can approve you, or you can redeem an invite below.';
@@ -80,6 +92,7 @@ async function checkAccess() {
       gateState = access.status;
       return;
     }
+    usernameForm.hidden = true;
     if (!entered) {
       entered = true;
       document.body.dataset.accountId = session.user.id;
@@ -104,6 +117,26 @@ async function checkAccess() {
 const post = (path, data) => api(path, { method: 'POST', headers: {
   'Content-Type': 'application/json', ...(session?.csrfToken ? { 'X-CSRF-Token': session.csrfToken } : {}),
 }, body: JSON.stringify(data) });
+
+usernameInput.addEventListener('input', () => {
+  usernameEdited = true; usernameStatus.textContent = '';
+  usernameGitHub.hidden = !githubName || usernameInput.value === githubName;
+});
+usernameGitHub.addEventListener('click', () => { usernameInput.value = githubName; usernameEdited = true; usernameGitHub.hidden = true; usernameInput.focus(); });
+$('#access-username-suggest').addEventListener('click', () => {
+  usernameInput.value = generatedUsername(crypto.randomUUID()); usernameEdited = true;
+  usernameGitHub.hidden = !githubName; usernameInput.focus();
+});
+usernameForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const save = $('#access-username-save'); save.disabled = true;
+  try {
+    const result = await post('/api/waitlist/username', { username: usernameInput.value.trim() });
+    usernameInput.value = result.username; usernameEdited = false;
+    usernameStatus.textContent = `Saved. You’ll be known as ${result.username}.`;
+  } catch (error) { usernameStatus.textContent = usernameError(error); }
+  finally { save.disabled = false; }
+});
 
 // Cloudflare Turnstile guards email sign-in when the build has a site key. The
 // widget loads on first use of the email field, so GitHub sign-in never loads it.
@@ -272,6 +305,27 @@ async function loadRequests() {
       const row = document.createElement('div'); row.className = 'access-request';
       const person = document.createElement('span'); person.textContent = `${request.name}${request.email ? ` · ${request.email}` : ''} · ${request.status}`;
       row.append(person);
+      // The name this resident will be known by: editable until they are approved.
+      const username = document.createElement('input');
+      username.className = 'access-request-username'; username.value = request.username ?? ''; username.maxLength = 39;
+      username.autocapitalize = 'off'; username.spellcheck = false; username.readOnly = request.status === 'approved';
+      username.setAttribute('aria-label', `Username for ${request.name}`);
+      row.append(username);
+      const editedName = () => { const value = username.value.trim(); return value && value !== (request.username ?? '') ? value : undefined; };
+      if (request.status !== 'approved') {
+        const saveName = document.createElement('button'); saveName.type = 'button'; saveName.textContent = 'Save name';
+        saveName.setAttribute('aria-label', `Save username for ${request.name}`);
+        saveName.addEventListener('click', async () => {
+          saveName.disabled = true;
+          try {
+            const result = await post('/api/waitlist/username', { userId: request.userId, username: username.value.trim() });
+            request.username = result.username; username.value = result.username;
+            reviewStatus.textContent = `${request.name} will be known as ${result.username}.`;
+          } catch (error) { reviewStatus.textContent = usernameError(error); }
+          finally { saveName.disabled = false; }
+        });
+        row.append(saveName);
+      }
       const identifier = document.createElement('code');
       identifier.className = 'access-request-id';
       identifier.textContent = 'User ID hidden';
@@ -303,9 +357,14 @@ async function loadRequests() {
         button.addEventListener('click', async () => {
           button.disabled = true;
           try {
-            await api('/api/waitlist/decision', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken }, body: JSON.stringify({ userId: request.userId, approved }) });
+            // A name edited in the row goes with the decision; a refused name refuses it.
+            const named = approved && editedName();
+            await api('/api/waitlist/decision', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken }, body: JSON.stringify({ userId: request.userId, approved, ...(named ? { username: named } : {}) }) });
             if (!review.hidden) await loadRequests();
-          } catch { reviewStatus.textContent = 'Could not save that decision. Try again.'; button.disabled = false; }
+          } catch (error) {
+            reviewStatus.textContent = error.message?.startsWith('username_') ? usernameError(error) : 'Could not save that decision. Try again.';
+            button.disabled = false;
+          }
         });
         row.append(button);
       }
