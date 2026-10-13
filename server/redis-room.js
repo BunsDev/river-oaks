@@ -84,7 +84,7 @@ function validOperation(operation) {
 }
 
 /** Private room coordinator. Authentication and connection IDs come from the server. */
-export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null}) {
+export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID,now=Date.now,authorize,isAdmin=isJevicaAdmin,regionCatalog=null,regionSha256=null,avatarPreferences=null,voice=null}) {
   if(!redis || typeof authorize!=='function' || typeof prefix!=='string' || !prefix || prefix.length>180) throw new Error('Invalid room configuration');
   validateWorldId(worldId);
   const tag=prefix.includes('{')?prefix:`{${prefix}}`;
@@ -157,7 +157,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       if(!authorizations.has(key))authorizations.set(key,Promise.resolve().then(()=>authorize(identity)).then(value=>value===true));
       return authorizations.get(key);
     };
-    const remove=userId=>{connections.delete(userId);world.leave(userId);};
+    const removedUsers=[];
+    const remove=userId=>{connections.delete(userId);world.leave(userId);removedUsers.push(userId);};
     const presence=await Promise.all([...connections.values()].map(async connection=>({connection,authorized:await allowed(connection.identity)})));
     for(const {connection,authorized} of presence) {
       if(!authorized || time-connection.identity.expiresAt>=10000 || connection.leftAt!==null && time-connection.leftAt>=10000 || time-connection.lastSeen>=20000) remove(connection.identity.userId);
@@ -250,6 +251,18 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       replies.push({key:`${tag}:reply:${entry.id}`,result});
     }
     if(closed){cached=null;return null;}
+    // Shared voice: the lease holder is the one place with both the live world
+    // and the authoritative connections, so it reconciles leases here, after
+    // this tick's kicks and before the snapshot carries the result. A failure
+    // never blocks the tick; the next one and the sweep retry.
+    if(voice) {
+      try {
+        const stamped=await voice.reconcileWorld({worldId,removed:removedUsers,
+          present:[...connections.values()].filter(connection=>connection.leftAt===null)
+            .map(connection=>({userId:connection.identity.userId,connectionId:connection.connectionId,space:world.voiceSpaceOf(connection.identity.userId)}))});
+        for(const [userId,participantIdentity] of stamped)world.setVoice(userId,participantIdentity);
+      } catch {console.warn(JSON.stringify({event:'voice_reconcile_failed',worldId}));}
+    }
     const revision=(previous?.revision??0)+1;
     const snapshot=world.snapshot();if(currentHash)snapshot.regionSha256=currentHash;
     const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};

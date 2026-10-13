@@ -11,6 +11,10 @@ export const VOICE_LEASE_TTL_MS = 45_000, VOICE_RENEW_MS = 15_000, VOICE_TOKEN_T
 export const VOICE_MAX_PER_SPACE = 32, VOICE_MAX_LEASES = 256, VOICE_DAILY_JOINS = 5000;
 export const OUTDOOR_SPACE = 'outdoor';
 const FAILURES_BEFORE_PAUSE = 3, PAUSE_MS = 60_000, MAX_READ = 64;
+// A player must sit in another space for this many reconciles (600 ms on the
+// hosted 200 ms tick) before the old room's lease ends, so a doorway does not
+// flap. Removals run behind the tick; past this many in flight the sweep takes over.
+const SPACE_CHANGE_TICKS = 3, MAX_REMOVALS_IN_FLIGHT = 8;
 const NAMESPACE = /^[A-Za-z0-9:_-]{1,120}$/, SAFE_SPACE = /^[A-Za-z0-9_-]{1,64}$/, ROOM = /^[A-Za-z0-9._-]{1,200}$/, PARTICIPANT = /^[A-Za-z0-9_-]{1,64}$/;
 const validId = value => typeof value === 'string' && value.length > 0 && value.length <= 160 && !/[\u0000-\u001f\u007f]/.test(value);
 const clamp = (value, fallback, min, max) => Math.min(max, Math.max(min, Number.parseInt(value ?? '', 10) || fallback));
@@ -181,10 +185,10 @@ export function createRedisVoiceLeases({ redis, prefix, now = Date.now } = {}) {
   };
 }
 
-export function createVoiceService({ leases, livekit, namespace, allow, now = Date.now, dailyLimit = VOICE_DAILY_JOINS, maxPerSpace = VOICE_MAX_PER_SPACE,
+export function createVoiceService({ leases, livekit, namespace, allow, now = Date.now, monotonic = () => performance.now(), dailyLimit = VOICE_DAILY_JOINS, maxPerSpace = VOICE_MAX_PER_SPACE,
   maxLeases = VOICE_MAX_LEASES, leaseTtlMs = VOICE_LEASE_TTL_MS, renewMs = VOICE_RENEW_MS, tokenTtlSeconds = VOICE_TOKEN_TTL_S, log = console } = {}) {
   if (!leases || !livekit || typeof allow !== 'function') throw new Error('Invalid voice configuration');
-  voiceRoomPrefix(namespace);
+  const roomPrefix = voiceRoomPrefix(namespace);
   // Spend and failure control as in chauffeur.js: a global daily join budget,
   // and a pause after three provider failures in a row. While paused, no token
   // is minted and status reports voice unavailable.
@@ -201,6 +205,17 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
     }
   }
   const remove = (room, identity) => provider(() => livekit.removeParticipant(room, identity)).then(() => true, () => false);
+  const deleteRoom = room => provider(() => livekit.deleteRoom(room)).then(() => true, () => false);
+  // Removals behind a world tick never wait for the provider; a removal that
+  // does not fit is left to the sweep, which lists every room's participants.
+  const inFlight = new Set();
+  const removeLater = (room, identity) => {
+    if (inFlight.size >= MAX_REMOVALS_IN_FLIGHT) return;
+    const task = remove(room, identity).finally(() => inFlight.delete(task));
+    inFlight.add(task);
+  };
+  const mismatches = new Map();
+  let sweepTimer = null;
   async function join({ userId, worldId, connectionId, space }) {
     if (!validId(userId) || !validId(connectionId)) return { ok: false, reason: 'stale_connection' };
     if (space === null || space === undefined) return { ok: false, reason: 'no_space' };
@@ -263,19 +278,94 @@ export function createVoiceService({ leases, livekit, namespace, allow, now = Da
       return true;
     } catch { warn('voice_storage_unavailable'); return false; }
   }
+  // Called by whoever owns a world's authoritative presence (the hosted room's
+  // lease holder each tick, the standalone town each second). `present` is every
+  // live connection with its current space; `removed` is everyone that tick
+  // took out of the world. Answers each present player's participant identity,
+  // or null, for the snapshot. Storage errors propagate so the caller can log
+  // and try again next tick.
+  async function reconcileWorld({ worldId, present, removed = [] }) {
+    if (!Array.isArray(present) || !Array.isArray(removed) || present.some(item => !validId(item?.userId) || !validId(item?.connectionId))) throw new Error('Invalid voice presence');
+    for (const userId of removed) {
+      mismatches.delete(userId);
+      if (!validId(userId)) continue;
+      const lease = await leases.revoke(userId);
+      if (lease) removeLater(lease.room, lease.participantIdentity);
+    }
+    const ids = [...new Set(present.map(item => item.userId))], found = new Map();
+    for (let index = 0; index < ids.length; index += MAX_READ) for (const [userId, lease] of await leases.getMany(ids.slice(index, index + MAX_READ))) found.set(userId, lease);
+    const result = new Map();
+    for (const { userId, connectionId, space } of present) {
+      const lease = found.get(userId);
+      if (!lease) { mismatches.delete(userId); result.set(userId, null); continue; }
+      let revoke = lease.connectionId !== connectionId || lease.worldId !== worldId || space === null || space === undefined;
+      if (!revoke && space !== lease.space) {
+        const count = (mismatches.get(userId) ?? 0) + 1;
+        if (count >= SPACE_CHANGE_TICKS) revoke = true; else mismatches.set(userId, count);
+      } else if (!revoke) mismatches.delete(userId);
+      if (!revoke) { result.set(userId, lease.participantIdentity); continue; }
+      mismatches.delete(userId);
+      const gone = await leases.revoke(userId);
+      if (gone) removeLater(gone.room, gone.participantIdentity);
+      result.set(userId, null);
+    }
+    return result;
+  }
+  // Removes every participant of this namespace's rooms that has no live lease
+  // (expired, revoked while the provider was down, or never ours), and deletes
+  // rooms nobody holds a lease for. Idempotent; any instance may run it. Rooms of
+  // other namespaces in the same LiveKit project are never touched.
+  async function sweep({ budgetMs = 20_000 } = {}) {
+    const result = { ok: true, rooms: 0, removed: 0, deletedRooms: 0, failures: 0, complete: false };
+    const started = monotonic(), within = () => monotonic() - started < budgetMs;
+    try {
+      const rooms = await leases.rooms(), known = new Set(rooms);
+      for (const name of rooms) {
+        if (!within()) return result;
+        const held = new Set((await leases.members(name)).map(item => item.participantIdentity));
+        let participants;
+        try { participants = await provider(() => livekit.listParticipants(name)); } catch { result.failures++; return result; }
+        result.rooms++;
+        for (const participant of participants) {
+          if (held.has(participant.identity)) continue;
+          if (await remove(name, participant.identity)) result.removed++;
+          else { result.failures++; if (paused()) return result; }
+        }
+        if (!held.size) { if (await deleteRoom(name)) result.deletedRooms++; else result.failures++; }
+      }
+      if (!within()) return result;
+      let listed;
+      try { listed = await provider(() => livekit.listRooms()); } catch { result.failures++; return result; }
+      for (const { name } of listed) {
+        if (!name.startsWith(roomPrefix) || known.has(name)) continue;
+        if (!within()) return result;
+        if (await deleteRoom(name)) result.deletedRooms++; else result.failures++;
+      }
+      result.complete = true;
+      return result;
+    } catch { warn('voice_storage_unavailable'); result.ok = false; return result; }
+  }
+  // Long-lived hosts sweep on a timer; on Vercel the per-minute cron calls sweep().
+  function sweepEvery(ms) {
+    if (sweepTimer) clearInterval(sweepTimer);
+    sweepTimer = setInterval(() => { void sweep().catch(() => {}); }, ms);
+    sweepTimer.unref?.();
+  }
   return {
-    join, renew, leave, revokeUser,
+    join, renew, leave, revokeUser, reconcileWorld, sweep, sweepEvery,
     status: () => ({ enabled: true, available: !paused(), renewMs }),
-    close() { /* No owned connections or timers yet. */ },
+    close() { if (sweepTimer) clearInterval(sweepTimer); sweepTimer = null; },
   };
 }
 
 // Builds the service from the environment, or nothing: off unless
 // RIVER_OAKS_VOICE=on, and off with a warning when LiveKit is not configured.
-export function configureVoice({ env = process.env, leases, allow, namespace, log = console } = {}) {
+export function configureVoice({ env = process.env, leases, allow, namespace, sweepMs = 0, log = console } = {}) {
   if (env.RIVER_OAKS_VOICE !== 'on') return null;
   if (!livekitConfigured(env)) { log.warn?.(JSON.stringify({ event: 'voice_not_configured' })); return null; }
-  return createVoiceService({ leases, allow, log, namespace: env.RIVER_OAKS_VOICE_NAMESPACE || namespace,
+  const voice = createVoiceService({ leases, allow, log, namespace: env.RIVER_OAKS_VOICE_NAMESPACE || namespace,
     livekit: createLiveKitClient({ url: env.LIVEKIT_URL, apiKey: env.LIVEKIT_API_KEY, apiSecret: env.LIVEKIT_API_SECRET }),
     dailyLimit: voiceDailyLimit(env), maxLeases: voiceMaxLeases(env) });
+  if (sweepMs > 0) voice.sweepEvery(sweepMs);
+  return voice;
 }

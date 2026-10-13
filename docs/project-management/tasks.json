@@ -4034,12 +4034,13 @@
       "title": "Resume shared spatial voice (deferred 2026-10-05) with LiveKit Cloud: server-issued scoped tokens, connectionId-fenced leases, tick reconciler plus cron sweep, then browser controls, spatial audio, desktop microphone permission and real two-browser acceptance",
       "status": "active",
       "branches": [
-        "feat/voice-server-20261013"
+        "feat/voice-server-20261013",
+        "feat/voice-controller-20261013"
       ],
       "owner": "claude:river-oaks-f1 (46fc41e0)",
-      "updatedAt": "2026-10-13T10:13:11.370Z",
+      "updatedAt": "2026-10-13T10:51:14.967Z",
       "leaseUntil": "2026-10-13T12:13:11.370Z",
-      "nextAction": "PR 1 (flag off): server/voice.js leases + service, server/voice-routes.js, server/livekit-client.js, world.voiceSpaceOf/setVoice + snapshot voice fields, mounting, routing allowlist, env names; failing-first server tests with a fake LiveKit; pnpm run verify; PR; land.",
+      "nextAction": "PR 1 #300 landing; PR 2 (reconciler, sweep, headers) on feat/voice-controller-20261013: verify passed, open a PR and land after #300. PR 3 (browser controller) in progress on feat/voice-client-20261013.",
       "filesOwned": [
         "server/voice.js",
         "server/voice-routes.js",
